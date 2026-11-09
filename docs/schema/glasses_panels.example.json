@@ -1878,5 +1878,524 @@
         }
       }
     ]
+  },
+  "dungeon/week": {
+    "app": "dungeon",
+    "item": "week",
+    "label": "This Week",
+    "title": "This Week",
+    "lines": [
+      {
+        "text": "$193.50 so far",
+        "detail": "on pace for $989.00",
+        "tone": ""
+      },
+      {
+        "text": "$2,920.72 banked",
+        "detail": "toward Freedom",
+        "tone": ""
+      },
+      {
+        "text": "The warehouse",
+        "detail": "today 9 h · $193.50 · planned",
+        "tone": ""
+      },
+      {
+        "text": "Next dungeon",
+        "detail": "Set up Freedom (Apps → Freedom) and the next dungeon shows here.",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No shifts yet this week."
+  },
+  "issues/open": {
+    "app": "issues",
+    "item": "open",
+    "label": "Open Issues",
+    "title": "Open Issues",
+    "lines": [
+      {
+        "text": "The log shift tool broke",
+        "detail": "2× · last 2026-10-27",
+        "tone": "bad"
+      },
+      {
+        "text": "Wrong result from get eggs",
+        "detail": "1× · last 2026-10-27",
+        "tone": "bad"
+      },
+      {
+        "text": "Wrong answer in chat",
+        "detail": "1× · last 2026-10-27",
+        "tone": "bad"
+      },
+      {
+        "text": "Offered log shift but only talked",
+        "detail": "1× · last 2026-10-27",
+        "tone": "bad"
+      },
+      {
+        "text": "Requests MIA couldn't match to anything",
+        "detail": "1× · last 2026-10-27",
+        "tone": "bad"
+      }
+    ],
+    "more": 2,
+    "empty": "Nothing broken right now."
+  },
+  "compliance/due": {
+    "app": "compliance",
+    "item": "due",
+    "label": "Deadlines",
+    "title": "Deadlines",
+    "lines": [
+      {
+        "text": "Federal income tax return (Form 1040)",
+        "detail": "IRS · 58 days late",
+        "tone": "attention"
+      },
+      {
+        "text": "Sales and use tax return",
+        "detail": "State revenue department · 2 days late",
+        "tone": "attention"
+      },
+      {
+        "text": "City business licence renewal",
+        "detail": "City clerk · in 12 days",
+        "tone": "attention"
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing due soon."
+  },
+  "flock/eggs": {
+    "app": "flock",
+    "item": "eggs",
+    "label": "Eggs",
+    "title": "Eggs",
+    "lines": [
+      {
+        "text": "7 eggs today",
+        "detail": "65 this week · 12 hens",
+        "tone": ""
+      },
+      {
+        "text": "The layers",
+        "detail": "7 today · lays 77% · feed $1.97/dozen",
+        "tone": ""
+      },
+      {
+        "text": "15 eggs on hand",
+        "detail": "not yet sold or used",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No flock yet."
+  },
+  "business/orders": {
+    "app": "business",
+    "item": "orders",
+    "label": "Open Orders",
+    "title": "Open Orders",
+    "lines": [
+      {
+        "text": "Engraved sign",
+        "detail": "Sam · Ready · due 2026-11-12",
+        "tone": ""
+      },
+      {
+        "text": "Porch bench",
+        "detail": "Jordan · Building · due 2026-11-15 · $206.00 owed",
+        "tone": ""
+      },
+      {
+        "text": "Printed bracket set",
+        "detail": "Riley · Open · due 2026-11-20 · $42.00 owed",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No open orders."
+  },
+  "business/quotes": {
+    "app": "business",
+    "item": "quotes",
+    "label": "Open Quotes",
+    "title": "Open Quotes",
+    "lines": [
+      {
+        "text": "Two planter boxes",
+        "detail": "Sam · $140.00",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No open quotes."
+  },
+  "insurance/renewals": {
+    "app": "insurance",
+    "item": "renewals",
+    "label": "Renewals",
+    "title": "Renewals",
+    "lines": [
+      {
+        "text": "Truck insurance",
+        "detail": "Placeholder Mutual · renews in 12 days · $1,284.00 a year",
+        "tone": "attention"
+      },
+      {
+        "text": "Renters insurance",
+        "detail": "Sample Home Co · renews in 113 days · $192.00 a year",
+        "tone": ""
+      },
+      {
+        "text": "Could save $188.00 a year",
+        "detail": "from the quotes you've kept",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No policies saved yet."
+  },
+  "security/cameras": {
+    "app": "security",
+    "item": "cameras",
+    "label": "Cameras",
+    "title": "Cameras",
+    "lines": [
+      {
+        "text": "Front Door",
+        "detail": "working",
+        "tone": ""
+      },
+      {
+        "text": "Driveway",
+        "detail": "working",
+        "tone": ""
+      },
+      {
+        "text": "Backyard",
+        "detail": "working",
+        "tone": ""
+      },
+      {
+        "text": "Shop",
+        "detail": "working",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No cameras set up yet."
+  },
+  "reward_shop/rewards": {
+    "app": "reward_shop",
+    "item": "rewards",
+    "label": "Rewards",
+    "title": "Rewards",
+    "lines": [
+      {
+        "text": "850 credits",
+        "detail": "1250 earned · 400 spent",
+        "tone": ""
+      },
+      {
+        "text": "🍕 Favorite takeout",
+        "detail": "400 credits · ready",
+        "tone": "attention"
+      },
+      {
+        "text": "🍿 Movie night",
+        "detail": "500 credits · ready",
+        "tone": "attention"
+      },
+      {
+        "text": "🛠 A new tool or piece of gear",
+        "detail": "3000 credits · 2150 to go",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No rewards in the shop yet."
+  },
+  "vault/status": {
+    "app": "vault",
+    "item": "status",
+    "label": "Memory Vault",
+    "title": "Memory Vault",
+    "lines": [
+      {
+        "text": "Copying to the home computer…",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "9 photos · 0 videos",
+        "detail": "38.6 MB on the PC",
+        "tone": ""
+      },
+      {
+        "text": "1 waiting to copy",
+        "detail": "4.1 MB",
+        "tone": "attention"
+      },
+      {
+        "text": "4 safe to free on the phone",
+        "detail": "15.2 MB",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing kept yet."
+  },
+  "knowledge/packs": {
+    "app": "knowledge",
+    "item": "packs",
+    "label": "Offline Library",
+    "title": "Offline Library",
+    "lines": [
+      {
+        "text": "Wikipedia: Medicine",
+        "detail": "52,000 articles",
+        "tone": ""
+      },
+      {
+        "text": "Gardening & Homesteading",
+        "detail": "8,400 articles",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No offline packs installed yet."
+  },
+  "toolbox/alarms": {
+    "app": "toolbox",
+    "item": "alarms",
+    "label": "Alarms",
+    "title": "Alarms",
+    "lines": [
+      {
+        "text": "05:30 Work",
+        "detail": "weekdays · on",
+        "tone": ""
+      },
+      {
+        "text": "07:00 Feed the hens",
+        "detail": "every day · on",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No alarms set."
+  },
+  "operating_journal/how": {
+    "app": "operating_journal",
+    "item": "how",
+    "label": "How I'm Living",
+    "title": "How I'm Living",
+    "lines": [
+      {
+        "text": "Pay myself first on payday.",
+        "detail": "3 of 4 months",
+        "tone": ""
+      },
+      {
+        "text": "Train on the days the plan says.",
+        "detail": "3 of 4 weeks",
+        "tone": ""
+      },
+      {
+        "text": "No phone at dinner.",
+        "detail": "2 / 5 last week",
+        "tone": "attention"
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing written yet. Say \"add a rule: ...\" to start."
+  },
+  "life_notes/promises": {
+    "app": "life_notes",
+    "item": "promises",
+    "label": "Promises",
+    "title": "Promises",
+    "lines": [
+      {
+        "text": "Sam: fix his gate (by Saturday)",
+        "detail": "by 2026-11-07",
+        "tone": "attention",
+        "action": {
+          "kind": "life_note.done",
+          "label": "Done",
+          "params": {
+            "note_id": "n1"
+          }
+        }
+      },
+      {
+        "text": "Send the bench photos",
+        "detail": "2026-11-08",
+        "tone": "",
+        "action": {
+          "kind": "life_note.done",
+          "label": "Done",
+          "params": {
+            "note_id": "n5"
+          }
+        }
+      }
+    ],
+    "more": 0,
+    "empty": "No open promises."
+  },
+  "life_notes/ideas": {
+    "app": "life_notes",
+    "item": "ideas",
+    "label": "Ideas",
+    "title": "Ideas",
+    "lines": [
+      {
+        "text": "Selling honey at the market",
+        "detail": "2026-11-01",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No ideas kept yet."
+  },
+  "life_notes/decisions": {
+    "app": "life_notes",
+    "item": "decisions",
+    "label": "Decisions",
+    "title": "Decisions",
+    "lines": [
+      {
+        "text": "The metal roof, because it lasts longer",
+        "detail": "2026-11-02",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No decisions kept yet."
+  },
+  "play/week": {
+    "app": "play",
+    "item": "week",
+    "label": "This Week",
+    "title": "This Week",
+    "lines": [
+      {
+        "text": "100 min of play this week",
+        "detail": "2 games · 2 workouts",
+        "tone": ""
+      },
+      {
+        "text": "Pickup basketball",
+        "detail": "60 min · Hard · 2026-11-05",
+        "tone": ""
+      },
+      {
+        "text": "Disc golf, 18 holes",
+        "detail": "40 min · Easy · 2026-11-01",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing played yet. Say \"I played an hour of basketball\"."
+  },
+  "good_news/today": {
+    "app": "good_news",
+    "item": "today",
+    "label": "Today's Stories",
+    "title": "Today's Stories",
+    "lines": [
+      {
+        "text": "A river cleanup removed 12 tons of trash in a weekend.",
+        "detail": "Environment · Confirmed by two outlets",
+        "tone": ""
+      },
+      {
+        "text": "A seed library opens its third rural branch.",
+        "detail": "Community · From the source itself",
+        "tone": ""
+      },
+      {
+        "text": "Monarch counts up along the eastern route.",
+        "detail": "Nature · One outlet",
+        "tone": "attention"
+      }
+    ],
+    "more": 0,
+    "empty": "No stories yet today."
+  },
+  "browser/waiting": {
+    "app": "browser",
+    "item": "waiting",
+    "label": "Waiting For You",
+    "title": "Waiting For You",
+    "lines": [
+      {
+        "text": "Press \"Pay now\" on the county tax site",
+        "detail": "tax.example.gov · approve on your phone or PC",
+        "tone": "attention"
+      },
+      {
+        "text": "Pay the property tax",
+        "detail": "practising",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing waiting, and no tasks taught yet."
+  },
+  "diagnostics/health": {
+    "app": "diagnostics",
+    "item": "health",
+    "label": "PC Health",
+    "title": "PC Health",
+    "lines": [
+      {
+        "text": "Is the PC ready for MIA?",
+        "detail": "all good",
+        "tone": ""
+      },
+      {
+        "text": "The network",
+        "detail": "The wired connection is running at 100 Mb/s, under a gigabit.",
+        "tone": "bad"
+      },
+      {
+        "text": "Room for a big download",
+        "detail": "all good",
+        "tone": ""
+      },
+      {
+        "text": "1 recent problem in her log",
+        "detail": "A song in the library couldn't be read; it was skipped.",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No check-ups ran."
+  },
+  "files/folder": {
+    "app": "files",
+    "item": "folder",
+    "label": "MIA Folder",
+    "title": "MIA Folder",
+    "lines": [
+      {
+        "text": "Receipts/",
+        "detail": "0 items",
+        "tone": ""
+      },
+      {
+        "text": "packing notes.txt",
+        "detail": "27 bytes · 2026-10-16",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "The folder is empty. Open the files on your phone to add some."
   }
 }

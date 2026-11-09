@@ -1,0 +1,471 @@
+"""
+core.glasses_cards
+====================
+
+Glasses cards for the apps that only had an ask (Zac, 2026-11-08: "build out the glasses screens as much as
+possible"; DEC-0125 full use on every device). Each app's quick action menu gains a readout panel or two, built here
+from the same page assembler its web screen uses (never a second copy of the logic), in core/glasses.py's panel shape:
+a title, at most five short lines (text, detail, tone) and what to say when it's empty. The app's asks stay after its
+panels, so MIA still answers anything the card doesn't show.
+
+What these cards may change is still core/glasses.GLASSES_KINDS: here only "Done" on an open promise
+(`life_note.done`, undoable). Everything else is a readout: no money moves, no camera settings, no browser steps (a
+browser commit is approved by a person on a bigger screen, DEC-0117), no compliance marked filed.
+
+How: `PANELS` maps an app id to its menu entries (item id, label, builder), merged into core/glasses.PANELS at import;
+each builder is `(context, today) -> panel` and never raises (a store that isn't here gives the panel's empty line).
+Money is formatted by the page assemblers (core.region.money); tones are "attention" for what needs the person and
+"bad" only for something broken.
+"""
+
+from __future__ import annotations
+
+import re
+from datetime import date
+from typing import Callable
+
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
+
+def _line(text: str, detail: str = "", tone: str = "", action=None) -> dict:
+    """core/glasses._line (imported when called: core/glasses imports this module at its end)."""
+    from core.glasses import _line as line
+
+    return line(text, detail, tone, action)
+
+
+def _panel(title: str, lines: list, empty: str, more: int = 0) -> dict:
+    """core/glasses._panel (imported when called, like _line)."""
+    from core.glasses import _panel as panel
+
+    return panel(title, lines, empty, more)
+
+
+def _page(title: str, read: Callable[[], dict], empty: str):
+    """The page an assembler returns, or (None, the panel to show instead) when it isn't available or fails."""
+    try:
+        page = read()
+    except Exception:  # noqa: BLE001 - a card that can't be read says so; the glasses keep going
+        log.exception("Glasses: %s couldn't be read", title)
+        return None, _panel(title, [], "That couldn't be read just now.")
+    if not isinstance(page, dict) or page.get("available") is False:
+        return None, _panel(title, [], empty)
+    return page, None
+
+
+def _days_word(days) -> str:
+    """Pure logic. A due date's distance in words: "today", "in 3 days", "4 days late"."""
+    if days is None:
+        return ""
+    days = int(days)
+    if days == 0:
+        return "today"
+    if days < 0:
+        return f"{-days} day{'s' if days != -1 else ''} late"
+    return "tomorrow" if days == 1 else f"in {days} days"
+
+
+# ------------------------------------------------------------ the Dungeon (paid work as a game)
+
+def _dungeon_week(context, today: date):
+    """Panel: this week's loot so far, the projection, what's banked, and each dungeon's shift today."""
+    from core.web_dungeon import dungeon_page
+
+    page, none = _page("This Week", lambda: dungeon_page(context, today), "Set up your job in the Dungeon first.")
+    if none:
+        return none
+    s = page.get("summary") or {}
+    lines = [_line(f"{s.get('week_text', '')} so far", f"on pace for {s.get('projected_text', '')}"),
+             _line(f"{s.get('banked_text', '')} banked", "toward Freedom")]
+    for d in page.get("dungeons") or []:
+        t = d.get("today") or {}
+        if t.get("hours"):
+            lines.append(_line(d["name"], f"today {t['hours']:g} h · {t.get('loot_text', '')} · {t.get('status', '')}"))
+    nxt = page.get("next_dungeon") or {}
+    if nxt.get("line"):
+        lines.append(_line("Next dungeon", nxt["line"]))
+    return _panel("This Week", lines, "No shifts yet this week.")
+
+
+# ------------------------------------------------------------ the Fix-It Log
+
+def _issues_open(context, today: date):
+    """Panel: what's still broken in MIA, heaviest first, with how often and when last."""
+    from core.failure_actions import failures_page
+
+    page, none = _page("Open Issues", lambda: failures_page(context), "The Fix-It Log isn't on this MIA.")
+    if none:
+        return none
+    s = page.get("summary") or {}
+    open_ = [i for i in page.get("issues") or [] if i.get("status") == "open"]
+    lines = [_line(i["title"], f"{i['count']}× · last {str(i.get('last', ''))[:10]}", "bad") for i in open_]
+    if s.get("fixed"):
+        lines.append(_line(f"{s['fixed']} fixed lately", f"{s.get('learned', 0)} new phrases learned"))
+    return _panel("Open Issues", lines, "Nothing broken right now.")
+
+
+# ------------------------------------------------------------ Compliance
+
+def _compliance_due(context, today: date):
+    """Panel: deadlines overdue, then soon, each with when and who it's owed to; unverified ones said so."""
+    from core.web_compliance import compliance_page
+
+    page, none = _page("Deadlines", lambda: compliance_page(context, today), "Compliance isn't on this MIA.")
+    if none:
+        return none
+    groups = page.get("groups") or {}
+    lines = []
+    for where in ("overdue", "soon"):
+        for o in groups.get(where) or []:
+            detail = " · ".join(b for b in (o.get("authority", ""), _days_word(o.get("days")),
+                                            "" if o.get("verified") else "date not checked") if b)
+            lines.append(_line(o["title"], detail, "attention"))
+    more = len(groups.get("later") or [])
+    return _panel("Deadlines", lines, "Nothing due soon.", more=more)
+
+
+# ------------------------------------------------------------ the Flock
+
+def _flock_today(context, today: date):
+    """Panel: eggs today and this week across the flocks, each flock's lay rate, and eggs not yet used."""
+    from core.web_flock import flock_page
+
+    page, none = _page("Eggs", lambda: flock_page(context, today), "Add your flock in the Flock app first.")
+    if none:
+        return none
+    t = page.get("total") or {}
+    lines = [_line(f"{t.get('today', 0):g} eggs today", f"{t.get('week', 0):g} this week · {t.get('hens', 0)} hens")]
+    for f in page.get("flocks") or []:
+        fig = f.get("figures") or {}
+        lines.append(_line(f["name"], f"{fig.get('today', 0):g} today · lays {fig.get('lay_rate_text', '')}"
+                                      f" · feed {fig.get('feed_per_dozen_text', '')}/dozen"))
+    if t.get("loose"):
+        lines.append(_line(f"{t['loose']:g} eggs on hand", "not yet sold or used"))
+    return _panel("Eggs", lines, "No flock yet.")
+
+
+# ------------------------------------------------------------ Business (orders and quotes)
+
+def _business_orders(context, today: date):
+    """Panel: open orders, overdue first, with the customer, the stage, when due and what's still owed."""
+    from core.web_business import business_page
+
+    page, none = _page("Open Orders", lambda: business_page(context, today), "The business isn't set up here.")
+    if none:
+        return none
+    orders = sorted((o for o in page.get("orders") or [] if o.get("open")),
+                    key=lambda o: (not o.get("overdue"), o.get("due") or "9999"))
+    lines = [_line(o["title"], " · ".join(b for b in (o.get("customer", ""), o.get("status", ""),
+                                                       f"due {o['due']}" if o.get("due") else "",
+                                                       f"{o['left']} owed" if o.get("left_value") else "") if b),
+                   "attention" if o.get("overdue") else "") for o in orders]
+    return _panel("Open Orders", lines, "No open orders.")
+
+
+def _business_quotes(context, today: date):
+    """Panel: quotes still open, with the customer, the price and how long the quote holds."""
+    from core.web_business import business_page
+
+    page, none = _page("Open Quotes", lambda: business_page(context, today), "The business isn't set up here.")
+    if none:
+        return none
+    lines = [_line(q["title"], " · ".join(b for b in (q.get("customer", ""), q.get("price", ""),
+                                                       f"good until {q['valid_until']}" if q.get("valid_until") else "")
+                                          if b))
+             for q in page.get("quotes") or [] if q.get("open")]
+    return _panel("Open Quotes", lines, "No open quotes.")
+
+
+# ------------------------------------------------------------ Insurance
+
+def _insurance_renewals(context, today: date):
+    """Panel: each policy by renewal date, with the insurer and what it costs a year; what she could save."""
+    from core.insurance import insurance_page
+    from core.region import money
+
+    page, none = _page("Renewals", lambda: insurance_page(context, today), "Insurance isn't on this MIA.")
+    if none:
+        return none
+    lines = []
+    for p in sorted(page.get("policies") or [], key=lambda p: p.get("renews") or "9999"):
+        days = None
+        try:
+            days = (date.fromisoformat(p["renews"]) - today).days if p.get("renews") else None
+        except ValueError:
+            pass
+        lines.append(_line(p.get("name") or p.get("kind", "Policy"),
+                           " · ".join(b for b in (p.get("insurer", ""), f"renews {_days_word(days)}" if days is not None
+                                                  else "", f"{money(p.get('per_year') or 0)} a year") if b),
+                           "attention" if days is not None and days <= 30 else ""))
+    s = page.get("summary") or {}
+    if s.get("could_save"):
+        lines.append(_line(f"Could save {money(s['could_save'])} a year", "from the quotes you've kept"))
+    return _panel("Renewals", lines, "No policies saved yet.")
+
+
+# ------------------------------------------------------------ Security cameras
+
+def _security_cameras(context, today: date):
+    """Panel: each camera, where it is and whether it's answering (a problem is broken, so it's red)."""
+    from core.security_cams import security_page
+
+    page, none = _page("Cameras", lambda: security_page(context), "No cameras set up yet.")
+    if none:
+        return none
+    def where(c) -> str:
+        """The camera's place when its name doesn't already say it."""
+        loc = c.get("location") or ""
+        return f"{loc} · " if loc and loc.lower() != str(c.get("name", "")).lower() else ""
+
+    lines = [_line(c["name"], c["problem"] if c.get("problem") else where(c) + "working", "bad" if c.get("problem") else "")
+             for c in page.get("cameras") or []]
+    return _panel("Cameras", lines, "No cameras set up yet.")
+
+
+# ------------------------------------------------------------ the Reward Shop
+
+def _shop_rewards(context, today: date):
+    """Panel: credits left, then the rewards you can buy now and how far off the rest are (buying is on the phone)."""
+    from core.game_layer import shop_page
+
+    page, none = _page("Rewards", lambda: shop_page(context), "The Reward Shop isn't on this MIA.")
+    if none:
+        return none
+    c = page.get("credits") or {}
+    rewards = sorted((r for r in page.get("rewards") or [] if r.get("available")),
+                     key=lambda r: (not r.get("affordable"), r.get("to_go") or 0))
+    lines = [_line(f"{c.get('left', 0)} credits", f"{c.get('earned', 0)} earned · {c.get('spent', 0)} spent")]
+    lines += [_line(f"{r.get('icon', '')} {r['name']}".strip(),
+                    f"{r['cost']} credits · " + ("ready" if r.get("affordable") else f"{r.get('to_go', 0)} to go"),
+                    "attention" if r.get("affordable") else "") for r in rewards]
+    return _panel("Rewards", lines, "No rewards in the shop yet.")
+
+
+# ------------------------------------------------------------ the Memory Vault
+
+def _vault_status(context, today: date):
+    """Panel: what the vault is doing, how many photos and videos are kept, and what's waiting to copy."""
+    from core.memory_vault import vault_page
+
+    page, none = _page("Memory Vault", lambda: vault_page(context, today=today), "The Memory Vault isn't set up.")
+    if none:
+        return none
+    s = page.get("summary") or {}
+    lines = [_line(page.get("state_words") or ("On" if page.get("on") else "Off"), ""),
+             _line(f"{s.get('photos', 0)} photos · {s.get('videos', 0)} videos", f"{s.get('size', '')} on the PC")]
+    if s.get("waiting"):
+        lines.append(_line(f"{s['waiting']} waiting to copy", s.get("waiting_size", ""), "attention"))
+    free = page.get("free") or {}
+    if free.get("count"):
+        lines.append(_line(f"{free['count']} safe to free on the phone", free.get("size", "")))
+    return _panel("Memory Vault", lines, "Nothing kept yet.")
+
+
+# ------------------------------------------------------------ the Knowledge library
+
+def _knowledge_packs(context, today: date):
+    """Panel: the offline reference packs installed, with how many articles each holds."""
+    library = getattr(context, "reference_library", None)
+    if library is None:
+        return _panel("Offline Library", [], "No offline packs installed yet.")
+    try:
+        packs = library.list_packs()
+    except Exception:  # noqa: BLE001 - a library that can't be read shows none
+        log.exception("Glasses: the offline library couldn't be read")
+        packs = []
+    lines = [_line(p.title, f"{p.article_count:,} articles") for p in packs]
+    return _panel("Offline Library", lines, "No offline packs installed yet.")
+
+
+# ------------------------------------------------------------ the Toolbox
+
+def _toolbox_alarms(context, today: date):
+    """Panel: the alarms, earliest first, with when they repeat and whether they're on."""
+    from core.web_toolbox import _alarms
+
+    alarms = _alarms(context)
+    lines = [_line(f"{a['time']} {a['label']}".strip(), f"{a['repeat']} · {'on' if a['on'] else 'off'}")
+             for a in alarms]
+    return _panel("Alarms", lines, "No alarms set.")
+
+
+# ------------------------------------------------------------ the Operating Journal
+
+def _operating_how(context, today: date):
+    """Panel: each line of how you said you want to live, with how it's going (under half is worth a look)."""
+    from core.operating_journal import screen
+
+    page, none = _page("How I'm Living", lambda: screen(context, today), "")
+    if none:
+        return none
+    lines = []
+    for o in page.get("lines") or []:
+        score = o.get("score") or {}
+        pct = score.get("pct")
+        lines.append(_line(o["text"], score.get("text") or o.get("how", ""),
+                           "attention" if isinstance(pct, (int, float)) and pct < 50 else ""))
+    return _panel("How I'm Living", lines, "Nothing written yet. Say \"add a rule: ...\" to start.")
+
+
+# ------------------------------------------------------------ Kept (promises, decisions, ideas)
+
+_KIND_WORDS = re.compile(r"^(a promise|an idea|a decision|a goal set aside|a goal)( to)?\s*:?\s*", re.I)
+
+def _kept(kind: str, title: str, empty: str, done_button: bool = False):
+    """A builder for one kind of kept note: the open ones, newest first, due ones flagged; promises can be marked done."""
+    def build(context, today: date):
+        """Panel: the open notes of this kind, newest first (a promise past its date needs you)."""
+        from core.life_notes import screen
+
+        page, none = _page(title, lambda: screen(context), "")
+        if none:
+            return none
+        group = next((g for g in page.get("kinds") or [] if g.get("kind") == kind), {"notes": []})
+        lines = []
+        for n in group["notes"]:
+            if n.get("status") != "open":
+                continue
+            late = bool(n.get("due")) and n["due"] < today.isoformat()
+            action = {"kind": "life_note.done", "label": "Done", "params": {"note_id": n["id"]}} if done_button else None
+            text = _KIND_WORDS.sub("", n["line"]) or n["line"]  # the card says which kind; the line says what (and to whom)
+            lines.append(_line(text[:1].upper() + text[1:], f"by {n['due']}" if n.get("due") else str(n.get("at", ""))[:10],
+                               "attention" if late else "", action))
+        return _panel(title, lines, empty)
+    return build
+
+
+# ------------------------------------------------------------ Play
+
+def _play_week(context, today: date):
+    """Panel: this week's play against your workouts, then the latest games with how hard they were."""
+    from core.recreation import screen
+
+    page, none = _page("Play", lambda: screen(context, today), "")
+    if none:
+        return none
+    weeks = page.get("weeks") or []
+    lines = []
+    if weeks:
+        w = weeks[-1]
+        lines.append(_line(f"{w.get('play_minutes', 0)} min of play this week",
+                           f"{w.get('played', 0)} games · {w.get('workouts', 0)} workouts"))
+    lines += [_line(p["what"], f"{p.get('minutes', 0)} min · {p.get('effort_word', '')} · {p.get('date', '')}")
+              for p in (page.get("played") or [])[:4]]
+    return _panel("This Week", lines, "Nothing played yet. Say \"I played an hour of basketball\".")
+
+
+# ------------------------------------------------------------ Good News
+
+def _news_today(context, today: date):
+    """Panel: today's good stories, each with how sure it is (one outlet only is worth knowing)."""
+    from core.good_news import screen
+
+    page, none = _page("Good News", lambda: screen(context), "")
+    if none:
+        return none
+    if not page.get("on"):
+        return _panel("Good News", [], "Good News Radio is off. Turn it on in the app.")
+    lines = [_line(s["title"], " · ".join(b for b in (s.get("topic", ""), s.get("tag", "")) if b),
+                   "attention" if s.get("tone") == "attention" else "") for s in page.get("stories") or []]
+    return _panel("Today's Stories", lines, "No stories yet today.")
+
+
+# ------------------------------------------------------------ Her browser
+
+def _browser_waiting(context, today: date):
+    """Panel: the steps her browser is waiting on you for (approve them on the phone or PC), then the tasks taught."""
+    from core.web_browser import screen
+
+    page, none = _page("Browser", lambda: screen(context), "Her browser isn't set up on this PC.")
+    if none:
+        return none
+    lines = [_line(w["summary"], f"{w.get('site', '')} · approve on your phone or PC", "attention")
+             for w in page.get("waiting") or []]
+    lines += [_line(t["name"], t.get("state", "")) for t in page.get("tasks") or []]
+    opened = page.get("open") or {}
+    if opened.get("title") and not lines:
+        lines.append(_line(f"On {opened['title']}", ""))
+    return _panel("Waiting For You", lines, "Nothing waiting, and no tasks taught yet.")
+
+
+# ------------------------------------------------------------ Diagnostics
+
+def _diagnostics_health(context, today: date):
+    """Panel: each check-up passed or what failed (a failure is broken), then the log's newest problems."""
+    from core.diagnostics import screen
+
+    page, none = _page("PC Health", lambda: screen(context), "")
+    if none:
+        return none
+    if page.get("error"):
+        return _panel("PC Health", [], page["error"])
+    lines = [_line(c["title"], "all good" if c["ok"] else c["failed"][0], "" if c["ok"] else "bad")
+             for c in page.get("checks") or []]
+    problems = page.get("problems") or []
+    if problems:
+        lines.append(_line(f"{len(problems)} recent problem{'s' if len(problems) != 1 else ''} in her log",
+                           problems[0].get("text", ""), "bad" if any(p.get("level") == "error" for p in problems) else ""))
+    return _panel("PC Health", lines, "No check-ups ran.")
+
+
+# ------------------------------------------------------------ Files
+
+def _files_recent(context, today: date):
+    """Panel: MIA's folder: its folders with how much is in each, then the newest files there."""
+    from core.web_more import files_page
+
+    page, none = _page("MIA Folder", lambda: files_page(context), "Files isn't set up on this PC.")
+    if none:
+        return none
+    lines = [_line(f["name"] + "/", f"{f.get('count', 0)} items") for f in page.get("folders") or []]
+    newest = sorted(page.get("files") or [], key=lambda f: str(f.get("modified") or ""), reverse=True)
+    lines += [_line(f["name"], " · ".join(b for b in (f.get("size_text", ""), str(f.get("modified") or "")[:10]) if b))
+              for f in newest]
+    return _panel("MIA Folder", lines, "The folder is empty. Open the files on your phone to add some.")
+
+
+PANELS = {
+    "dungeon": (("week", "This Week", _dungeon_week),),
+    "issues": (("open", "Open Issues", _issues_open),),
+    "compliance": (("due", "Deadlines", _compliance_due),),
+    "flock": (("eggs", "Eggs", _flock_today),),
+    "business": (("orders", "Open Orders", _business_orders), ("quotes", "Open Quotes", _business_quotes)),
+    "insurance": (("renewals", "Renewals", _insurance_renewals),),
+    "security": (("cameras", "Cameras", _security_cameras),),
+    "reward_shop": (("rewards", "Rewards", _shop_rewards),),
+    "vault": (("status", "Memory Vault", _vault_status),),
+    "knowledge": (("packs", "Offline Library", _knowledge_packs),),
+    "toolbox": (("alarms", "Alarms", _toolbox_alarms),),
+    "operating_journal": (("how", "How I'm Living", _operating_how),),
+    "life_notes": (("promises", "Promises", _kept("commitment", "Promises", "No open promises.", done_button=True)),
+                   ("ideas", "Ideas", _kept("idea", "Ideas", "No ideas kept yet.")),
+                   ("decisions", "Decisions", _kept("decision", "Decisions", "No decisions kept yet."))),
+    "play": (("week", "This Week", _play_week),),
+    "good_news": (("today", "Today's Stories", _news_today),),
+    "browser": (("waiting", "Waiting For You", _browser_waiting),),
+    "diagnostics": (("health", "PC Health", _diagnostics_health),),
+    "files": (("folder", "MIA Folder", _files_recent),),
+}
+
+
+# The cards whose status line (the card face, before its menu) is their first panel's first line: the cheap reads
+# only (Diagnostics inspects the PC, Files lists a folder, her browser and the vault ask a service: those show none).
+STATUS_FROM = {"dungeon": "week", "issues": "open", "compliance": "due", "flock": "eggs", "business": "orders",
+               "insurance": "renewals", "reward_shop": "rewards", "operating_journal": "how", "life_notes": "promises",
+               "play": "week", "toolbox": "alarms"}
+
+
+def status(context, app_id: str, today: date) -> dict:
+    """A card's face line for an app with no at-a-glance line: {line, tone} from its first panel (tone "attention" when
+    any line there needs the person), or {} for an app not in STATUS_FROM or with nothing to show."""
+    item = STATUS_FROM.get(app_id)
+    build = next((b for i, _label, b in PANELS.get(app_id, ()) if i == item), None)
+    if build is None:
+        return {}
+    panel = build(context, today)
+    if not panel["lines"]:
+        return {}
+    tone = "attention" if any(line["tone"] in ("attention", "bad") for line in panel["lines"]) else ""
+    return {"line": panel["lines"][0]["text"][:48], "tone": tone}

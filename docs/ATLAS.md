@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1304 files, 283,364 lines; 1304 files describe themselves; 15,943 of 16,037 classes and functions are documented.
+1306 files, 283,979 lines; 1306 files describe themselves; 15,978 of 16,072 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-486 files, 134,226 lines; 7,181 of 7,267 classes and functions documented
+487 files, 134,713 lines; 7,205 of 7,291 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -204,6 +204,7 @@
 - `core/generate_worker.py`: Runs a single `AppContext.llm.generate()` call off the GUI thread — same reasoning as `core/chat_worker.py`, a separate class only because `generate()` and `chat_with_tools()` have different signatures/return types (`Optional[str]` vs `Optional[ChatReply]`), not because the threading concern itself 
 - `core/geo_grid.py`: Grid references (build plan step 14, DEC-0099): UTM and MGRS, the Military Grid Reference System that maps, search-and-rescue teams and TAK apps use ("18S UJ 23396 06441"), worked out in code from latitude and longitude on the WGS84 ellipsoid. No dependency, no network. Accurate to well under a metr
 - `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the
+- `core/glasses_cards.py`: Glasses cards for the apps that only had an ask (Zac, 2026-11-08: "build out the glasses screens as much as possible"; DEC-0125 full use on every device). Each app's quick action menu gains a readout panel or two, built here from the same page assembler its web screen uses (never a second copy of th
 - `core/glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): blank until something happens, then a card ("+50 XP · Mission Complete", "Debt payment: Car loan"), then clear again. This is what's new for the person since the glasses last asked, wherever it happened (the phone, the PC, the glasses).
 - `core/glasses_voice.py`: Talking to MIA through the glasses (H-0041 Phase 3; Zac, 2026-10-19). The Display glasses pair to the phone as a Bluetooth headset, so MIA's phone app listens through the glasses' microphone (Android's own speech recognizer, on the phone), sends the words here, and speaks the answer back through the
 - `core/good_news.py`: Good News Radio (DEC-0096, build plan step 13; Zac, 2026-11-06: AI that reads credible outlets daily and gathers good news, healing, technology, medicine, renewable energy, societies improving, "heard through AI radio personalities matched to mood"; sources by Claude's recommendation, approved, and 
@@ -772,7 +773,7 @@
 
 ## tests/: the test suite: what each part must do
 
-446 files, 75,315 lines; 6,472 of 6,480 classes and functions documented
+447 files, 75,438 lines; 6,483 of 6,491 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -918,6 +919,7 @@
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures).
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML.
 - `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. Every ask reaches one o
+- `tests/test_glasses_cards.py`: The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026-11-08): every one builds a panel without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what needs the person in amber and only what's broken in red, and lets the gl
 - `tests/test_glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): new notifications and wins since the cursor, each once; the same moment shown once; money never to a child.
 - `tests/test_glasses_readouts.py`: The glasses' readout panels for apps that had only questions (core/glasses.py): What MIA Noticed (Needs You first, in amber), the Lab's latest readings (newest first) and Power's levels (the battery, then each meter, amber when low). The latest notes, Memories, what's plugged in, the waypoints and t
 - `tests/test_glasses_screens.py`: The numbers on an app's glasses screen, a vehicle's own page, "I Made This", Home's line and its tone, and the live workout's one big number (the canvas's GlassesHome and GlassesTraining, DEC-0113).
@@ -1223,7 +1225,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-102 files, 18,604 lines
+102 files, 18,609 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
