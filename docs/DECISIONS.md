@@ -2559,3 +2559,24 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   a drafted message he sends, no account for her); (3) how MIA learns what he did (recommended: what's logged, plus
   "I did X" by voice); (4) the flow guard (recommended: yes).
 - Related: DEC-0047, DEC-0097, DEC-0119, DEC-0141, DEC-0143, DEC-0044
+
+### DEC-0149: Trade Master — professional job procedures, diagnoses and apprentice programs for every trade
+- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- From: Zac, 2026-11-08 ("just like Homesteading is Construction ... walk me through step by step of any home
+  construction, repair, or diagnosis jobs with industry standard professional steps so nothing is missed ... She
+  should become a Trade master and be able to teach an entry level Apprentice": carpentry, plumbing, HVAC,
+  electrical, appliances, siding, roofing, "and more"; "this same idea should be implemented for many other
+  processes").
+- Finding (`docs/TRADE_MASTER_PROPOSAL.md`): the pieces exist (the Construction specialist's sourced notes, the plans
+  shelf and calculators, learning paths, cooking and training sessions, missions, maintenance, Sight, the reference
+  library). Missing: a professional job procedure (stop rules, permits, hazards, tools, materials, phases, steps with
+  why and watch-for, hold points), diagnosis trees, an apprentice program per trade, and conversation grounded in them.
+- Proposed first version: `core/trades.py` (jobs and diagnoses as reviewed, sourced data; stop rules in code), a job
+  session (step by step, hold points waiting for "checked"), a job as a mission (phases as objectives, materials to the
+  shopping list), diagnosis sessions, apprentice programs on `core/paths.py` (Carpentry stages 1-3 first), one
+  specialist per trade; ~10 starter jobs and 6 diagnoses across trades.
+- Open for Zac: (1) the direction and first version; (2) which jobs first; (3) licensed work (recommended: walk
+  through it where a homeowner may legally do it under a permit, with the stop rules); (4) who checks the content
+  (recommended: a licensed tradesperson for electrical, gas and structural, Zac for the rest); (5) one specialist per
+  trade.
+- Related: DEC-0109, DEC-0112, DEC-0118, DEC-0123, DEC-0144, DEC-0147
