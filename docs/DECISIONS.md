@@ -2527,7 +2527,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0030, DEC-0036, DEC-0118, DEC-0120, DEC-0141, DEC-0144
 
 ### DEC-0148: Natural Momentum — help good mornings happen again, and stay out of their way
-- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- Status: APPROVED (Zac, 2026-11-08: "Yes and go with all your recommendations"): the first slice; Faith only
+  through the shared grocery list and a message MIA drafts that he sends (no account for her, DEC-0119 holds); MIA
+  learns from what's logged plus "I did X" by voice, never a daily "what did you get done?"; the flow guard holds her
+  non-urgent messages. **And (same message):** "anything I talk about or say I did X today should be evaluated for
+  how MIA can incorporate it into missions or track it": every activity he says he did is recorded in his history and
+  checked against his routines (counted), open tasks and mission objectives (offered to tick off), and what he keeps
+  doing untracked (offered as a routine).
 - From: Zac's handoff "Natural Momentum & Flow State Optimization" (a morning where waking naturally and coffee led
   to the dishes, laundry, the kitchen, the dev list and getting ready, without forcing it). Its section 10 asks to
   find what exists first and not duplicate it.
