@@ -12,3 +12,9 @@
 - [Research](research.md): 0 notes (0 confirmed), 2 open questions
 - [Testing and auditing](testing.md): 0 notes (0 confirmed), 2 open questions
 - [Software and AI engineering](engineering.md): 0 notes (0 confirmed), 1 open questions
+- [Carpentry and framing](carpentry.md): 0 notes (0 confirmed), 3 open questions
+- [Plumbing](plumbing.md): 0 notes (0 confirmed), 3 open questions
+- [Electrical](electrical.md): 0 notes (0 confirmed), 3 open questions
+- [HVAC](hvac.md): 0 notes (0 confirmed), 3 open questions
+- [Appliances](appliances.md): 0 notes (0 confirmed), 3 open questions
+- [Roofing, siding and windows](exterior.md): 0 notes (0 confirmed), 3 open questions

@@ -161,6 +161,60 @@ SPECIALISTS: tuple[Specialist, ...] = (
                limits="Changes go through the lab and Zac approves them.",
                starts_from=("How should a small router model be evaluated before it's used?",),
                words=("code", "software", "python", "deploy", "model", "api", "web page", "app", "programming")),
+    # Trade Master (DEC-0149, Zac 2026-11-08: "one specialist per trade"): each studies its own trade for the jobs in
+    # core/trade_jobs.py, with Construction as the general one.
+    Specialist("carpentry", "Carpentry and framing", "Wood framing and finish carpentry: layout, walls, floors, roofs "
+               "and rafters, stairs, decks, sheathing, trim, fasteners and connectors, and the span and header tables.",
+               skills=("Construction",), loops=("trades.depth",), limits="Work a code or a licence requires is named as such, with who to call, and walked through only where a homeowner may legally do it under a permit (DEC-0149); safety first in every procedure; codes vary by place, so every code note says to check with the local building department.",
+               starts_from=("How do you lay out and frame a stud wall with a door opening?",
+                            "How do you cut and set common rafters for a gable roof?",
+                            "What does the code's fastening schedule call for in wall and floor framing?"),
+               words=("frame", "framing", "stud", "rafter", "joist", "header", "plate", "sheathing", "trim", "deck",
+                      "carpentry", "lumber", "subfloor", "stairs")),
+    Specialist("plumbing", "Plumbing", "Water supply and drains: pipe materials and joining (PEX, copper, PVC), "
+               "drain, waste and vent sizing and slope, traps, fixtures, water heaters, wells and septic basics, "
+               "pressure tests, and leaks.", skills=("Construction",), loops=("trades.depth",), limits="Work a code or a licence requires is named as such, with who to call, and walked through only where a homeowner may legally do it under a permit (DEC-0149); safety first in every procedure; codes vary by place, so every code note says to check with the local building department.",
+               starts_from=("How do you size and slope a drain line and its vent?",
+                            "How do you join PEX, copper and PVC correctly?",
+                            "How do you pressure test new water supply lines?"),
+               words=("plumbing", "pipe", "drain", "toilet", "faucet", "leak", "water heater", "pex", "copper",
+                      "vent", "trap", "sewer", "septic", "shower")),
+    Specialist("electrical", "Electrical", "Residential wiring: circuits and their sizing, breakers, GFCI and AFCI "
+               "protection, boxes and fill, grounding and bonding, outlets, switches and lights, subpanels, proving "
+               "a circuit dead, and the electrical code.", skills=("Construction",), loops=("trades.depth",),
+               limits="Work a code or a licence requires is named as such, with who to call, and walked through only where a homeowner may legally do it under a permit (DEC-0149); safety first in every procedure; codes vary by place, so every code note says to check with the local building department. Never work on a circuit that hasn't been proven dead.",
+               starts_from=("How do you size wire and breakers for a branch circuit?",
+                            "Where does the code require GFCI and AFCI protection in a house?",
+                            "How do you safely prove a circuit is dead before working on it?"),
+               words=("electrical", "wiring", "wire", "circuit", "breaker", "outlet", "receptacle", "switch", "gfci",
+                      "afci", "panel", "volt", "amp", "light fixture")),
+    Specialist("hvac", "HVAC", "Heating, cooling and ventilation: load sizing, furnaces, heat pumps and mini-splits, "
+               "ductwork and its sealing, filters and maintenance, thermostats, ventilation and moisture.",
+               skills=("Construction",), loops=("trades.depth",),
+               limits="Work a code or a licence requires is named as such, with who to call, and walked through only where a homeowner may legally do it under a permit (DEC-0149); safety first in every procedure; codes vary by place, so every code note says to check with the local building department. Refrigerant work needs a certified technician (EPA Section 608 in the US).",
+               starts_from=("How do you size heating and cooling for a room or a building?",
+                            "How do you install and seal ductwork so it delivers its airflow?",
+                            "What can a homeowner maintain on a furnace or a heat pump, and what needs a technician?"),
+               words=("hvac", "furnace", "heat pump", "air conditioner", "mini split", "minisplit", "duct", "filter",
+                      "thermostat", "ventilation", "heating", "cooling")),
+    Specialist("appliances", "Appliances", "Household appliances: how washers, dryers, refrigerators, ranges, "
+               "dishwashers and water heaters work, diagnosing them in order, testing parts with a multimeter, and "
+               "replacing common parts.", skills=("Construction",), loops=("trades.depth",),
+               limits="Work a code or a licence requires is named as such, with who to call, and walked through only where a homeowner may legally do it under a permit (DEC-0149); safety first in every procedure; codes vary by place, so every code note says to check with the local building department. Unplug or switch off at the breaker before opening any appliance; gas appliances "
+               "follow the gas stop rule.",
+               starts_from=("How do you diagnose an electric dryer that runs but doesn't heat?",
+                            "How do you diagnose a refrigerator that isn't cooling?",
+                            "How do you safely test an appliance part with a multimeter?"),
+               words=("appliance", "dryer", "washer", "fridge", "refrigerator", "dishwasher", "range", "oven",
+                      "freezer", "ice maker", "multimeter")),
+    Specialist("exterior", "Roofing, siding and windows", "The building's skin: roofing (underlayment, drip edge, "
+               "shingles and metal), flashing, house wrap, siding, windows and doors, gutters, and keeping water out.",
+               skills=("Construction",), loops=("trades.depth",), limits="Work a code or a licence requires is named as such, with who to call, and walked through only where a homeowner may legally do it under a permit (DEC-0149); safety first in every procedure; codes vary by place, so every code note says to check with the local building department. Fall protection on every roof.",
+               starts_from=("How do you install underlayment, drip edge and asphalt shingles to the maker's specs?",
+                            "How do you flash a window in a wall with house wrap?",
+                            "How do you install lap siding so it sheds water?"),
+               words=("roof", "roofing", "shingle", "siding", "flashing", "gutter", "window", "house wrap", "soffit",
+                      "fascia", "metal roof", "drip edge")),
 )
 
 BY_ID = {s.id: s for s in SPECIALISTS}

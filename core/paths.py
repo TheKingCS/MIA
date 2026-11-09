@@ -144,6 +144,7 @@ def register(program: Program) -> Program:
 def _builtins() -> None:
     """Imports the modules that register built-in programs."""
     import core.guitar  # noqa: F401
+    import core.carpentry  # noqa: F401  (Trade Master's first apprentice program, DEC-0149)
 
 
 def program_of(context, path_id: str) -> Optional[Program]:

@@ -70,12 +70,12 @@ def test_answers_say_where_they_come_from_and_whether_confirmed(tmp_path):
     sp.confirm("homesteading", note["id"], tmp_path)
     assert "(confirmed by a person)" in sp.answer("hens laying winter", folder=tmp_path)
     unknown = sp.answer("what gauge wire for a 20 amp circuit on my neighbour's deck", folder=tmp_path)
-    assert "construction specialist doesn't have a note" in unknown
-    book = sp.book("construction", tmp_path)
+    assert "electrical specialist doesn't have a note" in unknown  # a trade's own specialist (DEC-0149)
+    book = sp.book("electrical", tmp_path)
     assert book["unanswered"] == 1 and not any("neighbour" in q for q in book["questions"])  # never their words
-    assert sp.next_to_study(tmp_path).id == "construction"  # asked and couldn't answer: it studies first
+    assert sp.next_to_study(tmp_path).id == "electrical"  # asked and couldn't answer: it studies first
     sp.answer("what gauge wire for a 20 amp deck circuit", folder=tmp_path, keep_question=True)
-    assert "what gauge wire for a 20 amp deck circuit" in sp.book("construction", tmp_path)["questions"]
+    assert "what gauge wire for a 20 amp deck circuit" in sp.book("electrical", tmp_path)["questions"]
     assert [s.id for s in sp.who_knows("my meshtastic antenna")][0] == "radio"
 
 
