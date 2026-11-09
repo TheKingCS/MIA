@@ -5,7 +5,7 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-08 (evening, after the engine and design sessions' unattended runs)*
+*Last updated: 2026-11-08 (evening: the glasses cards, after the unattended runs)*
 
 **New 2026-11-08 (engine session's unattended run, 09:42 to evening): what's built, and what's next.** Built, core
 only, all pushed: the deep What's Next (DEC-0144, every chain); T-0020 repository inspection plus the weekly docs
@@ -75,7 +75,9 @@ forest for the Plants portal", `portal.picture`, `set_portal_picture`; the Nexus
 `play_world_turn`, the story from the engine's `turns_in`), **Connections' "What She Found First"** (the engine's
 research, on the page and by voice), and every remaining test helper documented except the budget and Plaid files
 (waiting on Zac's Plaid work). K-0137, K-0138. All 96 pages pass the demo sweep on desktop and phone, none wider than
-the phone. Afternoon (Zac still away), screens for each engine piece as it landed: the Greenhouse's **What's Next**
+the phone. Evening (Zac back, "build out the glasses screens"): **every app has a glasses card** but Passwords and Look
+(core/glasses_cards.py; DEC-0125 note), plus What's Next, Your Campaign, My Directions and Connections on existing
+cards; demo data in docs/schema/glasses*.example.json regenerated from each screen's own demo. Afternoon (Zac still away), screens for each engine piece as it landed: the Greenhouse's **What's Next**
 shows "step 1 of N on the way to…", the whole path and the checks behind it, and where the budget came from;
 **About MIA** shows how her apps are doing on this device (DEC-0057; Diagnostics' and Settings' stale "no web screen
 yet" limits corrected); **Diagnostics** shows her own repository's findings (T-0020); the **development board** shows

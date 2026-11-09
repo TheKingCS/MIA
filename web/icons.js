@@ -72,8 +72,13 @@
     plus: '<path d="M12 5v14M5 12h14"/>',
     journal: '<path d="M6 3.5h11.5a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6Z"/><path d="M6 3.5v17M9.5 8h6M9.5 11.5h6"/>',
     model: '<rect x="6" y="6" width="12" height="12" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+    // 2026-11-08 (the glasses' new cards): Play, Good News Radio, her browser
+    play: '<circle cx="9" cy="9" r="5.5"/><path d="M13 13l6.5 6.5M17 19.5l2.5-2.5"/><circle cx="17.5" cy="6.5" r="1.5"/>',
+    good_news: '<rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M7 9l10-5"/><circle cx="15.5" cy="14.75" r="2.75"/><path d="M6.5 13h4M6.5 16.5h4"/>',
+    browser: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5Z"/>',
   };
-  const ALIAS = { web_home: "mia", module_browser: "apps", voice: "mic", quick_add: "plus", add: "plus", budget_card: "budget" };
+  const ALIAS = { web_home: "mia", module_browser: "apps", voice: "mic", quick_add: "plus", add: "plus", budget_card: "budget",
+    operating_journal: "journal", life_notes: "notes" };
 
   function name(id) { return ALIAS[id] || id; }
   function has(id) { return Object.prototype.hasOwnProperty.call(P, name(id)); }

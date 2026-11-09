@@ -443,6 +443,11 @@
      "type": "panel"
     },
     {
+     "id": "next",
+     "label": "What's Next",
+     "type": "panel"
+    },
+    {
      "id": "pin",
      "label": "Pin To Glasses",
      "type": "action",
@@ -684,6 +689,16 @@
    "ask": "What have you noticed lately?",
    "pinned": false,
    "menu": [
+    {
+     "id": "noticed",
+     "label": "What MIA Noticed",
+     "type": "panel"
+    },
+    {
+     "id": "connections",
+     "label": "Connections",
+     "type": "panel"
+    },
     {
      "id": "ask0",
      "label": "What have you noticed lately",
@@ -1109,16 +1124,21 @@
    "name": "Diagnostics",
    "full_name": "Diagnostics",
    "tagline": "How MIA is doing.",
-   "status": "",
+   "status": "Is the PC ready for MIA?",
    "tone": "calm",
    "ask": "How is the computer doing?",
    "pinned": false,
    "menu": [
     {
+     "id": "health",
+     "label": "PC Health",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
-     "label": "How is the computer doing",
+     "label": "How is my system health",
      "type": "ask",
-     "say": "How is the computer doing?"
+     "say": "How is my system health?"
     },
     {
      "id": "pin",
@@ -1135,6 +1155,758 @@
     }
    ],
    "tiles": []
+  },
+  {
+   "id": "dungeon",
+   "name": "The Dungeon",
+   "full_name": "The Dungeon",
+   "tagline": "Clear the run. Bank the loot.",
+   "status": "$193.50 so far",
+   "tone": "calm",
+   "ask": "How much loot this week?",
+   "pinned": false,
+   "tiles": [
+    {
+     "label": "Week",
+     "value": "$193.50",
+     "tone": ""
+    },
+    {
+     "label": "Pace",
+     "value": "$989.00",
+     "tone": ""
+    },
+    {
+     "label": "Banked",
+     "value": "$2,920.72",
+     "tone": ""
+    }
+   ],
+   "menu": [
+    {
+     "id": "week",
+     "label": "This Week",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "How much loot did I make this week",
+     "type": "ask",
+     "say": "How much loot did I make this week?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "dungeon",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "issues",
+   "name": "Fix-It Log",
+   "full_name": "Fix-It Log",
+   "tagline": "Where MIA stumbled, so it gets fixed.",
+   "status": "The log shift tool broke",
+   "tone": "calm",
+   "ask": "What's been going wrong?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "open",
+     "label": "Open Issues",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "What is in the Fix-It Log",
+     "type": "ask",
+     "say": "What is in the Fix-It Log?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "issues",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "compliance",
+   "name": "Compliance",
+   "full_name": "Compliance",
+   "tagline": "Every deadline, on time.",
+   "status": "Federal income tax return (Form 1040)",
+   "tone": "attention",
+   "ask": "What's due for taxes?",
+   "pinned": false,
+   "tiles": [
+    {
+     "label": "Overdue",
+     "value": "2",
+     "tone": "attention"
+    },
+    {
+     "label": "Soon",
+     "value": "1",
+     "tone": ""
+    },
+    {
+     "label": "Open",
+     "value": "6",
+     "tone": ""
+    }
+   ],
+   "menu": [
+    {
+     "id": "due",
+     "label": "Deadlines",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "What deadlines are coming up",
+     "type": "ask",
+     "say": "What deadlines are coming up?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "compliance",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "flock",
+   "name": "Chickens",
+   "full_name": "Chickens",
+   "tagline": "Eggs, every day.",
+   "status": "7 eggs today",
+   "tone": "calm",
+   "ask": "How many eggs this week?",
+   "pinned": false,
+   "tiles": [
+    {
+     "label": "Today",
+     "value": "7",
+     "tone": ""
+    },
+    {
+     "label": "Week",
+     "value": "65",
+     "tone": ""
+    },
+    {
+     "label": "Hens",
+     "value": "12",
+     "tone": ""
+    }
+   ],
+   "menu": [
+    {
+     "id": "eggs",
+     "label": "Eggs",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "How many eggs did the hens lay today",
+     "type": "ask",
+     "say": "How many eggs did the hens lay today?"
+    },
+    {
+     "id": "ask1",
+     "label": "How many eggs this week",
+     "type": "ask",
+     "say": "How many eggs this week?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "flock",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "business",
+   "name": "Orders & Quotes",
+   "full_name": "Orders & Quotes",
+   "tagline": "Customers, quotes and orders.",
+   "status": "Engraved sign",
+   "tone": "calm",
+   "ask": "How much profit did I make this month?",
+   "pinned": false,
+   "tiles": [
+    {
+     "label": "Orders",
+     "value": "3",
+     "tone": ""
+    },
+    {
+     "label": "Quotes",
+     "value": "1",
+     "tone": ""
+    },
+    {
+     "label": "Owed",
+     "value": "$248.00",
+     "tone": ""
+    }
+   ],
+   "menu": [
+    {
+     "id": "orders",
+     "label": "Open Orders",
+     "type": "panel"
+    },
+    {
+     "id": "quotes",
+     "label": "Open Quotes",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "How much profit did I make this month",
+     "type": "ask",
+     "say": "How much profit did I make this month?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "business",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "insurance",
+   "name": "Insurance",
+   "full_name": "Insurance",
+   "tagline": "Covered, for less.",
+   "status": "Truck insurance",
+   "tone": "attention",
+   "ask": "When does my car insurance renew?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "renewals",
+     "label": "Renewals",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "When does my insurance renew",
+     "type": "ask",
+     "say": "When does my insurance renew?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "insurance",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "security",
+   "name": "Security",
+   "full_name": "Security",
+   "tagline": "Your cameras, at home.",
+   "status": "Front Door",
+   "tone": "calm",
+   "ask": "Are the cameras working?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "cameras",
+     "label": "Cameras",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Are the cameras working",
+     "type": "ask",
+     "say": "Are the cameras working?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "security",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "reward_shop",
+   "name": "Reward Shop",
+   "full_name": "Reward Shop",
+   "tagline": "Spend what you earn.",
+   "status": "850 credits",
+   "tone": "attention",
+   "ask": "What can I buy with my credits?",
+   "pinned": false,
+   "tiles": [
+    {
+     "label": "Credits",
+     "value": "850",
+     "tone": ""
+    },
+    {
+     "label": "Ready",
+     "value": "2",
+     "tone": ""
+    },
+    {
+     "label": "Bought",
+     "value": "0",
+     "tone": ""
+    }
+   ],
+   "menu": [
+    {
+     "id": "rewards",
+     "label": "Rewards",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "What can I buy with my credits",
+     "type": "ask",
+     "say": "What can I buy with my credits?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "reward_shop",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "vault",
+   "name": "Memory Vault",
+   "full_name": "Memory Vault",
+   "tagline": "Your photos, kept safe.",
+   "status": "Copying to the home computer…",
+   "tone": "attention",
+   "ask": "Are my photos backed up?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "status",
+     "label": "Memory Vault",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Do I have photos of the garden",
+     "type": "ask",
+     "say": "Do I have photos of the garden?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "vault",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "knowledge",
+   "name": "Knowledge",
+   "full_name": "Knowledge",
+   "tagline": "The offline library.",
+   "status": "Wikipedia: Medicine",
+   "tone": "calm",
+   "ask": "How do I purify water?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "packs",
+     "label": "Offline Library",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Which woodworking plans do you have",
+     "type": "ask",
+     "say": "Which woodworking plans do you have?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "knowledge",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "toolbox",
+   "name": "Toolbox",
+   "full_name": "Toolbox",
+   "tagline": "Quick tools.",
+   "status": "05:30 Work",
+   "tone": "calm",
+   "ask": "Convert 5 gallons to liters.",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "alarms",
+     "label": "Alarms",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Can you convert 5 gallons to liters",
+     "type": "ask",
+     "say": "Can you convert 5 gallons to liters?"
+    },
+    {
+     "id": "ask1",
+     "label": "How many board feet in a 2x6 that is 8 feet long",
+     "type": "ask",
+     "say": "How many board feet in a 2x6 that is 8 feet long?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "toolbox",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "operating_journal",
+   "name": "Operating Journal",
+   "full_name": "Operating Journal",
+   "tagline": "How you mean to live, and how you do.",
+   "status": "Pay myself first on payday.",
+   "tone": "attention",
+   "ask": "Am I living how I said I want to?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "how",
+     "label": "How I'm Living",
+     "type": "panel"
+    },
+    {
+     "id": "directions",
+     "label": "My Directions",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Am I living how I said I want to",
+     "type": "ask",
+     "say": "Am I living how I said I want to?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "operating_journal",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "life_notes",
+   "name": "Kept",
+   "full_name": "Kept",
+   "tagline": "What you said you'd do.",
+   "status": "Sam: fix his gate (by Saturday)",
+   "tone": "attention",
+   "ask": "What did I promise?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "promises",
+     "label": "Promises",
+     "type": "panel"
+    },
+    {
+     "id": "ideas",
+     "label": "Ideas",
+     "type": "panel"
+    },
+    {
+     "id": "decisions",
+     "label": "Decisions",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "What did I promise",
+     "type": "ask",
+     "say": "What did I promise?"
+    },
+    {
+     "id": "ask1",
+     "label": "What ideas have I had",
+     "type": "ask",
+     "say": "What ideas have I had?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "life_notes",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "play",
+   "name": "Play",
+   "full_name": "Play",
+   "tagline": "Games and sports, counted.",
+   "status": "100 min of play this week",
+   "tone": "calm",
+   "ask": "Played pickleball for an hour, it was hard.",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "week",
+     "label": "This Week",
+     "type": "panel"
+    },
+    {
+     "id": "campaign",
+     "label": "Your Campaign",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "How much have I played this week",
+     "type": "ask",
+     "say": "How much have I played this week?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "play",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "good_news",
+   "name": "Good News Radio",
+   "full_name": "Good News Radio",
+   "tagline": "What went right today.",
+   "status": "A river cleanup removed 12 tons of trash",
+   "tone": "attention",
+   "ask": "What's the good news?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "today",
+     "label": "Today's Stories",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "What's the good news",
+     "type": "ask",
+     "say": "What's the good news?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "good_news",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "browser",
+   "name": "Browser",
+   "full_name": "Browser",
+   "tagline": "She browses. You approve.",
+   "status": "Press \"Pay now\" on the county tax site",
+   "tone": "attention",
+   "ask": "Open the county website.",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "waiting",
+     "label": "Waiting For You",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Which browser tasks have you learned",
+     "type": "ask",
+     "say": "Which browser tasks have you learned?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "browser",
+       "favorite": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "files",
+   "name": "Files",
+   "full_name": "Files",
+   "tagline": "Your files.",
+   "status": "Receipts/",
+   "tone": "calm",
+   "ask": "What's in my MIA folder?",
+   "pinned": false,
+   "tiles": [],
+   "menu": [
+    {
+     "id": "folder",
+     "label": "MIA Folder",
+     "type": "panel"
+    },
+    {
+     "id": "ask0",
+     "label": "Which files are in my MIA folder",
+     "type": "ask",
+     "say": "Which files are in my MIA folder?"
+    },
+    {
+     "id": "pin",
+     "label": "Pin To Glasses",
+     "type": "action",
+     "action": {
+      "kind": "app.favorite",
+      "label": "Pin",
+      "params": {
+       "module_id": "files",
+       "favorite": true
+      }
+     }
+    }
+   ]
   }
  ],
  "hint": "",
@@ -1146,6 +1918,7 @@
   "fitness.step",
   "fitness.training_done",
   "grocery.check",
+  "life_note.done",
   "maintenance.done",
   "meal.prep_done",
   "mission.complete",

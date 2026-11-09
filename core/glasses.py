@@ -18,6 +18,9 @@ menu. Assembled here, in code, so `web/glasses.js` holds no logic
   the canvas's GlassesHome, DEC-0113), and `areas` for the Nexus's ring
   (`glasses_areas`: each area with its apps here, hue and what needs you;
   `short_name` fits its name on the ring; DEC-0130).
+- Every app has a card but Passwords (no secrets on the display) and Look (the
+  glasses' own camera, still to come): the apps that only had an ask got
+  theirs in core/glasses_cards.py (2026-11-08), merged into PANELS below.
 - `glasses_panel(context, app_id, item_id)`: what one menu item shows: a
   title and a few lines, each line optionally carrying the action it
   proposes. Served as `/api/glasses/{app_id}/{item_id}`.
@@ -34,7 +37,7 @@ and a second gesture approves it (H-0008, H-0012).
 
 **What the glasses may change** is `GLASSES_KINDS`: quick, everyday,
 non-destructive things (ate it, a step done, a mission claimed, a chore
-or upkeep done, a grocery item checked). Nothing that deletes, nothing
+or upkeep done, a grocery item checked, a promise kept). Nothing that deletes, nothing
 that needs a typed number, and no money (H-0041: money stays readouts on
 the glasses in v1). A line whose action isn't in the list is shown as a
 readout only.
@@ -65,6 +68,8 @@ GLASSES_KINDS = frozenset({
     "trip.arrived",
     # the course to continue in the Classroom: a lesson ticked done (its skill XP credited once)
     "lesson.done",
+    # Kept's open promises (core/glasses_cards.py, 2026-11-08): "Done", undoable
+    "life_note.done",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
@@ -1259,6 +1264,18 @@ ASKS: dict[str, tuple[str, ...]] = {
     "files": ("Which files are in my MIA folder?",),
 }
 
+# The cards for the apps that only had an ask (core/glasses_cards.py, Zac, 2026-11-08): each app's readout panels,
+# from its own page assembler; its asks above stay after them in the menu.
+from core.glasses_cards import PANELS as _MORE_PANELS  # noqa: E402  (it builds on _line and _panel above)
+from core.glasses_cards import STATUS_FROM as _MORE_STATUS  # noqa: E402
+from core.glasses_cards import status as _more_status  # noqa: E402
+
+PANELS.update(_MORE_PANELS)
+from core.glasses_cards import EXTRA as _MORE_ITEMS  # noqa: E402  (What's Next, Your Campaign, My Directions, Connections)
+
+for _app, _items in _MORE_ITEMS.items():
+    PANELS[_app] = PANELS.get(_app, ()) + _items
+
 
 EQUIPMENT_SCOPES = ("garage", "greenhouse")
 
@@ -1345,6 +1362,10 @@ def _calendar_tiles(context, today) -> list[dict]:
 # The numbers at the top of an app's screen. No money here (H-0041).
 TILES = {"kitchen": _kitchen_tiles, "workout": _workout_tiles, "garage": _equipment_tiles("garage"),
          "greenhouse": _equipment_tiles("greenhouse"), "calendar": _calendar_tiles, "music": _music_tiles}
+# The new cards' tiles (core/glasses_cards.py, 2026-11-08): Chickens, the Dungeon, Compliance, Reward Shop, Orders.
+from core.glasses_cards import TILES as _MORE_TILES  # noqa: E402
+
+TILES.update(_MORE_TILES)
 
 
 def _tiles(context, module_id: str, today: date) -> list[dict]:
@@ -1412,7 +1433,8 @@ def priority_tone(apps: list[dict]) -> str:
 
 def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str] = None) -> dict:
     """The person's glasses cards: their pinned apps (favorites), then the
-    rest behind "All apps". Each card has a status line and its menu; Home's
+    rest behind "All apps". Each card has a status line (its at-a-glance line, or for the cards drawn 2026-11-08 their
+    first panel's first line: core/glasses_cards.status) and its menu; Home's
     line is `priority`, with `priority_tone` for her orb; `areas` is the Nexus's ring (glasses_areas)."""
     from core.focus_presets import favorite_apps
     from core.web_surfaces import dashboard
@@ -1440,6 +1462,8 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
             g = _equipment_status(context, app.module_id, today)
         elif app.module_id == "calendar":
             g = calendar_status(context, today)
+        elif not g.get("line") and app.module_id in _MORE_STATUS:
+            g = _more_status(context, app.module_id, today)
         return {
             "id": app.module_id, "name": SHORT_NAMES.get(app.module_id, app.name), "full_name": app.name,
             "tagline": app.tagline, "status": g.get("line") or "", "tone": g.get("tone") or "calm",
