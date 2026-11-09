@@ -1,6 +1,7 @@
 """The Dungeon (DEC-0046): work as a dungeon you loot every day. Runs and
 their loot, overtime bosses, projected and banked loot, the hard-mode
-record, and the Game Master's quests."""
+record, the Game Master's quests, and shift differentials and tips in
+the loot."""
 
 from datetime import date, timedelta
 
@@ -180,3 +181,42 @@ def test_the_week_counts_its_runs_cleared_out_of_all_of_them():
             R(date="2026-11-05", status="planned"), R(date="2026-11-10", status="planned"),  # next week
             R(date="2026-11-04", status="skipped")]
     assert _week_runs(runs, monday, monday + timedelta(days=6)) == {"runs_cleared": 2, "runs": 3}
+
+
+def test_a_shift_differential_is_paid_on_every_hour_and_tips_are_added_as_they_are():
+    from core.work_dungeon import Dungeon, Run, extras, parse_days, run_differential, run_loot
+
+    d = Dungeon("d1", "Work", hourly=20, overtime_multiplier=1.5, differential=2,
+                differential_days=parse_days("weekends"))
+    saturday = Run("r1", "d1", "2026-11-07", hours=8, tips=30)
+    monday = Run("r2", "d1", "2026-11-09", hours=8)
+    own = Run("r3", "d1", "2026-11-10", hours=8, differential=1.0)
+    assert run_differential(d, saturday) == 2 and run_differential(d, monday) == 0 and run_differential(d, own) == 1
+    assert extras(d, saturday, 6, 2) == 2 * (6 + 2 * 1.5) + 30  # overtime hours carry the differential at 1.5x
+    assert run_loot(d, saturday, 6, 2) == 6 * 20 + 2 * 30 + 18 + 30
+    assert run_loot(d, monday, 8, 0) == 160
+    assert parse_days("sat, Sunday") == ["Saturday", "Sunday"]
+    with pytest.raises(ValueError):
+        parse_days("someday")
+
+
+def test_differentials_and_tips_through_the_actions_and_the_screen(work):
+    from core.region import money
+    from core.web_dungeon import dungeon_page
+
+    w = work
+    do(w, "dungeon.add", name="The diner", hourly=10, differential=1.5, differential_days="weekends")
+    assert w.dungeon.dungeons[0].differential_days == ["Saturday", "Sunday"]
+    saturday = date.today() - timedelta(days=(date.today().weekday() - 5) % 7 or 7)
+    p = do(w, "dungeon.run", date=saturday.isoformat(), hours=8, tips="45.50")
+    assert money(10 * 8 + 1.5 * 8 + 45.5) in p.summary and "tips" in p.summary
+    run = w.dungeon.runs[0]
+    assert run.tips == 45.5
+    do(w, "dungeon.tips", run_id=run.run_id, tips=60)
+    assert w.dungeon.runs[0].tips == 60
+    v = dungeon_page(w, today=saturday)["dungeons"][0]
+    row = v["runs"][0]
+    assert row["loot"] == 80 + 12 + 60 and row["tips_text"] == money(60) and row["differential"] == 1.5
+    assert v["week"]["earned"] == 152 and "Saturday, Sunday" in v["rates"]["differential_text"]
+    with pytest.raises(Exception, match="amount"):
+        do(w, "dungeon.tips", run_id=run.run_id, tips="lots")

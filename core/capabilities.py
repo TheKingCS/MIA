@@ -48,7 +48,7 @@ LIMITS = {
     "web_home": "",
     "dashboard": "Retired: Home shows what it showed.",
     "issues": "MIA finds and groups the problems; fixing her code is Claude's job, tested before it ships, never hers.",
-    "dungeon": "Loot is pay before taxes, worked out from your hours; what reaches the bank comes from the bank sync. Shift differentials and tips aren't counted yet.",
+    "dungeon": "Loot is pay before taxes, worked out from your hours with any shift differential and the tips you enter; what reaches the bank comes from the bank sync.",
     "operating_journal": "Lines MIA can't see in your records (sleep, mood, focus) are yours to rate; she never judges the gap.",
     "play": "Training load needs how hard it was; without it she counts a middle effort and asks next time.",
     "life_notes": "Kept only on your yes, from plain first-person words (\"I promised...\", \"we're going with...\"); some slip by, so tell her again.",

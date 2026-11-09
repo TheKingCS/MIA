@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1326 files, 288,225 lines; 1326 files describe themselves; 16,187 of 16,281 classes and functions are documented.
+1326 files, 288,431 lines; 1326 files describe themselves; 16,198 of 16,292 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-497 files, 137,804 lines; 7,340 of 7,426 classes and functions documented
+497 files, 137,958 lines; 7,349 of 7,435 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -783,7 +783,7 @@
 
 ## tests/: the test suite: what each part must do
 
-455 files, 76,344 lines; 6,557 of 6,565 classes and functions documented
+455 files, 76,385 lines; 6,559 of 6,567 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -837,7 +837,7 @@
 - `tests/test_calendar_manager.py`: Unit tests for core.calendar_manager. Isolates _DATA_DIR/_EVENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/calendar_events.json.
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions.
 - `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
-- `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, what broke
+- `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, a missing 
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
@@ -1225,7 +1225,7 @@
 - `tests/test_why_graph.py`: Slice B, "Remember Why": the reason chain on Intents, the evidence builder (core/why_graph.py), the tools (core/assistant_why_actions.py), and the Perspective path. Checks facts and structure, never wording.
 - `tests/test_work_activity.py`: Who did what to the development work (DEC-0068, core/work_activity.py): an append-only log, searchable, that says where an interrupted task got to, and closing a task gathers its evidence.
 - `tests/test_work_dashboard.py`: The development dashboard (DEC-0068/0070, core/work_dashboard.py): the device's owner sees the work, the queue and the history; nobody else does.
-- `tests/test_work_dungeon.py`: The Dungeon (DEC-0046): work as a dungeon you loot every day. Runs and their loot, overtime bosses, projected and banked loot, the hard-mode record, and the Game Master's quests.
+- `tests/test_work_dungeon.py`: The Dungeon (DEC-0046): work as a dungeon you loot every day. Runs and their loot, overtime bosses, projected and banked loot, the hard-mode record, the Game Master's quests, and shift differentials and tips in the loot.
 - `tests/test_work_loop.py`: The agent registry and the loop (DEC-0068/0069, core/work_agents.py and core/work_loop.py): a task worked from claim to review through the lab, resumed where it stopped, and only by a role whose tier allows it.
 - `tests/test_work_mvp.py`: The MIA-DII MVP, end to end (DEC-0070; the acceptance list in docs/DEV_ECOSYSTEM_AUDIT.md section 11 and the spec's section 9): one task from creation to Zac's approval, through the real task records, activity log, agent registry, loop, review and dashboard, with a stand-in lab so no git or real cod
 - `tests/test_work_review.py`: Independent review and Zac's approval (DEC-0069, core/work_review.py): never reviewed by its author, approved only by a person at the keyboard, and only after a review that approves it.
@@ -1243,7 +1243,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-104 files, 18,841 lines
+104 files, 18,852 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

@@ -4,7 +4,9 @@
  * say what made it hard mode, the overtime line, planned runs, make a hard
  * day a quest), Loot (this week earned and projected, the month, the year at
  * this pace, banked paychecks, the next dungeon), Record (the hard-mode
- * record with its dates, recent runs) and Setup (the job and its pay).
+ * record with its dates, recent runs) and Setup (the job and its pay, a shift
+ * differential and its days). Tips go in when a run is cleared or after
+ * (dungeon.tips), and count in its loot.
  * Every change is an action (core/dungeon_actions.py). Formatting only.
  */
 (function () {
@@ -46,11 +48,15 @@
     if (v) act({ kind: "dungeon.run", params: { dungeon_id: d.id, date: r.date, hours: v.hours } });
   }
   const remove = (r) => act({ kind: "dungeon.run_delete", params: { run_id: r.id } });
+  async function addTips(r) {  // tips counted after the shift (dungeon.tips)
+    const v = await form("Tips For " + day(r.date), [field("tips", "Tips taken", "money", r.tips || "", true)], {});
+    if (v) act({ kind: "dungeon.tips", params: { run_id: r.id, tips: v.tips } });
+  }
   const quest = (affix) => act({ kind: "dungeon.quest", params: { challenge: affix.id || affix.name } });
 
-  function clearToday(d, hoursInput, noteInput) {
+  function clearToday(d, hoursInput, noteInput, tipsInput) {
     act({ kind: "dungeon.run", params: { dungeon_id: d.id, hours: hoursInput.value, hard_mode: [...picked].join(","),
-      overtime: calledIn ? "yes" : "", note: noteInput.value } }).then((done) => { if (done) { picked.clear(); calledIn = false; } });
+      overtime: calledIn ? "yes" : "", note: noteInput.value, tips: tipsInput.value } }).then((done) => { if (done) { picked.clear(); calledIn = false; } });
   }
 
   // ------------------------------------------------------------ views
@@ -58,6 +64,7 @@
     return el("li", { class: "dg-run" + (r.boss ? " boss" : "") + (r.affixes.length ? " hard" : "") },
       el("div", {}, el("div", { class: "row-title" }, (r.boss ? "⚔ Boss · " : "") + day(r.date) + " · " + r.hours + " h"),
         el("div", { class: "row-sub" }, [r.loot_text && r.loot_text + " loot", r.bonus_text && r.bonus_text + " boss bonus",
+          r.differential_text, r.tips_text && r.tips_text + " tips",
           r.status === "cleared" ? "+" + r.xp + " XP" : null, r.note].filter(Boolean).join(" · ")),
         r.affixes.length ? el("div", { class: "dg-affixes" }, r.affixes.map((a) => chip(a.name, "chip-soon"))) : null),
       extra || null);
@@ -66,13 +73,14 @@
   function enter(d) {
     const t = d.today;
     if (t && t.status === "cleared") {
-      return section("Run Cleared", null, el("ul", { class: "dg-runs" }, runLine(d, t)),
+      return section("Run Cleared", null, el("ul", { class: "dg-runs" }, runLine(d, t, buttons(btn(t.tips ? "Change Tips" : "Add Tips", "btn-ghost btn-small", () => addTips(t))))),
         t.affixes.length ? el("p", { class: "dim" }, "Cleared on hard mode. Want it as a quest too?") : null,
         t.affixes.length ? buttons(...t.affixes.map((a) => btn("Make " + a.name + " A Quest", "btn-ghost btn-small", () => quest(a)))) : null);
     }
     const hours = el("input", { type: "number", step: "any", min: "0", inputmode: "decimal", id: "dg-hours",
       value: String(t ? t.hours : d.values.shift_hours || 8) });
     const note = el("input", { type: "text", id: "dg-note", placeholder: "Anything to remember (optional)" });
+    const tips = el("input", { type: "number", step: "0.01", min: "0", inputmode: "decimal", id: "dg-tips", placeholder: "0" });
     const chips = page.affixes.map((a) => {
       const b = el("button", { type: "button", class: "chip-button dg-affix", "aria-pressed": String(picked.has(a.id)), title: a.line,
         onclick: () => { picked.has(a.id) ? picked.delete(a.id) : picked.add(a.id); b.setAttribute("aria-pressed", String(picked.has(a.id))); lines(); } },
@@ -100,8 +108,9 @@
       el("div", { class: "dg-affixes dg-overtime" }, boss),
       el("div", { class: "dg-fields" },
         el("label", { class: "form-row", for: "dg-hours" }, el("span", {}, "Hours"), hours),
+        el("label", { class: "form-row", for: "dg-tips" }, el("span", {}, "Tips (optional)"), tips),
         el("label", { class: "form-row", for: "dg-note" }, el("span", {}, "Note (optional)"), note)),
-      el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => clearToday(d, hours, note) }, "Run Cleared"));
+      el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => clearToday(d, hours, note, tips) }, "Run Cleared"));
   }
 
   // The canvas's boss card: overtime is the boss; what it pays, and when it starts this week.
@@ -201,7 +210,8 @@
           : el("p", { class: "empty" }, "No hard-mode runs in the last two months."),
         el("p", { class: "dim" }, "Plain dates, no names: if you ever raise it at work, this is the pattern.")),
       section("Recent Runs", null, d.runs.length ? el("ul", { class: "dg-runs" }, d.runs.map((r) =>
-        runLine(d, r, buttons(btn("Take Back", "btn-ghost btn-small", () => remove(r))))))
+        runLine(d, r, buttons(btn(r.tips ? "Change Tips" : "Add Tips", "btn-ghost btn-small", () => addTips(r)),
+          btn("Take Back", "btn-ghost btn-small", () => remove(r))))))
         : el("p", { class: "empty" }, "No runs cleared yet."))));
   }
 
@@ -214,9 +224,10 @@
     return [...page.dungeons.map((d) => section(d.name, buttons(btn("Change", "btn-ghost btn-small", () => setUp(d)),
         btn("Delete", "btn-ghost btn-small", () => act({ kind: "dungeon.delete", params: { dungeon_id: d.id } }))),
       tiles(["Pay An Hour", d.rates.hourly_text || "—"], ["Overtime", d.rates.overtime_text ? d.rates.overtime_text + " after " + d.rates.after + " h" : "—"],
-        ["Pay Week Starts", d.rates.week_starts], ["Paycheck Says", d.values.payer || "—"]))),
+        ["Pay Week Starts", d.rates.week_starts], ["Shift Differential", d.rates.differential_text || "—"],
+        ["Paycheck Says", d.values.payer || "—"]))),
       buttons(btn(page.dungeons.length ? "Add Another Dungeon" : "Set Up Your Dungeon", page.dungeons.length ? "btn-ghost" : "btn-amber", () => setUp(null))),
-      el("p", { class: "dim" }, "Loot is pay before taxes, worked out from your hours. What reaches the bank comes from the bank sync, never a guess.")];
+      el("p", { class: "dim" }, "Loot is pay before taxes, worked out from your hours, with any shift differential and the tips you enter. What reaches the bank comes from the bank sync, never a guess.")];
   }
 
   // ------------------------------------------------------------ the loop (DEC-0047, core/the_loop.py)

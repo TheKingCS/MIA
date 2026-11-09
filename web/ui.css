@@ -493,7 +493,8 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
   background: rgba(var(--rgb-win), 0.08); border: 1px solid rgba(var(--rgb-win), 0.25); }
 .dg-loot strong { font-family: var(--font-mono); font-size: var(--text-lg); color: var(--win); }
 .dg-run-card p { margin: 0; }
-.dg-fields { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0, 1fr); gap: 10px; }
+.dg-fields { display: grid; grid-template-columns: minmax(90px, 140px) minmax(90px, 140px) minmax(0, 1fr); gap: 10px; }
+@media (max-width: 520px) { .dg-fields { grid-template-columns: 1fr 1fr; } .dg-fields .form-row:last-child { grid-column: 1 / -1; } }
 .dg-fields .form-row { margin: 0; }
 .dg-boss, .dg-week { display: grid; gap: 8px; margin-bottom: var(--gap); padding: 14px; }
 .dg-boss { border-color: rgba(var(--rgb-amber), 0.4); }
