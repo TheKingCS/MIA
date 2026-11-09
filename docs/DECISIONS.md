@@ -2598,7 +2598,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0109, DEC-0112, DEC-0118, DEC-0123, DEC-0144, DEC-0147
 
 ### DEC-0150: The aquaponics greenhouse: build it with MIA, then hand it to her
-- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- Status: APPROVED (Zac, 2026-11-08): (1) "Yes safely merge homestead into MIA" (merged locally and verified: MIA's
+  suite unchanged at 5,955 passing, the node's scenarios 242 of 245 as before, the 3 needing rsync; the push itself
+  was held by the session's safety check and waits for Zac to push or allow it); (2) the first version; (3) the
+  snapshot by hand and fetched over the home network or Tailscale now, a live link later; (4) MIA monitors and
+  proposes, the node and its safety MCU act; (5) the pilot cell first. **And (same message):** "MIA needs to be able
+  to flash/program the pi and other components and help me set them up when it comes time. Maybe have like preloaded
+  configs set up and all internal info able to be pushed by MIA": provisioning (flashing the safety MCU's firmware
+  from the PC over USB, preparing the Pi, configs generated in advance from the node's own templates, pushed to the
+  node), each step a person-approved action with the stop rules, secrets from the vault and never typed by a model.
 - From: Zac, 2026-11-08 ("walk through and execute the steps for building out the aquaponics greenhouse ...
   understand what technologies go into it, what she is able to connect to and configure ... build it and essentially
   pass her to it, so that she can integrate and monitor everything she has set up for monitoring").

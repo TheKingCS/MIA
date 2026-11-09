@@ -5,10 +5,10 @@ core.homestead_manager
 Watched-folder ingestion for MIA Home's summarized-state snapshots from
 sibling automation projects — the first (and so far only) source is
 MIA Homestead's greenhouse/aquaponics system
-(`~/Projects/mia-homestead`, a separate repo), which exports via its
-own `viewer/export_home_snapshot.py`. See that repo's
-`docs/MIA_HOME_SYNC_PLAN.md` for the full cross-project scoping this
-implements one half of.
+(`homestead/` in this repository since DEC-0145; once a separate repo),
+which exports via its own `homestead/viewer/export_home_snapshot.py`.
+See `homestead/docs/MIA_HOME_SYNC_PLAN.md` for the full cross-project
+scoping this implements one half of.
 
 Deliberately a sibling of `core/finance_manager.py`, not a shared
 abstraction over it — same reasoning `core/finance_manager.py`'s own
