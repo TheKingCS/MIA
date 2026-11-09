@@ -162,3 +162,20 @@ def test_a_long_sentence_splits_into_a_head_and_a_detail_where_it_reads_well():
     assert gc._split("Dream one small thing onto paper today — a creature.") == (
         "Dream one small thing onto paper today", "a creature.")
     assert gc._split("A short line.") == ("A short line.", "")
+
+
+def test_the_new_card_faces_carry_tiles_from_their_pages(monkeypatch):
+    import core.web_compliance as wc
+    import core.web_flock as wf
+
+    monkeypatch.setattr(wf, "flock_page", lambda context, today=None: _example("flock"))
+    monkeypatch.setattr(wc, "compliance_page", lambda context, today=None: _example("compliance"))
+    assert [(t["label"], t["value"]) for t in gc._flock_tiles(SimpleNamespace(), TODAY)] == [
+        ("Today", "7"), ("Week", "65"), ("Hens", "12")]
+    overdue = gc._compliance_tiles(SimpleNamespace(), TODAY)[0]
+    assert overdue == {"label": "Overdue", "value": "2", "tone": "attention"}
+
+
+def test_a_card_with_nothing_set_up_has_no_tiles():
+    for app in gc.TILES:
+        assert glasses._tiles(SimpleNamespace(config=None), app, TODAY) == []

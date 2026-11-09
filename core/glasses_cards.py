@@ -573,3 +573,67 @@ def status(context, app_id: str, today: date) -> dict:
         return {}
     tone = "attention" if any(line["tone"] in ("attention", "bad") for line in panel["lines"]) else ""
     return {"line": panel["lines"][0]["text"][:48], "tone": tone}
+
+
+# ------------------------------------------------------------ card-face tiles (the canvas's tile row, 2 to 4 each)
+
+def _tile(label: str, value, tone: str = "") -> dict:
+    """One tile on a card's face (core/glasses._tile's shape)."""
+    return {"label": label, "value": str(value), "tone": tone}
+
+
+def _flock_tiles(context, today: date) -> list[dict]:
+    """The Chickens card's face: eggs today, this week, hens."""
+    from core.web_flock import flock_page
+
+    page = flock_page(context, today)
+    t = (page.get("total") or {}) if page.get("available") else {}
+    return [_tile("Today", f"{t.get('today', 0):g}"), _tile("Week", f"{t.get('week', 0):g}"),
+            _tile("Hens", t.get("hens", 0))] if t else []
+
+
+def _dungeon_tiles(context, today: date) -> list[dict]:
+    """The Dungeon card's face: this week's loot, the projection, what's banked."""
+    from core.web_dungeon import dungeon_page
+
+    page = dungeon_page(context, today)
+    s = (page.get("summary") or {}) if page.get("available") else {}
+    return [_tile("Week", s.get("week_text", "")), _tile("Pace", s.get("projected_text", "")),
+            _tile("Banked", s.get("banked_text", ""))] if s else []
+
+
+def _compliance_tiles(context, today: date) -> list[dict]:
+    """The Compliance card's face: overdue (needs you), soon, open."""
+    from core.web_compliance import compliance_page
+
+    page = compliance_page(context, today)
+    c = (page.get("counts") or {}) if page.get("available") else {}
+    return [_tile("Overdue", c.get("overdue", 0), "attention" if c.get("overdue") else ""),
+            _tile("Soon", c.get("soon", 0)), _tile("Open", c.get("open", 0))] if c else []
+
+
+def _shop_tiles(context, today: date) -> list[dict]:
+    """The Reward Shop card's face: credits left, rewards ready to buy, bought."""
+    from core.game_layer import shop_page
+
+    page = shop_page(context)
+    if not page.get("available"):
+        return []
+    c, n = page.get("credits") or {}, page.get("counts") or {}
+    return [_tile("Credits", c.get("left", 0)), _tile("Ready", n.get("ready", 0)), _tile("Bought", n.get("bought", 0))]
+
+
+def _business_tiles(context, today: date) -> list[dict]:
+    """The Orders & Quotes card's face: open orders, open quotes, what's owed."""
+    from core.web_business import business_page
+
+    page = business_page(context, today)
+    if not page.get("available"):
+        return []
+    c = page.get("counts") or {}
+    return [_tile("Orders", c.get("open_orders", 0)), _tile("Quotes", c.get("open_quotes", 0)),
+            _tile("Owed", c.get("owed", ""))]
+
+
+TILES = {"flock": _flock_tiles, "dungeon": _dungeon_tiles, "compliance": _compliance_tiles,
+         "reward_shop": _shop_tiles, "business": _business_tiles}

@@ -1165,7 +1165,23 @@
    "tone": "calm",
    "ask": "How much loot this week?",
    "pinned": false,
-   "tiles": [],
+   "tiles": [
+    {
+     "label": "Week",
+     "value": "$193.50",
+     "tone": ""
+    },
+    {
+     "label": "Pace",
+     "value": "$989.00",
+     "tone": ""
+    },
+    {
+     "label": "Banked",
+     "value": "$2,920.72",
+     "tone": ""
+    }
+   ],
    "menu": [
     {
      "id": "week",
@@ -1239,7 +1255,23 @@
    "tone": "attention",
    "ask": "What's due for taxes?",
    "pinned": false,
-   "tiles": [],
+   "tiles": [
+    {
+     "label": "Overdue",
+     "value": "2",
+     "tone": "attention"
+    },
+    {
+     "label": "Soon",
+     "value": "1",
+     "tone": ""
+    },
+    {
+     "label": "Open",
+     "value": "6",
+     "tone": ""
+    }
+   ],
    "menu": [
     {
      "id": "due",
@@ -1276,7 +1308,23 @@
    "tone": "calm",
    "ask": "How many eggs this week?",
    "pinned": false,
-   "tiles": [],
+   "tiles": [
+    {
+     "label": "Today",
+     "value": "7",
+     "tone": ""
+    },
+    {
+     "label": "Week",
+     "value": "65",
+     "tone": ""
+    },
+    {
+     "label": "Hens",
+     "value": "12",
+     "tone": ""
+    }
+   ],
    "menu": [
     {
      "id": "eggs",
@@ -1319,7 +1367,23 @@
    "tone": "calm",
    "ask": "How much profit did I make this month?",
    "pinned": false,
-   "tiles": [],
+   "tiles": [
+    {
+     "label": "Orders",
+     "value": "3",
+     "tone": ""
+    },
+    {
+     "label": "Quotes",
+     "value": "1",
+     "tone": ""
+    },
+    {
+     "label": "Owed",
+     "value": "$248.00",
+     "tone": ""
+    }
+   ],
    "menu": [
     {
      "id": "orders",
@@ -1435,7 +1499,23 @@
    "tone": "attention",
    "ask": "What can I buy with my credits?",
    "pinned": false,
-   "tiles": [],
+   "tiles": [
+    {
+     "label": "Credits",
+     "value": "850",
+     "tone": ""
+    },
+    {
+     "label": "Ready",
+     "value": "2",
+     "tone": ""
+    },
+    {
+     "label": "Bought",
+     "value": "0",
+     "tone": ""
+    }
+   ],
    "menu": [
     {
      "id": "rewards",

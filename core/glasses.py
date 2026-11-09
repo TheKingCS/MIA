@@ -1362,6 +1362,10 @@ def _calendar_tiles(context, today) -> list[dict]:
 # The numbers at the top of an app's screen. No money here (H-0041).
 TILES = {"kitchen": _kitchen_tiles, "workout": _workout_tiles, "garage": _equipment_tiles("garage"),
          "greenhouse": _equipment_tiles("greenhouse"), "calendar": _calendar_tiles, "music": _music_tiles}
+# The new cards' tiles (core/glasses_cards.py, 2026-11-08): Chickens, the Dungeon, Compliance, Reward Shop, Orders.
+from core.glasses_cards import TILES as _MORE_TILES  # noqa: E402
+
+TILES.update(_MORE_TILES)
 
 
 def _tiles(context, module_id: str, today: date) -> list[dict]:
