@@ -2156,3 +2156,9 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .op-findings { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14.5px; line-height: 1.5; }
 .op-flow { margin: 0; color: rgb(var(--rgb-accent)); }
 .op-runs-note { margin: 0; font-size: 12.5px; }
+
+/* Waiting for the Internet (web/notifications.js): reminders kept for when MIA is back online. */
+.nt-online { display: grid; gap: 8px; padding: 14px 16px; margin-top: var(--gap); }
+.nt-online .pw-label, .nt-online p { margin: 0; }
+.nt-online-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.nt-online-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; }

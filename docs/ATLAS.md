@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1321 files, 287,581 lines; 1321 files describe themselves; 16,151 of 16,245 classes and functions are documented.
+1321 files, 287,704 lines; 1321 files describe themselves; 16,159 of 16,253 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-495 files, 137,457 lines; 7,320 of 7,406 classes and functions documented
+495 files, 137,524 lines; 7,326 of 7,412 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -781,7 +781,7 @@
 
 ## tests/: the test suite: what each part must do
 
-453 files, 76,158 lines; 6,541 of 6,549 classes and functions documented
+453 files, 76,190 lines; 6,543 of 6,551 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1196,7 +1196,7 @@
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets; sort a bank charge to
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
 - `tests/test_web_nexus.py`: The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096); the Nexus and an area's room share one 3D engine.
-- `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py).
+- `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py); and the r
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one.
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
 - `tests/test_web_progress_tree.py`: The Skills page's tree (core/web_progress.skill_tree): a column per tier, prerequisites from other categories in a first column marked outside, and a line from each prerequisite to the skill it opens, lit once the prerequisite has XP.
@@ -1239,7 +1239,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-103 files, 18,738 lines
+103 files, 18,762 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

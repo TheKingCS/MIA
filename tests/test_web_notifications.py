@@ -1,6 +1,7 @@
 """Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a
 warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions,
-and the same by voice (core/assistant_notification_actions.py)."""
+and the same by voice (core/assistant_notification_actions.py); and the reminders Waiting for the Internet, added
+and taken off as actions (online.remind, online.forget)."""
 
 from __future__ import annotations
 
@@ -56,3 +57,34 @@ def test_notifications_are_listed_explained_read_and_dismissed(home):
     assert registry._actions["mark_notifications_read"].handler(home, {}) == "Everything's already read."
     assert run(home, "notification.dismiss", notification_id=first.notification_id)[1] == "Dismissed “Backup finished”."
     assert [i["title"] for i in notifications_page(home)["items"]] == ["The mower blade is due"]
+
+
+def test_reminders_waiting_for_the_internet_are_listed_added_and_taken_off(tmp_path):
+    from types import SimpleNamespace
+
+    from core.actions import ACTION_TYPES, ActionError
+    from core.connectivity import OFFLINE
+    from core.online_watch import OnlineReminders
+    from core.web_notifications import waiting_for_internet
+
+    ctx = SimpleNamespace(connectivity=SimpleNamespace(status=OFFLINE))
+    ctx.online_reminders = OnlineReminders(ctx, data_dir=tmp_path)
+    ACTION_TYPES["online.remind"].execute(ctx, {"what": "  sync the   bank "})
+    ACTION_TYPES["online.remind"].execute(ctx, {"what": "upload the photos"})
+    page = waiting_for_internet(ctx)
+    assert page["state"] == "offline" and [r["what"] for r in page["items"]] == ["sync the bank", "upload the photos"]
+    assert "upload the photos" in ACTION_TYPES["online.forget"].describe(ctx, {"index": 1})
+    ACTION_TYPES["online.forget"].execute(ctx, {"index": 0})
+    assert OnlineReminders(ctx, data_dir=tmp_path).pending() == ["upload the photos"]
+    with pytest.raises(ActionError):
+        ACTION_TYPES["online.forget"].describe(ctx, {"index": 5})
+    with pytest.raises(ActionError):
+        ACTION_TYPES["online.remind"].execute(ctx, {"what": " "})
+
+
+def test_without_the_reminder_store_the_section_says_its_not_there():
+    from types import SimpleNamespace
+
+    from core.web_notifications import waiting_for_internet
+
+    assert waiting_for_internet(SimpleNamespace()) == {"available": False, "state": "unknown", "items": []}
