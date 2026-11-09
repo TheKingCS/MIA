@@ -50,8 +50,9 @@ hold points), a job as a mission, diagnosis sessions, the Carpentry apprentice p
 session's; voice tools beyond the session's own phrases are the parity session's.
 
 **Built by the engine session (2026-11-08 evening), core only: DEC-0148 Natural Momentum (approved).** For the
-design session: `core.momentum.findings(context)` (plain-word counts, [] until three runs) is ready for a small
-"how your good runs go" line, never a score. For the parity session: "I did X" is code-done already
+design session: **built** (claude, design, 2026-11-09): How Your Good Runs Go on the Operating Journal
+(`core/momentum.picture`, the counts, or how many runs of the three she waits for; "you're on a run" while in flow),
+and Good Runs on the glasses' Operating Journal card. Never a score. For the parity session: "I did X" is code-done already
 (`core/did_it.py`), so no tool is needed for it; the gate topic is `momentum`.
 `core/did_it.py` ("I did X": recorded, counted toward a routine, offered toward a task or mission objective or as a
 new routine), `core/momentum.py` (windows, chains, flow, one easy start, tomorrow's prep), the gate's flow guard.

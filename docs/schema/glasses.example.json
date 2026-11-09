@@ -1692,6 +1692,11 @@
      "type": "panel"
     },
     {
+     "id": "runs",
+     "label": "Good Runs",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "Am I living how I said I want to",
      "type": "ask",

@@ -2544,6 +2544,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   after A 3+ times and half of A's times), flow (2 done in 30 min), one easy start in his usual hour, tomorrow's prep
   before a shift; the gate holds everything but the urgent while he's in flow; the daily check `momentum` offers
   the easy start and the prep through the gate, once a day each. Faith: nothing built for her (DEC-0119 holds).
+  **Screen built (claude, design, 2026-11-09):** How Your Good Runs Go on the Operating Journal (`core/momentum.picture`)
+  and Good Runs on the glasses' Operating Journal card; counts only.
 - From: Zac's handoff "Natural Momentum & Flow State Optimization" (a morning where waking naturally and coffee led
   to the dishes, laundry, the kitchen, the dev list and getting ready, without forcing it). Its section 10 asks to
   find what exists first and not duplicate it.

@@ -2149,3 +2149,10 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .tm-holdtag { font-size: 11px; color: var(--attention); }
 .tm-rule { font-size: 13.5px; }
 .tm-pick, .tm-standard { font-size: 13px; }
+
+/* How Your Good Runs Go (web/operating.js, DEC-0148): counts, never a meter. */
+.op-runs { display: grid; gap: 8px; padding: 16px 18px; }
+.op-runs .op-label { margin: 0; }
+.op-findings { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14.5px; line-height: 1.5; }
+.op-flow { margin: 0; color: rgb(var(--rgb-accent)); }
+.op-runs-note { margin: 0; font-size: 12.5px; }

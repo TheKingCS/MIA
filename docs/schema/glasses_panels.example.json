@@ -2420,8 +2420,8 @@
         "tone": "attention"
       },
       {
-        "text": "Turn and sieve the first finished compost could be made instead of buying seed-starting mix.",
-        "detail": "",
+        "text": "Turn and sieve the first finished compost",
+        "detail": "could be made instead of buying seed-starting mix.",
         "tone": "attention"
       }
     ],
@@ -2465,8 +2465,8 @@
         "tone": ""
       },
       {
-        "text": "Did you know you could put some time into Guitar right now? You're on stage 2, Chords — the next step is ready when you are.",
-        "detail": "right now",
+        "text": "Did you know you could put some time into",
+        "detail": "right now · Guitar right now? You're on stage 2, Chords — the next step is ready when you are.",
         "tone": ""
       },
       {
@@ -2505,12 +2505,12 @@
     "title": "Chicken coop and run",
     "lines": [
       {
-        "text": "Build the floor frame from treated 2x4s (joists at 16 in)",
+        "text": "Build the floor frame from treated 2x4s",
         "detail": "Foundation and floor · step 5 of 13",
         "tone": ""
       },
       {
-        "text": "Check its diagonals, then glue and screw the plywood floor.",
+        "text": "(joists at 16 in), check its diagonals, then glue and screw the plywood floor.",
         "detail": "then",
         "tone": ""
       },
@@ -2547,5 +2547,35 @@
     ],
     "more": 1,
     "empty": ""
+  },
+  "operating_journal/runs": {
+    "app": "operating_journal",
+    "item": "runs",
+    "label": "Good Runs",
+    "title": "Good Runs",
+    "lines": [
+      {
+        "text": "5 of your 7 runs of getting things done",
+        "detail": "began with making coffee.",
+        "tone": ""
+      },
+      {
+        "text": "6 of 7 began in the morning.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "5 of 7 were on a day off.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "4 of the 5 with sleep logged came after a",
+        "detail": "full night.",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing yet."
   }
 }

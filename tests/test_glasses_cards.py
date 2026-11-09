@@ -4,7 +4,8 @@ without a store and in a real household, shows the page assembler's facts in at 
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
 Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
 Workshop's The Job, moving a Trade Master job along with its holds kept), the card
-faces and their tiles, and long sentences split into a head and a detail.
+faces and their tiles, and long sentences split into a head and a detail (at a mark, or at the last word that fits),
+and Good Runs (Natural Momentum's counts).
 """
 
 import json
@@ -23,6 +24,19 @@ SCHEMA = Path(__file__).resolve().parent.parent / "docs" / "schema"
 def _example(name):
     """A screen's demo data (docs/schema/<name>.example.json): the page assembler's real shape."""
     return json.loads((SCHEMA / f"{name}.example.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture(autouse=True)
+def _no_real_inspection(monkeypatch):
+    """The PC Health card inspects the computer and keeps the report under data/: here it reads a stand-in that
+    says it couldn't, so no test writes into the real data folder."""
+    import core.inspection
+
+    def refuse(_context, _subject):
+        """Stands in for a passive inspection that can't run here."""
+        raise RuntimeError("not inspected in a test")
+
+    monkeypatch.setattr(core.inspection, "inspect", refuse)
 
 
 def _builders():
@@ -157,12 +171,14 @@ def test_the_added_items_come_after_a_cards_own_panels():
     assert [m["label"] for m in glasses.menu_for(play)][:2] == ["This Week", "Your Campaign"]
 
 
-def test_a_long_sentence_splits_into_a_head_and_a_detail_where_it_reads_well():
+def test_a_long_sentence_splits_into_a_head_and_a_detail_where_it_reads_well_or_at_a_word():
     assert gc._split("About $70 for the whole path, more than the $20 you have.") == (
         "About $70 for the whole path", "more than the $20 you have.")
     assert gc._split("Dream one small thing onto paper today — a creature.") == (
         "Dream one small thing onto paper today", "a creature.")
     assert gc._split("A short line.") == ("A short line.", "")
+    assert gc._split("5 of your 7 runs of getting things done began with making coffee.") == (
+        "5 of your 7 runs of getting things done", "began with making coffee.")  # no mark: the last word that fits
 
 
 def test_the_new_card_faces_carry_tiles_from_their_pages(monkeypatch):

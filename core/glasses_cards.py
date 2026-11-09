@@ -70,7 +70,8 @@ def _days_word(days) -> str:
 
 def _split(text: str, room: int = 44) -> tuple[str, str]:
     """Pure logic. A long sentence as a glasses line: (the head, the rest as its detail), split at a dash, semicolon,
-    comma or question mark that falls within `room` characters; short text stays whole."""
+    comma or question mark that falls within `room` characters, else at the last word that fits; short text stays
+    whole."""
     text = " ".join(str(text or "").split())
     if len(text) <= room:
         return text, ""
@@ -79,7 +80,8 @@ def _split(text: str, room: int = 44) -> tuple[str, str]:
         if 0 < at <= room:
             cut = at + (1 if mark in ("? ",) else 0)
             return text[:cut].rstrip(" ,;:"), text[at + len(mark):]
-    return text, ""
+    at = text.rfind(" ", 0, room + 1)  # no mark near the start: break at the last word that fits
+    return (text[:at], text[at + 1:]) if at > room // 2 else (text, "")
 
 
 # ------------------------------------------------------------ the Dungeon (paid work as a game)
@@ -524,7 +526,7 @@ def _connections(context, today: date):
 
 def _trade_job(context, today: date):
     """Panel (the Workshop card): the job or diagnosis being walked through (Trade Master, core/web_trades.walkthrough,
-    DEC-0149): the step in focus with Next (a long one's rest on the next line), its hold point with Checked,
+    DEC-0149): the step in focus with Next (a long one split where it reads well, its rest on the next line), its hold point with Checked,
     Back, Stop, then why; a diagnosis's question
     with Yes and No. The holds are enforced in core/trade_session.py, so Next on an unchecked hold says what to check."""
     from core.web_trades import walkthrough
@@ -546,7 +548,7 @@ def _trade_job(context, today: date):
     pr = w.get("progress") or {}
     where = f"{pr.get('phase', '')} · step {pr.get('step')} of {pr.get('of')}" if pr else ""
     open_hold = w.get("hold") and not w.get("checked")
-    head, rest = _split(w.get("step_text", ""), 64)
+    head, rest = _split(w.get("step_text", ""))
     lines = [_line(head, where, "", None if open_hold else act("trade.next", "Next"))]
     if rest:  # the rest of a long step on its own line, so the whole step can be read
         lines.append(_line(rest[:1].upper() + rest[1:], "then"))
@@ -560,11 +562,28 @@ def _trade_job(context, today: date):
     return _panel(w["title"], lines, "")
 
 
+def _good_runs(context, today: date):
+    """Panel (the Operating Journal card): how your good runs go (Natural Momentum, DEC-0148, core/momentum.picture):
+    the findings as counts, or how many runs she's seen of the few she waits for; on a run now, only that."""
+    from core import momentum
+
+    try:
+        p = momentum.picture(context)
+    except Exception:
+        log.exception("Glasses: the good runs failed")
+        return _panel("Good Runs", [], "Your runs couldn't be read just now.")
+    lines = [_line("You're on a run", "anything that can wait is held")] if p.get("in_flow") else []
+    for f in p.get("findings") or []:
+        head, rest = _split(f)
+        lines.append(_line(head, rest))
+    return _panel("Good Runs", lines, momentum.picture_words(p) or "Nothing yet.")
+
+
 # More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
 EXTRA = {
     "greenhouse": (("next", "What's Next", _whats_next),),
     "play": (("campaign", "Your Campaign", _campaign),),
-    "operating_journal": (("directions", "My Directions", _directions),),
+    "operating_journal": (("directions", "My Directions", _directions), ("runs", "Good Runs", _good_runs)),
     "observations": (("connections", "Connections", _connections),),
     "workshop": (("job", "The Job", _trade_job),),
 }
