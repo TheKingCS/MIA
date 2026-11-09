@@ -16,6 +16,8 @@ glasses. The steps come from core/trades.py, never from a model.
   professional and what to tell them.
 - **A mission**: a job's phases can become a mission's objectives (core/trade_actions.py, `trade.plan`); a session on that
   job counts each step done toward its phase.
+- **The model's context** (`context_block`): mid-job, the step with why, its hold and the stop rules, so a
+  question is answered within them; with none going, the outline of a job a question about doing it names.
 
 Everything but `TradeStore` is pure logic. The store is personal (core/personal_data.py), sealed at rest (DEC-0126),
 and writes through atomic_write_text, so "undo that" can put a session back.
@@ -24,6 +26,7 @@ and writes through atomic_write_text, so "undo that" can put a session back.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -188,6 +191,41 @@ def progress(s: Session) -> dict:
         return {}
     p, _i, _step_ = _step(s, item)
     return {"step": s.at + 1, "of": len(item.steps()), "phase": item.phases[p].name, "phase_index": p}
+
+
+_ABOUT_DOING = re.compile(r"\b(?:build|building|built|install|installing|fix|fixing|repair|repairing|frame|framing|"
+                          r"diagnose|steps?|what'?s involved|how (?:do|would|should|can) i|how to|materials?|tools?|"
+                          r"permit|keeps? (?:running|tripping)|won'?t|doesn'?t)\b")
+_GROUND = ("Answer questions about this job from these steps and their sources. If a question goes beyond them, say so "
+           "plainly and suggest the trade's professional or the local building department. Never suggest skipping a "
+           "hold point or working past a stop rule.")
+
+
+def context_block(context, prompt: str = "") -> str:
+    """For the model's system message (core/assistant_chat.py): the job in progress, its step with why, what to watch
+    for, its hold and the job's stop rules, so a question mid-job is answered within them; with none in progress, the
+    outline of a job or diagnosis the words name. "" otherwise."""
+    store = getattr(context, "trade_session", None)
+    live = store.live() if store is not None else None
+    about_doing = bool(_ABOUT_DOING.search((prompt or "").lower()))  # "I'm in the workshop" isn't about building one
+    item = item_of(live) if live is not None else trades.find(prompt) if about_doing else None
+    if item is None:
+        return ""
+    rules = "; ".join(f"{trades.STOP_RULES[r].when}: {trades.STOP_RULES[r].instead}" for r in item.stop_if
+                      if r in trades.STOP_RULES)
+    if live is None:
+        return f"A job the person may be asking about: {trades.outline(item)} Its stop rules: {rules}. {_GROUND}"
+    if live.kind == "diagnosis":
+        check = item.check(live.check)
+        return (f"You're walking the person through a diagnosis: {item.name}. Safety: {item.safety} The check now: "
+                f"{check.ask} (why: {check.why}). Its stop rules: {rules}. {_GROUND}")
+    p, _i, step = _step(live, item)
+    hold = f" Hold point: {step.hold}" if step.hold else ""
+    watch_for = f" Watch for: {' '.join(step.watch)}" if step.watch else ""
+    status = "" if item.status == trades.CONFIRMED else " It's drafted from its sources, not yet confirmed by a person."
+    return (f"You're walking the person through a job: {item.name}.{status} Now: {item.phases[p].name}, step "
+            f"{live.at + 1} of {len(item.steps())}: {step.do} Why: {step.why}{watch_for}{hold} Its stop rules: {rules}. "
+            f"Sources: {'; '.join(item.sources)}. {_GROUND}")
 
 
 class TradeStore:

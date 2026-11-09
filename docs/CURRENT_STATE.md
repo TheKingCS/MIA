@@ -21,6 +21,16 @@ desktop and phone. In the afternoon each engine piece got its screen as it lande
 checks, About MIA's app health, Diagnostics' repository check, the development board's disagreements and evolution
 timeline, and **Look It Up Online** (searches through your own SearXNG once it's running). See `docs/NEXT_SESSION.md`.
 
+**2026-11-08 evening (Claude, engine session, with Zac): Trade Master (DEC-0149, approved).** Say "walk me through
+building the coop" and MIA takes you through it step by step: each step with why and what to watch for, hold points
+she won't go past until you say "checked", and stop rules in code ("I smell gas", "the tester beeps", "I'm bleeding")
+that end it at once with what to do instead. "Make it a mission" turns its phases into a mission that counts as you
+go. The first builds, in your order: a hoop-house greenhouse, the chicken coop, a workshop on a slab, a cold room; and
+the first diagnosis, a toilet that keeps running. Every job is held to a written standard in code (a test fails on one
+that falls short) and marked drafted until a person confirms it. A Carpentry apprentice program (three stages,
+safety first), a specialist for each trade, and a loop that names the next job to write each week, through all of
+home building.
+
 **2026-11-08 evening (Claude, engine session, with Zac): "I did X" and Natural Momentum (DEC-0148, approved).**
 Say what you did ("I just put away the dishes and started a load of laundry") and MIA keeps it in your history,
 counts it toward a routine it names (undoable), and offers once to tick off a matching task or mission step, or to

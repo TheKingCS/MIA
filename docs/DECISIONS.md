@@ -2567,6 +2567,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   a high standard to be able to provide thorough and complete instructions": a quality standard in code that every
   job must meet (a test fails on one that doesn't), each job still marked drafted until a person confirms it; (5) one
   specialist per trade.
+  **Built (claude, engine, 2026-11-08 evening):** `core/trades.py` (jobs and diagnoses as data; nine stop rules in code;
+  `problems()`, the standard: a scope, a permit note pointing to the local office, hazards, PPE, tools, materials, a
+  planning phase first and an inspection phase last, 12+ steps each with why, what to watch for on half, hold points
+  through the job, the stop rules its own steps call for, 2+ sources; a diagnosis's every branch ends at a check, a
+  cause or a professional; `WANTED`, Zac's order, 46 to write), `core/trade_jobs.py` (the hoop house, the coop, the
+  workshop on a slab, the cold room, and the running toilet; all drafted), `core/trade_session.py` and
+  `core/trade_actions.py` (step by step, holds refused until "checked", why and watch-for from the step, a stop rule's
+  words end it, `trade.*` actions, the voice in code, a job planned as a mission with a phase per objective counted
+  step by step, the model's context grounded in the job and step), `core/carpentry.py` (the apprentice program, three
+  stages), six trade specialists, and two loops: `trades.depth` (opens a task for the next wanted job weekly) and
+  `trades.finished`.
 - From: Zac, 2026-11-08 ("just like Homesteading is Construction ... walk me through step by step of any home
   construction, repair, or diagnosis jobs with industry standard professional steps so nothing is missed ... She
   should become a Trade master and be able to teach an entry level Apprentice": carpentry, plumbing, HVAC,

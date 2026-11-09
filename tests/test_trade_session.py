@@ -93,3 +93,21 @@ def test_finishing_or_stopping_is_kept_and_the_loops_read_it(world):
     assert _trades_finished(world).value == 0.5
     depth = _trades_depth(world)
     assert depth.n == len(trades.WANTED) and "next: workshop_circuit" in depth.detail
+
+
+def test_the_model_is_given_the_job_and_step_it_s_asked_about(world):
+    """Mid-job, the system message carries the job, the step with why, its hold and the stop rules, and the rule never
+    to skip either; with no job going, a question about building one carries its outline, and a passing mention of
+    the place doesn't."""
+    from core.assistant_chat import build_system_message
+    from core.trade_session import context_block
+
+    assert context_block(world, "I'm out in the workshop") == ""
+    asked = context_block(world, "what's involved in building a chicken coop?")
+    assert asked.startswith("A job the person may be asking about: Chicken coop and run") and "stop rules" in asked
+    reply(world, "walk me through building the workshop")
+    block = context_block(world, "can I use a smaller header?")
+    step = trades.JOBS["workshop"].steps()[0][2]
+    assert f"step 1 of {len(trades.JOBS['workshop'].steps())}: {step.do}" in block and f"Why: {step.why}" in block
+    assert "Never suggest skipping a hold point or working past a stop rule." in block
+    assert block in build_system_message(world, False, prompt="can I use a smaller header?")

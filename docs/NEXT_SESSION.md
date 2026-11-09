@@ -30,7 +30,13 @@ T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 history's older lines (seal them or not), the homestead push, DEC-0147's choices, the iOS path, restart MIA.
 
-**Claimed by the engine session (2026-11-08 evening), core only: DEC-0149 Trade Master (approved).**
+**Built by the engine session (2026-11-08 evening), core only: DEC-0149 Trade Master (approved).** Next on
+`core/trades.WANTED` (the `trades.depth` loop opens a task for it): `workshop_circuit` (the workshop's wiring, a
+permit and the electrical stop rule), then `root_cellar`, the greenhouse and cold-room calculators in
+`core/build_calcs.py`, then all of home building in order. Every job must pass `trades.problems()`. For the design
+session: a Trade Master screen (a job's outline, the step in focus with "next", "checked", "why", "back", "stop", and
+"make it a mission"; data from `core.trade_session.say/progress` and `core.trades.outline`, actions `trade.*`). For the
+parity session: voice is code-done for the walkthrough itself; a model tool to start one by a vaguer phrase is open.
 `core/trades.py` (jobs as sourced data, stop rules in code, the quality standard), `core/job_session.py` (step by step,
 hold points), a job as a mission, diagnosis sessions, the Carpentry apprentice program, a specialist per trade, the
 `trades.depth` loop, and the first builds: greenhouse, coop, workshop, cold storage. Screens are the design

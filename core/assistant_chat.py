@@ -551,7 +551,8 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     and then by chance, a nudge toward one line of wit (`humor_for`), and
     once it's been learned, the person's preferred answer style
     (`core.response_style.style_for`, DEC-0138 — empty until they've picked), and, on an
-    everyday turn, a connection she's holding (DEC-0146). A how-to question about MIA herself also
+    everyday turn, a connection she's holding (DEC-0146). A job being walked through, or one
+    the words name, carries its step and stop rules (`core.trade_session.context_block`, DEC-0149). A how-to question about MIA herself also
     carries her own facts (`core.self_knowledge.grounding_block`, DEC-0142).
     """
     if is_action_request:
@@ -575,6 +576,11 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         block = connectivity_prompt_block(connectivity.status)
         if block:
             parts.append(block)
+    from core.trade_session import context_block as trade_block
+
+    walking = trade_block(context, prompt)  # the job being walked through, or one the words name (DEC-0149)
+    if walking:
+        parts.append(walking)
     if closing_instruction is CONVERSATION_INSTRUCTION:
         parts.append(EXAMPLES)  # conversation only: help and teaching answers stay plain
         deep = deep_line(prompt)  # faith, meaning, morality (the Highest Self, section 7)
