@@ -37,7 +37,8 @@ from typing import Optional
 DRAFTED, CONFIRMED = "drafted", "confirmed"
 TRADES = {"carpentry": "Carpentry and framing", "plumbing": "Plumbing", "electrical": "Electrical", "hvac": "HVAC",
           "appliances": "Appliances", "exterior": "Roofing, siding and windows", "concrete": "Concrete and masonry",
-          "site": "Site work", "finishing": "Drywall, paint and finishing"}
+          "site": "Site work", "finishing": "Drywall, paint and finishing",
+          "aquaponics": "Aquaponics systems (DEC-0150)"}
 KINDS = ("build", "install", "repair")
 
 
@@ -162,6 +163,7 @@ DIAGNOSES: dict[str, Diagnosis] = {}
 # or still to write; the trades.depth loop opens a task for the next one not written to the standard.
 WANTED: tuple[str, ...] = (
     "hoop_house", "chicken_coop", "workshop", "cold_room",
+    "aquaponics_system", "aquaponics_controls", "aquaponics_commission",  # DEC-0150: the pilot, built then handed over
     "toilet_running", "workshop_circuit", "root_cellar", "greenhouse_calc", "cold_room_calc",
     "site_layout", "footings", "slab_on_grade", "foundation_wall", "floor_framing", "wall_framing", "roof_framing",
     "roof_sheathing_underlayment", "asphalt_shingles", "metal_roof", "windows_doors", "house_wrap_flashing",

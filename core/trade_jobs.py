@@ -608,3 +608,248 @@ register(Diagnosis(
      "National Roofing Contractors Association (NRCA), The NRCA Roofing Manual",
      "International Code Council, IRC 2021: R903 (weather protection) and R905.2.8 (flashing)"),
 ))
+
+# ------------------------------------------------------------------ the aquaponics pilot (DEC-0150)
+# Written from MIA Homestead's own design (homestead/docs/PILOT_VS_SCALE.md: a 55-gallon tank, 3 to 5 bluegill,
+# fishless-cycled first; homestead/docs/SAFETY_SPEC.md: aeration first, dosing off by default, the safety MCU the final
+# authority) and the published aquaponics guides named on each job.
+
+_AQUA_SOURCES = ("FAO Fisheries and Aquaculture Technical Paper 589, Small-scale aquaponic food production "
+                 "(Somerville et al., 2014)",
+                 "Rakocy, Masser and Losordo, Recirculating Aquaculture Tank Production Systems: Aquaponics, SRAC "
+                 "Publication 454 (2006)")
+
+register(Job(
+    "aquaponics_system", "aquaponics", "build", "Build the pilot aquaponics system",
+    "The pilot from MIA Homestead's plan: a 55-gallon fish tank on a stand rated for it, a media grow bed above it "
+    "draining back by gravity, the pump, the plumbing with an overflow so the bed can never flood the floor, and "
+    "aeration that can't back-siphon. Leak-tested with water before any fish, sensor or controller. The controls and "
+    "the fish are their own jobs.",
+    ("aquaponics system", "aquaponics", "fish tank and grow bed", "aquaponic system", "build the aquaponics"),
+    ("live_power", "structural", "injury"),
+    "A small indoor or greenhouse system rarely needs a building permit, but a new outlet or circuit for it does, and "
+    "some places regulate keeping fish. " + _LOCAL,
+    ("water and electricity together", "the weight of a full tank (about 550 lb at 55 gallons) on the floor and stand",
+     "lifting a heavy tank", "materials that poison fish (copper, zinc from galvanized parts, soap residue)"),
+    ("gloves", "safety glasses when cutting pipe or drilling the bed"),
+    ("level (2 ft)", "tape measure", "hacksaw or PVC cutter", "drill with a hole saw for the bulkhead",
+     "deburring tool or file", "bucket and hose", "a marker for the water line"),
+    ("a 55-gallon tank and a stand rated for its full weight", "a food-safe grow bed and its stand",
+     "expanded clay or lava-rock media, rinsed", "a bulkhead (or uniseal) fitting, a standpipe or bell siphon, and an "
+     "overflow", "schedule 40 PVC pipe and fittings (no copper or galvanized)", "a submersible circulation pump sized "
+     "to move the tank's volume about once an hour", "an air pump, airline, a check valve and an airstone",
+     "a GFCI-protected outlet and drip loops for every cord"),
+    (
+        Phase("Plan and prepare", (
+            Step("Choose the spot: a level floor that can carry about 550 lb on the stand's footprint, out of direct "
+                 "sun, near a GFCI-protected outlet, with somewhere for water to go if a pipe lets go.",
+                 "A full 55-gallon tank weighs more than most people expect, and sun on the tank means algae and heat.",
+                 ("On a wood floor, put the stand across the joists, near a bearing wall.",)),
+            Step("Size the grow bed: for a media bed, roughly the tank's volume in bed is a common starting ratio "
+                 "(start smaller and add beds as the fish grow).",
+                 "The bed is the filter: too little bed for the fish and ammonia builds up.",
+                 ("Plan the bed high enough that it drains to the tank by gravity.",)),
+            Step("Check every part that touches water is fish-safe: no copper, no galvanized metal, no treated wood, "
+                 "nothing washed with soap.", "Copper and zinc kill fish at very low levels.",
+                 ("Rinse new parts in plain water only.",)),
+        )),
+        Phase("Stand, tank and bed", (
+            Step("Set the tank stand level and shim it; fill the tank alone and leave it 24 hours.",
+                 "A tank on an uneven stand stresses its seams; a slow leak is cheap to find before anything else is "
+                 "connected.", ("Mark the water line and check it the next day.",),
+                 "The tank held for 24 hours with the line unchanged and the stand level."),
+            Step("Set the grow bed level on its own stand above the tank and drill it for the bulkhead at its low "
+                 "point.", "The bulkhead is the drain that returns water to the tank.",
+                 ("Deburr the hole so the gasket seals.",)),
+            Step("Rinse the media until the water runs clear, then fill the bed.",
+                 "Dust from new media clouds the water and clogs the pump.", ("Wear a mask while rinsing dusty media.",)),
+        )),
+        Phase("Plumbing", (
+            Step("Fit the drain (a standpipe for constant flow, or a bell siphon for flood and drain) and an overflow "
+                 "above it, both returning to the tank.",
+                 "If the main drain clogs, the overflow sends the water back to the tank instead of onto the floor.",
+                 ("The overflow must be lower than the bed's rim.",)),
+            Step("Run the pump's line from the tank to the bed with a valve to set the flow; set the pump on the tank "
+                 "floor on a block so it doesn't suck up debris.",
+                 "Setting the flow is how the bed floods and drains in time with the pump.",
+                 ("Use a union so the pump can come out without cutting pipe.",)),
+            Step("Run water with the pump: watch the bed fill and drain several times. Then block the main drain on "
+                 "purpose.", "A drain only proves itself when it fails: the overflow has to carry the full flow.",
+                 ("Turn the flow down if the siphon won't start or won't stop.",),
+                 "The bed fills and drains, and with the drain blocked the overflow returns all the water to the tank."),
+        )),
+        Phase("Aeration and power", (
+            Step("Mount the air pump above the water line (or add a check valve in its line) and set the airstone on "
+                 "the tank floor.", "Without that, a power cut lets the tank siphon back through the line into the "
+                 "air pump.", ("Never set the air pump on the floor beside the tank without a check valve.",),
+                 "The air pump is above the water or has a check valve."),
+            Step("Plug the pump and air pump into a GFCI-protected outlet, with a drip loop in every cord.",
+                 "Water running down a cord must drip off before it reaches the plug.",
+                 ("Test the GFCI with its button.",), "Every cord has a drip loop and the GFCI trips on test."),
+        )),
+        Phase("Leak test and final inspection", (
+            Step("Run the whole system for 48 hours with water only and the line marked on the tank.",
+                 "Slow leaks and evaporation look alike for a day; two days shows the difference.",
+                 ("Check every fitting with a dry paper towel.",), "Two days, no drips, and the level drop only "
+                 "what evaporation explains."),
+            Step("Write down the tank's water volume, the flow you set and how the bed cycles, for the node's "
+                 "settings and for MIA.", "The controls and the cycling job start from these numbers.", ()),
+        )),
+    ),
+    _AQUA_SOURCES + ("Sylvia Bernstein, Aquaponic Gardening (New Society, 2011)",
+                     "MIA Homestead's pilot plan and safety spec (homestead/docs/PILOT_VS_SCALE.md, SAFETY_SPEC.md)"),
+    skill="plumbing",
+))
+
+register(Job(
+    "aquaponics_controls", "aquaponics", "install", "Install the greenhouse controller, safety MCU and sensors",
+    "MIA Homestead's controls on the pilot: the Pi (the brain) and the ESP32 safety MCU (the final authority), bench-"
+    "tested with LEDs first; probes for pH, EC, dissolved oxygen and temperature; the dosing pumps; pumps and heater "
+    "switched through enclosed, listed relay outlets (no mains wiring done by hand); and the physical override "
+    "switch. Each device goes in its labeled port. Flashing the MCU and preparing the Pi are MIA's provisioning steps.",
+    ("aquaponics controls", "install the controller", "greenhouse controller", "install the sensors",
+     "safety mcu", "install the probes"),
+    ("live_power", "injury"),
+    "Low-voltage controls need no permit, but a new outlet or circuit for the greenhouse does; mains wiring is a "
+    "licensed electrician's work unless your permit lets a homeowner do it. " + _LOCAL,
+    ("water and mains electricity in one place", "a pH probe or dosing chemical splashed in the eyes",
+     "a relay that fails on and runs a pump or heater"),
+    ("safety glasses and gloves with pH up and pH down", "dry hands for anything plugged in"),
+    ("small screwdrivers", "a multimeter", "label maker or colored labels (the setup convention)",
+     "zip ties and cable clips", "a USB cable for the MCU", "a measuring cup (for the dosing test)"),
+    ("the parts on the node's live parts list (homestead/docs/HARDWARE_BOM_LIVE.md)", "a ventilated enclosure for "
+     "the Pi, MCU and relay board, mounted above and away from water", "enclosed, listed relay-controlled outlets for "
+     "the pumps and heater", "Atlas Scientific EZO circuits and probes, with their calibration solutions",
+     "peristaltic dosing pumps and food-safe tubing", "a physical override switch (kill dosing, force aeration)"),
+    (
+        Phase("Plan and bench-test", (
+            Step("Lay out every part from the node's live parts list and label each device and its port with the "
+                 "setup convention's name and color.", "Labels and colors are how a device can't go in the wrong "
+                 "port.", ("Label both ends of every cable.",)),
+            Step("On the bench, flash the safety MCU (MIA does it from the PC over USB) and wire an LED with a "
+                 "resistor in place of each relay.",
+                 "LEDs prove the whole safety chain cheaply before anything touches water or chemicals.",
+                 ("Nothing mains-powered on the bench.",)),
+            Step("Run the node in simulation, then live with the LEDs: watch it announce, pair, take a command, pulse "
+                 "and, when you unplug the Pi, fall back to safe defaults.",
+                 "The fallback is the safety system's whole point; it has to be seen working.",
+                 ("Time how long the fallback takes after the Pi goes quiet.",),
+                 "Announce, pair, command, pulse and fallback all seen on the LEDs."),
+        )),
+        Phase("Mount the controls", (
+            Step("Mount the enclosure above and away from the tank, with drip loops on every cable entering it.",
+                 "Splash and condensation are the enemy of electronics by a tank.", ()),
+            Step("Put the pumps and heater on enclosed, listed relay outlets, each plugged into a GFCI-protected "
+                 "outlet, and connect only their low-voltage control leads to the relay board.",
+                 "Switching mains through a listed enclosure means no exposed mains wiring by hand.",
+                 ("Never open a relay outlet's mains side.",),
+                 "No mains conductor is exposed anywhere, and every mains device is on a GFCI."),
+            Step("Install and wire the physical override switch (dosing off, aeration forced on) where you can reach "
+                 "it without the Pi.", "Safety must work with every screen dark.", (),
+                 "The override kills dosing and forces aeration with the Pi unplugged."),
+            Step("Power the Pi and the MCU from the battery-backed side, with the air pump first on it: per the safety "
+                 "spec, aeration is the last load shed.", "Fish suffocate faster than anything else in the system "
+                 "fails; aeration must outlast every other load.", ("Label which loads are on the backed-up side.",)),
+        )),
+        Phase("Sensors and dosing", (
+            Step("Mount each probe per its maker (the pH probe never left dry, in its storage solution until "
+                 "fitted), connect each EZO circuit to its labeled port, and the temperature probe to its own.",
+                 "A dried-out pH probe is ruined; a probe in the wrong port reads as the wrong thing.",
+                 ("Keep probes away from the dosing points and the airstone.",),
+                 "The setup helper shows every device connected."),
+            Step("Compare each probe's first readings with your test kit and a reference thermometer before the "
+                 "node may act on them.", "A probe that reads wrong would dose wrong; the kit is the independent check.",
+                 ("pH within 0.2 of the kit, temperature within 1 F.",)),
+            Step("Run the dosing lines to a well-mixed spot away from the fish's favorite corner, and prime them "
+                 "with water, not chemical.", "Priming with water lets you test volumes safely.",
+                 ("Dosing pumps default off: every dose is a timed pulse.",)),
+            Step("Command a test pulse of water from each pump into a measuring cup and compare with what the node "
+                 "says it dosed.", "The node's dosing limits are only real if the volume per pulse is.",
+                 ("Repeat three times; use the average.",), "Each pump's measured volume matches within 10 percent."),
+        )),
+        Phase("Final checks", (
+            Step("Unplug the Pi with everything running: the MCU must stop dosing and keep aeration and circulation "
+                 "on.", "This is the failure the system was designed around; prove it on the real build.",
+                 (), "The MCU fell back to safe defaults on the real system."),
+            Step("Photograph the wiring and the labels, and note anything changed from the parts list, for the node "
+                 "and for MIA.", "The next diagnosis starts from how it's really wired.", ()),
+        )),
+    ),
+    ("MIA Homestead's safety spec, MCU protocol, device setup guide and firmware README (homestead/docs/SAFETY_SPEC.md, "
+     "MCU_PROTOCOL.md, DEVICE_SETUP_GUIDE.md, homestead/firmware/safety_mcu/README.md)",
+     "Atlas Scientific EZO pH, EC and dissolved oxygen circuit datasheets",
+     "NFPA 70, National Electrical Code (NEC) 2023, 210.8 (GFCI protection)"),
+    skill="electrical_wiring",
+))
+
+register(Job(
+    "aquaponics_commission", "aquaponics", "install", "Commission and cycle the system, then stock the fish",
+    "From a built, leak-tested system with its controls in: calibrate every probe, hand the node to MIA so she "
+    "watches every sensor, cycle the biofilter without fish (four to six weeks) until ammonia and nitrite read zero, "
+    "plant, then stock bluegill gradually, testing every day at first, and set the node's species, dosing limits and "
+    "alert contacts.",
+    ("commission the aquaponics", "cycle the system", "fishless cycle", "stock the fish", "cycle the aquaponics",
+     "commission the system"),
+    ("live_power", "injury"),
+    "Keeping, buying and moving live fish, and the species allowed, are set by your state's fish and wildlife "
+    "agency; check before you buy. " + _LOCAL,
+    ("ammonia and pH-adjusting chemicals (caustic or acidic)", "fish lost to a dissolved-oxygen crash or an ammonia "
+     "spike", "chlorinated tap water"),
+    ("gloves and safety glasses with ammonia and pH chemicals",),
+    ("a freshwater test kit (ammonia, nitrite, nitrate, pH)", "Atlas calibration solutions (pH 4, 7, 10; EC; DO)",
+     "a reference thermometer", "a dropper or syringe for dosing ammonia", "a fish net and a bucket"),
+    ("dechlorinated water (a dechlorinator, which also handles chloramine)", "pure ammonia or ammonium chloride for "
+     "the fishless cycle", "hardy plants to start (leafy greens)", "3 to 5 bluegill from a licensed source",
+     "a quality floating fish feed"),
+    (
+        Phase("Prepare the water", (
+            Step("Fill with dechlorinated water (a dechlorinator handles chloramine, which doesn't gas off), and let "
+                 "the system run a day.", "Chlorine and chloramine kill the very bacteria the cycle grows.",
+                 ("Ask your water supplier whether they use chloramine.",)),
+            Step("Check your state's rules for keeping bluegill and where to buy them, before the cycle starts.",
+                 "Four to six weeks is the time to line up a legal, healthy source.", ()),
+            Step("Set up a quarantine tub with its own aeration, to hold new fish a week or two before they join the "
+                 "system.", "A sick fish brought in can infect the system; a quarantine tub keeps it out until it's "
+                 "clearly healthy.", ("Never share nets or buckets between the tub and the system.",)),
+        )),
+        Phase("Calibrate and hand over", (
+            Step("Calibrate each probe as its maker says: pH at 7 then 4 and 10, EC dry then in solution, DO in air, "
+                 "and the temperature probe against a reference thermometer.",
+                 "Every dosing decision is only as good as the reading behind it.",
+                 ("Rinse probes between solutions.",), "Every probe is calibrated and its readings make sense."),
+            Step("Hand the node to MIA (\"take over the greenhouse\"): she lists every sensor she now watches and any "
+                 "she can't.", "From here on she watches it with you, and alerts reach you when you're away.",
+                 (), "MIA reports every sensor, with nothing missing."),
+        )),
+        Phase("Cycle the biofilter", (
+            Step("Add ammonia to about 2 ppm and test ammonia, nitrite and nitrate every day; top it back up to 2 ppm "
+                 "when it falls.", "Bacteria that turn ammonia into nitrite, then nitrate, grow on the media without "
+                 "fish being harmed.", ("Keep pH near 7 and the water in the fish's range: the bacteria like it "
+                                         "warm.",)),
+            Step("Watch nitrite rise, then fall, and nitrate rise. The cycle is done when a 2 ppm dose of ammonia "
+                 "reads zero ammonia and zero nitrite within a day.", "That's the proof the biofilter can handle "
+                 "fish waste.", ("It usually takes four to six weeks; cold water takes longer.",),
+                 "Ammonia and nitrite both read zero within 24 hours of a dose, and nitrate is rising."),
+            Step("Keep a daily log through the cycle: your test kit's ammonia, nitrite and nitrate beside the node's "
+                 "pH and temperature (MIA keeps the node's).", "The log shows the cycle's progress and catches a stalled "
+                 "one early.", ("A cycle stalled for a week: check pH and temperature first.",)),
+            Step("Plant hardy greens once nitrate shows.", "Plants are the other half of the filter.", ()),
+        )),
+        Phase("Stock and final checks", (
+            Step("Float the fish's bag 15 to 20 minutes, then add tank water to the bag a little at a time before "
+                 "netting them in; start with one or two.", "Sudden changes in temperature and pH shock fish.",
+                 ("Never pour the bag's water into the tank.",)),
+            Step("Feed lightly and test ammonia and nitrite every day for two weeks; add the rest of the fish over "
+                 "the next weeks.", "The biofilter grows with the load: add fish faster than it grows and ammonia "
+                 "spikes.", ("Any ammonia or nitrite: stop feeding a day and do a partial water change.",),
+                 "Ammonia and nitrite stayed at zero through the two weeks."),
+            Step("Set the node's tank species to Bluegill, review its dosing limits, set the alert contacts and the "
+                 "dead-man check-in, and send a test critical alert.",
+                 "The species turns on the right temperature watch; a test alert proves you'll hear about trouble.",
+                 (), "A test critical alert reached your phone."),
+        )),
+    ),
+    _AQUA_SOURCES + ("Atlas Scientific EZO calibration guides (pH, EC, dissolved oxygen)",
+                     "MIA Homestead's pilot plan (homestead/docs/PILOT_VS_SCALE.md: fishless cycle first, bluegill)"),
+    skill="home_building",
+))
