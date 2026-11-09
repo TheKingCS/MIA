@@ -85,6 +85,7 @@ dependencies {
     // Meta's Device Access Toolkit: MIA on the glasses (DEC-0059).
     implementation("com.meta.wearable:mwdat-core:1.0.1")
     implementation("com.meta.wearable:mwdat-display:1.0.1")
+    implementation("com.meta.wearable:mwdat-camera:1.0.1")  // "what am I looking at?" through the glasses (GlassesCamera.kt)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")  // the sealed relay (DEC-0062)
     implementation("androidx.core:core:1.16.0")  // FileProvider, for Look's camera (already pulled in by mwdat)

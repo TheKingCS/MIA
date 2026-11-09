@@ -108,8 +108,11 @@ def command(context, text: str) -> Optional[dict]:
 def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
     """What the words do. `talk(text)` runs a Talk turn and returns its
     answer ({"reply_text", ...}); `sync(text)` gives User Sync the words
-    first (core/user_sync.hear). Returns {"heard", "say", "open"?}, and
-    the glasses hear about it through their feed."""
+    first (core/user_sync.hear). Returns {"heard", "say", "open"?, "look"?}, and
+    the glasses hear about it through their feed. "Look at this" or "what am I
+    looking at?" answers with `look` (the question to ask Sight): the phone app
+    takes the photo through the glasses' own camera (GlassesCamera.kt) and sends
+    it to /api/sight."""
     from core import welcome
     from core.glasses_feed import said
 
@@ -124,6 +127,13 @@ def handle(context, profile_id: str, text: str, talk, sync=None) -> dict:
         meeting = None
     if meeting is not None:
         out = {"heard": heard, **meeting}
+        said(profile_id, out)
+        return out
+    from core.sight import wants_look
+
+    looking = wants_look(heard)  # "what am I looking at?": the phone takes a photo through the glasses' camera
+    if looking is not None:
+        out = {"heard": heard, "say": "Let me look.", "look": looking}
         said(profile_id, out)
         return out
     found = command(context, heard)

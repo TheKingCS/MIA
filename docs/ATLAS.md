@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1333 files, 289,933 lines; 1333 files describe themselves; 16,261 of 16,355 classes and functions are documented.
+1334 files, 290,140 lines; 1334 files describe themselves; 16,262 of 16,356 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-499 files, 138,712 lines; 7,390 of 7,476 classes and functions documented
+499 files, 138,724 lines; 7,390 of 7,476 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -785,7 +785,7 @@
 
 ## tests/: the test suite: what each part must do
 
-457 files, 76,661 lines; 6,579 of 6,587 classes and functions documented
+457 files, 76,672 lines; 6,580 of 6,588 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -938,7 +938,7 @@
 - `tests/test_glasses_feed.py`: The glasses' Heads-Up screen (Zac, 2026-10-18): new notifications and wins since the cursor, each once; the same moment shown once; money never to a child.
 - `tests/test_glasses_readouts.py`: The glasses' readout panels for apps that had only questions (core/glasses.py): What MIA Noticed (Needs You first, in amber), the Lab's latest readings (newest first) and Power's levels (the battery, then each meter, amber when low). The latest notes, Memories, what's plugged in, the waypoints and t
 - `tests/test_glasses_screens.py`: The numbers on an app's glasses screen, a vehicle's own page, "I Made This", Home's line and its tone, and the live workout's one big number (the canvas's GlassesHome and GlassesTraining, DEC-0113).
-- `tests/test_glasses_voice.py`: Talking to MIA through the glasses (core/glasses_voice.py): "open Kitchen" switches the glasses to that app, anything else is a Talk turn, and the glasses hear about it through their feed. A phone linked to the home computer sends the words there first.
+- `tests/test_glasses_voice.py`: Talking to MIA through the glasses (core/glasses_voice.py): "open Kitchen" switches the glasses to that app, anything else is a Talk turn, and the glasses hear about it through their feed. A phone linked to the home computer sends the words there first. "What am I looking at?" asks the phone for a p
 - `tests/test_good_news.py`: Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known (confirmed by two outlets, from the source itself, or one outlet, each with its tag), its caveats kept, four personalities, on only when switched on, and stories called misleading counted by sou
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package.
@@ -1247,7 +1247,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,009 lines
+105 files, 19,015 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1357,11 +1357,12 @@
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 
-17 files, 3,009 lines
+18 files, 3,187 lines
 
 - `android-phone/app/src/main/java/com/mia/phone/AutofillActivity.kt`: "Fill from MIA" (MiaAutofillService): the person's own choice of which login goes into the boxes. Asks MIA's engine on the phone (127.0.0.1, the signed-in person's session) for the logins that fit the site or app, titles and usernames only; with the vault locked it asks for the master password first
 - `android-phone/app/src/main/java/com/mia/phone/Engine.kt`: MIA's engine and server inside this app (mia_phone.py), started once per app process. Its own object, not MainActivity's, so the listening service (ListenService) can start MIA by itself when the glasses are tapped and the app isn't open: Android may have closed the screen, or the whole app, since M
 - `android-phone/app/src/main/java/com/mia/phone/Gallery.kt`: The memory vault's door to the camera roll (DEC-0030 E, core/memory_vault.py), for MIA's own screens as window.MIAAndroid. MIA's engine reads the photos itself once Android allows it; this only asks for that permission, and, when the person chooses to free space, hands the exact files to Android's o
+- `android-phone/app/src/main/java/com/mia/phone/GlassesCamera.kt`: One photo through the glasses' own camera, for Sight's "what am I looking at?" (core/sight.py; the parity gap sight:glasses). DEC-0062 keeps whatever needs Meta's toolkit in this app, so a look opens a camera-only session on the glasses, takes a single still through the camera stream (the toolkit's 
 - `android-phone/app/src/main/java/com/mia/phone/GlassesService.kt`: Keeps MIA awake while the glasses are connected (MetaGlasses.kt). The glasses only ever talk to the phone, so a phone that froze MIA's engine would leave them on a screen that can't answer. Ends with the session.
 - `android-phone/app/src/main/java/com/mia/phone/ListenService.kt`: MIA ready to listen with the app closed and the phone locked (slice 0 of docs/GLASSES_FIRST_BOOT_PLAN.md; Zac 2026-10-29: "the glasses shouldn't need the phone to be open").
 - `android-phone/app/src/main/java/com/mia/phone/ListenTile.kt`: The Quick Settings tile "Talk to MIA". With MIA ready (ListenService running) she listens right away, even on the lock screen; otherwise it opens MIA listening (Voice.kt), which starts the service.

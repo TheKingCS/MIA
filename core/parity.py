@@ -44,8 +44,10 @@ VOICE_ELSEWHERE = {
 }
 # Has a web page the sidebar doesn't link as App.page: the gear opens Settings, Settings opens Diagnostics.
 PAGE_ELSEWHERE = {"settings": "settings.html", "diagnostics": "diagnostics.html"}
-# On the glasses as the glasses themselves: the orb is Home and Talk.
-GLASSES_ARE = {"web_home": "the orb is Home", "assistant": "the orb is Talk"}
+# On the glasses as the glasses themselves: the orb is Home and Talk, and their camera is Sight's eyes.
+GLASSES_ARE = {"web_home": "the orb is Home", "assistant": "the orb is Talk",
+               # Said to the glasses: the phone app takes one photo with their own camera (GlassesCamera.kt, 2026-11-09)
+               "sight": "\"what am I looking at?\" through the glasses: a photo with their own camera"}
 
 
 def desktop_registry():

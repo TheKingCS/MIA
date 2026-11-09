@@ -9,10 +9,6 @@
       "status": "none",
       "why": "secrets never on the glasses' display (with passwords:voice, Zac 2026-11-07)"
     },
-    "sight:glasses": {
-      "status": "todo",
-      "why": "the glasses' own camera: 'what am I looking at' through them (the phone's camera works by voice since 2026-11-07)"
-    },
     "module_browser:glasses": {
       "status": "none",
       "why": "choosing apps is a bigger screen's job; on the glasses it's said to the orb (set_app_visibility, set_app_focus)"

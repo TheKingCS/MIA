@@ -2,7 +2,8 @@
 Talking to MIA through the glasses (core/glasses_voice.py): "open Kitchen"
 switches the glasses to that app, anything else is a Talk turn, and the
 glasses hear about it through their feed. A phone linked to the home
-computer sends the words there first.
+computer sends the words there first. "What am I looking at?" asks the
+phone for a photo through the glasses' camera instead of opening a page.
 """
 
 from datetime import datetime, timedelta
@@ -96,3 +97,13 @@ def test_a_voice_turn_speaks_a_composed_answer(world):
     out = handle(world, "person", "tell me everything", lambda heard: {"reply_text": "A long sentence goes here now. " * 30})
     assert words(out["say"]) <= BUDGET[GLASSES]
     assert out["say"].startswith("A long sentence goes here now.")
+
+
+def test_looking_through_the_glasses_asks_the_phone_for_a_photo_not_a_page():
+    from types import SimpleNamespace
+
+    from core import glasses_voice
+
+    out = glasses_voice.handle(SimpleNamespace(), "p1", "what am I looking at?", talk=lambda words: {"reply_text": "no"})
+    assert out["look"] == "What is this?" and out["say"] == "Let me look." and "open" not in out
+    assert glasses_voice.handle(SimpleNamespace(), "p1", "read this label", talk=lambda w: {})["look"] == "Read this label"

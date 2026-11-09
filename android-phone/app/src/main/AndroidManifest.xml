@@ -28,6 +28,9 @@
     <!-- Talking to MIA through the glasses (Voice.kt): their microphone is a
          Bluetooth headset's; Android's speech recognizer hears you. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- The glasses' camera through Meta's toolkit (GlassesCamera.kt): one photo when you ask "what am I looking
+         at?". Declaring it means Look's phone camera asks for it first too (MainActivity). -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- MIA ready with the app closed (ListenService.kt): a microphone service
          with its "MIA · Ready" notification, and the CPU kept awake for one turn. -->

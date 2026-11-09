@@ -125,7 +125,8 @@
       h.linked ? el("button", { type: "button", class: "btn btn-ghost", onclick: disconnect }, "Unlink") : ""));
   }
 
-  // Pairing with the glasses' sealed relay (DEC-0062) lives in the phone app, so this shows only there.
+  // Pairing with the glasses' sealed relay (DEC-0062) lives in the phone app, so this shows only there; so does letting
+  // MIA use the glasses' camera (Meta AI's own request, GlassesCamera.kt).
   function glassesSection() {
     const relay = window.MIARelay;
     if (!relay) return "";
@@ -150,8 +151,13 @@
             el("button", { type: "button", class: "btn btn-amber", onclick: () => relay.confirm() }, "They Match"),
             el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.cancel() }, "They Don't")));
       } else {
-        body.replaceChildren(el("p", { class: "dim" }, state.connected ? "Paired. Your glasses can reach MIA." : "Paired. Connecting..."),
-          el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.unpair() }, "Unpair Glasses")));
+        body.replaceChildren(...[el("p", { class: "dim" }, state.connected ? "Paired. Your glasses can reach MIA." : "Paired. Connecting..."),
+          el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: () => relay.unpair() }, "Unpair Glasses"),
+            // "What am I looking at?" through the glasses' own camera (GlassesCamera.kt): Meta AI asks once.
+            window.MIAGlassesCamera ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => window.MIAGlassesCamera.allow() },
+              "Let MIA Use the Glasses' Camera") : null),
+          window.MIAGlassesCamera ? el("p", { class: "dim" }, "Then say “what am I looking at?” through your glasses: one photo, " +
+            "taken only when you ask, answered and not kept.") : null].filter(Boolean));
       }
     };
     draw();
