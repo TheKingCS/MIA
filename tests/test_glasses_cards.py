@@ -2,6 +2,8 @@
 The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026-11-08): every one builds a panel
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
+Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections), the card
+faces, and long sentences split into a head and a detail.
 """
 
 import json
@@ -23,8 +25,9 @@ def _example(name):
 
 
 def _builders():
-    """Every new card's (app, item, builder)."""
-    return [(app, item, build) for app, items in gc.PANELS.items() for item, _label, build in items]
+    """Every new card's (app, item, builder), and the items added to cards that had panels."""
+    return [(app, item, build) for table in (gc.PANELS, gc.EXTRA) for app, items in table.items()
+            for item, _label, build in items]
 
 
 @pytest.mark.parametrize("app,item,build", _builders())
@@ -121,3 +124,41 @@ def test_a_card_face_shows_its_first_line_and_needs_you_when_a_line_does(monkeyp
     assert face == {"line": "Federal income tax return (Form 1040)", "tone": "attention"}
     assert gc.status(SimpleNamespace(), "diagnostics", TODAY) == {}  # an expensive read shows no face line
     assert gc.status(SimpleNamespace(config=None), "flock", TODAY) == {}  # nothing to show, no line
+
+
+def test_whats_next_on_the_greenhouse_card_is_the_step_its_goal_and_what_needs_you():
+    panel = gc._whats_next(SimpleNamespace(config=None), date(2026, 3, 8))
+    texts = [line["text"] for line in panel["lines"]]
+    assert panel["title"] == "What's Next" and texts[0] and len(panel["lines"]) <= glasses.MAX_LINES
+    assert all("action" not in line for line in panel["lines"])  # advice only
+
+
+def test_the_campaign_directions_and_connections_read_their_pages(monkeypatch):
+    import core.web_connections as wcn
+    import core.web_directions as wd
+    import core.web_worlds as ww
+
+    monkeypatch.setattr(ww, "screen", lambda context, campaign_id="": _example("worlds"))
+    monkeypatch.setattr(wd, "screen", lambda context, today=None: _example("directions"))
+    monkeypatch.setattr(wcn, "screen", lambda context, today=None: _example("connections"))
+    campaign = gc._campaign(SimpleNamespace(), TODAY)["lines"]
+    assert campaign[0]["text"] == "The Salt Road" and campaign[1]["detail"].startswith("you: ")
+    directions = gc._directions(SimpleNamespace(), TODAY)["lines"]
+    assert directions[0]["detail"].startswith("today's seed") and directions[1]["detail"].startswith("right now")
+    [tie] = gc._connections(SimpleNamespace(), TODAY)["lines"]
+    assert tie["text"] == "Chicken run" and "plans shelf" in tie["detail"]
+
+
+def test_the_added_items_come_after_a_cards_own_panels():
+    from core.web_surfaces import APPS
+
+    play = next(a for a in APPS if a.module_id == "play")
+    assert [m["label"] for m in glasses.menu_for(play)][:2] == ["This Week", "Your Campaign"]
+
+
+def test_a_long_sentence_splits_into_a_head_and_a_detail_where_it_reads_well():
+    assert gc._split("About $70 for the whole path, more than the $20 you have.") == (
+        "About $70 for the whole path", "more than the $20 you have.")
+    assert gc._split("Dream one small thing onto paper today — a creature.") == (
+        "Dream one small thing onto paper today", "a creature.")
+    assert gc._split("A short line.") == ("A short line.", "")

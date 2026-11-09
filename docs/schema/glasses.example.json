@@ -443,6 +443,11 @@
      "type": "panel"
     },
     {
+     "id": "next",
+     "label": "What's Next",
+     "type": "panel"
+    },
+    {
      "id": "pin",
      "label": "Pin To Glasses",
      "type": "action",
@@ -684,6 +689,16 @@
    "ask": "What have you noticed lately?",
    "pinned": false,
    "menu": [
+    {
+     "id": "noticed",
+     "label": "What MIA Noticed",
+     "type": "panel"
+    },
+    {
+     "id": "connections",
+     "label": "Connections",
+     "type": "panel"
+    },
     {
      "id": "ask0",
      "label": "What have you noticed lately",
@@ -1582,6 +1597,11 @@
      "type": "panel"
     },
     {
+     "id": "directions",
+     "label": "My Directions",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "Am I living how I said I want to",
      "type": "ask",
@@ -1669,6 +1689,11 @@
     {
      "id": "week",
      "label": "This Week",
+     "type": "panel"
+    },
+    {
+     "id": "campaign",
+     "label": "Your Campaign",
      "type": "panel"
     },
     {

@@ -2397,5 +2397,105 @@
     ],
     "more": 0,
     "empty": "The folder is empty. Open the files on your phone to add some."
+  },
+  "greenhouse/next": {
+    "app": "greenhouse",
+    "item": "next",
+    "label": "What's Next",
+    "title": "What's Next",
+    "lines": [
+      {
+        "text": "Toilet-paper-roll seed cups",
+        "detail": "$0 · make it",
+        "tone": ""
+      },
+      {
+        "text": "Step 1 of 6",
+        "detail": "toward Sell seedling starts",
+        "tone": ""
+      },
+      {
+        "text": "About $70 for the whole path",
+        "detail": "more than the $20 you have; this step is $0.",
+        "tone": "attention"
+      },
+      {
+        "text": "Turn and sieve the first finished compost could be made instead of buying seed-starting mix.",
+        "detail": "",
+        "tone": "attention"
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing to suggest yet."
+  },
+  "play/campaign": {
+    "app": "play",
+    "item": "campaign",
+    "label": "Your Campaign",
+    "title": "Your Campaign",
+    "lines": [
+      {
+        "text": "The Salt Road",
+        "detail": "In play · Emberfall",
+        "tone": ""
+      },
+      {
+        "text": "The ink has bled into the paper; you make out a date and the word \"well\", nothing more.",
+        "detail": "you: I try to read the faded notes in the margin",
+        "tone": ""
+      },
+      {
+        "text": "Find the lost cartographer",
+        "detail": "quest",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing played yet. Say \"in my campaign I…\""
+  },
+  "operating_journal/directions": {
+    "app": "operating_journal",
+    "item": "directions",
+    "label": "My Directions",
+    "title": "My Directions",
+    "lines": [
+      {
+        "text": "Dream one small thing onto paper today",
+        "detail": "today's seed · a creature, a shop sign, a corner of the world in your head.",
+        "tone": ""
+      },
+      {
+        "text": "Did you know you could put some time into Guitar right now? You're on stage 2, Chords — the next step is ready when you are.",
+        "detail": "right now",
+        "tone": ""
+      },
+      {
+        "text": "Make before buying",
+        "detail": "Make, mend or upcycle a thing before buying a new one.",
+        "tone": ""
+      },
+      {
+        "text": "Slow afternoons",
+        "detail": "Leave room for drawing, walks and quiet making.",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No directions yet. Say \"add a direction: …\""
+  },
+  "observations/connections": {
+    "app": "observations",
+    "item": "connections",
+    "label": "Connections",
+    "title": "Connections",
+    "lines": [
+      {
+        "text": "Chicken run",
+        "detail": "you said “picked up a roll of hardware cloth today” · there's a plan for it on the plans shelf, Chicken Run (a covered run for six to ten hens)",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No connections waiting."
   }
 }

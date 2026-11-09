@@ -67,6 +67,20 @@ def _days_word(days) -> str:
     return "tomorrow" if days == 1 else f"in {days} days"
 
 
+def _split(text: str, room: int = 44) -> tuple[str, str]:
+    """Pure logic. A long sentence as a glasses line: (the head, the rest as its detail), split at a dash, semicolon,
+    comma or question mark that falls within `room` characters; short text stays whole."""
+    text = " ".join(str(text or "").split())
+    if len(text) <= room:
+        return text, ""
+    for mark in (" — ", "; ", "? ", ", ", ": "):
+        at = text.find(mark)
+        if 0 < at <= room:
+            cut = at + (1 if mark in ("? ",) else 0)
+            return text[:cut].rstrip(" ,;:"), text[at + len(mark):]
+    return text, ""
+
+
 # ------------------------------------------------------------ the Dungeon (paid work as a game)
 
 def _dungeon_week(context, today: date):
@@ -424,6 +438,96 @@ def _files_recent(context, today: date):
     lines += [_line(f["name"], " · ".join(b for b in (f.get("size_text", ""), str(f.get("modified") or "")[:10]) if b))
               for f in newest]
     return _panel("MIA Folder", lines, "The folder is empty. Open the files on your phone to add some.")
+
+
+# ------------------------------------------------------------ features with a page but no app of their own
+
+def _whats_next(context, today: date):
+    """Panel (the Greenhouse card): the homestead's next move, the goal it's a step toward, and the checks behind it
+    (core/development_engine.plan, DEC-0144; advice only, the same as the web's What's Next)."""
+    from core.development_engine import plan
+
+    try:
+        found = plan(context, month=today.month)
+    except Exception:  # noqa: BLE001 - advice that can't be worked out says so
+        log.exception("Glasses: What's Next couldn't be worked out")
+        return _panel("What's Next", [], "That couldn't be worked out just now.")
+    nxt = found.get("next") or {}
+    if not nxt.get("name"):
+        return _panel("What's Next", [], found.get("note") or "Nothing to suggest yet.")
+    first = (nxt.get("path") or [{}])[0]
+    lines = [_line(nxt["name"], first.get("cost", "") + (" · make it" if first.get("made") else ""))]
+    if len(nxt.get("path") or []) > 1 and nxt.get("goal"):
+        lines.append(_line(f"Step 1 of {len(nxt['path'])}", f"toward {nxt['goal']['name']}"))
+    for c in nxt.get("checks") or []:
+        if c["ok"] is not True:  # what's in place goes without saying on a 600-pixel card
+            head, rest = _split(c["line"])
+            lines.append(_line(head, rest, "attention" if c["ok"] is False else ""))
+    return _panel("What's Next", lines, "Nothing to suggest yet.")
+
+
+def _campaign(context, today: date):
+    """Panel (the Play card): the campaign last played in Living Worlds, the latest turn and the quests still open
+    (DEC-0134; play a turn by saying "in my campaign I…")."""
+    from core.web_worlds import screen
+
+    page, none = _page("Your Campaign", lambda: screen(context), "Living Worlds isn't on this MIA.")
+    if none:
+        return none
+    c = page.get("campaign")
+    if not c:
+        return _panel("Your Campaign", [], "No campaign yet. Start one in Living Worlds.")
+    lines = [_line(c["name"], " · ".join(b for b in (c.get("status_word", ""), (c.get("universe") or {}).get("name", ""))
+                                          if b))]
+    story = c.get("story") or []
+    if story:
+        last = story[-1]
+        lines.append(_line(last["lines"][0] if last.get("lines") else last.get("said", ""), "you: " + last.get("said", "")))
+    lines += [_line(q["name"], "quest") for q in c.get("quests") or [] if q.get("status") == "open"]
+    return _panel("Your Campaign", lines, "Nothing played yet. Say \"in my campaign I…\"")
+
+
+def _directions(context, today: date):
+    """Panel (the Operating Journal card): today's seed, one thing within reach right now, and the directions in force
+    (core/web_directions.screen, DEC-0141)."""
+    from core.web_directions import screen
+
+    page, none = _page("My Directions", lambda: screen(context, today), "Directions aren't on this MIA.")
+    if none:
+        return none
+    lines = []
+    if page.get("seed"):
+        head, rest = _split(page["seed"])
+        lines.append(_line(head, "today's seed" + (f" · {rest}" if rest else "")))
+    if page.get("right_now"):
+        head, rest = _split(page["right_now"])
+        lines.append(_line(head, "right now" + (f" · {rest}" if rest else "")))
+    lines += [_line(d["title"], d.get("statement", "")) for d in page.get("directions") or [] if d.get("active")]
+    return _panel("My Directions", lines, "No directions yet. Say \"add a direction: …\"")
+
+
+def _connections(context, today: date):
+    """Panel (the Observations card): the connections MIA is holding, what each ties into, and what she found first
+    (core/web_connections.screen, DEC-0146)."""
+    from core.web_connections import screen
+
+    page, none = _page("Connections", lambda: screen(context, today), "Connections aren't on this MIA.")
+    if none:
+        return none
+    lines = []
+    for c in page.get("waiting") or []:
+        found = (c.get("found") or [{}])[0].get("line", "")
+        lines.append(_line(f"{c['name']}", f"you said \u201c{c['said']}\u201d" + (f" · {found}" if found else "")))
+    return _panel("Connections", lines, "No connections waiting.")
+
+
+# More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
+EXTRA = {
+    "greenhouse": (("next", "What's Next", _whats_next),),
+    "play": (("campaign", "Your Campaign", _campaign),),
+    "operating_journal": (("directions", "My Directions", _directions),),
+    "observations": (("connections", "Connections", _connections),),
+}
 
 
 PANELS = {

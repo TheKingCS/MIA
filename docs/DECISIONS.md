@@ -1956,6 +1956,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   `work/parity.json`, to build or deliberately not, and a test fails on one nobody decided about, so parity only
   grows. `docs/PARITY.md` is the table. The one exception (Zac, 2026-11-07: "yes keep passwords screen only"):
   passwords, PINs and card numbers are never spoken, heard or shown on the glasses; they stay on a screen.
+- **Glasses cards for every app (Zac, 2026-11-08: "build out the glasses screens as much as possible"; claude):** the
+  18 apps that only had an ask on the glasses got readout panels (core/glasses_cards.py), each from the app's own page
+  assembler; What's Next, Your Campaign, My Directions and Connections joined the Greenhouse, Play, Operating Journal
+  and Observations cards. The new cards change nothing but an open promise (`life_note.done`); money, cameras, browser
+  steps and filings stay readouts. Only Passwords (never on the display) and Look (the glasses' camera) have no card.
 - Related: DEC-0017, DEC-0062, DEC-0124
 
 ### DEC-0126: MIA encrypts her own data at rest
