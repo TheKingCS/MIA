@@ -27,7 +27,9 @@ reference is regenerated. **Passwords autofill** on the phone: MIA is an Android
 `AutofillActivity.kt`, `core/password_autofill.py`), checked on every phone build's emulator (registered and taken as
 the phone's autofill service, a fitting login listed without its password, a look-alike refused, 423 when locked);
 **Zac:** turn it on in Android Settings → Passwords and
-autofill → Autofill service → MIA, and try a sign-in. No app is partial in the capability list now.
+autofill → Autofill service → MIA, and try a sign-in. No app is partial in the capability list now. **Sight through the glasses' camera** (the last parity todo): "what am I looking at?" said
+through the glasses takes one photo with their own camera (`GlassesCamera.kt`, mwdat-camera 1.0.1) and asks Sight;
+builds and passes the emulator check, untried on the real glasses (Settings → Glasses → Let MIA Use the Glasses' Camera).
 **Loose ends from a full cloud run
 (2026-11-09):** besides the cloud's usual stand-in failures (FastAPI StopIteration, Qt mocks, libzim, astral, PDF
 readers), `core/inbox_manager.py` called `budget.all_expenses(include_uncounted=True)`, which this repo's
