@@ -2577,5 +2577,35 @@
     ],
     "more": 0,
     "empty": "Nothing yet."
+  },
+  "maps/tracks": {
+    "app": "maps",
+    "item": "tracks",
+    "label": "Tracks",
+    "title": "Tracks",
+    "lines": [
+      {
+        "text": "10.9 km in the last 30 days",
+        "detail": "2 tracks",
+        "tone": ""
+      },
+      {
+        "text": "Creek trail",
+        "detail": "3.97 km · 117 m up · 59 min · 2026-11-07",
+        "tone": ""
+      },
+      {
+        "text": "Ridge loop",
+        "detail": "6.94 km · 60 m up · 39 min · 2026-11-01",
+        "tone": ""
+      },
+      {
+        "text": "Morning ride",
+        "detail": "3.92 km · 117 m up · 59 min · 2026-09-20",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No tracks yet. Add a GPX file on your phone or PC."
   }
 }

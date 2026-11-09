@@ -5,7 +5,22 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-08 (evening: the glasses cards, after the unattended runs)*
+*Last updated: 2026-11-09 (early morning: the design session's screens-to-completion run)*
+
+**New 2026-11-09 (design session, unattended, Zac's /goal "every screen of MIA built out, glasses, PC and phone"):**
+the screens audit found these missing and built them, each with its actions, tests, demo data and a glasses panel
+where it fits, all pushed: **Trade Master** (`web/trades.html` in Home, `core/web_trades.py`; glasses Workshop → The
+Job moves it along, `trade.*` in GLASSES_KINDS), **How Your Good Runs Go** (DEC-0148, on the Operating Journal;
+glasses Good Runs), **Waiting for the Internet** (the online reminders, on Notifications; `online.remind`,
+`online.forget`), **Tracks** (GPX walks, rides and drives, `web/tracks.html` in Recreation; `track.add`,
+`track.delete`; glasses Maps → Tracks), voice for **look it up online**, **what isn't working**, and **past
+conversations** (`core/assistant_screen_tools.py`), the Dungeon's **shift differentials and tips**
+(`run_loot`, `dungeon.tips`), and Real Estate **selling** (`property.list_sale`, `property.sell`, a Sold section;
+a sold property leaves equity). Glasses lines with no mark now split at a word. All 99 pages pass the demo sweep on
+desktop and phone. K-0156 to K-0162. **Still partial, not built on purpose:** Greenhouse/Power/Lab sensor readings
+(the greenhouse node is DEC-0150, proposed, waiting on Zac's five answers), Passwords autofill in other apps
+(never, by design so far), the character portrait (Zac's call; the art studio paints no people).
+**On the PC:** `python -m tools.dump_assistant_capabilities` (four new tools; it needs PySide6).
 
 **New 2026-11-08 (engine session's unattended run, 09:42 to evening): what's built, and what's next.** Built, core
 only, all pushed: the deep What's Next (DEC-0144, every chain); T-0020 repository inspection plus the weekly docs

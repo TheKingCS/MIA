@@ -2,7 +2,18 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-08 (evening: the engine and design sessions, both unattended runs done), by claude.*
+session. Last updated: 2026-11-09 (early morning: the design session's screens-to-completion run), by claude.*
+
+**2026-11-09 early morning (Claude, design session, unattended under Zac's goal: every screen built out on the
+glasses, the PC and the phone).** An audit of every screen found what had no screen and built it: **Trade Master**
+(the jobs and diagnoses by trade, one opened whole, and the step-by-step walkthrough with Checked, Next, Back and Stop;
+on the glasses, the Workshop card's "The Job"), **How Your Good Runs Go** on the Operating Journal (Natural Momentum's
+counts, never a score), **Waiting for the Internet** on Notifications, and **Tracks** (your GPX walks, rides and
+drives with their shapes and numbers; on the glasses' Maps card too). MIA can now **look things up online**, say
+**what isn't working**, and find **past conversations** by voice. The Dungeon counts **shift differentials and tips**,
+and Real Estate tracks **selling a property** (listed, then sold, with what it came to as an estimate). Every one of
+the 99 web pages passes on desktop and phone. What's left partial waits on Zac: the greenhouse sensors (DEC-0150) and
+the character portrait.
 
 **2026-11-08 overnight (Claude, design session, Zac asleep): screens for everything decided.** The engine session's
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,

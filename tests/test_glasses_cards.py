@@ -3,7 +3,7 @@ The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
 Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
-Workshop's The Job, moving a Trade Master job along with its holds kept), the card
+Workshop's The Job, moving a Trade Master job along with its holds kept, and the Maps card's Tracks), the card
 faces and their tiles, and long sentences split into a head and a detail (at a mark, or at the last word that fits),
 and Good Runs (Natural Momentum's counts).
 """
@@ -238,3 +238,16 @@ def test_the_workshop_card_says_when_no_job_is_going():
 
     p = _trade_job(SimpleNamespace(trade_session=SimpleNamespace(live=lambda: None)), date(2026, 11, 9))
     assert p["lines"] == [] and "walk me through" in p["empty"]
+
+
+def test_the_maps_card_shows_the_latest_tracks_and_the_months_total(tmp_path):
+    from core.gps_tracks import GpsTracks
+    from core.glasses_cards import _tracks
+    from tests.test_web_tracks import gpx
+
+    ctx = SimpleNamespace()
+    ctx.gps_tracks = GpsTracks(ctx, data_dir=tmp_path)
+    ctx.gps_tracks.add_gpx(gpx("Ridge loop", "2026-11-01"))
+    p = _tracks(ctx, date(2026, 11, 9))
+    assert p["lines"][0]["text"].endswith("km in the last 30 days") and p["lines"][1]["text"] == "Ridge loop"
+    assert "No tracks yet" in _tracks(SimpleNamespace(gps_tracks=GpsTracks(ctx, data_dir=tmp_path / "none")), date(2026, 11, 9))["empty"]

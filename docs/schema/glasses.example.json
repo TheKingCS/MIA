@@ -944,6 +944,16 @@
    "pinned": false,
    "menu": [
     {
+     "id": "trail_maps",
+     "label": "Trail Maps",
+     "type": "panel"
+    },
+    {
+     "id": "tracks",
+     "label": "Tracks",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "Which trail maps do I have",
      "type": "ask",

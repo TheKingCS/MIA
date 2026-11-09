@@ -579,6 +579,22 @@ def _good_runs(context, today: date):
     return _panel("Good Runs", lines, momentum.picture_words(p) or "Nothing yet.")
 
 
+def _tracks(context, today: date):
+    """Panel (the Maps card): the latest tracks (core/web_tracks.screen, DEC-0099), each with its distance, climb and
+    time, and the last 30 days' total."""
+    from core.web_tracks import screen
+
+    page, none = _page("Tracks", lambda: screen(context, today), "Tracks aren't on this MIA.")
+    if none:
+        return none
+    lines = [_line(t["name"], " · ".join(b for b in (f"{t['km']:g} km", f"{t['climb_m']} m up" if t["climb_m"] else "",
+                                                      t["time"], t["date"]) if b)) for t in page.get("tracks") or []]
+    t = page.get("totals") or {}
+    if lines and t.get("count_30"):
+        lines.insert(0, _line(f"{t['km_30']:g} km in the last 30 days", f"{t['count_30']} track{'s' if t['count_30'] != 1 else ''}"))
+    return _panel("Tracks", lines, "No tracks yet. Add a GPX file on your phone or PC.")
+
+
 # More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
 EXTRA = {
     "greenhouse": (("next", "What's Next", _whats_next),),
@@ -586,6 +602,7 @@ EXTRA = {
     "operating_journal": (("directions", "My Directions", _directions), ("runs", "Good Runs", _good_runs)),
     "observations": (("connections", "Connections", _connections),),
     "workshop": (("job", "The Job", _trade_job),),
+    "maps": (("tracks", "Tracks", _tracks),),
 }
 
 
