@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1323 files, 287,849 lines; 1323 files describe themselves; 16,157 of 16,251 classes and functions are documented.
+1326 files, 288,784 lines; 1326 files describe themselves; 16,209 of 16,303 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-496 files, 137,821 lines; 7,330 of 7,416 classes and functions documented
+498 files, 138,542 lines; 7,368 of 7,454 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -216,6 +216,8 @@
 - `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable.
 - `core/goods_starters.py`: Starter recipes for homestead goods (DEC-0037): a cutting board, a planter, spice and herb blends, mixes in a jar, eggs, microgreens and plant starts, to copy into Workshop → Recipes and change to your own. Generic on purpose: no prices (yours to set), quantities a common starting point, allergens f
 - `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e
+- `core/greenhouse_link.py`: "Take over the greenhouse" (DEC-0150; Zac, 2026-11-08: "build it and essentially pass her to it, so that she can integrate and monitor everything she has set up for monitoring"). MIA's half of the link to the MIA Homestead node (`homestead/`): she watches; the node, its control loop and its safety M
+- `core/greenhouse_provision.py`: Setting up the greenhouse's hardware from MIA (DEC-0150; Zac, 2026-11-08: "MIA needs to be able to flash/program the pi and other components and help me set them up when it comes time. Maybe have like preloaded configs set up and all internal info able to be pushed by MIA").
 - `core/grow_actions.py`: The grow lab's actions (DEC-0030 phase D, core/grow_lab.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/grow_lab.py`: The grow lab (DEC-0030 phase D): running a greenhouse, aquaponics tanks and growing beds like a scientist. Record what's planted, measure the water, compare what works, learn from the results.
 - `core/guitar.py`: Guitar, the first program on MIA's learning paths (DEC-0111, DEC-0112; Zac, 2026-11-07: "I want to learn guitar and would like for MIA to be able to help teach me as well as track my progress and assign missions like homework ... being able to verify and test a user's skills just like it would do fo
@@ -783,7 +785,7 @@
 
 ## tests/: the test suite: what each part must do
 
-454 files, 76,123 lines; 6,536 of 6,544 classes and functions documented
+455 files, 76,337 lines; 6,550 of 6,558 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -941,6 +943,7 @@
 - `tests/test_good_news.py`: Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known (confirmed by two outlets, from the source itself, or one outlet, each with its tag), its caveats kept, four personalities, on only when switched on, and stories called misleading counted by sou
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package.
+- `tests/test_greenhouse.py`: Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/greenhouse_link.py watches every sensor the node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab, reads only from the person's own network, and knows the node fro
 - `tests/test_greenhouse_module.py`: Unit tests for modules.greenhouse.module's pure functions, same style as tests/test_garage_module.py/tests/test_property_module.py (no Qt event loop, no fixtures).
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known.
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a

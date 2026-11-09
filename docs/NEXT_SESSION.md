@@ -30,8 +30,14 @@ T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 history's older lines (seal them or not), the homestead push, DEC-0147's choices, the iOS path, restart MIA.
 
-**Proposed (engine, 2026-11-08 evening): DEC-0150, the aquaponics greenhouse built with MIA and handed to her**
-(`docs/AQUAPONICS_HANDOFF_PROPOSAL.md`): waits on Zac's homestead push (DEC-0145) and his five answers. Zac also
+**Built (engine, 2026-11-08 evening): DEC-0150, the aquaponics greenhouse built with MIA and handed to her**
+(approved). The homestead merge (DEC-0145) is committed on local master with this work on top; **the push was held
+by the session's safety check, so it waits for Zac** (`git push origin master` in C:\Users\zacrh\MIA, or a
+permission rule). Then remove the worktree C:\Users\zacrh\MIA-merge-homestead (`git worktree remove`) and the
+`homestead-merge` branch. Built: the three aquaponics jobs, `homestead/viewer/serve_exports.py`,
+`core/greenhouse_link.py`, `core/greenhouse_provision.py`, the `greenhouse.reporting` loop. Next: the SMTP secret
+pushed from the vault, the live link (DEC-0150 answer 3c), and for the design session a Greenhouse screen (monitors,
+alerts, "take over", the flash and push steps). Zac also
 asked for the Trade Master walkthrough screen (2026-11-08, "let's build those"): **for the design session**, as
 noted below; the six starter diagnoses are built.
 

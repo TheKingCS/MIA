@@ -473,6 +473,9 @@ class MIAApplication:
         self.context.avatar = AvatarManager(self.context)
         self.context.finance = FinanceManager(self.context)
         self.context.homestead = HomesteadManager(self.context)
+        from core.greenhouse_link import GreenhouseLink
+
+        self.context.greenhouse_link = GreenhouseLink(self.context)  # "take over the greenhouse" (DEC-0150)
         self.context.lite_captures = LiteCaptureManager(self.context)
         self.context.maintenance = MaintenanceManager(self.context)
         self.context.insights = InsightManager(self.context)
@@ -732,7 +735,7 @@ class MIAApplication:
 
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
-        DEC-0148).
+        DEC-0148, and the greenhouse node, DEC-0150).
 
         Stabilization (2026-09-14) — this used to be one long function
         with 14 sequential `if should_run_once_daily(...):` blocks and
@@ -799,6 +802,7 @@ class MIAApplication:
             ("direction_nudge", self._check_direction_nudge),
             ("capability_reminder", self._check_capability_reminder),
             ("momentum", self._check_momentum),
+            ("greenhouse", self._check_greenhouse),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -1197,6 +1201,19 @@ class MIAApplication:
                     source="system", fingerprint=f"capability:{today_iso}")
         config.set("system.last_capability_reminder_date", today_iso)
         config.save()
+
+    def _check_greenhouse(self, now: datetime, today_iso: str) -> None:
+        """The greenhouse node (core/greenhouse_link.py, DEC-0150): once MIA has taken it over, read it every few
+        minutes, keep its readings in the grow lab, and offer each new alert through the gate (critical urgent,
+        warning timely)."""
+        from core import greenhouse_link
+
+        link = getattr(self.context, "greenhouse_link", None)
+        if link is None:
+            return
+        for c in greenhouse_link.tick(self.context, link, now):
+            self._offer(topic=c.topic, title=c.title, message=c.message, urgency=c.urgency, source=c.source,
+                        fingerprint=c.fingerprint)
 
     def _check_momentum(self, now: datetime, today_iso: str) -> None:
         """Natural Momentum (core/momentum.py, DEC-0148): in the person's usual hour for a run of getting things done,

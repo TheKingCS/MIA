@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-94 loops in 8 areas.
+95 loops in 8 areas.
 
 ## Answers
 
@@ -113,6 +113,7 @@
 |---|---|---|---|---|---|
 | `browser.runs` | runs of taught browser tasks that finished clean (DEC-0117) | person | ≥ 0.8 (from 3) | offers it to them | `store:browser_routines` |
 | `classroom.stalled` | courses under way that no lesson moved in 30 days | person | trend | shown, never acted on | `store:classroom`, `action:subject`, `action:course`, `action:lesson` |
+| `greenhouse.reporting` | the greenhouse node's sensors reporting fresh readings (DEC-0150) | device | ≥ 0.9 | shown, never acted on | `check:greenhouse` |
 | `journal.pace` | how often they operate the way they said they mean to | person | trend | shown, never acted on | `store:operating_journal`, `action:operating`, `check:operating_journal` |
 | `missions.recurring` | daily recurring missions not done, in 30 days | person | ≤ 0.5 (from 10) | offers it to them | `check:recurring_mission` |
 | `paths.practice` | practice days this week on each learning path, of the plan's (DEC-0112) | person | trend | shown, never acted on | `store:paths` |
@@ -129,7 +130,7 @@
 
 | Loop | Watches | Scope | Floor | When it slips | Covers |
 |---|---|---|---|---|---|
-| `checks.dismissed` | the daily check whose messages are dismissed most, in 30 days | person | ≤ 0.6 (from 10) | opens a task | `check:budget_nudge`, `check:calendar_digest`, `check:capability_reminder`, `check:checkin`, `check:chronicle`, `check:dependency_audit` and 20 more |
+| `checks.dismissed` | the daily check whose messages are dismissed most, in 30 days | person | ≤ 0.6 (from 10) | opens a task | `check:budget_nudge`, `check:calendar_digest`, `check:capability_reminder`, `check:checkin`, `check:chronicle`, `check:dependency_audit` and 21 more |
 | `connections.landed` | connections she noticed that she brought up, not let expire, in 30 days | person | ≥ 0.3 (from 5) | opens a task | `store:connections` |
 | `gate.dismissed` | unprompted messages dismissed, in 7 days | person | ≤ 0.5 (from 5) | opens a task | `flow:gate`, `store:communication`, `store:notifications` |
 | `gate.expired` | messages held back that expired before they went out | person | trend (from 3) | shown, never acted on | `flow:gate` |

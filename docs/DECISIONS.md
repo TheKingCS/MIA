@@ -2607,6 +2607,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   configs set up and all internal info able to be pushed by MIA": provisioning (flashing the safety MCU's firmware
   from the PC over USB, preparing the Pi, configs generated in advance from the node's own templates, pushed to the
   node), each step a person-approved action with the stop rules, secrets from the vault and never typed by a model.
+  **Built (claude, engine, 2026-11-08 evening, committed locally on top of the merge; it all goes up with Zac's
+  push):** three Trade Master jobs for the pilot (`aquaponics_system`, `aquaponics_controls`, `aquaponics_commission`,
+  an Aquaponics systems trade, each to DEC-0149's standard); `homestead/viewer/serve_exports.py` (the node serves its
+  two exports, read-only, nothing else); `core/greenhouse_link.py` ("take over the greenhouse [at <address>]": every
+  sensor a monitor, new critical alerts urgent and warnings timely through the gate, once each, readings into the
+  grow lab's series every half hour a sensor, a status line, the node known from its own generated FEATURES and BOM
+  documents, only from an address on his own network; a dropped dashboard_state.json works too);
+  `core/greenhouse_provision.py` ("flash the safety MCU": the ESP32 found by its USB chip, PlatformIO's upload on a
+  "yes, flash it"; "prepare the Pi": an SSH key, preloaded configs from the node's own templates with every comment
+  kept and the SMTP password left empty, the Imager steps with the Wi-Fi password typed by him; "push the greenhouse
+  to <host>": the node and its configs over SSH and its install, on a "yes, push it"); the `greenhouse.reporting`
+  loop. Not yet: the vault-to-node secret push, the live link (answer 3c), a screen (the design session's).
 - From: Zac, 2026-11-08 ("walk through and execute the steps for building out the aquaponics greenhouse ...
   understand what technologies go into it, what she is able to connect to and configure ... build it and essentially
   pass her to it, so that she can integrate and monitor everything she has set up for monitoring").

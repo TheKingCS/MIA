@@ -83,7 +83,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     """For the desktop's chat panels, which build their own model request
     (2026-10-30: they never got these): a plain-word command done by code
     ("workout complete", "undo that"), a job being walked through ("next",
-    "checked", core/trade_actions.py), what they did ("I put away the
+    "checked", core/trade_actions.py), the greenhouse and its hardware
+    ("take over the greenhouse", "flash the safety MCU", DEC-0150), what they did ("I put away the
     dishes", core/did_it.py), or a question one lookup answers, run by
     code, no model; None when a question plan will answer (it comes
     first, as in run_assistant_turn) or it's for the model. Never in a
@@ -97,6 +98,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     except Exception:
         log.exception("Couldn't follow the job")
         walked = None
+    if walked is None:
+        walked = _greenhouse_reply(context, prompt)  # the greenhouse and its hardware (DEC-0150), as in a turn
     if walked is not None:
         return walked
     from core.quick_commands import handle
@@ -119,6 +122,19 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     if match(context, prompt) is not None or follow_up(conversation, prompt) is not None:
         return None
     return _direct_lookup(context, prompt)
+
+
+def _greenhouse_reply(context, prompt: str):
+    """The greenhouse node, in code: "take over the greenhouse", "how's the greenhouse?" (core/greenhouse_link.py),
+    and setting up its hardware, "flash the safety MCU", "prepare the Pi", "push the greenhouse to ..."
+    (core/greenhouse_provision.py); None when the words aren't for it."""
+    from core import greenhouse_link, greenhouse_provision
+
+    try:
+        return greenhouse_link.reply(context, prompt) or greenhouse_provision.reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't follow the greenhouse words")
+        return None
 
 
 def _personal(conversation) -> bool:
@@ -172,7 +188,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), a job being walked through (core/trade_actions.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -219,6 +235,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         except Exception:
             log.exception("Couldn't follow the job")
             walked = None
+        if walked is None:
+            walked = _greenhouse_reply(context, prompt)  # "take over the greenhouse", "flash the safety MCU" (DEC-0150)
         if walked is not None:
             add_message(conversation, "assistant", walked)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [walked], route="code")

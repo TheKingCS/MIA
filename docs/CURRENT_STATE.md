@@ -21,6 +21,15 @@ desktop and phone. In the afternoon each engine piece got its screen as it lande
 checks, About MIA's app health, Diagnostics' repository check, the development board's disagreements and evolution
 timeline, and **Look It Up Online** (searches through your own SearXNG once it's running). See `docs/NEXT_SESSION.md`.
 
+**2026-11-08 evening (Claude, engine session, with Zac): MIA Homestead merged in, and the greenhouse handed to MIA
+(DEC-0145, DEC-0150, approved).** The homestead node is now `homestead/` in MIA's repository (merged and verified
+locally: MIA's suite unchanged, the node's scenarios as before; **the push waits for Zac**). MIA walks the pilot's
+build as three jobs (build the system, install the controls, commission and cycle). "Take over the greenhouse" has her
+read the node every few minutes from its read-only export server on your own network: every sensor a monitor,
+critical alerts right away, readings into the grow lab, a status line, and she knows the node's technology from its
+own documents. She can flash the safety MCU over USB, prepare the Pi (an SSH key, preloaded configs, the Imager
+steps) and push the node to it, each on your yes. The node and its safety MCU still do all the controlling.
+
 **2026-11-08 evening (Claude, engine session, with Zac): Trade Master (DEC-0149, approved).** Say "walk me through
 building the coop" and MIA takes you through it step by step: each step with why and what to watch for, hold points
 she won't go past until you say "checked", and stop rules in code ("I smell gas", "the tester beeps", "I'm bleeding")

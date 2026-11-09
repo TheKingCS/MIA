@@ -9,14 +9,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Start here (2026-11-08 evening: the short list, in order; everything else is below)
+0. [ ] **Push the homestead merge** (you said yes; the session's safety check held the push itself): in
+       `C:\Users\zacrh\MIA` run `git push origin master`. It carries the merge (verified: MIA's suite unchanged,
+       the node's scenarios as before) and the greenhouse work on top of it.
 1. [ ] **Restart MIA** (close both copies, start it once): turns on everything built 2026-11-07/08, including the
        encryption at rest. Then **save the recovery key** (Settings, or `python -m tools.data_key recovery`) in your
        password manager.
-2. [ ] **Say yes or no to the homestead push** (DEC-0145): `mia-homestead` is merged as `homestead/` on the branch
-       `homestead-merge` (worktree `C:\Users\zacrh\MIA-merge-homestead`), held back because it puts another repo's
-       history on master. On your yes, Claude merges and pushes it.
-3. [ ] **Decide four proposals:** DEC-0150 the aquaponics greenhouse (`docs/AQUAPONICS_HANDOFF_PROPOSAL.md`, five questions;
-       its first is the homestead push in item 2), DEC-0147
+2. [x] ~~The homestead merge~~: you said yes; merged (item 0 is its push).
+3. [ ] **Decide three proposals:** DEC-0147
        the Woodworking Studio (four questions), the iOS path (three options,
        below), and T-0051 the phone's old security packages (three options, below).
 4. [ ] **Your history's older lines** (DEC-0126): seal them (close MIA, then
@@ -24,6 +24,14 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 5. [ ] **Start SearXNG** for online lookups (`docs/ONLINE_LOOKUP.md`: Docker Desktop and one command).
 6. [ ] **Commit the DEC-0133 email files and finish Plaid** on the PC (both are your uncommitted work: details below).
 7. [ ] **Encrypt the PC's drive** (Windows 11 Home has Device Encryption: details under Security).
+
+### The greenhouse (2026-11-08: approved and built, DEC-0150)
+- [ ] **When the pilot build starts:** "walk me through building the aquaponics system", then the controls job, then
+      "walk me through the fishless cycle". Install PlatformIO on the PC (`pip install platformio`) before "flash the
+      safety MCU".
+- [ ] **When the Pi is ready:** "prepare the Pi" (it writes the configs and the Imager steps), then "push the
+      greenhouse to mia-greenhouse", then on the node run `viewer/serve_exports.py --bind <its address>`, then "take
+      over the greenhouse at <its address>".
 
 ### Trade Master (2026-11-08: approved and built, DEC-0149)
 - [ ] **Try it after the restart:** "walk me through building the coop" (or the greenhouse, the workshop, the cold

@@ -333,6 +333,7 @@ CHECK_TOPICS = {
     "produce": "direction_nudge",
     "capability": "capability_reminder",
     "momentum": "momentum",
+    "greenhouse": "greenhouse",
 }
 
 
@@ -380,6 +381,19 @@ def _trades_depth(_context) -> Optional[Reading]:
     return Reading(round(d["written"] / d["wanted"], 3), d["wanted"],
                    f"{d['written']} of {d['wanted']} written; next: {d['next'] or 'none'}"
                    + (f"; short of the standard: {', '.join(d['failing'])}" if d["failing"] else ""))
+
+
+def _greenhouse_reporting(context) -> Optional[Reading]:
+    """Measure: the share of the greenhouse node's sensors reporting fresh readings in the last state MIA read
+    (DEC-0150). None before she has taken it over."""
+    from core.greenhouse_link import monitors
+
+    link = getattr(context, "greenhouse_link", None)
+    found = monitors(link.state) if link is not None and link.taken_over else []
+    if not found:
+        return None
+    fresh = sum(1 for m in found if not m["stale"] and m["value"] is not None)
+    return Reading(round(fresh / len(found), 3), len(found), f"{fresh} of {len(found)} sensors reporting")
 
 
 def _trades_finished(context) -> Optional[Reading]:
@@ -1255,6 +1269,9 @@ LOOPS: tuple[Loop, ...] = (
     Loop("trades.depth", "development", "Trade Master's wanted jobs written to the standard (DEC-0149)", "device",
          _trades_depth, better="higher", floor=1.0, min_n=1, every=7,
          files=("core/trades.py", "core/trade_jobs.py"), covers=("dev:trades",)),
+    Loop("greenhouse.reporting", "life", "the greenhouse node's sensors reporting fresh readings (DEC-0150)", "device",
+         _greenhouse_reporting, better="higher", floor=0.9, min_n=1, acts="watch",
+         files=("core/greenhouse_link.py",), covers=("check:greenhouse",)),
     Loop("trades.finished", "life", "jobs and diagnoses walked through to the end, of those started, in 90 days "
          "(DEC-0149)", "person", _trades_finished, better="higher", floor=0.5, min_n=3, acts="watch",
          files=("core/trade_session.py", "core/trade_actions.py"), covers=("store:trade_session", "action:trade")),
