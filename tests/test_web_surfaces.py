@@ -4,7 +4,8 @@ core/web_surfaces.py so web/ holds no logic. The sidebar is the
 person's own (child-safe, tucked-away apps hidden), Home is the
 concept's dashboard: greeting, Today's Focus with each item's action and
 kind, Upcoming, the status strip, glance cards (DEC-0113 for the last two
-additions; net worth, Observations and the Inbox among them since 2026-11-07).
+additions; net worth, Observations and the Inbox among them since 2026-11-07), and Home said
+aloud for its Hear It button (`briefing`).
 """
 
 from datetime import date, datetime, timedelta
@@ -265,3 +266,15 @@ def test_the_glance_adds_net_worth_and_what_mia_noticed_and_captures_waiting():
     assert (inbox["app"], inbox["line"]) == ("inbox", "2 captures to file · Hardware store receipt")
     quiet = glance_counts({"insights": [{"source": "Patterns", "items": [{"title": "You cook more on Sundays"}]}]}, [])
     assert quiet[0]["tone"] == "calm" and quiet[0]["line"] == "1 thing noticed · You cook more on Sundays"
+
+
+def test_home_said_aloud_names_todays_first_three_and_what_she_noticed():
+    from core.web_surfaces import briefing
+
+    said = briefing("Good morning, Sam", "Mon, Nov 9", [{"title": "Feed the hens"}, {"title": "Pay the loan"},
+                                                       {"title": "Oil change"}, {"title": "Water"}],
+                    [{"title": "x"}, {"title": "y"}], {"claim": "Your egg count dropped this week."})
+    assert said == ("Good morning, Sam. It's Mon, Nov 9. 4 things need you today: Feed the hens, Pay the loan, Oil "
+                    "change, and 1 more. 2 more coming up soon. One thing I noticed: your egg count dropped this week.")
+    assert briefing("Hi", "", [], [], None) == "Hi. Nothing needs you today."
+    assert "One thing needs you today: Water." in briefing("Hi", "", [{"title": "Water"}], [], {"claim": "MIA is new."})
