@@ -9,7 +9,7 @@ a title, at most five short lines (text, detail, tone) and what to say when it's
 panels, so MIA still answers anything the card doesn't show.
 
 What these cards may change is still core/glasses.GLASSES_KINDS: here only "Done" on an open promise
-(`life_note.done`, undoable), and moving a Trade Master job along (`trade.next`, `trade.check`,
+(`life_note.done`, undoable), and starting and moving a Trade Master job along (`trade.start`, `trade.next`, `trade.check`,
 `trade.back`, `trade.answer`, `trade.stop`: the hold points are enforced in core/trade_session.py). Everything else is a readout: no money moves, no camera settings, no browser steps (a
 browser commit is approved by a person on a bigger screen, DEC-0117), no compliance marked filed.
 
@@ -528,7 +528,8 @@ def _trade_job(context, today: date):
     """Panel (the Workshop card): the job or diagnosis being walked through (Trade Master, core/web_trades.walkthrough,
     DEC-0149): the step in focus with Next (a long one split where it reads well, its rest on the next line), its hold point with Checked,
     Back, Stop, then why; a diagnosis's question
-    with Yes and No. The holds are enforced in core/trade_session.py, so Next on an unchecked hold says what to check."""
+    with Yes and No; with none going, the jobs and diagnoses to start (Start). The holds are enforced in
+    core/trade_session.py, so Next on an unchecked hold says what to check."""
     from core.web_trades import walkthrough
 
     try:
@@ -536,9 +537,16 @@ def _trade_job(context, today: date):
     except Exception:
         log.exception("Glasses: the job panel failed")
         return _panel("The Job", [], "The job couldn't be read just now.")
-    if not w or w.get("status") != "working":
-        return _panel("The Job", [], "No job going. Say \u201cwalk me through\u2026\u201d a build or a repair.")
     act = lambda kind, label, **params: {"kind": kind, "label": label, "params": params}  # noqa: E731
+    if not w or w.get("status") != "working":
+        from core.web_trades import library
+
+        if getattr(context, "trade_session", None) is None:
+            return _panel("The Job", [], "Trade Master isn't on this MIA.")
+        starts = [_line(it["name"], f"{it['kind_word'].lower()} · {it['steps']} {'checks' if it['kind'] == 'diagnosis' else 'steps'}",
+                        "", act("trade.start", "Start", item_id=it["id"]))
+                  for g in library() for it in g["items"]]
+        return _panel("Start a Job", starts, "Nothing written yet. Say \u201cwalk me through\u2026\u201d a build or a repair.")
     if w["kind"] == "diagnosis":
         head, rest = _split(w.get("ask") or w.get("say", ""))
         return _panel(w["title"], [_line(head, rest or "diagnosis"),

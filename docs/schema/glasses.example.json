@@ -1964,6 +1964,7 @@
   "trade.back",
   "trade.check",
   "trade.next",
+  "trade.start",
   "trade.stop"
  ],
  "areas": [

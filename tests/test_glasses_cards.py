@@ -3,7 +3,7 @@ The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
 Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
-Workshop's The Job, moving a Trade Master job along with its holds kept, the Maps card's Tracks, and the Classroom's Practice with a chord's shape), the card
+Workshop's The Job, starting a Trade Master job and moving it along with its holds kept, the Maps card's Tracks, and the Classroom's Practice with a chord's shape), the card
 faces and their tiles, and long sentences split into a head and a detail (at a mark, or at the last word that fits),
 and Good Runs (Natural Momentum's counts).
 """
@@ -231,13 +231,15 @@ def test_the_workshop_card_asks_a_diagnosis_yes_or_no():
     assert [(ln.get("action") or {}).get("params", {}).get("answer") for ln in p["lines"][1:3]] == ["yes", "no"]
 
 
-def test_the_workshop_card_says_when_no_job_is_going():
+def test_the_workshop_card_offers_the_jobs_to_start_when_none_is_going():
     from types import SimpleNamespace
 
     from core.glasses_cards import _trade_job
 
     p = _trade_job(SimpleNamespace(trade_session=SimpleNamespace(live=lambda: None)), date(2026, 11, 9))
-    assert p["lines"] == [] and "walk me through" in p["empty"]
+    assert p["title"] == "Start a Job" and p["lines"] and all(
+        ln["action"]["kind"] == "trade.start" and ln["action"]["params"]["item_id"] for ln in p["lines"])
+    assert "isn't on this MIA" in _trade_job(SimpleNamespace(), date(2026, 11, 9))["empty"]
 
 
 def test_the_maps_card_shows_the_latest_tracks_and_the_months_total(tmp_path):

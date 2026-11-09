@@ -71,9 +71,9 @@ GLASSES_KINDS = frozenset({
     "lesson.done",
     # Kept's open promises (core/glasses_cards.py, 2026-11-08): "Done", undoable
     "life_note.done",
-    # Trade Master's walkthrough (DEC-0149, core/glasses_cards._trade_job): the step along, a hold checked, a
-    # diagnosis's yes or no, and Stop; the holds are enforced in core/trade_session.py, never on the card
-    "trade.next", "trade.check", "trade.back", "trade.answer", "trade.stop",
+    # Trade Master's walkthrough (DEC-0149, core/glasses_cards._trade_job): a job started, the step along, a hold
+    # checked, a diagnosis's yes or no, and Stop; the holds are enforced in core/trade_session.py, never on the card
+    "trade.start", "trade.next", "trade.check", "trade.back", "trade.answer", "trade.stop",
 })
 
 # Apps the glasses don't show as cards: the orb *is* Home and Talk; the
