@@ -30,7 +30,10 @@ T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 history's older lines (seal them or not), the homestead push, DEC-0147's choices, the iOS path, restart MIA.
 
-**Claimed by the engine session (2026-11-08 evening), core only: DEC-0148 Natural Momentum (approved).**
+**Built by the engine session (2026-11-08 evening), core only: DEC-0148 Natural Momentum (approved).** For the
+design session: `core.momentum.findings(context)` (plain-word counts, [] until three runs) is ready for a small
+"how your good runs go" line, never a score. For the parity session: "I did X" is code-done already
+(`core/did_it.py`), so no tool is needed for it; the gate topic is `momentum`.
 `core/did_it.py` ("I did X": recorded, counted toward a routine, offered toward a task or mission objective or as a
 new routine), `core/momentum.py` (windows, chains, flow, one easy start, tomorrow's prep), the gate's flow guard.
 Screens stay the design session's, voice routing beyond these code-done phrases the parity session's.

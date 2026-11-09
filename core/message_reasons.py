@@ -49,6 +49,9 @@ REASONS: dict[str, tuple[str, str]] = {
                                              "security problems, and tell you when one needs updating"),
     "produce": ("your producer goal", "you asked me to encourage your shift from consumer to producer, so now and then "
                                       "I nudge you toward making, restoring or growing something yourself"),
+    "momentum": ("easy starts and tomorrow's prep", "you asked me (DEC-0148) to help your good runs of getting things "
+                 "done happen again: one easy first thing in your usual hour, and the prep you've done before a work "
+                 "day"),
     "capability": ("what you're capable of", "you asked me to remind you now and then of what you can already go and "
                                              "do right now — a gentle redirect when it helps you get on track"),
 }

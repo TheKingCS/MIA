@@ -21,6 +21,14 @@ desktop and phone. In the afternoon each engine piece got its screen as it lande
 checks, About MIA's app health, Diagnostics' repository check, the development board's disagreements and evolution
 timeline, and **Look It Up Online** (searches through your own SearXNG once it's running). See `docs/NEXT_SESSION.md`.
 
+**2026-11-08 evening (Claude, engine session, with Zac): "I did X" and Natural Momentum (DEC-0148, approved).**
+Say what you did ("I just put away the dishes and started a load of laundry") and MIA keeps it in your history,
+counts it toward a routine it names (undoable), and offers once to tick off a matching task or mission step, or to
+make something you keep doing a routine. She learns your runs of getting things done (what starts them, when, after
+a full night or not) as counts, offers one easy start in your usual hour and tomorrow's prep before a work day, and
+holds her non-urgent messages while you're in the middle of getting things done. Nothing for Faith beyond what
+already exists (DEC-0119).
+
 **2026-11-08, 09:42 to evening (Claude, engine session, Zac asleep: "work on everything decided"): smarter next
 steps, and MIA watching her own development.** Core logic only; the design session built the screens as each piece
 landed. **What's Next got deep** (DEC-0144): the homestead advisor looks down each goal's whole path, weighs value

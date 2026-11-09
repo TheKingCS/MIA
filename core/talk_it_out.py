@@ -118,7 +118,8 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     it may type or search for on its own (DEC-0122). Past the danger
     check, the words are looked at for connections to things started
     weeks ago (core/connections.py), kept to come up naturally later;
-    that never changes this turn."""
+    that never changes this turn. A yes to "keep it" or to tracking what
+    they did (core/did_it.py) is done here too."""
     result = PreTurn()
     conversation.private_turn = _looks_like_journal_read(prompt)
     # Her browser may type or search for only what the person said (DEC-0117, tightened 2026-11-07).
@@ -222,6 +223,18 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
         kept = None
     if kept is not None:
         result.fixed_reply = kept
+        return result
+
+    # A yes to MIA's offer to track something they did (core/did_it.py, DEC-0148).
+    from core.did_it import answer_offer as track_answer
+
+    try:
+        tracked = track_answer(context, conversation, prompt)
+    except Exception:
+        log.exception("Couldn't track what the person did")
+        tracked = None
+    if tracked is not None:
+        result.fixed_reply = tracked
         return result
 
     # Where MIA stumbled (core/failure_log.py): what these words say about her

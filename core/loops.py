@@ -332,6 +332,7 @@ CHECK_TOPICS = {
     "dependency_audit": "dependency_audit",
     "produce": "direction_nudge",
     "capability": "capability_reminder",
+    "momentum": "momentum",
 }
 
 

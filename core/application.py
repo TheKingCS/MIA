@@ -731,7 +731,8 @@ class MIAApplication:
             )
 
     def _check_daily_occasions(self) -> None:
-        """See core/daily_occasions.py's docstring for the full reasoning behind each check.
+        """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
+        DEC-0148).
 
         Stabilization (2026-09-14) — this used to be one long function
         with 14 sequential `if should_run_once_daily(...):` blocks and
@@ -797,6 +798,7 @@ class MIAApplication:
             ("system_map", self._check_system_map),
             ("direction_nudge", self._check_direction_nudge),
             ("capability_reminder", self._check_capability_reminder),
+            ("momentum", self._check_momentum),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -1195,6 +1197,22 @@ class MIAApplication:
                     source="system", fingerprint=f"capability:{today_iso}")
         config.set("system.last_capability_reminder_date", today_iso)
         config.save()
+
+    def _check_momentum(self, now: datetime, today_iso: str) -> None:
+        """Natural Momentum (core/momentum.py, DEC-0148): in the person's usual hour for a run of getting things done,
+        with nothing done yet, one easy start; in the evening before a work day, the prep they've done before. Each at
+        most once a day, through the gate (which holds both while they're already in flow)."""
+        from core import momentum
+
+        config = self.context.config
+        for kind, line, title in (("start", momentum.easy_start(self.context, now), "\u2615 An easy start"),
+                                  ("prep", momentum.tomorrow_prep(self.context, now), "\U0001F319 For tomorrow")):
+            if not line or config.get(f"system.last_momentum_{kind}_date") == today_iso:
+                continue
+            self._offer(topic="momentum", title=title, message=line, urgency=AMBIENT, source="system",
+                        fingerprint=f"momentum:{kind}:{today_iso}")
+            config.set(f"system.last_momentum_{kind}_date", today_iso)
+            config.save()
 
     def _capabilities_on_hand(self) -> list:
         """The real, right-now abilities a reminder can draw from: core/capability_reminders.on_hand (shared with the

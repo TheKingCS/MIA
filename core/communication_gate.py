@@ -124,10 +124,12 @@ class Decision:
 
 @dataclass
 class GateState:
-    """What decide_batch() needs to know about the past."""
+    """What decide_batch() needs to know: what's been sent, whether the person is mid-conversation in a personal
+    mode or in flow getting things done (core/momentum.py), and what's paused."""
 
     sent: list[dict] = field(default_factory=list)  # {at, key, topic, urgency, digest_id}
     user_busy: bool = False
+    in_flow: bool = False  # getting things done right now (core/momentum.py, DEC-0148): non-urgent waits
     paused: dict = field(default_factory=dict)  # topic -> until (datetime), from paused_topics()
 
 
@@ -183,7 +185,7 @@ def paused_topics(log: list[dict], now: datetime, resumed: Optional[dict] = None
 
 
 def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, settings: dict) -> list[Decision]:
-    """Pure logic. One Decision per candidate, in order."""
+    """Pure logic. One Decision per candidate, in order. In flow (DEC-0148), everything but the urgent waits."""
     budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]))
     spacing = timedelta(minutes=int(settings.get("min_spacing_minutes", DEFAULT_SETTINGS["min_spacing_minutes"])))
     repeat_window = timedelta(days=int(settings.get("repeat_days", DEFAULT_SETTINGS["repeat_days"])))
@@ -208,6 +210,10 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
         sent_at = recent_keys.get(candidate.key())
         if sent_at is not None:
             decisions.append(Decision(candidate, DROP, f"nothing new since {sent_at:%b %d}"))
+            continue
+        if state.in_flow and candidate.urgency != URGENT:  # the flow guard: held, never dropped, till it goes quiet
+            candidate.not_before = (now + _BUSY_DEFER).isoformat(timespec="seconds")
+            decisions.append(Decision(candidate, DEFER, "you were in the middle of getting things done"))
             continue
         if state.user_busy:
             if candidate.urgency == TIMELY:
@@ -329,6 +335,16 @@ class CommunicationGate:
         person_settings.put(self.context, "communication.daily_budget", count)
         return count
 
+    def _in_flow(self, now: datetime) -> bool:
+        """Whether the person is getting things done right now (core/momentum.in_flow); False when it can't tell."""
+        from core import momentum
+
+        try:
+            return momentum.in_flow(self.context, now)
+        except Exception:
+            log.exception("Couldn't tell whether the person is in flow")
+            return False
+
     def _user_busy(self, now: datetime) -> bool:
         """Mid-conversation in a personal mode: venting, journaling, perspective."""
         from core.conversation_modes import PERSONAL_MODES  # local: keeps this module's imports light
@@ -344,9 +360,10 @@ class CommunicationGate:
         return updated is not None and now - updated <= _BUSY_WINDOW
 
     def _state(self, now: datetime) -> GateState:
-        """What the decision needs now: what's been sent, whether the person is busy, and whether everything is paused."""
+        """What the decision needs now: what's been sent, whether the person is busy or in flow, and whether everything is paused."""
         sent = [e for e in self._log if e.get("action") == ACT]
-        return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now))
+        return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now),
+                         in_flow=self._in_flow(now))
 
     def _all_paused(self, now: datetime) -> dict:
         """Breaks from dismissing a kind of message, and ones asked for."""

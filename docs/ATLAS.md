@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1311 files, 284,773 lines; 1311 files describe themselves; 16,028 of 16,122 classes and functions are documented.
+1315 files, 285,645 lines; 1315 files describe themselves; 16,082 of 16,176 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-489 files, 135,245 lines; 7,237 of 7,323 classes and functions documented
+491 files, 135,877 lines; 7,273 of 7,359 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -161,6 +161,7 @@
 - `core/device_help_manager.py`: Retrieval-grounded "what does this do / how do I use this device" answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and module metadata, never a
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`.
 - `core/diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040; `docs/ACAF_REVIEW.md` section 6): a check-up written as a spec, not code, over what inspection's PASSIVE methods already read (core/inspection.py: the OS, CPU and memory, the drives, the network, the firewall, the AI runtime, MIA's own health). Nothing her
+- `core/did_it.py`: "I did X" (DEC-0148; Zac, 2026-11-08: "anything I talk about or say I did X today should be evaluated for how MIA can incorporate it into missions or track it"). When the person says what they did ("I just put away the dishes and started a load of laundry"), MIA's own code, no model:
 - `core/direction.py`: The standing directions a person is steering their life by — the values they've asked MIA to hold in mind and gently encourage (Zac, 2026-11-08: his shift "from consumer to producer" — make and restore before buying, 3D print, upcycle, thrift and design his own clothes, grow and cook his own natural
 - `core/disagreements.py`: Agents may disagree, and a disagreement is resolved, never dropped (DEC-0071 point 3; T-0022). A review's objection to a *change* was built first (core/work_review.py: answered with `resolve` before approve). This adds objections to a **decision** (`DEC-0071`) or a **design** (a doc in `docs/`, like
 - `core/discovery_manager.py`: Discovery — the AI-generated counterpart to Mission Pathways (core/pathway_manager.py, hand-authored) and the first real piece of the "Personal Capability & Progression Engine" the user described after Pathways shipped. Deliberately the smallest possible closed loop, not the full vision (cross-tree 
@@ -290,6 +291,7 @@
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information").
 - `core/module_manager.py`: Discovers and manages MIA modules.
 - `core/module_validator.py`: Validates a candidate module folder against the compatibility contract in docs/MODULE_SPEC.md, before it's installed into modules/.
+- `core/momentum.py`: Natural Momentum (DEC-0148; Zac, 2026-11-08: a morning where waking naturally and a cup of coffee led to the dishes, laundry, the kitchen, the development list and getting ready for work, quickly and without forcing it). MIA learns the conditions of those runs and helps them happen again, and stays 
 - `core/money_actions.py`: Every change the Money screen can make (2026-10-06, DEC-0017: the web does everything the PC app's Budget screen does), as action kinds on the contract in core/actions.py: Propose → Approve → Execute → Record → Undo.
 - `core/more_actions.py`: Every change the Journal, Workshop, Expeditions, Music and Files screens make (Zac, 2026-10-16: "they are empty right now and just bring up a chat with MIA"), as action kinds on the contract in core/actions.py, most from the shared table in core/record_actions.py.
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
@@ -776,7 +778,7 @@
 
 ## tests/: the test suite: what each part must do
 
-449 files, 75,623 lines; 6,500 of 6,508 classes and functions documented
+451 files, 75,863 lines; 6,518 of 6,526 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -887,6 +889,7 @@
 - `tests/test_device_profile.py`: Unit tests for core.device_profile. Isolates ConfigManager's _CONFIG_FILE (same pattern as test_assistant_action_handlers.py's own fixture) — without this, `ConfigManager()` here loads the real config/config.json, and `test_defaults_to_core_when_unset` silently starts asserting against whatever this
 - `tests/test_diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems, 
 - `tests/test_diagnostics_log_viewer.py`: Unit tests for the pure tail/filter helpers backing the Diagnostics module's log viewer (modules.diagnostics.module.tail_lines filter_lines). The QWidget-building side of get_widget() needs a live Qt event loop and is exercised manually instead — see docs/testing/2.6_system_logs_viewer.md.
+- `tests/test_did_it.py`: "I did X" (core/did_it.py, DEC-0148): what the person says they did is kept in their history, counted toward a routine it names (undoable), and offered once toward a task, a mission objective, or as a new routine when they keep doing it; never a negative, a vague or self-critical "I did", or a priva
 - `tests/test_direction.py`: The standing directions MIA holds and encourages (core/direction.py, DEC-0141): a direction is set, persisted (sealed, DEC-0126), and turns up in the context block she carries every turn — framed to lean her suggestions that way, never to preach; turning one off removes it.
 - `tests/test_disagreements.py`: Disagreements over a decision or a design (core/disagreements.py, T-0022, DEC-0071 point 3): an objection names a real decision or doc, is answered, goes to Zac when raised again after an answer, closes only when Zac settles it at the keyboard, and shows in the dashboard's list with the tasks whose 
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py.
@@ -1017,6 +1020,7 @@
 - `tests/test_model_registry.py`: MIA about herself (core/model_registry.py): "What AI model are you using?" answered from the runtime, saying where each fact came from, never from the model's guess.
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager.
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder.
+- `tests/test_momentum.py`: Natural Momentum (core/momentum.py, DEC-0148): runs of things done found in the history, what they have in common said as counts once there are enough, what tends to follow what, whether the person is in flow (and the gate holding her non-urgent messages then), one easy start in their usual hour, an
 - `tests/test_music_manager.py`: Unit tests for core.music_manager. The CRUD/scan_library() section is entirely Qt-free (matches this project's established convention — see tests/test_avatar_manager.py monkeypatching QMediaDevices rather than constructing a real QApplication). The playback section monkeypatches MusicManager._ensure
 - `tests/test_music_module.py`: Unit tests for modules.music.module's pure formatting functions — no Qt event loop needed, same shape as tests/test_power_module.py.
 - `tests/test_named_tool.py`: The tool a message names in its own words (2026-10-19, the PC model's misses): AssistantActionRegistry.named_action() and core/assistant_chat.settle_on_named_tool(). Pure logic, no model.

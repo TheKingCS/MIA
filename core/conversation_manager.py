@@ -121,6 +121,10 @@ class Conversation:
     # Transient: MIA's offer to record something the owner mentioned in
     # passing (core/passing_mentions.py), waiting for a yes on the next turn.
     pending_offer: Optional[object] = field(default=None, repr=False, compare=False)
+    # Transient: MIA's offer to track something the person said they did (core/did_it.py, DEC-0148), waiting for a
+    # yes on the next turn, and the message already answered by that code this turn (so it isn't offered twice).
+    pending_track: Optional[dict] = field(default=None, repr=False, compare=False)
+    did_handled: Optional[str] = field(default=None, repr=False, compare=False)
     # Transient: MIA just asked which kind of support the user wants
     # (core/support_choice.py), and when she last asked.
     awaiting_support: bool = field(default=False, repr=False, compare=False)

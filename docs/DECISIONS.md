@@ -2534,6 +2534,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   how MIA can incorporate it into missions or track it": every activity he says he did is recorded in his history and
   checked against his routines (counted), open tasks and mission objectives (offered to tick off), and what he keeps
   doing untracked (offered as a routine).
+  **Built (claude, engine, 2026-11-08 evening):** `core/did_it.py`: a message that's only what he did is answered by
+  code before the model (after the workout and meal commands, and stepping aside for a passing mention about a kept
+  record): each activity a `did` line in his history, a routine it names counted through `routine.log`, one offer
+  for the first other one (an open task: `task.done`; a mission's tally objective: `objective.tick`; said on another
+  day lately, or "I've been ...": `routine.add`), done on a yes as him, undoable. With a question in the message the
+  model answers and the activities are kept after, routines not counted there. `core/momentum.py`: runs (3+ within
+  45 min each), findings as counts (what started them, the time of day, a day off, a full night before), chains (B
+  after A 3+ times and half of A's times), flow (2 done in 30 min), one easy start in his usual hour, tomorrow's prep
+  before a shift; the gate holds everything but the urgent while he's in flow; the daily check `momentum` offers
+  the easy start and the prep through the gate, once a day each. Faith: nothing built for her (DEC-0119 holds).
 - From: Zac's handoff "Natural Momentum & Flow State Optimization" (a morning where waking naturally and coffee led
   to the dishes, laundry, the kitchen, the dev list and getting ready, without forcing it). Its section 10 asks to
   find what exists first and not duplicate it.

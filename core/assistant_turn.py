@@ -82,8 +82,9 @@ def _direct_lookup(context, prompt: str) -> Optional[str]:
 def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     """For the desktop's chat panels, which build their own model request
     (2026-10-30: they never got these): a plain-word command done by code
-    ("workout complete", "undo that"), or a question one lookup answers,
-    run by code, no model; None when a question plan will answer (it comes
+    ("workout complete", "undo that"), what they did ("I put away the
+    dishes", core/did_it.py), or a question one lookup answers, run by
+    code, no model; None when a question plan will answer (it comes
     first, as in run_assistant_turn) or it's for the model. Never in a
     personal mode or the journal."""
     if _personal(conversation):
@@ -93,6 +94,15 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     quick = handle(context, prompt)
     if quick is not None:
         return quick
+    from core.did_it import reply as did_reply
+
+    try:  # "I just put away the dishes" (DEC-0148), after the quick commands (a workout, a meal), as in a turn
+        did = did_reply(context, conversation, prompt)
+    except Exception:
+        log.exception("Couldn't take in what the person did")
+        did = None
+    if did is not None:
+        return did
     from core.conversation_state import follow_up
     from core.question_plans import match
 
@@ -112,7 +122,8 @@ def _personal(conversation) -> bool:
 
 def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: str, surface: str = "") -> AssistantTurn:
     """One turn, traced (core/turn_trace.py): how it was answered, how long it took, and on which device
-    ("glasses", "phone"; "" for the PC), for the glasses.voice loop."""
+    ("glasses", "phone"; "" for the PC), for the glasses.voice loop. After the reply, one offer: a note to keep
+    (core/life_notes.py), else a way to track what they said they did (core/did_it.py)."""
     from core.turn_trace import record
 
     started = time.monotonic()
@@ -130,6 +141,17 @@ def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: 
         if offer:  # a promise, decision, idea or goal set aside, offered for a yes (DEC-0054)
             add_message(conversation, "assistant", offer)
             turn.replies.append(offer)
+        else:  # what they said they did, kept, and one way to track it offered (DEC-0148)
+            from core.did_it import offer_after as did_offer
+
+            try:
+                track = did_offer(context, conversation, prompt)
+            except Exception:
+                log.exception("Couldn't take in what the person did")
+                track = None
+            if track:
+                add_message(conversation, "assistant", track)
+                turn.replies.append(track)
     record(context, conversation, prompt, turn, time.monotonic() - started, surface)
     return turn
 
@@ -140,7 +162,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), plain-word commands, question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -183,6 +205,17 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         from core.quick_commands import handle
 
         quick = handle(context, prompt)
+        if quick is None:
+            from core.did_it import reply as did_reply
+
+            try:  # "I just put away the dishes and started the laundry" (DEC-0148): kept, counted, one offer, by
+                did = did_reply(context, conversation, prompt)  # code; after the quick commands (a workout, a meal)
+            except Exception:
+                log.exception("Couldn't take in what the person did")
+                did = None
+            if did is not None:
+                add_message(conversation, "assistant", did)
+                return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [did], route="code")
         if quick is None:
             # A detailed question a plan answers: lookups by code, one answer (DEC-0052, core/question_plans.py).
             from core.question_plans import answer as plan_answer
