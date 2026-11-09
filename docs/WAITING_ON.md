@@ -15,7 +15,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 2. [ ] **Say yes or no to the homestead push** (DEC-0145): `mia-homestead` is merged as `homestead/` on the branch
        `homestead-merge` (worktree `C:\Users\zacrh\MIA-merge-homestead`), held back because it puts another repo's
        history on master. On your yes, Claude merges and pushes it.
-3. [ ] **Decide three proposals:** DEC-0147
+3. [ ] **Decide four proposals:** DEC-0150 the aquaponics greenhouse (`docs/AQUAPONICS_HANDOFF_PROPOSAL.md`, five questions;
+       its first is the homestead push in item 2), DEC-0147
        the Woodworking Studio (four questions), the iOS path (three options,
        below), and T-0051 the phone's old security packages (three options, below).
 4. [ ] **Your history's older lines** (DEC-0126): seal them (close MIA, then

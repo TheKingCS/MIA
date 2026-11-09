@@ -2596,3 +2596,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (recommended: a licensed tradesperson for electrical, gas and structural, Zac for the rest); (5) one specialist per
   trade.
 - Related: DEC-0109, DEC-0112, DEC-0118, DEC-0123, DEC-0144, DEC-0147
+
+### DEC-0150: The aquaponics greenhouse: build it with MIA, then hand it to her
+- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- From: Zac, 2026-11-08 ("walk through and execute the steps for building out the aquaponics greenhouse ...
+  understand what technologies go into it, what she is able to connect to and configure ... build it and essentially
+  pass her to it, so that she can integrate and monitor everything she has set up for monitoring").
+- Finding (`docs/AQUAPONICS_HANDOFF_PROPOSAL.md`): most of it is MIA Homestead (`homestead/`, waiting on the DEC-0145
+  push): the Pi brain and ESP32 safety MCU, aquaponics/climate/power modules that declare their capabilities and
+  hardware (a live BOM and features list), Atlas Scientific drivers, a simulator, a device setup convention, day-one
+  readiness, experiments behind approval, auto-revert, its own assistant. MIA has snapshot ingestion (by hand), the
+  grow lab, What's Next, Trade Master. Missing: the build as Trade Master jobs, MIA reading the node's registry, an
+  automatic link, and the node's sensors and alerts as MIA's monitors.
+- Proposed first version: three Trade Master jobs (build the system, install the controller and sensors, commission
+  and cycle), the node's registry as her knowledge, "take over the greenhouse" (snapshots fetched over the home
+  network or Tailscale, every sensor a monitor, critical alerts urgent through the gate, readings into the grow lab, a
+  daily line), control staying with the node and its safety MCU (MIA monitors and proposes).
+- Open for Zac: (1) the homestead push (DEC-0145, needed first); (2) the first version; (3) how MIA reaches the node
+  (recommended: fetching snapshots over the home network or Tailscale now, a live link later); (4) MIA monitors and
+  proposes, the node acts (recommended: yes); (5) the pilot cell first (recommended: yes).
+- Related: DEC-0030, DEC-0128, DEC-0144, DEC-0145, DEC-0149
