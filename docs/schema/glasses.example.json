@@ -805,10 +805,20 @@
    "pinned": false,
    "menu": [
     {
+     "id": "continue",
+     "label": "Continue",
+     "type": "panel"
+    },
+    {
+     "id": "practice",
+     "label": "Practice",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
-     "label": "What should I study next",
+     "label": "How is my learning progress",
      "type": "ask",
-     "say": "What should I study next?"
+     "say": "How is my learning progress?"
     },
     {
      "id": "pin",

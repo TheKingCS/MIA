@@ -2607,5 +2607,30 @@
     ],
     "more": 0,
     "empty": "No tracks yet. Add a GPX file on your phone or PC."
+  },
+  "classroom/practice": {
+    "app": "classroom",
+    "item": "practice",
+    "label": "Practice",
+    "title": "Practice",
+    "lines": [
+      {
+        "text": "Guitar: stage 1",
+        "detail": "First sounds",
+        "tone": ""
+      },
+      {
+        "text": "Tune all six strings; let MIA hear each one",
+        "detail": "The lesson for it: Holding it and tuning it. 5 checks left in this stage",
+        "tone": ""
+      },
+      {
+        "text": "Em: 0 2 2 0 0 0",
+        "detail": "fingers 0 2 3 0 0 0 · low E to high E",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No path started. Say “I want to learn guitar”."
   }
 }

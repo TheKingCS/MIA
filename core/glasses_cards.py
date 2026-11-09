@@ -595,6 +595,42 @@ def _tracks(context, today: date):
     return _panel("Tracks", lines, "No tracks yet. Add a GPX file on your phone or PC.")
 
 
+def _practice(context, today: date):
+    """Panel (the Classroom card): each learning path started (core/paths.path_card, DEC-0112) with its stage and what's
+    next, and for a guitar check that names a chord, the chord's shape, string by string from the low E (frets and
+    fingers), to read while the guitar is in your hands."""
+    from core import paths
+
+    book = getattr(context, "paths", None)
+    if book is None:
+        return _panel("Practice", [], "Learning paths aren't on this MIA.")
+    try:
+        cards = [paths.path_card(book, p) for p in (paths.program_of(context, pid) for pid in book.started()) if p]
+    except Exception:
+        log.exception("Glasses: the practice panel failed")
+        return _panel("Practice", [], "Your paths couldn't be read just now.")
+    lines = []
+    for c in cards:
+        st = c.get("stats") or {}
+        nxt = c.get("next", "")
+        m = re.search(r'next is "([^"]+)"\s*(.*)', nxt)  # "…: next is "Tune all six strings" (show me, …)."
+        head, rest = (m.group(1), re.sub(r"^\([^)]*\)\.?\s*", "", m.group(2)).strip(" .")) if m else _split(nxt)
+        lines.append(_line(f"{c['name']}: stage {st.get('stage', '?')}", " · ".join(b for b in (
+            st.get("stage_name", ""), f"{st.get('week_minutes', 0)} min this week" if st.get("week_minutes") else "") if b)))
+        if head:
+            lines.append(_line(head, rest or "next"))
+        if c["id"] == "guitar":
+            from core.guitar import CHORDS
+
+            for chk in c.get("open") or []:
+                chord = CHORDS.get(chk.get("about") or "")
+                if chord is not None:
+                    lines.append(_line(f"{chord.name}: {' '.join(chord.frets)}",
+                                       f"fingers {' '.join(chord.fingers)} · low E to high E"))
+                    break
+    return _panel("Practice", lines, "No path started. Say \u201cI want to learn guitar\u201d.")
+
+
 # More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
 EXTRA = {
     "greenhouse": (("next", "What's Next", _whats_next),),
@@ -603,6 +639,7 @@ EXTRA = {
     "observations": (("connections", "Connections", _connections),),
     "workshop": (("job", "The Job", _trade_job),),
     "maps": (("tracks", "Tracks", _tracks),),
+    "classroom": (("practice", "Practice", _practice),),
 }
 
 

@@ -3,7 +3,7 @@ The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
 Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
-Workshop's The Job, moving a Trade Master job along with its holds kept, and the Maps card's Tracks), the card
+Workshop's The Job, moving a Trade Master job along with its holds kept, the Maps card's Tracks, and the Classroom's Practice with a chord's shape), the card
 faces and their tiles, and long sentences split into a head and a detail (at a mark, or at the last word that fits),
 and Good Runs (Natural Momentum's counts).
 """
@@ -251,3 +251,19 @@ def test_the_maps_card_shows_the_latest_tracks_and_the_months_total(tmp_path):
     p = _tracks(ctx, date(2026, 11, 9))
     assert p["lines"][0]["text"].endswith("km in the last 30 days") and p["lines"][1]["text"] == "Ridge loop"
     assert "No tracks yet" in _tracks(SimpleNamespace(gps_tracks=GpsTracks(ctx, data_dir=tmp_path / "none")), date(2026, 11, 9))["empty"]
+
+
+def test_the_classroom_card_shows_each_path_whats_next_and_a_chords_shape(tmp_path):
+    from core import guitar, paths
+    from core.glasses_cards import _practice
+
+    ctx = SimpleNamespace()
+    ctx.paths = paths.PathBook(ctx, data_dir=tmp_path)
+    assert "No path started" in _practice(ctx, TODAY)["empty"]
+    ctx.paths.start(guitar.PROGRAM, "songs", 15, 5, today=TODAY)
+    p = _practice(ctx, TODAY)
+    texts = [ln["text"] for ln in p["lines"]]
+    assert texts[0].startswith("Guitar: stage 1") and len(p["lines"]) <= glasses.MAX_LINES
+    chord = next((ln for ln in p["lines"] if ln["detail"].startswith("fingers")), None)
+    assert chord is None or chord["text"].split(":")[0] in guitar.CHORDS
+    assert "Learning paths aren't" in _practice(SimpleNamespace(), TODAY)["empty"]
