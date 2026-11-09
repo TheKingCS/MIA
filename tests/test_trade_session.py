@@ -16,6 +16,8 @@ from core.actions import ActionCenter
 from core.trade_actions import reply
 from tests.engine_world import build_world
 
+trades._loaded()  # the content, before the diagnoses are listed for parametrize
+
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
@@ -111,3 +113,35 @@ def test_the_model_is_given_the_job_and_step_it_s_asked_about(world):
     assert f"step 1 of {len(trades.JOBS['workshop'].steps())}: {step.do}" in block and f"Why: {step.why}" in block
     assert "Never suggest skipping a hold point or working past a stop rule." in block
     assert block in build_system_message(world, False, prompt="can I use a smaller header?")
+
+
+@pytest.mark.parametrize("diag_id", sorted(trades.DIAGNOSES))
+def test_every_path_through_every_diagnosis_ends_in_a_cause_or_a_professional(diag_id):
+    """Every run of yes and no answers, through the session itself, ends in "Found it" or a professional to call,
+    never a dead end or a loop."""
+    from datetime import datetime
+
+    d = trades.DIAGNOSES[diag_id]
+    paths = [[]]
+    endings = 0
+    while paths:
+        answers = paths.pop()
+        s = ts.start(d, datetime(2026, 11, 8))
+        said = ""
+        for yes in answers:
+            said = ts.answer(s, yes)
+        if s.status == ts.FINISHED:
+            assert said.startswith(("Found it: ", "This one's for ")), (diag_id, answers, said)
+            endings += 1
+            continue
+        assert len(answers) < len(d.checks) + 1, (diag_id, answers)  # no loops
+        paths += [answers + [True], answers + [False]]
+    assert endings >= len(d.checks)
+
+
+def test_a_symptom_said_starts_its_diagnosis_with_safety_first(world):
+    """"My breaker keeps tripping, help me figure it out" starts the breaker diagnosis, safety said before the first
+    check."""
+    said = reply(world, "my breaker keeps tripping, help me figure it out")
+    assert said.startswith("A breaker that keeps tripping") and "Never take the panel cover off" in said
+    assert "Unplug or switch off everything on that circuit" in said

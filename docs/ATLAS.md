@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1323 files, 287,353 lines; 1323 files describe themselves; 16,155 of 16,249 classes and functions are documented.
+1323 files, 287,602 lines; 1323 files describe themselves; 16,157 of 16,251 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-496 files, 137,359 lines; 7,330 of 7,416 classes and functions documented
+496 files, 137,574 lines; 7,330 of 7,416 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -417,7 +417,7 @@
 - `core/toolbox_actions.py`: The Toolbox's changes on the web (DEC-0113 canvas Toolbox, DEC-0125: alarms were set only on the PC or by voice). An alarm is set with `alarm.add` (a label, a clock time said any common way, and once / every day / weekdays weekends), switched on or off with `alarm.switch`, and taken out with `alarm.
 - `core/toolbox_calcs.py`: The Toolbox's calculators as pure math (DEC-0113 canvas Toolbox, DEC-0125: the same answer by voice, on the PC and on the phone). Ohm's law (solve() moved here from modules/toolbox/calculators/ohms_law.py, which re-exports it), Ohm's law from any two of the three, board feet and concrete volume. Uni
 - `core/trade_actions.py`: Trade Master's walkthroughs (core/trade_session.py, DEC-0149) as action kinds on the contract in core/actions.py, so the screen and voice move the one session the same way: start a job or a diagnosis, next, back, "checked" (a hold point), yes or no (a diagnosis), stop; and plan a job as a mission, i
-- `core/trade_jobs.py`: The jobs and diagnoses MIA walks someone through (DEC-0149, the content for core/trades.py): Zac's first four builds, in his order (2026-11-08): a hoop-house greenhouse, a chicken coop, a workshop on a slab, and a cold room for the harvest; and the first diagnosis, a toilet that keeps running. Each 
+- `core/trade_jobs.py`: The jobs and diagnoses MIA walks someone through (DEC-0149, the content for core/trades.py): Zac's first four builds, in his order (2026-11-08): a hoop-house greenhouse, a chicken coop, a workshop on a slab, and a cold room for the harvest; and six diagnoses: a toilet that keeps running, a breaker t
 - `core/trade_session.py`: Walking someone through a job or a diagnosis, one step at a time (DEC-0149; the third session beside cooking and training, core/cooking_session.py, core/training_session.py), shared by every surface: the screen, voice, later the glasses. The steps come from core/trades.py, never from a model.
 - `core/trades.py`: Trade Master (DEC-0149; Zac, 2026-11-08: "walk me through step by step of any home construction, repair, or diagnosis jobs with industry standard professional steps so nothing is missed ... She should become a Trade master and be able to teach an entry level Apprentice"). The jobs and diagnoses MIA 
 - `core/trail_map_library.py`: A catalog of official state park / trail map PDFs — the "state park maps and trail maps" half of the Maps module's offline-maps upgrade, alongside core.map_tile_cache's real basemap tiles.
@@ -783,7 +783,7 @@
 
 ## tests/: the test suite: what each part must do
 
-454 files, 76,089 lines; 6,534 of 6,542 classes and functions documented
+454 files, 76,123 lines; 6,536 of 6,544 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

@@ -4,7 +4,8 @@ core.trade_jobs
 
 The jobs and diagnoses MIA walks someone through (DEC-0149, the content for core/trades.py): Zac's first four builds,
 in his order (2026-11-08): a hoop-house greenhouse, a chicken coop, a workshop on a slab, and a cold room for the
-harvest; and the first diagnosis, a toilet that keeps running. Each is written from its sources (named on it) to the
+harvest; and six diagnoses: a toilet that keeps running, a breaker that keeps tripping, no hot water, air conditioning
+that doesn't cool, a dryer that doesn't heat, and a roof leak. Each is written from its sources (named on it) to the
 standard in core/trades.problems(), and stays DRAFTED until a person confirms it.
 
 Quantities aren't written here: a job with a plan gets them from that plan's calculator (core/build_calcs.py). The
@@ -392,4 +393,218 @@ register(Diagnosis(
     ),
     ("Fluidmaster, 400A fill valve and flapper installation and troubleshooting instructions",
      "Kohler and American Standard toilet repair guides (fill valve and flush valve)"),
+))
+
+register(Diagnosis(
+    "breaker_tripping", "electrical", "A breaker that keeps tripping",
+    ("breaker keeps tripping", "breaker trips", "tripping breaker", "breaker tripped", "breaker keeps going off",
+     "circuit keeps tripping"),
+    ("live_power", "injury"),
+    "Never take the panel cover off, and reset a breaker no more than once or twice: a breaker that trips again is "
+    "protecting the wiring. A hot, buzzing or scorched breaker, or a burning smell, means leave it off and call a "
+    "licensed electrician now.",
+    "empty",
+    (
+        DiagCheck("empty", "Unplug or switch off everything on that circuit, then reset the breaker. Does it trip again "
+                  "right away, with nothing running?",
+                  "A breaker that trips with nothing on it points at the wiring or the breaker, not what's plugged in.",
+                  "pro:a licensed electrician; say the breaker trips with nothing plugged in or switched on (a short "
+                  "or ground fault in the wiring, or a failed breaker)", "load"),
+        DiagCheck("load", "Plug things back in one at a time. Does it trip when one appliance runs, or when several "
+                  "heavy ones run at once (a space heater, a microwave, a hair dryer, a vacuum)?",
+                  "Most nuisance trips are an overloaded circuit or one faulty appliance.", "which", "gfci"),
+        DiagCheck("which", "Plug that appliance into a different circuit. Does that one trip too, or does the "
+                  "appliance spark, smell hot, or have a damaged cord?",
+                  "An appliance that trips any circuit is the fault; one that only trips this circuit means too much "
+                  "on it.",
+                  "cause:the appliance has a fault: stop using it and have it repaired or replaced|",
+                  "cause:the circuit is overloaded: move heavy appliances to other circuits; one that often needs more "
+                  "needs a new circuit from a licensed electrician, never a bigger breaker|"),
+        DiagCheck("gfci", "Is it a GFCI or AFCI breaker (it has a TEST button), or does the circuit feed a bathroom, "
+                  "kitchen, garage or outdoor outlet?",
+                  "Ground-fault and arc-fault breakers trip on moisture and wiring faults, not only on load.",
+                  "moisture", "warm"),
+        DiagCheck("moisture", "Does it trip after rain, in damp weather, or when an outdoor or bathroom outlet gets wet?",
+                  "Water in an outlet box or a cord's plug is the most common cause of ground-fault trips.",
+                  "cause:moisture in an outdoor or damp-location outlet, box or cord: dry it and fit an in-use "
+                  "(bubble) cover; a box that stays wet needs repair by a licensed electrician|",
+                  "pro:a licensed electrician; say a GFCI or AFCI breaker trips with no load or moisture pattern "
+                  "(a ground fault, an arc fault in the wiring, or a failing breaker)"),
+        DiagCheck("warm", "Without opening anything, is the breaker warm to the touch, buzzing, or scorched, or does "
+                  "the panel smell of burning?",
+                  "Heat at a breaker means a loose connection or a failing breaker: a fire risk.",
+                  "pro:a licensed electrician right away; leave the breaker off and say it's hot, buzzing or scorched",
+                  "pro:a licensed electrician; say the breaker trips at random with normal loads (a loose connection "
+                  "or a weak breaker)"),
+    ),
+    ("NFPA 70, National Electrical Code (NEC) 2023: Article 240 (overcurrent protection), 210.8 (GFCI) and 210.12 "
+     "(AFCI)", "Electrical Safety Foundation International (ESFi), circuit breaker and home electrical safety guidance"),
+))
+
+register(Diagnosis(
+    "no_hot_water", "plumbing", "No hot water",
+    ("no hot water", "water heater not working", "water heater isn't working", "hot water is out",
+     "water won't get hot", "only cold water"),
+    ("gas", "live_power", "injury"),
+    "If you smell gas, stop: leave and call the gas utility from outside. Switch an electric heater off at its breaker "
+    "before opening any panel on it. Hot water and the relief valve can scald: keep clear of the valve's pipe.",
+    "kind",
+    (
+        DiagCheck("kind", "Is the water heater electric (no gas line or flame, a heavy cable at the top)?",
+                  "Electric and gas heaters fail in different places, so the checks split here.",
+                  "elec_breaker", "gas_pilot"),
+        DiagCheck("elec_breaker", "Is its breaker (usually a double 30 amp) off or tripped?",
+                  "No power is the simplest cause, and a tripped breaker says something drew too much.",
+                  "cause:the breaker was off or tripped: reset it once; if it trips again, leave it off and call a "
+                  "licensed plumber or electrician|", "elec_reset"),
+        DiagCheck("elec_reset", "With the breaker OFF, take off the upper access panel and fold back the insulation. "
+                  "Is the red reset button (the high-limit) popped out?",
+                  "The high-limit cuts power when the water gets too hot, usually from a failing thermostat.",
+                  "cause:the high-limit tripped: press it in, close up and restore power; if it trips again, a "
+                  "thermostat or element is failing and needs testing|",
+                  "pro:a plumber or appliance technician; say an electric heater with power and its reset in still "
+                  "makes no hot water (likely an element or thermostat, tested with a meter)"),
+        DiagCheck("gas_pilot", "Look through the sight window at the bottom. Is the pilot (or the burner) out?",
+                  "A pilot that's gone out is the most common gas heater fault.", "relight", "gas_supply"),
+        DiagCheck("relight", "Follow the lighting instructions on the heater's label exactly. Does the pilot light "
+                  "and stay lit after you let go of the control knob?",
+                  "A pilot that lights but goes out when released usually means the thermocouple has failed.",
+                  "cause:the pilot had gone out: it's relit; if it goes out again, the thermocouple or flame sensor "
+                  "is likely failing|",
+                  "pro:a licensed plumber or gas technician; say the pilot won't stay lit (likely the thermocouple, "
+                  "or a gas supply or venting problem)"),
+        DiagCheck("gas_supply", "The pilot is lit: is the gas valve to the heater open (handle in line with the pipe), "
+                  "and do your other gas appliances work?",
+                  "With the pilot lit but no heat, the gas control or thermostat is next, after the supply.",
+                  "pro:a licensed plumber or gas technician; say the pilot is lit and gas is on but the water doesn't "
+                  "heat (a gas control valve, thermostat or venting problem)",
+                  "pro:the gas utility or a licensed plumber; say the gas supply to the heater (or the house) is off "
+                  "or not working"),
+    ),
+    ("U.S. Department of Energy, Energy Saver: storage water heaters", "The water heater's own use and care manual "
+     "(lighting instructions on its label)"),
+))
+
+register(Diagnosis(
+    "ac_not_cooling", "hvac", "Air conditioning that runs but doesn't cool",
+    ("ac not cooling", "ac isn't cooling", "ac won't cool", "air conditioner not cooling", "ac blowing warm",
+     "air conditioning isn't cooling", "ac blowing hot air", "blowing warm",
+     "blowing hot air", "ac is blowing", "ac isn't cold", "air conditioner isn't cooling"),
+    ("live_power", "injury"),
+    "Switch the outdoor unit off at its disconnect (and the breaker) before touching it: its capacitor holds a charge "
+    "even then, so leave the electrical parts to a technician. Never open the refrigerant lines; that work needs a "
+    "certified technician.",
+    "thermostat",
+    (
+        DiagCheck("thermostat", "Is the thermostat set to Cool, a few degrees below the room, with fresh batteries?",
+                  "A setting or a dead battery is the cheapest thing to rule out first.", "airflow",
+                  "cause:the thermostat's setting or batteries: set it to Cool below the room temperature and fit new "
+                  "batteries|"),
+        DiagCheck("airflow", "Is air blowing from the vents?",
+                  "No airflow points indoors (the blower); weak cool air points at the filter or the outdoor unit.",
+                  "filter", "pro:an HVAC technician; say the system is on but no air moves from the vents (the blower "
+                  "motor, its capacitor or the control board), after checking the indoor unit's switch and breaker"),
+        DiagCheck("filter", "Pull the air filter: is it dirty or clogged, or is there ice on the refrigerant lines?",
+                  "A clogged filter starves the coil of air until it freezes and stops cooling.",
+                  "cause:a clogged filter (and possibly a frozen coil): replace the filter, and if there's ice, run "
+                  "the fan only with cooling off until it melts|", "outdoor"),
+        DiagCheck("outdoor", "Go to the outdoor unit: is its fan spinning and its compressor humming?",
+                  "If the outdoor unit isn't running, the house moves air but nothing removes its heat.",
+                  "coil", "outdoor_power"),
+        DiagCheck("outdoor_power", "Is the outdoor unit's breaker tripped or its disconnect switched off?",
+                  "Power to the outdoor unit is separate from the indoor one.",
+                  "cause:the outdoor unit's power was off or tripped: reset it once; if it trips again, call an HVAC "
+                  "technician|", "pro:an HVAC technician; say the outdoor unit doesn't start with power on (often a "
+                  "failed capacitor or contactor, which hold a charge)"),
+        DiagCheck("coil", "With the power off at the disconnect, is the outdoor coil packed with dirt, leaves or "
+                  "cottonwood, or crowded by plants?",
+                  "A blocked condenser coil can't shed heat, so the system runs without cooling.",
+                  "cause:a dirty condenser coil: with the power off, rinse it gently from the inside out with a garden "
+                  "hose, and clear 2 ft around the unit|",
+                  "pro:an HVAC technician; say it runs and the coil is clean but it doesn't cool (often low refrigerant "
+                  "from a leak, which needs a certified technician)"),
+    ),
+    ("U.S. Department of Energy, Energy Saver: maintaining your air conditioner",
+     "U.S. EPA, Section 608 of the Clean Air Act (refrigerant handling by certified technicians)",
+     "Air Conditioning Contractors of America (ACCA), homeowner maintenance guidance"),
+))
+
+register(Diagnosis(
+    "dryer_no_heat", "appliances", "A dryer that runs but doesn't heat",
+    ("dryer won't heat", "dryer not heating", "dryer isn't heating", "dryer no heat", "dryer doesn't heat",
+     "dryer runs but no heat", "clothes won't dry"),
+    ("live_power", "gas", "injury"),
+    "Unplug the dryer (or switch off its breaker) before opening it: an electric dryer runs on 240 volts. A gas dryer "
+    "follows the gas rule: a smell of gas means stop and leave. Lint is a fire risk, so clean it out as you go.",
+    "fuel",
+    (
+        DiagCheck("fuel", "Is it a gas dryer (a gas line to the back)?",
+                  "Gas and electric dryers heat differently, so the parts to check differ.",
+                  "pro:an appliance technician experienced with gas; say a gas dryer runs but doesn't heat (igniter, "
+                  "gas valve coils or flame sensor)", "breaker"),
+        DiagCheck("breaker", "An electric dryer needs both halves of its double breaker. Switch it fully off and back "
+                  "on: does it heat now?",
+                  "Half a double breaker turns the drum but not the heater, the most common no-heat cause.",
+                  "cause:a half-tripped double breaker: it heats now; if it trips again, call a licensed "
+                  "electrician|", "vent"),
+        DiagCheck("vent", "With it running, go outside: is the exhaust weak, or the vent hood or duct full of lint?",
+                  "A blocked vent overheats the dryer until its safety fuse cuts the heat (and risks a fire).",
+                  "cause:a clogged vent: clean the whole duct and hood, then check the thermal fuse, which a blocked "
+                  "vent usually blows|", "fuse"),
+        DiagCheck("fuse", "Unplugged, with the back panel off: does the thermal fuse (on the exhaust duct) show no "
+                  "continuity on a multimeter?",
+                  "A blown thermal fuse cuts the heat to protect against overheating.",
+                  "cause:a blown thermal fuse: replace it with the model's part, after cleaning the vent|", "element"),
+        DiagCheck("element", "Still unplugged: does the heating element show no continuity across its terminals?",
+                  "A broken element coil is the next most common failure.",
+                  "cause:a broken heating element: replace it with the model's part|",
+                  "pro:an appliance technician; say the breaker, vent, thermal fuse and element test good (next are "
+                  "the cycling thermostat, high-limit, and the timer or control board)"),
+    ),
+    ("U.S. Fire Administration, Clothes dryer fire safety", "The dryer maker's service manual and wiring diagram "
+     "(the sheet inside the back panel)"),
+))
+
+register(Diagnosis(
+    "roof_leak", "exterior", "A roof leak",
+    ("roof leak", "roof is leaking", "leaking roof", "roof leaks", "water through the ceiling", "ceiling stain",
+     "water coming through the ceiling"),
+    ("fall", "weather", "injury"),
+    "Look from the attic and the ground first, and stay off a wet, icy or steep roof: roof work needs fall protection "
+    "and a second person. Keep water away from light fixtures and wiring below the leak.",
+    "attic",
+    (
+        DiagCheck("attic", "In the attic with a light, during or right after rain: can you find wet wood, stains or "
+                  "drips?",
+                  "Water travels along rafters before it shows on a ceiling, so the attic shows where it really "
+                  "enters.", "trace", "not_roof"),
+        DiagCheck("trace", "Follow the wet trail uphill to where it starts: is it at something through the roof (a "
+                  "plumbing vent, a chimney, a skylight, a roof vent)?",
+                  "Penetrations are where most roof leaks begin.", "boot", "valley"),
+        DiagCheck("boot", "Is the rubber boot round a vent pipe cracked, or the flashing round a chimney or skylight "
+                  "lifted or its sealant gone?",
+                  "Boots and flashing age faster than the shingles around them.",
+                  "cause:a failed boot or flashing at a penetration: replace the boot or reflash it (sealant alone is "
+                  "a stopgap); chimney step and counter flashing is often a roofer's job|",
+                  "pro:a roofer; say water enters at a penetration whose boot and flashing look sound"),
+        DiagCheck("valley", "Is it in a valley, where the roof meets a wall, or at the eaves in winter (ice dams)?",
+                  "Valleys, wall flashing and ice dams need flashing or ice-and-water underlayment, not just shingles.",
+                  "pro:a roofer; say where it enters (a valley, a wall's step flashing, or ice dams at the eaves)",
+                  "shingles"),
+        DiagCheck("shingles", "From the ground with binoculars, above where the water shows: are shingles missing, "
+                  "lifted or cracked, or nails backed out?",
+                  "Damaged shingles or popped nails let water under the courses above the leak.",
+                  "cause:damaged or missing shingles: replace them (with fall protection) or have a roofer do it|",
+                  "pro:a roofer; say where the leak shows in the attic and that the shingles look intact"),
+        DiagCheck("not_roof", "No sign in the attic: is the stain under a bathroom, a pipe, or the air conditioner's "
+                  "indoor unit?",
+                  "Ceiling stains often come from plumbing or AC condensate, not the roof.",
+                  "cause:not the roof: a plumbing leak or AC condensate (check the drain pan and its line) is the "
+                  "likely source|",
+                  "pro:a roofer or a home inspector; say there's a ceiling stain with no sign in the attic (possibly "
+                  "only in wind-driven rain)"),
+    ),
+    ("Asphalt Roofing Manufacturers Association (ARMA), Residential Asphalt Roofing Manual",
+     "National Roofing Contractors Association (NRCA), The NRCA Roofing Manual",
+     "International Code Council, IRC 2021: R903 (weather protection) and R905.2.8 (flashing)"),
 ))
