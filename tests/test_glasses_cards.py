@@ -3,7 +3,7 @@ The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
 Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
-Workshop's The Job, starting a Trade Master job and moving it along with its holds kept, the Maps card's Tracks, and the Classroom's Practice with a chord's shape), the card
+Workshop's The Job, starting a Trade Master job and moving it along with its holds kept, the Maps card's Tracks, the Classroom's Practice with a chord's shape, and the Lab's Sensors), the card
 faces and their tiles, and long sentences split into a head and a detail (at a mark, or at the last word that fits),
 and Good Runs (Natural Momentum's counts).
 """
@@ -269,3 +269,17 @@ def test_the_classroom_card_shows_each_path_whats_next_and_a_chords_shape(tmp_pa
     chord = next((ln for ln in p["lines"] if ln["detail"].startswith("fingers")), None)
     assert chord is None or chord["text"].split(":")[0] in guitar.CHORDS
     assert "Learning paths aren't" in _practice(SimpleNamespace(), TODAY)["empty"]
+
+
+def test_the_lab_card_shows_each_sensors_last_reading_and_a_quiet_one_in_amber(tmp_path, monkeypatch):
+    import core.person_settings
+    from core.glasses_cards import _sensors
+    from core.sensors import SensorStore
+
+    monkeypatch.setattr(core.person_settings, "person_id", lambda context: "p1")
+    ctx = SimpleNamespace()
+    ctx.sensors = SensorStore(ctx, data_dir=tmp_path)
+    a, _ = ctx.sensors.add("p1", "Probe", "lab", {"series": "temp"})
+    ctx.sensors.get(a["id"]).update(last_at="2026-11-07T08:00:00", last_value=20.5)
+    [line] = _sensors(ctx, date(2026, 11, 9))["lines"]
+    assert line["text"] == "Probe: 20.5" and line["tone"] == "attention"

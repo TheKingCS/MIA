@@ -14,6 +14,8 @@ Voice tools for screens that had none (claude, 2026-11-09; DEC-0125: every featu
 - **list_past_conversations** and **find_in_conversations** (the chat page's History): the conversations kept, newest
   first, and the ones whose kept messages mention some words. Off-the-record and private messages were never written,
   so they can't be found.
+- **list_sensors** (the Sensors page, core/sensors.py): each sensor, where its readings go, the last one and when.
+  Adding one stays on a screen: its key is shown once and never spoken.
 
 Facts come from code; the model only phrases them.
 """
@@ -77,8 +79,23 @@ def _find(context, arguments: dict) -> str:
     return f"{len(hits)} conversation{'s' if len(hits) != 1 else ''}: " + "; ".join(hits[:5]) + "."
 
 
+def _sensors(context, arguments: dict) -> str:
+    """Tool list_sensors: the person's sensors, where each sends its readings, and its last reading and when."""
+    from core.person_settings import person_id
+    from core.sensors import target_words
+
+    store = getattr(context, "sensors", None)
+    if store is None:
+        return "Sensors aren't on this MIA."
+    mine = store.mine(person_id(context) or "")
+    if not mine:
+        return "No sensors yet. Add one on the Sensors page (Settings and Diagnostics)."
+    return "; ".join(f"{s['name']} → {target_words(s)}: " + (f"{s['last_value']:g} at {s['last_at'][11:16]} on {s['last_at'][:10]}"
+                                                         if s.get("last_at") else "no readings yet") for s in mine) + "."
+
+
 def register_screen_tools(registry) -> None:
-    """Registers look_up_online, get_app_status, list_past_conversations and find_in_conversations."""
+    """Registers look_up_online, get_app_status, list_past_conversations, find_in_conversations and list_sensors."""
     registry.register(AssistantAction(
         name="look_up_online", domain="system",
         description=("Look something up online through the person's own search engine, when they ask you to search "
@@ -123,4 +140,13 @@ def register_screen_tools(registry) -> None:
                          "did we talk about", "find in our conversations", "search our conversations",
                          "search my chats"),
         subjects=("conversation", "conversations", "chat", "talked"),
+    ))
+    registry.register(AssistantAction(
+        name="list_sensors", domain="system",
+        description="The person's sensors that send their own readings: where each one's go, and its last reading and when.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_sensors,
+        trigger_phrases=("my sensors", "what sensors", "which sensors", "sensor readings", "is my sensor",
+                         "is the probe", "last sensor reading"),
+        subjects=("sensor", "sensors", "probe"),
     ))

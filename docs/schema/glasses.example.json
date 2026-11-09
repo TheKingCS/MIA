@@ -1034,10 +1034,20 @@
    "pinned": false,
    "menu": [
     {
+     "id": "latest",
+     "label": "Latest Readings",
+     "type": "panel"
+    },
+    {
+     "id": "sensors",
+     "label": "Sensors",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
-     "label": "What's my latest experiment reading",
+     "label": "What are my latest lab readings",
      "type": "ask",
-     "say": "What's my latest experiment reading?"
+     "say": "What are my latest lab readings?"
     },
     {
      "id": "pin",

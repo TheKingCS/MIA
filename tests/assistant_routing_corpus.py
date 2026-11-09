@@ -25,6 +25,7 @@ CORPUS: list[tuple[str, str]] = [
     ("Show me our past conversations", "list_past_conversations"),
     ("What did we talk about last week?", "list_past_conversations"),
     ("When did we talk about the chicken coop?", "find_in_conversations"),
+    ("What are my sensors saying?", "list_sensors"),
     # ---- MIA about herself (core/model_registry.py, 2026-10-21) ---------
     ("What AI model are you using?", "get_model_info"),
     ("Which model are you running on?", "get_model_info"),

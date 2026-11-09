@@ -311,7 +311,7 @@ class MIAApplication:
     def __init__(self) -> None:
         """Builds the whole app before anything is shown: the Qt application and fonts, config, the event bus and AppContext, the
         theme, profiles and households, then every core service onto the context (each store, the model, voice, the
-        communication gate, budget, maps...), the module manager and search, the registries (search providers,
+        communication gate, budget, maps, the sensors that send their own readings...), the module manager and search, the registries (search providers,
         calculators, the Assistant's tools, dashboard widgets) and the timers that run the periodic checks. Only
         construction happens here; run() shows the splash and boots.
         """
@@ -481,6 +481,9 @@ class MIAApplication:
         self.context.net_worth = NetWorthHistory(self.context)
         self.context.real_estate = RealEstateManager(self.context)
         self.context.energy = EnergyManager(self.context)
+        from core.sensors import SensorStore
+
+        self.context.sensors = SensorStore(self.context)  # sensors that send their own readings (core/sensors.py)
         self.context.plaid = PlaidManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)

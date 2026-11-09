@@ -2632,5 +2632,30 @@
     ],
     "more": 0,
     "empty": "No path started. Say “I want to learn guitar”."
+  },
+  "lab/sensors": {
+    "app": "lab",
+    "item": "sensors",
+    "label": "Sensors",
+    "title": "Sensors",
+    "lines": [
+      {
+        "text": "Battery monitor: 87",
+        "detail": "Power: battery (%) · 07:59 11-09",
+        "tone": ""
+      },
+      {
+        "text": "Bench probe: no readings yet",
+        "detail": "The Lab: soil moisture (%)",
+        "tone": ""
+      },
+      {
+        "text": "Tank 1 pH probe: 6.9",
+        "detail": "Greenhouse: Tank 1 pH · 07:58 11-09",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No sensors yet. Add one on the Sensors page."
   }
 }

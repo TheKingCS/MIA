@@ -129,6 +129,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     rules (waypoints/inventory/journal before expeditions/trips before
     memories/missions) but only for the managers this scope actually
     uses — see this module's docstring for what's deliberately excluded.
+    The sensors that send their own readings (core/sensors.py) are built here too, as on the desktop.
     """
     context = AppContext(config=config, events=events)
 
@@ -254,6 +255,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.energy_manager import EnergyManager
 
     context.energy = EnergyManager(context)  # Power on the phone (DEC-0125), as on the desktop
+    from core.sensors import SensorStore
+
+    context.sensors = SensorStore(context)  # sensors that send their own readings (core/sensors.py)
     context.tasks = TaskManager(context)
     context.kitchen = KitchenManager(context)
     context.relationships = RelationshipsManager(context)

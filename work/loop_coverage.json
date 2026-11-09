@@ -65,6 +65,10 @@
    "status": "none",
    "why": "reading and dismissing notifications by hand; a dismissal already teaches the communication gate (its gate.* loops)"
   },
+  "action:sensor": {
+   "status": "none",
+   "why": "removing a sensor a person added; its readings are improved by each app's own reading loops (ranges, findings)"
+  },
   "action:track": {
    "status": "none",
    "why": "keeping a GPX file someone chose and deleting one; the numbers are worked out in code from the file (core/gps_tracks.stats), so there's nothing to learn"

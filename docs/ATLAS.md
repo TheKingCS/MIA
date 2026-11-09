@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1326 files, 288,867 lines; 1326 files describe themselves; 16,217 of 16,311 classes and functions are documented.
+1329 files, 289,490 lines; 1329 files describe themselves; 16,250 of 16,344 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-497 files, 138,271 lines; 7,364 of 7,450 classes and functions documented
+498 files, 138,610 lines; 7,385 of 7,471 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -382,6 +382,7 @@
 - `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from 
 - `core/self_knowledge.py`: What MIA can honestly say about herself — grounded in real data, never guessed. When the person asks "what are you?", "what can you do?", "what are you working on?" or "what do you know about me?", her answer should come from the facts (the system map, her Night School focus, the person's own stored
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta
+- `core/sensors.py`: Sensors that send their own readings (claude, 2026-11-09; DEC-0019: the computer adds sensors; DEC-0125: the Greenhouse, Power and the Lab had readings by hand only). A sensor is anything on the home network that can make an HTTP request (an ESP32, a Raspberry Pi, a smart plug's script): it sends on
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC.
 - `core/sign_in_guard.py`: Sign-in protection for MIA's server (2026-11-08, Zac: "fortify our security measures to industry standards and beyond"; docs/SECURITY.md). Two rules, both from OWASP's authentication and session guidance:
@@ -508,7 +509,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 3,990 lines; 47 of 47 classes and functions documented
+2 files, 4,049 lines; 49 of 49 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -783,7 +784,7 @@
 
 ## tests/: the test suite: what each part must do
 
-455 files, 76,456 lines; 6,563 of 6,571 classes and functions documented
+456 files, 76,595 lines; 6,573 of 6,581 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -816,7 +817,7 @@
 - `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.
 - `tests/test_assistant_life_actions.py`: Workout, people & pets, household routine, and Classroom Assistant tools (core/assistant_life_actions.py) run through the real registry against real managers on temp data, plus their pure parsers.
 - `tests/test_assistant_routing.py`: Enforces tests/assistant_routing_corpus.py against the real desktop action registry: every realistic request reaches its tool, how-to questions reach the help docs, and small talk stays tool-free. Plus unit tests for the pieces that make that work (record-name lookup, quantity parsing, keyword/recor
-- `tests/test_assistant_screen_tools.py`: tests/test_assistant_screen_tools.py — voice for screens that had none (core/assistant_screen_tools.py, DEC-0125): looking something up online through the person's own engine (and saying why not when it can't), what isn't working, and past conversations listed and searched.
+- `tests/test_assistant_screen_tools.py`: tests/test_assistant_screen_tools.py — voice for screens that had none (core/assistant_screen_tools.py, DEC-0125): looking something up online through the person's own engine (and saying why not when it can't), what isn't working, past conversations listed and searched, and the sensors listed with t
 - `tests/test_at_rest.py`: MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a file that won't open is copied aside before the error, so a store starti
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
@@ -1117,6 +1118,7 @@
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's report and tasks, and the series written from the principles and
 - `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.
+- `tests/test_sensors.py`: tests/test_sensors.py — sensors that send their own readings (core/sensors.py): a sensor added by a person gets a key shown once and kept as a hash; its readings go through its app's own reading action (the Lab, Power, the Greenhouse) as that person; a key does nothing else, a reading must be a numb
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
 - `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept.
@@ -1243,7 +1245,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-104 files, 18,904 lines
+105 files, 18,990 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1325,6 +1327,7 @@
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z
 - `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick 
 - `web/security.js`: security.js — Security (claude, 2026-10-18, DEC-0033). Renders MIA.security() (core/security_cams.py) in tabs: Cameras (a live grid: each tile asks MIA for the camera's picture every few seconds while it's on screen; tap one for a full view, refreshed every second, with Save Picture), Pictures (what
+- `web/sensors.js`: sensors.js — Sensors (claude, 2026-11-09). Renders MIA.sensors() (core/sensors.py): each sensor that sends its own readings, where they go (the Lab, Power or the Greenhouse), its last reading and when, and Remove (sensor.remove). Add a Sensor asks which app, then its name and target there; MIA.senso
 - `web/settings.js`: settings.js — the Settings screen (claude, 2026-10-07; Zac: the gear's Settings). Renders MIA.settings() (core/web_account.py): the person's own settings, grouped as on the PC, the kinds of message MIA is taking a break from, and a way to choose which apps show. Each change is an action (setting.set
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
 - `web/shop.js`: shop.js — the Reward Shop (claude, 2026-10-17, DEC-0028). Renders MIA.shop() (core/game_layer.py): credits earned / spent / left, the rewards you set (ready to buy first, then how far off the rest are), ideas to start with, and what you've bought. Buy proposes shop.buy; undo gives the credits back. 

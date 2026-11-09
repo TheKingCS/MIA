@@ -1,7 +1,7 @@
 """
 tests/test_assistant_screen_tools.py — voice for screens that had none (core/assistant_screen_tools.py, DEC-0125):
 looking something up online through the person's own engine (and saying why not when it can't), what isn't working,
-and past conversations listed and searched.
+past conversations listed and searched, and the sensors listed with their last readings.
 """
 
 from types import SimpleNamespace
@@ -63,3 +63,17 @@ def test_a_conversation_is_found_by_what_was_said_in_it():
     assert "Coop plans" in said and "How big" in said
     assert "didn't find" in t._find(_conversations(), {"words": "tractor"})
     assert "don't keep" in t._find(SimpleNamespace(), {"words": "coop"})
+
+
+def test_the_sensors_are_listed_with_their_last_reading(tmp_path, monkeypatch):
+    import core.person_settings
+    from core.sensors import SensorStore
+
+    monkeypatch.setattr(core.person_settings, "person_id", lambda context: "p1")
+    ctx = SimpleNamespace()
+    ctx.sensors = SensorStore(ctx, data_dir=tmp_path)
+    assert "No sensors yet" in t._sensors(ctx, {})
+    s, _key = ctx.sensors.add("p1", "Bench probe", "lab", {"series": "soil moisture"})
+    ctx.sensors.get(s["id"]).update(last_at="2026-11-09T08:15:00", last_value=41.5)
+    assert t._sensors(ctx, {}) == "Bench probe → The Lab: soil moisture: 41.5 at 08:15 on 2026-11-09."
+    assert "aren't on this MIA" in t._sensors(SimpleNamespace(), {})

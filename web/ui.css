@@ -2181,3 +2181,16 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .tr-say { margin-top: var(--gap); font-size: 13px; }
 @media (max-width: 520px) { .tr-card { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; } .tr-shape { width: 76px; height: 76px; }
   .tr-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Sensors (web/sensors.js): each sensor and, once, a new one's key. */
+.sn-card, .sn-key { display: grid; gap: 8px; padding: 14px 16px; margin-top: var(--gap); }
+.sn-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.sn-top h2 { margin: 0; font-size: 17px; text-transform: none; }
+.sn-last { margin: 0; font-family: var(--font-mono); }
+.sn-key { border-left: 3px solid var(--attention); }
+.sn-key p { margin: 0; }
+.sn-warn { color: var(--attention); }
+.sn-code { display: block; padding: 8px 10px; border-radius: var(--radius-sm, 8px); background: rgba(var(--rgb-accent), 0.06);
+  border: 1px solid var(--line); font-family: var(--font-mono); font-size: 13px; overflow-wrap: anywhere; user-select: all; }
+.sn-code.small { font-size: 11.5px; }
+.sn-standard { margin-top: var(--gap); font-size: 13px; }

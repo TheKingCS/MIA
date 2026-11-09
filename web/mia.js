@@ -236,7 +236,10 @@
     paint: (description, use, apply, area) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply, area: area || "" }),
     portals: () => read("/api/portals", "portals"),  // Portal Pictures: your paintings in the Nexus portals (DEC-0140)
     lookup: () => read("/api/lookup", "lookup"),  // Look It Up Online (DEC-0053)
-    tracks: () => read("/api/tracks", "tracks"),  // Tracks: walks, rides and drives from GPX (DEC-0099)
+    tracks: () => read("/api/tracks", "tracks"),
+    // Sensors (core/sensors.py): the person's sensors; adding one returns its key, shown once (never an action).
+    sensors: () => read("/api/sensors", "sensors"),
+    sensorAdd: (body) => demo ? demoOnly() : call("POST", "/api/sensors", body),  // Tracks: walks, rides and drives from GPX (DEC-0099)
     trades: (item) => read("/api/trades" + (item ? "?item=" + encodeURIComponent(item) : ""), "trades"),  // Trade Master (DEC-0149)
     lookupSearch: (words) => demo ? read("/api/lookup", "lookup_results") : call("POST", "/api/lookup", { words }),
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.

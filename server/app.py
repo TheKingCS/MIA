@@ -25,6 +25,10 @@ context.profiles.verify_password() and returns an opaque bearer token
 app's own state — no JWT library, no persistence (a server restart
 logs everyone out, acceptable for a personal device's first pass).
 
+**A sensor's own key** (2026-11-09, core/sensors.py): `/api/sensors/reading` takes no sign-in, only
+the sensor's key in X-Sensor-Key (`SensorReading`), and can do one thing: log a number to that
+sensor's series. Adding a sensor (`SensorAdd`) returns its key once.
+
 **Secrets from the web** (2026-11-07): the inbox's email setup and unlock
 (`/api/inbox/email*`) take a password and passphrase in their own request
 models (`MailSetupRequest`, `MailUnlockRequest`), handed straight to
@@ -404,6 +408,19 @@ class PackDelete(BaseModel):
     confirm: str = ""
 
 
+class SensorAdd(BaseModel):
+    """A sensor added from the Sensors page (core/sensors.py): its name, the app it feeds and its target there."""
+    name: str
+    app: str
+    target: dict = Field(default_factory=dict)
+
+
+class SensorReading(BaseModel):
+    """One reading a sensor sends: the number, and an optional note."""
+    value: float | str
+    note: str = ""
+
+
 class BackupMake(BaseModel):
     """A backup made from the web: its passphrase, when it should be encrypted (never kept)."""
     passphrase: str = ""
@@ -485,7 +502,8 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), and Tracks is /api/tracks (DEC-0099)."""
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), and sensors send their readings to
+    /api/sensors/reading with their own key (core/sensors.py)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2569,6 +2587,47 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return screen(view_for(context, profile_id), item)
+
+    @app.get("/api/sensors")
+    def sensors_screen(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Sensors (core/sensors.screen): the person's sensors, what each app needs to name a target, and the picks."""
+        from core.sensors import screen as sensors_page
+
+        with app.state.turn_lock:
+            return sensors_page(view_for(context, profile_id), profile_id)
+
+    @app.post("/api/sensors")
+    def sensor_add(body: SensorAdd, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Adds a sensor and returns its key, the only time it's shown (never an action: a key is a secret, and actions
+        are logged). The person adding it is its say-so for every reading it sends."""
+        from core.sensors import SensorError
+
+        store = getattr(context, "sensors", None)
+        if store is None:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Sensors aren't on this MIA.")
+        try:
+            with app.state.turn_lock:
+                sensor, key = store.add(profile_id, body.name, body.app, body.target)
+        except SensorError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"sensor": sensor, "key": key, "path": "/api/sensors/reading", "header": "X-Sensor-Key",
+                "body": {"value": 6.8}}
+
+    @app.post("/api/sensors/reading")
+    def sensor_reading(body: SensorReading, request: Request) -> dict:
+        """A sensor's reading (core/sensors.reading), its key in X-Sensor-Key: logged through its app's reading action
+        as the person who added it. The key can do nothing else; turned away from outside when phone access is off,
+        like every route."""
+        from core.sensors import SensorError, reading
+
+        try:
+            with app.state.turn_lock:
+                done = reading(context, view_for, request.headers.get("x-sensor-key", ""), body.value, body.note)
+        except SensorError as problem:
+            code = status.HTTP_403_FORBIDDEN if "key" in str(problem) else (
+                status.HTTP_429_TOO_MANY_REQUESTS if "Too soon" in str(problem) else status.HTTP_400_BAD_REQUEST)
+            raise HTTPException(code, str(problem)) from None
+        return {"ok": True, "value": done["value"]}
 
     @app.get("/api/tracks")
     def web_tracks(profile_id: str = Depends(require_profile_id)) -> dict:

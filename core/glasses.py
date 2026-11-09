@@ -1275,7 +1275,7 @@ from core.glasses_cards import STATUS_FROM as _MORE_STATUS  # noqa: E402
 from core.glasses_cards import status as _more_status  # noqa: E402
 
 PANELS.update(_MORE_PANELS)
-from core.glasses_cards import EXTRA as _MORE_ITEMS  # noqa: E402  (What's Next, Your Campaign, My Directions, Good Runs, Connections, The Job, Tracks, Practice)
+from core.glasses_cards import EXTRA as _MORE_ITEMS  # noqa: E402  (What's Next, Your Campaign, My Directions, Good Runs, Connections, The Job, Tracks, Practice, Sensors)
 
 for _app, _items in _MORE_ITEMS.items():
     PANELS[_app] = PANELS.get(_app, ()) + _items

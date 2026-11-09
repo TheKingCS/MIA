@@ -639,6 +639,30 @@ def _practice(context, today: date):
     return _panel("Practice", lines, "No path started. Say \u201cI want to learn guitar\u201d.")
 
 
+def _sensors(context, today: date):
+    """Panel (the Lab card): each sensor sending its own readings (core/sensors.py), its last reading and when; amber
+    when it's been quiet a day or more since it last sent one."""
+    from datetime import datetime
+
+    from core.person_settings import person_id
+    from core.sensors import target_words
+
+    store = getattr(context, "sensors", None)
+    if store is None:
+        return _panel("Sensors", [], "Sensors aren't on this MIA.")
+    lines = []
+    for s in store.mine(person_id(context) or ""):
+        at = s.get("last_at") or ""
+        try:
+            quiet = bool(at) and (today - datetime.fromisoformat(at).date()).days >= 1
+        except ValueError:
+            quiet = False
+        value = f"{s['last_value']:g}" if s.get("last_value") is not None else "no readings yet"
+        lines.append(_line(f"{s['name']}: {value}", f"{target_words(s)}" + (f" · {at[11:16]} {at[5:10]}" if at else ""),
+                           "attention" if quiet else ""))
+    return _panel("Sensors", lines, "No sensors yet. Add one on the Sensors page.")
+
+
 # More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
 EXTRA = {
     "greenhouse": (("next", "What's Next", _whats_next),),
@@ -648,6 +672,7 @@ EXTRA = {
     "workshop": (("job", "The Job", _trade_job),),
     "maps": (("tracks", "Tracks", _tracks),),
     "classroom": (("practice", "Practice", _practice),),
+    "lab": (("sensors", "Sensors", _sensors),),
 }
 
 

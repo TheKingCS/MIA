@@ -78,6 +78,7 @@ PORTALS = Page("portals", "Portal Pictures", "apps", "Put your own paintings in 
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
 CHANGES = Page("changes", "Recent Changes", "issues", "What changed, with Undo.", "changes.html")
+SENSORS = Page("sensors", "Sensors", "lab", "Sensors that send their own readings.", "sensors.html")
 NOTIFS = Page("notifications", "Notifications", "inbox", "What MIA told you.", "notifications.html")
 HEALTH = Page("health", "Health", "workout", "Sleep, visits, medications and records.", "health.html")
 COMMS = Page("communications", "Communications", "inbox", "Email, MIA's messages and people to reach.",
@@ -104,7 +105,7 @@ AREAS: tuple[Area, ...] = (
          ("security", WALLET, "passwords", SIGNINS, "field_kit"), hue="#c0c8d4"),
     Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),
     Area("system", "Settings and Diagnostics", "settings", "Make MIA yours, and see how she's doing.",
-         ("settings", STUDIO, PORTALS, ANSWERS, ABOUT, "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
+         ("settings", STUDIO, PORTALS, ANSWERS, ABOUT, "diagnostics", "issues", SENSORS, CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
     Area("finances", "Finances", "budget", "Money in, money out, and the way out.",
          ("budget", "freedom", "dungeon", "insurance", "real_estate", "compliance", "inbox"), hue="#3f7bff"),
     Area("business", "Business", "business", "Customers, products and the paperwork.",
