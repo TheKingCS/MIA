@@ -163,8 +163,9 @@ def _screen_changes() -> dict[str, int]:
 
 
 def capability_map(context=None) -> list[dict]:
-    """Every app: what it's for, where it runs, whether this person can
-    open it, the tools MIA can use in it (look up / change), and its limits."""
+    """Every app: what it's for, where it runs (Settings and Diagnostics count their own web pages,
+    core/parity.PAGE_ELSEWHERE), whether this person can open it, the tools MIA can use in it
+    (look up / change), and its limits."""
     from core.assistant_actions import changes_records
     from core.web_surfaces import APPS, RETIRED, WEB_ONLY
 
@@ -177,6 +178,8 @@ def capability_map(context=None) -> list[dict]:
             allowed = lambda app_id: app_allowed(context, app_id)  # noqa: E731
         except ImportError:
             allowed = None
+    from core.parity import PAGE_ELSEWHERE
+
     out = []
     for app in APPS:
         mine = [a for domain in app.domains for a in tools.get(domain, [])]
@@ -184,7 +187,7 @@ def capability_map(context=None) -> list[dict]:
             where = "retired"
         elif app.module_id in WEB_ONLY:
             where = "web"
-        elif app.page:
+        elif app.page or app.module_id in PAGE_ELSEWHERE:  # Settings and Diagnostics have web pages of their own
             where = "web and desktop"
         else:
             where = "desktop"
