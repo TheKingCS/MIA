@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1324 files, 288,017 lines; 1324 files describe themselves; 16,176 of 16,270 classes and functions are documented.
+1326 files, 288,225 lines; 1326 files describe themselves; 16,187 of 16,281 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-496 files, 137,669 lines; 7,335 of 7,421 classes and functions documented
+497 files, 137,804 lines; 7,340 of 7,426 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -62,6 +62,7 @@
 - `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
 - `core/assistant_proposal_actions.py`: Mission ideas and field recordings by voice (DEC-0125; the screens are the Missions page's idea card and the Journal's From the Field, core web_proposals.py). "Suggest a mission" asks the model for one idea (checked in code before it's kept); "accept it" / "set it aside" decide it. "Any field record
 - `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
+- `core/assistant_screen_tools.py`: Voice tools for screens that had none (claude, 2026-11-09; DEC-0125: every feature works by voice and without it):
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable.
 - `core/assistant_subscription_actions.py`: "Still using it?" by voice (DEC-0054, DEC-0125): "I still use Netflix" marks that subscription in use today (the same `bill.still_using` as Money's button), and "which subscriptions haven't I checked?" lists the ones not said to be in use in three months (core/subscriptions.py).
@@ -782,7 +783,7 @@
 
 ## tests/: the test suite: what each part must do
 
-454 files, 76,271 lines; 6,551 of 6,559 classes and functions documented
+455 files, 76,344 lines; 6,557 of 6,565 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -815,6 +816,7 @@
 - `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.
 - `tests/test_assistant_life_actions.py`: Workout, people & pets, household routine, and Classroom Assistant tools (core/assistant_life_actions.py) run through the real registry against real managers on temp data, plus their pure parsers.
 - `tests/test_assistant_routing.py`: Enforces tests/assistant_routing_corpus.py against the real desktop action registry: every realistic request reaches its tool, how-to questions reach the help docs, and small talk stays tool-free. Plus unit tests for the pieces that make that work (record-name lookup, quantity parsing, keyword/recor
+- `tests/test_assistant_screen_tools.py`: tests/test_assistant_screen_tools.py — voice for screens that had none (core/assistant_screen_tools.py, DEC-0125): looking something up online through the person's own engine (and saying why not when it can't), what isn't working, and past conversations listed and searched.
 - `tests/test_at_rest.py`: MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a file that won't open is copied aside before the error, so a store starti
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —

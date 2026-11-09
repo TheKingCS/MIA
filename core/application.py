@@ -99,6 +99,7 @@ from core.assistant_cooking_actions import register_cooking_actions
 from core.assistant_household_actions import register_household_actions
 from core.assistant_lab_actions import register_lab_actions
 from core.assistant_notification_actions import register_notification_actions
+from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
 from core.assistant_trip_route_actions import register_trip_route_actions
@@ -1670,7 +1671,10 @@ class MIAApplication:
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
         milestone 5.5. Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
-        the one place independent core services get wired together.
+        the one place independent core services get wired together
+        (tools in their own files register here too, such as
+        core/assistant_screen_tools.py: look it up online, what isn't
+        working, past conversations).
         Every handler below is a `@staticmethod` — a pure function of
         (context, arguments) — except that none of them actually need
         `self` at all; `context.module_manager` (set right above) is
@@ -1719,6 +1723,7 @@ class MIAApplication:
         register_asset_part_actions(self.context.assistant_actions)  # the parts an asset uses
         register_health_actions(self.context.assistant_actions)  # sleep, visits, medications, records (DEC-0129)
         register_notification_actions(self.context.assistant_actions)  # read out and mark notifications read (DEC-0125)
+        register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
         register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)
