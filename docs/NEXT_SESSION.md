@@ -16,7 +16,9 @@ glasses Good Runs), **Waiting for the Internet** (the online reminders, on Notif
 `track.delete`; glasses Maps → Tracks), voice for **look it up online**, **what isn't working**, and **past
 conversations** (`core/assistant_screen_tools.py`), the Dungeon's **shift differentials and tips**
 (`run_loot`, `dungeon.tips`), and Real Estate **selling** (`property.list_sale`, `property.sell`, a Sold section;
-a sold property leaves equity). Glasses lines with no mark now split at a word. All 99 pages pass the demo sweep on
+a sold property leaves equity), Home's spoken briefing (**Hear It**, `core/web_surfaces.briefing`), and on the
+glasses Practice (Classroom: a path's next step and a chord's shape) and Start a Job (Workshop, `trade.start`).
+Glasses lines with no mark now split at a word. All 99 pages pass the demo sweep on
 desktop and phone. K-0156 to K-0162. **Still partial, not built on purpose:** Greenhouse/Power/Lab sensor readings
 (the greenhouse node is DEC-0150, proposed, waiting on Zac's five answers), Passwords autofill in other apps
 (never, by design so far), the character portrait (Zac's call; the art studio paints no people).

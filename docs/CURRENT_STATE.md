@@ -12,8 +12,10 @@ counts, never a score), **Waiting for the Internet** on Notifications, and **Tra
 drives with their shapes and numbers; on the glasses' Maps card too). MIA can now **look things up online**, say
 **what isn't working**, and find **past conversations** by voice. The Dungeon counts **shift differentials and tips**,
 and Real Estate tracks **selling a property** (listed, then sold, with what it came to as an estimate). Every one of
-the 99 web pages passes on desktop and phone. What's left partial waits on Zac: the greenhouse sensors (DEC-0150) and
-the character portrait.
+the 99 web pages passes on desktop and phone. Later the same run: Home's **Hear It** says the day aloud in MIA's voice,
+and the glasses gained **Practice** on the Classroom card (each learning path's next step and a chord's shape to read
+while you play), **Tracks** on the Maps card, and **starting a Trade Master job** right from the Workshop card. What's
+left partial waits on Zac: the greenhouse sensors (DEC-0150) and the character portrait.
 
 **2026-11-08 overnight (Claude, design session, Zac asleep): screens for everything decided.** The engine session's
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,
