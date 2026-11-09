@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1329 files, 289,490 lines; 1329 files describe themselves; 16,250 of 16,344 classes and functions are documented.
+1329 files, 289,559 lines; 1329 files describe themselves; 16,253 of 16,347 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-498 files, 138,610 lines; 7,385 of 7,471 classes and functions documented
+498 files, 138,648 lines; 7,387 of 7,473 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -473,7 +473,7 @@
 - `core/web_nexus.py`: The Nexus (DEC-0130, Zac 2026-11-08): MIA's spatial home. A chamber of portals, one per area (core/web_areas.AREAS), around MIA's orb, with the HUD across the top. This module is what the page shows; `web/nexus.html` and `web/spatial.js` only draw it.
 - `core/web_notifications.py`: Notifications on the web (the screens review's missing notifications, docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125). Each notification (core/notification_manager.py), newest first: its title and message, a tone for its level (amber for a warning, red only for a real error: DEC-0014), where
 - `core/web_power.py`: Power's web screen (DEC-0113 canvas, DEC-0125: Power had no phone screen). Two parts:
-- `core/web_progress.py`: Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018, answering H-0013): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and `/api/character`; changes are the action kinds in core/mission_actions.py.
+- `core/web_progress.py`: Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018, answering H-0013): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and `/api/character`; changes are the action kinds in core/mission_actions.py. The Characte
 - `core/web_projects.py`: Projects on the web (DEC-0125: projects and their tasks were voice-only; the desktop has them in the Toolbox's Project Manager). A project is a bounded build or job of the person's own ("Greenhouse", "Fix the fence"), with a status, a due date, a budget, what's been spent on it (the expenses tagged 
 - `core/web_proposals.py`: The Toolbox's two "MIA proposes, you confirm" tools on the web and by voice (DEC-0125: Discovery and Field Captures were in the Qt Toolbox only).
 - `core/web_push.py`: Sends Web Push messages via pywebpush (VAPID-signed, per the standard Web Push protocol) and owns this device's VAPID keypair — generated once on first use and persisted to data/vapid_keys.json, never regenerated after that (regenerating it would silently invalidate every subscription a browser has 
@@ -784,7 +784,7 @@
 
 ## tests/: the test suite: what each part must do
 
-456 files, 76,595 lines; 6,573 of 6,581 classes and functions documented
+456 files, 76,611 lines; 6,574 of 6,582 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -806,7 +806,7 @@
 - `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
-- `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tiny PNG back.
+- `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.
 - `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
@@ -1245,7 +1245,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 18,990 lines
+105 files, 19,005 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

@@ -1325,6 +1325,9 @@ body.mod-maps .hero { display: none; }
 .ch-portrait { width: 108px; height: 108px; border-radius: 50%; display: grid; place-items: center; border: 1px dashed rgba(var(--rgb-accent), 0.5);
   background: radial-gradient(circle, rgba(var(--rgb-accent), 0.1), transparent 70%); color: var(--accent); }
 .ch-portrait svg { width: 54px; height: 54px; }
+.ch-portrait.crest { border-style: solid; overflow: hidden; }
+.ch-portrait.crest img { width: 100%; height: 100%; object-fit: cover; }
+.ch-hero .ch-paint { justify-self: center; }
 .ch-hero h2 { margin: 0; font-size: var(--text-xl); font-weight: 600; }
 .ch-level { display: flex; gap: 12px; align-items: baseline; }
 .ch-level .pw-label { margin: 0; }

@@ -38,6 +38,7 @@ PERSONAL_SETTINGS = (
     "first_boot.progress",
     "user_sync.progress",
     "welcome.progress",
+    "character.crest",  # the painting on the Character portrait card (core/art_studio.py "crest", 2026-11-09)
     "email.send.address",
     "email.send.host",
     "email.send.port",

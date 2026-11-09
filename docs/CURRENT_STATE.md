@@ -14,8 +14,10 @@ drives with their shapes and numbers; on the glasses' Maps card too). MIA can no
 and Real Estate tracks **selling a property** (listed, then sold, with what it came to as an estimate). Every one of
 the 99 web pages passes on desktop and phone. Later the same run: Home's **Hear It** says the day aloud in MIA's voice,
 and the glasses gained **Practice** on the Classroom card (each learning path's next step and a chord's shape to read
-while you play), **Tracks** on the Maps card, and **starting a Trade Master job** right from the Workshop card. What's
-left partial waits on Zac: the greenhouse sensors (DEC-0150) and the character portrait.
+while you play), **Tracks** on the Maps card, and **starting a Trade Master job** right from the Workshop card. Then
+**Sensors**: any probe or Pi on the home network can send its readings to the Lab, Power or the Greenhouse with its
+own key (shown once, able to do nothing else), and the Character card's portrait became **a crest MIA paints** from
+your two strongest stats when you ask. Only Passwords' autofill stays partial, by design.
 
 **2026-11-08 overnight (Claude, design session, Zac asleep): screens for everything decided.** The engine session's
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,
