@@ -17,7 +17,8 @@ and the glasses gained **Practice** on the Classroom card (each learning path's 
 while you play), **Tracks** on the Maps card, and **starting a Trade Master job** right from the Workshop card. Then
 **Sensors**: any probe or Pi on the home network can send its readings to the Lab, Power or the Greenhouse with its
 own key (shown once, able to do nothing else), and the Character card's portrait became **a crest MIA paints** from
-your two strongest stats when you ask. Only Passwords' autofill stays partial, by design.
+your two strongest stats when you ask. Last, Passwords fill other apps and sites on the phone ("Fill from MIA",
+only the login you pick). No app is listed as partial any more.
 
 **2026-11-08 overnight (Claude, design session, Zac asleep): screens for everything decided.** The engine session's
 new pieces each got their screen, actions and voice tools: **My Directions** (your values in your words, today's seed,

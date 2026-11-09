@@ -23,8 +23,9 @@ desktop and phone. K-0156 to K-0162. **Sensors** (core/sensors.py, the Sensors p
 or the Greenhouse with its own key (shown once, hashed, can only log to its series); DEC-0150's greenhouse node can
 use it. The **Character portrait** is a crest MIA paints from your two strongest stats when you press Paint My Crest (never
 a person; core/art_studio "crest"). The inbox falls back when the budget lacks `include_uncounted`, and the tool
-reference is regenerated. **Still partial, by design:** Passwords autofill in other apps (the assistant never sees
-a password).
+reference is regenerated. **Passwords autofill** on the phone: MIA is an Android autofill service (`MiaAutofillService.kt`,
+`AutofillActivity.kt`, `core/password_autofill.py`); **Zac:** turn it on in Android Settings → Passwords and
+autofill → Autofill service → MIA, and try a sign-in. No app is partial in the capability list now.
 **Loose ends from a full cloud run
 (2026-11-09):** besides the cloud's usual stand-in failures (FastAPI StopIteration, Qt mocks, libzim, astral, PDF
 readers), `core/inbox_manager.py` called `budget.all_expenses(include_uncounted=True)`, which this repo's
