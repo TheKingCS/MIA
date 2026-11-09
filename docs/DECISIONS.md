@@ -2525,3 +2525,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   workshop, kitchen and bakery, garden and flock with woodworking first; (3) 2D views first or wait for 3D; (4) a
   print-ready page or a generated PDF.
 - Related: DEC-0030, DEC-0036, DEC-0118, DEC-0120, DEC-0141, DEC-0144
+
+### DEC-0148: Natural Momentum — help good mornings happen again, and stay out of their way
+- Status: PROPOSED (claude, engine, 2026-11-08), awaiting Zac. Nothing built.
+- From: Zac's handoff "Natural Momentum & Flow State Optimization" (a morning where waking naturally and coffee led
+  to the dishes, laundry, the kitchen, the dev list and getting ready, without forcing it). Its section 10 asks to
+  find what exists first and not duplicate it.
+- Finding (`docs/NATURAL_MOMENTUM_PROPOSAL.md`): most of it exists — rhythms (The Loop, Work Dungeon shifts),
+  sleep (Health), routines, the Operating Journal, the history, "you could go do X" (capability reminders), Presence,
+  the communication gate (5 a day, no nagging), the dismissed loop, the dev agents (missions, council), the Kitchen
+  and her browser. Missing: momentum windows, task chaining, recognizing flow, tomorrow's prep.
+- Proposed first slice, from records already kept (no new tracking): `core/momentum.py` (windows of 3+ things done
+  within ~90 min, what began them, counts never rules), chains as counts offered once through the gate, a flow guard
+  in the gate (2+ done in 30 min: non-urgent offers held), one easy start in his usual momentum hours, one evening
+  prep line from tomorrow's schedule and prep he's done before, feedback through the dismissed loop; no scores.
+- Open for Zac: (1) approve the slice; (2) Faith and delegation vs DEC-0119 (recommended: the shared grocery list and
+  a drafted message he sends, no account for her); (3) how MIA learns what he did (recommended: what's logged, plus
+  "I did X" by voice); (4) the flow guard (recommended: yes).
+- Related: DEC-0047, DEC-0097, DEC-0119, DEC-0141, DEC-0143, DEC-0044
