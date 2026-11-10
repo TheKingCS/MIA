@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1362 files, 301,188 lines; 1362 files describe themselves; 16,586 of 16,680 classes and functions are documented.
+1363 files, 301,290 lines; 1363 files describe themselves; 16,592 of 16,686 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -758,7 +758,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-38 files, 3,921 lines; 124 of 124 classes and functions documented
+39 files, 4,023 lines; 130 of 130 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -787,6 +787,7 @@
 - `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
 - `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py).
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
+- `tools/page_check.py`: Every page of the web front end opened once, to catch the page that fails to load before a person does (roadmap 2.8, 2026-11-10). Serves `web/` on a local port, opens each `*.html` in demo mode (`?demo`, the placeholder example, no MIA needed) in headless Edge through Playwright, waits for it to set
 - `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet:
 - `tools/pc_model_check.py`: Which model should MIA's home computer run? (DEC-0022.) Runs each model through MIA's golden set (core/model_bench.py) with Ollama on this computer, on its graphics card, exactly as Talk calls it, and writes what it found to `pc-check/models.md` (paste that file's contents to Claude, or just say "do
 - `tools/publish_glasses.py`: Copies MIA's glasses interface to the public page (DEC-0062).
