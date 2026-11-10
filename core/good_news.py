@@ -35,12 +35,25 @@ installed, a track in MIA's music library ("Good News Radio, Sunny, Nov 6")
 the PC, phone and glasses can play.
 
 **Its loop** (`news.misleading`): stories the person said were misleading
-("that story was misleading"), by source; a source that keeps misleading opens
-a task to drop it.
+("that story was misleading", or the story's button on the page), by source; a
+source that keeps misleading opens a task to drop it.
+
+**Following a story** (Zac, 2026-11-10): a person can follow a story from the
+page or by voice ("follow that story"). Each day's feeds are then checked for
+later reports on it (`follow_ups()`, by the headline's own words), good news
+or not: following means hearing what happened next. What they follow, and
+what was found, is theirs (`good_news_following.json` in their own folder).
+
+**Its page** (`screen()`, web/news.html): the latest episode's stories with a
+summary, how each is known and where to read it in full, the episode to play
+in each personality's voice, the stories followed, and the switches (on, off,
+make today's now) as actions in `core/news_actions.py`. Everything the page
+does can be said, and everything said has its control there (DEC-0125).
 """
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import re
@@ -62,7 +75,12 @@ SETTING = "good_news.on"
 STORIES = 6
 KEEP_DAYS = 3
 KEEP_TRACKS = 7
-AGENT = "MIA-GoodNewsRadio/1.0 (+offline-first personal assistant; one fetch a day)"
+LATEST_DAYS = 7  # how far back the page looks for an episode to show
+KEEP_EPISODES = 30  # days an episode's file is kept
+MAKING_MINUTES = 15  # how long a started episode counts as being made
+FOLLOW_LIMIT = 20  # stories one person follows at once
+UPDATES_KEPT = 12  # later reports kept for one followed story
+AGENT ="MIA-GoodNewsRadio/1.0 (+offline-first personal assistant; one fetch a day)"
 
 PRIMARY, JOURNALISM, SOLUTIONS, PRESS = "primary", "journalism", "solutions", "press release"
 SOURCES = (
@@ -274,6 +292,66 @@ def _stamp(text: str) -> float:
         return 0.0
 
 
+def story_id(story: dict) -> str:
+    """Pure logic. A story's id, the same on every day and device: made from its first link (its headline when it
+    has none)."""
+    first = (story.get("links") or [story.get("link", "")])[0] or story.get("title", "")
+    return hashlib.sha1(str(first).encode("utf-8")).hexdigest()[:10]
+
+
+# ------------------------------------------------------------------ following a story (pure)
+
+COMMON = frozenset(
+    "the and for with from that this these those have has had are was were will would its into onto new first says "
+    "said say study studies scientists researchers research after before over under more most than about how why "
+    "what when where who could may might can their they them been being not but you your our one two three year "
+    "years day days week weeks now just also here there out off all any some found finds find shows show "
+    "reveals reveal report reports make makes made help helps gets get got way ways use uses used using".split())
+
+
+def _keywords(text: str) -> set[str]:
+    """Pure logic. A headline's own words: three letters or more, the everyday ones left out, a plural's "s" dropped
+    (so "reefs" and "reef" are the same word)."""
+    words = (w for w in re.findall(r"[a-z0-9]+", str(text or "").lower()) if len(w) >= 3 and w not in COMMON)
+    return {w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w for w in words}
+
+
+def _same_subject(a: set[str], b: set[str]) -> bool:
+    """Pure logic. Whether two headlines' words are about the same thing: three words shared, or two when that is
+    most of the shorter headline. Strict on purpose: a missed report is better than a wrong one."""
+    shared = len(a & b)
+    return shared >= 3 or (shared >= 2 and shared / min(len(a), len(b)) >= 0.6)
+
+
+def follow_ups(items: list[dict], followed: list[dict]) -> dict[str, list[dict]]:
+    """Pure logic. Later reports on each followed story among the feeds' items, by followed id, oldest first: an item
+    about the same subject, not one of the story's own links or a report already kept, and not published before the
+    story. Good news or not (each says which): following means hearing what happened next."""
+    out: dict[str, list[dict]] = {}
+    for f in followed:
+        mine = _keywords(f.get("title", ""))
+        known = set(f.get("links", [])) | set(f.get("seen", [])) | {u.get("link") for u in f.get("updates", [])}
+        found = []
+        for item in items:
+            if not mine or item["link"] in known:
+                continue
+            if item.get("published") and f.get("published") and item["published"] <= f["published"]:
+                continue
+            theirs = _keywords(item["title"])
+            if not theirs or not _same_subject(mine, theirs):
+                continue
+            known.add(item["link"])
+            found.append({"title": item["title"], "link": item["link"], "source": item["source"],
+                          "outlet": SOURCE_BY_ID.get(item["source"], (0, item["source"]))[1],
+                          "published": item.get("published", ""),
+                          "summary": _first_sentences(item.get("summary", ""), 2, 320)
+                          if item.get("summary") and item["summary"] != item["title"] else "",
+                          "good": judge(item) is not None})
+        if found:
+            out[f["id"]] = sorted(found, key=lambda u: _stamp(u["published"]))
+    return out
+
+
 # ------------------------------------------------------------------ on the air (pure)
 
 PERSONALITIES = {
@@ -374,12 +452,53 @@ def episode(day: Optional[date] = None) -> Optional[dict]:
         return None
 
 
-def make(day: Optional[date] = None, fetch: Callable[[str], str] = _fetch, flagged: tuple = ()) -> dict:
+def latest(day: Optional[date] = None, days: int = LATEST_DAYS) -> Optional[dict]:
+    """The newest episode from `day` (today by default) back `days` days, or None: what the page shows when today's
+    isn't made yet."""
+    day = day or date.today()
+    for back in range(days + 1):
+        found = episode(day - timedelta(days=back))
+        if found is not None:
+            return found
+    return None
+
+
+def _tidy_episodes(day: date) -> None:
+    """Episodes older than KEEP_EPISODES days, and the "started" notes of earlier days, are deleted."""
+    oldest = (day - timedelta(days=KEEP_EPISODES)).isoformat()
+    for path in list(_episodes().glob("*.json")):
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", path.stem) and path.stem < oldest:
+            path.unlink(missing_ok=True)
+    for path in list(DATA.glob("started-*")):
+        if path.name[len("started-"):] < day.isoformat():
+            path.unlink(missing_ok=True)
+
+
+def making(now: Optional[datetime] = None) -> bool:
+    """Whether today's episode is being made right now: started within MAKING_MINUTES and not there yet. (A start
+    that never finished stops counting, so it can be started again.)"""
+    now = now or datetime.now()
+    started = DATA / f"started-{now.date().isoformat()}"
+    try:
+        age = now.timestamp() - started.stat().st_mtime
+    except OSError:
+        return False
+    return episode(now.date()) is None and age < MAKING_MINUTES * 60
+
+
+def make(day: Optional[date] = None, fetch: Callable[[str], str] = _fetch, flagged: tuple = (),
+         on_items: Optional[Callable[[list[dict]], None]] = None) -> dict:
     """The day's stories, fetched, judged, checked against each other and kept, with every personality's script.
     Fresh means published within KEEP_DAYS before the end of that day (not before now), so an episode made for a
-    given day keeps the same stories whenever it's made."""
+    given day keeps the same stories whenever it's made. `on_items` is handed everything the feeds held (how a
+    person's followed stories get their later reports, `keep_updates`, without their list going in the episode)."""
     day = day or date.today()
     items, failed = fetch_all(fetch)
+    if on_items is not None:
+        try:
+            on_items(items)
+        except Exception:  # the episode is still made
+            log.exception("Good News: the followed stories couldn't be checked")
     day_end = datetime(day.year, day.month, day.day, tzinfo=timezone.utc) + timedelta(days=1)
     since = (day_end - timedelta(days=KEEP_DAYS + 1)).isoformat()
     fresh = [i for i in items if not i["published"] or i["published"] >= since]
@@ -389,6 +508,7 @@ def make(day: Optional[date] = None, fetch: Callable[[str], str] = _fetch, flagg
               "scripts": {k: script(stories, k) for k in PERSONALITIES}, "tracks": {}}
     _episodes().mkdir(parents=True, exist_ok=True)
     atomic_write_text(_episodes() / f"{day.isoformat()}.json", json.dumps(record, indent=1, ensure_ascii=False))
+    _tidy_episodes(day)
     return record
 
 
@@ -477,16 +597,200 @@ def flagged_sources(context, days: int = 90, at_least: int = 2) -> tuple:
     return tuple(s for s, n in by.items() if n >= at_least)
 
 
+# ------------------------------------------------------------------ the person: followed, marked, listened
+
+def _story(record: Optional[dict], sid: str) -> Optional[dict]:
+    """The story with this id in an episode, or None."""
+    return next((s for s in (record or {}).get("stories", []) if story_id(s) == sid), None)
+
+
+def _find_story(stories: list[dict], words: str) -> Optional[dict]:
+    """The story (or followed story) a person's words name ("the reef one"): the one sharing the most of their words
+    with its headline and topic, the first of them on a tie; None when none shares any."""
+    asked = _keywords(words)
+    best, most = None, 0
+    for s in stories:
+        shared = len(asked & _keywords(f"{s.get('title', '')} {s.get('topic', '')}"))
+        if shared > most:
+            best, most = s, shared
+    return best
+
+
+def following(context) -> list[dict]:
+    """The stories this person follows, oldest first: id, title, topic, its links and their outlets, when it was
+    published and followed (`since`), the later reports found (`updates`) and every report link seen (`seen`)."""
+    folder = _folder(context)
+    try:
+        found = json.loads((folder / "good_news_following.json").read_text(encoding="utf-8")) if folder else {}
+    except (OSError, ValueError):
+        return []
+    return [f for f in found.get("following", []) if isinstance(f, dict) and f.get("id")]
+
+
+def _save_following(context, found: list[dict]) -> None:
+    """Writes the followed stories to the person's own folder, atomically (so an action's change can be undone).
+    ValueError, in words, for an account with no folder."""
+    folder = _folder(context)
+    if folder is None:
+        raise ValueError("There's nowhere to keep followed stories for this account.")
+    folder.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(folder / "good_news_following.json",
+                      json.dumps({"following": found}, indent=1, ensure_ascii=False))
+
+
+def follow(context, sid: str, now: Optional[datetime] = None) -> dict:
+    """Starts following a story of the latest episode and returns what's kept. Following one already followed changes
+    nothing. ValueError, in words for the person, when the story isn't there anymore or FOLLOW_LIMIT is reached."""
+    now = now or datetime.now()
+    found = following(context)
+    mine = next((f for f in found if f["id"] == sid), None)
+    if mine is not None:
+        return mine
+    story = _story(latest(now.date()), sid)
+    if story is None:
+        raise ValueError("That story isn't in the latest episode anymore.")
+    if len(found) >= FOLLOW_LIMIT:
+        raise ValueError(f"You're following {FOLLOW_LIMIT} stories, the most I keep up with. Stop following one first.")
+    mine = {"id": sid, "title": story["title"], "topic": story.get("topic", ""), "links": list(story["links"]),
+            "outlets": [SOURCE_BY_ID.get(x, (0, x))[1] for x in story["sources"]],
+            "published": story.get("published", ""), "since": now.date().isoformat(), "updates": [], "seen": []}
+    _save_following(context, found + [mine])
+    return mine
+
+
+def unfollow(context, sid: str) -> Optional[dict]:
+    """Stops following a story (its kept reports go with it). Returns what was kept, or None when it wasn't followed."""
+    found = following(context)
+    mine = next((f for f in found if f["id"] == sid), None)
+    if mine is not None:
+        _save_following(context, [f for f in found if f["id"] != sid])
+    return mine
+
+
+def keep_updates(context, items: list[dict], today: Optional[date] = None) -> int:
+    """Checks a day's feed items against this person's followed stories and keeps each later report found (the newest
+    UPDATES_KEPT a story, each with the day it was found). Returns how many were new."""
+    found = following(context)
+    if not found:
+        return 0
+    new = follow_ups(items, found)
+    day = (today or date.today()).isoformat()
+    count = 0
+    for f in found:
+        for update in new.get(f["id"], []):
+            f.setdefault("updates", []).append({**update, "found": day})
+            f["seen"] = (f.get("seen", []) + [update["link"]])[-200:]
+            count += 1
+        f["updates"] = f.get("updates", [])[-UPDATES_KEPT:]
+    if count:
+        _save_following(context, found)
+    return count
+
+
+def flagged_ids(context, day: str) -> set[str]:
+    """The stories of one day's episode this person marked misleading, by story id."""
+    return {sid for h in heard(context) if h.get("day") == day for sid in h.get("flagged", [])}
+
+
+def flag(context, sid: str, now: Optional[datetime] = None) -> dict:
+    """Marks a story of the latest episode misleading, from its button or "the story about X was misleading": its
+    outlet is counted (the `news.misleading` loop, `flagged_sources`) and the story is remembered as marked.
+    Returns the story. ValueError, in words, when it isn't there, was already marked, or can't be kept."""
+    now = now or datetime.now()
+    record = latest(now.date())
+    story = _story(record, sid)
+    folder = _folder(context)
+    if story is None:
+        raise ValueError("That story isn't in the latest episode anymore.")
+    if folder is None:
+        raise ValueError("There's nowhere to keep that for this account.")
+    if sid in flagged_ids(context, record["day"]):
+        raise ValueError("You already marked that story misleading.")
+    found = heard(context)[-500:]
+    at = next((n for n in range(len(found) - 1, -1, -1)
+               if found[n].get("day") == record["day"] and found[n].get("stories")), None)
+    if at is None:  # marked before it was played or asked for: the episode counts as heard from here
+        found.append({"at": now.isoformat(timespec="seconds"), "day": record["day"], "how": "screen",
+                      "personality": personality_for(now.hour),
+                      "stories": [s["sources"][0] for s in record["stories"]]})
+        at = len(found) - 1
+    found[at].setdefault("misleading", []).append(story["sources"][0])
+    found[at].setdefault("flagged", []).append(sid)
+    folder.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(folder / "good_news_heard.json", json.dumps({"heard": found}, indent=1))
+    return story
+
+
+def note_listened(context, personality: str = "", now: Optional[datetime] = None) -> bool:
+    """The page saying its episode was played: counted as heard once a day, so stories listened to on the page count
+    toward the misleading share the same as ones asked for. False when it's off, there's no episode, or today's
+    listening is already counted."""
+    now = now or datetime.now()
+    record = latest(now.date())
+    if record is None or not is_on(context) or _folder(context) is None:
+        return False
+    today = now.date().isoformat()
+    if any(h.get("how") == "screen" and h.get("day") == record["day"] and str(h.get("at", "")).startswith(today)
+           for h in heard(context)):
+        return False
+    _note_heard(context, {"at": now.isoformat(timespec="seconds"), "day": record["day"], "how": "screen",
+                          "personality": personality if personality in PERSONALITIES else personality_for(now.hour),
+                          "stories": [s["sources"][0] for s in record["stories"]]})
+    return True
+
+
+def can_make(context, now: Optional[datetime] = None) -> Optional[str]:
+    """Why today's episode can't be started right now, in words for the person, or None when it can."""
+    from core import loops
+
+    now = now or datetime.now()
+    if not is_on(context):
+        return "Good News Radio is off. Turn it on first."
+    if episode(now.date()) is not None:
+        return "Today's episode is already made."
+    if making(now):
+        return "Today's episode is being made right now. Give it a minute or two."
+    if not loops._has_repo():
+        return "The episode is made on the home computer, and this isn't it."
+    return None
+
+
+def start_making(context, now: Optional[datetime] = None) -> str:
+    """Starts today's episode now instead of waiting for the daily check (`launch()`, a process of its own), and
+    says so. ValueError with why not (`can_make`)."""
+    why = can_make(context, now)
+    if why:
+        raise ValueError(why)
+    launch()
+    return "Making today's episode: reading the feeds and recording the voices takes a minute or two."
+
+
 _ASK = re.compile(r"^(?:(?:what'?s|tell me|give me|any|got any|read me|let'?s hear)(?: the)? )?good news(?: radio)?"
                   r"(?: today| please| for me)?(?:,? (?:with )?(?:the )?(.+?))?[?.!]*$", re.IGNORECASE)
-_MISLEADING = re.compile(r"^(?:that|the last|that last) (?:story|one) (?:was|is|seemed|sounds) (?:misleading|wrong|"
-                         r"not true|overblown|hype)[.!]*$", re.IGNORECASE)
+_WRONG = r"(?:was|is|seemed|sounds) (?:misleading|wrong|not true|overblown|hype)"
+_MISLEADING = re.compile(rf"^(?:that|the last|that last) (?:story|one) {_WRONG}[.!]*$", re.IGNORECASE)
+_MISLEADING_ABOUT = re.compile(rf"^the (?:story|one) (?:about|on) (.+?) {_WRONG}[.!]*$", re.IGNORECASE)
 _TURN_ON = re.compile(r"^(?:turn on|switch on|start|enable) good news(?: radio)?[.!]*$", re.IGNORECASE)
+_TURN_OFF = re.compile(r"^(?:turn off|switch off|disable) good news(?: radio)?[.!]*$", re.IGNORECASE)
+_MAKE = re.compile(r"^(?:make|build|refresh|update) (?:today'?s |the )?good news(?: radio)?(?: episode)?"
+                   r"(?: now| today)?[.!]*$", re.IGNORECASE)
+_FOLLOW_THAT = re.compile(r"^follow (?:that|this|the last|that last) (?:story|one)[.!]*$", re.IGNORECASE)
+_FOLLOW = re.compile(r"^follow the (?:(?:story|one) (?:about|on) (.+?)|(.+?) story)[.!]*$", re.IGNORECASE)
+_UNFOLLOW = re.compile(r"^(?:stop following|unfollow) (?:the )?(?:(?:story|one) (?:about|on) )?(.+?)(?: story)?[.!]*$",
+                       re.IGNORECASE)
+_I_FOLLOW = r"(?:the |my )?stories i(?:'m| am)? follow(?:ing)?"
+_UPDATES = re.compile(rf"^(?:what'?s new (?:on|with|in) {_I_FOLLOW}|what (?:stories )?am i following|"
+                      rf"any(?:thing)? (?:new|updates?|news) on {_I_FOLLOW}|(?:show |list )?(?:me )?{_I_FOLLOW}|"
+                      r"(?:show |list )?(?:me )?my followed stories)[?.!]*$", re.IGNORECASE)
+OFF_SAID = "Good News Radio is off. Say \"turn on good news radio\" and I'll read the news for you once a day."
+THANKS_SAID = "Thanks: I'll weigh that source down, and drop it if it keeps happening."
 
 
 def reply(context, text: str, now: Optional[datetime] = None) -> Optional[str]:
-    """Talking to it: "what's the good news?", "good news, the calm one", "that story was misleading",
-    "turn on good news radio". None when it isn't that."""
+    """Talking to it: "what's the good news?", "good news, the calm one", "that story was misleading", "the story
+    about the reef was misleading", "turn on good news radio", "turn off good news radio", "make today's good
+    news", "follow that story", "follow the story about the reef", "stop following the reef story", "what's new on
+    the stories I follow?". None when it isn't that."""
     from core import person_settings
 
     said = " ".join(str(text or "").split())
@@ -496,6 +800,9 @@ def reply(context, text: str, now: Optional[datetime] = None) -> Optional[str]:
         return ("Good News Radio is on. Once a day I'll read the public feeds of NASA, the NIH, the WHO, Nature, MIT "
                 "News, Our World in Data, the BBC, NPR, The Conversation, ScienceDaily, Positive News, Reasons to be "
                 "Cheerful, Anthropocene and Canary Media. Nothing about you is sent. Say \"what's the good news?\".")
+    if _TURN_OFF.match(said):
+        person_settings.put(context, SETTING, False)
+        return "Good News Radio is off. I won't read the feeds again until you turn it back on."
     if _MISLEADING.match(said):
         found = heard(context)
         last = next((n for n in range(len(found) - 1, -1, -1) if found[n].get("stories")), None)
@@ -504,12 +811,20 @@ def reply(context, text: str, now: Optional[datetime] = None) -> Optional[str]:
             return None
         found[last].setdefault("misleading", []).append(found[last]["stories"][-1])  # the story just heard
         atomic_write_text(folder / "good_news_heard.json", json.dumps({"heard": found}, indent=1))
-        return "Thanks: I'll weigh that source down, and drop it if it keeps happening."
+        return THANKS_SAID
+    if _MAKE.match(said):
+        try:
+            return start_making(context, now) if is_on(context) else OFF_SAID
+        except ValueError as problem:
+            return str(problem)
+    stories = _said_about_a_story(context, said, now)
+    if stories is not None:
+        return stories
     asked = _ASK.match(said)
     if not asked:
         return None
     if not is_on(context):
-        return "Good News Radio is off. Say \"turn on good news radio\" and I'll read the news for you once a day."
+        return OFF_SAID
     record = episode(now.date()) or episode(now.date() - timedelta(days=1))
     if record is None:
         return "Today's Good News Radio isn't ready yet; I put it together once a day. Ask me again in a bit."
@@ -521,13 +836,70 @@ def reply(context, text: str, now: Optional[datetime] = None) -> Optional[str]:
     return record["scripts"][key] + tail
 
 
+def _said_about_a_story(context, said: str, now: datetime) -> Optional[str]:
+    """The story commands of `reply()`: following one ("that story", or named by its subject), stopping, what's new
+    on the ones followed, and marking a named one misleading. None when it isn't one of those, the radio is off, or
+    the words name no story it has (so the words can still mean something else to MIA)."""
+    that, named, stop = _FOLLOW_THAT.match(said), _FOLLOW.match(said), _UNFOLLOW.match(said)
+    news, wrong = _UPDATES.match(said), _MISLEADING_ABOUT.match(said)
+    if not (that or named or stop or news or wrong) or not is_on(context):
+        return None
+    mine = following(context)
+    if news:
+        if not mine:
+            return ("You aren't following any stories. Say \"follow that story\" after the news, or press Follow on "
+                    "one on the Good News Radio page.")
+        lines = []
+        for f in mine:
+            reports = f.get("updates", [])
+            lines.append(f"- {f['title']}: " + (
+                f"{reports[-1]['outlet']} reported \"{reports[-1]['title']}\""
+                + (f" ({len(reports)} reports so far)." if len(reports) > 1 else ".") if reports
+                else "nothing new yet."))
+        return "The stories you follow:\n" + "\n".join(lines)
+    if stop:
+        target = _find_story(mine, stop.group(1))
+        if target is None:
+            return None
+        unfollow(context, target["id"])
+        return f"Stopped following \"{target['title']}\"."
+    record = latest(now.date())
+    stories = (record or {}).get("stories", [])
+    if wrong:
+        story = _find_story(stories, wrong.group(1))
+        if story is None:
+            return None
+        try:
+            flag(context, story_id(story), now)
+        except ValueError as problem:
+            return str(problem)
+        return f"Marked \"{story['title']}\" misleading. {THANKS_SAID}"
+    if that:
+        last = next((h for h in reversed(heard(context)) if h.get("stories")), None)
+        story = stories[-1] if stories and last is not None and last.get("day") == record["day"] else None
+        if story is None:
+            return ("Ask me \"what's the good news?\" first and then say \"follow that story\", or name it: "
+                    "\"follow the story about the reef\".")
+    else:
+        words = named.group(1) or named.group(2)
+        story = _find_story(stories, words)
+        if story is None:
+            return None
+    try:
+        kept = follow(context, story_id(story), now)
+    except ValueError as problem:
+        return str(problem)
+    return (f"Following \"{kept['title']}\". When an outlet I read reports more on it, good or not, it'll be on the "
+            "Good News Radio page, or ask \"what's new on the stories I follow?\".")
+
+
 def due(context, now: Optional[datetime] = None) -> bool:
     """On for this person, on the PC, and today's episode not made yet (after 5 in the morning)."""
     from core import loops
 
     now = now or datetime.now()
     started = DATA / f"started-{now.date().isoformat()}"
-    return is_on(context) and loops._has_repo() and now.hour >= 5 and episode(now.date()) is None and         not started.exists()
+    return is_on(context) and loops._has_repo() and now.hour >= 5 and episode(now.date()) is None and not started.exists()
 
 
 def launch() -> None:
@@ -549,18 +921,85 @@ def launch() -> None:
                          creationflags=quiet_job_flags())
 
 
+def _reads(names: list, links: list) -> list[dict]:
+    """Where to read a story in full: [{outlet, href}] in the order its outlets told it, web links only (whatever
+    else a feed put in a link never becomes something the page opens)."""
+    return [{"outlet": names[n] if n < len(names) else "", "href": link} for n, link in enumerate(links)
+            if str(link).startswith(("https://", "http://"))]
+
+
+def _flat(text) -> str:
+    """A title as letters and digits only, to match a recording's title to its track whatever the library did to
+    its punctuation."""
+    return re.sub(r"[^a-z0-9]+", "", str(text).lower())
+
+
+def _audio(context, record: dict) -> dict:
+    """The music-library track of each personality's recording of this episode, {personality: track id}: {} without
+    the library or the recordings. Matched by the title each was saved under (`on_air`)."""
+    music = getattr(context, "music", None)
+    titles = record.get("tracks") or {}
+    if music is None or not titles:
+        return {}
+    try:
+        by_title = {_flat(t.title): t.track_id for t in music.all_tracks()}
+    except Exception:
+        log.exception("Good News Radio couldn't look for its recordings")
+        return {}
+    return {key: by_title[_flat(title)] for key, title in titles.items() if _flat(title) in by_title}
+
+
+def _story_card(s: dict, mine: set, marked: set) -> dict:
+    """One story as the page shows it: its id, headline, topic, a summary in the outlet's own first sentences, how
+    it's known (in words and as its tag), its caveats, where to read it, and whether this person follows it or
+    marked it misleading."""
+    sid = story_id(s)
+    names = [SOURCE_BY_ID.get(x, (0, x))[1] for x in s["sources"]]
+    reads = _reads(names, s["links"])
+    return {"id": sid, "title": s["title"], "topic": s["topic"], "known": s["known"], "caveats": s["caveats"],
+            "summary": _first_sentences(s["summary"], 3, 480) if s.get("summary") and s["summary"] != s["title"] else "",
+            "how": _how_known(s), "published": s.get("published", ""), "reads": reads,
+            "links": [r["href"] for r in reads], "outlets": sorted(set(names)),
+            "followed": sid in mine, "misleading": sid in marked,
+            **KNOWN_TAGS.get(s["known"], {"tag": s["known"], "tone": ""})}
+
+
+def _followed_card(f: dict) -> dict:
+    """One followed story as the page shows it: what it is, since when, where it was read, and the later reports
+    found, newest first (each: headline, outlet, link, when, a summary, and whether it reads as good news)."""
+    reports = [{"title": u.get("title", ""), "outlet": u.get("outlet", ""), "published": u.get("published", ""),
+                "found": u.get("found", ""), "summary": u.get("summary", ""), "good": bool(u.get("good")),
+                "href": u["link"] if str(u.get("link", "")).startswith(("https://", "http://")) else ""}
+               for u in reversed(f.get("updates", []))]
+    return {"id": f["id"], "title": f.get("title", ""), "topic": f.get("topic", ""), "since": f.get("since", ""),
+            "reads": _reads(f.get("outlets", []), f.get("links", [])), "updates": reports}
+
+
 def screen(context, now: Optional[datetime] = None) -> dict:
-    """Good News Radio's web screen (web/news.html): today's stories with how each is known (and its tag, KNOWN_TAGS)
-    and its links, the scripts by personality, and whether it's on."""
+    """Good News Radio's web screen (web/news.html). Whether it's on; the latest episode (today's, or the newest of
+    the last LATEST_DAYS days, with `today` and `fresh`, meaning today's or yesterday's, saying which): its stories
+    (`_story_card`), the scripts by personality, the recordings to play (`tracks` by title, `audio` by library
+    track id); the personalities and the one for this hour; the stories this person follows with what was found
+    since; the outlets it reads; and whether today's episode is being made or can be started now."""
     now = now or datetime.now()
-    record = episode(now.date()) or episode(now.date() - timedelta(days=1))
-    personalities = [{"key": k, "name": p["name"]} for k, p in PERSONALITIES.items()]
+    today = now.date()
+    record = latest(today)
+    sources = []
+    for _id, name, _url, kind in SOURCES:
+        if not any(s["name"] == name for s in sources):
+            sources.append({"name": name, "kind": kind})
+    followed = following(context)
+    out = {"on": is_on(context), "day": None, "today": False, "fresh": False, "made": "", "stories": [], "scripts": {},
+           "tracks": {}, "audio": {}, "failed": [],
+           "personalities": [{"key": k, "name": p["name"], "when": k} for k, p in PERSONALITIES.items()],
+           "now": personality_for(now.hour), "following": [_followed_card(f) for f in followed], "sources": sources,
+           "making": making(now), "can_make": can_make(context, now) is None}
     if record is None:
-        return {"on": is_on(context), "day": None, "stories": [], "personalities": personalities,
-                "now": personality_for(now.hour)}
-    stories = [{"title": s["title"], "topic": s["topic"], "known": s["known"], "caveats": s["caveats"],
-                "links": s["links"], "outlets": sorted({SOURCE_BY_ID.get(x, (0, x))[1] for x in s["sources"]}),
-                **KNOWN_TAGS.get(s["known"], {"tag": s["known"], "tone": ""})}
-               for s in record["stories"]]
-    return {"on": is_on(context), "day": record["day"], "stories": stories, "scripts": record["scripts"],
-            "tracks": record.get("tracks", {}), "personalities": personalities, "now": personality_for(now.hour)}
+        return out
+    mine, marked = {f["id"] for f in followed}, flagged_ids(context, record["day"])
+    out.update({"day": record["day"], "today": record["day"] == today.isoformat(),
+                "fresh": record["day"] >= (today - timedelta(days=1)).isoformat(), "made": record.get("made", ""),
+                "stories": [_story_card(s, mine, marked) for s in record["stories"]], "scripts": record["scripts"],
+                "tracks": record.get("tracks", {}), "audio": _audio(context, record),
+                "failed": sorted({SOURCE_BY_ID.get(x, (0, x))[1] for x in record.get("failed", [])})})
+    return out

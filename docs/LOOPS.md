@@ -136,5 +136,5 @@
 | `gate.expired` | messages held back that expired before they went out | person | trend (from 3) | shown, never acted on | `flow:gate` |
 | `gate.saturation` | days the daily limit of unprompted messages was hit, in 7 | person | ≤ 2 | opens a task | `flow:gate` |
 | `gate.unwelcome` | kinds of message on a break for being dismissed | person | trend | shown, never acted on | `flow:gate`, `action:communication` |
-| `news.misleading` | Good News Radio stories they called misleading, in 30 days | person | ≤ 0.05 (from 20) | opens a task | `check:good_news` |
+| `news.misleading` | Good News Radio stories they called misleading, in 30 days | person | ≤ 0.05 (from 20) | opens a task | `check:good_news`, `action:news` |
 | `notes.offers` | offers to keep what they said they'd do, decided or set aside, turned down | person | ≤ 0.6 (from 10) | opens a task | `store:life_notes` |

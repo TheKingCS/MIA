@@ -646,7 +646,7 @@ def pick_trip(trips: list, today: date) -> Optional[dict]:
 
 
 def life_cards(context, today: date) -> dict:
-    """The Dashboard's life cards (DEC-0129): {music: what's playing or None, news: today's first good-news story or
+    """The Dashboard's life cards (DEC-0129): {music: what's playing or None, news: the first good-news story of an episode that is still fresh, or
     None, pictures: the newest photos kept at home, trip: pick_trip}. Each source is optional; a failure leaves its
     card out."""
     out = {"music": None, "news": None, "pictures": [], "trip": None}
@@ -661,7 +661,7 @@ def life_cards(context, today: date) -> dict:
         from core.good_news import screen as news_screen
 
         news = news_screen(context)
-        if news.get("on") and news.get("stories"):
+        if news.get("on") and news.get("stories") and news.get("fresh", True):  # never last week's as today's
             first = news["stories"][0]
             out["news"] = {"title": first["title"], "tag": first.get("tag", ""), "count": len(news["stories"])}
     except Exception:

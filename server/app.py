@@ -169,6 +169,11 @@ class PageErrorRequest(BaseModel):
     message: str = Field(default="", max_length=400)
 
 
+class NewsHeardRequest(BaseModel):
+    """Good News Radio's page saying its episode was played, and in whose voice."""
+    personality: str = Field(default="", max_length=40)
+
+
 class PageOpenedRequest(BaseModel):
     """A web page saying it was opened, for which apps are used."""
     page: str = Field(default="", max_length=120)
@@ -508,7 +513,8 @@ def create_app(context: AppContext) -> FastAPI:
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
     store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
-    with that conversation's own lock."""
+    with that conversation's own lock. Good News Radio's page says when it played an episode
+    (/api/news/heard, core/good_news.note_listened)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -1666,6 +1672,15 @@ def create_app(context: AppContext) -> FastAPI:
         from core.good_news import screen
 
         return screen(view_for(context, profile_id))
+
+    @app.post("/api/news/heard")
+    def news_heard(body: NewsHeardRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The radio's page played its episode (web/news.js): counted as heard once a day, so stories listened
+        to there count toward the misleading share like ones asked for (core.good_news.note_listened)."""
+        from core.good_news import note_listened
+
+        with app.state.turn_lock:
+            return {"counted": note_listened(view_for(context, profile_id), body.personality)}
 
     @app.post("/api/sight")
     async def sight(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:

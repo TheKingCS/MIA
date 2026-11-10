@@ -376,7 +376,8 @@ def _play_week(context, today: date):
 # ------------------------------------------------------------ Good News
 
 def _news_today(context, today: date):
-    """Panel: today's good stories, each with how sure it is (one outlet only is worth knowing)."""
+    """Panel: today's good stories, each with how sure it is (one outlet only is worth knowing). An episode
+    from an earlier day isn't shown as today's."""
     from core.good_news import screen
 
     page, none = _page("Good News", lambda: screen(context), "")
@@ -385,7 +386,8 @@ def _news_today(context, today: date):
     if not page.get("on"):
         return _panel("Good News", [], "Good News Radio is off. Turn it on in the app.")
     lines = [_line(s["title"], " · ".join(b for b in (s.get("topic", ""), s.get("tag", "")) if b),
-                   "attention" if s.get("tone") == "attention" else "") for s in page.get("stories") or []]
+                   "attention" if s.get("tone") == "attention" else "")
+             for s in (page.get("stories") or []) if page.get("fresh", True)]  # an older episode isn't today's
     return _panel("Today's Stories", lines, "No stories yet today.")
 
 

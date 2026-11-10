@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1366 files, 301,569 lines; 1366 files describe themselves; 16,606 of 16,700 classes and functions are documented.
+1367 files, 302,622 lines; 1367 files describe themselves; 16,657 of 16,751 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-514 files, 147,738 lines; 7,586 of 7,672 classes and functions documented
+515 files, 148,340 lines; 7,626 of 7,712 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -309,6 +309,7 @@
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
 - `core/net_worth_history.py`: Net worth over time, for the line on Money's Overview (DEC-0113, the design canvas's Money artboard: "net worth, +$X this month, and its line"). MIA only ever knew net worth *now* (core/finance_summary.py's `_net_worth`: each linked account's latest total plus property equity); this keeps one point 
+- `core/news_actions.py`: Good News Radio's buttons (core/good_news.py), so the radio is fully used without voice as well as with it (Zac, 2026-11-10; DEC-0125). Its page (web/news.html) turns it on and off, starts today's episode, follows a story or stops, and marks one misleading, each through one of these actions, and eac
 - `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH
 - `core/notification_manager.py`: A system-wide notification service any module can raise an alert through — low battery, backup complete, a medication reminder, a weather warning, etc. — without needing to know anything about how notifications are displayed.
 - `core/nutrition.py`: A recipe's nutrition facts per serving (DEC-0020): what the person typed into the recipe wins, nutrient by nutrient; the rest is worked out from its ingredients with MIA's built-in food table (core/food_table.py). Each answer says where it came from, so a screen can show "from your recipe" or "worke
@@ -525,7 +526,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,093 lines; 49 of 49 classes and functions documented
+2 files, 4,108 lines; 50 of 50 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -758,7 +759,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-39 files, 4,027 lines; 130 of 130 classes and functions documented
+39 files, 4,031 lines; 130 of 130 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -802,7 +803,7 @@
 
 ## tests/: the test suite: what each part must do
 
-472 files, 78,645 lines; 6,719 of 6,727 classes and functions documented
+472 files, 78,818 lines; 6,729 of 6,737 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1279,7 +1280,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,256 lines
+105 files, 19,515 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1341,7 +1342,7 @@
 - `web/money.js`: money.js — the Money screen (claude, 2026-10-06, DEC-0017). Renders MIA.money(); every button proposes a money action and the engine decides. Only formatting here (the currency symbol comes from the engine).
 - `web/music.js`: music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists and Artists. A song plays right here, in the browser, streamed from MIA (/api/music/track/<id>/audio, fetched with this tab's sign-in); the next one in
 - `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two on a compass (the design canvas, DEC-0113), and the sun and moon at the first. Read only; a waypoint is added b
-- `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096). Renders MIA.news() (core/good_news.py): today's stories, how each is known (confirmed by two outlets, from the source itself, or one outlet), its caveats and its links, and each personality's script. Formatting only; the look is muse's.
+- `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096; the station itself 2026-11-10, Zac: "it should list the news stories so I can read more about them, should have an audio card playing the station where I can play or pause it, maybe follow a story"). Renders MIA.news() (core/good_news.py scree
 - `web/nexus.js`: nexus.js — the Nexus (DEC-0130, claude, 2026-11-08). Draws MIA.nexus() (core/web_nexus.nexus): a portal per area on MIASpatial.ring, each in its hue and glowing amber with a count when something inside needs you; the HUD (Today, Browser, Settings, Search, MIA; you, your level and XP); the vapor in t
 - `web/nexus3d.js`: nexus3d.js — the Nexus as a room you stand in (DEC-0130, claude, 2026-11-08; Zac: "spatial, like you're in a room", "almost game like and animated, flowing, seamless", everything orbiting MIA).
 - `web/notifications.js`: notifications.js — Notifications (claude, 2026-11-07, DEC-0125). Renders MIA.notifications() (core/web_notifications.py): each notification newest first, unread ones lit, amber for a warning and red only for a real error; "Why?" opens why MIA sent one she sent on her own. Mark All Read and Dismiss a

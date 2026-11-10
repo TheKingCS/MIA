@@ -479,15 +479,46 @@
       played: [{ id: "g1", what: "Pickup basketball", minutes: 60, effort: 7, effort_word: "Hard", with: [], date: "2026-11-05", load: 420 },
         { id: "g2", what: "Disc golf, 18 holes", minutes: 40, effort: 3, effort_word: "Easy", with: [], date: "2026-11-01", load: 120 }] })
       : call("GET", "/api/play"),
-    news: () => demo ? Promise.resolve({ on: true, day: "2026-11-07", now: "morning", scripts: { morning: "Good morning. Three good things today…" }, tracks: {},
-      personalities: [{ key: "morning", name: "Morning" }],
-      stories: [{ title: "A river cleanup removed 12 tons of trash in a weekend.", topic: "Environment", known: "confirmed", tag: "Confirmed by two outlets", tone: "ok",
-        caveats: ["Numbers are the organizers' count."], links: ["https://example.org/a", "https://example.org/b"], outlets: ["Example News", "Example Daily"] },
-        { title: "A seed library opens its third rural branch.", topic: "Community", known: "from the source", tag: "From the source itself", tone: "",
-          caveats: ["Announced by the library; not yet reported elsewhere."], links: ["https://example.org/c"], outlets: ["The library"] },
-        { title: "Monarch counts up along the eastern route.", topic: "Nature", known: "one outlet", tag: "One outlet", tone: "attention",
-          caveats: ["Early estimate; the full survey comes in spring."], links: ["https://example.org/d"], outlets: ["Example Weekly"] }] })
-      : call("GET", "/api/news"),
+    // Good News Radio (core/good_news.py screen): the latest episode's stories, each personality's script and
+    // recording, the stories followed with what was reported since, and the outlets it reads.
+    news: () => {
+      if (!demo) return call("GET", "/api/news");
+      const stories = [
+        { id: "d1a2b3c4e5", title: "A river cleanup removed 12 tons of trash in a weekend", topic: "Environment", known: "confirmed",
+          tag: "Confirmed by two outlets", tone: "ok", published: "2026-11-09T14:00:00+00:00", followed: true, misleading: false,
+          summary: "Four hundred volunteers worked a nine-mile stretch over two days. Crews say the fish count at the lower weir is already higher than last spring.",
+          how: "Reported by Example News and Example Daily.", caveats: ["Numbers are the organizers' count."],
+          reads: [{ outlet: "Example News", href: "https://example.org/a" }, { outlet: "Example Daily", href: "https://example.org/b" }],
+          links: ["https://example.org/a", "https://example.org/b"], outlets: ["Example Daily", "Example News"] },
+        { id: "f6a7b8c9d0", title: "A seed library opens its third rural branch", topic: "Community", known: "from the source",
+          tag: "From the source itself", tone: "", published: "2026-11-09T10:00:00+00:00", followed: false, misleading: false,
+          summary: "Anyone can borrow seed in spring and return some from their own harvest in the fall. The new branch shares a room with the town's tool shed.",
+          how: "From The Library itself.", caveats: ["Announced by the library; not yet reported elsewhere."],
+          reads: [{ outlet: "The Library", href: "https://example.org/c" }], links: ["https://example.org/c"], outlets: ["The Library"] },
+        { id: "0a1b2c3d4e", title: "Monarch counts are up along the eastern route", topic: "Nature", known: "one outlet",
+          tag: "One outlet", tone: "attention", published: "2026-11-08T18:00:00+00:00", followed: false, misleading: false,
+          summary: "Counters at three stations logged more butterflies than in any of the last six autumns.",
+          how: "Reported by Example Weekly so far.", caveats: ["Early estimate; the full survey comes in spring."],
+          reads: [{ outlet: "Example Weekly", href: "https://example.org/d" }], links: ["https://example.org/d"], outlets: ["Example Weekly"] }];
+      const told = stories.map((s) => s.title + ". " + s.summary + " " + s.how + " Worth knowing: " + s.caveats.join("; "));
+      const script = (open, close) => [open, ...told, close].join("\n\n");
+      return Promise.resolve({ on: true, day: "2026-11-10", today: true, fresh: true, made: "2026-11-10T06:30:00", stories,
+        scripts: { morning: script("Good morning! This is Good News Radio, and the world did some good things.", "That's your good news. Go have a great day!"),
+          afternoon: script("Hello, curious people. This is Good News Radio, and I've been reading.", "That's what's going right today. Stay curious."),
+          evening: script("Good evening. Let's take a few quiet minutes for what went well.", "That's the good in today. Rest well."),
+          "late night": script("It's late, so I'll keep it soft. Here's what went right.", "Sleep well.") },
+        tracks: {}, audio: {}, failed: [], now: "morning", making: false, can_make: false,
+        personalities: [{ key: "morning", name: "Sunny", when: "morning" }, { key: "afternoon", name: "Spark", when: "afternoon" },
+          { key: "evening", name: "Still", when: "evening" }, { key: "late night", name: "Night Owl", when: "late night" }],
+        following: [{ id: "d1a2b3c4e5", title: "A river cleanup removed 12 tons of trash in a weekend", topic: "Environment", since: "2026-11-10",
+          reads: [{ outlet: "Example News", href: "https://example.org/a" }],
+          updates: [{ title: "River cleanup crews plan a second weekend after record turnout", outlet: "Example Daily", published: "2026-11-10T08:00:00+00:00",
+            found: "2026-11-10", summary: "Organizers say twice as many people have signed up for the next one.", good: true, href: "https://example.org/e" }] }],
+        sources: [{ name: "Example News", kind: "journalism" }, { name: "Example Daily", kind: "journalism" },
+          { name: "Example Weekly", kind: "solutions" }, { name: "The Library", kind: "primary" }] });
+    },
+    // The radio's page played its episode: counted as heard once a day (core.good_news.note_listened).
+    newsHeard: (personality) => demo ? Promise.resolve({ counted: false }) : call("POST", "/api/news/heard", { personality }),
     // Guitar (core/guitar.py, DEC-0111): the stage, stats and open checks; a check heard from a WAV recording.
     guitar: (pathId) => demo ? Promise.resolve({ id: "guitar", name: "Guitar", stats: { started: "2026-11-02", stage: 1, stage_name: "First sounds",
         plan: { minutes_a_day: 15, days_a_week: 5 }, week_days: 3, week_minutes: 55, streak: 2, hours: 1.2,

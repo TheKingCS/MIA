@@ -40,7 +40,7 @@ VOICE_ELSEWHERE = {
     "diagnostics": "check_my_setup and get_system_health (the system area)",
     "module_browser": "set_app_visibility and set_app_focus (Settings' apps area)",
     "sight": "\"look at this\", \"what am I looking at?\" open Look with the camera (core/sight.py wants_look)",
-    "good_news": "quick commands: \"what's the good news?\", \"turn on good news radio\" (core/good_news.py reply)",
+    "good_news": "quick commands: \"what's the good news?\", \"turn on good news radio\", \"follow that story\", \"what's new on the stories I follow?\" (core/good_news.py reply)",
 }
 # Has a web page the sidebar doesn't link as App.page: the gear opens Settings, Settings opens Diagnostics.
 PAGE_ELSEWHERE = {"settings": "settings.html", "diagnostics": "diagnostics.html"}

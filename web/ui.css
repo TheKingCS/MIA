@@ -981,6 +981,45 @@ body.cook-live .mia-orb-button, body.cook-live .bottom-bar { display: none; }
 .nw-sources summary { cursor: pointer; font-size: var(--text-sm); color: var(--accent); }
 .nw-sources ul { margin: 6px 0 0; padding-left: 18px; font-size: var(--text-sm); }
 .nw-sources a { color: var(--accent); }
+/* The station itself (2026-11-10): who reads it, the play button with its line and time, the script to read
+   along; a story's summary, where to read it in full and its buttons; the stories you follow with what was
+   reported since; the outlets it reads. */
+.nw-air { display: grid; gap: 12px; margin-bottom: var(--gap); }
+.nw-air .sect { margin: 0; }
+.nw-voices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.nw-voice { display: grid; gap: 2px; min-height: 48px; padding: 8px 10px; border-radius: var(--radius); border: 1px solid var(--line-strong);
+  background: none; color: var(--text); font: inherit; text-align: left; text-transform: none; cursor: pointer; }
+.nw-voice span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+.nw-voice:hover { border-color: rgba(var(--rgb-accent), 0.6); }
+.nw-voice.on { border-color: var(--accent); background: rgba(var(--rgb-accent), 0.1); }
+.nw-voice.on span { color: var(--accent); }
+.nw-player { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; }
+.nw-play { width: 56px; height: 56px; font-size: 18px; border-color: var(--accent); color: var(--accent); }
+.nw-play:hover { background: rgba(var(--rgb-accent), 0.12); }
+.nw-now { display: grid; gap: 4px; min-width: 0; }
+.nw-meter { height: 8px; margin-top: 4px; cursor: pointer; }
+.nw-time { min-height: 1.2em; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+.nw-problem { margin: 0; font-size: var(--text-sm); color: var(--attention); }
+.nw-making { margin: 0; color: var(--accent); }
+.nw-script summary, .nw-where summary { cursor: pointer; font-size: var(--text-sm); color: var(--accent); }
+.nw-script p { margin: 10px 0 0; padding-left: 10px; border-left: 2px solid transparent; color: var(--text-dim); line-height: 1.55; }
+.nw-script p.nw-reading { border-left-color: var(--accent); color: var(--text); }
+.nw-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+h3.nw-title { margin: 0; font-size: var(--text-md); text-transform: none; letter-spacing: 0; }
+.nw-summary { margin: 0; line-height: 1.55; }
+.nw-reads { margin: 0; font-size: var(--text-sm); }
+.nw-story a, .nw-where a { color: var(--accent); }
+.nw-story .row-buttons { margin: 4px 0 0; }
+.nw-follow { margin-bottom: var(--gap); }
+.nw-reports { list-style: none; display: grid; gap: 10px; width: 100%; margin: 4px 0 0; padding: 0; }
+.nw-report { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding-top: 10px; border-top: 1px solid var(--line); }
+.nw-report > div { display: grid; gap: 4px; }
+.nw-where { padding: 12px 14px; margin-bottom: var(--gap); }
+.nw-where > p { margin: 8px 0 0; }
+.nw-where .row-buttons { margin: 12px 0 0; }
+.nw-off { display: grid; gap: 10px; margin-bottom: var(--gap); }
+.nw-off p { margin: 0; line-height: 1.55; }
+@media (max-width: 560px) { .nw-voices { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ---------------------------------------------------------------- Look (DEC-0113) */
 .lk-head h2 { margin: 0 0 var(--gap); font-size: var(--text-2xl); text-transform: none; }

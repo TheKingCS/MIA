@@ -15,6 +15,7 @@ No secret used in sign-in, two-step or a password change reaches a log
 line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
 only on the PC itself, with the password, and logged (DEC-0126). Your Data
 lists the person's files and exports or deletes the account behind the password.
+Good News Radio's page reports an episode played, only for a signed-in person.
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -622,6 +623,13 @@ def test_a_web_screen_counts_itself(client, context, tmp_path, monkeypatch):
     assert res.status_code == 200 and res.json() == {"counted": True}
     assert context.usage_tracker.page_usage()["workout.html"]["count"] == 1
     assert client.post("/api/usage/page", json={"page": "x.html"}).status_code == 401  # signed in only
+
+
+def test_the_radio_page_reports_listening_only_when_signed_in(client, context):
+    token = _login(client, context)
+    res = client.post("/api/news/heard", json={"personality": "morning"}, headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 200 and res.json() == {"counted": False}  # off until switched on: nothing is counted
+    assert client.post("/api/news/heard", json={}).status_code == 401
 
 
 # ----------------------------------------------------------------------
