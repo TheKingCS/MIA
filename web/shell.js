@@ -679,12 +679,32 @@
 
   // ---------------------------------------------------------------- start
   let render = null;
-  let refreshing = false;
+  let refreshing = false, again = false, heldForTyping = false;
+  // A change that arrives mid-redraw redraws once more after (2026-11-10: it used to be dropped until the next one).
   async function refresh() {
-    if (!render || refreshing) return;
+    if (!render) return;
+    if (refreshing) { again = true; return; }
     refreshing = true;
     try { await render(); } catch (e) { say(e.message); } finally { refreshing = false; }
+    if (again) { again = false; refresh(); }
   }
+  // While the person types in a field of the page (not Talk, a dialog or sign-in), a live change waits: a redraw
+  // would replace the field and what's in it. It redraws once they leave the field.
+  function typingOnPage() {
+    const a = document.activeElement;
+    if (!a || !a.matches || (a.closest && a.closest("#talk-panel, dialog, .sign-in"))) return false;
+    if (a.isContentEditable) return true;
+    return a.matches("textarea, input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range])")
+      && String(a.value || "") !== "";
+  }
+  function refreshFromChange() {
+    if (typingOnPage()) { heldForTyping = true; return; }
+    refresh();
+  }
+  document.addEventListener("focusout", () => {
+    if (!heldForTyping) return;
+    setTimeout(() => { if (heldForTyping && !typingOnPage()) { heldForTyping = false; refresh(); } }, 0);
+  });
 
   function signInForm(then) {
     let form = $("#sign-in");
@@ -784,7 +804,7 @@
       if (!options || options.refreshOnChange !== false) {
         MIA.onChange(async () => {
           try { renderNav(await MIA.shell()); } catch (e) { /* keep the old one */ }
-          refresh();
+          refreshFromChange();
         });
       }
       if (MIA.demo) say("Demo: placeholder data. Actions and Talk need MIA running.");
