@@ -117,6 +117,7 @@ def start_script_process(interpreter: str, content: str) -> tuple[subprocess.Pop
         text=True,
         bufsize=1,
         start_new_session=True,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),  # its output is read through the pipe; no window
     )
     return process, script_path
 
@@ -144,6 +145,7 @@ def terminate_process_tree(process: subprocess.Popen) -> None:
                 capture_output=True,
                 timeout=_TASKKILL_TIMEOUT_SECONDS,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except (OSError, subprocess.TimeoutExpired):
             pass

@@ -121,6 +121,7 @@ class AmixerVolumeBackend:
                 text=True,
                 timeout=_SUBPROCESS_TIMEOUT_SECONDS,
                 check=False,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
             raise VolumeUnavailableError(f"amixer is not available: {exc}") from exc

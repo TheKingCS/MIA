@@ -206,7 +206,7 @@ def is_boot_device(disk_name: str) -> bool:
     try:
         root_source = subprocess.run(
             ["findmnt", "-no", "SOURCE", "/"],
-            capture_output=True, text=True, timeout=_LSBLK_TIMEOUT_SECONDS, check=True,
+            capture_output=True, text=True, timeout=_LSBLK_TIMEOUT_SECONDS, check=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         log.warning("findmnt failed — treating '%s' as the boot device to be safe.", disk_name)
@@ -217,7 +217,7 @@ def is_boot_device(disk_name: str) -> bool:
     try:
         pkname = subprocess.run(
             ["lsblk", "-no", "PKNAME", root_source],
-            capture_output=True, text=True, timeout=_LSBLK_TIMEOUT_SECONDS, check=True,
+            capture_output=True, text=True, timeout=_LSBLK_TIMEOUT_SECONDS, check=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         log.warning("lsblk PKNAME lookup failed — treating '%s' as the boot device to be safe.", disk_name)
@@ -236,6 +236,7 @@ def list_block_devices() -> list[BlockDevice]:
             text=True,
             timeout=_LSBLK_TIMEOUT_SECONDS,
             check=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         log.warning("lsblk unavailable or failed — no storage devices detected.")
@@ -322,6 +323,7 @@ def _list_mounted_partitions(disk_name: str) -> list[tuple[str, str]]:
             text=True,
             timeout=_LSBLK_TIMEOUT_SECONDS,
             check=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return []
@@ -366,7 +368,7 @@ def eject_storage_device(disk_name: str) -> tuple[bool, str]:
     for device_path, mountpoint in partitions:
         command = ["udisksctl", "unmount", "-b", device_path] if use_udisksctl else ["umount", mountpoint]
         try:
-            subprocess.run(command, capture_output=True, text=True, timeout=10.0, check=True)
+            subprocess.run(command, capture_output=True, text=True, timeout=10.0, check=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
             failures.append(f"{mountpoint}: {exc}")
 

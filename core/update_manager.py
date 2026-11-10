@@ -211,11 +211,11 @@ def _commit_update(
     try:
         subprocess.run(
             ["git", "add", "--"] + applied_files,
-            cwd=_PROJECT_ROOT, check=True, capture_output=True, text=True,
+            cwd=_PROJECT_ROOT, check=True, capture_output=True, text=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
         subprocess.run(
             ["git", "commit", "-m", message],
-            cwd=_PROJECT_ROOT, check=True, capture_output=True, text=True,
+            cwd=_PROJECT_ROOT, check=True, capture_output=True, text=True, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except subprocess.CalledProcessError as exc:
         detail = (exc.stderr or exc.stdout or str(exc)).strip()

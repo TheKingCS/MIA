@@ -2,7 +2,9 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-10 (the audit and its tier 1 fixes), by claude.*
+session. Last updated: 2026-11-10 (the audit, tier 1, then tier 2 and 3), by claude.*
+
+**2026-11-10, evening (Claude: tier 2 and 3).** Replies no longer freeze the phone and pages (the lock is let go while the model thinks); one store lock shared with the desktop's timers; one MIA per data folder; web pages keep late changes, don't redraw over typing, and show loading, offline and failed states; every page opened in CI; a scripted-model turn harness; the phone's libraries pinned and tested in CI; thread errors logged. CI green. The rest of tier 2 waits on Zac's decisions.
 
 **2026-11-10, later (Claude: tier 1 of the roadmap).** Nightly automatic backups and a restore applied at the next start; the writer's shrink copy and replace retry; linked phones unlinked from the PC; the Assistant's tool gate (offered tools only, nothing changed straight after outside text); sync merges an edit made during the exchange; the test run clean here and in a fresh checkout, with CI annotating its failures; the Windows CI is green again (`a1c334ba`). Tier 2 (lock split, one engine builder) waits for Zac.
 

@@ -410,7 +410,8 @@ def _rtsp_picture(url: str) -> bytes:
     try:
         done = subprocess.run([ffmpeg, "-nostdin", "-loglevel", "error", "-rtsp_transport", "tcp", "-i", url,
                                "-frames:v", "1", "-q:v", "5", "-f", "image2", "-vcodec", "mjpeg", "pipe:1"],
-                              capture_output=True, timeout=TIMEOUT_S + 4, check=False)
+                              capture_output=True, timeout=TIMEOUT_S + 4, check=False,
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except subprocess.TimeoutExpired:
         raise CameraError("The camera's stream didn't answer in time.") from None
     if done.returncode != 0 or not done.stdout.startswith(b"\xff\xd8"):

@@ -9,7 +9,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### Start here (2026-11-08 evening: the short list, in order; everything else is below)
-0c. [ ] **Read the audit and say what to start** (2026-11-10): on the PC in `audit/` (three files; not in git). Eight decisions are yours, listed in section 8 of `AUDIT_2026-11-10.md`; the first is whether this repository, which is public today, should be. Tier 1 (the small fixes) is done since you set the goal; tier 2 onward, which changes how MIA is built, waits for you. Restoring a backup now finishes when MIA restarts.
+0c. [ ] **Read the audit and say what to start** (2026-11-10): on the PC in `audit/` (three files; not in git). Eight decisions are yours, listed in section 8 of `AUDIT_2026-11-10.md`; the first is whether this repository, which is public today, should be. Tiers 1 to 3 are done as far as they go without you; what's left needs your decisions: 1.1 (public or private), 2.1 (measure a larger model; it runs over your records), 2.5 (a quiet window for the engine move), 2.6, 2.10, 2.11 (where the lab's tests may run), 3.7. Restoring a backup now finishes when MIA restarts, and a second copy of MIA says so instead of starting.
 0b. [ ] **The glasses' camera for Look** (2026-11-09): built by the design session (GlassesCamera.kt, mwdat-camera 1.0.1) and passing CI's emulator check. Left for you: in Meta's Wearables Developer Center, approve Camera for the MIA app, then on the phone Settings → Glasses → Let MIA Use the Glasses' Camera, and say "what am I looking at?" through the glasses.
 
 0. [x] **Let Claude commit again**: done 2026-11-09 (Zac made .claude/settings.local.json); the held work was committed, merged with the design session's, and pushed.

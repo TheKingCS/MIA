@@ -105,7 +105,8 @@ def run_tesseract(exe: str, image: Path, language: str = "eng", timeout: int = _
     if nice:
         command = [nice, "-n", "10"] + command  # lower priority (not preexec_fn: unsafe with threads)
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, env=env)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, env=env,
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except subprocess.TimeoutExpired as exc:
         raise OcrError("Reading a page took too long.") from exc
     except OSError as exc:

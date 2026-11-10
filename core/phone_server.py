@@ -88,12 +88,14 @@ def tailscale_info(port: int, run: Callable = subprocess.run, which: Callable = 
         return TailscaleInfo(problem="Tailscale isn't installed on this computer (docs/SETUP_GUIDE.md, Part 8).")
     info = TailscaleInfo(installed=True)
     try:
-        status = run([exe, "status", "--json"], capture_output=True, text=True, timeout=5)
+        quiet = getattr(subprocess, "CREATE_NO_WINDOW", 0)  # no window flashing on the desktop
+        status = run([exe, "status", "--json"], capture_output=True, text=True, timeout=5, creationflags=quiet)
         info.running, info.address = parse_tailscale_status(status.stdout)
         if not info.running:
             info.problem = "Tailscale is installed but not connected. Run: sudo tailscale up"
             return info
-        serve = run([exe, "serve", "status", "--json"], capture_output=True, text=True, timeout=5)
+        serve = run([exe, "serve", "status", "--json"], capture_output=True, text=True, timeout=5,
+                    creationflags=quiet)
         info.serving_mia = serve_forwards_to(serve.stdout or "", port)
     except (OSError, subprocess.SubprocessError) as exc:
         info.problem = f"Couldn't ask Tailscale: {exc}"

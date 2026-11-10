@@ -318,7 +318,7 @@ class LocalModels:
         try:
             self._process = subprocess.Popen(
                 server_args(self.binary, str(self.path(model)), port=self.port, threads=threads, cores=cores[:threads]),
-                stdout=log_file, stderr=subprocess.STDOUT)
+                stdout=log_file, stderr=subprocess.STDOUT, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         except OSError as problem:
             self._loading_marker().unlink(missing_ok=True)
             with self._lock:

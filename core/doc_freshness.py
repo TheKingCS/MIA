@@ -127,10 +127,11 @@ def stale(old_text: str, new_text: str) -> list[dict]:
 
 
 def _git(*args: str, root: Path = ROOT) -> str:
-    """Runs git in the repo and returns what it printed (empty when it fails)."""
+    """Runs git in the repo, with no window (MIA runs it from her daily checks, where each call used to flash a
+    console on the desktop), and returns what it printed (empty when it fails)."""
     try:
         done = subprocess.run(["git", *args], cwd=str(root), capture_output=True, text=True, encoding="utf-8",
-                              errors="replace", timeout=60)
+                              errors="replace", timeout=60, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.SubprocessError):
         return ""
     return done.stdout if done.returncode == 0 else ""

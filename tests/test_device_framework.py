@@ -51,7 +51,7 @@ def _fake_lsblk(blockdevices: list[dict], boot_disk_name: str = "sda"):
     """
     payload = json.dumps({"blockdevices": blockdevices})
 
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         if args[0] == "findmnt":
             return _FakeCompletedProcess(f"/dev/{boot_disk_name}1")
         if args[0] == "lsblk" and "PKNAME" in args:
@@ -185,7 +185,7 @@ def test_list_block_devices_returns_empty_when_lsblk_missing(monkeypatch):
 
 
 def test_list_block_devices_returns_empty_on_malformed_json(monkeypatch):
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         return _FakeCompletedProcess("not json")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
@@ -198,7 +198,7 @@ def test_list_block_devices_returns_empty_on_malformed_json(monkeypatch):
 
 def _fake_boot_lookup(root_source: str, pkname: str):
     """A stand-in for running findmnt and lsblk that names the boot disk as given."""
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         if args[0] == "findmnt":
             return _FakeCompletedProcess(root_source)
         if args[0] == "lsblk":
@@ -222,7 +222,7 @@ def test_is_boot_device_true_when_root_mounted_directly_on_disk_no_partition(mon
 
 
 def test_is_boot_device_fails_closed_when_findmnt_fails(monkeypatch):
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         raise OSError("findmnt not found")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
@@ -230,7 +230,7 @@ def test_is_boot_device_fails_closed_when_findmnt_fails(monkeypatch):
 
 
 def test_is_boot_device_fails_closed_when_pkname_lookup_fails(monkeypatch):
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         if args[0] == "findmnt":
             return _FakeCompletedProcess("/dev/sda2")
         raise subprocess.CalledProcessError(1, args)
@@ -383,7 +383,7 @@ def _fake_partition_query(disk_name: str, children: list[dict], disk_mountpoint=
         ]
     })
 
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         if args[0] == "lsblk":
             return _FakeCompletedProcess(payload)
         return _FakeCompletedProcess("")
@@ -416,7 +416,7 @@ def test_eject_unmounts_mounted_partition_via_umount_when_no_udisksctl(monkeypat
 def test_eject_prefers_udisksctl_when_available(monkeypatch):
     calls = []
 
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         calls.append(args)
         if args[0] == "lsblk":
             return _FakeCompletedProcess(json.dumps({
@@ -435,7 +435,7 @@ def test_eject_prefers_udisksctl_when_available(monkeypatch):
 
 
 def test_eject_reports_failure_when_unmount_fails(monkeypatch):
-    def fake_run(args, capture_output, text, timeout, check):
+    def fake_run(args, capture_output, text, timeout, check, **_):
         if args[0] == "lsblk":
             return _FakeCompletedProcess(json.dumps({
                 "blockdevices": [{"name": "sdb", "mountpoint": None, "type": "disk", "children": [
