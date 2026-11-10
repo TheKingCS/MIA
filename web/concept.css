@@ -1806,3 +1806,11 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .side a.side-start .ico { font-weight: 700; color: var(--accent); }
 .guide-say .btn { white-space: normal; text-align: left; text-transform: none; }
 .browser-live { cursor: crosshair; user-select: none; }
+/* Teaching a task (web/browser.js teaching()): numbered steps, the one you're on lit, the ones behind you dimmed. */
+.teach-steps { margin: 10px 0 0; padding-left: 22px; display: grid; gap: 10px; }
+.teach-steps li { padding-left: 4px; color: var(--text-dim); }
+.teach-steps li strong { display: block; color: var(--text); font-weight: 600; }
+.teach-steps li span { display: block; font-size: var(--text-sm, 0.875rem); }
+.teach-steps li.now::marker, .teach-steps li.now strong { color: var(--accent); }
+.teach-steps li.done { opacity: 0.6; }
+.teach-steps li .form-row, .teach-steps li .row-buttons { margin-top: 8px; }

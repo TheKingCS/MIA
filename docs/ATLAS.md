@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1366 files, 301,542 lines; 1366 files describe themselves; 16,606 of 16,700 classes and functions are documented.
+1366 files, 301,569 lines; 1366 files describe themselves; 16,606 of 16,700 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -1279,7 +1279,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,229 lines
+105 files, 19,256 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1288,7 +1288,7 @@
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
 - `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude; the canvas's Talk, DEC-0113: her orb and state in the header, What I used under each answer). Typed turns go through MIA.talk; spoken ones are recorded with the shell's recorder (the mono 16-bit WAV MIA's voice path expects) and sent with MIA.voice. He
-- `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), the task she's learning, and the tasks you taught her (how practised, the last 
+- `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), how teaching a task works with the step you're on marked (teaching()), and the 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py) as the design canvas's one page (DEC-0113): Past Due and Due Today with their actions, Due Soon as short lines, and the month with its dots beside them. Each item says what it is and offers it
 - `web/changes.js`: changes.js — Recent Changes (claude, 2026-11-07, DEC-0125). Renders MIA.changes() (core/web_changes.py): what MIA can still put back, newest first, with Undo on the newest (the action undo.last, the same as saying "undo that"), then the last fortnight's history by day, undone ones struck through. Fo

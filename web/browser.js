@@ -1,8 +1,8 @@
 /*
  * browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the
- * page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), the
- * task she's learning, and the tasks you taught her (how practised, the last run, Do it / Forget through
- * MIAShell.act). Formatting only; the look is muse's.
+ * page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), how
+ * teaching a task works with the step you're on marked (teaching()), and the tasks you taught her (how practised, the
+ * last run, Do it / Forget through MIAShell.act). Formatting only; the look is muse's.
  */
 (function () {
   "use strict";
@@ -130,22 +130,48 @@
         el("p", { class: "dim" }, "Closed. Open a website or search above and it shows here, live: click on it to "
           + "click, scroll to scroll, type in the box under it. She works in the same view."));
     }
-    const name = el("input", { type: "text", class: "input", placeholder: "Name a task to teach her from here", autocomplete: "off" });
-    const teach = data.learning
-      ? el("div", { class: "row-buttons" },
-        el("p", {}, "Watching you do \"" + data.learning + "\": do it in the picture above, then keep it."),
-        btn("Done, keep it", "btn-green", () => run({ kind: "browser.learn_done", params: {} })))
-      : el("form", { class: "form-row", onsubmit: (e) => {
-        e.preventDefault();
-        if (name.value.trim()) run({ kind: "browser.learn", params: { name: name.value.trim() } });
-      } }, name, el("button", { type: "submit", class: "btn btn-ghost" }, "Learn a task"));
     return section("Her Browser", bar,
       ...liveView(data),
       el("div", { class: "row-buttons" },
         btn("Back", "btn-ghost btn-small", () => run({ kind: "browser.back", params: {} })),
         btn("Ask MIA about this page", "btn-ghost btn-small", () => MIAShell.talk(true, "Read the page and tell me what's on it")),
-        btn("Close", "btn-ghost btn-small", () => run({ kind: "browser.close", params: {} }))),
-      teach);
+        btn("Close", "btn-ghost btn-small", () => run({ kind: "browser.close", params: {} }))));
+  }
+
+  // Teaching her a task (2026-11-10, docs/BROWSER.md): what it is, the five steps with the one you're on marked, and
+  // that step's control right under it. The same by voice: "learn this: pay the water bill", "done", "do pay the
+  // water bill".
+  const TEACH_STEPS = [
+    ["Open the page where the task starts", "Use the address box above, or ask her: \"open the county tax site\"."],
+    ["Name the task", "A few words for what it does: \"pay the water bill\", \"check the library's hours\"."],
+    ["Do it once while she watches", "Click and type in the live picture. She notes each click, box and choice by "
+      + "its label. Where you type a password she keeps only \"sign in\", never what you typed."],
+    ["Keep it", "Press Done and it's saved with its steps, under Tasks You Taught Her."],
+    ["Have her do it", "Press Do it, or say \"do pay the water bill\". She goes step by step, stops for you at "
+      + "each sign-in and before anything that submits, pays or sends, and says where if a page isn't what she "
+      + "expects. Two clean runs in a row and it's marked learned."],
+  ];
+  function teaching(data) {
+    const on = data.learning ? 2 : data.open ? 1 : 0;  // the step this person is on now
+    const at = data.learning ? 3 : on;  // where that step's control sits (Done belongs to "Keep it")
+    const name = el("input", { type: "text", class: "input", placeholder: "Name the task, for example: pay the water bill",
+      autocomplete: "off", "aria-label": "Task name" });
+    const control = data.learning
+      ? el("div", { class: "row-buttons" },
+        el("p", {}, "She's watching you do \"" + data.learning + "\". Do it in the picture above, then:"),
+        btn("Done, keep it", "btn-green", () => run({ kind: "browser.learn_done", params: {} })))
+      : data.open
+        ? el("form", { class: "form-row", onsubmit: (e) => {
+          e.preventDefault();
+          if (name.value.trim()) run({ kind: "browser.learn", params: { name: name.value.trim() } });
+        } }, name, el("button", { type: "submit", class: "btn btn-green" }, "Start teaching"))
+        : el("p", { class: "dim" }, "Start by opening a page above.");
+    return section("Teach Her A Task",
+      el("p", {}, "A task is something you do on a website more than once: paying a bill, checking an order, "
+        + "booking the same class. Show her once and she can do it for you from then on, here or by voice."),
+      el("ol", { class: "teach-steps" }, TEACH_STEPS.map(([title, how], i) => el("li",
+        { class: i === on || i === at ? "now" : i < on ? "done" : "", "aria-current": i === on ? "step" : null },
+        el("strong", {}, title), el("span", {}, how), i === at ? control : null))));
   }
 
   async function draw() {
@@ -158,9 +184,10 @@
     $("panel").replaceChildren(...[
       controls(data),
       data.waiting.length ? section("Waiting For Your OK", ...data.waiting.map(waitingCard)) : null,
+      teaching(data),
       section("Tasks You Taught Her",
         data.tasks.length ? el("div", { class: "rows" }, data.tasks.map(taskRow))
-          : el("p", { class: "empty" }, "None yet. Ask MIA to open where a task starts, say \"learn this\", and do it in her window.")),
+          : el("p", { class: "empty" }, "None yet. Follow the steps above to teach the first one.")),
       section("How She Browses",
         el("p", { class: "dim" }, "Her own Edge window, with none of your sign-ins. She reads, searches and follows links by herself; "
           + "anything that submits, buys, sends, signs in or deletes waits here for your OK, and she never types passwords or card numbers.")),
