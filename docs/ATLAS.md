@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1357 files, 300,729 lines; 1357 files describe themselves; 16,558 of 16,652 classes and functions are documented.
+1358 files, 300,784 lines; 1358 files describe themselves; 16,561 of 16,655 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -756,12 +756,13 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-37 files, 3,866 lines; 121 of 121 classes and functions documented
+38 files, 3,921 lines; 124 of 124 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17).
 - `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA:
+- `tools/ci_failures.py`: Says which tests failed in CI where anyone reading the run can see it (2026-11-10). The Actions job log needs a sign-in, but a check run's annotations don't, so this reads pytest's JUnit report and prints one GitHub `::error` annotation per failed test (name and the first lines of why), up to LIMIT 
 - `tools/cloud_tests.py`: Runs the test suite in a place without the PC's libraries (a cloud session: no PySide6, pyserial, mutagen, libzim...). Each library on STUBBED that can't be imported is replaced by an empty stand-in before pytest starts, so tests that only import a Qt module on the way (the parity checks, the voice 
 - `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p
 - `tools/data_key.py`: MIA's data key for sealed files (DEC-0126, core/at_rest.py), from the command line on the PC:
