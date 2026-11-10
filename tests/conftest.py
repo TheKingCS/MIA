@@ -233,4 +233,6 @@ def pytest_sessionfinish(session, exitstatus):
         message = "Tests wrote into the real data/ folder, config or repository top: " + ", ".join(touched)
         if reporter is not None:
             reporter.write_line(message, red=True)
+            if os.environ.get("GITHUB_ACTIONS"):  # shown on the run's page, whose log needs a sign-in
+                reporter.write_line("::error title=Tests wrote outside their folders::" + message[:900])
         session.exitstatus = 1
