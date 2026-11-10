@@ -124,3 +124,5 @@ pc-check/
 # A restore waiting for the next start (core/backup_manager.schedule_restore): a whole backup, opened.
 /restore_pending.zip
 /restore_pending.zip.tmp
+# CI's test report (tools/ci_failures.py reads it)
+/pytest-report.xml

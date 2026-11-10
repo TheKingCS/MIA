@@ -211,7 +211,7 @@ def _data_snapshot() -> dict[str, float]:
     # A new file or folder at the top of the repository (2026-11-10: a store given a MagicMock context made a
     # "MagicMock" folder there, which the data/ snapshot never saw). Names only, so it costs one listing.
     for p in _REAL_DATA_DIR.parent.iterdir():
-        if p.name not in (".pytest_cache", "__pycache__", "restore_pending.zip"):
+        if p.name not in (".pytest_cache", "__pycache__", "restore_pending.zip", "pytest-report.xml"):  # CI's report
             snapshot[f"../{p.name}"] = 0.0
     return snapshot
 

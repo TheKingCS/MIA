@@ -72,7 +72,12 @@ jobs:
         # "offscreen" mode has no fonts on Windows, so test PDFs came out blank).
         env:
           PYTHONUTF8: "1"
-        run: python -m pytest -q -p no:cacheprovider --deselect tests/test_navigation_module.py::test_sun_moon_summary_for_real_coordinates_has_sensible_shape
+        run: python -m pytest -q -p no:cacheprovider --junitxml=pytest-report.xml --deselect tests/test_navigation_module.py::test_sun_moon_summary_for_real_coordinates_has_sensible_shape
+      - name: Name the failed tests where the run's page shows them (its log needs a sign-in)
+        if: failure()
+        env:
+          PYTHONUTF8: "1"
+        run: python -m tools.ci_failures pytest-report.xml
       - name: Web front end device check
         if: always()
         env:
