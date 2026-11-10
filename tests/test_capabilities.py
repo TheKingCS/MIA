@@ -64,11 +64,11 @@ def test_the_map_comes_from_the_code(ctx):
 
 
 def test_can_you_answers_from_the_map_or_says_it_cant(ctx):
-    assert can_i(ctx, "track my chickens").startswith("Closest match in MIA: Chickens")
+    assert can_i(ctx, "track my chickens").startswith("The closest thing I have: Chickens")
     taxes = can_i(ctx, "file my taxes")
-    assert taxes.startswith("Closest match in MIA: Compliance") and "never files, pays or signs" in taxes
+    assert taxes.startswith("The closest thing I have: Compliance") and "never files, pays or signs" in taxes
     assert "Workshop" in can_i(ctx, "sell banana bread at the market")
-    assert can_i(ctx, "fly a drone").startswith("I can't find anything in MIA that does \"fly a drone\"")
+    assert can_i(ctx, "fly a drone").startswith("I can't find anything of mine that does \"fly a drone\"")
 
 
 def test_the_questions_reach_the_tools(ctx):

@@ -73,10 +73,24 @@ def _direct_lookup(context, prompt: str) -> Optional[str]:
     from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
 
     registry = getattr(context, "assistant_actions", None)
-    if registry is None or looks_like_how_to_question(prompt) or looks_like_teaching_request(prompt):
+    if (registry is None or looks_like_how_to_question(prompt) or looks_like_teaching_request(prompt)
+            or _about_her(prompt)):
         return None
     action = registry.direct_lookup(prompt, context)
     return registry.execute(context, action.name, action.direct_arguments(prompt)) if action is not None else None
+
+
+def _about_her(prompt: str) -> bool:
+    """Whether the message is a question only MIA's own records answer (her history, limits, design, what she's
+    being built toward, how she learns: core/self_knowledge.py). The person's question plans and lookups stand
+    aside for it, and the model answers with those records beside it."""
+    from core.self_knowledge import asks_about_her
+
+    try:
+        return asks_about_her(prompt)
+    except Exception:
+        log.exception("Couldn't tell whether the question is about MIA herself")
+        return False
 
 
 def instant_answer(context, conversation, prompt: str) -> Optional[str]:
@@ -122,6 +136,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     from core.conversation_state import follow_up
     from core.question_plans import match
 
+    if _about_her(prompt):  # her own records answer it, in the model's turn
+        return None
     if match(context, prompt) is not None or follow_up(conversation, prompt) is not None:
         return None
     return _direct_lookup(context, prompt)
@@ -205,7 +221,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -245,6 +261,16 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             said = f"Here's your {card[1]}."
             add_message(conversation, "assistant", said)
             return AssistantTurn(replies=[said], open=card[0], route="wallet")
+        from core.conversation_export import reply as taken_out
+
+        try:  # "summarize this conversation", "export this chat as JSON": the whole of it, not its last messages
+            out = taken_out(context, conversation, prompt)
+        except Exception:
+            log.exception("Couldn't summarise or export the conversation")
+            out = None
+        if out is not None:
+            add_message(conversation, "assistant", out[0])
+            return AssistantTurn(replies=[out[0]], open=out[1], route="conversation")
         from core.trade_actions import reply as job_reply
 
         try:  # a job in progress ("next", "checked", "why?", a stop rule's words) or "walk me through ..." (DEC-0149)
@@ -277,7 +303,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             # A detailed question a plan answers: lookups by code, one answer (DEC-0052, core/question_plans.py).
             from core.question_plans import answer as plan_answer
 
-            planned = plan_answer(context, conversation, prompt)
+            # A question about MIA herself isn't one about the person's records (core/self_knowledge.py).
+            planned = None if _about_her(prompt) else plan_answer(context, conversation, prompt)
             if planned is not None:
                 said, _sheet = planned
                 add_message(conversation, "assistant", said)
@@ -328,7 +355,11 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         return AssistantTurn(replies=replies, used=used, route="model, tools", tools_offered=offered,
                              tools_called=[c.name for c in calls_to_execute])
 
-    content = with_offer(conversation, reply.content)
+    from core.response_composer import polish
+
+    # Her own words without the model's habitual "Sure!" first and "let me know" last, on every surface, not
+    # only the phone (docs/CONVERSATION_REVIEW.md). An offer of hers to do something stays.
+    content = with_offer(conversation, polish(reply.content))
     add_message(conversation, "assistant", content)
     _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
              garbled=_garbled(reply.content))

@@ -30,7 +30,8 @@ def test_the_list_skips_empty_ones_and_shows_the_first_question(ctx):
     assert page["total"] == 2 and {c["title"] for c in page["conversations"]} == {"Truck", "Seeds"}
     seeds = next(c for c in page["conversations"] if c["title"] == "Seeds")
     assert seeds["count"] == 2 and seeds["first"] == "When do I start tomatoes?"
-    assert wc.one(ctx, seeds["id"])["messages"][1] == {"role": "assistant", "content": "Here's what I found."}
+    second = wc.one(ctx, seeds["id"])["messages"][1]
+    assert (second["role"], second["content"]) == ("assistant", "Here's what I found.") and second["at"] > "2026"
     assert wc.one(ctx, "nope") is None
 
 
@@ -46,3 +47,13 @@ def test_picking_one_up_marks_it_used_now_and_delete_runs_through_its_action(ctx
     assert wc.history(ctx)["total"] == 1
     with pytest.raises(ActionError):
         ACTION_TYPES["conversation.delete"].describe(ctx, {"conversation_id": truck.conversation_id})
+
+
+def test_a_message_said_in_private_is_never_listed_or_shown_even_while_it_is_still_in_memory(ctx):
+    from core.conversation_manager import ConversationMessage
+
+    seeds = next(c for c in ctx.conversations.all_conversations() if c.title == "Seeds")
+    seeds.messages.insert(0, ConversationMessage(role="user", content="Just between us.", privacy="private"))
+    row = next(c for c in wc.history(ctx)["conversations"] if c["title"] == "Seeds")
+    assert row["count"] == 2 and row["first"] == "When do I start tomatoes?"
+    assert all(m["content"] != "Just between us." for m in wc.one(ctx, seeds.conversation_id)["messages"])

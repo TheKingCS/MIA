@@ -1,0 +1,11 @@
+---
+id: K-0212
+kind: implementation
+title: A conversation is exported exactly and summarised whole, in core/conversation_export.py
+status: confirmed
+by: claude
+created: 2026-11-10T23:38:37+00:00
+concerns: core/conversation_export.py, core/web_conversations.py, core/assistant_turn.py, server/app.py, web/assistant.js
+from: file:docs/CONVERSATION_REVIEW.md, file:core/conversation_export.py, dec:DEC-0125
+---
+The chat page gained Summary and Export, and the same by asking ("summarize this conversation", "export this chat as JSON": route "conversation" in assistant_turn._turn). export_of gives Markdown or JSON with every kept message in order, who said it and when (a time kept in UTC is shown local). summary_of reads the whole conversation: when it doesn't fit one prompt it is cut into parts on line ends (_parts), each part is summarised, then one summary is written from the notes, so the start counts as much as the end; if any part fails there is no summary of only some of it. With no model she says so and lists what was asked, in order. The model writes headings every which way ("- Topics", "**Decided:**"), so _tidy puts the four headings back on their own lines. The material is fenced and called something to summarise, never instructions. Asked in talk, the request itself is left out (skip_last). kept() is the one filter for what may leave the chat: a message said in private stays out of exports, summaries, the history list and a picked-up conversation, even while it is still in memory. Saving is the action conversation.export (into Files, folder Conversations, never over an earlier export); the server only offers the text (/api/talk/conversations/{id}/export and /summary, id "current" for the one Talk is in; the model runs outside the turn lock). Trap: core.actions imports core.web_conversations and core.conversation_export, and conversation_export imports core.actions, so web_conversations imports kept inside its functions. Trap: actions.propose is a method of the action service; a test calls ACTION_TYPES[kind].describe/execute. Known limit: on a phone linked to the computer, Save to Files for the computer's current conversation runs on the phone's own store and doesn't find it; Copy works.

@@ -696,6 +696,10 @@
     conversations: () => read("/api/talk/conversations", "conversations"),  // past conversations (core/web_conversations.py)
     conversation: (id) => demo ? read("", "conversation") : call("GET", "/api/talk/conversations/" + encodeURIComponent(id)),
     continueChat: (id) => demo ? demoOnly() : call("POST", "/api/talk/continue", { conversation_id: id }),
+    // One conversation taken out of the chat (core/conversation_export.py); id "current" is the one Talk is in.
+    exportConversation: (id, form) => demo ? read("", "conversation_export")
+      : call("GET", "/api/talk/conversations/" + encodeURIComponent(id) + "/export?form=" + encodeURIComponent(form || "markdown")),
+    summarize: (id) => demo ? read("", "conversation_summary") : call("POST", "/api/talk/conversations/" + encodeURIComponent(id) + "/summary"),
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),
     music: () => read("/api/music", "music"),

@@ -21,6 +21,8 @@ starting.
   of them. The benchmark runs are a store of their own, searched with
   the rest.
 
+`records(kinds)` is the kept record itself, whole or by kind (what she
+reads to say when something about her happened: core/self_knowledge.py).
 `sync()` adds whatever is new to `data/dev/history` (a DevStore: append
 only, never rewritten), each record once by its signature; a record's `at`
 is when it was kept and `on` when it happened (a commit's date, a
@@ -55,6 +57,12 @@ _END = "\x1e"
 def _store(folder: Optional[Path] = None) -> DevStore:
     """The history's append-only store (data/dev/history unless told)."""
     return DevStore(Path(folder) if folder else HISTORY)
+
+
+def records(kinds: Iterable[str] = (), store: Optional[DevStore] = None) -> list[dict]:
+    """Every record of the history as kept, oldest first as written (`kinds` narrows it to those kinds)."""
+    wanted = set(kinds)
+    return [r for r in (store or _store()).records() if not wanted or r.get("kind") in wanted]
 
 
 def when(record: dict) -> str:

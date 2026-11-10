@@ -25,6 +25,9 @@ What's searched, and how much it counts:
 - Never `data/`, `config/` or anything personal: only the repo's own docs
   and code.
 
+`decision(id)` reads one decision by its number, status first, without a
+search (core/self_knowledge.py cites them).
+
 Keyword search (the help system's own chunking and scoring,
 core/device_help_manager.py): it works the same on the phone and needs no
 model. Built once per process, rebuilt when a file changes.
@@ -80,6 +83,37 @@ def _decisions(text: str, file: str) -> list[Passage]:
         kind = "decision" if status and status.group(1).upper() == "APPROVED" else "proposal"
         out.append(Passage(file, f"{m.group(1)}: {m.group(2)}", body, kind))
     return out
+
+
+_decision_cache: dict = {"key": None, "by_id": {}}
+
+
+def decision(dec_id: str, chars: int = 300, root: Path = DOCS) -> Optional[dict]:
+    """One decision read straight from DECISIONS.md, without building the whole index: its id, title, status as
+    written, in its first words, and gist (the Decision and its honest limits); None when there's no such decision. Kept until the
+    file changes."""
+    path = root / "DECISIONS.md"
+    try:
+        key = (str(path), path.stat().st_mtime)
+    except OSError:
+        return None
+    if _decision_cache["key"] != key:
+        by_id = {}
+        for p in _decisions(path.read_text(encoding="utf-8"), "docs/DECISIONS.md"):
+            status = re.search(r"^- Status: ([^\n]+)", p.text, re.M)
+            by_id[p.heading.split(":", 1)[0]] = (p, status.group(1).strip() if status else "")
+        _decision_cache.update(key=key, by_id=by_id)
+    found = _decision_cache["by_id"].get((dec_id or "").upper())
+    if found is None:
+        return None
+    p, status = found
+    gist = _gist(p, chars)
+    if not re.search(r"^- Decision", p.text, re.M):  # written as What / From / Next: say it after the status
+        rest = re.sub(r"^- Status.*?(?=^- (?!\s)|\Z)", "", p.text.split("\n", 1)[-1], flags=re.M | re.S)
+        text = _plain(rest)
+        gist = text if len(text) <= chars else text[:chars].rsplit(" ", 1)[0] + "…"
+    return {"id": dec_id.upper(), "title": p.heading.split(": ", 1)[-1],
+            "status": re.split(r"\s*[(:,;]", status, maxsplit=1)[0][:40], "gist": gist}
 
 
 def build(root: Path = DOCS) -> list[Passage]:

@@ -397,6 +397,7 @@ import core.answer_compare  # noqa: E402,F401  (how MIA answers: pick, set, forg
 import core.web_worlds  # noqa: E402,F401  (Living Worlds: worlds, campaigns, the character, quests, DEC-0134)
 import core.web_trails  # noqa: E402,F401  (Trail Maps: taking one out, its PDF set aside for Undo)
 import core.web_conversations  # noqa: E402,F401  (past conversations: deleting one, undoable)
+import core.conversation_export  # noqa: E402,F401  (a conversation saved to Files as Markdown or JSON)
 import core.web_connections  # noqa: E402,F401  (connections: don't bring that up, allow again, DEC-0146)
 import core.portal_pictures  # noqa: E402,F401  (Portal Pictures: your painting in an area's portal, DEC-0140)
 import core.art_studio  # noqa: E402  (pictures MIA painted: deleting one, DEC-0140)

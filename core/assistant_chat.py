@@ -73,8 +73,11 @@ NO_WHY_YET_INSTRUCTION = (
 )
 from core.device_help_manager import GROUNDING_INSTRUCTION
 from core.llm_manager import ChatReply, ToolCall
+from core.logger import get_logger
 from core.main_thread import changes_records
 from core.user_memory_manager import MEMORY_CATEGORIES
+
+log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from core.conversation_manager import Conversation, ConversationMessage
@@ -387,11 +390,20 @@ _TEACHING_INSTRUCTION = (
 CONVERSATION_INSTRUCTION = (
     "Talk with the user the way a thoughtful, capable person who knows them would, not like a program. Use what "
     "you know about them above and your own general knowledge. Never invent anything about their own life, "
-    "records or numbers that isn't above: for those, say what you'd need or offer to look it up or add it. If "
+    "records or numbers that isn't above: for those, say what you'd need or offer to look it up or add it. "
+    "About yourself, speak in the first person (I, my) and say only what your own records above show; what "
+    "they don't show, you don't know yet, and saying so is fine. For facts about the world, answer from what "
+    "you know; when you're unsure, or it may have changed since you learned it, say so in a few words, and "
+    "never make up a source, a number or a quote. A figure that changes (a population, a price, a record) is "
+    "\"about\" and \"last I knew\", rounded, never to the last digit. If "
     "you're not sure what they mean, ask one short question, or offer the two closest things you could do for "
     "them. Never say you don't know what to do. When reference material comes with the question, use it where "
-    "it helps. A statement isn't a request: answer what they said before offering to do anything. Keep it "
-    "brief and natural, in plain conversational text."
+    "it helps. A statement isn't a request: answer what they said before offering to do anything. Answer "
+    "what was asked, first, at the length it deserves: a simple question gets a sentence or two, with no "
+    "lead-in and no summary. Don't repeat their words back, and don't say again what you said earlier in the "
+    "conversation: build on it. When they change the subject, go with them and leave the old one behind. "
+    "Stop when you've answered: ask a question only when you need the answer or really want to know, never "
+    "just to close. Keep it natural, in plain conversational text."
 )
 NO_MATERIAL_PREFIX = "No reference material matched"
 
@@ -604,15 +616,58 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
             linked = connections_for(context)  # a tie to something started weeks ago, raised once if it fits
             if linked:
                 parts.append(linked)
-    if is_help_question:  # a how-to question about MIA herself gets her own facts (DEC-0142)
-        from core.self_knowledge import about_herself, grounding_block
+    from core.self_knowledge import about_herself, block_for, grounding_block
 
-        if about_herself(prompt):
-            facts = grounding_block(context)
-            if facts:
-                parts.append(facts)
+    # A question about MIA herself, in whatever words, gets her own records on it, read now (DEC-0142,
+    # docs/CONVERSATION_REVIEW.md): what her code, decisions and registry say, each line with its source.
+    try:
+        mine = block_for(context, prompt)
+    except Exception:
+        log.exception("Couldn't read MIA's own records for the question")
+        mine = ""
+    if mine:
+        parts.append(mine)
+    if (is_help_question or mine) and about_herself(prompt):
+        facts = grounding_block(context)
+        if facts:
+            parts.append(facts)
     parts.append(closing_instruction)
+    if mine:  # the last thing a small model reads is what it keeps to
+        parts.append(ABOUT_HER_REMINDER)
     return "\n\n".join(parts)
+
+
+ABOUT_HER_REMINDER = (
+    "This question is about you. Answer it from your own records above, in the first person (I, never \"MIA\") "
+    "and your own voice, the way you'd say it out loud: two to four plain sentences, only what was asked, nothing "
+    "that isn't in those records. No bullet points, no numbered list and no bold headings unless they asked for "
+    "a list, and no question at the end."
+)
+
+
+def _describes_her(context, prompt: str) -> bool:
+    """Whether the message asks MIA to describe herself or something she has ("do you have a greenhouse app?"),
+    which is answered in conversation from her own records, not handed to a tool (core/self_knowledge.py). False
+    after "yes" to an offer or when it can't be told."""
+    from core.self_knowledge import wants_described
+
+    try:
+        return wants_described(context, prompt)
+    except Exception:
+        log.exception("Couldn't tell whether the question asks MIA to describe herself")
+        return False
+
+
+def _from_her_records(context, prompt: str) -> bool:
+    """Whether the message is about MIA herself (her history, her limits, an app of hers), so her own records
+    answer it and the help pages stay out. False when it can't be told."""
+    from core.self_knowledge import asks_about_her
+
+    try:
+        return asks_about_her(prompt) or _describes_her(context, prompt)
+    except Exception:
+        log.exception("Couldn't tell whether the question is about MIA herself")
+        return False
 
 
 def build_chat_request(context, conversation: "Conversation", prompt: str) -> tuple[list[dict], list[dict]]:
@@ -661,6 +716,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     matched_actions = (
         context.assistant_actions.matching_actions(routed, context)
         if context.assistant_actions is not None and not is_teaching_request and not looks_like_how_to_question(prompt)
+        and not _describes_her(context, prompt)
         else []
     )
     is_action_request = bool(matched_actions)
@@ -671,7 +727,10 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     if not is_action_request and context.device_help is not None:
         # The offline reference packs (first aid, repair guides...) still come along when they match,
         # as help to draw on; only a how-to question about MIA is held to her own docs.
-        grounded = context.device_help.build_grounded_prompt(prompt)
+        # A question about herself is answered from her own records (core/self_knowledge.py): help pages that
+        # only share a word with it were being read back as her plans and her abilities.
+        hers = not is_help_question and _from_her_records(context, prompt)
+        grounded = NO_MATERIAL_PREFIX if hers else context.device_help.build_grounded_prompt(prompt)
         if is_help_question or not grounded.startswith(NO_MATERIAL_PREFIX):
             llm_prompt = grounded
 

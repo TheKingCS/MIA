@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1367 files, 302,622 lines; 1367 files describe themselves; 16,657 of 16,751 classes and functions are documented.
+1369 files, 304,228 lines; 1369 files describe themselves; 16,750 of 16,844 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-515 files, 148,340 lines; 7,626 of 7,712 classes and functions documented
+516 files, 149,410 lines; 7,678 of 7,764 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -127,6 +127,7 @@
 - `core/connectivity.py`: What MIA can do with and without the internet, and whether she has it right now — so if the connection drops she keeps acting sensibly instead of promising things she can't deliver.
 - `core/connectors.py`: Bringing data in from other apps (Zac, 2026-11-08: "make MIA able to connect to any app with relevant data and be able to import data upon user request and approval"; the audit and plan: https://claude.ai/artifact/H8gYSX2rvneRMp5mgA4qFa). Every source works the same way: the person asks, MIA reads i
 - `core/context_assembler.py`: The "Life State" layer — a real service answering "what's going on in this person's life right now," synthesized live from every domain manager already in AppContext. This exact shape was discussed and agreed on 2026-09-11 (see mia_system_vision's own dated entry: a context_assembler.py query layer 
+- `core/conversation_export.py`: A conversation with MIA, taken out of the chat: exported whole (Markdown or JSON) and summarised whole (docs/specs/CONVERSATION.md, section 11: C and D). The chat page (web/assistant.js), Talk ("summarize this conversation", "export this chat as JSON") and the server's two endpoints all use what's h
 - `core/conversation_manager.py`: Persistent Assistant conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request for a ChatGPT-like experience: named conversation threads you can review, continue, or delete, rather than the stateless one-message-at-a-time exchanges the Assistant used before t
 - `core/conversation_modes.py`: How MIA should talk right now — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Pure logic: the mode vocabulary, the explicit phrases that switch modes, and the one short tone line each mode adds to the system prompt.
 - `core/conversation_state.py`: What a conversation is about (DEC-0052 step 4, first slice; docs/REASONING_PLAN.md section 5). Before, every message started over: "Which debt should I pay first?" then "what if I added $300 a month?" or "why?" reached the model with no idea which records it was about.
@@ -163,7 +164,7 @@
 - `core/dev_store.py`: Where the development history lives on this PC (DEC-0077, Zac 2026-11-04: "a way to not take up a ton of memory while maintaining MIAs ability to access the fullness of her memory and development"; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` section 6.5).
 - `core/dev_usage.py`: What each development model was used for, and when it ran out (DEC-0079, Zac 2026-11-03: "understanding usage and delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavailable"; review section 6.4).
 - `core/development_engine.py`: The strategic layer (DEC-0144, proposed, from ChatGPT's Development Intelligence + Convergence handoffs; proving domain: homestead, Zac 2026-11-08). Over the systems MIA already has — projects, intents, missions, plans, skills, materials — it does the one thing they don't: decide *what's worth doing
-- `core/device_framework.py`: Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first piece of Field Kit. Detects and identifies devices physically attached to this Pi: USB storage (drives, SD cards, other Pis in USB mass-storage mode) via `lsblk`, and serial/MCU boards (Arduino, ESP32, etc.) via `pyserial`'s port
+- `core/device_framework.py`: Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first piece of Field Kit. Detects and identifies devices physically attached to the computer MIA runs on (written for the Pi; where `lsblk` isn't there, as on Windows, only the serial half finds anything): USB storage (drives, SD cards
 - `core/device_help_manager.py`: Retrieval-grounded "what does this do / how do I use this device" answers — docs/ROADMAP.md milestone 5.4. This is explicitly **stage 1 ("Read & explain")** of the Self-Modification / Dev Mode staged plan in docs/ROADMAP.md: read-only retrieval over `docs/user_help/*.md` and module metadata, never a
 - `core/device_profile.py`: MIA runs as one codebase across two editions — docs/ROADMAP.md milestone 13.1: **Core** (the Pi 5 + AI HAT+ 2, resource-constrained, a field data-gathering tool) and **Home** (a desktop workstation, more storage/resources), distinguished only by `config.system.device_profile`.
 - `core/diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040; `docs/ACAF_REVIEW.md` section 6): a check-up written as a spec, not code, over what inspection's PASSIVE methods already read (core/inspection.py: the OS, CPU and memory, the drives, the network, the firewall, the AI runtime, MIA's own health). Nothing her
@@ -526,7 +527,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,108 lines; 50 of 50 classes and functions documented
+2 files, 4,161 lines; 50 of 50 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -803,7 +804,7 @@
 
 ## tests/: the test suite: what each part must do
 
-472 files, 78,818 lines; 6,729 of 6,737 classes and functions documented
+473 files, 79,194 lines; 6,770 of 6,778 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -880,6 +881,7 @@
 - `tests/test_connectors.py`: Bringing data in from other apps (core/connectors.py): a rental calendar keeps only the booked dates (never the guest's details), blocked days aren't stays, links reach only the public internet over https, a preview counts what's new and what's already here, and an approved import lands as one chang
 - `tests/test_context_assembler.py`: Unit/integration tests for core.context_assembler — the "Life State" synthesis layer. Isolates every underlying manager's own data files into a tmp_path scratch area, same monkeypatch pattern as test_skill_patterns.py's own isolated_paths, extended to cover the extra managers assemble_life_state() r
 - `tests/test_conversation_card.py`: Unit test for gui.widgets.conversation_card's pure formatting helper — no Qt event loop needed. The card widget itself (click-to-select, delete button, selected-state property toggling) needs a real Qt event loop to exercise meaningfully, so that was verified with a manual headless smoke test instea
+- `tests/test_conversation_export.py`: A conversation taken out of the chat (core/conversation_export.py): the export in Markdown and JSON, the summary of the whole of it with and without a model, how it's asked for in words, and the action that saves it to Files.
 - `tests/test_conversation_manager.py`: Unit tests for core.conversation_manager. Isolates _DATA_DIR _CONVERSATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths. Also isolates config_manager's _CONFIG_FILE, since set_active_conversation_id() calls context.config.save() — the exact
 - `tests/test_conversation_modes.py`: Explicit mode switches (core/conversation_modes.py): a sentence corpus, not wording.
 - `tests/test_conversation_state.py`: What a conversation is about (DEC-0052 step 4, core/conversation_state.py): a short follow-up goes back to the last question plan, with both questions.
@@ -1280,7 +1282,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,515 lines
+105 files, 19,622 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

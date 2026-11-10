@@ -4,6 +4,8 @@
  * turns go through MIA.talk; spoken ones are recorded with the shell's
  * recorder (the mono 16-bit WAV MIA's voice path expects) and sent with
  * MIA.voice. Her spoken reply plays when her computer has a voice.
+ * Every answer of hers has Copy; Summary and Export take the whole
+ * conversation out of the chat (core/conversation_export.py).
  */
 (function () {
   "use strict";
@@ -19,6 +21,19 @@
     b.scrollIntoView({ block: "end", behavior: "smooth" });
     return b.querySelector("p");
   }
+
+  // Under each answer of hers: Copy (the whole message, as she wrote it) and, for an answer to something asked,
+  // 👍/👎 (the Fix-It Log, DEC-0049).
+  function tools(reply, asked) {
+    const row = el("div", { class: "chat-tools" }, MIAShell.copyButton(() => reply.textContent));
+    if (asked != null) row.append(MIAShell.notRight(asked, reply.textContent));
+    reply.parentElement.append(row);
+  }
+  const past = (m) => {
+    const b = el("div", { class: "chat-bubble " + (m.role === "user" ? "me" : "mia"), title: when(m.at) }, el("p", {}, m.content));
+    if (m.role !== "user") b.append(el("div", { class: "chat-tools" }, MIAShell.copyButton(m.content)));
+    return b;
+  };
 
   // Her orb and its label in the header follow the turn (DEC-0113: one orb, one set of states).
   function orb(state, label) {
@@ -49,7 +64,7 @@
       reply.textContent = turn.reply_text || "Done.";
       const used = usedLine(turn);
       if (used) reply.after(used);
-      reply.parentElement.append(MIAShell.notRight(text, turn.reply_text));  // the Fix-It Log (DEC-0049)
+      tools(reply, text);
       if (turn.comparable) MIAShell.twoWays(turn.reply_text, reply.parentElement, reply.parentElement.parentElement);  // DEC-0138
       MIAShell.refresh();
       orb("idle", "Ready");
@@ -80,6 +95,7 @@
       reply.textContent = turn.reply_text || "Done.";
       const used = usedLine(turn);
       if (used) reply.after(used);
+      tools(reply, turn.transcript || "");
       orb("idle", "Ready");
       if (turn.audio_wav_base64) {  // her voice, with the orb speaking while it plays
         const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
@@ -96,7 +112,7 @@
   // ------------------------------------------------------------ history (the Qt Assistant's History, on the web)
   // Past conversations (MIA.conversations, core/web_conversations.py): newest first; one opens to read, with Pick It
   // Back Up (Talk continues it) and Delete (conversation.delete, undoable). Only what was kept: never private turns.
-  const when = (iso) => iso ? new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+  function when(iso) { return iso ? new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""; }
   async function showHistory() {
     const box = $("history");
     let list;
@@ -118,16 +134,18 @@
       el("div", { class: "chat-history-head" },
         el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: showHistory }, "‹ All"),
         el("p", { class: "pw-label" }, c.title)),
-      el("div", { class: "chat-past-log" }, ...c.messages.map((m) => el("div", { class: "chat-bubble " + (m.role === "user" ? "me" : "mia") }, el("p", {}, m.content)))),
+      el("div", { class: "chat-past-log" }, ...c.messages.map(past)),
       el("div", { class: "row-buttons" },
         el("button", { type: "button", class: "btn btn-small", onclick: async () => {
           try {
             await MIA.continueChat(id);
-            $("log").replaceChildren(...c.messages.slice(-12).map((m) => el("div", { class: "chat-bubble " + (m.role === "user" ? "me" : "mia") }, el("p", {}, m.content))));
+            $("log").replaceChildren(...c.messages.slice(-12).map(past));
             toggleHistory(false);
             say("Picked back up: " + c.title);
           } catch (e) { say(e.message); }
         } }, "Pick It Back Up"),
+        el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => showSummary(id, c.title) }, "Summary"),
+        el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => showExport(id, c.title) }, "Export"),
         el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: async () => {
           if (await MIAShell.act({ kind: "conversation.delete", params: { conversation_id: id } })) showHistory();
         } }, "Delete")));
@@ -135,14 +153,66 @@
   function toggleHistory(open) {
     const box = $("history");
     box.hidden = !open;
+    if (open) $("panel").hidden = true;
     $("history-btn").setAttribute("aria-expanded", String(open));
     if (open) showHistory();
   }
   $("history-btn").addEventListener("click", () => toggleHistory($("history").hidden));
+
+  // ------------------------------------------------------------ summary and export (core/conversation_export.py)
+  // Either one is of the conversation Talk is in (id "current") or of a past one opened in History. The summary
+  // is the model's reading of the whole conversation, with a first line counted in code; the export is the
+  // record itself, as Markdown or JSON, to copy or to save in Files (conversation.export).
+  function panel(title, ...body) {
+    toggleHistory(false);
+    const box = $("panel");
+    box.hidden = false;
+    box.replaceChildren(el("div", { class: "chat-history-head" }, el("p", { class: "pw-label" }, title),
+      el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: () => { box.hidden = true; } }, "Close")), ...body);
+    box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  async function showSummary(id, title) {
+    const text = el("p", { class: "chat-summary dim" }, "Reading the whole conversation…");
+    panel("Summary" + (title ? " · " + title : ""), text);
+    orb("thinking", "Summarizing");
+    try {
+      const s = await MIA.summarize(id || "current");
+      text.textContent = s.text;
+      text.classList.remove("dim");
+      if (s.count) text.after(el("div", { class: "row-buttons" }, MIAShell.copyButton(s.text, "Copy Summary", "btn btn-small")),
+        s.by === "model" ? el("p", { class: "dim" }, "My reading of the whole conversation. The export is the exact record.") : null);
+    } catch (e) { text.textContent = e.message; }
+    orb("idle", "Ready");
+  }
+  async function showExport(id, title, form) {
+    form = form === "json" ? "json" : "markdown";
+    let made = null;
+    const text = el("textarea", { class: "chat-export-text", readonly: true, rows: "9", "aria-label": "The conversation, exported" });
+    const told = el("p", { class: "dim", role: "status" });
+    const pick = (f, label) => el("button", { type: "button", class: "btn btn-small" + (f === form ? "" : " btn-ghost"),
+      "aria-pressed": String(f === form), onclick: () => showExport(id, title, f) }, label);
+    const save = el("button", { type: "button", class: "btn btn-small", onclick: async () => {
+      if (!made) return;
+      const done = await MIAShell.act({ kind: "conversation.export", params: { conversation_id: made.id, form } }, { quick: true });
+      if (done) told.replaceChildren((done.result || "Saved") + ". ", el("a", { href: "files.html#Conversations" }, "Open Files"));
+    } }, "Save to Files");
+    panel("Export" + (title ? " · " + title : ""), el("div", { class: "row-buttons" }, pick("markdown", "Markdown"), pick("json", "JSON")),
+      text, el("div", { class: "row-buttons" }, MIAShell.copyButton(() => text.value, "Copy", "btn btn-small"), save), told);
+    try {
+      made = await MIA.exportConversation(id || "current", form);
+      text.value = made.text;
+      told.textContent = made.count ? made.count + (made.count === 1 ? " message" : " messages") + ", in order, each with who said it and when."
+        : "Nothing has been said in this conversation yet.";
+      if (!made.count) made = null;
+    } catch (e) { told.textContent = e.message; }
+  }
+  $("summary-btn").addEventListener("click", () => showSummary("current", ""));
+  $("export-btn").addEventListener("click", () => showExport("current", ""));
   $("new-chat").addEventListener("click", async () => {
     try {
       await MIA.newChat();
       $("log").replaceChildren();
+      $("panel").hidden = true;
       bubble("mia", "New chat. What's on your mind?");
     } catch (e) { say(e.message); }
   });

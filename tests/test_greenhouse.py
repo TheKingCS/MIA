@@ -249,3 +249,10 @@ def test_how_s_the_greenhouse_reads_it_fresh_and_show_me_live_gives_the_dashboar
 
     assert gl.reply(world, "how's the greenhouse?", get=down).startswith("I couldn't reach the node just now; this is "
                                                                          "from 08:00.")
+
+
+def test_a_general_greenhouse_question_gets_her_own_part_and_not_the_nodes_module_list(world):
+    block = gl.context_block(world, "how do you improve greenhouse yields?")
+    assert "never offer them" in block and "approval" in block and "no live readings" in block
+    assert "declares these modules" not in block
+    assert "declares these modules" in gl.context_block(world, "which greenhouse modules are proven?")

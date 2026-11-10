@@ -81,3 +81,50 @@ def test_a_tool_the_model_wasn_t_offered_changes_nothing(talk, context):  # noqa
     assert "delete_note" not in script.offered[0]
     assert "Coop door" in _notes(context)
     assert reply["replies"]
+
+
+class _Heard(_Script):
+    """A scripted model that also keeps the messages it was sent."""
+
+    def __init__(self, *replies):
+        """Nothing heard yet."""
+        super().__init__(*replies)
+        self.heard = []
+
+    def chat(self, messages, tools, timeout):
+        """Keeps the messages, then answers from the script."""
+        self.heard.append(messages)
+        return super().chat(messages, tools, timeout)
+
+
+def test_a_question_about_her_reaches_the_model_with_her_records_and_no_help_pages(talk):
+    from core.assistant_chat import ABOUT_HER_REMINDER
+
+    script = _Heard(ChatReply(content="My first commit was in July 2026. Would you like to know more about my history?"))
+    reply = talk(script)("When did your development begin?")
+    said = " ".join(reply["replies"])
+    assert "July 2026" in said and "Would you like to know more" not in said
+    system, asked = script.heard[0][0]["content"], script.heard[0][-1]
+    assert "About you, MIA:" in system and "core/dev_history.py]" in system and ABOUT_HER_REMINDER in system
+    assert asked == {"role": "user", "content": "When did your development begin?"}
+    assert script.offered[0] == []
+
+
+def test_asked_to_summarize_the_conversation_she_reads_the_whole_of_it_and_leaves_the_request_out(talk):
+    script = _Script(ChatReply(content="Four square feet a bird inside."))
+    say = talk(script)
+    say("How big should the coop be?")
+    reply = say("Summarize this conversation")
+    said = " ".join(reply["replies"])
+    assert said.startswith("2 messages") and "- How big should the coop be?" in said
+    assert "Summarize this conversation" not in said
+    assert len(script.offered) == 1  # the model that answers with tools was asked the first question only
+
+
+def test_asked_to_export_the_conversation_she_saves_it_or_says_plainly_why_she_cannot(talk):
+    say = talk(_Script(ChatReply(content="Four square feet a bird inside.")))
+    say("How big should the coop be?")
+    reply = say("export this chat as JSON")
+    said = " ".join(reply["replies"])
+    assert said.startswith("Saved to Files: Conversations/") or said == "Files aren't set up on this MIA."
+    assert reply["open"] == ("files.html#Conversations" if said.startswith("Saved") else "")

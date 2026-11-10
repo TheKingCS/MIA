@@ -481,7 +481,7 @@
         if (used) thinking.after(used);
         // Which brain answered (DEC-0022): the home computer's model or this device's.
         if (turn.level) thinking.append(el("small", { class: "talk-level", title: "Answered by the model on " + turn.level.toLowerCase() }, turn.level));
-        thinking.append(notRight(asked || turn.transcript || "", turn.reply_text));
+        thinking.append(copyButton(turn.reply_text || ""), notRight(asked || turn.transcript || "", turn.reply_text));
         if (turn.comparable) twoWays(turn.reply_text, thinking, log);  // now and then: "this way or that?" (DEC-0138)
         refresh();
       } catch (err) {
@@ -549,6 +549,39 @@
     const orb = el("button", { type: "button", id: "mia-orb", class: "mia-orb-button", "aria-label": "Talk to MIA",
       onclick: () => toggleTalk() }, el("span", { class: "mia-orb-core", "aria-hidden": "true" }));
     document.body.append(panel, orb);
+  }
+
+  // Copy (docs/specs/CONVERSATION.md, 11B): the selection way first, which works inside the click that asked and
+  // needs no permission (so it works in the desktop window and the phone app too), then the browser's clipboard.
+  // The button itself says "Copied ✓" for a moment; without a button the status line does.
+  function copy(text, button) {
+    const told = (ok) => {
+      if (ok && button) {
+        const was = button.dataset.label || button.textContent;
+        button.dataset.label = was;
+        button.textContent = "Copied ✓";
+        button.classList.add("copied");
+        setTimeout(() => { button.textContent = was; button.classList.remove("copied"); }, 1600);
+      } else say(ok ? "Copied." : "Couldn't copy here. Select the text to copy it.");
+      return ok;
+    };
+    const had = document.activeElement;
+    const box = el("textarea", { class: "copy-box", "aria-hidden": "true", tabindex: "-1", readonly: true });
+    box.value = text || "";
+    document.body.append(box);
+    box.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    box.remove();
+    if (had && had.focus) had.focus();
+    if (ok) return Promise.resolve(told(true));
+    return (navigator.clipboard ? navigator.clipboard.writeText(text || "") : Promise.reject()).then(() => told(true), () => told(false));
+  }
+  /** A Copy button for some text (a string, or a function that gives it when pressed). */
+  function copyButton(text, label, cls) {
+    const b = el("button", { type: "button", class: cls || "talk-thumb talk-copy", title: "Copy to the clipboard" }, label || "Copy");
+    b.onclick = () => copy(typeof text === "function" ? text() : text, b);
+    return b;
   }
 
   // Rating her answers (DEC-0067): 👍 or 👎 under a reply, kept as a rating
@@ -981,7 +1014,7 @@
     catch (e) { return false; }
   }
 
-  window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk, copy, copyButton,
     notRight, voiceRecorder, playReply, twoWays };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon

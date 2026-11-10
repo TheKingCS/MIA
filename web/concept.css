@@ -242,13 +242,22 @@ body[data-app] .hero {
 }
 
 /* ---------------------------------------------------------------- MIA Assistant (the concept's chat) */
-.chat-main { max-width: 760px; display: flex; flex-direction: column; min-height: calc(100vh - 40px); }
+/* The conversation uses the width there is (docs/specs/CONVERSATION.md, 11A): the page has no cap of its own, and
+   one message stops at a width a line can still be read across. */
+.chat-main { max-width: none; display: flex; flex-direction: column; min-height: calc(100vh - 40px); }
 .chat-head { display: flex; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(var(--mod-rgb), 0.2); }
 .chat-head h1 { margin: 0; font-size: var(--text-lg); }
 .chat-head p { margin: 2px 0 0; }
 .chat-head .home-badge { text-decoration: none; }
 .chat-log { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 14px 0; overflow-y: auto; }
-.chat-bubble { display: flex; gap: 8px; align-items: flex-start; max-width: 86%; }
+.chat-bubble { display: flex; gap: 8px; align-items: flex-start; max-width: min(88%, 1100px); }
+.chat-bubble.mia { flex-wrap: wrap; }
+.chat-bubble.mia > p { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.chat-bubble.mia > .chat-who ~ p { max-width: calc(100% - 38px); }
+.chat-bubble.mia > .used, .chat-bubble.mia > .chat-tools { flex: 0 0 100%; }
+.chat-bubble.mia > .chat-who ~ .used, .chat-bubble.mia > .chat-who ~ .chat-tools { flex-basis: calc(100% - 38px); margin-left: 38px; }
+.chat-tools { display: flex; align-items: center; gap: 2px; margin-top: -4px; }
+.chat-tools .talk-thumb:first-child { margin-left: 0; }
 .chat-bubble p { margin: 0; padding: 10px 14px; border-radius: var(--radius); line-height: 1.5; white-space: pre-wrap; }
 .chat-bubble.me { align-self: flex-end; }
 .chat-bubble.me p { background: linear-gradient(180deg, rgba(var(--rgb-ok), 0.85), rgba(var(--rgb-ok), 0.85)); color: var(--bg); border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius); }
@@ -1524,6 +1533,20 @@ h1, h2, h3, .sect h2, .hero h1, dialog h2, dialog h3 {
 .talk-thumb { margin-left: 8px; border: 0; background: transparent; cursor: pointer; opacity: 0.55; font-size: 0.9em; min-height: 32px; }
 .talk-thumb:hover, .talk-thumb:focus-visible { opacity: 1; }
 .talk-thumb.done { opacity: 0.8; color: var(--text-dim); }
+/* Copy (web/shell.js copy): the button beside the thumbs, and the box the text is selected in, kept off the screen */
+.talk-copy { color: var(--text-dim); font-family: var(--font); font-size: var(--text-xs, 12px); letter-spacing: 0.04em; }
+.talk-copy.copied, .btn.copied { color: var(--accent); opacity: 1; }
+.copy-box { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+/* The chat page's Summary and Export panels */
+.chat-summary { margin: 0; white-space: pre-wrap; line-height: 1.55; }
+.chat-export-text { width: 100%; min-height: 180px; resize: vertical; padding: 10px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line); background: rgba(var(--rgb-panel), 0.9); color: var(--text); font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm); line-height: 1.5; }
+@media (max-width: 600px) {
+  .chat-head { flex-wrap: wrap; }
+  .chat-head-actions { margin-left: 0; flex-basis: 100%; }
+  .chat-bubble { max-width: 96%; }
+}
 .fx-issue { border-left: 3px solid var(--line-strong); }
 .fx-issue.open { border-left-color: rgb(var(--rgb-amber)); }
 .fx-issue.fixed { border-left-color: rgb(var(--rgb-ok)); opacity: 0.85; }

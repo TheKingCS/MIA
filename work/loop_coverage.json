@@ -39,7 +39,7 @@
   },
   "action:conversation": {
    "status": "none",
-   "why": "deleting a past conversation is the person's own choice; answers are watched by the ratings and turn-trace loops"
+   "why": "deleting a past conversation, or saving one to Files, is the person's own choice; answers are watched by the ratings and turn-trace loops"
   },
   "action:direction": {
    "status": "none",

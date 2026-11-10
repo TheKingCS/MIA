@@ -4,7 +4,8 @@ core.device_framework
 
 Connected Device Framework — docs/ROADMAP.md milestone 11.1, the first
 piece of Field Kit. Detects and identifies devices physically attached
-to this Pi: USB storage (drives, SD cards, other Pis in USB
+to the computer MIA runs on (written for the Pi; where `lsblk` isn't
+there, as on Windows, only the serial half finds anything): USB storage (drives, SD cards, other Pis in USB
 mass-storage mode) via `lsblk`, and serial/MCU boards (Arduino, ESP32,
 etc.) via `pyserial`'s port enumeration. This is the shared core
 service `docs/ROADMAP.md`'s "Connected Device Framework" row already

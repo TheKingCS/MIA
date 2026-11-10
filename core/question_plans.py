@@ -100,8 +100,9 @@ class Plan:
 _NOTHING = re.compile(r"^(you don't have|you have no|no |nothing|there (are|is) no|i don't have|none)", re.IGNORECASE)
 
 
-def _look(context, sheet: Sheet, tool: str, source: str, **arguments) -> str:
-    """Run one of MIA's own lookups and put what it says on the sheet."""
+def _look(context, sheet: Sheet, tool: str, source: str, said_as: str = "", **arguments) -> str:
+    """Run one of MIA's own lookups and put what it says on the sheet (a fact after `said_as`, when given: whose
+    it is)."""
     registry = getattr(context, "assistant_actions", None)
     if registry is None or tool not in getattr(registry, "_actions", {}):
         return ""
@@ -111,7 +112,8 @@ def _look(context, sheet: Sheet, tool: str, source: str, **arguments) -> str:
         log.exception("Question plan lookup %s failed", tool)
         return ""
     sheet.looked_up.append(tool)
-    sheet.add(MISSING if _NOTHING.match(text.strip()) else FACT, text, source)
+    found = not _NOTHING.match(text.strip())
+    sheet.add(FACT if found else MISSING, said_as + text if found else text, source)
     return text
 
 
@@ -570,6 +572,7 @@ _RECALL_KINDS = (
     ("decision", re.compile(r"\b(decid\w*|decisions?|chose|chosen|went with)\b", re.IGNORECASE)),
     ("idea", re.compile(r"\b(ideas?|never (pursued|tried)|haven'?t tried|want(ed)? to try)\b", re.IGNORECASE)),
 )
+_WE_DECIDED = re.compile(r"\b(?:we|you and i)\b[^.?!]*\b(?:decid\w*|decisions?|agree\w*|settle\w*)\b", re.IGNORECASE)
 _RECALL_NONE = {"commitment": "No promises kept yet.", "decision": "No decisions kept yet.", "idea": "No ideas kept yet.",
                 "dropped_goal": "No goals set aside kept yet."}
 
@@ -590,11 +593,18 @@ def _notes(context, sheet, kind, open_only=False):
 
 
 def _recall(context, sheet, prompt, today):
-    """DEC-0054 (E3, E6, E10, E15): what they promised, decided, want to try and set aside, as kept on their yes."""
+    """DEC-0054 (E3, E6, E10, E15): what they promised, decided, want to try and set aside, as kept on their yes.
+    "What did *we* decide" with nothing kept also looks in MIA's own decision record, said as hers, not theirs."""
     kinds = [k for k, words in _RECALL_KINDS if words.search(prompt or "")] or [k for k, _ in _RECALL_KINDS]
     for kind in kinds:
         if not _notes(context, sheet, kind):
             sheet.add(MISSING, _RECALL_NONE[kind], "what you told MIA")
+            if kind == "decision" and _WE_DECIDED.search(prompt or ""):
+                # "What did we decide about eggs?" may mean a decision about MIA herself: those are in her own
+                # documents (docs/DECISIONS.md), not in what the person asked her to keep.
+                _look(context, sheet, "get_mia_docs", "MIA's own decisions", question=prompt,
+                      said_as="Not something the person asked you to keep, but a decision made about you, MIA, in "
+                              "your own decision record. Say it that way (\"my records have a decision that…\"): ")
     sheet.add(ESTIMATE, "Only what they said and agreed to keep is here: when they mention one, MIA offers to keep it.",
               "how MIA remembers")
     if "decision" in kinds or "dropped_goal" in kinds:
@@ -1167,7 +1177,8 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
 def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     """The model's answer when it keeps to the sheet's numbers; else the
     sheet in plain words (never a number MIA didn't look up), noted for the
-    answers.numbers loop."""
+    answers.numbers loop. Either way without a stock opener or closer
+    (core.response_composer.polish)."""
     from core.plain_words import strip_markdown
 
     said = strip_markdown(content or "")
@@ -1185,7 +1196,9 @@ def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
                 log.exception("Couldn't note the invented number.")
         said = sheet.plain()
     from core import calibration
+    from core.response_composer import polish
 
+    said = polish(said)  # no "Sure!" first, no "let me know" last
     calibration.note(context, sheet.plan, sureness(sheet)[0], said)
     return said
 

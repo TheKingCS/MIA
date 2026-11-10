@@ -74,3 +74,12 @@ def test_grounded_numbers():
     """A rephrasing is grounded only when its numbers are the facts'."""
     assert grounded("Rent is 1,200 on the 3rd.", "Rent of 1,200 is due on the 3rd.")
     assert not grounded("Rent is 1,500.", "Rent of 1,200 is due.")
+
+
+def test_polish_drops_an_invitation_to_keep_talking_and_keeps_an_offer_to_act():
+    from core.response_composer import polish
+
+    assert polish("I began in July 2026. Would you like to know more about my history?") == "I began in July 2026."
+    assert polish("That's the plan. Feel free to ask if you have any questions!") == "That's the plan."
+    kept = "The Garden page has it. Would you like to open it now?"
+    assert polish(kept) == kept

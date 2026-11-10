@@ -43,7 +43,13 @@ REWRITE_SECONDS = 6.0  # a glasses answer can't wait longer than this for its sp
 REWRITE_LIMIT = 40  # a rewrite longer than this missed the point; use the answer's own sentences
 
 FILLER = re.compile(r"^(certainly|sure thing|sure|of course|absolutely|great question|i'?d be happy to help)[!,.:]*\s+", re.I)
-OFFER = re.compile(r"\s*(?:[^.?!]*\b(?:let me know|anything else|feel free|is there anything)\b[^.?!]*[.?!]?)\s*$", re.I)
+# A last sentence that only invites more talk, which a model adds by habit. An offer to do something ("Want me
+# to open it?") isn't one: a "yes" to that acts (core/conversation_state.py), so it's never in this list.
+_INVITES = (r"let me know|anything else|feel free|is there anything|just ask|"
+            r"(?:would you like|do you want|want|care) to (?:know|hear|learn) more|"
+            r"would you like (?:more|further|additional) (?:details?|information|info)|"
+            r"if you have (?:any |more |other |further |specific )*questions")
+OFFER = re.compile(r"\s*(?:[^.?!]*\b(?:" + _INVITES + r")\b[^.?!]*[.?!]?)\s*$", re.I)
 LIST_MARK = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+", re.M)
 SENTENCE = re.compile(r".+?(?:[.!?](?=\s|$)|$)\s*", re.S)
 NUMBER = re.compile(r"\d[\d,.:]*")
@@ -81,7 +87,7 @@ def tidy(text: str) -> str:
     return kept or text
 
 
-OFFERING = re.compile(r"\b(let me know|anything else|feel free|is there anything)\b", re.I)
+OFFERING = re.compile(r"\b(?:" + _INVITES + r")\b", re.I)
 
 
 def polish(text: str) -> str:

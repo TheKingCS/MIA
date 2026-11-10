@@ -669,3 +669,13 @@ def test_a_how_to_question_about_mia_herself_carries_her_own_facts(monkeypatch):
     assert "What's true about you: FACTS" in about
     app = build_system_message(context, is_action_request=False, prompt="How do I add a bill?", is_help_question=True)
     assert "FACTS" not in app
+
+
+def test_a_question_about_her_is_sent_without_help_pages_and_with_her_records():
+    from core.assistant_chat import ABOUT_HER_REMINDER
+
+    context = _FakeContext(assistant_actions=_FakeAssistantActions(keywords=[], tools=[]), device_help=_FakeDeviceHelp())
+    messages, tools = build_chat_request(context, _empty_conversation(), "What are your current limitations?")
+    assert messages[-1] == {"role": "user", "content": "What are your current limitations?"}
+    assert "About you, MIA:" in messages[0]["content"] and ABOUT_HER_REMINDER in messages[0]["content"]
+    assert tools == []

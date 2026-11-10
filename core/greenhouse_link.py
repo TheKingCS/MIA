@@ -388,22 +388,40 @@ def reply(context, text: str, get=None) -> Optional[str]:
 
 _ABOUT = re.compile(r"\b(?:greenhouse|aquaponics|node|safety mcu|probe|sensors?|dosing|relay|esp32|raspberry pi|"
                     r"the pi|pump|grow bed|fish tank)\b")
+# The node's own technology: only these bring its whole module list into the turn.
+_TECH = re.compile(r"\b(?:node|modules?|safety mcu|mcu|probes?|sensors?|dosing|relays?|esp32|raspberry pi|the pi|"
+                   r"pumps?|hardware|parts|controllers?|connect\w*|wir(?:e|ed|ing)|technolog\w+|equipment)\b")
 
 
 def context_block(context, prompt: str = "") -> str:
-    """For the model's system message, on a turn about the greenhouse's technology: what the node declares (its
-    modules, with what each can do and whether it's proven; its parts) and, once she's watching it, its latest state.
-    "" otherwise."""
+    """For the model's system message, on a turn about the greenhouse: that a separate node runs it and what her
+    own part is, with its latest state once she's watching it; and, when the question names the technology (a
+    sensor, a module, a part), what the node declares (its modules, with what each can do and whether it's
+    proven; its parts). "" otherwise."""
     if not _ABOUT.search((prompt or "").lower()):
         return ""
     know = node_knowledge()
     if not know["modules"] and not know["hardware"]:
         return ""
+    link = getattr(context, "greenhouse_link", None)
+    now = (f" Right now: {status_line(link.state)}" if link is not None and link.taken_over and link.state
+           else " You aren't watching a node right now, so you have no live readings from one.")
+    if not _TECH.search((prompt or "").lower()):
+        # Measured: with every module named, a question like "how do you improve yields?" was answered by
+        # offering the node's modules as her own. So the list waits for a question about the technology.
+        proven = sum(1 for m in know["modules"] if m["proven"])
+        return ("The greenhouse is run by its own controller, the greenhouse node (MIA Homestead), which declares "
+                f"{len(know['modules'])} modules of its own ({proven} with proof recorded). They are the node's, "
+                "not apps or abilities of yours: never offer them as things the person can use through you."
+                + now + " Your own part: you read the node's sensors, keep the readings as history, pass on its "
+                "alerts and propose changes, which go through the node's approval queue with the person's OK. The "
+                "node and its safety MCU do the controlling; you never switch, dose or run anything.")
     mods = "; ".join(f"{m['name']} ({'proven' if m['proven'] else 'unverified'}): {', '.join(m['does'][:3])}"
                      for m in know["modules"][:25])
     parts = "; ".join(know["hardware"][:30])
-    link = getattr(context, "greenhouse_link", None)
-    now = f" Right now: {status_line(link.state)}" if link is not None and link.taken_over and link.state else ""
     return ("The greenhouse node (MIA Homestead) declares these modules: " + mods + ". Its parts: " + parts + "."
+            " Those modules belong to the node, a separate controller: they are not apps or abilities of yours, so "
+            "speak of them as the node's (\"proven\" means the node's own proof is recorded, \"unverified\" that "
+            "it's declared and not shown yet)."
             + now + " The node and its safety MCU do the controlling; you watch and propose, and changes to dosing "
             "or targets go through the node's approval queue with the person's OK.")

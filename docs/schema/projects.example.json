@@ -64,6 +64,25 @@
         "status": "Active",
         "due_date": "2026-12-15",
         "description": "8 x 12 hoop house on the south side, with a gravel floor."
+      },
+      "missions": [
+        {
+          "id": "m-frame",
+          "name": "Frame it up",
+          "icon": "🔨",
+          "status": "active",
+          "done": 1,
+          "total": 3,
+          "percent": 33,
+          "next": "Set the corner posts"
+        }
+      ],
+      "progress": {
+        "percent": 47,
+        "tasks_done": 2,
+        "tasks_total": 4,
+        "missions_done": 0,
+        "missions_total": 1
       }
     },
     {
@@ -97,6 +116,14 @@
         "status": "Planning",
         "due_date": "",
         "description": ""
+      },
+      "missions": [],
+      "progress": {
+        "percent": 0,
+        "tasks_done": 0,
+        "tasks_total": 1,
+        "missions_done": 0,
+        "missions_total": 0
       }
     },
     {
@@ -122,6 +149,14 @@
         "status": "Complete",
         "due_date": "",
         "description": ""
+      },
+      "missions": [],
+      "progress": {
+        "percent": 100,
+        "tasks_done": 0,
+        "tasks_total": 0,
+        "missions_done": 0,
+        "missions_total": 0
       }
     }
   ],

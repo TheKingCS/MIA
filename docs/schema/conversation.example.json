@@ -5,19 +5,23 @@
  "messages": [
   {
    "role": "user",
-   "content": "When should I start the tomatoes?"
+   "content": "When should I start the tomatoes?",
+   "at": "2026-11-07T19:36:10"
   },
   {
    "role": "assistant",
-   "content": "About six to eight weeks before your last frost. With the greenhouse heated, mid-February works."
+   "content": "About six to eight weeks before your last frost. With the greenhouse heated, mid-February works.",
+   "at": "2026-11-07T19:36:24"
   },
   {
    "role": "user",
-   "content": "And peppers?"
+   "content": "And peppers?",
+   "at": "2026-11-07T19:39:02"
   },
   {
    "role": "assistant",
-   "content": "A couple of weeks earlier than the tomatoes: they're slow to germinate."
+   "content": "A couple of weeks earlier than the tomatoes: they're slow to germinate.",
+   "at": "2026-11-07T19:39:15"
   }
  ]
 }

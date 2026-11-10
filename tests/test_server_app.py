@@ -1005,3 +1005,15 @@ def test_your_data_lists_the_person_s_files_and_exports_and_deletes_behind_the_p
         "deleted": True, "erased": False}
     assert client.get("/api/your-data", headers=auth).status_code == 401
     assert [p.name for p in context.profiles.list_profiles()] == ["Bo"]
+
+
+def test_the_current_conversation_is_exported_and_summarised_and_one_that_is_not_there_is_not_found(client, context):
+    auth = _signed_in(client, context)
+    out = client.get("/api/talk/conversations/current/export?form=json", headers=auth)
+    assert out.status_code == 200 and out.json()["count"] == 0 and out.json()["filename"].endswith(".json")
+    summary = client.post("/api/talk/conversations/current/summary", headers=auth)
+    assert summary.status_code == 200 and summary.json()["text"] == "Nothing has been said in this conversation yet."
+    assert client.get("/api/talk/conversations/current/export?form=pdf", headers=auth).status_code == 400
+    assert client.get("/api/talk/conversations/nope/export", headers=auth).status_code == 404
+    assert client.post("/api/talk/conversations/nope/summary", headers=auth).status_code == 404
+    assert client.get("/api/talk/conversations/current/export").status_code == 401

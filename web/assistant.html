@@ -22,6 +22,9 @@
     ?draft= starts one,
     ?voice=1 starts listening. MIA's face: presence.html. History lists past
     conversations to read, pick back up or delete (core/web_conversations.py).
+    The conversation uses the page's width; every answer of hers has Copy;
+    Summary reads the whole conversation and Export gives it as Markdown or
+    JSON, to copy or to save in Files (core/conversation_export.py).
   -->
   <div class="layout" id="app" hidden>
     <nav class="side" aria-label="Apps"></nav>
@@ -30,11 +33,14 @@
         <a class="chat-orb-link" href="presence.html" aria-label="MIA's presence"><span class="mia-orb" id="chat-orb" data-state="idle"></span></a>
         <div><h1>MIA</h1><span class="mia-orb-label" id="chat-state" aria-live="polite">Ready</span></div>
         <div class="row-buttons chat-head-actions">
+          <button type="button" class="btn btn-ghost btn-small" id="summary-btn" aria-controls="panel">Summary</button>
+          <button type="button" class="btn btn-ghost btn-small" id="export-btn" aria-controls="panel">Export</button>
           <button type="button" class="btn btn-ghost btn-small" id="history-btn" aria-expanded="false" aria-controls="history">History</button>
           <button type="button" class="btn btn-ghost btn-small" id="new-chat">New Chat</button>
         </div>
       </header>
       <section class="glass chat-history" id="history" hidden aria-label="Past conversations"></section>
+      <section class="glass chat-history" id="panel" hidden aria-label="Summary or export"></section>
       <div class="chat-log" id="log" aria-live="polite"></div>
       <div class="chat-chips" id="chips"></div>
       <form class="chat-form" id="form">

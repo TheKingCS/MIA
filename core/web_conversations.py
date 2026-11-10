@@ -27,26 +27,32 @@ def _manager(context):
 
 
 def history(context, current_id: str = "") -> dict:
-    """The person's past conversations with something in them, newest first: id, title, when, how many messages, and
-    which one Talk is in now."""
+    """The person's past conversations with something kept in them, newest first: id, title, when, how many kept
+    messages, and which one Talk is in now."""
+    from core.conversation_export import kept  # here, not above: core.actions imports that module and this one
+
     manager = _manager(context)
     if manager is None:
         return {"available": False, "conversations": []}
-    rows = [c for c in manager.all_conversations() if c.messages]
+    rows = [(c, kept(c)) for c in manager.all_conversations()]
+    rows = [(c, shown) for c, shown in rows if shown]
     return {"available": True, "total": len(rows), "conversations": [{
         "id": c.conversation_id, "title": c.title, "when": (c.updated_at or c.created_at or "")[:16],
-        "count": len(c.messages), "current": c.conversation_id == current_id,
-        "first": next((m.content[:90] for m in c.messages if m.role == "user"), "")} for c in rows[:SHOWN]]}
+        "count": len(shown), "current": c.conversation_id == current_id,
+        "first": next((m.content[:90] for m in shown if m.role == "user"), "")} for c, shown in rows[:SHOWN]]}
 
 
 def one(context, conversation_id: str) -> Optional[dict]:
-    """One conversation to read: its title and its kept messages (the person's and MIA's), or None."""
+    """One conversation to read: its title and its kept messages (the person's and MIA's, each with when it was
+    said), or None."""
+    from core.conversation_export import kept
+
     manager = _manager(context)
     c = manager.get_conversation(conversation_id) if manager is not None else None
     if c is None:
         return None
     return {"id": c.conversation_id, "title": c.title, "when": (c.updated_at or "")[:16],
-            "messages": [{"role": m.role, "content": m.content} for m in c.messages if m.role in ("user", "assistant")]}
+            "messages": [{"role": m.role, "content": m.content, "at": m.timestamp} for m in kept(c)]}
 
 
 def pick_up(context, conversation_id: str):

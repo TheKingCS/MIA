@@ -101,3 +101,14 @@ def test_every_plan_gathers_without_failing(life):
 def test_personal_modes_stay_a_conversation(life):
     talk = SimpleNamespace(messages=[], mode="listen")
     assert qp.request(life, talk, "Which debt should I prioritize?") is None
+
+
+def test_what_we_decided_also_looks_in_her_own_decision_record_and_says_whose_it_is(life, monkeypatch):
+    looked = []
+    monkeypatch.setattr(qp, "_look", lambda context, sheet, tool, source, said_as="", **kept:
+                        looked.append((tool, said_as)) or "")
+    qp._recall(life, qp.Sheet("recall", "Recall"), "What did we decide about eggs?", TODAY)
+    assert any(tool == "get_mia_docs" and "your own decision record" in said for tool, said in looked)
+    looked.clear()
+    qp._recall(life, qp.Sheet("recall", "Recall"), "What did I decide about the truck?", TODAY)
+    assert not any(tool == "get_mia_docs" for tool, _ in looked)

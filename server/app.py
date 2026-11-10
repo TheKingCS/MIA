@@ -56,7 +56,10 @@ sent as the raw body to `/upload`, or downloaded from a link the person gave
 by `/fetch`, `TrailLinkRequest`, outside the turn lock; core/web_trails.py),
 and `/api/talk/conversations` with `/api/talk/continue` (`ContinueRequest`):
 the person's own kept conversations, read, picked back up or deleted (an
-action); private turns were never kept, so never shown.
+action); private turns were never kept, so never shown. One conversation
+(`current` for the one Talk is in) is also exported as text at
+`/api/talk/conversations/{id}/export` and summarised whole at `/summary`
+(core/conversation_export.py; the model runs outside the turn lock).
 
 **MIA's browser, live** (2026-11-07): `/api/browser/frame` (a picture of
 her browser now) and `/api/browser/input` (the person's click, typing, key
@@ -87,7 +90,7 @@ import io
 import secrets
 import time
 import tempfile
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 import threading
 import wave
 from datetime import date, datetime, timedelta
@@ -4043,6 +4046,56 @@ def create_app(context: AppContext) -> FastAPI:
         if found is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That conversation isn't here.")
         return found
+
+    def talk_conversation_named(view, profile_id: str, conversation_id: str) -> Conversation:
+        """The conversation an id names in the person's own store (`current`: the one Talk is in); 404 when it
+        isn't there. Call it holding the turn lock."""
+        if conversation_id == "current":
+            return app.state.voice_conversations.get(profile_id) or conversation_for(profile_id, view)
+        manager = getattr(view, "conversations", None)
+        found = manager.get_conversation(conversation_id) if manager is not None else None
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That conversation isn't here.")
+        return found
+
+    @app.get("/api/talk/conversations/{conversation_id}/export")
+    def talk_export(conversation_id: str, form: str = "markdown", profile_id: str = Depends(require_profile_id)) -> dict:
+        """One conversation as text, Markdown or JSON, for the chat page's Copy (saving it to Files is the action
+        `conversation.export`). Only what was kept. A phone linked to the home computer reads the computer's
+        current conversation: that's where its words went."""
+        from core.conversation_export import export_of
+        from core.home_link import HomeLinkError, home_call, linked
+
+        if conversation_id == "current" and linked(context):
+            try:
+                return home_call(context, f"/api/talk/conversations/current/export?form={quote(form)}", method="GET")
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        with app.state.turn_lock:
+            found = talk_conversation_named(view_for(context, profile_id), profile_id, conversation_id)
+            try:
+                return export_of(found, form)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/talk/conversations/{conversation_id}/summary")
+    def talk_summary(conversation_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A summary of one whole conversation (core/conversation_export.summary_of): what was talked about,
+        decided, left open and to do. The conversation is found under the turn lock; the model reads it outside
+        the lock, so Talk isn't held up while it writes."""
+        from core.conversation_export import summary_of
+        from core.home_link import HomeLinkError, home_call, linked
+
+        if conversation_id == "current" and linked(context):
+            try:
+                return home_call(context, "/api/talk/conversations/current/summary", payload={}, timeout=240.0,
+                                 method="POST")
+            except HomeLinkError:
+                pass  # the computer's out of reach: this phone answers
+        with app.state.turn_lock:
+            view = view_for(context, profile_id)
+            found = talk_conversation_named(view, profile_id, conversation_id)
+        return summary_of(view, found)
 
     @app.post("/api/talk/continue")
     def talk_continue(body: ContinueRequest, profile_id: str = Depends(require_profile_id)) -> dict:

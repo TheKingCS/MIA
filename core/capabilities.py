@@ -460,7 +460,7 @@ def can_i(context, thing: str) -> str:
         if hit:
             scored.append((hit, a))
     if not scored:
-        return (f"I can't find anything in MIA that does \"{thing.strip()}\". That's a feature MIA doesn't have yet, "
+        return (f"I can't find anything of mine that does \"{thing.strip()}\". That's something I don't have yet, "
                 "as far as my own app list shows.")
     scored.sort(key=lambda x: -x[0])
     best = [a for hit, a in scored if hit == scored[0][0]][:2]
@@ -483,7 +483,7 @@ def can_i(context, thing: str) -> str:
         if a["ask"]:
             sentence += f" Try: \"{a['ask']}\""
         parts.append(sentence)
-    return "Closest match in MIA: " + " ".join(parts)
+    return "The closest thing I have: " + " ".join(parts)
 
 
 def find_app(context, app_id: str) -> Optional[dict]:
