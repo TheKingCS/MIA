@@ -104,12 +104,15 @@ chaquopy {
             // pydantic 2's core is Rust with no Android build yet; pydantic 1
             // is pure Python, and FastAPI before 0.100 runs on it. MIA's
             // server works on both (the desktop keeps the newest).
-            install("fastapi<0.100")
-            install("pydantic<2")
-            install("uvicorn")
+            // Pinned exactly (2026-11-10), so each build has the same libraries the server's tests ran on
+            // (the "phone libraries" job in .github/workflows/windows.yml). cryptography comes from Chaquopy's own
+            // Android build, so it isn't pinned here; certifi stays current for its certificate roots.
+            install("fastapi==0.99.1")
+            install("pydantic==1.10.27")
+            install("uvicorn==0.54.0")
             install("cryptography")
-            install("astral")
-            install("mutagen")
+            install("astral==3.2")
+            install("mutagen==1.48.1")
             install("certifi") // HTTPS for downloading a model (core/local_model.py)
         }
     }

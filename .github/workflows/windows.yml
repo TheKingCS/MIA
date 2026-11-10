@@ -3,7 +3,11 @@
 # own Windows machines stand in for it on every push:
 #   1. install: the real installer (install.ps1), as the owner would run it;
 #   2. tests:   the full test suite, a headless app boot, and the web
-#               front end's device check (tools/web_check.py).
+#               front end's device check (tools/web_check.py);
+#   3. phone-libraries: the server's tests on the phone's own Python and
+#               libraries (android-phone/app/build.gradle.kts: FastAPI
+#               before 0.100, pydantic 1), so a route that breaks only on
+#               the phone is caught here (2026-11-10).
 # Results: the Actions tab, or Claude reads them through the GitHub API.
 name: Windows
 
@@ -83,3 +87,31 @@ jobs:
         env:
           PYTHONUTF8: "1"
         run: python -m tools.web_check
+
+  phone-libraries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"  # the phone's (Chaquopy)
+      - name: The phone's libraries (keep in step with build.gradle.kts)
+        env:
+          SKIP_CYTHON: "1"  # pydantic 1 as pure Python, as on the phone
+        run: |
+          python -m pip install --no-binary pydantic "fastapi==0.99.1" "pydantic==1.10.27" "uvicorn==0.54.0"             cryptography "astral==3.2" "mutagen==1.48.1" certifi
+          python -m pip install pytest "httpx<0.28"  # tests only: Starlette 0.27's test client needs httpx before 0.28
+      - name: The server's tests on them
+        env:
+          PYTHONUTF8: "1"
+        # Not on the phone, so not tested here: web push (pywebpush), numpy (startup sounds, the guitar check), and
+        # one test that uses a newer test client's option.
+        run: >
+          python -m tools.cloud_tests tests/test_server_app.py tests/test_home_link.py tests/test_store_lock.py
+          tests/test_sync.py -q -p no:cacheprovider
+          --deselect tests/test_server_app.py::test_vapid_public_key_returns_a_real_key
+          --deselect tests/test_server_app.py::test_push_test_sends_via_webpush_with_the_right_subscription
+          --deselect tests/test_server_app.py::test_learning_paths_list_and_a_guitar_check_is_heard
+          --deselect tests/test_server_app.py::test_a_startup_sound_to_hear_before_choosing
+          --deselect tests/test_server_app.py::test_the_recovery_key_is_shown_only_on_this_pc_with_the_password_and_is_logged
