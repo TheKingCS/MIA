@@ -506,7 +506,9 @@ def create_app(context: AppContext) -> FastAPI:
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). The Sign-ins page lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
-    password change unlink them all."""
+    password change unlink them all. Requests that read or change stores hold app.state.turn_lock (a
+    core/store_lock.StoreLock); a turn lets it go while the model thinks and keeps its conversation's turns in order
+    with that conversation's own lock."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -887,7 +889,10 @@ def create_app(context: AppContext) -> FastAPI:
 
     app.state.voice_conversations: dict[str, Conversation] = {}
     app.state.fresh_talk: set[str] = set()  # "New chat" asked for: the next turn starts one
-    app.state.turn_lock = threading.Lock()
+    from core.store_lock import StoreLock, conversation_lock
+
+    # Held while a request reads or changes stores; a turn lets it go while the model thinks (core/store_lock.py).
+    app.state.turn_lock = StoreLock()
 
     # Two-way sync with the home computer (core/sync.py): a linked device keeps at it in the background.
     def _start_sync() -> None:
@@ -994,7 +999,8 @@ def create_app(context: AppContext) -> FastAPI:
         conversation = conversation_for(profile_id, view)
         started = time.monotonic()
         drafts = getattr(view, "email_drafts", None)
-        with app.state.turn_lock:
+        # One conversation's turns in order (its own lock), the store lock let go while the model thinks.
+        with conversation_lock((profile_id, conversation.conversation_id)), app.state.turn_lock:
             before = drafts.latest() if drafts is not None else None
             turn: AssistantTurn = run_assistant_turn(view, conversation, transcript, surface)
             after_phone_turn(conversation, transcript, view)

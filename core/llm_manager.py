@@ -405,7 +405,16 @@ class LLMManager:
         """Run `call(backend)` on the home computer when it's there, else
         here; a home computer that stops answering mid-conversation hands
         the turn to this device's model. When this device's model doesn't
-        answer, `_wake_local` may start Ollama and the call is tried once more."""
+        answer, `_wake_local` may start Ollama and the call is tried once more.
+        The server's store lock is let go while it runs (core/store_lock.py):
+        the model touches no store, and the phone and pages needn't wait."""
+        from core.store_lock import released
+
+        with released():
+            return self._ask_unlocked(call)
+
+    def _ask_unlocked(self, call):
+        """_ask's work, with no store lock held."""
         from core.home_link import HOME_PC
 
         if self.home is not None and self.home_reach.up():
