@@ -242,7 +242,11 @@ def test_a_sealed_store_whose_file_won_t_open_starts_empty_and_keeps_a_copy(tmp_
     before = (tmp_path / name).read_bytes()
     at_rest.use_key(KEY)
     store_class = getattr(importlib.import_module(module), cls)
-    store_class(MagicMock(), data_dir=tmp_path)
+    context = MagicMock()
+    # A setting reads as its default, and a watched folder is this test's own, never a folder named after a mock.
+    context.config.get.side_effect = lambda key, default=None: (str(tmp_path / "watched") if key.endswith("_folder")
+                                                               else default)
+    store_class(context, data_dir=tmp_path)
     [aside] = tmp_path.glob(name + ".unreadable-*")
     assert aside.read_bytes() == before
 

@@ -180,6 +180,9 @@ import core.good_news as good_news_module  # noqa: E402
 
 good_news_module.DATA = _TEST_DEV_DIR / "good_news"  # never today's real episode
 chronicle_issue_module.PANELS = _TEST_DEV_DIR / "chronicles"
+import core.inspection as inspection_module  # noqa: E402
+
+inspection_module._DIR = _TEST_DEV_DIR / "inspections"  # a test that runs an inspection never saves into the real data/
 loops_module._has_repo = lambda: False
 
 

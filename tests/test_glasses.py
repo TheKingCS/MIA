@@ -131,7 +131,13 @@ def test_household_people_and_inbox_panels(world, tmp_path):
     assert glasses_panel(world, "inbox", "waiting", TODAY)["empty"].startswith("Nothing waiting")
 
 
-def test_every_panel_builds_and_carries_only_glasses_safe_actions(world):
+def test_every_panel_builds_and_carries_only_glasses_safe_actions(world, monkeypatch):
+    """Every panel of every app builds; PC Health reads a stand-in inspection, never the real PC's."""
+    def _no_inspection(context, subject):
+        """The real inspection reads this PC and saves a report; a test does neither."""
+        raise RuntimeError("no inspection in tests")
+
+    monkeypatch.setattr("core.inspection.inspect", _no_inspection)
     seen = 0
     for app, item, panel in _every_panel(world):
         seen += 1

@@ -30,13 +30,69 @@ It is also where MIA's most private files are sealed (DEC-0126,
 core/at_rest.py): `seal_text` encrypts a file whose name is in
 at_rest.SEALED and leaves every other file's text as it is. Such a
 file is read back with `at_rest.open_text`.
+
+Two guards for the one failure an atomic write can't stop (2026-11-10):
+a store that couldn't read its file starts empty, and its next save
+would write that near-empty state over everything that was there.
+(a) A write that would shrink a file of some size to under half keeps
+the old file beside it as `.<name>.prev` (hidden, so sync skips it; one
+per file, replaced by the next such write, and removed after
+PREV_KEEP_DAYS so a deliberate clear-out doesn't linger). (b) On
+Windows the replace fails with PermissionError while another reader
+holds the file open, so it is retried a few times before giving up.
 """
 
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
+import time
 from pathlib import Path
+
+# A file this size or larger that a write would shrink to under half keeps its old contents (guard a).
+PREV_MIN_BYTES = 512
+# How long a kept `.prev` copy stays before the next write of that file removes it.
+PREV_KEEP_DAYS = 3
+# Attempts at the replace while another reader holds the file (guard b), with a growing pause between.
+REPLACE_ATTEMPTS = 5
+
+
+def prev_path(path: Path) -> Path:
+    """Where the writer keeps a file's old contents before a large shrink: `.<name>.prev` beside it."""
+    path = Path(path)
+    return path.with_name(f".{path.name}.prev")
+
+
+def _keep_previous(path: Path, new_size: int) -> None:
+    """Guard (a): copies `path` to its `.prev` when the new contents are under half its size, and drops a `.prev`
+    older than PREV_KEEP_DAYS. Never raises: a failed copy is logged and the write goes on."""
+    prev = prev_path(path)
+    try:
+        old_size = path.stat().st_size
+    except OSError:
+        return
+    try:
+        if old_size >= PREV_MIN_BYTES and new_size * 2 < old_size:
+            shutil.copy2(path, prev)
+        elif prev.exists() and time.time() - prev.stat().st_mtime > PREV_KEEP_DAYS * 86400:
+            prev.unlink()
+    except OSError:
+        from core.logger import get_logger
+
+        get_logger(__name__).exception("Couldn't keep the old contents of %s", path.name)
+
+
+def _replace(tmp_path: Path, path: Path) -> None:
+    """Guard (b): os.replace, retried on PermissionError (a reader holding the file on Windows)."""
+    for attempt in range(REPLACE_ATTEMPTS):
+        try:
+            os.replace(tmp_path, path)
+            return
+        except PermissionError:
+            if attempt == REPLACE_ATTEMPTS - 1:
+                raise
+            time.sleep(0.05 * (attempt + 1))
 
 
 def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
@@ -45,7 +101,9 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
     `Path.write_text()` (just with `path` as an explicit first
     argument instead of the receiver), so it's a drop-in replacement
     at every call site. A file named in core.at_rest.SEALED is written
-    sealed (DEC-0126). `path`'s parent directory must already exist
+    sealed (DEC-0126). A large shrink keeps the old file as its `.prev`,
+    and the replace is retried while a reader holds the file (see the
+    module's docstring). `path`'s parent directory must already exist
     (same requirement every existing call site already satisfies via
     its own `_DATA_DIR.mkdir(parents=True, exist_ok=True)` before
     calling this).
@@ -59,6 +117,7 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
     from core.undo_log import before_write
 
     before_write(path)
+    _keep_previous(path, len(text.encode(encoding)))
     fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     tmp_path = Path(tmp_name)
     try:
@@ -66,7 +125,7 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
             f.write(text)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(tmp_path, path)
+        _replace(tmp_path, path)
     except BaseException:
         tmp_path.unlink(missing_ok=True)
         raise
