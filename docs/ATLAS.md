@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1358 files, 300,796 lines; 1358 files describe themselves; 16,561 of 16,655 classes and functions are documented.
+1362 files, 301,188 lines; 1362 files describe themselves; 16,586 of 16,680 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-512 files, 147,480 lines; 7,571 of 7,657 classes and functions documented
+514 files, 147,705 lines; 7,585 of 7,671 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -243,6 +243,7 @@
 - `core/inbox_manager.py`: The document inbox (2026-09-28): "an email inbox that I can send receipts and owners manuals and all kinds of business documents to and it be able to classify it and determine where to put it, like storing the manual and user guide and maintenance schedule for the mower and automatically assigning i
 - `core/insight_manager.py`: Insight + Recommendation — the first real piece of the observe → understand → insight → recommend → act → result → learn loop from the "connective infrastructure" architecture-review discussion (see docs/ROADMAP.md's dated entry), piloted in the Maintenance domain only (core/maintenance_insights.py)
 - `core/inspection.py`: Universal Inspection, phases 1 and 2 (DEC-0056, docs/INSPECTION_AND_SELF_PLAN.md): MIA investigates a subject with every relevant *authorized* method she has, keeps each finding as evidence (what, where it came from, when, how sure), correlates findings from different methods, says what she couldn't
+- `core/instance_lock.py`: One MIA per data folder (roadmap 2.4, 2026-11-10). Two copies of MIA on the same `data/` (a double-click while one is already running, the desktop and `core_main.py` at once) each keep their own stores in memory and save over each other's changes. Nothing stopped it.
 - `core/insurance.py`: The insurance check-up (Zac, 2026-10-18 idea, picked 2026-10-19: `docs/future/IDEAS.md` #1, DEC-0034): keep your policies in one place, see what they cost and what's worth a look, and shop them with quotes you collect, compared fairly.
 - `core/insurance_actions.py`: The insurance check-up's changes (DEC-0034, core/insurance.py) on the action contract: policies and quotes are records (add, edit, delete, undoable); then drafting a quote request (MIA drafts, you press Send), "Switch To This" (a mission with the steps, no gap in coverage) and "I Switched" (the poli
 - `core/intent_manager.py`: Intent — the "why" layer in the connective-infrastructure pass that followed the "My Hero's Path" architecture review (see docs/ROADMAP.md's dated entry for the full reasoning). An Intent is a long-running, open-ended goal ("Homestead Independence," "Get really good at making things") that a core.pr
@@ -409,6 +410,7 @@
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
 - `core/startup_sounds.py`: The startup sounds' names and which one is chosen (Zac, 2026-11-07: "sample some sounds and I will pick a good start up sound, and make it a togglable setting"). Kept apart from core/boot_sound.py, which makes the sounds with numpy, so Settings can list them anywhere MIA runs (the phone too).
+- `core/store_lock.py`: The lock the server holds while a request reads or changes MIA's stores, let go of while the model thinks (roadmap 2.3, 2026-11-10).
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
 - `core/subscriptions.py`: DEC-0054's "still using it?" mark on subscriptions (2026-11-07; the unused-subscription finding core/findings.py listed as not built "for want of data": nothing recorded use). Now the person records it: "I still use Netflix", or Still Using on the bill in Money, stamps the bill's `still_using_on` wi
 - `core/support_choice.py`: "When it's ambiguous, MIA asks instead of guessing" (2026-09-28), the part of slice B that was deferred (docs/COGNITIVE_EXTENSION_PROPOSAL.md, sections 8 and 9).
@@ -523,7 +525,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,084 lines; 49 of 49 classes and functions documented
+2 files, 4,093 lines; 49 of 49 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -799,7 +801,7 @@
 
 ## tests/: the test suite: what each part must do
 
-467 files, 78,340 lines; 6,695 of 6,703 classes and functions documented
+469 files, 78,478 lines; 6,706 of 6,714 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -984,6 +986,7 @@
 - `tests/test_insight_manager.py`: Unit tests for core.insight_manager. Isolates _DATA_DIR/_INSIGHTS_FILE _RECOMMENDATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file.
 - `tests/test_inspection.py`: Universal Inspection (DEC-0056, core/inspection.py): every finding with its source, time and confidence; agreement confirms, disagreement is kept; what couldn't be determined says why; only passive methods run unasked; the repository subject finds where her docs disagree with her repository.
 - `tests/test_installer.py`: MIA's installer (2026-10-01): install.sh (Linux, Raspberry Pi), install.ps1 / install.bat (Windows), and the shared finishing step deploy/finish_install.py.
+- `tests/test_instance_lock.py`: One MIA per data folder (core/instance_lock.py) and the desktop's timers under the store lock (MIAApplication._while_stores_free, roadmap 2.4). A second holder is a second open of the lock file in this process, which the operating system refuses just as it refuses another process.
 - `tests/test_insurance.py`: The insurance check-up (core/insurance.py, DEC-0034): policies, what's worth a look, a policy's PDF read into the form, quotes side by side (a cheaper quote that covers less says so), the drafted quote request, and switching (a mission, then the policy becomes the quote and the saving is recorded). 
 - `tests/test_intelligence_bench.py`: The Intelligence Benchmark (docs/INTELLIGENCE_BENCHMARK.md): the question list and the document stay in step, and the routing audit runs.
 - `tests/test_intent_manager.py`: Unit tests for core.intent_manager. Isolates _DATA_DIR/_INTENTS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_project_manager.py's isolated_paths.
@@ -1162,6 +1165,7 @@
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
 - `tests/test_state_export.py`: The state export (Engine Phase 1 step 4, 2026-10-05): Life State v2 as JSON from `python -m tools.export_state` and `/api/state`, matching the published schema docs/schema/life_state.schema.json.
 - `tests/test_stopwatch_format.py`: Unit tests for modules.toolbox.tools.stopwatch_tool.format_elapsed — pure formatting logic, no Qt/QApplication needed.
+- `tests/test_store_lock.py`: The server's store lock (core/store_lock.py, roadmap 2.3): released() lets go of the locks this thread holds and takes them back; a turn lets go of it while the model thinks, so another request (here /api/state) answers meanwhile; and one conversation's turns still run one after another.
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
@@ -1271,7 +1275,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,161 lines
+105 files, 19,181 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
