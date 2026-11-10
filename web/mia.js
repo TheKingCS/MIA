@@ -110,14 +110,32 @@
     if (stage === "explore") out.ideas = [{ label: "Plan my week", say: "" }, { label: "Set a goal", say: "" }, { label: "Just talk", say: "" }];
     return out;
   };
+  // Whether MIA answers (2026-11-10): a request that can't reach her at all says so to onConnection's listeners
+  // (the shell shows it), and the next one that does says she's back.
+  let reachable = true;
+  const connectionListeners = [];
+  function reached(now) {
+    if (now === reachable) return;
+    reachable = now;
+    window.MIA.reachable = now;
+    connectionListeners.forEach((fn) => { try { fn(now); } catch (e) { /* one listener can't stop the rest */ } });
+  }
+
   async function call(method, path, body) {
     if (!token) throw new MiaError(401, "Not signed in.");
-    const response = await fetch(path, {
-      method,
-      headers: Object.assign({ Authorization: "Bearer " + token },
-                             body ? { "Content-Type": "application/json" } : {}),
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    let response;
+    try {
+      response = await fetch(path, {
+        method,
+        headers: Object.assign({ Authorization: "Bearer " + token },
+                               body ? { "Content-Type": "application/json" } : {}),
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (e) {
+      reached(false);
+      throw new MiaError(0, "MIA can't be reached right now.");
+    }
+    reached(true);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);
     return data;
@@ -209,6 +227,8 @@
 
   window.MIA = {
     demo,
+    reachable: true,  // false while MIA can't be reached; onConnection(fn) hears each change
+    onConnection: (fn) => { connectionListeners.push(fn); },
     desktop,  // inside MIA's desktop window: PC-only apps open there
     signIn,
     signOut,

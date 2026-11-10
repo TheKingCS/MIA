@@ -51,7 +51,8 @@ def pages(names: list[str]) -> list[str]:
 
 
 def check(names: list[str]) -> dict[str, list[str]]:
-    """Each page's problems (thrown errors and console errors), by page; a page with none isn't listed."""
+    """Each page's problems (not answering 200, thrown errors, console errors), by page; a page with none isn't
+    listed."""
     from playwright.sync_api import sync_playwright
 
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(_Pages, directory=str(WEB)))
@@ -67,7 +68,10 @@ def check(names: list[str]) -> dict[str, list[str]]:
                 page.on("console", lambda msg, p=problems: p.append(f"console: {msg.text}")
                         if msg.type == "error" and not any(i in msg.text for i in IGNORED) else None)
                 try:
-                    page.goto(f"http://127.0.0.1:{server.server_port}/{name}?demo", wait_until="load", timeout=15000)
+                    answer = page.goto(f"http://127.0.0.1:{server.server_port}/{name}?demo", wait_until="load",
+                                       timeout=15000)
+                    if answer is None or answer.status != 200:
+                        problems.append(f"answered {answer.status if answer is not None else 'nothing'}")
                     page.wait_for_timeout(SETTLE_MS)
                 except Exception as problem:
                     problems.append(f"didn't load: {problem}")

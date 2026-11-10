@@ -681,12 +681,38 @@
   let render = null;
   let refreshing = false, again = false, heldForTyping = false;
   // A change that arrives mid-redraw redraws once more after (2026-11-10: it used to be dropped until the next one).
+  // The page's first draw (2026-11-10): skeleton lines in its panel until it's there, and if it fails, the error
+  // state with Try Again in their place, not a blank page. Later redraws that fail just say why.
+  let drawn = false;
+  function loading() {
+    const panel = $("#panel");
+    if (panel && !panel.children.length) panel.replaceChildren(...[0, 1, 2].map(() => el("span", { class: "skeleton" })));
+  }
+  function failedFirst(message) {
+    const panel = $("#panel");
+    if (!panel) { say(message); return; }
+    panel.replaceChildren(el("div", { class: "state-error", role: "alert" },
+      el("strong", {}, "This page couldn't load"), el("p", {}, message),
+      el("button", { type: "button", class: "btn btn-ghost", onclick: () => { loading(); refresh(); } }, "Try Again")));
+  }
   async function refresh() {
     if (!render) return;
     if (refreshing) { again = true; return; }
     refreshing = true;
-    try { await render(); } catch (e) { say(e.message); } finally { refreshing = false; }
+    try { await render(); if (!drawn) document.querySelectorAll("#panel > .skeleton").forEach((n) => n.remove()); drawn = true; }
+    catch (e) { if (drawn) say(e.message); else failedFirst(e.message); }
+    finally { refreshing = false; }
     if (again) { again = false; refresh(); }
+  }
+  // MIA out of reach (web/mia.js): a notice at the top until she answers again, then a redraw.
+  function connection(up) {
+    let notice = $("#mia-offline");
+    if (up) { if (notice) { notice.remove(); refresh(); } return; }
+    if (notice) return;
+    notice = el("div", { id: "mia-offline", class: "state-offline", role: "status" },
+      el("strong", {}, "MIA can't be reached"),
+      el("p", {}, "Showing what was last loaded. This page catches up once she answers again."));
+    document.body.prepend(notice);
   }
   // While the person types in a field of the page (not Talk, a dialog or sign-in), a live change waits: a redraw
   // would replace the field and what's in it. It redraws once they leave the field.
@@ -795,10 +821,12 @@
     const go = async () => {
       const app = $("#app") || $(".layout");
       if (app) app.hidden = false;
+      if (MIA.onConnection) { MIA.onConnection(connection); if (MIA.reachable === false) connection(false); }
       let shell = null;
       try { shell = await MIA.shell(); renderNav(shell); } catch (e) { say(e.message); }
       if (!options || options.talk !== false) { mountTalk(); if (shell) sayLine(shell); }
       if (MIA.pageOpened) MIA.pageOpened(location.pathname.split("/").pop() || "index.html").catch(() => {});  // a count (page-usage audit)
+      loading();
       await refresh();
       backToPlace();  // the scroll and Talk you left, after the phone locked or the app was closed
       if (!options || options.refreshOnChange !== false) {
