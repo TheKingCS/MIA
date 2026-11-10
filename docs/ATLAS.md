@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1363 files, 301,290 lines; 1363 files describe themselves; 16,592 of 16,686 classes and functions are documented.
+1365 files, 301,491 lines; 1365 files describe themselves; 16,604 of 16,698 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-514 files, 147,705 lines; 7,585 of 7,671 classes and functions documented
+514 files, 147,728 lines; 7,586 of 7,672 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -758,7 +758,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-39 files, 4,023 lines; 130 of 130 classes and functions documented
+39 files, 4,027 lines; 130 of 130 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -802,7 +802,7 @@
 
 ## tests/: the test suite: what each part must do
 
-469 files, 78,478 lines; 6,706 of 6,714 classes and functions documented
+471 files, 78,604 lines; 6,717 of 6,725 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1018,6 +1018,7 @@
 - `tests/test_living_worlds.py`: Living Worlds Phase 1 (core/living_worlds.py, DEC-0134): universes, campaigns, characters and per-universe versions are created and persisted so a campaign survives sessions; a version's growth is its own and never touches another's; ids are validated; and a campaign can be paused and resumed. The s
 - `tests/test_llm_manager.py`: Unit tests for core.llm_manager. No real Ollama server involved — urllib.request.urlopen is monkeypatched to a fake so these exercise the manager/backend's success and graceful-degradation paths in isolation, same fake-dependency approach as test_reference_library_manager.py's _FakeConfig. And (T-00
 - `tests/test_local_model.py`: The phone's own model (core/local_model.py, 2026-10-07, DEC-0019): downloading (and carrying on after a break), starting llama.cpp's server and pointing Talk at it, running the test, and starting the same model again after MIA restarts. A small Python script stands in for llama-server, and a local H
+- `tests/test_logger.py`: core/logger.py: an exception that ends a background thread reaches MIA's log with its traceback (2026-11-10), and is still handed on to the hook that was there before. pytest swaps in its own thread hook per test, so the test installs MIA's over a stand-in and calls it directly.
 - `tests/test_look_by_voice.py`: Look asked out loud (DEC-0125, core/sight.py `wants_look`): "look at this" opens Look with the question and the camera, since no tool can take the photo; ordinary talk about looking at something doesn't.
 - `tests/test_loop_catalog.py`: docs/LOOPS.md is the code's own list of MIA's loops (core/loop_catalog.py): generated, kept current by this test.
 - `tests/test_loop_coverage.py`: Every process MIA has is watched by a loop or has a reason not to be (DEC-0101, core/loop_coverage.py). When this fails, something new joined MIA without anyone deciding how it will be watched: give it a loop in core/loops.py (its `covers`) or a line in work/loop_coverage.json (status todo, or none 
@@ -1190,6 +1191,7 @@
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <->
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.
 - `tests/test_trip_route.py`: A trip's route and checkpoints on the web and by voice (core/trip_route.py, core/assistant_trip_route_actions.py): stops from saved waypoints, "arrived" logged now, the legs walked, an out-and-back route, undo, the glasses' On The Trail panel, and a trip's log with its weather.
+- `tests/test_turn_harness.py`: Turns through the real engine with a scripted model (roadmap 2.8, 2026-11-10): the server built on the real headless context (build_core_context), the real model manager with a backend that replies from a script, and the real tools. Each test says what was asked, what the model "chose", and checks w
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password.
 - `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
@@ -1276,7 +1278,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,181 lines
+105 files, 19,229 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
