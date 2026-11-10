@@ -150,9 +150,10 @@ def flash_mcu(port: str, run: Optional[Callable] = None, pio: Optional[list] = N
 
 # ------------------------------------------------------------------ the Pi
 
-def node_key(run: Optional[Callable] = None, key: Path = KEY) -> str:
+def node_key(run: Optional[Callable] = None, key: Optional[Path] = None) -> str:
     """The public half of the node's SSH key, made once (ed25519, no passphrase, the private half kept in
-    data/.keys/); "" when ssh-keygen isn't here."""
+    data/.keys/, KEY unless `key` says otherwise, read when called); "" when ssh-keygen isn't here."""
+    key = key or KEY
     pub = key.with_name(key.name + ".pub")
     if not pub.exists():
         key.parent.mkdir(parents=True, exist_ok=True)

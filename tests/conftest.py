@@ -181,6 +181,15 @@ import core.good_news as good_news_module  # noqa: E402
 good_news_module.DATA = _TEST_DEV_DIR / "good_news"  # never today's real episode
 chronicle_issue_module.PANELS = _TEST_DEV_DIR / "chronicles"
 import core.inspection as inspection_module  # noqa: E402
+import core.greenhouse_provision as greenhouse_provision_module  # noqa: E402
+import core.maintenance_manager as maintenance_manager_module  # noqa: E402
+
+# 2026-11-10, found on a fresh checkout (CI): the greenhouse setup made its SSH key in the real data/.keys by
+# running ssh-keygen, and the maintenance store made maintenance_documents/ at the repository top.
+greenhouse_provision_module.KEY = _TEST_DEV_DIR / "keys" / "greenhouse_node_ed25519"
+greenhouse_provision_module._run = lambda command, timeout=60, **kwargs: (1, "no processes in tests")
+greenhouse_provision_module._run_input = lambda command, data, timeout=60: (1, "no processes in tests")
+maintenance_manager_module._DOCUMENT_ROOT = _TEST_DEV_DIR / "maintenance_documents"
 
 inspection_module._DIR = _TEST_DEV_DIR / "inspections"  # a test that runs an inspection never saves into the real data/
 loops_module._has_repo = lambda: False
