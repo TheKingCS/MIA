@@ -4,11 +4,12 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-08*
+*Last updated: 2026-11-10*
 
 ## Zac
 
 ### Start here (2026-11-08 evening: the short list, in order; everything else is below)
+0c. [ ] **Read the audit and say what to start** (2026-11-10): on the PC in `audit/` (three files; not in git). Eight decisions are yours, listed in section 8 of `AUDIT_2026-11-10.md`; the first is whether this repository, which is public today, should be. Nothing in the roadmap starts until you say.
 0b. [ ] **The glasses' camera for Look** (2026-11-09): built by the design session (GlassesCamera.kt, mwdat-camera 1.0.1) and passing CI's emulator check. Left for you: in Meta's Wearables Developer Center, approve Camera for the MIA app, then on the phone Settings → Glasses → Let MIA Use the Glasses' Camera, and say "what am I looking at?" through the glasses.
 
 0. [x] **Let Claude commit again**: done 2026-11-09 (Zac made .claude/settings.local.json); the held work was committed, merged with the design session's, and pushed.

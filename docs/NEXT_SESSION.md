@@ -5,7 +5,9 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-09 (early morning: the design session's screens-to-completion run)*
+*Last updated: 2026-11-10 (the system-wide audit; nothing changed, waiting on Zac)*
+
+**New 2026-11-10 (Claude, engine session on the PC: the system-wide audit Zac asked for). Nothing in the repository was changed.** Eight investigations plus an independent reviewer, every finding re-checked in the code. The audit, a five-tier roadmap and the security detail are on Zac's PC in `audit/` (kept out of git by `.git/info/exclude`, so a cloud session will not see them), **waiting on Zac: no roadmap item starts without his approval, and no major architectural change either.** What any session should know now: (1) this repository is public, though `CLAUDE.md` says private, so never commit a description of a weak point, and there is no auto-push hook (push after each commit); (2) the suite's 6,178 tests pass but the run is not clean: `tests/conftest.py`'s guard reports writes into the real `data/` (from `tests/test_glasses.py`'s every-panel test, which runs a real inspection, and `tests/test_at_rest.py`, which leaves `MagicMock/` folders); (3) the Windows CI's test step has failed on every run since 2026-11-07 (first red `7f6ba40e`), cause not yet read from its log. The first roadmap steps, once approved, are small: guards in the one file writer, a nightly backup, and a clean test run.
 
 **New 2026-11-09 (design session, unattended, Zac's /goal "every screen of MIA built out, glasses, PC and phone"):**
 the screens audit found these missing and built them, each with its actions, tests, demo data and a glasses panel
