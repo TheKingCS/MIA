@@ -194,7 +194,8 @@ _REAL_CONFIG_FILE = Path(__file__).resolve().parent.parent / "config" / "config.
 
 
 def _data_snapshot() -> dict[str, float]:
-    """The modification times of everything in the real data folder, the real config and the work record, to catch a test writing there."""
+    """The modification times of everything in the real data folder, the real config and the work record, and the
+    names at the top of the repository, to catch a test writing there."""
     snapshot = {}
     if _REAL_DATA_DIR.exists():
         snapshot = {
@@ -207,6 +208,11 @@ def _data_snapshot() -> dict[str, float]:
     for p in [work / "activity.jsonl", *sorted((work / "tasks").glob("*.md"))]:
         if p.exists():
             snapshot[f"../work/{p.relative_to(work).as_posix()}"] = p.stat().st_mtime
+    # A new file or folder at the top of the repository (2026-11-10: a store given a MagicMock context made a
+    # "MagicMock" folder there, which the data/ snapshot never saw). Names only, so it costs one listing.
+    for p in _REAL_DATA_DIR.parent.iterdir():
+        if p.name not in (".pytest_cache", "__pycache__", "restore_pending.zip"):
+            snapshot[f"../{p.name}"] = 0.0
     return snapshot
 
 
@@ -224,7 +230,7 @@ def pytest_sessionfinish(session, exitstatus):
     touched = sorted(name for name, mtime in after.items() if before.get(name) != mtime)
     if touched:
         reporter = session.config.pluginmanager.get_plugin("terminalreporter")
-        message = "Tests wrote into the real data/ folder or config: " + ", ".join(touched)
+        message = "Tests wrote into the real data/ folder, config or repository top: " + ", ".join(touched)
         if reporter is not None:
             reporter.write_line(message, red=True)
         session.exitstatus = 1
