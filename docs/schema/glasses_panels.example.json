@@ -2420,8 +2420,8 @@
         "tone": "attention"
       },
       {
-        "text": "Turn and sieve the first finished compost could be made instead of buying seed-starting mix.",
-        "detail": "",
+        "text": "Turn and sieve the first finished compost",
+        "detail": "could be made instead of buying seed-starting mix.",
         "tone": "attention"
       }
     ],
@@ -2465,8 +2465,8 @@
         "tone": ""
       },
       {
-        "text": "Did you know you could put some time into Guitar right now? You're on stage 2, Chords — the next step is ready when you are.",
-        "detail": "right now",
+        "text": "Did you know you could put some time into",
+        "detail": "right now · Guitar right now? You're on stage 2, Chords — the next step is ready when you are.",
         "tone": ""
       },
       {
@@ -2497,5 +2497,165 @@
     ],
     "more": 0,
     "empty": "No connections waiting."
+  },
+  "workshop/job": {
+    "app": "workshop",
+    "item": "job",
+    "label": "The Job",
+    "title": "Chicken coop and run",
+    "lines": [
+      {
+        "text": "Build the floor frame from treated 2x4s",
+        "detail": "Foundation and floor · step 5 of 13",
+        "tone": ""
+      },
+      {
+        "text": "(joists at 16 in), check its diagonals, then glue and screw the plywood floor.",
+        "detail": "then",
+        "tone": ""
+      },
+      {
+        "text": "The floor's diagonals match within 1/4 in.",
+        "detail": "check before you go on",
+        "tone": "attention",
+        "action": {
+          "kind": "trade.check",
+          "label": "Checked",
+          "params": {}
+        }
+      },
+      {
+        "text": "Back",
+        "detail": "one step",
+        "tone": "",
+        "action": {
+          "kind": "trade.back",
+          "label": "Back",
+          "params": {}
+        }
+      },
+      {
+        "text": "Stop",
+        "detail": "",
+        "tone": "",
+        "action": {
+          "kind": "trade.stop",
+          "label": "Stop",
+          "params": {}
+        }
+      }
+    ],
+    "more": 1,
+    "empty": ""
+  },
+  "operating_journal/runs": {
+    "app": "operating_journal",
+    "item": "runs",
+    "label": "Good Runs",
+    "title": "Good Runs",
+    "lines": [
+      {
+        "text": "5 of your 7 runs of getting things done",
+        "detail": "began with making coffee.",
+        "tone": ""
+      },
+      {
+        "text": "6 of 7 began in the morning.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "5 of 7 were on a day off.",
+        "detail": "",
+        "tone": ""
+      },
+      {
+        "text": "4 of the 5 with sleep logged came after a",
+        "detail": "full night.",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "Nothing yet."
+  },
+  "maps/tracks": {
+    "app": "maps",
+    "item": "tracks",
+    "label": "Tracks",
+    "title": "Tracks",
+    "lines": [
+      {
+        "text": "10.9 km in the last 30 days",
+        "detail": "2 tracks",
+        "tone": ""
+      },
+      {
+        "text": "Creek trail",
+        "detail": "3.97 km · 117 m up · 59 min · 2026-11-07",
+        "tone": ""
+      },
+      {
+        "text": "Ridge loop",
+        "detail": "6.94 km · 60 m up · 39 min · 2026-11-01",
+        "tone": ""
+      },
+      {
+        "text": "Morning ride",
+        "detail": "3.92 km · 117 m up · 59 min · 2026-09-20",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No tracks yet. Add a GPX file on your phone or PC."
+  },
+  "classroom/practice": {
+    "app": "classroom",
+    "item": "practice",
+    "label": "Practice",
+    "title": "Practice",
+    "lines": [
+      {
+        "text": "Guitar: stage 1",
+        "detail": "First sounds",
+        "tone": ""
+      },
+      {
+        "text": "Tune all six strings; let MIA hear each one",
+        "detail": "The lesson for it: Holding it and tuning it. 5 checks left in this stage",
+        "tone": ""
+      },
+      {
+        "text": "Em: 0 2 2 0 0 0",
+        "detail": "fingers 0 2 3 0 0 0 · low E to high E",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No path started. Say “I want to learn guitar”."
+  },
+  "lab/sensors": {
+    "app": "lab",
+    "item": "sensors",
+    "label": "Sensors",
+    "title": "Sensors",
+    "lines": [
+      {
+        "text": "Battery monitor: 87",
+        "detail": "Power: battery (%) · 07:59 11-09",
+        "tone": ""
+      },
+      {
+        "text": "Bench probe: no readings yet",
+        "detail": "The Lab: soil moisture (%)",
+        "tone": ""
+      },
+      {
+        "text": "Tank 1 pH probe: 6.9",
+        "detail": "Greenhouse: Tank 1 pH · 07:58 11-09",
+        "tone": ""
+      }
+    ],
+    "more": 0,
+    "empty": "No sensors yet. Add one on the Sensors page."
   }
 }

@@ -160,7 +160,29 @@ class Voice(private val context: Context, private val onState: (String) -> Unit 
         val ok = connection.responseCode in 200..299
         val body = (if (ok) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
         val json = try { JSONObject(body) } catch (e: Exception) { JSONObject() }
+        if (ok && json.has("look")) return look(json.optString("look", "What is this?"))
         return if (ok) json.optString("say", "Done.") else json.optString("detail", "MIA couldn't do that.")
+    }
+
+    /** "What am I looking at?": one photo through the glasses' camera (GlassesCamera.kt), asked of Sight on this phone
+     *  (/api/sight, answered by the home computer's eyes when it's linked); the photo isn't kept. */
+    private fun look(question: String): String {
+        main.post { Toast.makeText(context, "Looking…", Toast.LENGTH_SHORT).show() }
+        val shot = GlassesCamera.photo(context)
+        val jpeg = shot.jpeg ?: return shot.why
+        val connection = URL("http://127.0.0.1:${MainActivity.PORT}/api/sight").openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.connectTimeout = 5000
+        connection.readTimeout = 120000
+        connection.doOutput = true
+        connection.setRequestProperty("Content-Type", "image/jpeg")
+        connection.setRequestProperty("Authorization", "Bearer $token")
+        connection.setRequestProperty("x-question", java.net.URLEncoder.encode(question, "UTF-8").replace("+", "%20"))
+        connection.outputStream.use { it.write(jpeg) }
+        val ok = connection.responseCode in 200..299
+        val body = (if (ok) connection.inputStream else connection.errorStream)?.bufferedReader()?.use { it.readText() }.orEmpty()
+        val json = try { JSONObject(body) } catch (e: Exception) { JSONObject() }
+        return if (ok) json.optString("said", "I couldn't make it out.") else json.optString("detail", "I couldn't look just now.")
     }
 
     private fun say(text: String) {

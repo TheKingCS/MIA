@@ -344,13 +344,14 @@
       "badge": {
         "text": "Rented",
         "tone": "ok"
-      }
+      },
+      "sale": null
     },
     {
       "id": "3e3a0389b2",
       "name": "Oak Duplex",
       "type": "Rental",
-      "status": "For Rent",
+      "status": "For Sale",
       "location": "City, ST",
       "rent": 0.0,
       "value": 310000.0,
@@ -382,8 +383,24 @@
         "notes": ""
       },
       "badge": {
-        "text": "For Rent",
+        "text": "For Sale",
         "tone": "attention"
+      },
+      "sale": {
+        "sold": false,
+        "listed": "2026-10-20",
+        "days_listed": 20,
+        "asking": 325500.0,
+        "price": 325500.0,
+        "costs": 0,
+        "net": 325500.0,
+        "payoff": 228000.0,
+        "cash": 97500.0,
+        "basis": 0,
+        "gain": null,
+        "depreciation": 0,
+        "months_held": null,
+        "long_term": false
       }
     },
     {
@@ -424,7 +441,8 @@
       "badge": {
         "text": "",
         "tone": ""
-      }
+      },
+      "sale": null
     }
   ],
   "totals": {
@@ -432,6 +450,8 @@
     "equity": 232000.0,
     "rent": 1450.0,
     "cash_flow": 639.3,
-    "attention": 1
-  }
+    "attention": 1,
+    "sold": 0
+  },
+  "sold": []
 }

@@ -1,5 +1,5 @@
 ---
-id: K-0161
+id: K-0189
 kind: implementation
 title: A secret from the vault to a device without the model or a log ever holding it
 status: confirmed

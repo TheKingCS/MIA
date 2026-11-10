@@ -32,5 +32,21 @@
       "read": true,
       "why": ""
     }
-  ]
+  ],
+  "online": {
+    "available": true,
+    "state": "offline",
+    "items": [
+      {
+        "index": 0,
+        "what": "sync the bank accounts",
+        "when": "2 hours ago"
+      },
+      {
+        "index": 1,
+        "what": "upload the coop photos",
+        "when": "yesterday"
+      }
+    ]
+  }
 }

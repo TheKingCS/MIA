@@ -9,7 +9,8 @@ a title, at most five short lines (text, detail, tone) and what to say when it's
 panels, so MIA still answers anything the card doesn't show.
 
 What these cards may change is still core/glasses.GLASSES_KINDS: here only "Done" on an open promise
-(`life_note.done`, undoable). Everything else is a readout: no money moves, no camera settings, no browser steps (a
+(`life_note.done`, undoable), and starting and moving a Trade Master job along (`trade.start`, `trade.next`, `trade.check`,
+`trade.back`, `trade.answer`, `trade.stop`: the hold points are enforced in core/trade_session.py). Everything else is a readout: no money moves, no camera settings, no browser steps (a
 browser commit is approved by a person on a bigger screen, DEC-0117), no compliance marked filed.
 
 How: `PANELS` maps an app id to its menu entries (item id, label, builder), merged into core/glasses.PANELS at import;
@@ -69,7 +70,8 @@ def _days_word(days) -> str:
 
 def _split(text: str, room: int = 44) -> tuple[str, str]:
     """Pure logic. A long sentence as a glasses line: (the head, the rest as its detail), split at a dash, semicolon,
-    comma or question mark that falls within `room` characters; short text stays whole."""
+    comma or question mark that falls within `room` characters, else at the last word that fits; short text stays
+    whole."""
     text = " ".join(str(text or "").split())
     if len(text) <= room:
         return text, ""
@@ -78,7 +80,8 @@ def _split(text: str, room: int = 44) -> tuple[str, str]:
         if 0 < at <= room:
             cut = at + (1 if mark in ("? ",) else 0)
             return text[:cut].rstrip(" ,;:"), text[at + len(mark):]
-    return text, ""
+    at = text.rfind(" ", 0, room + 1)  # no mark near the start: break at the last word that fits
+    return (text[:at], text[at + 1:]) if at > room // 2 else (text, "")
 
 
 # ------------------------------------------------------------ the Dungeon (paid work as a game)
@@ -521,12 +524,155 @@ def _connections(context, today: date):
     return _panel("Connections", lines, "No connections waiting.")
 
 
+def _trade_job(context, today: date):
+    """Panel (the Workshop card): the job or diagnosis being walked through (Trade Master, core/web_trades.walkthrough,
+    DEC-0149): the step in focus with Next (a long one split where it reads well, its rest on the next line), its hold point with Checked,
+    Back, Stop, then why; a diagnosis's question
+    with Yes and No; with none going, the jobs and diagnoses to start (Start). The holds are enforced in
+    core/trade_session.py, so Next on an unchecked hold says what to check."""
+    from core.web_trades import walkthrough
+
+    try:
+        w = walkthrough(context)
+    except Exception:
+        log.exception("Glasses: the job panel failed")
+        return _panel("The Job", [], "The job couldn't be read just now.")
+    act = lambda kind, label, **params: {"kind": kind, "label": label, "params": params}  # noqa: E731
+    if not w or w.get("status") != "working":
+        from core.web_trades import library
+
+        if getattr(context, "trade_session", None) is None:
+            return _panel("The Job", [], "Trade Master isn't on this MIA.")
+        starts = [_line(it["name"], f"{it['kind_word'].lower()} · {it['steps']} {'checks' if it['kind'] == 'diagnosis' else 'steps'}",
+                        "", act("trade.start", "Start", item_id=it["id"]))
+                  for g in library() for it in g["items"]]
+        return _panel("Start a Job", starts, "Nothing written yet. Say \u201cwalk me through\u2026\u201d a build or a repair.")
+    if w["kind"] == "diagnosis":
+        head, rest = _split(w.get("ask") or w.get("say", ""))
+        return _panel(w["title"], [_line(head, rest or "diagnosis"),
+                                   _line("Yes", "", "", act("trade.answer", "Yes", answer="yes")),
+                                   _line("No", "", "", act("trade.answer", "No", answer="no")),
+                                   _line("Stop", "", "", act("trade.stop", "Stop"))], "")
+    pr = w.get("progress") or {}
+    where = f"{pr.get('phase', '')} · step {pr.get('step')} of {pr.get('of')}" if pr else ""
+    open_hold = w.get("hold") and not w.get("checked")
+    head, rest = _split(w.get("step_text", ""))
+    lines = [_line(head, where, "", None if open_hold else act("trade.next", "Next"))]
+    if rest:  # the rest of a long step on its own line, so the whole step can be read
+        lines.append(_line(rest[:1].upper() + rest[1:], "then"))
+    if w.get("hold"):
+        lines.append(_line(w["hold"], "checked" if w.get("checked") else "check before you go on",
+                           "" if w.get("checked") else "attention",
+                           act("trade.check", "Checked") if open_hold else None))
+    lines += [_line("Back", "one step", "", act("trade.back", "Back")), _line("Stop", "", "", act("trade.stop", "Stop"))]
+    if w.get("why"):  # last: when five lines are full, "why" is still a word away
+        lines.append(_line(w["why"], "why"))
+    return _panel(w["title"], lines, "")
+
+
+def _good_runs(context, today: date):
+    """Panel (the Operating Journal card): how your good runs go (Natural Momentum, DEC-0148, core/momentum.picture):
+    the findings as counts, or how many runs she's seen of the few she waits for; on a run now, only that."""
+    from core import momentum
+
+    try:
+        p = momentum.picture(context)
+    except Exception:
+        log.exception("Glasses: the good runs failed")
+        return _panel("Good Runs", [], "Your runs couldn't be read just now.")
+    lines = [_line("You're on a run", "anything that can wait is held")] if p.get("in_flow") else []
+    for f in p.get("findings") or []:
+        head, rest = _split(f)
+        lines.append(_line(head, rest))
+    return _panel("Good Runs", lines, momentum.picture_words(p) or "Nothing yet.")
+
+
+def _tracks(context, today: date):
+    """Panel (the Maps card): the latest tracks (core/web_tracks.screen, DEC-0099), each with its distance, climb and
+    time, and the last 30 days' total."""
+    from core.web_tracks import screen
+
+    page, none = _page("Tracks", lambda: screen(context, today), "Tracks aren't on this MIA.")
+    if none:
+        return none
+    lines = [_line(t["name"], " · ".join(b for b in (f"{t['km']:g} km", f"{t['climb_m']} m up" if t["climb_m"] else "",
+                                                      t["time"], t["date"]) if b)) for t in page.get("tracks") or []]
+    t = page.get("totals") or {}
+    if lines and t.get("count_30"):
+        lines.insert(0, _line(f"{t['km_30']:g} km in the last 30 days", f"{t['count_30']} track{'s' if t['count_30'] != 1 else ''}"))
+    return _panel("Tracks", lines, "No tracks yet. Add a GPX file on your phone or PC.")
+
+
+def _practice(context, today: date):
+    """Panel (the Classroom card): each learning path started (core/paths.path_card, DEC-0112) with its stage and what's
+    next, and for a guitar check that names a chord, the chord's shape, string by string from the low E (frets and
+    fingers), to read while the guitar is in your hands."""
+    from core import paths
+
+    book = getattr(context, "paths", None)
+    if book is None:
+        return _panel("Practice", [], "Learning paths aren't on this MIA.")
+    try:
+        cards = [paths.path_card(book, p) for p in (paths.program_of(context, pid) for pid in book.started()) if p]
+    except Exception:
+        log.exception("Glasses: the practice panel failed")
+        return _panel("Practice", [], "Your paths couldn't be read just now.")
+    lines = []
+    for c in cards:
+        st = c.get("stats") or {}
+        nxt = c.get("next", "")
+        m = re.search(r'next is "([^"]+)"\s*(.*)', nxt)  # "…: next is "Tune all six strings" (show me, …)."
+        head, rest = (m.group(1), re.sub(r"^\([^)]*\)\.?\s*", "", m.group(2)).strip(" .")) if m else _split(nxt)
+        lines.append(_line(f"{c['name']}: stage {st.get('stage', '?')}", " · ".join(b for b in (
+            st.get("stage_name", ""), f"{st.get('week_minutes', 0)} min this week" if st.get("week_minutes") else "") if b)))
+        if head:
+            lines.append(_line(head, rest or "next"))
+        if c["id"] == "guitar":
+            from core.guitar import CHORDS
+
+            for chk in c.get("open") or []:
+                chord = CHORDS.get(chk.get("about") or "")
+                if chord is not None:
+                    lines.append(_line(f"{chord.name}: {' '.join(chord.frets)}",
+                                       f"fingers {' '.join(chord.fingers)} · low E to high E"))
+                    break
+    return _panel("Practice", lines, "No path started. Say \u201cI want to learn guitar\u201d.")
+
+
+def _sensors(context, today: date):
+    """Panel (the Lab card): each sensor sending its own readings (core/sensors.py), its last reading and when; amber
+    when it's been quiet a day or more since it last sent one."""
+    from datetime import datetime
+
+    from core.person_settings import person_id
+    from core.sensors import target_words
+
+    store = getattr(context, "sensors", None)
+    if store is None:
+        return _panel("Sensors", [], "Sensors aren't on this MIA.")
+    lines = []
+    for s in store.mine(person_id(context) or ""):
+        at = s.get("last_at") or ""
+        try:
+            quiet = bool(at) and (today - datetime.fromisoformat(at).date()).days >= 1
+        except ValueError:
+            quiet = False
+        value = f"{s['last_value']:g}" if s.get("last_value") is not None else "no readings yet"
+        lines.append(_line(f"{s['name']}: {value}", f"{target_words(s)}" + (f" · {at[11:16]} {at[5:10]}" if at else ""),
+                           "attention" if quiet else ""))
+    return _panel("Sensors", lines, "No sensors yet. Add one on the Sensors page.")
+
+
 # More menu items on cards that already had panels: added after theirs (the menu still holds five at most).
 EXTRA = {
     "greenhouse": (("next", "What's Next", _whats_next),),
     "play": (("campaign", "Your Campaign", _campaign),),
-    "operating_journal": (("directions", "My Directions", _directions),),
+    "operating_journal": (("directions", "My Directions", _directions), ("runs", "Good Runs", _good_runs)),
     "observations": (("connections", "Connections", _connections),),
+    "workshop": (("job", "The Job", _trade_job),),
+    "maps": (("tracks", "Tracks", _tracks),),
+    "classroom": (("practice", "Practice", _practice),),
+    "lab": (("sensors", "Sensors", _sensors),),
 }
 
 

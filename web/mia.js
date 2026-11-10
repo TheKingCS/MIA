@@ -234,9 +234,14 @@
     // After a reply in Talk, now and then: the same answer a second way to pick from ({} when none; never in the demo).
     compareAnswer: (reply, isPrivate) => demo ? Promise.resolve({}) : call("POST", "/api/talk/compare", { reply, private: !!isPrivate }),
     paint: (description, use, apply, area) => demo ? demoOnly() : call("POST", "/api/art/paint", { description, use: use || "backdrop", apply: !!apply, area: area || "" }),
-    portals: () => read("/api/portals", "portals"),
+    portals: () => read("/api/portals", "portals"),  // Portal Pictures: your paintings in the Nexus portals (DEC-0140)
     lookup: () => read("/api/lookup", "lookup"),  // Look It Up Online (DEC-0053)
-    lookupSearch: (words) => demo ? read("/api/lookup", "lookup_results") : call("POST", "/api/lookup", { words }),  // Portal Pictures: your paintings in the Nexus portals (DEC-0140)
+    tracks: () => read("/api/tracks", "tracks"),
+    // Sensors (core/sensors.py): the person's sensors; adding one returns its key, shown once (never an action).
+    sensors: () => read("/api/sensors", "sensors"),
+    sensorAdd: (body) => demo ? demoOnly() : call("POST", "/api/sensors", body),  // Tracks: walks, rides and drives from GPX (DEC-0099)
+    trades: (item) => read("/api/trades" + (item ? "?item=" + encodeURIComponent(item) : ""), "trades"),  // Trade Master (DEC-0149)
+    lookupSearch: (words) => demo ? read("/api/lookup", "lookup_results") : call("POST", "/api/lookup", { words }),
     // The ID wallet (core/id_wallet.py): numbers travel only in these calls, never in an action.
     wallet: () => read("/api/wallet", "wallet"),
     walletCard: (id) => demo ? read("", "wallet").then((d) => ({ ...d.cards.find((c) => c.id === id), number: "D1234-5678-9012" })) : call("GET", "/api/wallet/" + encodeURIComponent(id)),
@@ -364,7 +369,9 @@
     operatingJournal: () => demo ? Promise.resolve({ sections: { values: "What I value", priorities: "My priorities", day: "My ideal day", week: "My ideal week", rules: "Rules I keep" }, lines: [
       { id: "o1", text: "Pay myself first on payday.", section: "rules", how: "checked against what's spent on Savings each month", self_rated: false, score: { pct: 75, text: "3 of 4 months" } },
       { id: "o2", text: "Train on the days the plan says.", section: "week", how: "checked against your workouts each week", self_rated: false, score: { pct: 75, text: "3 of 4 weeks" } },
-      { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }] })
+      { id: "o3", text: "No phone at dinner.", section: "rules", how: "yours to rate, 1 to 5, each week", self_rated: true, score: { pct: 80, text: "4 / 5 last week" } }],
+      momentum: { runs: 7, need: 3, in_flow: false, words: "", standard: "Counts from what you've done, never a score or a schedule: what your good runs have in common, said once they've happened a few times.",
+        findings: ["5 of your 7 runs of getting things done began with making coffee.", "6 of 7 began in the morning.", "5 of 7 were on a day off.", "4 of the 5 with sleep logged came after a full night."] } })
       : call("GET", "/api/operating-journal"),
     // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
     securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, on_this_pc: true,

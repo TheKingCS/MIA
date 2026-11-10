@@ -48,7 +48,7 @@ LIMITS = {
     "web_home": "",
     "dashboard": "Retired: Home shows what it showed.",
     "issues": "MIA finds and groups the problems; fixing her code is Claude's job, tested before it ships, never hers.",
-    "dungeon": "Loot is pay before taxes, worked out from your hours; what reaches the bank comes from the bank sync; tips and a shift's differential count once you give them.",
+    "dungeon": "Loot is pay before taxes, worked out from your hours with any shift differential and the tips you enter; what reaches the bank comes from the bank sync.",
     "operating_journal": "Lines MIA can't see in your records (sleep, mood, focus) are yours to rate; she never judges the gap.",
     "play": "Training load needs how hard it was; without it she counts a middle effort and asks next time.",
     "life_notes": "Kept only on your yes, from plain first-person words (\"I promised...\", \"we're going with...\"); some slip by, so tell her again.",
@@ -58,13 +58,13 @@ LIMITS = {
     "freedom": "The estimate assumes the last three months' pace; transfers between your own accounts can look like spending until the bank sync sorts them.",
     "compliance": "MIA keeps the list and reminds you; she never files, pays or signs anything, and a deadline isn't confirmed until you verify it.",
     "calendar": "",
-    "greenhouse": "Readings come from the greenhouse node once MIA has taken it over (DEC-0150); without one they're entered by hand.",
+    "greenhouse": "Readings come from the greenhouse node once MIA has taken it over (DEC-0150), from sensors you add (the Sensors page), or by hand; MIA warns on a range, never runs equipment.",
     "flock": "",
     "garage": "",
     "kitchen": "",
     "household": "",
     "workout": "",
-    "real_estate": "A sale is recorded with what it came to; its gain is an estimate for your preparer, never a tax figure.",
+    "real_estate": "Sale figures (the cash after the mortgage, the gain) are estimates in plain arithmetic, never a tax figure.",
     "missions": "",
     "skills": "",
     "budget": "Connecting and syncing banks needs the desktop on the home computer (the vault passphrase).",
@@ -74,7 +74,7 @@ LIMITS = {
     "business": "",
     "insurance": "MIA compares the quotes you collect; she never shops or buys for you.",
     "security": "Cameras need a local stream (no cloud-only cameras).",
-    "power": "Readings are entered by hand; no sensors are connected yet.",
+    "power": "Readings come by hand or from sensors you add (the Sensors page); MIA never switches anything.",
     "character": "",
     "reward_shop": "",
     "observations": "Read only: each is resolved where it lives (the upkeep, the mission, the bill).",
@@ -89,9 +89,9 @@ LIMITS = {
     "navigation": "Waypoints are added by voice or on the map; sun times are for the day, not live.",
     "knowledge": "Only packs copied onto this computer; articles read as plain text, without pictures.",
     "toolbox": "Alarms ring on the PC.",
-    "lab": "Readings are entered by hand; no sensors are connected yet.",
+    "lab": "Readings come by hand or from sensors you add (the Sensors page).",
     "field_kit": "Ejecting drives, running scripts and the port scan are on the PC.",
-    "passwords": "MIA's assistant never sees a password; no autofill in other apps yet.",
+    "passwords": "MIA's assistant never sees a password; on the phone, other apps and sites fill from it only when you pick a login.",
     "files": "",
     "music": "",
     "assistant": "",
@@ -163,8 +163,9 @@ def _screen_changes() -> dict[str, int]:
 
 
 def capability_map(context=None) -> list[dict]:
-    """Every app: what it's for, where it runs, whether this person can
-    open it, the tools MIA can use in it (look up / change), and its limits."""
+    """Every app: what it's for, where it runs (Settings and Diagnostics count their own web pages,
+    core/parity.PAGE_ELSEWHERE), whether this person can open it, the tools MIA can use in it
+    (look up / change), and its limits."""
     from core.assistant_actions import changes_records
     from core.web_surfaces import APPS, RETIRED, WEB_ONLY
 
@@ -177,6 +178,8 @@ def capability_map(context=None) -> list[dict]:
             allowed = lambda app_id: app_allowed(context, app_id)  # noqa: E731
         except ImportError:
             allowed = None
+    from core.parity import PAGE_ELSEWHERE
+
     out = []
     for app in APPS:
         mine = [a for domain in app.domains for a in tools.get(domain, [])]
@@ -184,7 +187,7 @@ def capability_map(context=None) -> list[dict]:
             where = "retired"
         elif app.module_id in WEB_ONLY:
             where = "web"
-        elif app.page:
+        elif app.page or app.module_id in PAGE_ELSEWHERE:  # Settings and Diagnostics have web pages of their own
             where = "web and desktop"
         else:
             where = "desktop"

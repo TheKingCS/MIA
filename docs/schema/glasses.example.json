@@ -614,6 +614,16 @@
    "pinned": false,
    "menu": [
     {
+     "id": "tasks",
+     "label": "Project Tasks",
+     "type": "panel"
+    },
+    {
+     "id": "job",
+     "label": "The Job",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "What jobs are open",
      "type": "ask",
@@ -795,10 +805,20 @@
    "pinned": false,
    "menu": [
     {
+     "id": "continue",
+     "label": "Continue",
+     "type": "panel"
+    },
+    {
+     "id": "practice",
+     "label": "Practice",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
-     "label": "What should I study next",
+     "label": "How is my learning progress",
      "type": "ask",
-     "say": "What should I study next?"
+     "say": "How is my learning progress?"
     },
     {
      "id": "pin",
@@ -934,6 +954,16 @@
    "pinned": false,
    "menu": [
     {
+     "id": "trail_maps",
+     "label": "Trail Maps",
+     "type": "panel"
+    },
+    {
+     "id": "tracks",
+     "label": "Tracks",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "Which trail maps do I have",
      "type": "ask",
@@ -1004,10 +1034,20 @@
    "pinned": false,
    "menu": [
     {
+     "id": "latest",
+     "label": "Latest Readings",
+     "type": "panel"
+    },
+    {
+     "id": "sensors",
+     "label": "Sensors",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
-     "label": "What's my latest experiment reading",
+     "label": "What are my latest lab readings",
      "type": "ask",
-     "say": "What's my latest experiment reading?"
+     "say": "What are my latest lab readings?"
     },
     {
      "id": "pin",
@@ -1682,6 +1722,11 @@
      "type": "panel"
     },
     {
+     "id": "runs",
+     "label": "Good Runs",
+     "type": "panel"
+    },
+    {
      "id": "ask0",
      "label": "Am I living how I said I want to",
      "type": "ask",
@@ -1924,7 +1969,13 @@
   "mission.complete",
   "objective.tick",
   "routine.log",
-  "task.done"
+  "task.done",
+  "trade.answer",
+  "trade.back",
+  "trade.check",
+  "trade.next",
+  "trade.start",
+  "trade.stop"
  ],
  "areas": [
   {

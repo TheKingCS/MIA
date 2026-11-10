@@ -99,6 +99,7 @@ from core.assistant_cooking_actions import register_cooking_actions
 from core.assistant_household_actions import register_household_actions
 from core.assistant_lab_actions import register_lab_actions
 from core.assistant_notification_actions import register_notification_actions
+from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
 from core.assistant_trip_route_actions import register_trip_route_actions
@@ -130,6 +131,7 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     rules (waypoints/inventory/journal before expeditions/trips before
     memories/missions) but only for the managers this scope actually
     uses — see this module's docstring for what's deliberately excluded.
+    The sensors that send their own readings (core/sensors.py) are built here too, as on the desktop.
     """
     context = AppContext(config=config, events=events)
 
@@ -263,6 +265,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.energy_manager import EnergyManager
 
     context.energy = EnergyManager(context)  # Power on the phone (DEC-0125), as on the desktop
+    from core.sensors import SensorStore
+
+    context.sensors = SensorStore(context)  # sensors that send their own readings (core/sensors.py)
     context.tasks = TaskManager(context)
     context.kitchen = KitchenManager(context)
     context.relationships = RelationshipsManager(context)
@@ -310,7 +315,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     (core/assistant_waypoint_actions.py), a trip's route and checkpoints (core/assistant_trip_route_actions.py), the backup status
     (core/assistant_backup_actions.py), MIA's own voice (core/assistant_voice_choice_actions.py), "still using it?" on subscriptions
     (core/assistant_subscription_actions.py), mission ideas and field recordings (core/assistant_proposal_actions.py), the parts an asset uses
-    (core/assistant_asset_part_actions.py), health (core/assistant_health_actions.py) and the notification tools (core/assistant_notification_actions.py)."""
+    (core/assistant_asset_part_actions.py), health (core/assistant_health_actions.py), the notification tools (core/assistant_notification_actions.py) and
+    the screens that had no voice: look it up online, what isn't working, past conversations
+    (core/assistant_screen_tools.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -335,6 +342,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_asset_part_actions(registry)  # the parts an asset uses
     register_health_actions(registry)  # sleep, visits, medications, records (DEC-0129)
     register_notification_actions(registry)  # read out and mark notifications read (DEC-0125)
+    register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_creation_actions(registry)  # screens MIA made for you, by voice (DEC-0091)
     register_game_actions(registry)  # boss battles and questlines by voice (DEC-0028)

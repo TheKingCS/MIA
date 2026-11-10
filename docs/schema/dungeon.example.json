@@ -12,7 +12,8 @@
         "overtime_text": "$32.25",
         "multiplier": 1.5,
         "after": 40.0,
-        "week_starts": "Monday"
+        "week_starts": "Monday",
+        "differential_text": ""
       },
       "today": {
         "id": "ca6dd4699c",
@@ -27,7 +28,11 @@
         "loot_text": "$193.50",
         "bonus_text": "",
         "xp": 19,
-        "note": ""
+        "note": "",
+        "tips": 0,
+        "tips_text": "",
+        "differential": 0,
+        "differential_text": ""
       },
       "week": {
         "start": "2026-10-26",
@@ -98,7 +103,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "7fc6bae260",
@@ -113,7 +122,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "b6be2f60ea",
@@ -128,7 +141,11 @@
           "loot_text": "$215.00",
           "bonus_text": "$43.00",
           "xp": 33,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         }
       ],
       "waiting": [],
@@ -152,7 +169,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 25,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "35d2f410ec",
@@ -173,7 +194,11 @@
           "loot_text": "$215.00",
           "bonus_text": "$43.00",
           "xp": 39,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "ee037b4099",
@@ -188,7 +213,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "acbbe6f132",
@@ -203,7 +232,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "7c7bec2fa4",
@@ -224,7 +257,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 25,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "c7ba7d2142",
@@ -239,7 +276,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "73752c3273",
@@ -260,7 +301,11 @@
           "loot_text": "$215.00",
           "bonus_text": "$43.00",
           "xp": 39,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "94a84fcf6f",
@@ -275,7 +320,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "4b3092d489",
@@ -290,7 +339,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "02336a2516",
@@ -316,7 +369,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 29,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "b1ea632a20",
@@ -331,7 +388,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "9216ef9f12",
@@ -346,7 +407,11 @@
           "loot_text": "$215.00",
           "bonus_text": "$43.00",
           "xp": 33,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "f6434bbfd3",
@@ -361,7 +426,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "5a23a24f98",
@@ -376,7 +445,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "79d96bc449",
@@ -397,7 +470,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 24,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "4fd833173f",
@@ -412,7 +489,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "a23ce974be",
@@ -427,7 +508,11 @@
           "loot_text": "$215.00",
           "bonus_text": "$43.00",
           "xp": 33,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "730722cb43",
@@ -442,7 +527,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "d528d22805",
@@ -457,7 +546,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "764787aa57",
@@ -478,7 +571,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 25,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         },
         {
           "id": "eeed4e60c9",
@@ -493,7 +590,11 @@
           "loot_text": "$193.50",
           "bonus_text": "",
           "xp": 19,
-          "note": ""
+          "note": "",
+          "tips": 0,
+          "tips_text": "",
+          "differential": 0,
+          "differential_text": ""
         }
       ],
       "hard_mode": [
@@ -548,7 +649,9 @@
         "payer": "EXAMPLE CO PAYROLL",
         "shift_hours": 9.0,
         "break_minutes": 0.0,
-        "notes": ""
+        "notes": "",
+        "differential": 0,
+        "differential_days": ""
       },
       "share": 0.8708
     }

@@ -61,6 +61,7 @@ PETS = Page("pets", "Pets", "relationships", "Your animals, their care and vet v
 PLACES = Page("places", "My Places", "maps", "Places you go, and quests there.", "places.html")
 WORLDS = Page("worlds", "Living Worlds", "character", "Your worlds, campaigns and character.", "worlds.html")
 TRAILS = Page("trails", "Trail Maps", "maps", "Official park and trail map PDFs, offline.", "trails.html")
+TRACKS = Page("tracks", "Tracks", "expeditions", "Your walks, rides and drives from GPX files.", "tracks.html")
 WORLD = Page("worldmap", "World Map", "memories", "Everywhere you've been.", "worldmap.html")
 CHECKIN = Page("checkin", "Sunday Check-In", "calendar", "The week, looked back on.", "checkin.html")
 PARTY = Page("party", "Party", "missions", "Raids and quests.", "party.html")
@@ -71,11 +72,13 @@ CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", 
 ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, what she knows.", "about.html")
 ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
+TRADES = Page("trades", "Trade Master", "workshop", "Any job or diagnosis, walked through step by step.", "trades.html")
 LOOKUP = Page("lookup", "Look It Up Online", "search", "Search the web through your own search engine.", "lookup.html")
 PORTALS = Page("portals", "Portal Pictures", "apps", "Put your own paintings in the Nexus portals.", "portals.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
 CHANGES = Page("changes", "Recent Changes", "issues", "What changed, with Undo.", "changes.html")
+SENSORS = Page("sensors", "Sensors", "lab", "Sensors that send their own readings.", "sensors.html")
 NOTIFS = Page("notifications", "Notifications", "inbox", "What MIA told you.", "notifications.html")
 HEALTH = Page("health", "Health", "workout", "Sleep, visits, medications and records.", "health.html")
 COMMS = Page("communications", "Communications", "inbox", "Email, MIA's messages and people to reach.",
@@ -89,7 +92,7 @@ SHOWOFF = Page("showoff", "Show Off", "workshop", "What you've made, to share.",
 
 AREAS: tuple[Area, ...] = (
     Area("home", "Home", "household", "The house, the kitchen and what keeps it running.",
-         ("household", "kitchen", HOME_UPKEEP, "power"), hue="#35d4ff"),
+         ("household", "kitchen", HOME_UPKEEP, TRADES, "power"), hue="#35d4ff"),
     Area("garage", "Garage", "garage", "Vehicles, tools and the work on them.",
          ("garage", "toolbox", "sight"), hue="#8fa7bf"),
     Area("plants_animals", "Plants and Animals", "greenhouse", "What grows and who you feed.",
@@ -97,12 +100,12 @@ AREAS: tuple[Area, ...] = (
     Area("kitchen", "Kitchen", "kitchen", "Meals, recipes and the pantry.", ("kitchen",), hue="#e9d4a8"),
     Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", "kitchen"), hue="#ff8a3d"),
     Area("recreation", "Recreation", "expeditions", "Trips, maps, music and play.",
-         ("expeditions", "maps", TRAILS, "navigation", "memories", WORLD, PLACES, "music", "play", WORLDS), hue="#9b6bff"),
+         ("expeditions", "maps", TRAILS, TRACKS, "navigation", "memories", WORLD, PLACES, "music", "play", WORLDS), hue="#9b6bff"),
     Area("security", "Security", "security", "Cameras, passwords and sign-ins.",
          ("security", WALLET, "passwords", SIGNINS, "field_kit"), hue="#c0c8d4"),
     Area("browser", "Browser", "search", "She browses. You approve.", ("browser",), hue="#bfefff"),
     Area("system", "Settings and Diagnostics", "settings", "Make MIA yours, and see how she's doing.",
-         ("settings", STUDIO, PORTALS, ANSWERS, ABOUT, "diagnostics", "issues", CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
+         ("settings", STUDIO, PORTALS, ANSWERS, ABOUT, "diagnostics", "issues", SENSORS, CONNECT, PROFILE, YOURDATA, CHANGES, "module_browser"), hue="#dfe9f2"),
     Area("finances", "Finances", "budget", "Money in, money out, and the way out.",
          ("budget", "freedom", "dungeon", "insurance", "real_estate", "compliance", "inbox"), hue="#3f7bff"),
     Area("business", "Business", "business", "Customers, products and the paperwork.",

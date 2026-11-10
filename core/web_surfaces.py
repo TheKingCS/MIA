@@ -20,7 +20,8 @@ the upcoming list and the at-a-glance cards.
   at-a-glance cards (Life State's, net worth on Money's, then Observations
   and the Inbox: `glance_counts`), and the life cards (DEC-0129,
   `life_cards`: what's playing, today's good news, recent pictures, the
-  trip from `pick_trip` with its dates from `span_text`). Served as
+  trip from `pick_trip` with its dates from `span_text`), and all of it
+  in a few sentences for Hear It (`briefing`). Served as
   `/api/dashboard`; `web/index.html` shows it.
 - `apps_page(context)`: every app, grouped, with what MIA can do in each.
   Served as `/api/apps`.
@@ -531,11 +532,35 @@ def _more_glance(context, today: date) -> list[dict]:
     return glance_counts(observations, waiting)
 
 
+def briefing(greeting_line: str, date_line: str, focus: list, upcoming: list, finding: Optional[dict]) -> str:
+    """Pure logic. Home said aloud (the "Hear It" button): the greeting and the date, what needs you today (the first
+    three by name), how many are coming up, and the one thing MIA noticed, in a few short sentences for her voice."""
+    said = [f"{greeting_line}. It's {date_line}." if date_line else f"{greeting_line}."]
+    names = [str(f.get("title", "")).rstrip(".") for f in focus[:3] if f.get("title")]
+    if not focus:
+        said.append("Nothing needs you today.")
+    elif len(focus) == 1:
+        said.append(f"One thing needs you today: {names[0]}." if names else "One thing needs you today.")
+    else:
+        rest = len(focus) - len(names)
+        said.append(f"{len(focus)} things need you today: " + ", ".join(names)
+                    + (f", and {rest} more." if rest else "."))
+    if upcoming:
+        said.append(f"{len(upcoming)} more coming up soon." if len(upcoming) > 1 else "One more coming up soon.")
+    if finding and finding.get("claim"):
+        claim = str(finding["claim"]).rstrip(".")
+        if claim[1:2].islower():  # "Your egg count..." reads on in the sentence; "MIA..." or "I..." stay as they are
+            claim = claim[:1].lower() + claim[1:]
+        said.append(f"One thing I noticed: {claim}.")
+    return " ".join(said)
+
+
 def dashboard(context, now: Optional[datetime] = None) -> dict:
     """Home's data: the greeting, the date, what needs doing today (from the life state's due items, each with its
     kind), what's coming, the status strip, the one thing MIA noticed across apps, quick actions, the glance (Life
     State's cards, then Observations and the Inbox), recent wins (only real wins, never spending), something to remember,
-    and the life cards (life_cards: music, good news, recent pictures, the trip).
+    and the life cards (life_cards: music, good news, recent pictures, the trip); and all of it said in a few
+    sentences for "Hear It" (`briefing`).
     """
     from core.context_assembler import assemble_life_state_v2
 
@@ -553,15 +578,18 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
     focus = [item(d) for d in due if d.get("when") in ("overdue", "today", "waiting")][:8]
     upcoming = [item(d) for d in due if d.get("when") == "soon"][:6]
     wins = [e for e in ((state.get("recent_wins") or {}).get("latest") or []) if e.get("type") in _WINS][:5]
+    found = _top_finding(context, today)
+    hello = greeting(now.hour, getattr(profile, "name", None))
     return {
-        "greeting": greeting(now.hour, getattr(profile, "name", None)),
+        "greeting": hello,
+        "briefing": briefing(hello, date_text(today), focus, upcoming, found),
         "subtitle": "Another day to build the life you want.",
         "date": date_text(today),
         "focus": focus,
         "upcoming": upcoming,
         # The canvas's status strip (DEC-0113): counts the engine already has, never a guess.
         "strip": home_strip(focus, upcoming, wins, today),
-        "finding": _top_finding(context, today),
+        "finding": found,
         "saying": SAYINGS[today.toordinal() % len(SAYINGS)],
         "quick_actions": list(QUICK_ACTIONS),
         "glance": _glance(state) + _more_glance(context, today),

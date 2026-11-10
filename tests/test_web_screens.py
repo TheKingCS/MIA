@@ -3,8 +3,8 @@ DEC-0017/0018 (2026-10-06): Kitchen, Workout and Real Estate on the web.
 The pages (core/web_screens.py) and every change as an action kind
 (core/kitchen_actions.py, core/workout_actions.py, core/estate_actions.py),
 each proposed, approved, recorded and undoable; a recipe's amounts scaled to
-the servings asked for; workouts and volume week by week; a property's sale,
-on the screen and by voice.
+the servings asked for; workouts and volume week by week; a property listed
+for sale, then sold and left out of the totals, on the screen and by voice.
 """
 
 from datetime import date, timedelta
@@ -204,6 +204,32 @@ def test_a_mortgage_gives_a_payment_and_cash_flow(world):
     assert card["payment"] == 1199.1 and card["cash_flow"] == 300.9
 
 
+def test_a_property_is_listed_then_sold_and_leaves_the_totals(world):
+    """Listing says what selling at the asking price comes to; recording the sale moves it to Sold, out of equity and
+    the totals, with what it came to; a sold property can't be sold again, and the sale can be undone."""
+    run(world, "property.add", name="Oak Duplex", property_type="Rental", monthly_rent="1800", current_value="300000",
+        mortgage_balance="150000", purchase_price="200000", land_value="40000", purchase_date="2020-06-01")
+    run(world, "property.add", name="Home", property_type="Primary Residence", current_value="250000")
+    oak = next(p for p in world.real_estate.all_properties() if p.name == "Oak Duplex")
+    proposal, _ = run(world, "property.list_sale", property_id=oak.property_id, price="320000", date=TODAY.isoformat())
+    assert proposal.summary.startswith("List Oak Duplex for sale at $320,000.00: about $170,000.00 in hand")
+    card = next(p for p in estate_page(world, TODAY)["properties"] if p["name"] == "Oak Duplex")
+    assert card["status"] == "For Sale" and card["sale"]["asking"] == 320000 and card["sale"]["days_listed"] == 0
+    proposal, sold = run(world, "property.sell", property_id=oak.property_id, price="318000", selling_costs="18000",
+                         date=TODAY.isoformat())
+    assert "about $150,000.00 in hand" in proposal.summary and "a gain of about" in proposal.summary
+    page = estate_page(world, TODAY)
+    assert [p["name"] for p in page["properties"]] == ["Home"] and [p["name"] for p in page["sold"]] == ["Oak Duplex"]
+    gone = page["sold"][0]
+    assert gone["equity"] == 0 and gone["sale"]["sold"] and gone["sale"]["cash"] == 300000 and gone["sale"]["long_term"]
+    assert gone["sale"]["gain"] == round(300000 - (200000 - gone["sale"]["depreciation"]), 2)
+    assert page["totals"]["count"] == 1 and page["totals"]["equity"] == 250000 and page["totals"]["sold"] == 1
+    with pytest.raises(ActionError, match="already sold"):
+        world.actions.propose(world, "property.sell", {"property_id": oak.property_id, "price": "1"})
+    world.actions.undo(world, sold.proposal_id)
+    assert world.real_estate.get_property(oak.property_id).status == "For Sale"
+
+
 def test_the_latest_workout_is_the_last_one_logged_that_day(world):
     run(world, "exercise.add", name="Squats")
     run(world, "exercise.add", name="Lunges")
@@ -278,36 +304,9 @@ def test_a_rented_property_with_no_rent_in_this_month_says_rent_due():
     assert property_badge("Primary Residence", 0, 0) == {"text": "Primary Residence", "tone": ""}
 
 
-def test_a_sale_is_recorded_with_what_it_came_to_leaves_the_totals_and_undoes(world):
-    """Selling a rental keeps the price, costs, the loan paid off and the depreciation as of the sale; its card shows
-    the cash left and the gain (an estimate), it leaves the portfolio's equity, a second sale is refused, and Undo
-    puts it back."""
-    from core.real_estate_manager import sale_summary
-
-    run(world, "property.add", name="Oak", property_type="Rental", monthly_rent="1500", current_value="300000",
-        mortgage_balance="100000")
-    oak = world.real_estate.all_properties()[0]
-    world.real_estate.update_property(oak.property_id, purchase_price=200000.0, land_value=35000.0,
-                                      purchase_date="2021-01-01")
-    proposal, sold = run(world, "property.sell", property_id=oak.property_id, sale_price="320000",
-                         selling_costs="20000", date="2026-01-01")
-    assert proposal.summary.startswith("Record Oak as sold for $320,000.00 on 2026-01-01")
-    oak = world.real_estate.get_property(oak.property_id)
-    s = sale_summary(oak)
-    assert oak.status == "Sold" and oak.payoff_at_sale == 100000.0 and s["net_proceeds"] == 200000.0
-    assert 29000 < s["depreciation"] < 31000 and s["recapture"] == s["depreciation"]  # 165,000 over 27.5, five years
-    assert s["gain"] == 300000.0 - (200000.0 - s["depreciation"])
-    card = estate_page(world, TODAY)["properties"][0]
-    assert card["sale"]["net_proceeds"] == 200000.0 and card["equity"] == 0 and card["depreciation"] is None
-    with pytest.raises(ActionError, match="already recorded as sold"):
-        world.actions.propose(world, "property.sell", {"property_id": oak.property_id, "sale_price": "1"})
-    world.actions.undo(world, sold.proposal_id)
-    assert world.real_estate.get_property(oak.property_id).sale_date == ""
-
-
 def test_a_sale_said_to_mia_is_recorded_by_the_same_store(world):
-    """"We sold Pine for 250,000" through record_property_sale: recorded, the cash and gain said, a missing price or
-    an unknown property says so."""
+    """"We sold Pine for 250,000" through record_property_sale runs the page's own property.sell: recorded, what it
+    comes to said; a price that isn't a number or a second sale says so."""
     from core.application import MIAApplication
 
     world.real_estate.add_property(name="Pine", property_type="Rental", current_value=240000.0,
@@ -315,5 +314,6 @@ def test_a_sale_said_to_mia_is_recorded_by_the_same_store(world):
     tool = MIAApplication._action_record_property_sale
     assert "price" in tool(world, {"property_name": "Pine", "sale_price": "lots"})
     said = tool(world, {"property_name": "Pine", "sale_price": 250000, "selling_costs": 15000})
-    assert said.startswith("Recorded 'Pine' as sold for $250,000: about $185,000 after costs")
-    assert "already recorded as sold" in tool(world, {"property_name": "Pine", "sale_price": 1})
+    assert said.startswith("Pine is recorded as sold.") and "$" in said
+    assert world.real_estate.all_properties()[0].status == "Sold"
+    assert "already sold" in tool(world, {"property_name": "Pine", "sale_price": 1})

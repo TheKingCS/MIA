@@ -5,7 +5,8 @@ core.web_progress
 Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018,
 answering H-0013): everything the PC app's screens show, assembled here
 so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and
-`/api/character`; changes are the action kinds in core/mission_actions.py.
+`/api/character`; changes are the action kinds in core/mission_actions.py. The Character card's
+portrait is a crest MIA paints from the two strongest attributes (`crest_words`, 2026-11-09).
 
 Every number is the stores' own: levels from core.leveling and
 core.skill_leveling (derived from total XP, never stored), objective
@@ -339,11 +340,26 @@ def rewards_block(context, pid) -> dict:
 # ------------------------------------------------------------------ Character
 
 
+CREST_SYMBOLS = {"strength": "a hammer", "stamina": "a running stag", "vitality": "an oak leaf", "wisdom": "an open book",
+                 "charisma": "two clasped hands", "craft": "an anvil with a gear"}
+
+
+def crest_words(attributes: list, level: int) -> str:
+    """Pure logic. What MIA paints for a person's crest, from their two strongest attributes (each its symbol) and
+    their level (more ornate as it climbs): never a person or a face."""
+    top = [a["key"] for a in sorted(attributes or [], key=lambda a: -float(a.get("value") or 0))[:2]
+           if a.get("key") in CREST_SYMBOLS]
+    symbols = " and ".join(CREST_SYMBOLS[k] for k in top) or "a rising star"
+    finish = "gold filigree" if level >= 20 else "silver inlay" if level >= 10 else "bronze"
+    return f"a shield bearing {symbols}, {finish}, deep blue and cyan glow"
+
+
 def character_page(context, today: Optional[date] = None) -> dict:
     """The data the Character screen shows, assembled here (the web only draws it): the person's level, their
     lifetime stats, the collection of rewards by rarity, emblems, buffs, this week's Chronicle, the six attributes
     (a part that fails is logged and left empty), their top five skills, missions completed and the latest, and
-    when they joined.
+    when they joined; and the crest on the portrait card (`crest`: the picture's address when MIA painted one, and
+    the words she'd paint a new one from, `crest_words`).
     """
     from core.rarity import RARITY_NAMES
     from core.rewards_manager import STAT_DEFINITIONS
@@ -400,4 +416,18 @@ def character_page(context, today: Optional[date] = None) -> dict:
         page["latest_missions"] = [{"name": m.name, "icon": m.icon, "when": (m.updated_at or "")[:10]}
                                    for m in sorted(done, key=lambda m: m.updated_at or "", reverse=True)[:5]]
     page["member_since"] = (profile.created_at or "")[:10]
+    page["crest"] = _crest(context, page)
     return page
+
+
+def _crest(context, page: dict) -> dict:
+    """The Character card's crest: the painting's address when there's one (and it's still in their pictures), the
+    words for a new one, and whether MIA can paint here."""
+    from core import person_settings
+
+    art_id = person_settings.get(context, "character.crest", "") or ""
+    store = getattr(context, "art", None)
+    have = bool(art_id) and store is not None and store.path(art_id) is not None
+    return {"image": f"/api/art/{art_id}/image" if have else "", "words": crest_words(page.get("attributes") or [],
+                                                                                        (page.get("me") or {}).get("level", 1) or 1),
+            "can_paint": store is not None}

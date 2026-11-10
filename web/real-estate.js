@@ -6,8 +6,12 @@
  * Since Zac folded Property and Maintenance in (2026-10-16): the house and
  * its appliances (MIA.equipment("real_estate")) and their upkeep, sorted
  * Past Due / Due Today / Due Soon.
- * Rent and expenses are recorded into Money. Every change is a property
- * action (core/estate_actions.py) or a maintenance one. Formatting only here.
+ * Rent and expenses are recorded into Money. Selling (2026-11-09): List For
+ * Sale (property.list_sale) shows the asking price and what selling at it
+ * comes to; Record The Sale (property.sell) moves it to Sold, with what it
+ * came to (core/real_estate_manager.sale_numbers: estimates, never a tax
+ * figure). Every change is a property action (core/estate_actions.py) or a
+ * maintenance one. Formatting only here.
  */
 (function () {
   "use strict";
@@ -25,7 +29,33 @@
   const section = (title, actions, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
   const STATUS_TONE = { "Rented": "chip-ok", "Owner Occupied": "chip-ok", "Vacant": "chip-bad", "For Sale": "chip-soon",
-    "For Rent": "chip-soon", "Under Renovation": "chip-soon", "Sold": "" };
+    "For Rent": "chip-soon", "Under Renovation": "chip-soon", "Under Contract": "chip-soon", "Sold": "" };
+
+  async function listSale(p) {
+    const v = await form("List " + p.name + " For Sale", page.forms.list_sale.fields, { price: p.value || "" });
+    if (v) act({ kind: "property.list_sale", params: Object.assign({ property_id: p.id }, v) });
+  }
+  async function sell(p) {
+    const v = await form("Record The Sale Of " + p.name, page.forms.sell.fields, { price: (p.sale && p.sale.asking) || p.value || "" });
+    if (v) act({ kind: "property.sell", params: Object.assign({ property_id: p.id }, v) });
+  }
+  // What a sale comes to (the engine's sale_numbers): the cash after costs and the mortgage, and the gain on the price paid.
+  function saleLine(s) {
+    const bits = [(s.sold ? "Sold " + s.date + " for " : "Asking ") + fmt(s.price),
+      s.costs ? fmt(s.costs) + " costs" : null, fmt(s.payoff) + " to the mortgage", "≈ " + fmt(s.cash) + " in hand",
+      s.gain != null ? (s.gain >= 0 ? "gain " : "loss ") + fmt(Math.abs(s.gain)) + (s.depreciation ? " (" + fmt(s.depreciation) + " depreciation)" : "")
+        + (s.months_held != null ? ", held " + (s.long_term ? "over a year" : s.months_held + " months") : "") : null];
+    return el("p", { class: "dim prop-more" }, bits.filter(Boolean).join(" · ") + " (an estimate, not a tax figure)"
+      + (!s.sold && s.days_listed != null ? " · listed " + s.days_listed + " days" : ""));
+  }
+  function soldCard(p) {
+    return el("article", { class: "glass asset-card property-card sold" },
+      el("div", { class: "asset-head" },
+        el("div", { class: "prop-name" }, el("h3", {}, p.name), el("span", { class: "dim" }, [p.location, p.type].filter(Boolean).join(" · "))),
+        el("span", { class: "kind" }, "Sold")),
+      saleLine(p.sale),
+      buttons(btn("Edit", "btn-ghost", () => edit(p))));
+  }
 
   async function add() {
     const v = await form("Add a property", page.forms.property.fields, {});
@@ -38,10 +68,6 @@
   async function rent(p) {
     const v = await form("Rent from " + p.name, page.forms.rent.fields, { amount: p.rent || "" });
     if (v) act({ kind: "property.rent", params: Object.assign({ property_id: p.id }, v) });
-  }
-  async function sell(p) {
-    const v = await form("Record the sale of " + p.name, page.forms.sell.fields, {});
-    if (v) act({ kind: "property.sell", params: Object.assign({ property_id: p.id }, v) });
   }
   async function expense(p) {
     const v = await form("An expense on " + p.name, page.forms.expense.fields, {});
@@ -107,17 +133,15 @@
         .filter(Boolean).join(" · ")) : null,
       p.depreciation ? el("p", { class: "dim prop-more" }, "Depreciation " + fmt(p.depreciation.year) + " a year · " + fmt(p.depreciation.so_far)
         + " so far (straight-line estimate, not a tax figure)") : null,
-      p.sale ? el("p", { class: "dim prop-more" }, "Sold " + p.sale.date + " for " + fmt(p.sale.price) + " · about "
-        + fmt(p.sale.net_proceeds) + " after costs and the loan · gain about " + fmt(p.sale.gain)
-        + " (an estimate, not a tax figure)") : null,
+      p.sale ? saleLine(p.sale) : null,
       attention.length ? el("p", { class: "attention-line" }, "Needs you: " + attention.map((t) => t.title + " (" + (t.due || t.text).toLowerCase() + ")").join(", ")) : null,
       buttons(
-        p.sale ? null : btn("Record Rent", "btn-ghost", () => rent(p)),
+        btn("Record Rent", "btn-ghost", () => rent(p)),
         btn("Add Expense", "btn-ghost", () => expense(p)),
-        p.sale ? null : btn("Record Sale", "btn-ghost", () => sell(p)),
         p.asset_id ? el("a", { class: "btn btn-ghost", href: "asset.html?id=" + encodeURIComponent(p.asset_id) }, "Upkeep")
           : btn("Track upkeep", "btn-ghost", () => act({ kind: "property.track_upkeep", params: { property_id: p.id } })),
         btn("Edit", "btn-ghost", () => edit(p)),
+        p.sale ? btn("Record The Sale", "btn-ghost", () => sell(p)) : btn("List For Sale", "btn-ghost", () => listSale(p)),
         btn(p.photo ? "Change Photo" : "Add Photo", "btn-ghost", () => pickPhoto(p)),
         btn("Delete", "btn-ghost", () => act({ kind: "property.delete", params: { property_id: p.id } }))));
   }
@@ -138,7 +162,8 @@
   const views = {
     properties: () => [section("Properties", buttons(btn("Add property", "btn-amber", add)),
       page.properties.length ? el("div", { class: "asset-grid" }, page.properties.map(card))
-        : el("p", { class: "empty" }, el("strong", {}, "No properties yet."), "Add one to see its rent, equity and upkeep in one place."))],
+        : el("p", { class: "empty" }, el("strong", {}, "No properties yet."), "Add one to see its rent, equity and upkeep in one place.")),
+      (page.sold || []).length ? section("Sold", null, el("div", { class: "asset-grid" }, page.sold.map(soldCard))) : null].filter(Boolean),
     home: () => [section("Home & Appliances", buttons(btn("Add Appliance", "btn-amber", addAppliance)),
       home && home.assets.length ? el("div", { class: "asset-grid" }, home.assets.map(applianceCard))
         : el("p", { class: "empty" }, el("strong", {}, "Nothing here yet."), "Add your furnace, water heater, fridge… and MIA keeps their upkeep."))],

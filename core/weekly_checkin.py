@@ -51,9 +51,10 @@ def _span(a: date, b: date) -> str:
 
 
 def _loot(context, since: date, until: date) -> dict:
-    """Runs cleared in the range: loot, hours, overtime bosses, hard mode, paychecks landed."""
+    """Runs cleared in the range: loot (with shift differentials and tips), hours, overtime bosses, hard mode, paychecks
+    landed."""
     from core.web_dungeon import banked
-    from core.work_dungeon import AFFIX_BY_ID, boss_bonus, loot, split_hours
+    from core.work_dungeon import AFFIX_BY_ID, boss_bonus, run_loot, split_hours
 
     book = getattr(context, "dungeon", None)
     out = {"loot": 0.0, "hours": 0.0, "runs": 0, "bosses": 0, "bonus": 0.0, "hard": {}, "banked": 0.0,
@@ -69,7 +70,7 @@ def _loot(context, since: date, until: date) -> dict:
             regular, overtime = split.get(r.run_id, (r.hours, 0.0))
             out["runs"] += 1
             out["hours"] += r.hours
-            out["loot"] += loot(d, regular, overtime)
+            out["loot"] += run_loot(d, r, regular, overtime)  # with its shift differential and tips
             if overtime or r.boss:
                 out["bosses"] += 1
                 out["bonus"] += boss_bonus(d, overtime)
@@ -114,9 +115,9 @@ def noticed(loop_rows: list[dict], loot: dict) -> list[str]:
 
 
 def _ahead(context, today: date) -> tuple[list[dict], float]:
-    """The next seven days, day by day, and their projected loot."""
+    """The next seven days, day by day, and their projected loot (with each run's shift differential)."""
     from core.the_loop import clock_text, span_hours
-    from core.work_dungeon import loot, split_hours
+    from core.work_dungeon import run_loot, split_hours
 
     book = getattr(context, "loop", None)
     dungeons = getattr(context, "dungeon", None)
@@ -140,7 +141,7 @@ def _ahead(context, today: date) -> tuple[list[dict], float]:
             if run is None:
                 continue
             regular, overtime = splits[d.dungeon_id].get(run.run_id, (run.hours, 0.0))
-            worth = loot(d, regular, overtime) if d.hourly else None
+            worth = run_loot(d, run, regular, overtime) if d.hourly else None
             if worth is not None and run.status == "planned":
                 projected += worth
             r = book.find("work", d.dungeon_id) if book else None

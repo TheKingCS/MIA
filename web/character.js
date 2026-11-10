@@ -3,7 +3,8 @@
  * H-0013). Renders MIA.character() (core/web_progress.py): the person's
  * level and prestige, lifetime stats, everything they've unlocked (highest
  * rarity first) and the tally by rarity, prestige emblems, top skills and
- * latest missions. Read only; character art comes later (Zac's call).
+ * latest missions. The portrait card shows a crest MIA paints from your two strongest stats (never a person),
+ * when you ask for one (Paint My Crest).
  */
 (function () {
   "use strict";
@@ -56,7 +57,10 @@
     $("strip").hidden = true;
     $("panel").replaceChildren(...[
       el("section", { class: "glass ch-hero" + (me.prestige_color ? " prestige-" + me.prestige_color : "") },
-        el("div", { class: "ch-portrait", role: "img", "aria-label": "Character art placeholder" }),
+        el("div", { class: "ch-portrait" + (page.crest && page.crest.image ? " crest" : ""), role: "img",
+          "aria-label": page.crest && page.crest.image ? "Your crest, painted by MIA" : "Your character" }),
+        page.crest && page.crest.can_paint ? el("button", { type: "button", class: "btn btn-ghost btn-small ch-paint",
+          onclick: () => paintCrest(page.crest.words) }, page.crest.image ? "Paint a New Crest" : "Paint My Crest") : null,
         el("h2", {}, me.name || "You"),
         el("div", { class: "ch-level" }, el("span", { class: "pw-label" }, "Level"), el("strong", {}, String(me.level)),
           me.prestige_tier ? el("span", { class: "pw-label" }, "Prestige") : null, me.prestige_tier ? el("span", { class: "ch-prestige" }, ROMAN[me.prestige_tier] || String(me.prestige_tier)) : null),
@@ -92,7 +96,18 @@
         el("span", { class: "chip prestige-" + e.color }, "🏆 " + e.name)))) : null,
     ].filter(Boolean));
     const portrait = document.querySelector(".ch-portrait");
-    if (portrait && window.MIAIcons) MIAIcons.badge(portrait, "character");
+    if (portrait && page.crest && page.crest.image) {
+      const img = el("img", { alt: "", loading: "lazy" });
+      portrait.append(img);
+      MIA.image(page.crest.image).then((url) => { if (url) img.src = url; else { img.remove(); portrait.classList.remove("crest"); } });
+    } else if (portrait && window.MIAIcons) MIAIcons.badge(portrait, "character");
+  }
+
+  // The portrait's crest (core/art_studio.py "crest"): painted on the PC from the engine's words (your two strongest
+  // stats as symbols), never a person; it goes on this card when it's done.
+  async function paintCrest(words) {
+    try { await MIA.paint(words, "crest", true); MIAShell.say("MIA's painting your crest: " + words + ". It'll appear here when it's done."); }
+    catch (e) { MIAShell.say(e.message); }
   }
 
   MIAShell.start(async () => {

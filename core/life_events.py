@@ -108,9 +108,9 @@ TYPES = {
     "quest_completed": "fictional quests finished",
     "campaign_turn": "turns played (fictional)",
     "mission_abandoned": "missions set aside",
+    "property_sold": "properties sold",
     "trade_finished": "jobs walked through to the end",
     "trade_stopped": "jobs stopped partway",
-    "property_sold": "properties sold",
     "mcu_flashed": "greenhouse safety firmware flashed",
     "node_pushed": "greenhouse node installs",
     "node_secret_sent": "greenhouse node email set up",
@@ -262,7 +262,7 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
 
 _VERBS = (("_added", "Added"), ("_created", "Added"), ("_updated", "Changed"), ("_removed", "Removed"),
           ("_deleted", "Removed"), ("_finished", "Finished"), ("_done", "Done:"), ("_logged", "Logged"),
-          ("_filed", "Filed"), ("_started", "Started"))
+          ("_filed", "Filed"), ("_started", "Started"), ("_sold", "Sold"))
 
 
 def _about(result, args) -> tuple[str, str]:

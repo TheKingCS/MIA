@@ -4,6 +4,8 @@
  * status strip, MIA's one finding, the focus rows (each with its kind;
  * ticking runs the item's action: confirm, undo), what's upcoming, the
  * level; and on a wide screen MIA's column (MIA.history, things to ask).
+ * "Hear It" says the day aloud in MIA's voice (the engine's `briefing`,
+ * spoken by /api/heavy/speak on the home computer).
  */
 (function () {
   "use strict";
@@ -103,6 +105,7 @@
     if (nexusFirst()) return;
     const [home, shell] = await Promise.all([MIA.dashboard(), MIA.shell()]);
     $("greeting").textContent = home.greeting;
+    hearIt(home.briefing);
     $("subtitle").textContent = home.focus.length
       ? (home.focus.length === 1 ? "One thing needs you today." : home.focus.length + " things need you today.") + " The rest can wait."
       : home.subtitle;
@@ -127,6 +130,22 @@
       el("span", { class: "home-avatar", "aria-hidden": "true" }, "🧙"),
       el("span", { class: "home-level-text" }, el("strong", {}, "lvl " + p.level), el("small", {}, p.total_xp + " XP")),
       el("span", { class: "xpbar" }, el("span", { class: "xpbar-track" }, el("span", { class: "xpbar-fill", style: "width:" + pct + "%" }))));
+  }
+
+  // The spoken briefing: one button beside the greeting; her voice comes from the home computer.
+  function hearIt(text) {
+    let b = $("hear-it");
+    if (!text) { if (b) b.remove(); return; }
+    if (!b) {
+      b = el("button", { type: "button", class: "btn btn-ghost btn-small home-hear", id: "hear-it", "aria-label": "Hear today's briefing" }, "▶ Hear It");
+      $("subtitle").after(b);
+    }
+    b.onclick = async () => {
+      b.disabled = true;
+      try { const said = await MIA.speak(text); await new Audio("data:audio/wav;base64," + said.audio_wav_base64).play(); }
+      catch (e) { MIAShell.say(e.message || "MIA's voice isn't available right now."); }
+      finally { b.disabled = false; }
+    };
   }
 
   // The gear: Profile, Settings, Log out (Zac, 2026-10-07).

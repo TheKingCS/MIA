@@ -14,7 +14,9 @@ core/connectivity.py:
    MIA to offer this while offline; `OnlineReminders` makes it real: a
    small saved list (data/online_reminders.json), delivered as ordinary
    notifications the moment the connection returns (the owner asked for
-   them, so they don't count against the daily limit).
+   them, so they don't count against the daily limit). The Notifications
+   screen lists them (`listed`) and takes one off (`remove`): Waiting for
+   the Internet, core/web_notifications.py.
 """
 
 from __future__ import annotations
@@ -113,6 +115,19 @@ class OnlineReminders:
     def pending(self) -> list[str]:
         """What the reminders say, oldest first."""
         return [item["what"] for item in self._items]
+
+    def listed(self) -> list[dict]:
+        """Each reminder with when it was made, oldest first (the Notifications screen's Waiting for the Internet)."""
+        return [dict(item) for item in self._items]
+
+    def remove(self, index: int) -> str:
+        """Takes one reminder off the list (by its place, oldest first) and returns what it said; IndexError when
+        there's no such one."""
+        if not 0 <= index < len(self._items):
+            raise IndexError(index)
+        item = self._items.pop(index)
+        self._save()
+        return item["what"]
 
     def take_all(self) -> list[str]:
         """The reminders, removed: they're being delivered now."""

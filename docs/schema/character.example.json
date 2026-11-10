@@ -312,5 +312,10 @@
       "watch": [],
       "buffs": []
     }
-  ]
+  ],
+  "crest": {
+    "image": "",
+    "words": "a shield bearing an anvil with a gear and a hammer, bronze, deep blue and cyan glow",
+    "can_paint": true
+  }
 }

@@ -1,6 +1,6 @@
 """
 MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI),
-kept in the person's folder, and can go up as their theme's backdrop. Tested against a stand-in ComfyUI on a local
+kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local
 port: the same HTTP calls, a tiny PNG back.
 """
 
@@ -185,3 +185,19 @@ def test_a_painting_added_or_removed_is_a_line_in_her_history(tmp_path):
     assert [(e["type"], e["summary"]) for e in lines] == [("art_added", "Added a painting MIA made"),
                                                          ("art_removed", "Removed a painting")]
     assert "porch" not in json.dumps(lines)
+
+
+def test_a_crest_is_painted_for_the_character_card_and_shown_there(ctx, comfy):
+    from core import person_settings
+    from core.web_progress import _crest, crest_words
+
+    words = crest_words([{"key": "craft", "value": 9}, {"key": "strength", "value": 12}, {"key": "wisdom", "value": 3}], 14)
+    assert words == "a shield bearing a hammer and an anvil with a gear, silver inlay, deep blue and cyan glow"
+    assert art_studio.problem(words) is None  # no person, no face: a crest is something MIA paints
+    assert _crest(ctx, {"attributes": [], "me": {"level": 1}}) == {"image": "", "can_paint": True,
+                                                                   "words": crest_words([], 1)}
+    art_studio.start(ctx, words, "crest", apply=True, engine=comfy, wait=True)
+    art_id = art_studio.settle(ctx)[0]["art_id"]
+    assert person_settings.get(ctx, "character.crest") == art_id
+    assert _crest(ctx, {"attributes": [], "me": {"level": 1}})["image"] == f"/api/art/{art_id}/image"
+    assert art_studio.prompt_for(words, "crest")["width"] == 1024 and "people" in art_studio.prompt_for(words, "crest")["negative"]

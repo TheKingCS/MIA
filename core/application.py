@@ -99,6 +99,7 @@ from core.assistant_cooking_actions import register_cooking_actions
 from core.assistant_household_actions import register_household_actions
 from core.assistant_lab_actions import register_lab_actions
 from core.assistant_notification_actions import register_notification_actions
+from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
 from core.assistant_trip_route_actions import register_trip_route_actions
@@ -312,7 +313,7 @@ class MIAApplication:
     def __init__(self) -> None:
         """Builds the whole app before anything is shown: the Qt application and fonts, config, the event bus and AppContext, the
         theme, profiles and households, then every core service onto the context (each store, the model, voice, the
-        communication gate, budget, maps...), the module manager and search, the registries (search providers,
+        communication gate, budget, maps, the sensors that send their own readings...), the module manager and search, the registries (search providers,
         calculators, the Assistant's tools, dashboard widgets) and the timers that run the periodic checks. Only
         construction happens here; run() shows the splash and boots.
         """
@@ -493,6 +494,9 @@ class MIAApplication:
         self.context.net_worth = NetWorthHistory(self.context)
         self.context.real_estate = RealEstateManager(self.context)
         self.context.energy = EnergyManager(self.context)
+        from core.sensors import SensorStore
+
+        self.context.sensors = SensorStore(self.context)  # sensors that send their own readings (core/sensors.py)
         self.context.plaid = PlaidManager(self.context)
         self.context.map_tiles = MapTileCache(self.context)
         self.context.trail_maps = TrailMapLibrary(self.context)
@@ -1697,7 +1701,10 @@ class MIAApplication:
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
         milestone 5.5. Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
-        the one place independent core services get wired together.
+        the one place independent core services get wired together
+        (tools in their own files register here too, such as
+        core/assistant_screen_tools.py: look it up online, what isn't
+        working, past conversations).
         Every handler below is a `@staticmethod` — a pure function of
         (context, arguments) — except that none of them actually need
         `self` at all; `context.module_manager` (set right above) is
@@ -1746,6 +1753,7 @@ class MIAApplication:
         register_asset_part_actions(self.context.assistant_actions)  # the parts an asset uses
         register_health_actions(self.context.assistant_actions)  # sleep, visits, medications, records (DEC-0129)
         register_notification_actions(self.context.assistant_actions)  # read out and mark notifications read (DEC-0125)
+        register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_creation_actions(self.context.assistant_actions)  # screens MIA made for you, by voice (DEC-0091)
         register_game_actions(self.context.assistant_actions)  # boss battles and questlines by voice (DEC-0028)
@@ -5529,10 +5537,11 @@ class MIAApplication:
 
     @staticmethod
     def _action_record_property_sale(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `record_property_sale`: records a property as sold (price, costs, date) and says what it came
-        to, the gain as an estimate (core/real_estate_manager.sale_summary). Returns the reply in words (a missing or
-        unknown name, no price, or a property already sold says so, nothing changes)."""
-        from core.real_estate_manager import sale_summary
+        """Assistant tool `record_property_sale`: records a property as sold (price, costs, date) through the Real
+        Estate page's own `property.sell`, and says it's recorded and what it comes to (the cash after the mortgage
+        and the gain: estimates, never tax figures). Returns the reply in words (a missing or unknown name, a price
+        that isn't a number, or a property already sold says so, nothing changes)."""
+        from core.actions import ACTION_TYPES
 
         property_name = str(arguments.get("property_name", "")).strip()
         if not property_name:
@@ -5545,15 +5554,14 @@ class MIAApplication:
         prop, error = MIAApplication._resolve_property(context, property_name)
         if error:
             return error
+        kind = ACTION_TYPES["property.sell"]
+        params = {"property_id": prop.property_id, "price": price, "selling_costs": costs,
+                  "date": str(arguments.get("date") or "").strip()}
         try:
-            sold = context.real_estate.record_sale(prop.property_id, price, str(arguments.get("date") or "").strip(),
-                                                   costs)
-        except ValueError as problem:
+            figures = kind.describe(context, params).split(": ", 1)[-1]
+            return f"{kind.execute(context, params)} {figures}"
+        except ValueError as problem:  # ActionError is one
             return str(problem)
-        summary = sale_summary(sold)
-        return (f"Recorded '{sold.name}' as sold for {money(sold.sale_price, ',.0f')}: about "
-                f"{money(summary['net_proceeds'], ',.0f')} after costs and the loan payoff, and an estimated gain of "
-                f"{money(summary['gain'], ',.0f')} (not a tax figure; your preparer works from the closing statement).")
 
     @staticmethod
     def _action_get_property_summary(context: AppContext, arguments: dict) -> str:

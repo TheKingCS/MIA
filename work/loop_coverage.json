@@ -33,6 +33,18 @@
    "status": "none",
    "why": "each import is the person's own ask, previewed and approved; a refused or failed one counts in actions.failed, and every import is undoable"
   },
+  "action:connection": {
+   "status": "none",
+   "why": "declining or allowing a connection is the person's own say (DEC-0146); connections.landed and connections.unlinked watch the connections themselves"
+  },
+  "action:conversation": {
+   "status": "none",
+   "why": "deleting a past conversation is the person's own choice; answers are watched by the ratings and turn-trace loops"
+  },
+  "action:direction": {
+   "status": "none",
+   "why": "a direction is the person's own value in their own words (DEC-0141); the nudges it feeds are watched by checks.dismissed"
+  },
   "action:energy": {
    "status": "none",
    "why": "readings and sources entered by hand (Power, DEC-0125): measurements, not her choices; nothing of MIA's to improve"
@@ -44,6 +56,10 @@
   "action:firstboot": {
    "status": "none",
    "why": "once per device; the glasses first boot is watched through glasses.voice once it is done"
+  },
+  "action:gps_track": {
+   "status": "none",
+   "why": "keeping a GPX file someone chose and deleting one; the numbers are worked out in code from the file (core/gps_tracks.stats), so there's nothing to learn"
   },
   "action:lab_reading": {
    "status": "none",
@@ -65,6 +81,14 @@
    "status": "none",
    "why": "reading and dismissing notifications by hand; a dismissal already teaches the communication gate (its gate.* loops)"
   },
+  "action:online": {
+   "status": "none",
+   "why": "reminders kept by hand for when the internet is back and delivered all at once when it is; nothing there to get better at"
+  },
+  "action:portal": {
+   "status": "none",
+   "why": "which painting is in a portal is the person's own look (DEC-0140); paintings are watched with the art studio's"
+  },
   "action:profile": {
    "status": "none",
    "why": "their own settings: nothing MIA chose, so nothing of hers to correct"
@@ -72,6 +96,10 @@
   "action:record": {
    "status": "none",
    "why": "health records kept as given (DEC-0129); never interpreted"
+  },
+  "action:sensor": {
+   "status": "none",
+   "why": "removing a sensor a person added; its readings are improved by each app's own reading loops (ranges, findings)"
   },
   "action:setting": {
    "status": "none",
@@ -85,6 +113,10 @@
    "status": "none",
    "why": "a starter set added by the person from Settings or by voice (DEC-0125); what it adds are routines and upkeep, which have their own loops"
   },
+  "action:style": {
+   "status": "none",
+   "why": "a pick or a choice of how to be answered is the person's own taste (DEC-0138); the style it teaches is the loop (response_style learns from every pick)"
+  },
   "action:textbook": {
    "status": "none",
    "why": "a course made from a book, or a book removed, by the person on the Classroom page or by voice (DEC-0125); the tutor's answers have their own loops"
@@ -92,6 +124,14 @@
   "action:theme": {
    "status": "none",
    "why": "a theme the person made or removed is their own taste (DEC-0136); nothing of MIA's to improve"
+  },
+  "action:track": {
+   "status": "none",
+   "why": "deleting an uploaded song from the music library; nothing to learn from it (a song from the music folder itself is never deleted)"
+  },
+  "action:trail_map": {
+   "status": "none",
+   "why": "taking a park map out is the person's own tidying; the map itself is the park's, nothing of MIA's to improve"
   },
   "action:undo": {
    "status": "none",
@@ -108,6 +148,10 @@
   "action:why": {
    "status": "none",
    "why": "the person's own reasons, linked, unlinked or marked achieved by hand on My Why (DEC-0125); MIA never invents a reason, so there's nothing of hers to improve"
+  },
+  "action:world": {
+   "status": "none",
+   "why": "worlds, campaigns and quests are the person's own fiction (DEC-0134, DEC-0137); nothing real to improve"
   },
   "check:birthday": {
    "status": "none",
@@ -193,6 +237,10 @@
    "status": "none",
    "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
   },
+  "store:living_worlds": {
+   "status": "none",
+   "why": "the person's own fiction (DEC-0134); fictional events never count as real life (DEC-0137)"
+  },
   "store:net_worth": {
    "status": "none",
    "why": "a reading of net worth once a day, worked out in code from the accounts and properties: a measurement, not her choices"
@@ -232,38 +280,6 @@
   "store:textbooks": {
    "status": "none",
    "why": "the books and chapters they added; the tutor keeps no quiz answers to grade, so there is nothing to measure until it records them"
-  },
-  "action:direction": {
-   "status": "none",
-   "why": "a direction is the person's own value in their own words (DEC-0141); the nudges it feeds are watched by checks.dismissed"
-  },
-  "action:style": {
-   "status": "none",
-   "why": "a pick or a choice of how to be answered is the person's own taste (DEC-0138); the style it teaches is the loop (response_style learns from every pick)"
-  },
-  "action:world": {
-   "status": "none",
-   "why": "worlds, campaigns and quests are the person's own fiction (DEC-0134, DEC-0137); nothing real to improve"
-  },
-  "store:living_worlds": {
-   "status": "none",
-   "why": "the person's own fiction (DEC-0134); fictional events never count as real life (DEC-0137)"
-  },
-  "action:trail_map": {
-   "status": "none",
-   "why": "taking a park map out is the person's own tidying; the map itself is the park's, nothing of MIA's to improve"
-  },
-  "action:conversation": {
-   "status": "none",
-   "why": "deleting a past conversation is the person's own choice; answers are watched by the ratings and turn-trace loops"
-  },
-  "action:connection": {
-   "status": "none",
-   "why": "declining or allowing a connection is the person's own say (DEC-0146); connections.landed and connections.unlinked watch the connections themselves"
-  },
-  "action:portal": {
-   "status": "none",
-   "why": "which painting is in a portal is the person's own look (DEC-0140); paintings are watched with the art studio's"
   }
  }
 }

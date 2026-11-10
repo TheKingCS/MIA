@@ -6,7 +6,8 @@
  * Show and Copy (a password comes from MIA one at a time, only then, and
  * is hidden again after a few seconds), add and change with a generator,
  * import a browser or Bitwarden export, Lock. Never through actions, so a
- * password is never in an action's record. Formatting only.
+ * password is never in an action's record. "Fill Other Apps" says how to
+ * turn MIA on as the phone's autofill service (2026-11-09). Formatting only.
  */
 (function () {
   "use strict";
@@ -234,6 +235,9 @@
         el("p", {}, "From Chrome or Edge: Settings → Passwords → Export. From Bitwarden, Firefox, 1Password or LastPass: their CSV export. Then pick the file here."),
         el("p", { class: "dim" }, "The export file isn't encrypted: delete it once they're in."),
         el("div", { class: "row-buttons" }, btn("Import A CSV", "btn-ghost", importExport), btn("Change Master Password", "btn-ghost", changeMaster))),
+      section("Fill Other Apps", null,
+        el("p", {}, "On your phone, MIA can fill sign-ins in other apps and websites: Android Settings → Passwords and autofill → Autofill service → MIA."),
+        el("p", { class: "dim" }, "A sign-in then offers “Fill from MIA”. Nothing is read until you pick a login, and only that password goes into the box.")),
     ].filter(Boolean);
   }
 

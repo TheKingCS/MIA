@@ -1,0 +1,154 @@
+{
+ "available": true,
+ "sensors": [
+  {
+   "id": "07b6be11d5",
+   "name": "Battery monitor",
+   "app": "power",
+   "target": {
+    "source_id": "s1",
+    "meter": "battery",
+    "unit": "%"
+   },
+   "profile_id": "demo",
+   "created": "2026-11-09T02:48:32",
+   "last_at": "2026-11-09T07:59:30",
+   "last_value": 87,
+   "count": 1490,
+   "goes_to": "Power: battery (%)"
+  },
+  {
+   "id": "9ecfde6324",
+   "name": "Bench probe",
+   "app": "lab",
+   "target": {
+    "series": "soil moisture",
+    "unit": "%"
+   },
+   "profile_id": "demo",
+   "created": "2026-11-09T02:48:32",
+   "last_at": "",
+   "last_value": null,
+   "count": 0,
+   "goes_to": "The Lab: soil moisture (%)"
+  },
+  {
+   "id": "3ad65a1628",
+   "name": "Tank 1 pH probe",
+   "app": "greenhouse",
+   "target": {
+    "place": "Tank 1",
+    "measure": "ph"
+   },
+   "profile_id": "demo",
+   "created": "2026-11-09T02:48:32",
+   "last_at": "2026-11-09T07:58:00",
+   "last_value": 6.9,
+   "count": 212,
+   "goes_to": "Greenhouse: Tank 1 pH"
+  }
+ ],
+ "apps": [
+  {
+   "id": "lab",
+   "name": "The Lab",
+   "fields": [
+    {
+     "name": "series",
+     "label": "The series (e.g. soil moisture)"
+    },
+    {
+     "name": "unit",
+     "label": "Unit (optional)"
+    }
+   ]
+  },
+  {
+   "id": "power",
+   "name": "Power",
+   "fields": [
+    {
+     "name": "source_id",
+     "label": "The energy source"
+    },
+    {
+     "name": "meter",
+     "label": "What it measures (e.g. battery %)"
+    },
+    {
+     "name": "unit",
+     "label": "Unit (optional)"
+    }
+   ]
+  },
+  {
+   "id": "greenhouse",
+   "name": "Greenhouse",
+   "fields": [
+    {
+     "name": "place",
+     "label": "The tank or bed"
+    },
+    {
+     "name": "measure",
+     "label": "What it measures (e.g. pH)"
+    }
+   ]
+  }
+ ],
+ "picks": {
+  "source_id": [
+   {
+    "value": "s1",
+    "label": "Solar bank"
+   }
+  ],
+  "place": [
+   {
+    "value": "Tank 1",
+    "label": "Tank 1"
+   }
+  ],
+  "series": [],
+  "measure": [
+   {
+    "value": "ph",
+    "label": "pH"
+   },
+   {
+    "value": "ammonia",
+    "label": "Ammonia"
+   },
+   {
+    "value": "nitrite",
+    "label": "Nitrite"
+   },
+   {
+    "value": "nitrate",
+    "label": "Nitrate"
+   },
+   {
+    "value": "oxygen",
+    "label": "Dissolved oxygen"
+   },
+   {
+    "value": "water_temp",
+    "label": "Water temperature"
+   },
+   {
+    "value": "air_temp",
+    "label": "Air temperature"
+   },
+   {
+    "value": "humidity",
+    "label": "Humidity"
+   },
+   {
+    "value": "ec",
+    "label": "EC"
+   }
+  ]
+ },
+ "min_gap": 30,
+ "standard": "A sensor's key can only log a number to its own series: it can't read anything or sign in. It's shown once; remove the sensor and the key stops working."
+}

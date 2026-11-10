@@ -22,6 +22,8 @@ the work dungeon's shifts (core/work_dungeon.py), the nights of sleep (core/heal
 - `easy_start()`: in their usual hour for a run, with nothing done yet today, the smallest thing that usually starts
   one, offered through the gate.
 - `tomorrow_prep()`: in the evening before a work day, the prep they've done themselves on such evenings before.
+- `picture()` / `picture_words()`: the findings for a screen (the Operating Journal, the glasses), with how many runs
+  she's seen of the few she waits for.
 """
 
 from __future__ import annotations
@@ -230,3 +232,25 @@ def tomorrow_prep(context, now: Optional[datetime] = None) -> Optional[str]:
         if count >= 2 and k not in tonight:
             return f"You work tomorrow. Last times you {said[k]} the night before. Want to do that tonight?"
     return None
+
+
+def picture(context, now: Optional[datetime] = None) -> dict:
+    """For a screen (the Operating Journal's "How Your Good Runs Go", the glasses' Good Runs; claude, 2026-11-09):
+    the findings as counts, how many runs MIA has seen and how many she waits for before saying anything, and whether
+    the person is on a run right now (then the screen only says so, and says nothing else). Never a score."""
+    now = now or datetime.now()
+    runs = len(windows(done_events(context, now)))
+    return {"findings": findings(context, now), "runs": runs, "need": MIN_RUNS, "in_flow": in_flow(context, now),
+            "standard": "Counts from what you've done, never a score or a schedule: what your good runs have in "
+                        "common, said once they've happened a few times."}
+
+
+def picture_words(p: dict) -> str:
+    """Pure logic. What to say when there are no findings yet: how many runs she's seen of the few she waits for."""
+    if p.get("findings"):
+        return ""
+    seen, need = p.get("runs", 0), p.get("need", MIN_RUNS)
+    if not seen:
+        return (f"Nothing yet. When you get three or more things done close together, MIA notes what started it; "
+                f"after {need} of those she says what they have in common.")
+    return f"{seen} of the {need} runs she waits for before saying what they have in common."

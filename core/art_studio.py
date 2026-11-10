@@ -63,6 +63,9 @@ USES: dict[str, tuple[int, int, str]] = {
                             "shadows toward the edges, highly detailed"),
     "portal": (832, 1216, "{d}, a single clear subject centred in the frame, painterly cinematic illustration, dusk "
                           "or night, glowing light, dark vignette edges, highly detailed"),
+    # The Character card's portrait (2026-11-09): a crest, never a person (NEGATIVE keeps people and faces out).
+    "crest": (1024, 1024, "{d}, a heraldic crest emblem, one symbolic design centred, ornate metal and glowing light, "
+                          "dark background, painterly fantasy illustration, symmetrical, highly detailed"),
 }
 NEGATIVE = ("text, letters, words, writing, watermark, signature, logo, brand, ui, frame, border, people, person, face, "
             "crowd, blurry, lowres, jpeg artifacts, deformed")
@@ -295,12 +298,12 @@ def start(context, description: str, use: str = "backdrop", apply: bool = False,
     """Starts a painting: checks the words and that the engine is running, then paints on a worker thread. Returns the
     job ({id, status: painting, description, use}); ValueError with a sentence when it can't start. `apply`: put it up
     as the background when it's done (settle); for a portal picture with `area`, put it in that area's portal instead
-    (core/portal_pictures). `wait`: paint on this thread (tests)."""
+    (core/portal_pictures); for a crest, on the Character card. `wait`: paint on this thread (tests)."""
     reason = problem(description)
     if reason:
         raise ValueError(reason)
     if use not in USES:
-        raise ValueError("MIA paints backdrops and portal pictures.")
+        raise ValueError("MIA paints backdrops, portal pictures and character crests.")
     engine = engine or engine_for(context)
     running, line = engine.available()
     if not running:
@@ -368,8 +371,8 @@ def public(job: dict) -> dict:
 
 def settle(context) -> list[dict]:
     """On the main thread: this person's finished paintings become pictures in their store; one asked for as the
-    background goes up as their theme's backdrop, one asked for an area's portal goes in that portal. Returns the jobs
-    it settled."""
+    background goes up as their theme's backdrop, one asked for an area's portal goes in that portal, and a crest asked
+    for the Character card goes there (`character.crest`). Returns the jobs it settled."""
     store = getattr(context, "art", None)
     me = _person(context)
     with _LOCK:
@@ -389,6 +392,10 @@ def settle(context) -> list[dict]:
                     put_up(context, job["area"], item["id"])
                 except ValueError as problem_:
                     log.warning("Art: couldn't put %s in the %s portal: %s", item["id"], job["area"], problem_)
+            elif job["apply"] and job["use"] == "crest":
+                from core import person_settings
+
+                person_settings.put(context, "character.crest", item["id"])
             elif job["apply"]:
                 try:
                     use_as_backdrop(context, item["id"])

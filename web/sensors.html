@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Sensors — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="sensors" data-icon="lab" class="mod-sensors" data-say="What are my sensors?">
+  <!--
+    Sensors (core/sensors.py): the person's sensors that send their own readings to the Lab, Power or the
+    Greenhouse, adding one (its key shown once) and removing one (sensor.remove). Built by claude, 2026-11-09.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Sensors</h1>
+        <p class="tagline" id="sn-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="sensors.js"></script>
+</body>
+</html>

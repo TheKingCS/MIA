@@ -2,8 +2,10 @@
 The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026-11-08): every one builds a panel
 without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what
 needs the person in amber and only what's broken in red, and lets the glasses change nothing but an open promise.
-Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections), the card
-faces and their tiles, and long sentences split into a head and a detail.
+Also the items added to cards that had panels (What's Next, Your Campaign, My Directions, Connections, and the
+Workshop's The Job, starting a Trade Master job and moving it along with its holds kept, the Maps card's Tracks, the Classroom's Practice with a chord's shape, and the Lab's Sensors), the card
+faces and their tiles, and long sentences split into a head and a detail (at a mark, or at the last word that fits),
+and Good Runs (Natural Momentum's counts).
 """
 
 import json
@@ -22,6 +24,19 @@ SCHEMA = Path(__file__).resolve().parent.parent / "docs" / "schema"
 def _example(name):
     """A screen's demo data (docs/schema/<name>.example.json): the page assembler's real shape."""
     return json.loads((SCHEMA / f"{name}.example.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture(autouse=True)
+def _no_real_inspection(monkeypatch):
+    """The PC Health card inspects the computer and keeps the report under data/: here it reads a stand-in that
+    says it couldn't, so no test writes into the real data folder."""
+    import core.inspection
+
+    def refuse(_context, _subject):
+        """Stands in for a passive inspection that can't run here."""
+        raise RuntimeError("not inspected in a test")
+
+    monkeypatch.setattr(core.inspection, "inspect", refuse)
 
 
 def _builders():
@@ -156,12 +171,14 @@ def test_the_added_items_come_after_a_cards_own_panels():
     assert [m["label"] for m in glasses.menu_for(play)][:2] == ["This Week", "Your Campaign"]
 
 
-def test_a_long_sentence_splits_into_a_head_and_a_detail_where_it_reads_well():
+def test_a_long_sentence_splits_into_a_head_and_a_detail_where_it_reads_well_or_at_a_word():
     assert gc._split("About $70 for the whole path, more than the $20 you have.") == (
         "About $70 for the whole path", "more than the $20 you have.")
     assert gc._split("Dream one small thing onto paper today — a creature.") == (
         "Dream one small thing onto paper today", "a creature.")
     assert gc._split("A short line.") == ("A short line.", "")
+    assert gc._split("5 of your 7 runs of getting things done began with making coffee.") == (
+        "5 of your 7 runs of getting things done", "began with making coffee.")  # no mark: the last word that fits
 
 
 def test_the_new_card_faces_carry_tiles_from_their_pages(monkeypatch):
@@ -179,3 +196,90 @@ def test_the_new_card_faces_carry_tiles_from_their_pages(monkeypatch):
 def test_a_card_with_nothing_set_up_has_no_tiles():
     for app in gc.TILES:
         assert glasses._tiles(SimpleNamespace(config=None), app, TODAY) == []
+
+
+def test_the_workshop_card_walks_a_job_with_next_checked_back_and_stop():
+    from datetime import datetime
+    from types import SimpleNamespace
+
+    from core import trade_session as js, trades
+    from core.glasses_cards import _trade_job
+
+    trades._loaded()
+    job = trades.JOBS["chicken_coop"]
+    s = js.start(job, datetime(2026, 11, 9, 9))
+    s.at = next(i for i, (_p, _j, st) in enumerate(job.steps()) if st.hold)
+    ctx = SimpleNamespace(trade_session=SimpleNamespace(live=lambda: s))
+    p = _trade_job(ctx, date(2026, 11, 9))
+    kinds = [(ln.get("action") or {}).get("kind") for ln in p["lines"]]
+    assert "trade.check" in kinds and "trade.stop" in kinds and kinds[0] is None  # Next waits on the hold
+    js.confirm(s)
+    kinds = [(ln.get("action") or {}).get("kind") for ln in _trade_job(ctx, date(2026, 11, 9))["lines"]]
+    assert kinds[0] == "trade.next" and "trade.check" not in kinds
+
+
+def test_the_workshop_card_asks_a_diagnosis_yes_or_no():
+    from datetime import datetime
+    from types import SimpleNamespace
+
+    from core import trade_session as js, trades
+    from core.glasses_cards import _trade_job
+
+    trades._loaded()
+    s = js.start(trades.DIAGNOSES["toilet_running"], datetime(2026, 11, 9, 9))
+    p = _trade_job(SimpleNamespace(trade_session=SimpleNamespace(live=lambda: s)), date(2026, 11, 9))
+    assert [(ln.get("action") or {}).get("params", {}).get("answer") for ln in p["lines"][1:3]] == ["yes", "no"]
+
+
+def test_the_workshop_card_offers_the_jobs_to_start_when_none_is_going():
+    from types import SimpleNamespace
+
+    from core.glasses_cards import _trade_job
+
+    p = _trade_job(SimpleNamespace(trade_session=SimpleNamespace(live=lambda: None)), date(2026, 11, 9))
+    assert p["title"] == "Start a Job" and p["lines"] and all(
+        ln["action"]["kind"] == "trade.start" and ln["action"]["params"]["item_id"] for ln in p["lines"])
+    assert "isn't on this MIA" in _trade_job(SimpleNamespace(), date(2026, 11, 9))["empty"]
+
+
+def test_the_maps_card_shows_the_latest_tracks_and_the_months_total(tmp_path):
+    from core.gps_tracks import GpsTracks
+    from core.glasses_cards import _tracks
+    from tests.test_web_tracks import gpx
+
+    ctx = SimpleNamespace()
+    ctx.gps_tracks = GpsTracks(ctx, data_dir=tmp_path)
+    ctx.gps_tracks.add_gpx(gpx("Ridge loop", "2026-11-01"))
+    p = _tracks(ctx, date(2026, 11, 9))
+    assert p["lines"][0]["text"].endswith("km in the last 30 days") and p["lines"][1]["text"] == "Ridge loop"
+    assert "No tracks yet" in _tracks(SimpleNamespace(gps_tracks=GpsTracks(ctx, data_dir=tmp_path / "none")), date(2026, 11, 9))["empty"]
+
+
+def test_the_classroom_card_shows_each_path_whats_next_and_a_chords_shape(tmp_path):
+    from core import guitar, paths
+    from core.glasses_cards import _practice
+
+    ctx = SimpleNamespace()
+    ctx.paths = paths.PathBook(ctx, data_dir=tmp_path)
+    assert "No path started" in _practice(ctx, TODAY)["empty"]
+    ctx.paths.start(guitar.PROGRAM, "songs", 15, 5, today=TODAY)
+    p = _practice(ctx, TODAY)
+    texts = [ln["text"] for ln in p["lines"]]
+    assert texts[0].startswith("Guitar: stage 1") and len(p["lines"]) <= glasses.MAX_LINES
+    chord = next((ln for ln in p["lines"] if ln["detail"].startswith("fingers")), None)
+    assert chord is None or chord["text"].split(":")[0] in guitar.CHORDS
+    assert "Learning paths aren't" in _practice(SimpleNamespace(), TODAY)["empty"]
+
+
+def test_the_lab_card_shows_each_sensors_last_reading_and_a_quiet_one_in_amber(tmp_path, monkeypatch):
+    import core.person_settings
+    from core.glasses_cards import _sensors
+    from core.sensors import SensorStore
+
+    monkeypatch.setattr(core.person_settings, "person_id", lambda context: "p1")
+    ctx = SimpleNamespace()
+    ctx.sensors = SensorStore(ctx, data_dir=tmp_path)
+    a, _ = ctx.sensors.add("p1", "Probe", "lab", {"series": "temp"})
+    ctx.sensors.get(a["id"]).update(last_at="2026-11-07T08:00:00", last_value=20.5)
+    [line] = _sensors(ctx, date(2026, 11, 9))["lines"]
+    assert line["text"] == "Probe: 20.5" and line["tone"] == "attention"

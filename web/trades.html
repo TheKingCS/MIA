@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Trade Master — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="trades" data-icon="workshop" class="mod-trades" data-say="Walk me through building the chicken coop">
+  <!--
+    Trade Master (DEC-0149): every job and diagnosis MIA can walk you through, by trade; one opened in full; and the
+    walkthrough, step by step with its hold points and stop rules. MIA.trades() (core/web_trades.py); every press is
+    a trade.* action. Built by claude, 2026-11-09.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Trade Master</h1>
+        <p class="tagline" id="tm-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="trades.js"></script>
+</body>
+</html>

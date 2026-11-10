@@ -1,5 +1,5 @@
 ---
-id: K-0160
+id: K-0188
 kind: implementation
 title: Home building written to the Trade Master standard, and the traps the standard's triggers set
 status: confirmed

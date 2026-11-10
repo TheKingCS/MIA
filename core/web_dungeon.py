@@ -51,19 +51,22 @@ def banked(context, dungeon, start: date, end: date) -> list:
 
 def _run_row(run, split: dict, d) -> dict:
     """One run (shift) for the screen: its hours split into regular and overtime, its hard-mode modifiers, whether
-    it was a boss, its loot (with its differential and tips) and bonus, its tips, and its XP.
+    it was a boss, its loot (with its shift differential and tips) and bonus, the tips and differential on their own,
+    and its XP.
     """
-    from core.work_dungeon import AFFIX_BY_ID, boss_bonus, loot, run_extra, run_xp
+    from core.work_dungeon import AFFIX_BY_ID, boss_bonus, run_differential, run_loot, run_xp
 
     regular, overtime = split.get(run.run_id, (run.hours, 0.0))
     boss = overtime > 0 or run.boss
-    earned = round(loot(d, regular, overtime) + run_extra(d, run, regular, overtime), 2)
     return {"id": run.run_id, "date": run.date, "hours": run.hours, "status": run.status,
             "affixes": [{"id": a, "name": AFFIX_BY_ID[a].name if a in AFFIX_BY_ID else a,
                          "real": AFFIX_BY_ID[a].real if a in AFFIX_BY_ID else a} for a in run.affixes],
             "boss": boss, "regular": regular, "overtime": overtime,
-            "loot": earned, "loot_text": _money(earned) if d.hourly or earned else "",
-            "tips": run.tips, "differential": run.differential,
+            "loot": run_loot(d, run, regular, overtime),
+            "loot_text": _money(run_loot(d, run, regular, overtime)) if d.hourly or run.tips else "",
+            "tips": run.tips, "tips_text": _money(run.tips) if run.tips else "",
+            "differential": run_differential(d, run),
+            "differential_text": _money(run_differential(d, run)) + " an hour extra" if run_differential(d, run) else "",
             "bonus_text": _money(boss_bonus(d, overtime)) if overtime and d.hourly else "",
             "xp": run_xp(run.hours, run.affixes, boss), "note": run.note}
 
@@ -76,11 +79,10 @@ def _week_runs(mine: list, week0: date, week1: date) -> dict:
 
 
 def dungeon_view(context, d, runs: list, today: date) -> dict:
-    """One dungeon's numbers: its rates, today's run, the week (loot, hours, runs cleared of all), the month, the
-    pace, overtime right now, loot banked, planned and waiting runs, and the hard-mode record. Loot holds each run's
-    tips and shift differential (core/work_dungeon.run_extra)."""
-    from core.work_dungeon import (AFFIX_BY_ID, AFFIXES, boss_bonus, loot, run_extra, split_hours, take_home_share,
-                                   week_of)
+    """One dungeon's numbers: its rates (and shift differential), today's run, the week (loot with differentials and
+    tips, hours, runs cleared of all), the month, the pace, overtime right now, loot banked, planned and waiting runs,
+    and the hard-mode record."""
+    from core.work_dungeon import AFFIX_BY_ID, AFFIXES, boss_bonus, extras, loot, split_hours, take_home_share, week_of
 
     cleared = split_hours(d, runs)
     projected = split_hours(d, runs, include_planned=True)
@@ -91,13 +93,14 @@ def dungeon_view(context, d, runs: list, today: date) -> dict:
     month1 = (month0 + timedelta(days=32)).replace(day=1) - timedelta(days=1)
 
     def total(split: dict, start: date, end: date, statuses=("cleared",)) -> tuple[float, float, float, float]:
-        """Hours (regular, overtime), loot (with each run's differential and tips) and boss bonus in a window."""
-        reg = ot = extra = 0.0
+        """The runs' regular and overtime hours between two days, their loot (with each run's differential and tips)
+        and the boss bonus."""
+        reg = ot = more = 0.0
         for r in mine:
             if r.status in statuses and r.run_id in split and start.isoformat() <= r.date <= end.isoformat():
                 a, b = split[r.run_id]
-                reg, ot, extra = reg + a, ot + b, extra + run_extra(d, r, a, b)
-        return round(reg, 2), round(ot, 2), round(loot(d, reg, ot) + extra, 2), boss_bonus(d, ot)
+                reg, ot, more = reg + a, ot + b, more + extras(d, r, a, b)
+        return round(reg, 2), round(ot, 2), round(loot(d, reg, ot) + more, 2), boss_bonus(d, ot)
 
     w_reg, w_ot, w_loot, w_bonus = total(cleared, week0, week1)
     p_reg, p_ot, p_loot, p_bonus = total(projected, week0, week1, ("cleared", "planned"))
@@ -148,7 +151,9 @@ def dungeon_view(context, d, runs: list, today: date) -> dict:
     return {
         "id": d.dungeon_id, "name": d.name, "hourly": d.hourly, "set_up": bool(d.hourly),
         "rates": {"hourly_text": _money(d.hourly) if d.hourly else "", "overtime_text": _money(ot_hour) if d.hourly else "",
-                  "multiplier": d.overtime_multiplier, "after": d.overtime_after, "week_starts": d.week_starts},
+                  "multiplier": d.overtime_multiplier, "after": d.overtime_after, "week_starts": d.week_starts,
+                  "differential_text": (f"{_money(d.differential)} an hour extra on {', '.join(d.differential_days)}"
+                                        if d.differential and d.differential_days else "")},
         "today": _run_row(today_run, projected, d) if today_run else None,
         "week": {"start": week0.isoformat(), "end": week1.isoformat(), "hours": round(hours_week, 2), "overtime": w_ot,
                  **_week_runs(mine, week0, week1),
@@ -177,7 +182,8 @@ def dungeon_view(context, d, runs: list, today: date) -> dict:
         "runs": [_run_row(r, cleared, d) for r in done[:30]],
         "hard_mode": record,
         "values": {f: getattr(d, f) for f in ("name", "hourly", "overtime_multiplier", "overtime_after", "week_starts",
-                                              "take_home_pct", "payer", "shift_hours", "break_minutes", "notes")},
+                                              "take_home_pct", "payer", "shift_hours", "break_minutes", "notes")}
+        | {"differential": d.differential, "differential_days": ", ".join(d.differential_days or [])},
         "share": share,
     }
 

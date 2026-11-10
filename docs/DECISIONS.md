@@ -630,6 +630,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   autofill in other apps yet (an Android autofill service is the next
   step). Forgetting both the master password and the recovery code
   loses the vault: by design, nobody can get in.
+  **Autofill built (claude, 2026-11-09):** the phone app is an Android
+  autofill service (`MiaAutofillService.kt`, `AutofillActivity.kt`): a
+  sign-in anywhere offers "Fill from MIA"; the vault is unlocked with the
+  master password if it isn't open, the person picks a login (sites by
+  host, apps by package, `core/password_autofill.py`, titles only), and
+  only that password is read, once, into the box. Nothing saved from it.
 - Related: core/password_vault.py, web/passwords.*, server/app.py
   (`/api/passwords/*`), core/sync.py (`password_vault.json`)
 
@@ -2544,6 +2550,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   after A 3+ times and half of A's times), flow (2 done in 30 min), one easy start in his usual hour, tomorrow's prep
   before a shift; the gate holds everything but the urgent while he's in flow; the daily check `momentum` offers
   the easy start and the prep through the gate, once a day each. Faith: nothing built for her (DEC-0119 holds).
+  **Screen built (claude, design, 2026-11-09):** How Your Good Runs Go on the Operating Journal (`core/momentum.picture`)
+  and Good Runs on the glasses' Operating Journal card; counts only.
 - From: Zac's handoff "Natural Momentum & Flow State Optimization" (a morning where waking naturally and coffee led
   to the dishes, laundry, the kitchen, the dev list and getting ready, without forcing it). Its section 10 asks to
   find what exists first and not duplicate it.
@@ -2578,6 +2586,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   step by step, the model's context grounded in the job and step), `core/carpentry.py` (the apprentice program, three
   stages), six trade specialists, and two loops: `trades.depth` (opens a task for the next wanted job weekly) and
   `trades.finished`.
+  **Screen built (claude, design, 2026-11-09):** `web/trades.html` (`core/web_trades.py`, `/api/trades`) and the
+  glasses' Workshop card panel "The Job" (`core/glasses_cards._trade_job`).
 - From: Zac, 2026-11-08 ("just like Homesteading is Construction ... walk me through step by step of any home
   construction, repair, or diagnosis jobs with industry standard professional steps so nothing is missed ... She
   should become a Trade master and be able to teach an entry level Apprentice": carpentry, plumbing, HVAC,

@@ -1,7 +1,7 @@
 """What MIA can do and how she's built (DEC-0041): the capability map from
 the code, "can you…?" answered from it (or "not that I can find", never a
 guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057:
-a boundary by design isn't partial, what broke is inferred, a planned piece is never said as working)."""
+a boundary by design isn't partial, a missing piece is partial until it's built, what broke is inferred, a planned piece is never said as working)."""
 
 from types import SimpleNamespace
 
@@ -57,7 +57,7 @@ def test_the_map_comes_from_the_code(ctx):
     apps = {a["id"]: a for a in capability_map(ctx)}
     assert apps["budget"]["where"] == "web and desktop" and "list_bills" in apps["budget"]["look_up"]
     assert "mark_bill_paid" in apps["budget"]["change"]
-    assert apps["compliance"]["where"] == "web" and apps["diagnostics"]["where"] == "desktop"
+    assert apps["compliance"]["where"] == "web" and apps["diagnostics"]["where"] == "web and desktop"  # its own page (parity.PAGE_ELSEWHERE)
     assert apps["dashboard"]["where"] == "retired"
     said = overview(ctx)
     assert said.startswith("I have ") and "tax deadlines" in said and "Dashboard" not in said
@@ -175,11 +175,12 @@ def _status(monkeypatch, gaps=None, failures=()):
     return {r["id"]: r for r in capabilities.capability_status(SimpleNamespace(failures=log), "pc")}, capabilities
 
 
-def test_a_boundary_by_design_is_not_partial_but_a_missing_piece_is(monkeypatch):
+def test_a_boundary_by_design_is_not_partial_and_only_a_missing_piece_or_device_is(monkeypatch):
     rows, _ = _status(monkeypatch)
     assert rows["compliance"]["status"] == "implemented" and "never files" in rows["compliance"]["limit"]
-    assert rows["power"]["status"] == "partial" and "yet" in rows["power"]["why"]
-    assert rows["dungeon"]["status"] == "implemented"  # tips and differentials counted (2026-11-09)
+    assert all(r["status"] != "partial" or "yet" in r["why"] or "not on the" in r["why"] for r in rows.values())
+    assert rows["greenhouse"]["status"] == "implemented"  # sensors send their own readings since 2026-11-09
+    assert rows["dungeon"]["status"] == "implemented"  # shift differentials and tips counted since 2026-11-09
 
 
 def test_what_broke_this_week_is_malfunctioning_and_said_as_inferred(monkeypatch):

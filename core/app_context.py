@@ -138,7 +138,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class AppContext:
-    """Shared services passed to modules and GUI components."""
+    """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
+    sensors that send readings)."""
 
     config: ConfigManager
     events: EventBus
@@ -261,6 +262,8 @@ class AppContext:
     main_thread_call: Optional[Callable[[Callable[[], None]], None]] = field(default=None, repr=False)
     # "Remind me when I'm back online" (core/online_watch.py).
     online_reminders: Optional["OnlineReminders"] = field(default=None, repr=False)
+    # Sensors that send their own readings (core/sensors.py): the device's, each naming whose it is.
+    sensors: Optional[object] = field(default=None, repr=False)
     reward_shop: Optional["RewardShop"] = field(default=None, repr=False)  # DEC-0028
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
     dungeon: Optional["DungeonBook"] = field(default=None, repr=False)  # DEC-0046 work as a dungeon: runs, loot

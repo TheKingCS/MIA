@@ -17,6 +17,15 @@ from __future__ import annotations
 INFO = "INFO"
 
 CORPUS: list[tuple[str, str]] = [
+    # ---- screens that had no voice (core/assistant_screen_tools.py, 2026-11-09) ----
+    ("Look it up online: how deep do fence posts go in clay", "look_up_online"),
+    ("Can you search the web for frost dates in zone 5?", "look_up_online"),
+    ("What isn't working?", "get_app_status"),
+    ("Are any of your apps broken?", "get_app_status"),
+    ("Show me our past conversations", "list_past_conversations"),
+    ("What did we talk about last week?", "list_past_conversations"),
+    ("When did we talk about the chicken coop?", "find_in_conversations"),
+    ("What are my sensors saying?", "list_sensors"),
     # ---- MIA about herself (core/model_registry.py, 2026-10-21) ---------
     ("What AI model are you using?", "get_model_info"),
     ("Which model are you running on?", "get_model_info"),

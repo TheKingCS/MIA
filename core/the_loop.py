@@ -621,7 +621,8 @@ def reminders(context, now: Optional[datetime] = None) -> list[tuple[Rhythm, str
 
 def _reminder(context, r: Rhythm, today: date, start: datetime) -> Optional[tuple[str, str]]:
     """What a rhythm's reminder says today, as (title, message), or None when there's nothing to remind about: a work
-    run already cleared (else when it opens and ends, the hours, the break, and the loot it should bring), chores all
+    run already cleared (else when it opens and ends, the hours, the break, and the loot it should bring, its shift
+    differential in it), chores all
     done (else how many and which), the weekly check-in's line, today's training unless it's done or it's a rest day,
     or a custom rhythm's name and time.
     """
@@ -640,10 +641,10 @@ def _reminder(context, r: Rhythm, today: date, start: datetime) -> Optional[tupl
             text += f" (plus your {d.break_minutes:g}-minute break)"
         if d.hourly and run is not None:
             from core.region import money
-            from core.work_dungeon import loot, split_hours
+            from core.work_dungeon import run_loot, split_hours
 
             regular, overtime = split_hours(d, dungeons.runs, include_planned=True)[run.run_id]
-            text += f", about {money(loot(d, regular, overtime))} loot" + (" (boss loot in it)" if overtime else "")
+            text += f", about {money(run_loot(d, run, regular, overtime))} loot" + (" (boss loot in it)" if overtime else "")
         return "⚔ The dungeon opens soon", text + "."
     if r.kind == "routine":
         open_ = [m for m in _routine_missions(context, r, today) if m.status != "completed"]
@@ -698,7 +699,8 @@ def week(context, today: Optional[date] = None, start: Optional[date] = None) ->
     """This week's loop (Monday first, or any seven days from `start`):
     each rhythm's scheduled days and how each went. A past scheduled day
     with nothing done earned nothing (shown plainly); the share cleared
-    is the week's honest score."""
+    is the week's honest score. A run's loot includes its shift
+    differential and tips."""
     from core.region import money
 
     book = getattr(context, "loop", None)
@@ -714,7 +716,7 @@ def week(context, today: Optional[date] = None, start: Optional[date] = None) ->
         split = {}
         d = dungeons.get_dungeon(r.ref) if (r.kind == "work" and dungeons) else None
         if d is not None:
-            from core.work_dungeon import loot, split_hours
+            from core.work_dungeon import run_loot, split_hours
 
             split = split_hours(d, dungeons.runs, include_planned=True)
         since = _day(r.created_at) or monday
@@ -725,7 +727,7 @@ def week(context, today: Optional[date] = None, start: Optional[date] = None) ->
             cell = {"date": key, "on": on, "status": "off", "text": ""}
             if d is not None:
                 run = next((x for x in dungeons.runs if x.dungeon_id == d.dungeon_id and x.date == key), None)
-                worth = loot(d, *split[run.run_id]) if run is not None and run.run_id in split and d.hourly else None
+                worth = run_loot(d, run, *split[run.run_id]) if run is not None and run.run_id in split and d.hourly else None
                 if run is not None and run.status == "cleared":
                     cell.update(status="cleared", text=money(worth) if worth is not None else f"{run.hours:g} h")
                 elif on or run is not None:

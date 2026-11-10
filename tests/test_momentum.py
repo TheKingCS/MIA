@@ -4,7 +4,8 @@ tests.test_momentum
 
 Natural Momentum (core/momentum.py, DEC-0148): runs of things done found in the history, what they have in common
 said as counts once there are enough, what tends to follow what, whether the person is in flow (and the gate holding
-her non-urgent messages then), one easy start in their usual hour, and tomorrow's prep before a work day.
+her non-urgent messages then), one easy start in their usual hour, and tomorrow's prep before a work day. Also what a
+screen shows (`picture`): the Operating Journal's How Your Good Runs Go and the glasses' Good Runs.
 """
 
 from datetime import datetime, timedelta
@@ -98,3 +99,26 @@ def test_an_easy_start_in_their_usual_hour_and_tomorrows_prep_before_a_work_day(
     done = preps + [_e(evening - timedelta(minutes=30), "made tomorrow's coffee")]
     assert momentum.tomorrow_prep(_world(monkeypatch, done, work=[tomorrow]), evening) is None
     assert momentum.tomorrow_prep(_world(monkeypatch, preps), evening) is None  # no shift tomorrow
+
+
+def test_the_picture_for_a_screen_waits_for_enough_runs_then_gives_the_counts(monkeypatch):
+    few = momentum.picture(_world(monkeypatch, _mornings(days=(2, 1))), NOW)
+    assert few["findings"] == [] and few["runs"] == 2 and few["need"] == momentum.MIN_RUNS
+    assert "2 of the 3" in momentum.picture_words(few)
+    assert momentum.picture_words(momentum.picture(_world(monkeypatch, []), NOW)).startswith("Nothing yet")
+    full = momentum.picture(_world(monkeypatch, _mornings()), NOW)
+    assert full["findings"] and momentum.picture_words(full) == "" and not full["in_flow"]
+
+
+def test_the_operating_journal_and_the_glasses_show_the_good_runs(monkeypatch):
+    from datetime import date
+
+    from core import operating_journal
+    from core.glasses_cards import _good_runs
+
+    context = _world(monkeypatch, _mornings())
+    monkeypatch.setattr(momentum, "datetime", type("D", (datetime,), {"now": staticmethod(lambda: NOW)}))
+    page = operating_journal.screen(context)
+    assert page["momentum"]["findings"] and page["momentum"]["words"] == ""
+    panel = _good_runs(context, date(2026, 11, 20))
+    assert panel["title"] == "Good Runs" and panel["lines"]

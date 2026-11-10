@@ -5,7 +5,37 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-08 (evening: the glasses cards, after the unattended runs)*
+*Last updated: 2026-11-09 (early morning: the design session's screens-to-completion run)*
+
+**New 2026-11-09 (design session, unattended, Zac's /goal "every screen of MIA built out, glasses, PC and phone"):**
+the screens audit found these missing and built them, each with its actions, tests, demo data and a glasses panel
+where it fits, all pushed: **Trade Master** (`web/trades.html` in Home, `core/web_trades.py`; glasses Workshop → The
+Job moves it along, `trade.*` in GLASSES_KINDS), **How Your Good Runs Go** (DEC-0148, on the Operating Journal;
+glasses Good Runs), **Waiting for the Internet** (the online reminders, on Notifications; `online.remind`,
+`online.forget`), **Tracks** (GPX walks, rides and drives, `web/tracks.html` in Recreation; `track.add`,
+`track.delete`; glasses Maps → Tracks), voice for **look it up online**, **what isn't working**, and **past
+conversations** (`core/assistant_screen_tools.py`), the Dungeon's **shift differentials and tips**
+(`run_loot`, `dungeon.tips`), and Real Estate **selling** (`property.list_sale`, `property.sell`, a Sold section;
+a sold property leaves equity), Home's spoken briefing (**Hear It**, `core/web_surfaces.briefing`), and on the
+glasses Practice (Classroom: a path's next step and a chord's shape) and Start a Job (Workshop, `trade.start`).
+Glasses lines with no mark now split at a word. All 99 pages pass the demo sweep on
+desktop and phone. K-0156 to K-0162. **Sensors** (core/sensors.py, the Sensors page): any device on the home network sends readings to the Lab, Power
+or the Greenhouse with its own key (shown once, hashed, can only log to its series); DEC-0150's greenhouse node can
+use it. The **Character portrait** is a crest MIA paints from your two strongest stats when you press Paint My Crest (never
+a person; core/art_studio "crest"). The inbox falls back when the budget lacks `include_uncounted`, and the tool
+reference is regenerated. **Passwords autofill** on the phone: MIA is an Android autofill service (`MiaAutofillService.kt`,
+`AutofillActivity.kt`, `core/password_autofill.py`), checked on every phone build's emulator (registered and taken as
+the phone's autofill service, a fitting login listed without its password, a look-alike refused, 423 when locked);
+**Zac:** turn it on in Android Settings → Passwords and
+autofill → Autofill service → MIA, and try a sign-in. No app is partial in the capability list now. **Sight through the glasses' camera** (the last parity todo): "what am I looking at?" said
+through the glasses takes one photo with their own camera (`GlassesCamera.kt`, mwdat-camera 1.0.1) and asks Sight;
+builds and passes the emulator check, untried on the real glasses (Settings → Glasses → Let MIA Use the Glasses' Camera).
+**Loose ends from a full cloud run
+(2026-11-09):** besides the cloud's usual stand-in failures (FastAPI StopIteration, Qt mocks, libzim, astral, PDF
+readers), `core/inbox_manager.py` called `budget.all_expenses(include_uncounted=True)`, which this repo's
+`BudgetManager` doesn't take (the PC's uncommitted budget work, left alone): the inbox now falls back to
+`all_expenses()` when the option isn't there, so the receipt tests pass; and `test_life_events`' and `test_living_worlds`' sealed-store tests pass alone but fail
+after some other test in a full run (a data key left behind by an earlier test).
 
 **New 2026-11-08 (engine session's unattended run, 09:42 to evening): what's built, and what's next.** Built, core
 only, all pushed: the deep What's Next (DEC-0144, every chain); T-0020 repository inspection plus the weekly docs
@@ -49,8 +79,10 @@ noted below; the six starter diagnoses are built.
 `core/trades.WANTED` (the `trades.depth` loop opens a task for it): `workshop_circuit` (the workshop's wiring, a
 permit and the electrical stop rule), then `root_cellar`, the greenhouse and cold-room calculators in
 `core/build_calcs.py`, then all of home building in order. Every job must pass `trades.problems()`. For the design
-session: a Trade Master screen (a job's outline, the step in focus with "next", "checked", "why", "back", "stop", and
-"make it a mission"; data from `core.trade_session.say/progress` and `core.trades.outline`, actions `trade.*`). For the
+session: the Trade Master screen is **built** (claude, design, 2026-11-09): `web/trades.html` in Home (`core/web_trades.py`,
+`/api/trades`): the library by trade, a job or diagnosis opened whole with Start It and Make It a Mission, and the
+walkthrough (the step large, why, watch for, the hold, the phases, Checked / Next Step / Back / Stop, Yes / No for a
+diagnosis); on the glasses, the Workshop card's "The Job" panel moves it along (`trade.*` in `GLASSES_KINDS`). For the
 parity session: voice is code-done for the walkthrough itself; a model tool to start one by a vaguer phrase is open.
 `core/trades.py` (jobs as sourced data, stop rules in code, the quality standard), `core/job_session.py` (step by step,
 hold points), a job as a mission, diagnosis sessions, the Carpentry apprentice program, a specialist per trade, the
@@ -58,8 +90,9 @@ hold points), a job as a mission, diagnosis sessions, the Carpentry apprentice p
 session's; voice tools beyond the session's own phrases are the parity session's.
 
 **Built by the engine session (2026-11-08 evening), core only: DEC-0148 Natural Momentum (approved).** For the
-design session: `core.momentum.findings(context)` (plain-word counts, [] until three runs) is ready for a small
-"how your good runs go" line, never a score. For the parity session: "I did X" is code-done already
+design session: **built** (claude, design, 2026-11-09): How Your Good Runs Go on the Operating Journal
+(`core/momentum.picture`, the counts, or how many runs of the three she waits for; "you're on a run" while in flow),
+and Good Runs on the glasses' Operating Journal card. Never a score. For the parity session: "I did X" is code-done already
 (`core/did_it.py`), so no tool is needed for it; the gate topic is `momentum`.
 `core/did_it.py` ("I did X": recorded, counted toward a routine, offered toward a task or mission objective or as a
 new routine), `core/momentum.py` (windows, chains, flow, one easy start, tomorrow's prep), the gate's flow guard.

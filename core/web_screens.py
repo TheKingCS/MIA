@@ -372,11 +372,11 @@ def property_badge(status: str, rent: float, income_month: float) -> dict:
     """Pure logic. The word on a property's card and its tone (the design canvas's Real Estate, DEC-0113): a rented
     property with its rent set and no rent recorded yet this month says "Rent Due" (amber: it needs you);
     otherwise its status, green when it's rented or lived in, amber when it's waiting on something (for rent, for
-    sale, being renovated, vacant), plain for the rest. A vacancy is never shown as an error."""
+    sale or under contract, being renovated, vacant), plain for the rest (sold among them). A vacancy is never shown as an error."""
     if status == "Rented" and rent and income_month <= 0:
         return {"text": "Rent Due", "tone": "attention"}
     tone = ("ok" if status in ("Rented", "Owner Occupied") else
-            "attention" if status in ("Vacant", "For Rent", "For Sale", "Under Renovation") else "")
+            "attention" if status in ("Vacant", "For Rent", "For Sale", "Under Renovation", "Under Contract") else "")
     return {"text": status or "", "tone": tone}
 
 
@@ -391,12 +391,13 @@ def estate_page(context, today: Optional[date] = None) -> dict:
     """The data the Real Estate screen shows, assembled here (the web only draws it): each property with its value, loan and payment, this month's income and
     expenses and the year's net operating income (with a budget), its upkeep tasks, the missions linked to it, and
     the word on its card (`property_badge`: Rent Due, Rented...), its photo (`property_photo_url`), and for a rental or investment its straight-line
-    depreciation a year and so far (an estimate, not a tax figure), and once sold, what the sale came to (`sale`).
+    depreciation a year and so far (an estimate, not a tax figure); its sale (`_sale_view`: listed, or sold and what it
+    came to). Sold properties are listed apart (`sold`) and left out of the totals.
     """
     from core import links as links_module
     from core.estate_actions import RECORDS, form_spec
-    from core.real_estate_manager import (accumulated_depreciation, annual_depreciation, equity, has_loan_terms,
-                                          monthly_payment, sale_summary)
+    from core.real_estate_manager import (accumulated_depreciation, annual_depreciation, equity, has_loan_terms, is_sold,
+                                          monthly_payment, sale_numbers)
     from core.region import currency_symbol_for
 
     today = today or date.today()
@@ -443,13 +444,35 @@ def estate_page(context, today: Optional[date] = None) -> dict:
             "badge": property_badge(p.status, p.monthly_rent, income_month),
             # straight-line, rentals and investments only (core/real_estate_manager.py): an estimate, not a tax figure
             "depreciation": {"year": _r(annual_depreciation(p)), "so_far": _r(accumulated_depreciation(p, today))}
-            if annual_depreciation(p) > 0 and not p.sale_date else None,
-            # once sold: what it came to (core/real_estate_manager.sale_summary; the gain an estimate, not a tax figure)
-            "sale": {k: (_r(v) if isinstance(v, float) else v) for k, v in sale_summary(p).items()} if p.sale_date else None,
+            if annual_depreciation(p) > 0 and not is_sold(p) else None,
+            "sale": _sale_view(p, today, is_sold, sale_numbers),
         })
-    page["properties"] = properties
-    page["totals"] = {"count": len(properties), "equity": _r(sum(p["equity"] for p in properties)),
-                      "rent": _r(sum(p["rent"] for p in properties)),
-                      "cash_flow": _r(sum(p["cash_flow"] or 0 for p in properties)),
-                      "attention": sum(1 for p in properties for t in p["tasks"] if t["needs_attention"])}
+    page["properties"] = [p for p in properties if not (p["sale"] or {}).get("sold")]
+    page["sold"] = [p for p in properties if (p["sale"] or {}).get("sold")]
+    owned = page["properties"]
+    page["totals"] = {"count": len(owned), "equity": _r(sum(p["equity"] for p in owned)),
+                      "rent": _r(sum(p["rent"] for p in owned)),
+                      "cash_flow": _r(sum(p["cash_flow"] or 0 for p in owned)),
+                      "attention": sum(1 for p in owned for t in p["tasks"] if t["needs_attention"]),
+                      "sold": len(page["sold"])}
     return page
+
+
+def _sale_view(p, today: date, is_sold, sale_numbers) -> Optional[dict]:
+    """A property's sale for the screen: once sold, when, for what and what it came to (`sale_numbers` on its sale
+    day); while listed, the asking price, how long it's been listed and what selling at it would come to; else None.
+    Always said as an estimate, never a tax figure."""
+    if is_sold(p):
+        try:
+            on = date.fromisoformat(p.sale_date) if p.sale_date else today
+        except ValueError:
+            on = today
+        return {"sold": True, "date": p.sale_date, **sale_numbers(p, p.sale_price, p.selling_costs, on)}
+    if p.asking_price:
+        try:
+            days = (today - date.fromisoformat(p.listed_date)).days if p.listed_date else None
+        except ValueError:
+            days = None
+        return {"sold": False, "listed": p.listed_date, "days_listed": days, "asking": p.asking_price,
+                **sale_numbers(p, p.asking_price, 0, today)}
+    return None

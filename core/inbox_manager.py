@@ -551,7 +551,8 @@ class InboxManager:
 
     def _logged_already(self, item: InboxItem) -> bool:
         """Whether the same amount is already logged: within a day from any store (a forwarded copy reads its store
-        from the forwarder), or within 3 days from the same store (an order email and its receipt)."""
+        from the forwarder), or within 3 days from the same store (an order email and its receipt). Uncounted expenses
+        are checked too when the budget keeps them (`include_uncounted`); a budget without that option is read whole."""
         budget = getattr(self.context, "budget", None)
         if budget is None:
             return False
@@ -560,7 +561,11 @@ class InboxManager:
         except ValueError:
             when = date.today()
         store = (item.vendor or "").lower().strip()
-        for expense in budget.all_expenses(include_uncounted=True):
+        try:  # the PC's budget also keeps expenses it doesn't count (transfers, duplicates): check those too
+            expenses = budget.all_expenses(include_uncounted=True)
+        except TypeError:  # a budget without that option has only the counted ones
+            expenses = budget.all_expenses()
+        for expense in expenses:
             if abs(float(expense.amount) - float(item.amount)) > 0.005:
                 continue
             try:

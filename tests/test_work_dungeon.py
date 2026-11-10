@@ -1,6 +1,7 @@
 """The Dungeon (DEC-0046): work as a dungeon you loot every day. Runs and
 their loot, overtime bosses, projected and banked loot, the hard-mode
-record, the Game Master's quests, and tips and shift differentials."""
+record, the Game Master's quests, and shift differentials and tips in
+the loot."""
 
 from datetime import date, timedelta
 
@@ -182,27 +183,40 @@ def test_the_week_counts_its_runs_cleared_out_of_all_of_them():
     assert _week_runs(runs, monday, monday + timedelta(days=6)) == {"runs_cleared": 2, "runs": 3}
 
 
-def test_tips_and_a_shift_differential_count_in_the_loot():
-    """A night shift at $2 an hour extra and $30 in tips: the differential is paid on every hour, at time and a half
-    on the overtime ones (it's part of the regular rate), and the tips are added as they are."""
-    from core.work_dungeon import Dungeon, Run, loot, run_extra
+def test_a_shift_differential_is_paid_on_every_hour_and_tips_are_added_as_they_are():
+    from core.work_dungeon import Dungeon, Run, extras, parse_days, run_differential, run_loot
 
-    d = Dungeon("d1", "Work", hourly=20, overtime_after=40, overtime_multiplier=1.5)
-    night = Run("r", "d1", "2026-10-23", 9, differential=2, tips=30)
-    assert run_extra(d, night, 4, 5) == 2 * (4 + 5 * 1.5) + 30 == 53
-    assert loot(d, 4, 5) + run_extra(d, night, 4, 5) == 80 + 150 + 53
-    assert run_extra(d, Run("x", "d1", "2026-10-23", 8), 8, 0) == 0
+    d = Dungeon("d1", "Work", hourly=20, overtime_multiplier=1.5, differential=2,
+                differential_days=parse_days("weekends"))
+    saturday = Run("r1", "d1", "2026-11-07", hours=8, tips=30)
+    monday = Run("r2", "d1", "2026-11-09", hours=8)
+    own = Run("r3", "d1", "2026-11-10", hours=8, differential=1.0)
+    assert run_differential(d, saturday) == 2 and run_differential(d, monday) == 0 and run_differential(d, own) == 1
+    assert extras(d, saturday, 6, 2) == 2 * (6 + 2 * 1.5) + 30  # overtime hours carry the differential at 1.5x
+    assert run_loot(d, saturday, 6, 2) == 6 * 20 + 2 * 30 + 18 + 30
+    assert run_loot(d, monday, 8, 0) == 160
+    assert parse_days("sat, Sunday") == ["Saturday", "Sunday"]
+    with pytest.raises(ValueError):
+        parse_days("someday")
 
 
-def test_a_run_cleared_with_tips_says_them_and_the_week_counts_them(work):
-    """"I worked 8 hours, $40 in tips": the approval says the tips, the run keeps them, and the week's loot holds them."""
+def test_differentials_and_tips_through_the_actions_and_the_screen(work):
+    from core.region import money
     from core.web_dungeon import dungeon_page
 
-    d = work.dungeon.add_dungeon("Store", hourly=15)
-    proposal = work.actions.propose(work, "dungeon.run", {"dungeon_id": d.dungeon_id, "hours": "8", "tips": "$40"})
-    assert "$40.00 in tips" in proposal.summary and "about $160.00 loot" in proposal.summary
-    said = work.actions.approve(work, proposal.proposal_id).result
-    assert "$160.00 loot ($40.00 of it tips)" in said
-    assert work.dungeon.runs[0].tips == 40
-    view = dungeon_page(work)["dungeons"][0]
-    assert view["week"]["earned"] == 160
+    w = work
+    do(w, "dungeon.add", name="The diner", hourly=10, differential=1.5, differential_days="weekends")
+    assert w.dungeon.dungeons[0].differential_days == ["Saturday", "Sunday"]
+    saturday = date.today() - timedelta(days=(date.today().weekday() - 5) % 7 or 7)
+    p = do(w, "dungeon.run", date=saturday.isoformat(), hours=8, tips="45.50")
+    assert money(10 * 8 + 1.5 * 8 + 45.5) in p.summary and "tips" in p.summary
+    run = w.dungeon.runs[0]
+    assert run.tips == 45.5
+    do(w, "dungeon.tips", run_id=run.run_id, tips=60)
+    assert w.dungeon.runs[0].tips == 60
+    v = dungeon_page(w, today=saturday)["dungeons"][0]
+    row = v["runs"][0]
+    assert row["loot"] == 80 + 12 + 60 and row["tips_text"] == money(60) and row["differential"] == 1.5
+    assert v["week"]["earned"] == 152 and "Saturday, Sunday" in v["rates"]["differential_text"]
+    with pytest.raises(Exception, match="amount"):
+        do(w, "dungeon.tips", run_id=run.run_id, tips="lots")

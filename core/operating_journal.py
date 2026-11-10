@@ -43,6 +43,9 @@ from typing import Optional
 
 from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
+from core.logger import get_logger
+
+log = get_logger(__name__)
 
 FILE_NAME = "operating_journal.json"
 SECTIONS = ("values", "priorities", "day", "week", "rules")
@@ -342,12 +345,26 @@ def line_score(kind: str, m: Optional[dict]) -> Optional[dict]:
     return {"pct": round(100 * m["on_pace"] / m["of"]), "text": f"{m['on_pace']} of {m['of']} {per}{'s' if m['of'] != 1 else ''}"}
 
 
+def _momentum(context) -> dict:
+    """How your good runs go (Natural Momentum, DEC-0148, core/momentum.picture), with `words` for when there are no
+    findings yet; {} when it can't be read."""
+    from core import momentum
+
+    try:
+        p = momentum.picture(context)
+    except Exception:
+        log.exception("Couldn't read the good runs")
+        return {}
+    return dict(p, words=momentum.picture_words(p))
+
+
 def screen(context, today: Optional[date] = None) -> dict:
     """The Operating Journal's web screen (web/operating.html): every line with how it's checked, how it's going
-    in words, and its meter (`line_score`)."""
+    in words, and its meter (`line_score`); and how your good runs go (`momentum`, DEC-0148)."""
     journal = getattr(context, "operating_journal", None)
+    momentum = _momentum(context)
     if journal is None:
-        return {"lines": [], "sections": SECTION_WORDS}
+        return {"lines": [], "sections": SECTION_WORDS, "momentum": momentum}
     pictures = dict(zip((l["id"] for l in journal.lines), picture(context, today)))
     out = []
     for line in journal.lines:
@@ -358,4 +375,4 @@ def screen(context, today: Optional[date] = None) -> dict:
         out.append({"id": line["id"], "text": line["text"], "section": line["section"], "how": how,
                     "self_rated": h["kind"] == "self", "now": pictures.get(line["id"], ""),
                     "score": line_score(h["kind"], measure(context, line, today))})
-    return {"lines": out, "sections": SECTION_WORDS}
+    return {"lines": out, "sections": SECTION_WORDS, "momentum": momentum}

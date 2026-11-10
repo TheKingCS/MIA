@@ -40,6 +40,13 @@ class MainActivity : Activity() {
     // quests, DEC-0028): answered once Android's own permission is.
     private var geoAsk: Pair<String, GeolocationPermissions.Callback>? = null
     private var fileAsk: ValueCallback<Array<Uri>>? = null  // a page's file input, waiting on Android's picker
+    /** Settings' "Let MIA Use the Glasses' Camera": the Meta AI app's own request (GlassesCamera.askPermission). */
+    private val glassesCamera = object {
+        @android.webkit.JavascriptInterface
+        fun allow() { runOnUiThread { GlassesCamera.askPermission(this@MainActivity) } }
+    }
+    private var pendingCapture: Intent? = null  // Look's camera, waiting on Android's CAMERA permission
+    private var pendingPick: Intent? = null  // the picker to open instead if it's refused
     private var captured: Uri? = null  // where the camera is writing Look's photo, while it's open
     // The memory vault's door to the camera roll (Gallery.kt), window.MIAAndroid on MIA's screens.
     private val gallery = Gallery(this)
@@ -258,13 +265,15 @@ class MainActivity : Activity() {
                         Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, it)
                             .addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     } ?: params.createIntent()
-                    try {
-                        startActivityForResult(intent, FILE_REQUEST)
-                    } catch (e: ActivityNotFoundException) {
-                        fileAsk = null
-                        captured = null
-                        callback.onReceiveValue(null)
+                    // The glasses' camera toolkit (GlassesCamera.kt) brings Android's CAMERA permission into the app;
+                    // once it's declared, the camera app can only be opened after it's granted: ask first.
+                    if (captured != null && cameraDeclared() && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        pendingCapture = intent
+                        pendingPick = params.createIntent()
+                        requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_REQUEST)
+                        return true
                     }
+                    openChooser(intent)
                     return true
                 }
             }
@@ -273,6 +282,7 @@ class MainActivity : Activity() {
             addJavascriptInterface(phoneVoice.value, "MIAPhoneVoice")
             addJavascriptInterface(Relay, "MIARelay")
             addJavascriptInterface(permissions, "MIAPhonePermissions")
+            addJavascriptInterface(glassesCamera, "MIAGlassesCamera")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).
@@ -282,8 +292,36 @@ class MainActivity : Activity() {
         setContentView(view)
     }
 
+    /** Opens the camera or the picker for a page's file input; nothing to open answers the page with nothing. */
+    private fun openChooser(intent: Intent) {
+        try {
+            startActivityForResult(intent, FILE_REQUEST)
+        } catch (e: ActivityNotFoundException) {
+            fileAsk?.onReceiveValue(null)
+            fileAsk = null
+            captured = null
+        }
+    }
+
+    /** Whether the app's manifest asks for CAMERA (the glasses' camera toolkit adds it). */
+    private fun cameraDeclared(): Boolean = try {
+        @Suppress("DEPRECATION")
+        packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS).requestedPermissions
+            ?.contains(Manifest.permission.CAMERA) == true
+    } catch (e: Exception) {
+        false
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_REQUEST) {  // Look's "take a photo": the camera once allowed, else the picker
+            val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+            val next = if (granted) pendingCapture else pendingPick.also { captured = null }
+            pendingCapture = null
+            pendingPick = null
+            if (next != null) openChooser(next) else { fileAsk?.onReceiveValue(null); fileAsk = null }
+            return
+        }
         if (requestCode == Gallery.GALLERY_REQUEST) { gallery.accessChanged(); return }
         if (requestCode == Voice.VOICE_REQUEST) {
             val mic = permissions.indexOf(Manifest.permission.RECORD_AUDIO)
@@ -354,6 +392,7 @@ class MainActivity : Activity() {
         const val PORT = 8765
         const val GEO_REQUEST = 41
         const val FILE_REQUEST = 47
+        const val CAMERA_REQUEST = 53  // Look's camera, once the glasses' toolkit has brought in CAMERA
         const val PLACE_PREFS = "mia_place"  // where you were in the app (remember / lastPlace)
         const val PLACE_KEY = "page"
     }
