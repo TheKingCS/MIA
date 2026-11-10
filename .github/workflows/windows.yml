@@ -87,6 +87,11 @@ jobs:
         env:
           PYTHONUTF8: "1"
         run: python -m tools.web_check
+      - name: Every web page opens without an error (tools/page_check.py, headless Edge, demo mode)
+        if: always()
+        env:
+          PYTHONUTF8: "1"
+        run: python -m tools.page_check
 
   phone-libraries:
     runs-on: ubuntu-latest
