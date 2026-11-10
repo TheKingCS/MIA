@@ -17,7 +17,9 @@
     MIA Assistant (DEC-0018, the concept's chat; claude): talk to MIA by
     typing or with the microphone. Same engine path as the phone
     (/api/voice/text, /api/voice/turn); anything she changes is recorded and
-    undoable ("undo that"). ?ask= sends a question, ?draft= starts one,
+    undoable ("undo that"). ?ask= sends a question when one of MIA's own
+    pages sent it (MIAShell.askedHere) and only fills the box otherwise,
+    ?draft= starts one,
     ?voice=1 starts listening. MIA's face: presence.html. History lists past
     conversations to read, pick back up or delete (core/web_conversations.py).
   -->

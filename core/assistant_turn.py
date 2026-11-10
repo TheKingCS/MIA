@@ -206,7 +206,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
     show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
-    model with the tools offered for what was said.
+    model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     """
     prepared = pre_turn(context, conversation, prompt)
     add_message(conversation, "user", prompt)
@@ -313,7 +313,11 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             log.warning("Skipped destructive tool call(s) bundled with other calls in one reply: %s", skipped_names)
         replies = list(notices)
         for tool_call in calls_to_execute:
-            confirmation = context.assistant_actions.execute(context, tool_call.name, tool_call.arguments)
+            if tool_call.name not in offered:  # only a tool offered this turn runs (2026-11-10)
+                log.warning("The model called %s, which wasn't offered this turn; not run.", tool_call.name)
+                confirmation = "I got that mixed up on my end. Could you say it another way?"
+            else:
+                confirmation = context.assistant_actions.execute(context, tool_call.name, tool_call.arguments)
             add_message(conversation, "assistant", confirmation)
             replies.append(confirmation)
         called = calls_to_execute[0].name if calls_to_execute else ""

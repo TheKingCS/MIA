@@ -2,7 +2,8 @@
  * signins.js — Sign-ins and Security (claude, 2026-11-08). Renders MIA.securityLog() (core/security_log.py): this
  * account's events newest first (what happened, from which device, when; a new device and wrong passwords marked),
  * how many other devices are signed in, Sign Out Everywhere (MIA.signOutEverywhere: every other session ends,
- * this one stays), and two-step sign-in turned on (password, then the key for the authenticator app and a code from
+ * this one stays, and every linked phone is unlinked), the phones linked to MIA on this computer with Unlink for each
+ * (MIA.unlinkDevice, core/linked_devices.py), and two-step sign-in turned on (password, then the key for the authenticator app and a code from
  * it) or off (password and a code; core/two_step.py), and whether MIA's most private files are sealed on disk with
  * the recovery key shown behind the password, on the PC only (core/at_rest.py, DEC-0126). Formatting only.
  */
@@ -12,13 +13,35 @@
   const $ = (id) => document.getElementById(id);
 
   const when = (iso) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  const WARN = new Set(["sign_in_failed", "waiting", "password_changed", "phone_linked", "two_step_off"]);
+  const WARN = new Set(["sign_in_failed", "waiting", "password_changed", "phone_linked", "phone_unlinked", "two_step_off"]);
+  const day = (iso) => new Date(iso.length === 10 ? iso + "T12:00:00" : iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
   async function everywhere() {
-    if (!(await MIAShell.confirm("Sign out every other device? This one stays signed in. Linked phones are unlinked in Settings."))) return;
-    try { const done = await MIA.signOutEverywhere(); say(done.ended ? "Signed out " + done.ended + " other device" + (done.ended === 1 ? "" : "s") + "." : "No other devices were signed in."); }
+    if (!(await MIAShell.confirm("Sign out every other device? This one stays signed in. Linked phones are unlinked too, and link again with your password."))) return;
+    try {
+      const done = await MIA.signOutEverywhere();
+      const n = (done.ended || 0) + (done.unlinked || 0);
+      say(n ? "Signed out " + n + " other device" + (n === 1 ? "" : "s") + "." : "No other devices were signed in.");
+    }
     catch (e) { say(e.message); }
     draw(await MIA.securityLog());
+  }
+
+  // Linked phones (core/linked_devices.py): each with when it linked and last reached this computer, and Unlink.
+  function phones(page) {
+    const list = page.linked_devices || [];
+    const unlink = async (d) => {
+      if (!(await MIAShell.confirm("Unlink this phone? It stops reaching MIA on this computer until it links again with your password."))) return;
+      try { await MIA.unlinkDevice(d.id); say("Unlinked."); } catch (e) { say(e.message); }
+      draw(await MIA.securityLog());
+    };
+    return el("section", { class: "glass money-section", "aria-label": "Linked phones" },
+      el("h2", {}, "Linked Phones"),
+      list.length ? el("div", { class: "rows" }, list.map((d) => el("div", { class: "row" },
+        el("div", {}, el("div", { class: "row-title" }, "Phone linked " + day(d.linked)),
+          el("div", { class: "row-sub" }, d.last_seen ? "Last reached this computer " + day(d.last_seen) : "Not seen since it linked")),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: () => unlink(d) }, "Unlink"))))
+        : el("p", { class: "empty" }, "No phones are linked to MIA on this computer."));
   }
 
   // Two-step sign-in (core/two_step.py): on only once a code from the app is entered, so a mistyped key locks no one out.
@@ -90,6 +113,7 @@
           : "No other devices are signed in to your account."),
         el("p", { class: "dim" }, "If you see a sign-in you don't recognize, change your password: that signs every other device out too."),
         el("button", { type: "button", class: "btn btn-ghost", onclick: everywhere }, "Sign Out Everywhere")),
+      phones(page),
       twoStep(page),
       sealed(page),
       el("section", { class: "glass money-section", "aria-label": "Your security log" },

@@ -375,12 +375,15 @@
       : call("GET", "/api/operating-journal"),
     // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
     securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, on_this_pc: true,
+      linked_devices: [{ id: "3f2a9c41d0be", linked: "2026-10-12T19:20:00", last_seen: "2026-11-08" }],
       at_rest: { sealing: true, protection: "dpapi", why_not: "", files: 10 }, events: [
       { at: "2026-11-08T08:12:00", kind: "sign_in", what: "Signed in", device: "Android phone · 100.64.0.7", detail: "" },
       { at: "2026-11-07T22:40:00", kind: "sign_in_failed", what: "Wrong password", device: "Edge on Windows · 100.64.0.9", detail: "" },
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
       : call("GET", "/api/security/log"),
     signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
+    // One linked phone unlinked from the computer (core/linked_devices.py): its key stops working.
+    unlinkDevice: (device) => demo ? demoOnly() : call("POST", "/api/security/devices/unlink", { device }),
     // Your Data (core/your_data.py): what MIA keeps about you and what she read to answer you.
     yourData: () => demo ? Promise.resolve({ sealing: true, mine: [
       { file: "conversations.json", what: "Conversations with MIA", records: 42, bytes: 81234, sealed: true },

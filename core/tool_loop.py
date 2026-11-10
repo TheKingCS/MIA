@@ -18,7 +18,13 @@ up*:
    (`core.question_plans.invented_numbers`).
 
 A change (anything that writes records) is never run inside the loop:
-the reply goes back to the caller as before, through the usual path. The
+the reply goes back to the caller as before, through the usual path.
+Two checks (2026-11-10): a lookup the model names that wasn't offered
+this turn isn't run; and when a lookup brought in outside text (a web
+page or search framed by `untrusted()`, or the inbox's mail), a change
+the model then asks for is not handed on: MIA says what she would do
+and the person says it again (`held_after_outside_text`), so words on
+a page can't steer her into acting. Browser steps keep their own gate. The
 loop runs only against this computer's Ollama (the phone's small model
 keeps one round). Pure orchestration: `run()` calls the model and the
 lookups it's given; the desktop runs it on its ChatWorker thread, the
@@ -64,6 +70,32 @@ def _lookups_only(context, calls: list[ToolCall]) -> bool:
     registry = getattr(context, "assistant_actions", None)
     known = getattr(registry, "_actions", {}) if registry is not None else {}
     return bool(calls) and all(c.name in known and not changes_records(c.name) for c in calls)
+
+
+# Lookups whose results carry outside text without untrusted()'s framing: mail senders and subjects.
+OUTSIDE_TOOLS = frozenset({"list_inbox"})
+
+
+def _brought_outside_text(results: list[tuple[str, str]]) -> bool:
+    """Whether any lookup this turn returned outside text: framed by untrusted(), or from an OUTSIDE_TOOLS lookup."""
+    from core.browser_safety import carries_outside_text
+
+    return any(name in OUTSIDE_TOOLS or carries_outside_text(text) for name, text in results)
+
+
+def held_after_outside_text(context, reply: ChatReply) -> ChatReply:
+    """The reply to give instead of a change asked for right after outside text: what MIA would do, to be said again.
+    Browser steps (their own gate, DEC-0117) are never held here."""
+    registry = getattr(context, "assistant_actions", None)
+    known = getattr(registry, "_actions", {}) if registry is not None else {}
+    from core.assistant_browser_actions import DOMAIN as BROWSER
+
+    if all(getattr(known.get(c.name), "domain", "") == BROWSER for c in reply.tool_calls):
+        return reply
+    names = ", ".join(c.name.replace("_", " ") for c in reply.tool_calls)
+    log.info("Tool loop: held a change after outside text (%s).", names)
+    return ChatReply(content=(f"I just read something from outside MIA, so I won't act on it in the same breath. "
+                              f"I'd {names}. Say so and I'll do it."), tool_calls=[])
 
 
 LOOK_FIRST = ("The person asked about their own records. Don't answer from memory: call the lookup that holds the "
@@ -143,7 +175,9 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         budget: Optional[float] = None) -> Optional[ChatReply]:
     """One turn with the loop: the model's reply when it isn't only
     lookups (unchanged, for the caller's usual path); else one answer
-    built from what it looked up."""
+    built from what it looked up. Only lookups offered in `tools` run,
+    and a change asked for after a lookup that brought in outside text
+    is held and said back (held_after_outside_text)."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -162,6 +196,7 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         return reply
 
     registry = context.assistant_actions
+    offered = {t.get("function", {}).get("name", "") for t in tools}
     talk = list(messages)
     results: list[tuple[str, str]] = []
     seen: set[str] = set()
@@ -174,6 +209,11 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                      "tool_calls": [{"function": {"name": c.name, "arguments": c.arguments or {}}} for c in fresh]})
         for call in fresh:
             seen.add(f"{call.name}:{sorted((call.arguments or {}).items())}")
+            if call.name not in offered:
+                log.warning("Tool loop: the model named %s, which wasn't offered this turn; not run.", call.name)
+                results.append((call.name, f"(The {call.name} lookup isn't available for this question.)"))
+                talk.append({"role": "tool", "content": results[-1][1], "tool_name": call.name})
+                continue
             try:
                 text = registry.execute(context, call.name, call.arguments or {})
             except Exception:
@@ -187,6 +227,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                                     [] if last else tools)
     log.info("Tool loop: %d round(s), %s, %.1fs", step, ", ".join(n for n, _ in results), time.monotonic() - started)
     if reply is not None and reply.tool_calls and not _lookups_only(context, reply.tool_calls):
+        if _brought_outside_text(results):
+            return held_after_outside_text(context, reply)  # words from a page or a mail never steer a change
         if not asks_not_tells(prompt):
             return reply  # a change they asked for: the caller's usual path (approval), after looking things up
         reply = llm.chat_with_tools(talk + [{"role": "system", "content": ANSWER_ONLY}], [])  # never unasked

@@ -47,7 +47,9 @@ def call(*names):
     return ChatReply(content="", tool_calls=[ToolCall(name=n, arguments={}) for n in names])
 
 
-TOOLS = [{"function": {"name": "list_bills"}}]
+# Offered this turn: only an offered tool runs (2026-11-10).
+TOOLS = [{"function": {"name": "list_bills"}}, {"function": {"name": "get_budget_summary"}},
+         {"function": {"name": "add_bill"}}]
 
 
 def test_lookups_go_back_and_one_answer_comes_out(life):

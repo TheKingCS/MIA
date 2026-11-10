@@ -504,7 +504,9 @@ SECURITY_HEADERS = {
 def create_app(context: AppContext) -> FastAPI:
     """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio reads /api/themes and asks /api/themes/design (DEC-0136); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
-    which logins fit a sign-in (core/password_autofill.py)."""
+    which logins fit a sign-in (core/password_autofill.py). The Sign-ins page lists the phones linked to this
+    computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
+    password change unlink them all."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -677,11 +679,11 @@ def create_app(context: AppContext) -> FastAPI:
     def _linked_device(key: str) -> Optional[str]:
         """A phone linked to this computer (DEC-0022, core/home_link.py)
         signs in with its device key, kept here only as a hash, so the
-        link outlives a restart until the phone disconnects."""
-        import hashlib
+        link outlives a restart until the phone disconnects or is unlinked
+        from the Sign-ins page (core/linked_devices.py)."""
+        from core import linked_devices
 
-        found = (context.config.get("home_link.devices", {}) or {}).get(hashlib.sha256(key.encode()).hexdigest())
-        profile_id = found.get("profile_id") if isinstance(found, dict) else None
+        profile_id = linked_devices.for_key(context.config, key)
         if profile_id:
             from core.phone_link import seen
 
@@ -764,26 +766,25 @@ def create_app(context: AppContext) -> FastAPI:
     def model_link(body: LoginRequest, request: Request) -> dict:
         """A phone links to MIA on this computer: the person's own sign-in
         (never a new account), and a device key back for Talk to use."""
-        import hashlib
-
         profile = context.profiles.find_for_sign_in(body.profile_id)
         if not _checked(request, body.profile_id, lambda: profile is not None and profile.has_password and
                         context.profiles.verify_password(profile.profile_id, body.password)):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect profile or password.")
         _second_step(request, body.profile_id, profile.profile_id, body.code)
         key = secrets.token_urlsafe(32)
-        devices = dict(context.config.get("home_link.devices", {}) or {})
-        devices[hashlib.sha256(key.encode()).hexdigest()] = {
-            "profile_id": profile.profile_id, "linked": datetime.now().isoformat(timespec="seconds")}
-        context.config.set("home_link.devices", devices)
+        from core import linked_devices
+
+        devices = dict(context.config.get(linked_devices.KEY, {}) or {})
+        devices[linked_devices.key_hash(key)] = {"profile_id": profile.profile_id, "linked": linked_devices.linked_at()}
+        context.config.set(linked_devices.KEY, devices)
         context.config.save()
         log.info("A phone linked to this computer for '%s'.", profile.profile_id)
         _security("phone_linked", profile.profile_id, request)
         from core.security_log import alert
 
         alert(context, profile.profile_id, "A phone linked to MIA",
-              f"A phone ({_device(request)}) linked to MIA on this computer with your password. If it wasn't you, change "
-              "your password and unlink it in Settings.")
+              f"A phone ({_device(request)}) linked to MIA on this computer with your password. If it wasn't you, unlink "
+              "it on the Sign-ins and Security page and change your password.")
         return {"key": key, "profile_id": profile.profile_id, "name": profile.name}
 
     @app.post("/api/model/unlink")
@@ -2861,12 +2862,17 @@ def create_app(context: AppContext) -> FastAPI:
         this = credentials.credentials if credentials is not None else ""
         for token in [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this]:
             _end_session(token)
-        log.info("Password changed from the web for profile '%s'; its other sessions ended.", profile_id)
+        from core import linked_devices
+
+        linked_devices.unlink_all(context.config, profile_id)  # a linked phone links again with the new password
+        log.info("Password changed from the web for profile '%s'; its other sessions ended and its phones unlinked.",
+                 profile_id)
         _security("password_changed", profile_id, request)
         from core.security_log import alert
 
         alert(context, profile_id, "Your MIA password changed",
-              f"Your password was changed from {_device(request)}, and every other device was signed out. If this "
+              f"Your password was changed from {_device(request)}, and every other device was signed out (linked "
+              "phones too). If this "
               "wasn't you, use your recovery code to set a new one.")
         return {"changed": True}
 
@@ -2942,9 +2948,12 @@ def create_app(context: AppContext) -> FastAPI:
                      and t in app.state.session_started)
         from core import at_rest
 
+        from core import linked_devices
+
         sealed = at_rest.status()
         return {"available": book is not None, "events": book.for_person(profile_id) if book is not None else [],
                 "other_sessions": others, "two_step": bool(_two_step_secret(profile_id)),
+                "linked_devices": linked_devices.listed(context.config, profile_id),
                 "at_rest": {"sealing": sealed["sealing"], "protection": sealed["protection"], "why_not": sealed["why_not"],
                             "files": len(sealed["files"])}, "on_this_pc": _on_this_pc(request)}
 
@@ -3021,14 +3030,29 @@ def create_app(context: AppContext) -> FastAPI:
     @app.post("/api/security/sign-out-everywhere")
     def sign_out_everywhere(request: Request, profile_id: str = Depends(require_profile_id),
                             credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
-        """Ends every other session of this account (this one stays); linked phones are unlinked in Settings."""
+        """Ends every other session of this account (this one stays) and unlinks every phone linked for it
+        (core/linked_devices.py): a lost phone is one press from harmless."""
+        from core import linked_devices
+
         this = credentials.credentials if credentials is not None else ""
         ended = [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this
                  and t in app.state.session_started]
         for token in ended:
             _end_session(token)
-        _security("signed_out_everywhere", profile_id, request, f"{len(ended)} other session{'s' if len(ended) != 1 else ''}")
-        return {"ended": len(ended)}
+        phones = linked_devices.unlink_all(context.config, profile_id)
+        _security("signed_out_everywhere", profile_id, request, f"{len(ended)} other session{'s' if len(ended) != 1 else ''}"
+                  + (f", {phones} linked phone{'s' if phones != 1 else ''}" if phones else ""))
+        return {"ended": len(ended), "unlinked": phones}
+
+    @app.post("/api/security/devices/unlink")
+    def unlink_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Unlinks one of this person's linked phones from the computer (the Sign-ins page): its key stops working."""
+        from core import linked_devices
+
+        if not linked_devices.unlink(context.config, profile_id, str((body or {}).get("device", ""))):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No linked phone of yours by that id.")
+        _security("phone_unlinked", profile_id, request)
+        return {"unlinked": True}
 
     def _models(profile_id: str):
         from core.child_accounts import ASK_A_PARENT, is_child

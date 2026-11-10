@@ -9,7 +9,8 @@ why this is a legitimate, complete way to verify this code from a
 sandbox with no real browser/phone). pywebpush.webpush is mocked in
 the push-test cases, same as tests/test_web_push.py. Also the inbox's
 email endpoints (they answer plainly without a mailbox, and need a
-signed-in person), and a startup sound to hear before choosing it.
+signed-in person), a startup sound to hear before choosing it, and the
+phones linked to the computer, listed and unlinked from it.
 No secret used in sign-in, two-step or a password change reaches a log
 line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
 only on the PC itself, with the password, and logged (DEC-0126). Your Data
@@ -382,9 +383,9 @@ def test_voice_turn_runs_memory_extraction_after_a_plain_reply(voice_client, con
 
 def test_voice_turn_executes_tool_calls_and_speaks_confirmation(voice_client, context):
     context.assistant_actions.register(AssistantAction(
-        name="fake_add_note", description="Add a note.", parameters={"type": "object", "properties": {}},
-        handler=lambda ctx, args: "Note saved.",
-    ))
+        name="fake_add_note", domain="notes", description="Add a note.", parameters={"type": "object", "properties": {}},
+        handler=lambda ctx, args: "Note saved.", trigger_phrases=("note that",),
+    ))  # offered for what was said, as a real note tool is: only an offered tool runs
     context.llm.reply = ChatReply(content="", tool_calls=[ToolCall(name="fake_add_note", arguments={})])
     body = voice_client.post("/api/voice/text", json={"text": "note that the coop is framed"}).json()
     assert body["replies"] == ["Note saved."]
@@ -854,13 +855,50 @@ def test_a_new_device_and_repeated_wrong_passwords_alert_the_owner_and_nothing_s
 
 
 def test_sign_out_everywhere_ends_every_other_session_and_shows_on_the_log(client, context):
-    """This session stays; the others end; the page shows the event."""
+    """This session stays; the others end (no phone was linked, so none is unlinked); the page shows the event."""
     phone, laptop = _signed_in(client, context), _signed_in(client, context)
     assert client.get("/api/security/log", headers=phone).json()["other_sessions"] == 1
-    assert client.post("/api/security/sign-out-everywhere", headers=phone).json() == {"ended": 1}
+    assert client.post("/api/security/sign-out-everywhere", headers=phone).json() == {"ended": 1, "unlinked": 0}
     assert client.get("/api/settings", headers=laptop).status_code == 401
     events = client.get("/api/security/log", headers=phone).json()["events"]
     assert events[0]["kind"] == "signed_out_everywhere" and events[0]["what"] == "Signed out everywhere"
+
+
+def _linked_phone(client, context) -> dict:
+    """The Authorization header of a phone linked to this computer (/api/model/link), as its device key."""
+    who = _profile_id(context)
+    key = client.post("/api/model/link", json={"profile_id": who, "password": "hunter2"}).json()["key"]
+    return {"Authorization": f"Bearer {key}"}
+
+
+def test_a_linked_phone_is_listed_and_unlinked_from_the_computer_its_key_then_refused(client, context):
+    """The Sign-ins page lists the phone with when it last reached the PC; Unlink removes its key, and only that one."""
+    auth = _signed_in(client, context)
+    lost, kept = _linked_phone(client, context), _linked_phone(client, context)
+    assert client.get("/api/model/info", headers=lost).json()["available"] is not None
+    phones = client.get("/api/security/log", headers=auth).json()["linked_devices"]
+    assert len(phones) == 2 and all(len(d["id"]) == 12 for d in phones)
+    assert any(d["last_seen"] for d in phones)  # the lost one reached the PC just now
+    lost_id = next(d["id"] for d in phones if d["last_seen"])
+    assert client.post("/api/security/devices/unlink", headers=auth, json={"device": "000000000000"}).status_code == 404
+    assert client.post("/api/security/devices/unlink", headers=auth, json={"device": lost_id}).json() == {"unlinked": True}
+    assert client.get("/api/model/info", headers=lost).status_code == 401
+    assert client.get("/api/model/info", headers=kept).status_code == 200
+    assert [d["id"] for d in client.get("/api/security/log", headers=auth).json()["linked_devices"]] != [lost_id]
+    events = client.get("/api/security/log", headers=auth).json()["events"]
+    assert events[0]["kind"] == "phone_unlinked"
+
+
+def test_sign_out_everywhere_and_a_password_change_each_unlink_every_linked_phone(client, context):
+    auth = _signed_in(client, context)
+    phone = _linked_phone(client, context)
+    assert client.post("/api/security/sign-out-everywhere", headers=auth).json()["unlinked"] == 1
+    assert client.get("/api/model/info", headers=phone).status_code == 401
+    phone = _linked_phone(client, context)
+    changed = client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "a-new-password-9"})
+    assert changed.status_code == 200
+    assert client.get("/api/model/info", headers=phone).status_code == 401
+    assert client.get("/api/security/log", headers=auth).json()["linked_devices"] == []
 
 
 def test_two_step_sign_in_turns_on_with_a_code_then_asks_for_one_at_sign_in(client, context, monkeypatch):

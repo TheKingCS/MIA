@@ -156,7 +156,8 @@
   MIAShell.start(async () => {
     if (!$("log").children.length) {
       bubble("mia", "Hi. What can I help with? Ask me anything, or tell me what you did.");
-      if (params.get("ask")) send(params.get("ask"));
+      const ask = params.get("ask");  // sent at once from MIA's own pages; a link from elsewhere only fills the box
+      if (ask && MIAShell.askedHere(ask)) send(ask); else if (ask) { $("input").value = ask; $("input").focus(); }
       if (params.get("draft")) { $("input").value = params.get("draft"); $("input").focus(); }
       if (params.get("voice")) toggleMic();  // ?voice=1: start listening (startListening() no longer exists)
       history.replaceState(null, "", location.pathname);

@@ -913,7 +913,27 @@
         el("small", { class: "buff-left" }, b.lasts))));
   }
 
-  window.MIAShell = { look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
+  // Talk's ?ask= (2026-11-10): a question sent from one of MIA's own pages (a link or the home box) is noted for
+  // this tab, and Talk sends only a question so noted; one in a link from anywhere else just fills the box.
+  const ASKED = "mia.ask.from-mia";
+  function noteAsk(href) {
+    try {
+      const url = new URL(href, location.href);
+      if (url.origin === location.origin && url.pathname.endsWith("/assistant.html") && url.searchParams.get("ask"))
+        sessionStorage.setItem(ASKED, url.searchParams.get("ask"));
+    } catch (e) { /* storage off: the question just fills the box */ }
+  }
+  document.addEventListener("click", (e) => { const a = e.target.closest && e.target.closest("a[href]"); if (a) noteAsk(a.href); }, true);
+  document.addEventListener("submit", (e) => {
+    const f = e.target;
+    if (f && f.action && f.elements && f.elements.ask) noteAsk(f.action + "?ask=" + encodeURIComponent(f.elements.ask.value));
+  }, true);
+  function askedHere(question) {
+    try { const noted = sessionStorage.getItem(ASKED); sessionStorage.removeItem(ASKED); return !!question && noted === question; }
+    catch (e) { return false; }
+  }
+
+  window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk,
     notRight, voiceRecorder, playReply, twoWays };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon

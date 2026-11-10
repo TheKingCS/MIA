@@ -36,11 +36,15 @@ def publish(context, event_name: str, **kwargs) -> None:
 
 # Tools that only read: running them changes nothing on screen.
 _READ_ONLY_PREFIXES = ("get_", "list_", "search_", "check_", "what_", "find_", "read_", "show_", "describe_")
+# Tools whose name reads like a lookup but that change records (2026-11-10, found by scanning every lookup-named
+# tool's handler): they record an undo and refresh screens like any change. tests/test_tool_gate.py keeps this right.
+CHANGES_DESPITE_NAME = frozenset({"check_off_grocery_item"})
 
 
 def changes_records(action_name: str) -> bool:
-    """Pure logic. Whether a tool may change records: every tool except the read-only ones (get_, list_, search_, show_...)."""
-    return not action_name.startswith(_READ_ONLY_PREFIXES)
+    """Pure logic. Whether a tool may change records: every tool except the read-only ones (get_, list_, search_,
+    show_...), and those that only look like one (CHANGES_DESPITE_NAME) do."""
+    return action_name in CHANGES_DESPITE_NAME or not action_name.startswith(_READ_ONLY_PREFIXES)
 
 
 def records_changed(context, action_name: str) -> None:
