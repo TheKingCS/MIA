@@ -14,12 +14,18 @@ Usage
     from core.logger import get_logger
     log = get_logger(__name__)
     log.info("Module loaded")
+
+An exception that ends a background thread (the phone server's helpers,
+the desktop's workers, sync) is logged here too, with its traceback
+(2026-11-10): before, Python printed it to a console nobody sees and it
+never reached logs/, so a thread could fail quietly for days.
 """
 
 from __future__ import annotations
 
 import logging
 import logging.handlers
+import threading
 from pathlib import Path
 
 _LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
@@ -28,7 +34,7 @@ _CONFIGURED = False
 
 
 def _configure_root_logger() -> None:
-    """Set up the root 'mia' logger once, with both file and console output."""
+    """Set up the root 'mia' logger once, with both file and console output, and thread exceptions logged."""
     global _CONFIGURED
     if _CONFIGURED:
         return
@@ -57,8 +63,25 @@ def _configure_root_logger() -> None:
 
     root.addHandler(file_handler)
     root.addHandler(console_handler)
+    _log_thread_exceptions()
 
     _CONFIGURED = True
+
+
+def _log_thread_exceptions() -> None:
+    """Makes an exception that ends a thread go to MIA's log (as an error, with the traceback) before Python's own
+    handler reports it as it always did."""
+    previous = threading.excepthook
+
+    def hook(args) -> None:
+        """Logs the thread's exception, then hands it on."""
+        if args.exc_type is not SystemExit:
+            name = args.thread.name if args.thread is not None else "a thread"
+            logging.getLogger("mia.threads").error("The thread %s stopped on an error.", name,
+                                                   exc_info=(args.exc_type, args.exc_value, args.exc_traceback))
+        previous(args)
+
+    threading.excepthook = hook
 
 
 def get_logger(name: str = "mia") -> logging.Logger:
