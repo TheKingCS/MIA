@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1358 files, 300,405 lines; 1358 files describe themselves; 16,539 of 16,633 classes and functions are documented.
+1360 files, 300,965 lines; 1360 files describe themselves; 16,575 of 16,669 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-512 files, 147,410 lines; 7,572 of 7,658 classes and functions documented
+513 files, 147,640 lines; 7,586 of 7,672 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -90,7 +90,7 @@
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile that is MIA's alone, never the person's own browser, logins, cookies or saved passwords. The window is visible on the computer, so what she does can be watched.
 - `core/browser_routines.py`: Browser tasks MIA has been taught (DEC-0117, Zac 2026-11-07: "show her, then she practises"). The person does a task once in her browser while she records it; she saves it as a routine and replays it later, the same steps in the same order, checking the page as she goes.
-- `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it.
+- `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it. `untrusted()` fra
 - `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(65 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
@@ -262,6 +262,7 @@
 - `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s
 - `core/life_note_actions.py`: What someone said they'd do, decided, want to try and set aside (core/life_notes.py, DEC-0054) through the action contract (core/actions.py): `life_note.done` (a promise kept, an idea tried) and `life_note.forget`. The notes write through atomic_write_text, so "undo that" takes either back. Said out
 - `core/life_notes.py`: Remembering what you say you'll do, decide and want to try (DEC-0054, T-0018). Four kinds of note MIA picks up from normal conversation, never a form, each shown back for a yes before it's kept (Propose → Approve):
+- `core/linked_devices.py`: The phones linked to MIA on this computer (DEC-0022, `core/home_link.py`), seen and withdrawn from the computer's side (2026-11-10).
 - `core/links.py`: How things relate (2026-10-05, Engine Phase 1 step 2, docs/ENGINE_PHASE1_PLAN.md): typed links between the records MIA already keeps, like "this loan FUNDS that property", "the walipini DEPENDS_ON selling the lot", "this mission is EVIDENCE_FOR that skill". (Named `links` because `relationships_mana
 - `core/lite_capture_manager.py`: The receiving/processing side of "MIA Lite" (`docs/VISION.md`'s Core/Home split section, "MIA Lite — a fourth tier, lighter than Core") — scoped directly with the user across 4 real questions before any code: hardware (a mode on the existing Receiver, no new device), capture scope v1 (voice notes on
 - `core/live.py`: Live updates (2026-10-05, Phase 2 foundation, DEC-0013): one number, the state version, that goes up whenever any of MIA's data changes, so every open surface (the web Home, the phone, later the glasses) knows to re-read `/api/state` the moment something changes, wherever it changed: the desktop, th
@@ -523,7 +524,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,060 lines; 49 of 49 classes and functions documented
+2 files, 4,084 lines; 49 of 49 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -799,7 +800,7 @@
 
 ## tests/: the test suite: what each part must do
 
-467 files, 78,071 lines; 6,674 of 6,682 classes and functions documented
+468 files, 78,329 lines; 6,696 of 6,704 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1166,7 +1167,7 @@
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
-- `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does, and the PC's own endpoints.
+- `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), and the PC's own endpoints.
 - `tests/test_system_health.py`: Unit tests for core.system_health (moved here from modules.diagnostics.module in milestone 5.7 — see that module's own docstring and core/system_health.py's docstring for why). format_system_health() is tested with hand-built snapshots (pure, deterministic). read_system_health()/_read_cpu_temperatur
 - `tests/test_system_map.py`: The one map of everything that makes MIA (core/system_map.py, DEC-0139): it assembles every category from the real sources (decisions, loops, knowledge, learnings, stores, preferences, architecture, capabilities), renders a navigable page, and a broken source becomes a noted gap rather than a crash.
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
@@ -1176,6 +1177,7 @@
 - `tests/test_theme_manager.py`: Unit tests for gui.theme_manager. Pure string-lookup logic — no Qt event loop needed.
 - `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell. The Theme Studio builds a theme from a few choices, refuses warni
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant.
+- `tests/test_tool_gate.py`: The Assistant's tool gate (2026-11-10): only a tool offered this turn runs, a tool whose name reads like a lookup but changes records counts as a change (undo, screens refresh), and a change the model asks for right after a lookup that brought in outside text (a web page, a search, the inbox) is hel
 - `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop.
 - `tests/test_trade_session.py`: Walking someone through a job or a diagnosis (core/trade_session.py, core/trade_actions.py, DEC-0149): started by their words, one step at a time, never past a hold point until it's checked, why and what to watch for on any step, a stop rule's words ending it at once with what to do instead, a job p
 - `tests/test_trades.py`: Trade Master's jobs and diagnoses (core/trades.py, core/trade_jobs.py, DEC-0149): every one meets the standard Zac asked MIA be held to ("thorough and complete instructions"), the standard catches what a weak one leaves out, a job's own words call for its stop rules, a diagnosis always ends somewher
@@ -1271,7 +1273,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,113 lines
+105 files, 19,161 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

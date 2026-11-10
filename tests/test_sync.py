@@ -1,7 +1,8 @@
 """
 Two-way sync between the phone and the home computer (core/sync.py):
 the merge rules, one full sync against a computer that answers like MIA
-on the PC does, and the PC's own endpoints.
+on the PC does (and an edit made on the phone while it answers, which
+survives), and the PC's own endpoints.
 """
 
 import base64
@@ -327,3 +328,22 @@ def test_the_same_private_journal_syncs(phone):
     pc.journal_key = sync.journal_key(phone.dirs["mine"])
     done = sync.sync_now(phone, call=pc)
     assert json.loads(pc.files["mine"]["private_journal.json"])["entries"][0]["entry_id"] == "e1" and not done["note"]
+
+
+def test_an_edit_made_while_the_computer_answers_is_merged_not_written_over(phone):
+    """The file is read again under the lock after the network call (2026-11-10): the edit made meanwhile survives."""
+    pc = PretendPC()
+    pc.files["home"]["missions.json"] = _missions("pc1")
+    sync.sync_now(phone, call=pc)
+    pc.files["home"]["missions.json"] = _missions("pc1", "pc2")  # the computer changed it; the phone hadn't
+    missions = phone.dirs["home"] / "missions.json"
+
+    def pc_while_the_phone_edits(context, path, payload=None, **kwargs):
+        """The computer's answer, during which the phone adds a mission."""
+        if path.startswith("/api/sync/file?"):
+            missions.write_bytes(_missions("pc1", "phone3"))
+        return pc(context, path, payload, **kwargs)
+
+    sync.sync_now(phone, call=pc_while_the_phone_edits)
+    ids = [m["mission_id"] for m in json.loads(missions.read_text())]
+    assert "phone3" in ids and "pc2" in ids

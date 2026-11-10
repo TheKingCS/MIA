@@ -613,7 +613,9 @@ def sync_now(context, call=None, lock=None) -> dict:
     (tests pass their own). Returns what happened: {pushed, pulled, merged,
     files, at}. Raises HomeLinkError when the computer can't be reached.
     Local files are compared and sent by their content (a sealed one is
-    opened, DEC-0126); each side seals its own copy when it writes."""
+    opened, DEC-0126); each side seals its own copy when it writes. A file
+    is read again under `lock` once the computer has answered, so an edit
+    made here meanwhile is merged with theirs, never written over."""
     from core.home_link import home_call
 
     call = call or home_call
@@ -664,17 +666,25 @@ def sync_now(context, call=None, lock=None) -> dict:
                 done["pushed"] += 1
                 continue
             got = call(context, f"/api/sync/file?scope={scope}&name={name}", timeout=30, raw=True)
-            if local is None or not local_changed:
-                with lock:
+            prefer_local = (path.stat().st_mtime if path.is_file() else 0) >= float(rtime or 0)
+            with lock:
+                # The file again, now that nothing else can write it: an edit made here while the computer answered
+                # (up to 30 seconds) is merged in, never written over (2026-11-10).
+                fresh = open_bytes(path) if path.is_file() else None
+                edited_meanwhile = fresh is not None and digest(fresh) != lhash
+                if edited_meanwhile:
+                    local, local_changed, prefer_local = fresh, True, True
+                if local is None or not local_changed:
                     write_file(context, path, got)
+                    merged = None
+                else:
+                    merged = merge_file(name, base, local, got, prefer_local)
+                    if merged != local:
+                        write_file(context, path, merged)
+            if merged is None:
                 state.set_base(scope, name, got)
                 done["pulled"] += 1
                 continue
-            prefer_local = (path.stat().st_mtime if path.is_file() else 0) >= float(rtime or 0)
-            merged = merge_file(name, base, local, got, prefer_local)
-            with lock:
-                if merged != local:
-                    write_file(context, path, merged)
             if merged != got:
                 _push(context, call, scope, name, merged, digest(got))
             state.set_base(scope, name, merged)
