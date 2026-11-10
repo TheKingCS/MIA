@@ -311,7 +311,8 @@ class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
     def __init__(self) -> None:
-        """Builds the whole app before anything is shown: the Qt application and fonts, config, the event bus and AppContext, the
+        """Builds the whole app before anything is shown: the Qt application and fonts, a restore chosen before the
+        restart (core/backup_manager.apply_pending_restore, before anything reads its files), config, the event bus and AppContext, the
         theme, profiles and households, then every core service onto the context (each store, the model, voice, the
         communication gate, budget, maps, the sensors that send their own readings...), the module manager and search, the registries (search providers,
         calculators, the Assistant's tools, dashboard widgets) and the timers that run the periodic checks. Only
@@ -327,6 +328,9 @@ class MIAApplication:
             self.qt_app.setWindowIcon(QIcon(str(icon_path)))
         _load_bundled_fonts()
 
+        from core.backup_manager import apply_pending_restore
+
+        apply_pending_restore()  # a restore chosen before the restart, before anything has read its files
         self.config = ConfigManager()
         self.events = EventBus()
         self.context = AppContext(config=self.config, events=self.events)
@@ -749,7 +753,7 @@ class MIAApplication:
 
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
-        DEC-0148, and the greenhouse node, DEC-0150).
+        DEC-0148, the greenhouse node, DEC-0150, and the nightly backup, core/auto_backup.py).
 
         Stabilization (2026-09-14) — this used to be one long function
         with 14 sequential `if should_run_once_daily(...):` blocks and
@@ -817,6 +821,7 @@ class MIAApplication:
             ("capability_reminder", self._check_capability_reminder),
             ("momentum", self._check_momentum),
             ("greenhouse", self._check_greenhouse),
+            ("auto_backup", self._check_auto_backup),
         ]
         # 2026-09-27, Cognitive Extension slice C: checks no longer notify
         # directly. Each one offers what it would say (_offer()), and the
@@ -837,6 +842,13 @@ class MIAApplication:
         elif self.context.notifications is not None:
             for c in offers:
                 self.context.notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
+
+    def _check_auto_backup(self, now: datetime, today_iso: str) -> None:
+        """The nightly backup (core/auto_backup.py): once a night from 2 a.m., into the backups folder, rotated."""
+        from core import auto_backup
+
+        if auto_backup.due(self.context.config, now):
+            auto_backup.run(self.context, now)
 
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a

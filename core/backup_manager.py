@@ -6,6 +6,12 @@ Export/import MIA's config + data directory as a single backup
 file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted
 via core/secrets_manager.py.
 
+A restore chosen while MIA runs (2026-11-10) is checked by
+`schedule_restore()` and kept, opened, as `restore_pending.zip`;
+`apply_pending_restore()` restores it at the next start, before the
+config or any store is built, so no running store can save its old
+contents over the restored files. Nightly backups: core/auto_backup.py.
+
 File format:
     - Unencrypted: the raw zip bytes, completely unmodified — a plain
       backup is a genuinely standard zip file, openable with any zip
@@ -68,6 +74,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import shutil
 import tempfile
 import zipfile
@@ -309,6 +316,69 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None, config=N
 
     log.info("Restored config and data from backup '%s'.", source_path)
     return RestoreResult(passed=True)
+
+
+# A restore chosen while MIA runs waits here, opened and checked, until the next start (2026-11-10): restoring under
+# the running app let any store's next save write its old contents over the restored files.
+PENDING_RESTORE = _PROJECT_ROOT / "restore_pending.zip"
+
+
+def schedule_restore(source_path: Path, passphrase: Optional[str] = None) -> RestoreResult:
+    """Checks a backup the way restore_backup does (readable, the passphrase right, a MIA backup with a valid
+    config) and keeps its opened contents as PENDING_RESTORE for apply_pending_restore() at the next start. Nothing
+    live is touched now."""
+    source_path = Path(source_path)
+    try:
+        raw = source_path.read_bytes()
+    except OSError as exc:
+        return RestoreResult(passed=False, errors=[f"Could not read '{source_path}': {exc}"])
+    if raw.startswith(_MAGIC):
+        if not passphrase:
+            return RestoreResult(passed=False, errors=["This backup is encrypted — a passphrase is required."])
+        try:
+            raw = decrypt_bytes(raw[len(_MAGIC):], passphrase)
+        except SecretsError as exc:
+            return RestoreResult(passed=False, errors=[str(exc)])
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(raw))
+        names = zf.namelist()
+        config_text = zf.read("config.json").decode("utf-8") if "config.json" in names else None
+    except (zipfile.BadZipFile, UnicodeDecodeError):
+        return RestoreResult(passed=False, errors=["Backup contents are not a valid archive (corrupted?)."])
+    if "manifest.json" not in names:
+        return RestoreResult(passed=False, errors=["Not a MIA backup file (missing manifest)."])
+    if config_text is None:
+        return RestoreResult(passed=False, errors=["Backup is missing config.json."])
+    try:
+        json.loads(config_text)
+    except json.JSONDecodeError as exc:
+        return RestoreResult(passed=False, errors=[f"Backup's config.json is not valid JSON: {exc}"])
+    tmp = PENDING_RESTORE.with_name(PENDING_RESTORE.name + ".tmp")
+    try:
+        tmp.write_bytes(raw)
+        os.replace(tmp, PENDING_RESTORE)
+    except OSError as exc:
+        tmp.unlink(missing_ok=True)
+        return RestoreResult(passed=False, errors=[f"Could not keep the backup for the restart: {exc}"])
+    log.info("Restore from '%s' waits for the next start.", source_path)
+    return RestoreResult(passed=True)
+
+
+def apply_pending_restore() -> Optional[RestoreResult]:
+    """At the very start of a boot, before any store or the config is built: restores PENDING_RESTORE if one waits
+    (its outside content folders by the config it holds), then removes it. None when nothing waits. A restore that
+    fails leaves the file for the log and the next start to try again."""
+    if not PENDING_RESTORE.is_file():
+        return None
+    from core.config_manager import ConfigManager
+
+    result = restore_backup(PENDING_RESTORE, config=ConfigManager())
+    if result.passed:
+        PENDING_RESTORE.unlink(missing_ok=True)
+        log.info("The restore chosen before the restart is done.")
+    else:
+        log.error("The restore chosen before the restart failed: %s", "; ".join(result.errors))
+    return result
 
 
 def safe_extract_zip(zf: zipfile.ZipFile, target_dir: Path) -> None:

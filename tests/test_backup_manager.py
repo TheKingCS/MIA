@@ -5,7 +5,8 @@ tests.test_backup_manager
 Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR
 into a tmp_path scratch area (same monkeypatch pattern as
 test_config_manager.py) so these tests never touch the real
-config/config.json or data/ directory.
+config/config.json or data/ directory. Also a restore that waits for
+the next start (schedule_restore, then apply_pending_restore).
 """
 
 from __future__ import annotations
@@ -381,3 +382,28 @@ def test_restore_restores_all_six_external_content_directories(
     assert result.passed is True
     for name, directory in dirs.items():
         assert (directory / "original.txt").read_text() == f"original {name}"
+
+
+def test_a_restore_chosen_while_mia_runs_waits_for_the_next_start(tmp_path, monkeypatch):
+    """schedule_restore checks the backup and touches nothing live; apply_pending_restore at the next start restores
+    it, before any store could save over it, and clears the wait (2026-11-10)."""
+    import core.backup_manager as bm
+    import core.config_manager as config_module
+
+    data, cfg = tmp_path / "data", tmp_path / "config" / "config.json"
+    data.mkdir()
+    cfg.parent.mkdir()
+    cfg.write_text('{"before": true}', encoding="utf-8")
+    (data / "notes.json").write_text('[{"id": "kept"}]', encoding="utf-8")
+    for name, value in (("_DATA_DIR", data), ("_CONFIG_FILE", cfg), ("PENDING_RESTORE", tmp_path / "restore_pending.zip")):
+        monkeypatch.setattr(bm, name, value)
+    monkeypatch.setattr(config_module, "_CONFIG_FILE", cfg)
+    backup = tmp_path / "b.miabackup"
+    assert bm.create_backup(backup, passphrase="pass phrase").passed
+    assert not bm.schedule_restore(backup, "wrong").passed and not bm.PENDING_RESTORE.exists()
+    (data / "notes.json").write_text("[]", encoding="utf-8")
+    assert bm.schedule_restore(backup, "pass phrase").passed
+    assert (data / "notes.json").read_text(encoding="utf-8") == "[]"  # nothing live touched yet
+    assert bm.apply_pending_restore().passed
+    assert (data / "notes.json").read_text(encoding="utf-8") == '[{"id": "kept"}]'
+    assert not bm.PENDING_RESTORE.exists() and bm.apply_pending_restore() is None

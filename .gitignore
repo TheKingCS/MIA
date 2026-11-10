@@ -121,3 +121,6 @@ pc-check/
 /music_library/
 
 .claude/settings.local.json
+# A restore waiting for the next start (core/backup_manager.schedule_restore): a whole backup, opened.
+/restore_pending.zip
+/restore_pending.zip.tmp

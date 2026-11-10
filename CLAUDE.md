@@ -341,7 +341,8 @@ install script instead so re-running it stays reproducible. See
 `docs/HARDWARE.md` for the target hardware assumptions (Pi 5, AI HAT+ 2,
 storage split) this software is being built against.
 
-The repo has a private GitHub remote (`github.com/TheKingCS/MIA`). This
-checkout's `.git/hooks/post-commit` auto-pushes every commit on the
-current branch to `origin` — since git hooks aren't version-controlled,
-a fresh clone won't have this behavior until the hook is recreated.
+The repo's GitHub remote (`github.com/TheKingCS/MIA`) is public as of
+2026-11-10 (whether it stays public is Zac's decision): anyone can read
+what is committed, so never commit personal data, secrets, or a
+description of a weakness that isn't fixed yet. There is no post-commit
+hook in this checkout: push after each commit (`git push origin master`).

@@ -7,7 +7,9 @@ desktop's Settings only). For the PC's owner (the first account) only, since a
 backup holds everyone's data on this MIA.
 
 - `status(context, now)`: where backups go, the newest ones (name, size,
-  when, whether it needs a passphrase) and how long since the last one.
+  when, whether it needs a passphrase), how long since the last one, and
+  the nightly automatic backup (core/auto_backup.py): on or off, and its
+  last problem if it had one.
 - `make(context, passphrase, now)`: one backup into the backups folder
   (core/backup_manager.create_backup: config, data and the outside content
   folders), encrypted when a passphrase is given; named by the date and time.
@@ -48,7 +50,8 @@ def size_words(size: int) -> str:
 
 
 def status(context, now: Optional[datetime] = None) -> dict:
-    """The backups section: the folder, the newest backups (newest first) and how long since the last one."""
+    """The backups section: the folder, the newest backups (newest first), how long since the last one, and the
+    nightly backup's state (auto: {"on", "problem"})."""
     from core.backup_manager import is_backup_encrypted
 
     now = now or datetime.now()
@@ -64,7 +67,11 @@ def status(context, now: Optional[datetime] = None) -> dict:
         rows.append({"name": p.name, "size": size_words(p.stat().st_size), "when": made.strftime("%b %d, %Y %H:%M"),
                      "locked": is_backup_encrypted(p)})
     last = (now.date() - datetime.fromtimestamp(files[0].stat().st_mtime).date()).days if files else None
-    return {"folder": str(where), "backups": rows, "count": len(files), "last": age_words(last), "days": last}
+    config = getattr(context, "config", None)
+    auto = {"on": bool(config.get("backup.auto_enabled", True)) if config is not None else False,
+            "problem": str(config.get("backup.auto_problem", "") or "") if config is not None else ""}
+    return {"folder": str(where), "backups": rows, "count": len(files), "last": age_words(last), "days": last,
+            "auto": auto}
 
 
 def make(context, passphrase: str = "", now: Optional[datetime] = None) -> dict:

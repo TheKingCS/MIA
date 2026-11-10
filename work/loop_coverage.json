@@ -153,6 +153,10 @@
    "status": "none",
    "why": "worlds, campaigns and quests are the person's own fiction (DEC-0134, DEC-0137); nothing real to improve"
   },
+  "check:auto_backup": {
+   "status": "none",
+   "why": "the nightly backup either is made or is not: a failed night is kept as backup.auto_problem, shown on the Backups screen and logged, and tried again the next night; there is no judgement of MIA's in it to improve"
+  },
   "check:birthday": {
    "status": "none",
    "why": "a greeting once a year: there is nothing in how it lands to learn from"

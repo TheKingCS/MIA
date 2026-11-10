@@ -60,7 +60,7 @@ from PySide6.QtWidgets import (
 from core import focus_presets, person_settings
 from core import accessibility
 from core import region as region_module
-from core.backup_manager import create_backup, is_backup_encrypted, restore_backup
+from core.backup_manager import create_backup, is_backup_encrypted, schedule_restore
 from core.device_profile import CORE, HOME, get_device_profile
 from core.logger import get_logger
 from core.phone_server import DEFAULT_PORT, describe_status, serve_command, tailscale_info
@@ -859,7 +859,7 @@ class SettingsModule(ModuleBase):
     # ------------------------------------------------------------------
 
     def _on_restore_clicked(self) -> None:
-        """Restores a backup picked from disk (asking for its passphrase when encrypted) after warning that it overwrites the current config and data and can't be undone; MIA needs a restart after."""
+        """Restores a backup picked from disk (asking for its passphrase when encrypted) after warning that it overwrites the current config and data and can't be undone: checked now, applied when MIA next starts (core/backup_manager.schedule_restore), so nothing running can save over it."""
         source, _ = QFileDialog.getOpenFileName(
             None, "Select Backup File", "", "MIA Backup (*.zip *.miabackup);;All Files (*)"
         )
@@ -879,21 +879,23 @@ class SettingsModule(ModuleBase):
             "Confirm Restore",
             "Restoring will overwrite your current configuration and data "
             "(profiles, notifications, trip photos, trail maps, field "
-            "captures, etc.) with the contents of this backup. This "
-            "cannot be undone.\n\nContinue?",
+            "captures, etc.) with the contents of this backup when MIA "
+            "next starts. This cannot be undone.\n\nContinue?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
         if confirm != QMessageBox.StandardButton.Yes:
             return
 
-        result = restore_backup(source_path, passphrase=passphrase, config=self.context.config)
+        # Checked now, applied at the next start before anything loads (core/backup_manager.schedule_restore):
+        # restoring under the running app let a store's next save write over the restored files.
+        result = schedule_restore(source_path, passphrase=passphrase)
         if result.passed:
             QMessageBox.information(
-                None, "Restore Complete",
-                "Restore complete. Please restart MIA for the changes to take effect."
+                None, "Restore Ready",
+                "The backup checks out. Restart MIA and it is restored as she starts."
             )
-            self._set_status("Restore complete — restart MIA to apply.")
+            self._set_status("Restore ready — restart MIA to apply it.")
         else:
             QMessageBox.warning(None, "Restore Failed", "\n".join(result.errors))
             self._set_status("Restore failed — see error dialog.")
