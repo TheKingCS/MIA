@@ -434,24 +434,32 @@ def _wanted_file(rel: Path) -> bool:
     return not any(part.startswith(".") for part in rel.parts) and not rel.name.endswith((".part", ".tmp"))
 
 
+def _folder_files(label: str, root: Path) -> dict:
+    """One synced folder's files: {"label/path": [fingerprint, mtime, size]}, leaving out what isn't synced, what's
+    over MAX_FILE_BYTES, and a file that went away while it was read; {} for a folder that isn't there."""
+    files = {}
+    if not root.is_dir():
+        return files
+    for path in sorted(root.rglob("*")):
+        rel = path.relative_to(root)
+        if not path.is_file() or not _wanted_file(rel):
+            continue
+        try:
+            st = path.stat()
+            if st.st_size <= MAX_FILE_BYTES:
+                files[f"{label}/{rel.as_posix()}"] = [FINGERPRINTS.of(path), st.st_mtime, st.st_size]
+        except OSError:
+            continue  # gone or locked mid-scan: the next sync sees it
+    return files
+
+
 def file_manifest(context, profile_id: str) -> dict:
     """{scope: {"label/path": [fingerprint, mtime, size]}}."""
     out: dict[str, dict] = {}
     for scope, labels in file_folders(context, profile_id).items():
-        files = {}
+        out[scope] = {}
         for label, root in labels.items():
-            if not root.is_dir():
-                continue
-            for path in sorted(root.rglob("*")):
-                rel = path.relative_to(root)
-                if path.is_file() and _wanted_file(rel):
-                    try:
-                        st = path.stat()
-                        if st.st_size <= MAX_FILE_BYTES:
-                            files[f"{label}/{rel.as_posix()}"] = [FINGERPRINTS.of(path), st.st_mtime, st.st_size]
-                    except OSError:
-                        continue
-        out[scope] = files
+            out[scope].update(_folder_files(label, root))
     return out
 
 

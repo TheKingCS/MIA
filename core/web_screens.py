@@ -391,11 +391,12 @@ def estate_page(context, today: Optional[date] = None) -> dict:
     """The data the Real Estate screen shows, assembled here (the web only draws it): each property with its value, loan and payment, this month's income and
     expenses and the year's net operating income (with a budget), its upkeep tasks, the missions linked to it, and
     the word on its card (`property_badge`: Rent Due, Rented...), its photo (`property_photo_url`), and for a rental or investment its straight-line
-    depreciation a year and so far (an estimate, not a tax figure).
+    depreciation a year and so far (an estimate, not a tax figure), and once sold, what the sale came to (`sale`).
     """
     from core import links as links_module
     from core.estate_actions import RECORDS, form_spec
-    from core.real_estate_manager import accumulated_depreciation, annual_depreciation, equity, has_loan_terms, monthly_payment
+    from core.real_estate_manager import (accumulated_depreciation, annual_depreciation, equity, has_loan_terms,
+                                          monthly_payment, sale_summary)
     from core.region import currency_symbol_for
 
     today = today or date.today()
@@ -442,7 +443,9 @@ def estate_page(context, today: Optional[date] = None) -> dict:
             "badge": property_badge(p.status, p.monthly_rent, income_month),
             # straight-line, rentals and investments only (core/real_estate_manager.py): an estimate, not a tax figure
             "depreciation": {"year": _r(annual_depreciation(p)), "so_far": _r(accumulated_depreciation(p, today))}
-            if annual_depreciation(p) > 0 else None,
+            if annual_depreciation(p) > 0 and not p.sale_date else None,
+            # once sold: what it came to (core/real_estate_manager.sale_summary; the gain an estimate, not a tax figure)
+            "sale": {k: (_r(v) if isinstance(v, float) else v) for k, v in sale_summary(p).items()} if p.sale_date else None,
         })
     page["properties"] = properties
     page["totals"] = {"count": len(properties), "equity": _r(sum(p["equity"] for p in properties)),

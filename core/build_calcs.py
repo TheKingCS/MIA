@@ -9,7 +9,8 @@ and what to cut: a stud wall, a floor or deck frame, a raised garden bed,
 a fence run, a concrete slab, a gable shed built from the others, and
 (added the same evening) a chicken coop and run, garage shelving, a
 bookshelf, a lean-to, a compost bin, a cold frame, a picnic table, a
-firewood rack and deck stairs. `custom_cuts()` does any project of the
+firewood rack and deck stairs; and (2026-11-08) a hoop house and a walk-in cold room, for
+Trade Master's greenhouse and cold-room jobs. `custom_cuts()` does any project of the
 person's own: their parts packed into boards (`buy_boards()`) and 4x8
 sheets (`sheets_for()`). The model only phrases the result; it never does
 this arithmetic.
@@ -628,6 +629,95 @@ def custom_cuts(parts: list[dict], title: str = "your project") -> MaterialList:
     return out
 
 
+def hoop_house(width_ft: float = 14, length_ft: float = 24, bow_spacing_ft: float = 4,
+               wall_ft: float = 0) -> MaterialList:
+    """A ground-post hoop house (high tunnel): steel bows every `bow_spacing_ft` on driven ground posts (one each
+    side), three purlin runs, treated 2x6 baseboards and hip boards down both sides, 2x4 end walls with a door in one
+    and a vent in the other, wiggle-wire channel, and UV film cut long enough to wrap the ends and bury or batten.
+    A bow is taken as a half circle on `wall_ft` of straight leg each side (0 for a plain quonset)."""
+    bows = math.ceil(length_ft / bow_spacing_ft) + 1
+    rise_ft = width_ft / 2 + wall_ft
+    arc_ft = math.pi * width_ft / 2 + 2 * wall_ft
+    out = MaterialList(f"{_qty(width_ft)} x {_qty(length_ft)} ft hoop house",
+                       {"width_ft": width_ft, "length_ft": length_ft, "bow_spacing_ft": bow_spacing_ft,
+                        "wall_ft": wall_ft})
+    out.add("steel bows (1 3/8 in or heavier, bent to the width)", bows, "", f"each about {_qty(round(arc_ft, 1))} ft "
+            "of tube, from a kit or a bender")
+    out.add("ground posts (1 5/8 in steel, 36 in or longer)", 2 * bows, "", "driven about 24 in, 12 in left above")
+    runs = 3
+    out.add("purlin tube (10 ft lengths)", runs * math.ceil(length_ft / 9.5), "", "a ridge run and one each side, "
+            "lapped and screwed")
+    out.add("cross connectors", runs * bows, "", "purlin to bow")
+    _boards(out, "2x6", [("baseboard", 2, length_ft * 12), ("hip board", 2, length_ft * 12)], "pressure-treated "
+            "(ground contact for the baseboards), joined over a bow where a run is longer than a board")
+    studs = math.ceil(width_ft / 2) + 1
+    _boards(out, "2x4", [("end-wall stud (cut to the bow)", 2 * studs, rise_ft * 12),
+                         ("end-wall header and sill", 4, width_ft * 12)], "pressure-treated at the ground")
+    out.add("door (or a framed door with hinges and latch)", 1, "", "in one end wall")
+    out.add("vent (louver or roll-up panel)", 1, "", "high in the other end wall, opposite the door")
+    channel_ft = 2 * length_ft + 2 * arc_ft + 2 * width_ft
+    out.add("wiggle-wire channel and wire (6 ft lengths)", math.ceil(channel_ft / 6), "", "hip boards, end bows and "
+            "baseboards")
+    roof_w, roof_l = math.ceil(arc_ft + 8), math.ceil(length_ft + width_ft + 4)
+    out.add(f"greenhouse film (UV-stabilized, 6 mil, 4-year), {roof_w} x {roof_l} ft", 1, "piece",
+            "over the bows, long enough to wrap the end bows")
+    end_w, end_h = math.ceil(width_ft + 2), math.ceil(rise_ft + 2)
+    out.add(f"greenhouse film for the end walls, {end_w} x {end_h} ft", 2, "pieces")
+    out.add("anchors for the ground posts (augers, or concrete where the soil is loose)", 2 * bows, "",
+            "the corner posts and every few in between at the least")
+    out.add("self-drilling screws for the purlins and channel", math.ceil((runs * bows + channel_ft / 2) / 25) * 25)
+    out.add("structural screws or lags for the baseboards and hip boards", 4 * bows)
+    out.notes.append("Bow tube and posts come in kits sized to a width; buy those as a set so they fit each other.")
+    out.notes.append("Set the long side across the prevailing wind only if your kit is rated for it, and run it "
+                     "east-west for winter light where you can.")
+    out.notes.append(CODE_NOTE)
+    return out
+
+
+def cold_room(width_ft: float = 8, length_ft: float = 10, height_ft: float = 8, wall_r: int = 25,
+              ceiling_r: int = 30) -> MaterialList:
+    """A walk-in cold room built inside a dry building: four 2x4 stud walls (a door in one) with the insulation as
+    continuous rigid foam over them, a 2x6 ceiling frame, foam sized up to the R-values asked (polyiso at about R-6 an
+    inch, in 2 in boards, so a layer is never short), foil tape and spray foam for every seam, a vapor retarder on the warm side, plywood inside, an insulated door, and the window air conditioner and
+    controller sized from the floor area."""
+    out = MaterialList(f"{_qty(width_ft)} x {_qty(length_ft)} ft cold room, {_qty(height_ft)} ft tall",
+                       {"width_ft": width_ft, "length_ft": length_ft, "height_ft": height_ft, "wall_r": wall_r,
+                        "ceiling_r": ceiling_r})
+    for side, run, door in (("long wall", length_ft, (3,)), ("long wall", length_ft, ()),
+                            ("end wall", width_ft, ()), ("end wall", width_ft, ())):
+        wall = stud_wall(run, height_ft, 16, door, sheathing=False)
+        out.merge(wall, f"{side}: ")
+    joists = math.ceil(length_ft * 12 / 24) + 1
+    _boards(out, "2x6", [("ceiling joist", joists, width_ft * 12)], "ceiling frame at 24 in")
+    wall_area = 2 * (width_ft + length_ft) * height_ft - 3 * 6.7
+    ceiling_area = width_ft * length_ft
+    per_inch = 6
+    wall_layers = math.ceil(wall_r / per_inch / 2)
+    ceiling_layers = math.ceil(ceiling_r / per_inch / 2)
+    out.add("2 in polyiso foam board, 4x8", with_waste(wall_area * wall_layers / SHEET_SQFT), "sheets",
+            f"walls, {wall_layers} layers (about R-{wall_layers * 2 * per_inch}), seams staggered")
+    out.add("2 in polyiso foam board, 4x8", with_waste(ceiling_area * ceiling_layers / SHEET_SQFT), "sheets",
+            f"ceiling, {ceiling_layers} layers (about R-{ceiling_layers * 2 * per_inch})")
+    out.add("2 in XPS foam board, 4x8 (under a floor of plywood)", with_waste(ceiling_area / SHEET_SQFT), "sheets",
+            "floor, on a dry slab")
+    out.add("3/4 in plywood, 4x8", with_waste((wall_area + 2 * ceiling_area) / SHEET_SQFT), "sheets",
+            "inside the walls and ceiling, and the floor over the foam")
+    out.add("foil tape", math.ceil((wall_area + ceiling_area) / 60), "rolls", "every seam of every layer")
+    out.add("spray foam (low-expansion)", math.ceil((wall_area + ceiling_area) / 80) + 2, "cans")
+    out.add("6 mil poly vapor retarder", math.ceil((wall_area + ceiling_area) * 1.15), "sq ft",
+            "on the warm (outer) side, lapped and taped")
+    out.add("insulated door with gaskets and a closer", 1)
+    btu = max(5000, math.ceil(ceiling_area * 100 / 1000) * 1000)
+    out.add(f"window air conditioner, about {btu:,} BTU", 1, "", "sized from the floor area; the controller's maker "
+            "has a sizing chart that has the last word")
+    out.add("cooler controller (CoolBot or similar) and its sensor", 1)
+    out.notes = [n for n in out.notes if n != CODE_NOTE]
+    out.notes.append("The air conditioner needs its own circuit: that is the workshop circuit job's work, or an "
+                     "electrician's.")
+    out.notes.append(CODE_NOTE)
+    return out
+
+
 CALCULATORS = {
     "stud_wall": stud_wall,
     "floor": floor_frame,
@@ -645,4 +735,6 @@ CALCULATORS = {
     "picnic_table": picnic_table,
     "firewood_rack": firewood_rack,
     "stairs": stairs,
+    "hoop_house": hoop_house,
+    "cold_room": cold_room,
 }

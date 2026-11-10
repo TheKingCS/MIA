@@ -3,7 +3,8 @@ tests.test_id_wallet
 ======================
 
 The ID wallet (core/id_wallet.py): cards kept with their numbers and photos sealed at rest, numbers masked in lists
-and never in what MIA says or in an action, expiry reminders on Today, and "show my license" opening the card.
+and never in what MIA says or in an action, expiry reminders on Today, "show my license" opening the card, and
+the history noting a card added or removed without its name or number.
 """
 
 from datetime import date, timedelta
@@ -86,3 +87,16 @@ def test_a_card_to_renew_shows_on_today(wallet):
     wallet.add(name="New passport", expires=(TODAY + timedelta(days=900)).isoformat())
     items = {(i.title, i.when) for i in today_items(SimpleNamespace(id_wallet=wallet), TODAY) if i.module_id == "id_wallet"}
     assert items == {("Texas driver's license expires", "waiting"), ("Old passport expired", "overdue")}
+
+
+def test_a_card_added_or_removed_reaches_the_history_without_its_name_or_number(wallet, tmp_path):
+    """Adding and removing a card each note a life event in the person's folder; neither says the card's name or
+    number."""
+    from core.life_events import LifeEventLog
+
+    card = wallet.add(name="Example State driver's license", number="D1234567")
+    wallet.remove(card["id"])
+    events = LifeEventLog(None, tmp_path).all_events()
+    assert [e.type for e in events] == ["card_added", "card_removed"]
+    said = " ".join(e.summary for e in events)
+    assert "Example State" not in said and "D1234567" not in said and said.startswith("Added a card to the wallet")

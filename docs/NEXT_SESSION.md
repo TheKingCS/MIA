@@ -30,11 +30,15 @@ T-0052 (create_app's length) only when no one else is in
 `server/app.py`; T-0017 stays open for its voice tool and Zac's SearXNG. **Zac:** start SearXNG (WAITING_ON), the
 history's older lines (seal them or not), the homestead push, DEC-0147's choices, the iOS path, restart MIA.
 
+**Built (engine, 2026-11-09 night, uncommitted until Claude can commit: WAITING_ON item 0): Trade Master's whole first list** (49 of 49, DEC-0149): the workshop circuit, the root cellar, the hoop-house and cold-room calculators and plans, and every home-building job from site layout through gutters, plus the furnace diagnosis. A second tier of 20 (everyday jobs and breakdowns: clogged drain, leaky faucet, GFCI that won't reset, frozen pipe...) is written as well (69 of 69). Next depth for Trade Master: a person confirming the drafted jobs, and a third tier when Zac names the ground (outbuildings, well and septic, solar...).
+
 **Built (engine, 2026-11-08 evening): DEC-0150, the aquaponics greenhouse built with MIA and handed to her**
 (approved). The homestead merge (DEC-0145) is committed on local master with this work on top; **the push was held
 by the session's safety check, so it waits for Zac** (`git push origin master` in C:\Users\zacrh\MIA, or a
 permission rule). Then remove the worktree C:\Users\zacrh\MIA-merge-homestead (`git worktree remove`) and the
-`homestead-merge` branch. Built: the three aquaponics jobs, `homestead/viewer/serve_exports.py`,
+`homestead-merge` branch. Built: the setup sequence (`core/greenhouse_setup.py`: "let's set up the greenhouse", "what's next?" across
+build, PlatformIO, flash, controls, Pi, card, push, start, take-over, commission), the three aquaponics jobs,
+`homestead/viewer/serve_exports.py`,
 `core/greenhouse_link.py`, `core/greenhouse_provision.py`, the `greenhouse.reporting` loop. Next: the SMTP secret
 pushed from the vault, the live link (DEC-0150 answer 3c), and for the design session a Greenhouse screen (monitors,
 alerts, "take over", the flash and push steps). Zac also
@@ -1364,7 +1368,7 @@ it, and went with Claude's recommendations. The plan, in order:
 
 ## 4. Known loose ends
 
-- **DEC-0126 next stages (Claude):** seal money and people next (add the file names to `at_rest.SEALED`, make their `_load` use `open_text`, grep for other readers of the names first: K-0105), then the rest of PERSONAL_STORES; the phone's Android Keystore; a Settings line showing sealing on/off and the recovery key behind the password. The optional passphrase waits on Zac.
+- **DEC-0126 next stages (Claude):** people are sealed (relationships_people.json, checked 2026-11-09); money waits on the PC's Plaid work (core/budget_manager.py). Was: seal money and people next (add the file names to `at_rest.SEALED`, make their `_load` use `open_text`, grep for other readers of the names first: K-0105), then the rest of PERSONAL_STORES; the phone's Android Keystore; a Settings line showing sealing on/off and the recovery key behind the password. The optional passphrase waits on Zac.
 - **1,382 "Finished a book" life events (2026-11-08)** in data/life_events.jsonl from the decorator bug (fixed in 9bb99d47). History is never rewritten, so they stay unless Zac says to clear them.
 
 - **On Zac's PC (2026-10-20):** `pytest` used to save into the real
@@ -1388,12 +1392,10 @@ it, and went with Claude's recommendations. The plan, in order:
   has no name/email set (Claude commits with `-c user.name=Claude -c
   user.email=noreply@anthropic.com`) and no auto-push hook.
 
-- `tests/test_reference_library_manager.py` fails now and then on Zac's PC (a different test each time; passes on rerun, 2026-10-21): find what's timing-dependent.
+- ~~`tests/test_reference_library_manager.py` fails now and then on Zac's PC~~: found 2026-11-06 (a just-written file's timestamp can run a few milliseconds ahead of time.time() on Windows; the test's quiet period is below zero now).
 - Cloud sessions have no auto-push git hook: Claude pushes manually
   after each commit (working as intended).
-- `tests/run_module.py` can't open **Household** (it doesn't wire
-  `recurring_missions`), so the design package has no Household
-  screenshot.
+- ~~`tests/run_module.py` can't open **Household**~~: it wires `recurring_missions` now (2026-11-09).
 - One test fails in Claude's cloud sandbox (UTC clock) and looks
   timezone-dependent:
   `tests/test_navigation_module.py::test_sun_moon_summary_for_real_coordinates_has_sensible_shape`.

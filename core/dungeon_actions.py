@@ -23,7 +23,8 @@ from datetime import date
 
 from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 from core.record_actions import Field, Record, record_kinds
-from core.work_dungeon import AFFIX_BY_ID, DAYS, affix_names, boss_bonus, loot, parse_affixes, run_xp, split_hours
+from core.work_dungeon import (AFFIX_BY_ID, DAYS, affix_names, boss_bonus, loot, parse_affixes, run_extra, run_xp,
+                                split_hours)
 
 DUNGEON = Record("dungeon", "dungeon", "dungeon_id", "get_dungeon", "add_dungeon", "update_dungeon", "delete_dungeon",
                  store="dungeon", fields=(
@@ -119,13 +120,26 @@ def _with(context, d, run_date: str, hours: float, run_id: str = "") -> tuple[fl
     return split_hours(d, others + [probe])["__probe"]
 
 
-def _loot_words(d, regular: float, overtime: float) -> str:
+def _extras(params) -> tuple[float, float]:
+    """A run's shift differential an hour and its tips from the params (0 when not said); ActionError for a word
+    that isn't an amount."""
+    out = []
+    for key in ("differential", "tips"):
+        raw = str(params.get(key) or "").replace("$", "").replace(",", "").strip()
+        try:
+            out.append(max(0.0, float(raw)) if raw else 0.0)
+        except ValueError:
+            raise ActionError(f"The {key} should be an amount.")
+    return out[0], out[1]
+
+
+def _loot_words(d, regular: float, overtime: float, extra: float = 0.0) -> str:
     """What a run earns in words (" about <money> loot", plus the boss bonus when there's overtime), or "" when the
-    job has no pay rate.
+    job has no pay rate. `extra` is its differential and tips (`run_extra`).
     """
     if not d.hourly:
-        return ""
-    words = f" — about {_money(loot(d, regular, overtime))} loot"
+        return f" — {_money(extra)} in tips and differential" if extra else ""
+    words = f" — about {_money(loot(d, regular, overtime) + extra)} loot"
     if overtime:
         words += f" ({overtime:g} h overtime: boss bonus {_money(boss_bonus(d, overtime))})"
     return words
@@ -155,30 +169,43 @@ def _run_plan(context, params):
 
 
 def _run_describe(context, params) -> str:
-    """The sentence the approval card shows for `dungeon.run` (Propose); raises ActionError when it can't be done. It says the hours, hard mode, the loot and the XP."""
+    """The sentence the approval card shows for `dungeon.run` (Propose); raises ActionError when it can't be done. It says the hours, hard mode, any tips and differential,
+    the loot (with them) and the XP."""
+    from core.work_dungeon import Run
+
     d, day, hours, affixes, boss, planned, _ = _run_plan(context, params)
+    differential, tips = _extras(params)
     regular, overtime = _with(context, d, day, hours, planned.run_id if planned else "")
     hard = affix_names(affixes)
     text = f"Clear {_when(day)}'s {hours:g}-hour run at {d.name}"
     if hard:
         text += f", on hard mode ({', '.join(hard)})"
-    text += _loot_words(d, regular, overtime)
+    if tips:
+        text += f", {_money(tips)} in tips"
+    if differential:
+        text += f", {_money(differential)}/h differential"
+    extra = run_extra(d, Run("", "", "", differential=differential, tips=tips), regular, overtime)
+    text += _loot_words(d, regular, overtime, extra)
     return text + f"; +{run_xp(hours, affixes, boss or overtime > 0)} XP"
 
 
 def _run_execute(context, params) -> str:
-    """Does `dungeon.run` once approved, and says what happened. Today's planned run is cleared (else a new run added); XP, credits (one per
+    """Does `dungeon.run` once approved, and says what happened (its loot with any tips and differential). Today's planned run is cleared (else a new run added); XP, credits (one per
     hour) and Teamwork, Organization (hard mode) and Endurance (a boss) skill XP are granted.
     """
     from core.gamification import SkillWeight, grant_xp
 
     d, day, hours, affixes, boss, planned, note = _run_plan(context, params)
+    differential, tips = _extras(params)
     book = _book(context)
     if planned is not None:
-        run = book.clear_run(planned.run_id, hours=hours, affixes=affixes, note=note)
+        run = book.clear_run(planned.run_id, hours=hours, affixes=affixes, note=note,
+                             differential=differential or None, tips=tips or None)
     else:
-        run = book.add_run(d.dungeon_id, day, hours, affixes=affixes, boss=boss, note=note)
+        run = book.add_run(d.dungeon_id, day, hours, affixes=affixes, boss=boss, note=note,
+                           differential=differential, tips=tips)
     regular, overtime = split_hours(d, book.runs)[run.run_id]
+    extra = run_extra(d, run, regular, overtime)
     is_boss = overtime > 0 or run.boss
     xp = run_xp(run.hours, run.affixes, is_boss)
     weights = [SkillWeight("teamwork", 2)]
@@ -189,8 +216,10 @@ def _run_execute(context, params) -> str:
     title = "⚔ Boss down!" if is_boss else ("🔥 Hard mode cleared!" if run.affixes else "⚔ Run cleared!")
     grant_xp(context, xp, title, f"{run.hours:g} h at {d.name}.", credits=int(run.hours), skill_weights=weights)
     said = f"Run cleared: +{xp} XP"
-    if d.hourly:
-        said += f", {_money(loot(d, regular, overtime))} loot"
+    if d.hourly or extra:
+        said += f", {_money(loot(d, regular, overtime) + extra)} loot"
+        if run.tips:
+            said += f" ({_money(run.tips)} of it tips)"
         if overtime:
             said += f" ({_money(boss_bonus(d, overtime))} of it boss bonus)"
     return said + "."
@@ -298,7 +327,9 @@ def _register() -> None:
     kinds = list(record_kinds(DUNGEON)) + [
         ActionType("dungeon.run", "Clear A Run", {"dungeon_id": "the dungeon", "date": "the day (blank: today)",
                                                  "hours": "hours worked", "hard_mode": "what made it hard",
-                                                 "overtime": "a called-in overtime shift", "note": "a note"},
+                                                 "overtime": "a called-in overtime shift", "note": "a note",
+                                                 "tips": "tips taken (an amount)",
+                                                 "differential": "a shift differential an hour (nights, weekends)"},
                    _run_describe, _run_execute),
         ActionType("dungeon.plan", "Plan A Run", {"dungeon_id": "the dungeon", "date": "the day", "hours": "hours",
                                                  "overtime": "an overtime shift"}, _plan_describe, _plan_execute),

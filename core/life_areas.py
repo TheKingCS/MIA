@@ -136,6 +136,97 @@ def _grow(store, today):
     return {"batches": len(batches), "growing": sum(1 for b in batches if b.status == "Growing")}, None
 
 
+def _homestead(store, today):
+    """The greenhouse and its systems, from their latest snapshots: how many systems report, and their critical
+    alerts (the export's summary.critical_alert_count; one without it counts none), named as what's next when any are
+    open (2026-11-09)."""
+    latest = store.all_latest_snapshots()
+    alerts = 0
+    for snap in latest:
+        summary = (snap.data or {}).get("summary") if isinstance(snap.data, dict) else None
+        count = summary.get("critical_alert_count") if isinstance(summary, dict) else None
+        alerts += count if isinstance(count, (int, float)) and not isinstance(count, bool) else 0
+    return ({"systems": len(latest), "critical_alerts": alerts},
+            f"{alerts:g} critical alert{'' if alerts == 1 else 's'} at the homestead" if alerts else None)
+
+
+def _directions(store, today):
+    """The standing directions MIA holds, and how many are active (2026-11-09)."""
+    found = list(store.directions)
+    return {"directions": len(found), "active": sum(1 for d in found if d.active)}, None
+
+
+def _workplaces(store, today):
+    """Workplaces (The Dungeon), the shifts cleared this week, and the next planned shift (2026-11-09)."""
+    week = [_iso(today - timedelta(days=n)) for n in range(7)]
+    runs = list(store.runs)
+    ahead = sorted((r for r in runs if r.status == "planned" and r.date >= _iso(today)), key=lambda r: r.date)
+    names = {d.dungeon_id: d.name for d in store.dungeons}
+    return ({"workplaces": len(store.dungeons),
+             "shifts_this_week": sum(1 for r in runs if r.status == "cleared" and r.date in week)},
+            f"{names.get(ahead[0].dungeon_id, 'A shift')} on {ahead[0].date}" if ahead else None)
+
+
+def _worlds(store, today):
+    """Fictional campaigns, and how many are going (2026-11-09)."""
+    found = list(store.campaigns)
+    return {"campaigns": len(found), "active": sum(1 for c in found if c.status == "active")}, None
+
+
+def _questlines(store, today):
+    """Questlines started and finished, and the one under way (2026-11-09)."""
+    started = [q for q in store.quests if q.started_on]
+    going = [q for q in started if not q.finished]
+    return ({"started": len(started), "finished": len(started) - len(going)},
+            f"{going[0].name}, chapter {going[0].current() + 1}" if going else None)
+
+
+def _art(store, today):
+    """Paintings made in the art studio (2026-11-09)."""
+    return {"paintings": len(store.items)}, None
+
+
+def _creations(store, today):
+    """Screens and things MIA made for the person, and how many are published (2026-11-09)."""
+    items = list(store.items)
+    return {"creations": len(items), "published": sum(1 for c in items if c.get("status") == "published")}, None
+
+
+def _plans(store, today):
+    """Build plans kept on the Library's plans shelf (2026-11-09)."""
+    return {"plans": len(store.plans)}, None
+
+
+def _recreation(store, today):
+    """Play logged, and how much of it this week (2026-11-09)."""
+    week = _iso(today - timedelta(days=6))
+    entries = list(store.entries)
+    return {"played": len(entries), "this_week": sum(1 for e in entries if week <= str(e.get("date", "")) <= _iso(today))}, None
+
+
+def _world_map(store, today):
+    """Check-ins on the world map, and the squares of it cleared (2026-11-09)."""
+    return {"checkins": len(store.checkins), "cleared": len(store.first_seen)}, None
+
+
+def _bosses(store, today):
+    """Boss battles: the bosses defeated (2026-11-09)."""
+    return {"defeated": len(store.defeated)}, None
+
+
+def _fitness(store, today):
+    """The fitness plan: its training days in the week (2026-11-09)."""
+    training = store.plan.get("training") or {}
+    return {"training_days": len(training.get("days") or [])}, None
+
+
+def _business_use(store, today):
+    """Tools and vehicles with business use logged, and the jobs logged this year (2026-11-09)."""
+    year = today.year
+    assets = store.assets_with_business_use()
+    return {"tools": len(assets), "jobs_this_year": sum(len(store.entries_for(a, year)) for a in assets)}, None
+
+
 def _energy(store, today):
     """Energy sources."""
     return {"sources": len(store.all_energy_sources())}, None
@@ -244,6 +335,19 @@ AREAS: tuple[Area, ...] = (
     Area("flock", "flock", "core/flock.py", _flock),
     Area("grow_lab", "grow_lab", "core/grow_lab.py", _grow),
     Area("energy", "energy", "core/energy_manager.py", _energy),
+    Area("homestead", "homestead", "core/homestead_manager.py", _homestead),
+    Area("directions", "direction", "core/direction.py", _directions),
+    Area("workplaces", "dungeon", "core/work_dungeon.py", _workplaces),
+    Area("worlds", "living_worlds", "core/living_worlds.py", _worlds),
+    Area("questlines", "quest_book", "core/questlines.py", _questlines),
+    Area("art", "art", "core/art_studio.py", _art),
+    Area("creations", "creations", "core/creations.py", _creations),
+    Area("plans", "plans", "core/plan_library.py", _plans),
+    Area("play", "recreation", "core/recreation.py", _recreation),
+    Area("world_map", "world_map", "core/world_map.py", _world_map),
+    Area("bosses", "boss_book", "core/boss_battles.py", _bosses),
+    Area("fitness", "fitness", "core/fitness_manager.py", _fitness),
+    Area("business_use", "business_use", "core/business_use.py", _business_use, adults_only=True),
     Area("expeditions", "expeditions", "core/expedition_manager.py", _expeditions),
     Area("trips", "trips", "core/trip_manager.py", _trips),
     Area("waypoints", "waypoints", "core/waypoint_manager.py", _waypoints),

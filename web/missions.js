@@ -58,6 +58,35 @@
   const tick = (m, o) => act({ kind: "objective.tick", params: { mission_id: m.id, index: o.index } });
 
   // ------------------------------------------------------------ a mission, opened
+  // DEC-0152: a mission can be part of a project (one record: the mission names it). The sheet links to the
+  // project, and its Part Of A Project button is mission.project ("—" stands it on its own).
+  async function partOf(m) {
+    const v = await form("Part Of A Project", [{ name: "project_id", label: "Project", type: "pick", required: false,
+      options: ["projects"], default: null }], { project_id: m.project ? m.project.id : "" }, { projects: page.projects });
+    if (v) act({ kind: "mission.project", params: { mission_id: m.id, project_id: v.project_id || "" } });
+  }
+  // What guides the mission now (core/mission_guide.py): the step, why, what to watch for, a checkpoint to verify,
+  // and the buttons that move it on, the same as saying "next" or "checked".
+  function guideBlock(m, close) {
+    const g = m.guide;
+    if (!g) return null;
+    return el("section", { class: "glass gh-needs ms-guide", "aria-label": "Where you are" },
+      el("p", { class: "pw-label" }, g.live ? "Step " + g.step + " Of " + g.of + (g.phase ? " · " + g.phase : "") : "Guided"),
+      el("p", { class: "gh-what" }, g.do),
+      g.why ? el("p", { class: "dim" }, "Why: " + g.why) : null,
+      g.needs ? el("p", { class: "dim" }, "You'll need: " + g.needs) : null,
+      g.watch.length ? el("p", { class: "dim" }, "Watch for: " + g.watch.join(" ")) : null,
+      g.check ? el("p", { class: "attn" }, "Check before going on: " + g.check) : null,
+      g.drafted ? el("p", { class: "dim" }, "Drafted from its sources, not yet confirmed by a person.") : null,
+      g.actions.length ? el("div", { class: "row-buttons" }, g.actions.map((a, i) =>
+        btn(a.label, i === 0 ? "btn-green" : "btn-ghost btn-small", () => { close(); act({ kind: a.kind, params: a.params }); }))) : null,
+      g.say ? el("p", { class: "dim" }, g.say) : null,
+      g.steps && g.steps.length ? el("ol", { class: "quest-path ms-steps" }, g.steps.map((st) =>
+        el("li", { class: "quest-step " + (st.done ? "done" : st.current ? "current" : "") },
+          el("span", { class: "quest-node", "aria-hidden": "true" }, st.done ? "✓" : String(st.n)),
+          el("div", { class: "quest-step-body" }, st.title)))) : null);
+  }
+
   function sheet(m) {
     const dialog = el("dialog", { class: "confirm form-dialog mission-sheet", "aria-label": m.name });
     const close = () => { dialog.close(); dialog.remove(); };
@@ -67,6 +96,8 @@
       el("div", { class: "mission-sheet-head" }, el("span", { class: "mission-icon", "aria-hidden": "true" }, m.icon),
         el("div", {}, el("h3", {}, m.name), el("p", { class: "dim" }, [m.area, m.pathway, m.from_mia ? "From MIA" : null].filter(Boolean).join(" · ")))),
       m.summary ? el("p", { class: "mission-summary" }, m.summary) : null,
+      m.project ? el("p", { class: "dim" }, "Part of ", el("a", { href: "projects.html#" + encodeURIComponent(m.project.id) }, m.project.name)) : null,
+      guideBlock(m, close),
       el("div", { class: "chip-row" }, el("span", { class: "chip " + (DIFF[m.difficulty] || "") }, m.difficulty.toLowerCase()),
         m.streak ? el("span", { class: "chip chip-soon" }, "🔥 " + m.streak + "-day streak") : null,
         m.party.length ? el("span", { class: "chip" }, "👥 " + m.party.join(", ")) : null,
@@ -87,6 +118,7 @@
         active ? btn("Complete", "btn-green", then((x) => act({ kind: "mission.complete", params: { mission_id: x.id } }))) : null,
         active ? btn("Add objective", "btn-ghost", then(addObjective)) : null,
         btn("Teaches a skill", "btn-ghost", then(teaches)),
+        page.projects.length ? btn(m.project ? "Project" : "Part Of A Project", "btn-ghost", then(partOf)) : null,
         active ? null : btn("Pick back up", "btn-amber", then((x) => act({ kind: "mission.reopen", params: { mission_id: x.id } }))),
         btn("Edit", "btn-ghost", then(edit)),
         btn("Delete", "btn-ghost", then((x) => act({ kind: "mission.delete", params: { mission_id: x.id } }))),
@@ -126,6 +158,7 @@
     m.status === "active" ? el("div", { class: "ms-progress" }, bar(m.percent), el("span", { class: "ms-count" }, m.done + " / " + m.total)) : null,
     el("div", { class: "mission-chips ms-tags" },
       el("span", { class: "kind" + (m.from_mia ? " accent" : "") }, source(m)),
+      m.project ? el("span", { class: "kind" }, m.project.name) : null,
       el("span", { class: "kind" }, m.difficulty.toLowerCase())),
     el("div", { class: "mission-foot" },
       el("span", { class: "mission-rewards" }, rewards(m) || ""),
@@ -291,5 +324,9 @@
       return;
     }
     draw();
+    // missions.html#mission=<id> (a project's mission card) opens that mission's sheet.
+    const wanted = (location.hash.match(/^#mission=(.+)$/) || [])[1];
+    const found = wanted ? [].concat(page.active, page.daily, page.completed, page.set_aside || []).find((x) => x.id === decodeURIComponent(wanted)) : null;
+    if (found) sheet(found);
   });
 })();

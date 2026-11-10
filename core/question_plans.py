@@ -512,6 +512,58 @@ def _resources(context, sheet, prompt, today):
                         "live isn't on the sheet.", "general guidance")
 
 
+def _owned(context, tool: str) -> bool:
+    """Whether the household inventory holds a tool by its name (the part before any "and" or parenthesis)."""
+    inventory = getattr(context, "inventory", None)
+    name = re.split(r"\s+(?:and|or)\s+|\s*\(", tool.lower())[0].strip()
+    if inventory is None or len(name) < 3:
+        return False
+    try:
+        return bool(inventory.search(name))
+    except Exception:
+        return False
+
+
+def _the_job(context, sheet, prompt, today):
+    """Trade Master (DEC-0149; F2, F8, F9, F11, F12): the job or repair in progress (or the one the words name): what
+    it is, the step or check in focus, the tools it takes against the household inventory, its stop rules and permit,
+    and the holds left. With neither, it says how to start one when the words ask about "this job", and otherwise
+    leaves the sheet empty so the plan steps aside. The benchmark's open "this" questions (F2, F8, F9, F11) stay in
+    NOT_A_PLAN: the normal turn answers them, with the live job in its context (core/trade_session.context_block)."""
+    from core import trade_session, trades
+
+    store = getattr(context, "trade_session", None)
+    live = store.live() if store is not None else None
+    item = trade_session.item_of(live) if live is not None else trades.find(prompt)
+    if item is None:
+        if not re.search(r"\b(this|the) job\b", (prompt or "").lower()):
+            return
+        sheet.add(MISSING, "No job or repair is in progress and the question doesn't name one. Say \"walk me through "
+                           "...\" with the job, or \"help me figure out ...\" with the problem, and I'll take it step "
+                           "by step.", "Trade Master")
+        return
+    sheet.looked_up.append("trade_master")
+    sheet.add(FACT, trades.outline(item), "Trade Master")
+    if live is not None:
+        sheet.add(FACT, "Where you are: " + trade_session.say(live), "Trade Master")
+    if isinstance(item, trades.Diagnosis):
+        return
+    have = [t for t in item.tools if _owned(context, t)]
+    need = [t for t in item.tools if t not in have]
+    if have:
+        sheet.add(ESTIMATE, "Tools you seem to have already (matched by name in your inventory): " + ", ".join(have)
+                  + ".", "Inventory")
+    if need:
+        sheet.add(FACT, "Tools the job takes that aren't in your inventory: " + ", ".join(need) + ".", "Trade Master")
+    rules = [trades.STOP_RULES[r].when for r in item.stop_if if r in trades.STOP_RULES]
+    if rules:
+        sheet.add(FACT, "Stop and get help if " + "; or if ".join(rules) + ".", "Trade Master")
+    if live is not None:
+        holds = [(i, st) for i, (_p, _j, st) in enumerate(item.steps()) if st.hold and i >= live.at]
+        if holds:
+            sheet.add(FACT, f"{len(holds)} hold point(s) still ahead, the next: {holds[0][1].hold}", "Trade Master")
+
+
 _RECALL_KINDS = (
     ("commitment", re.compile(r"\b(promis\w*|commit\w*|said i'?d|owe)\b", re.IGNORECASE)),
     ("dropped_goal", re.compile(r"\b(abandon\w*|gave up|given up|giving up|set aside|dropp\w*)\b", re.IGNORECASE)),
@@ -776,8 +828,9 @@ PLANS: tuple[Plan, ...] = (
           "What is the next milestone in my current questline?", "Am I making progress toward the person I want to become?",
           "What should I work on next?", "Which of my skills would be most beneficial to develop next?",
           "What do you know about my current priorities?", "How am I doing on my goals?",
-          "How can I break this large objective into smaller missions?"),
-         r"\b(working toward|my goals?|questline|milestone|skills?|progress)\b", _progress),
+          "How can I break this large objective into smaller missions?",
+          "What would an ideal week of progression look like?"),
+         r"\b(working toward|my goals?|questline|milestone|skills?|progress|smaller missions|ideal week)\b", _progress),
     Plan("coming up", "What's coming up",
          ("What upcoming responsibilities should I prepare for?", "What risks should I be preparing for over the next six months?",
           "What's coming up in the next few weeks?", "What's coming up this month?", "What should I get ready for?"),
@@ -858,6 +911,12 @@ PLANS: tuple[Plan, ...] = (
          ("What is holding me back?", "What's getting in my way?", "Why am I stuck?", "What's slowing me down?",
           "Why can't I make progress?"),
          r"\b(holding me back|in my way|stuck|slowing me down|make progress)\b", _held_back),
+    Plan("the job", "The job or repair you're working on",
+         ("What tools do I need for this job?", "What step am I on?", "What do I need for this job?",
+          "What's left on this job?", "How do I do this step?", "What am I overlooking on this job?",
+          "What tools does the job take?"),
+         r"\b(this job|the job|what step|this step)\b",
+         _the_job),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),

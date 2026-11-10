@@ -1271,7 +1271,7 @@ LOOPS: tuple[Loop, ...] = (
          files=("core/trades.py", "core/trade_jobs.py"), covers=("dev:trades",)),
     Loop("greenhouse.reporting", "life", "the greenhouse node's sensors reporting fresh readings (DEC-0150)", "device",
          _greenhouse_reporting, better="higher", floor=0.9, min_n=1, acts="watch",
-         files=("core/greenhouse_link.py",), covers=("check:greenhouse",)),
+         files=("core/greenhouse_link.py", "core/greenhouse_setup.py"), covers=("check:greenhouse",)),
     Loop("trades.finished", "life", "jobs and diagnoses walked through to the end, of those started, in 90 days "
          "(DEC-0149)", "person", _trades_finished, better="higher", floor=0.5, min_n=3, acts="watch",
          files=("core/trade_session.py", "core/trade_actions.py"), covers=("store:trade_session", "action:trade")),
@@ -1320,7 +1320,7 @@ LOOPS: tuple[Loop, ...] = (
     Loop("dev.limits", "development", "usage limits hit in a week", "device", _limits, acts="watch", covers=("dev:usage",)),
     Loop("dev.council_cost", "development", "calls per council turn", "device", _council_cost, acts="watch", covers=("dev:council",)),
     Loop("dev.chronicles", "development", "Chronicles candidates waiting", "device", _chronicles, acts="watch",
-         covers=("dev:chronicles", "check:chronicle", "store:saga_moments")),
+         covers=("dev:chronicles", "check:chronicle", "store:saga_moments", "action:saga")),
     # The weekly benchmarks (step 5, core/benchmarks.py, run by tools/weekly_bench.py from Night School)
     Loop("answers.benchmark", "answers", "benchmark questions that fell since last week", "device",
          _bench("intelligence", "falls"), floor=0, every=7, files=("core/question_plans.py", "core/tool_loop.py"),

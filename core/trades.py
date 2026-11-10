@@ -171,6 +171,23 @@ WANTED: tuple[str, ...] = (
     "flooring_lvp", "tile_floor", "rough_plumbing_dwv", "rough_plumbing_supply", "water_heater", "fixtures_set",
     "rough_electrical", "electrical_finish", "hvac_ductwork", "minisplit", "deck", "stairs", "gutters",
     "breaker_tripping", "no_hot_water", "ac_not_cooling", "dryer_no_heat", "roof_leak", "furnace_no_heat",
+    # The second tier (2026-11-09, the depth loop's next ground once the first was written): the everyday house
+    # jobs and the breakdowns a homeowner meets most.
+    "clogged_drain", "leaky_faucet", "gfci_wont_reset", "frozen_pipe", "low_water_pressure", "smoke_alarm_chirp",
+    "garbage_disposal_jammed", "sump_pump_fail", "garage_door_wont_close", "ceiling_fan", "bathroom_vanity",
+    "kitchen_cabinets", "shower_tile", "exterior_paint", "wood_fence", "attic_ventilation", "sump_pump",
+    "retaining_wall", "window_replacement", "garage_door_opener",
+    # The third tier (2026-11-09): more of what breaks in a house, and the small jobs done most.
+    "water_heater_leaking", "toilet_clogged", "dishwasher_not_draining", "washer_not_draining",
+    "fridge_not_cooling", "well_pump_no_water", "ice_dam", "bathroom_mold", "door_sticking", "squeaky_floor",
+    "drywall_patch", "replace_toilet", "replace_receptacle", "recaulk_tub", "weatherstrip_door",
+    # The fourth tier (2026-11-09): the plans shelf's builds walked as jobs, each with its plan's material list.
+    "raised_bed", "gable_shed", "compost_bin", "cold_frame", "lean_to", "garage_shelving", "workbench",
+    "firewood_rack",
+    # The fifth tier (2026-11-09): the land and its water, for the homestead.
+    "french_drain", "gravel_driveway", "rain_barrel", "well_shock", "septic_care", "electric_fence",
+    # The sixth tier (2026-11-09): what the workshop circuit job hands on to.
+    "workshop_subpanel",
 )
 
 
@@ -309,11 +326,26 @@ def find(words: str):
     return best
 
 
+# A calculator on WANTED is written once its job's plan is on the plans shelf (its quantities in core/build_calcs.py).
+CALC_FOR = {"greenhouse_calc": "hoop_house", "cold_room_calc": "cold_room"}
+
+
+def _calc_written(wanted: str) -> bool:
+    """Whether a calculator on WANTED is in: its job names a plan that's on the shelf."""
+    job = JOBS.get(CALC_FOR.get(wanted, ""))
+    if job is None or not job.plan:
+        return False
+    from core.plan_library import BUILT_IN
+
+    return any(p["id"] == job.plan for p in BUILT_IN)
+
+
 def depth() -> dict:
     """How much of WANTED is written to the standard: {wanted, written, next (the first not yet written), failing
-    (written but short of the standard)}."""
+    (written but short of the standard)}. A calculator counts once its job's plan is on the shelf (`CALC_FOR`)."""
     _loaded()
-    written = [w for w in WANTED if (w in JOBS or w in DIAGNOSES) and not problems(JOBS.get(w) or DIAGNOSES[w])]
+    written = [w for w in WANTED if _calc_written(w)
+               or ((w in JOBS or w in DIAGNOSES) and not problems(JOBS.get(w) or DIAGNOSES[w]))]
     failing = [w for w in WANTED if (w in JOBS or w in DIAGNOSES) and w not in written]
     nxt = next((w for w in WANTED if w not in written), "")
     return {"wanted": len(WANTED), "written": len(written), "next": nxt, "failing": failing}

@@ -564,6 +564,8 @@ def test_changing_the_password_needs_the_current_one(client, context):
     short = client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "abc"})
     assert short.status_code == 400 and "at least" in short.json()["detail"]
     assert client.post("/api/account/password", headers=auth, json={"current": "hunter2", "new": "longenough"}).json() == {"changed": True}
+    changed = [e for e in context.security_log.entries() if e["kind"] == "password_changed"]
+    assert len(changed) == 1 and changed[0]["device"] != "this computer"  # logged once, with the device
     assert client.post("/api/login", json={"profile_id": "Alice", "password": "longenough"}).status_code == 200
     assert client.post("/api/account/password", json={"current": "x", "new": "yyyyyy"}).status_code == 401
 

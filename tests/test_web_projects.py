@@ -59,7 +59,9 @@ def test_a_project_with_its_budget_spending_and_tasks(world):
     with pytest.raises(ActionError, match="isn't done yet"):
         world.actions.propose(world, "task.reopen", {"task_id": first["id"]})
     do(world, "task.delete", task_id=first["id"])
-    assert projects_page(world)["counts"] == {"underway": 1, "open_tasks": 1}
+    counts = projects_page(world)["counts"]
+    assert counts["underway"] == 1 and counts["open_tasks"] == 1 and counts["all"] == 2
+    assert counts["by_status"] == {"Active": 1, "Planning": 0, "On Hold": 0, "Complete": 1}  # the filter tabs
     do(world, "project.edit", project_id=green["id"], **{**green["values"], "status": "Complete"})
     assert projects_page(world)["projects"][0]["status"] == "Complete"
     with pytest.raises(ActionError, match="negative"):

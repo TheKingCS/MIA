@@ -62,31 +62,30 @@ def _mission_name(item) -> str:
 
 
 def _start(context, params) -> str:
-    """Does `trade.start`: the job or diagnosis becomes the session (counting toward its planned mission, if any), and
-    it says what it is, its stop rules' reminder and the first step."""
+    """Does `trade.start`: the job or diagnosis becomes the session, and it says what it is, its stop rules' reminder
+    and the first step. A job is a mission from the start (Zac, 2026-11-09: in Missions, not on Today): its planned
+    mission if there is one, else one made now, one objective a phase, each counted as its steps are done."""
     item = _item(params)
+    store = _store(context)
     try:
-        s = _store(context).begin(item, mission_id=_mission_for(context, item))
+        s = store.begin(item, mission_id=_mission_for(context, item))
     except ValueError as exc:
         raise ActionError(str(exc)) from None
+    made = ""
+    if not s.mission_id and isinstance(item, trades.Job) and getattr(context, "missions", None) is not None:
+        s.mission_id = _make_mission(context, item).mission_id  # made once the job has really started
+        store.save()
+        made = f"It's in your Missions as \u201c{_mission_name(item)}\u201d. "
     lead = trades.outline(item) if isinstance(item, trades.Diagnosis) else (
         f"{item.name}{'' if item.status == trades.CONFIRMED else ' (drafted from its sources, not yet confirmed by a person)'}. "
         f"{len(item.phases)} phases, {len(item.steps())} steps. Permit: {item.permit} Wear: {', '.join(item.ppe)}.")
-    return f"{lead} {js.say(s)}" if isinstance(item, trades.Job) else lead
+    return f"{lead} {made}{js.say(s)}" if isinstance(item, trades.Job) else lead
 
 
 def _save_and(context, s, said: str) -> str:
-    """Saves the session and returns what to say; a session that just finished or stopped is a line in the person's
-    history (`trade_finished`, `trade_stopped`), for the trades.finished loop and Natural Momentum."""
-    store = _store(context)
-    store.save()
-    if s.status in (js.FINISHED, js.STOPPED) and not getattr(s, "_recorded", False):
-        from core import life_events
-
-        kind = "trade_finished" if s.status == js.FINISHED else "trade_stopped"
-        life_events.record(store, kind, f"{'Finished' if kind == 'trade_finished' else 'Stopped'}: {s.title}",
-                           payload={"id": s.item_id})
-        s._recorded = True
+    """Saves the session and returns what to say (the store's save puts a session that just finished or stopped in
+    the person's history)."""
+    _store(context).save()
     return said
 
 
@@ -140,17 +139,24 @@ def _plan(context, params) -> str:
     item = _item(params)
     if not isinstance(item, trades.Job):
         raise ActionError("A diagnosis isn't a mission: say “help me figure it out” to start it.")
-    missions = _need(context, "missions")
+    _need(context, "missions")
     if _mission_for(context, item):
         raise ActionError(f"“{_mission_name(item)}” is already one of your missions.")
-    mission = missions.add_mission(_mission_name(item), summary=item.scope, icon="\U0001F6E0")
-    for phase in item.phases:
-        missions.add_objective(mission.mission_id, phase.name, "tally", len(phase.steps))
+    mission = _make_mission(context, item)
     live = _store(context).live()
     if live is not None and live.item_id == item.id:
         live.mission_id = mission.mission_id
         _store(context).save()
     return f"Added the mission “{mission.name}”: {len(item.phases)} phases, each counted as you work its steps."
+
+
+def _make_mission(context, item):
+    """The job as a new mission: its scope as the summary, one tally objective a phase (its steps to count)."""
+    missions = context.missions
+    mission = missions.add_mission(_mission_name(item), summary=item.scope, icon="\U0001F6E0")
+    for phase in item.phases:
+        missions.add_objective(mission.mission_id, phase.name, "tally", len(phase.steps))
+    return missions.get_mission(mission.mission_id)
 
 
 def _describe_item(verb: str):

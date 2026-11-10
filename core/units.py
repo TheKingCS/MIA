@@ -7,8 +7,11 @@ recipe can say "500 g flour" while the flour is kept in pounds, or
 "1 cup honey" while the honey is kept in cups: an amount converts when
 both units measure the same thing (weight to weight, volume to volume,
 a count to a count). Weight to volume ("cups of flour" against pounds of
-flour) needs a density, which MIA doesn't guess: convert() says None,
-and the caller says so plainly.
+flour) needs a density: MIA uses one only for a material on the measured
+table (`DENSITIES`, 2026-11-09: King Arthur Baking's ingredient weight
+chart, and glycerin's handbook density), matched by the material's name;
+anything else she doesn't guess: convert() says None, and the caller
+says so plainly.
 
 Any other word is its own count: "3 cloves" against garlic kept in
 cloves, "1 jar" against jars. Plurals match ("jar" = "jars"), a count
@@ -30,6 +33,18 @@ _MASS = {"g": 1.0, "kg": 1000.0, "mg": 0.001, "oz": 28.349523125, "lb": 453.5923
 _VOLUME = {"ml": 1.0, "l": 1000.0, "tsp": 4.92892159375, "tbsp": 14.78676478125, "cup": 236.5882365,
            "fl oz": 29.5735295625, "pint": 473.176473, "quart": 946.352946, "gallon": 3785.411784}
 _COUNT = {"each": 1.0, "dozen": 12.0}
+# Grams per millilitre for materials measured both ways, from King Arthur Baking's Ingredient Weight Chart (grams in a
+# US cup, divided by 236.6 ml) and, for glycerin, its handbook density. Matched by a word in the material's name, the
+# longest first, so "brown sugar" isn't "sugar". Only what's on this table converts weight to volume.
+DENSITIES = {
+    "all-purpose flour": 0.507, "bread flour": 0.507, "whole wheat flour": 0.478, "flour": 0.507,
+    "brown sugar": 0.900, "powdered sugar": 0.478, "confectioners sugar": 0.478, "sugar": 0.837,
+    "honey": 1.420, "maple syrup": 1.319, "molasses": 1.437,
+    "water": 1.000, "milk": 0.959, "butter": 0.959,
+    "olive oil": 0.845, "coconut oil": 0.917, "vegetable oil": 0.837, "oil": 0.837,
+    "table salt": 1.217, "salt": 1.217, "cocoa": 0.355, "rolled oats": 0.376, "oats": 0.376, "rice": 0.837,
+    "glycerin": 1.261, "glycerine": 1.261,
+}
 
 _ALIASES = {
     "gram": "g", "grams": "g", "gs": "g", "kilogram": "kg", "kilograms": "kg", "kgs": "kg",
@@ -93,15 +108,30 @@ def kind(unit: str) -> str:
     return u
 
 
-def convert(quantity: float, from_unit: str, to_unit: str) -> Optional[float]:
+def density(material: str) -> Optional[float]:
+    """Grams per millilitre for a material named on `DENSITIES` (the longest name it contains), or None."""
+    name = " ".join(str(material or "").lower().replace("-", " ").split())
+    found = [k for k in DENSITIES if k.replace("-", " ") in name]
+    return DENSITIES[max(found, key=len)] if found else None
+
+
+def convert(quantity: float, from_unit: str, to_unit: str, material: str = "") -> Optional[float]:
     """`quantity` of `from_unit` in `to_unit`, or None when they measure
-    different things (cups and pounds, jars and lids)."""
+    different things (cups and pounds, jars and lids). Weight and volume
+    convert only for a `material` on the density table (cups of flour
+    against pounds of flour)."""
     a, b = canonical(from_unit), canonical(to_unit)
     if a == b:
         return float(quantity)
     for table in (_MASS, _VOLUME, _COUNT):
         if a in table and b in table:
             return float(quantity) * table[a] / table[b]
+    per_ml = density(material) if material else None
+    if per_ml is not None:
+        if a in _VOLUME and b in _MASS:
+            return float(quantity) * _VOLUME[a] * per_ml / _MASS[b]
+        if a in _MASS and b in _VOLUME:
+            return float(quantity) * _MASS[a] / per_ml / _VOLUME[b]
     # A plain count against a named one ("3" jars against "jars", a dozen
     # eggs against "eggs"): one each, since people often leave the unit off.
     named = lambda u: u not in _MASS and u not in _VOLUME and u not in _COUNT  # noqa: E731

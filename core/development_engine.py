@@ -58,6 +58,7 @@ FOOD_SALE_TAG = "food_sale_ok"
 FOOD_GOODS = frozenset({"eggs", "preserves"})
 OTHER_GOODS = frozenset({"grown_seedlings"})
 STEP_PENALTY = 2.0  # each extra step on a path is a little less certain
+WINDOW_BONUS = 60.0  # what doing a seasonal path in its short window is worth over one that can wait (K-0153)
 # Needs that mean one particular thing, so a finished step that needed one says it exists: a laying flock means a coop
 # and a feed bin. "Water" isn't one: a greenhouse watered by a hose doesn't mean a rain barrel.
 IMPLIED_TAGS = frozenset({"coop", "feed_storage", "greenhouse_site", "canning"})
@@ -310,14 +311,24 @@ def _path_score(goal: Candidate, steps: list, catalog: Sequence[Candidate], done
     it unlocks, plus what each step produces on the way, against the path's cost, work and the goal's risk, and a
     little less for every extra step (a far goal is less certain). And a payoff that can't come for months is worth
     less than one now: the value is discounted by the longest wait for a step's season on the path (in September,
-    preserves already put up beat seedling starts that can't sell until spring). A one-step path in season scores as
-    its candidate does."""
+    preserves already put up beat seedling starts that can't sell until spring). Two kinds of urgency are added on
+    top (K-0153): a path whose seasonal steps are all in season now gains for how long that season stays closed (a
+    raised bed missed in spring waits a year; a compost bin can be built any month), and a sale that can start now
+    gains as much as a nine-month window, since goods already made are worth most while they're ready. With no month
+    given, neither applies, and a one-step path scores as its candidate does."""
     value = goal.benefit + compounding_value(goal, catalog, done=frozenset(done)) + sum(
         s.benefit for s in steps if s is not goal)
     cost = sum(s.entry_cost + s.recurring_cost * 6 for s in steps)
     labour = sum(s.labour_hours for s in steps)
     wait = max((_months_until(s.season, month) for s in steps), default=0) if month else 0
-    return _worth(value, cost, labour) / (1 + wait / 6) - goal.risk * 20 - STEP_PENALTY * (len(steps) - 1)
+    seasonal = [s for s in steps if s.season]
+    window = 0.0  # a season open now and closed most of the year: missing it costs a year (K-0153)
+    if month and seasonal and all(month in s.season for s in seasonal):
+        window = WINDOW_BONUS * max(12 - len(s.season) for s in seasonal) / 12
+    if month and goal.sector == "business" and not wait:  # goods ready to sell are as urgent as a 9-month window
+        window = max(window, WINDOW_BONUS * 0.75)
+    return (_worth(value, cost, labour) / (1 + wait / 6) + window - goal.risk * 20
+            - STEP_PENALTY * (len(steps) - 1))
 
 
 def _months(season: tuple) -> str:

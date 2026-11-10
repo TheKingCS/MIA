@@ -206,7 +206,7 @@ def thumbnail(path: Path) -> tuple[bytes, str]:
             img.save(out, "JPEG", quality=80)
             return out.getvalue(), "image/jpeg"
     except Exception:
-        pass
+        log.debug("No thumbnail for %s; sending the image itself", path, exc_info=True)
     with open(path, "rb") as f:
         head = f.read(256 * 1024)
     small = exif_thumbnail(head)

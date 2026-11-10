@@ -22,7 +22,11 @@ condition, a dose or a diagnosis.
   as notes with a date (a value and units for a result).
 
 Every change is an action in core/health_actions.py (undo restores the
-file); the store writes through `atomic_write_text`.
+file); the store writes through `atomic_write_text`. A night logged, a
+visit, a medication or a record added is noted in the person's own
+history (2026-11-09: sleep_logged, visit_added, medication_added,
+health_record_added) without its name or details, since the history can
+be read back aloud: "logged a night's sleep", never what or how much.
 """
 
 from __future__ import annotations
@@ -33,6 +37,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core import life_events
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -117,6 +122,7 @@ class HealthStore:
                                                  indent=2))
 
     # ------------------------------------------------------------- sleep
+    @life_events.on_change("sleep_logged", "a night's sleep", named=False)
     def log_sleep(self, hours: float, rested: Optional[int] = None, night: Optional[str] = None, note: str = "") -> dict:
         """Logs a night (the night before `night`, by default last night): hours (0 to 24) and how rested, 1 to 5; a
         night logged again is replaced."""
@@ -149,6 +155,7 @@ class HealthStore:
                 "average": round(sum(logged) / len(logged), 1) if logged else None}
 
     # ------------------------------------------------------------- visits
+    @life_events.on_change("visit_added", "a health visit", named=False)
     def add_visit(self, kind: str, when: str, who: str = "", what_for: str = "", notes: str = "",
                   next_due: str = "") -> dict:
         """Adds a visit (a past one, or one booked) with when the next is due."""
@@ -175,6 +182,7 @@ class HealthStore:
         return visit
 
     # ------------------------------------------------------------- medications
+    @life_events.on_change("medication_added", "a medication or supplement", named=False)
     def add_med(self, name: str, dose: str = "", times=None, kind: str = "Medication", refills: Optional[int] = None,
                 refill_on: str = "", notes: str = "") -> dict:
         """Adds a medication or supplement as written: its dose, the times to take it (each gets a daily alarm),
@@ -245,6 +253,7 @@ class HealthStore:
         med["alarm_ids"] = []
 
     # ------------------------------------------------------------- records
+    @life_events.on_change("health_record_added", "a health record", named=False)
     def add_record(self, kind: str, name: str, when: str = "", value: str = "", notes: str = "") -> dict:
         """Adds a record: a test result (with its value), a vaccination, an allergy or a document, as given."""
         if not name.strip():

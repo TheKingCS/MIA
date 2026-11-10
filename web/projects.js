@@ -56,18 +56,33 @@
         onclick: () => act({ kind: "task.delete", params: { task_id: t.id } }) }, "✕"));
   }
 
+  function missionCard(m) {
+    return el("a", { class: "row money-row pj-mission" + (m.status !== "active" ? " finished" : ""),
+      href: "missions.html#mission=" + encodeURIComponent(m.id) },
+      el("div", {}, el("div", { class: "row-title" }, m.icon + " " + m.name),
+        el("div", { class: "row-sub" }, m.status === "active" ? (m.next ? "Next: " + m.next : "No objectives yet") : m.status)),
+      el("span", { class: "chip " + (m.status === "completed" ? "chip-ok" : "") }, m.percent + "%"));
+  }
+
   function card(p) {
     const isOpen = open === p.id;
     const head = el("button", { type: "button", class: "pj-head", "aria-expanded": String(isOpen),
       onclick: () => { open = isOpen ? null : p.id; history.replaceState(null, "", isOpen ? location.pathname : "#" + encodeURIComponent(p.id)); draw(); } },
       el("span", { class: "pj-name" }, p.name),
-      el("span", { class: "dim" }, [p.tasks_total ? p.tasks_done + "/" + p.tasks_total + " tasks" : null, p.due ? "due " + day(p.due) : null].filter(Boolean).join(" · ")),
+      el("span", { class: "dim" }, [p.progress.percent != null ? p.progress.percent + "%" : null,
+        p.tasks_total ? p.tasks_done + "/" + p.tasks_total + " tasks" : null,
+        p.missions.length ? p.missions.length + (p.missions.length === 1 ? " mission" : " missions") : null,
+        p.due ? "due " + day(p.due) : null].filter(Boolean).join(" · ")),
       el("span", { class: "chip " + (STATUS[p.status] || "") }, p.status));
     return el("article", { class: "glass pj-card" + (p.status === "Complete" ? " finished" : "") }, head,
       isOpen ? [
         p.description ? el("p", { class: "trip-notes" }, p.description) : null,
         p.why ? el("p", { class: "dim" }, "For: ", el("a", { href: "why.html" }, p.why)) : null,
         money(p),
+        // Its missions (DEC-0152): the same missions the Missions page shows; each card opens there.
+        el("h4", {}, "Missions" + (p.missions.length ? " " + p.progress.missions_done + "/" + p.progress.missions_total : "")),
+        p.missions.length ? el("div", { class: "rows" }, p.missions.map(missionCard))
+          : el("p", { class: "dim" }, "No missions yet. Open a mission and choose Part Of A Project, or say “make the coop mission part of the homestead”."),
         el("h4", {}, "Tasks" + (p.tasks_total ? " " + p.tasks_done + "/" + p.tasks_total : "")),
         p.tasks.length ? el("ul", { class: "gear-list pj-tasks" }, p.tasks.map(task)) : el("p", { class: "dim" }, "No tasks yet."),
         el("div", { class: "row-buttons" },

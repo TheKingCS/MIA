@@ -19,13 +19,9 @@ _S = {"type": "string"}
 
 def _run(context, kind: str, params: dict) -> str:
     """Runs a world action as the screen would (describe's checks, then execute); the problem as a line."""
-    from core.actions import ACTION_TYPES, ActionError
+    from core.actions import run_as_tool
 
-    try:
-        ACTION_TYPES[kind].describe(context, params)
-        return ACTION_TYPES[kind].execute(context, params)
-    except ActionError as problem:
-        return str(problem)
+    return run_as_tool(context, kind, params)
 
 
 def _action_list(context, arguments: dict) -> str:

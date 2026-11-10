@@ -1,7 +1,8 @@
 """
 How things relate (core/links.py), Engine Phase 1 step 2, 2026-10-05:
 stated links between real records, links the stores already imply, and
-what waits on what.
+what waits on what, and the newer kinds (a grow-lab batch, a workplace, a
+class subject, an inbox letter, and the stores that keep dicts) named and found like the rest.
 """
 
 import pytest
@@ -110,3 +111,53 @@ def test_links_are_not_for_children(world):
     make_child(world, kid.profile_id, [world.me.profile_id])
     world.profiles.set_active_profile(kid.profile_id)
     assert not tool_allowed(world, "links")
+
+
+def test_the_newer_kinds_name_and_find_their_records():
+    """A grow-lab batch is named by its crop, a workplace and a class subject by their names, an inbox letter by its
+    subject: name_of reads them and find picks them out by name."""
+    from types import SimpleNamespace
+
+    context = SimpleNamespace(
+        grow_lab=SimpleNamespace(batches=[SimpleNamespace(batch_id="b1", crop="Basil")]),
+        dungeon=SimpleNamespace(dungeons=[SimpleNamespace(dungeon_id="d1", name="Night shift at the mill")]),
+        classroom=SimpleNamespace(all_subjects=lambda: [SimpleNamespace(subject_id="s1", name="Welding")]),
+        inbox=SimpleNamespace(all_items=lambda: [SimpleNamespace(item_id="i1", subject="Property tax notice")]))
+    assert links.name_of(context, "grow_batch:b1") == "Basil"
+    assert links.find(context, "the night shift at the mill")[0] == "workplace:d1"
+    assert links.find(context, "welding")[0] == "subject:s1"
+    assert links.find(context, "property tax notice")[0] == "inbox_item:i1"
+
+
+def test_stores_that_keep_dicts_are_linkable_too():
+    """A plan on the shelf (kept in a dict by id), a creation, a note and a GPS track are named and found by their
+    titles, words and names like any record."""
+    from types import SimpleNamespace
+
+    context = SimpleNamespace(
+        plans=SimpleNamespace(plans={"gable-shed": {"id": "gable-shed", "title": "Gable shed"}}),
+        creations=SimpleNamespace(items=[{"id": "c1", "title": "Seed tracker"}]),
+        life_notes=SimpleNamespace(notes=[{"id": "n1", "what": "Call the county about the permit"}]),
+        gps_tracks=SimpleNamespace(tracks=[{"id": "t1", "name": "Ridge loop"}]))
+    assert links.name_of(context, "plan:gable-shed") == "Gable shed"
+    assert links.find(context, "the gable shed")[0] == "plan:gable-shed"
+    assert links.find(context, "seed tracker")[0] == "creation:c1"
+    assert links.name_of(context, "note:n1") == "Call the county about the permit"
+    assert links.find(context, "ridge loop")[0] == "track:t1"
+
+
+def test_shop_entries_rhythms_record_sets_and_play_are_linkable_by_their_history_s_refs():
+    """A shop expense is found by its description, a rhythm and a record set by their names, a game played by what
+    it was, each under the ref its store's history already uses."""
+    from types import SimpleNamespace
+
+    context = SimpleNamespace(
+        ledger=SimpleNamespace(all_expenses=lambda: [SimpleNamespace(entry_id="e1", description="Walnut boards")],
+                               all_revenue=lambda: []),
+        loop=SimpleNamespace(rhythms=[SimpleNamespace(rhythm_id="r1", name="Morning run")]),
+        my_record_sets=SimpleNamespace(sets=[{"id": "s1", "name": "Bird sightings"}]),
+        recreation=SimpleNamespace(entries=[{"id": "p1", "what": "pickleball"}]))
+    assert links.find(context, "walnut boards")[0] == "shop_expense:e1"
+    assert links.find(context, "the morning run")[0] == "rhythm:r1"
+    assert links.find(context, "bird sightings")[0] == "my_record_set:s1"
+    assert links.name_of(context, "play:p1") == "pickleball"

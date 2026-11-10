@@ -1,7 +1,8 @@
 """ACAF's first working demonstration (DEC-0088 to DEC-0091): from one
 sentence about information MIA has no screen for, she makes a record set and
 a screen, checked, previewed, published on approval, used, undone and
-rolled back, all through her own design system and the action contract."""
+rolled back, all through her own design system and the action contract; and the same by voice
+(core/assistant_creation_actions.py)."""
 
 from core import at_rest
 import json
@@ -393,3 +394,40 @@ def test_what_mia_made_reaches_the_persons_history_when_published_and_put_away(t
         ("creation_retired", "Put away something MIA made for you")]
     assert lines[0]["payload"] == {"id": made["id"], "version": 1}
     assert "Egg log" not in (tmp_path / "life_events.jsonl").read_bytes().decode("utf-8")  # creations.json is sealed
+
+
+def test_a_screen_is_made_listed_published_and_taken_out_by_voice(world, monkeypatch):
+    """DEC-0125: "make me a screen to track the seeds I save" drafts it (no data changed); "what have you made for me?"
+    lists it as a draft; "publish seed bank" puts it in the sidebar through creation.publish; an unknown name says so;
+    "retire seed bank" takes it out."""
+    from core import assistant_creation_actions as voice
+
+    w = world
+    monkeypatch.setattr(creation_maker, "_ollama", model(DESIGN))
+    said = voice._make(w, {"need": "I want to keep track of the seeds I save, when, how many and how they germinate"})
+    assert said.startswith('I drafted "Seed Bank" for you') and w.record_sets.sets == []
+    assert "Seed Bank (a draft, version 1)" in voice._list(w, {})
+    voice._change("creation.publish")(w, {"name": "seed bank"})
+    assert w.creations.items[0]["status"] == "published" and "in your sidebar" in voice._list(w, {})
+    assert "don't see a screen" in voice._change("creation.publish")(w, {"name": "tomato log"})
+    voice._change("creation.retire")(w, {"name": "Seed Bank"})
+    assert w.creations.items[0]["status"] == "retired"
+
+
+def test_a_published_screen_takes_an_entry_and_reads_it_back_by_voice(world, monkeypatch):
+    """"Add to my seed bank: variety Cherokee Purple, how many 20" fills the fields by their labels through
+    records.add; "what's in my seed bank?" reads it back; words that name no field say which fields there are; a
+    draft says it isn't published yet."""
+    from core import assistant_creation_actions as voice
+
+    w = world
+    monkeypatch.setattr(creation_maker, "_ollama", model(DESIGN))
+    voice._make(w, {"need": "I want to keep track of the seeds I save, when, how many and how they germinate"})
+    assert "isn't published yet" in voice._add_record(w, {"name": "seed bank", "values": "variety Brandywine"})
+    voice._change("creation.publish")(w, {"name": "seed bank"})
+    said = voice._add_record(w, {"name": "seed bank", "values": "Variety Cherokee Purple, how many: 20"})
+    assert "Cherokee Purple" in voice._read_records(w, {"name": "Seed Bank"}), said
+    assert "How many 20" in voice._read_records(w, {"name": "Seed Bank"})
+    assert voice._add_record(w, {"name": "seed bank", "values": "something odd"}).startswith("Which fields? Seed Bank has")
+    assert voice._values(DESIGN["fields"], "germination: Good; saved on 2026-10-01") == {
+        "germination": "Good", "saved_on": "2026-10-01"}

@@ -243,6 +243,21 @@ def words_of(text: str) -> list[str]:
     return [_singular(w) for w in re.findall(r"[a-z]+", plain)]
 
 
+def portions_of(text: str) -> dict[str, float]:
+    """Pure logic. A row's portions ("1 cup:240|1 tbsp:15") as {name: grams}; a part without a number of grams is
+    left out (the table's other portions still count)."""
+    portions = {}
+    for part in (text or "").split("|"):
+        name, sep, grams = part.rpartition(":")
+        if not sep:
+            continue
+        try:
+            portions[name.strip()] = float(grams)
+        except ValueError:
+            continue  # "1 cup:about 240" isn't a weight MIA can use
+    return portions
+
+
 def load(path: Optional[Path] = None) -> list[Food]:
     """The table (loaded once). Empty when MIA has no table yet."""
     global _cache
@@ -252,19 +267,10 @@ def load(path: Optional[Path] = None) -> list[Food]:
     table = Path(path or TABLE)
     if table.exists():
         with table.open(encoding="utf-8", newline="") as f:
-            rows = csv.DictReader((line for line in f if not line.startswith("#")), delimiter="\t")
-            for row in rows:
+            for row in csv.DictReader((line for line in f if not line.startswith("#")), delimiter="\t"):
                 per = {n: float(row[n]) for n in NUTRIENTS if row.get(n) not in (None, "")}
-                portions = {}
-                for part in (row.get("portions") or "").split("|"):
-                    if ":" in part:
-                        name, grams = part.rsplit(":", 1)
-                        try:
-                            portions[name.strip()] = float(grams)
-                        except ValueError:
-                            pass
-                foods.append(Food(row["fdc_id"], row["name"], row.get("category", ""), per, portions,
-                                  frozenset(words_of(row["name"]))))
+                foods.append(Food(row["fdc_id"], row["name"], row.get("category", ""), per,
+                                  portions_of(row.get("portions")), frozenset(words_of(row["name"]))))
     if path is None:
         _cache = foods
     return foods

@@ -17,8 +17,13 @@ internal info able to be pushed by MIA").
   and contacts).
 - **Pushing it** (`push_node`): the node's code and the preloaded configs copied to the Pi over SSH with that key,
   then its own install steps run there (a Python environment, the schema, the service with its rollback,
-  homestead/deploy/README.md). Only on the person's yes. Secrets stay out: the SMTP app password is left for the
-  person to add on the node.
+  homestead/deploy/README.md). Only on the person's yes. No secret goes into those files.
+- **The node's email password** (`push_secret`, DEC-0150: "secrets from the vault and never typed by a model"): the
+  SMTP app password the node sends its alerts with, read in code from the person's own password vault (it must be
+  unlocked by them; MIA never unlocks it), sent to the Pi over SSH on standard input (never on a command line, in a
+  log or in a reply) and written into the node's notifications config, readable by its owner only. Only on "yes,
+  send it". The model never sees it: every word said about it is said in code and names the vault login by its
+  title only.
 
 Every command goes through a `run` that tests replace, with no window on Windows. Nothing here sends the node a
 control command: the node and its safety MCU act (DEC-0150 answer 4).
@@ -28,6 +33,7 @@ from __future__ import annotations
 
 import json
 import re
+from urllib.parse import urlparse
 import shutil
 import subprocess
 from pathlib import Path
@@ -49,6 +55,17 @@ FLASH_TIMEOUT = 900
 ESP32_USB = {(0x10C4, 0xEA60), (0x1A86, 0x7523), (0x1A86, 0x55D4), (0x303A, 0x1001)}
 _EXCLUDE = (".venv", "__pycache__", "mia_homestead.db", "*.db-wal", "*.db-shm", "viewer/*_state.json",
             "viewer/home_snapshot.json", "viewer/state.json")
+
+
+def _run_input(cmd: list, data: str, timeout: int = 60) -> tuple[int, str]:
+    """Runs a command with `data` on its standard input (a secret goes this way, never as an argument), no window
+    and a timeout; (exit code, the tail of what it printed). The data is never part of what comes back."""
+    try:
+        out = subprocess.run(cmd, input=data, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                             timeout=timeout, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.SubprocessError) as problem:
+        return 1, type(problem).__name__
+    return out.returncode, ((out.stdout or "") + (out.stderr or "")).replace(data, "[hidden]")[-600:]
 
 
 def _run(cmd: list, timeout: int = 120) -> tuple[int, str]:
@@ -171,8 +188,8 @@ def filled(template: str, values: dict) -> str:
 
 def prepare_pi(answers: dict, run: Optional[Callable] = None, node: Path = NODE, bundle: Path = BUNDLE) -> dict:
     """The Pi's preloaded configs and its setup steps, in data/provisioning/greenhouse/: location (latitude,
-    longitude), notifications (contacts; the SMTP password left for the person), and the sync left to MIA's fetching.
-    Returns {folder, files, key, steps}."""
+    longitude), notifications (contacts; the SMTP password never written here: it goes from the vault to the node,
+    `push_secret`), and the sync left to MIA's fetching. Returns {folder, files, key, steps}."""
     configs = bundle / "config"
     configs.mkdir(parents=True, exist_ok=True)
     plan = {
@@ -200,7 +217,8 @@ def prepare_pi(answers: dict, run: Optional[Callable] = None, node: Path = NODE,
         "Write the card, put it in the Pi, power it on, and wait two minutes.",
         f"Tell MIA “push the greenhouse to {HOSTNAME}” (or its address): she copies the node and these configs and "
         "installs its service.",
-        "On the node, add the SMTP app password to config/notifications.yaml yourself (MIA never writes it).",
+        "Save the node's email (SMTP app) password in your password vault, and once the node is pushed say \"send "
+        "the greenhouse its email password\": it goes from the vault to the node, never through a conversation.",
     ]
     (bundle / "PI_SETUP.md").write_text("# The greenhouse Pi\n\n" + "\n".join(f"{n}. {s}" for n, s in
                                                                          enumerate(steps, 1)) + "\n", encoding="utf-8")
@@ -243,6 +261,84 @@ def push_node(host: str, user: str, run: Optional[Callable] = None) -> str:
             f"greenhouse at {host}”.")
 
 
+# ------------------------------------------------------------------ the node's email password
+
+# Run on the Pi with the password on standard input: it sets smtp_password in the node's notifications config (keeping
+# the line's comment), leaves the file readable by its owner only, and prints nothing of the password.
+_SET_SECRET = """
+import sys, json, os, pathlib
+p = pathlib.Path("config/notifications.yaml")
+v = sys.stdin.read().strip()
+lines = p.read_text().splitlines() if p.exists() else []
+out, done = [], False
+for line in lines:
+    if line.startswith("smtp_password:"):
+        at = line.rfind("  # ")
+        out.append("smtp_password: " + json.dumps(v) + (line[at:] if at > 0 else ""))
+        done = True
+    else:
+        out.append(line)
+if not done:
+    out.append("smtp_password: " + json.dumps(v))
+p.write_text(chr(10).join(out) + chr(10))
+os.chmod(p, 0o600)
+print("set")
+"""
+
+
+def secret_command(host: str, user: str, key: Path = KEY) -> list:
+    """Pure logic. The SSH command that sets the node's email password from standard input, then restarts the node
+    so it reads it. The password is never in it."""
+    remote = (f"cd {REMOTE_DIR} && .venv/bin/python -c '{_SET_SECRET}' && "
+              "(systemctl --user restart mia-homestead.service || true)")
+    return ["ssh", "-i", str(key), "-o", "StrictHostKeyChecking=accept-new", f"{user}@{host}", remote]
+
+
+def smtp_host() -> str:
+    """The email server the prepared config names (data/provisioning/greenhouse/config/notifications.yaml), or ""."""
+    path = BUNDLE / "config" / "notifications.yaml"
+    try:
+        found = re.search(r"(?m)^smtp_host:\s*\"?([^\"#\s]+)", path.read_text(encoding="utf-8"))
+    except OSError:
+        return ""
+    return found.group(1) if found else ""
+
+
+def smtp_login(context):
+    """The login in the person's vault for the node's email: one whose site is the configured email server, or whose
+    title names the greenhouse's email or SMTP. None when the vault is missing, locked, or has no such login."""
+    vault = getattr(context, "passwords", None)
+    if vault is None or not vault.is_unlocked():
+        return None
+    server = smtp_host().lower()
+    for login in vault.logins():
+        title, url = (login.title or "").lower(), (login.url or "").lower()
+        if (server and server in url) or "smtp" in title or ("greenhouse" in title and "mail" in title):
+            return login
+    return None
+
+
+def push_secret(context, entry_id: str, host: str, user: str, run_input: Optional[Callable] = None) -> str:
+    """Sends the vault login's password to the node (see `secret_command`); says how it went, never the password."""
+    if not KEY.exists():
+        return "There's no key for the node yet: ask me to prepare the Pi first."
+    vault = getattr(context, "passwords", None)
+    if vault is None or not vault.is_unlocked():
+        return "Your password vault is locked. Unlock it yourself, then say it again; I never unlock it."
+    try:
+        secret = vault.get(entry_id).password
+    except Exception:
+        return "That vault login isn't there any more."
+    if not secret:
+        return "That vault login has no password saved."
+    code, said = (run_input or _run_input)(secret_command(host, user), secret, 60)
+    said, secret = (said or "").replace(secret, "[hidden]"), ""  # hidden whatever ran it
+    if code != 0:
+        return f"The password didn't reach the node (exit {code}). The last of what it said: {said[-200:]}"
+    return (f"The node on {host} has its email password now (only its owner can read the file) and restarted to use "
+            "it. Its alerts can go out by email.")
+
+
 # ------------------------------------------------------------------ talking about it
 
 _FLASH = re.compile(r"\b(?:flash|program|upload (?:to|the firmware))\b.*\b(?:mcu|esp32|safety|firmware|board)\b")
@@ -251,12 +347,45 @@ _PUSH = re.compile(r"\bpush (?:the )?greenhouse to\s+([\w.\-]+)")
 _YES_FLASH = re.compile(r"^\s*yes,? (?:flash|do) it[.!]*\s*$")
 _YES_PUSH = re.compile(r"^\s*yes,? push it[.!]*\s*$")
 _PORT = re.compile(r"\b(COM\d+|/dev/tty\w+)\b", re.I)
+_SECRET = re.compile(r"\b(?:send|push|give)\b.*\b(?:email|smtp|mail)\b.*\bpassword\b.*\bgreenhouse\b|"
+                     r"\b(?:send|push|give)\b (?:the )?greenhouse (?:its |the )?(?:email |smtp |mail )?password\b")
+_YES_SECRET = re.compile(r"^\s*yes,? send it[.!]*\s*$")
 
 
-def reply(context, text: str, run: Optional[Callable] = None) -> Optional[str]:
+def _record(link, kind: str, summary: str) -> None:
+    """Puts a device step that finished in the history (`mcu_flashed`, `node_pushed`), so the setup sequence
+    (core/greenhouse_setup.py) knows it's done."""
+    from core import life_events
+
+    life_events.record(link, kind, summary)
+
+
+def _secret_plan(context, link, low: str) -> str:
+    """What MIA says to "send the greenhouse its email password": which vault login and which Pi, then waits for
+    "yes, send it"; or what's missing (the vault locked, no such login, no address)."""
+    vault = getattr(context, "passwords", None)
+    if vault is None or not vault.is_unlocked():
+        return ("Your password vault is locked. Unlock it yourself (I never do), with the node's email login saved "
+                "in it (its site the email server, or a title like \"Greenhouse email\"), then ask me again.")
+    login = smtp_login(context)
+    if login is None:
+        return ("I don't see the node's email login in your vault. Save one with its site set to the email server "
+                f"{smtp_host() or '(the one in its notifications config)'} or titled \"Greenhouse email\", then ask "
+                "me again.")
+    at = re.search(r"\bto\s+([\w.\-]+)", low)
+    host = at.group(1) if at else (urlparse(link.url).hostname if getattr(link, "url", "") else "") or HOSTNAME
+    user = (re.search(r"\bas (\w+)\b", low) or [None, "pi"])[1]
+    link.pending = {"kind": "secret", "entry": login.entry_id, "host": host, "user": user}
+    return (f"I'll send the password from your vault login \"{login.title}\" to the node at {user}@{host} over SSH, "
+            "into its notifications config (readable by its owner only), and restart it. I never see or say the "
+            "password. Say \"yes, send it\" to go ahead.")
+
+
+def reply(context, text: str, run: Optional[Callable] = None, run_input: Optional[Callable] = None) -> Optional[str]:
     """What MIA says, in code, to setting up the greenhouse's hardware: "flash the safety MCU" (the plan, then
     "yes, flash it"), "prepare the Pi" (the configs and the Imager steps), "push the greenhouse to <host>" (then "yes,
-    push it"); None otherwise. Each device step waits for its yes."""
+    push it"), "send the greenhouse its email password" (then "yes, send it"); None otherwise. Each device step waits for its yes, and one that finishes is recorded in the history
+    (`mcu_flashed`, `node_pushed`) for the setup sequence."""
     link = getattr(context, "greenhouse_link", None)
     if link is None:
         return None
@@ -265,10 +394,22 @@ def reply(context, text: str, run: Optional[Callable] = None) -> Optional[str]:
     pending = getattr(link, "pending", None) or {}
     if pending.get("kind") == "flash" and _YES_FLASH.match(low):
         link.pending = {}
-        return flash_mcu(pending["port"], run)
+        said = flash_mcu(pending["port"], run)
+        if said.startswith("Flashed"):
+            _record(link, "mcu_flashed", f"Flashed the greenhouse safety MCU on {pending['port']}")
+        return said
+    if pending.get("kind") == "secret" and _YES_SECRET.match(low):
+        link.pending = {}
+        said = push_secret(context, pending["entry"], pending["host"], pending["user"], run_input)
+        if said.startswith("The node on"):
+            _record(link, "node_secret_sent", f"Sent the greenhouse node its email password ({pending['host']})")
+        return said
     if pending.get("kind") == "push" and _YES_PUSH.match(low):
         link.pending = {}
-        return push_node(pending["host"], pending["user"], run)
+        said = push_node(pending["host"], pending["user"], run)
+        if said.startswith("The greenhouse node is on"):
+            _record(link, "node_pushed", f"Pushed the greenhouse node to {pending['host']}")
+        return said
     if _FLASH.search(low):
         port = _PORT.search(said)
         plan = flash_plan([{"device": port.group(1), "description": "the port you named", "vid": None,
@@ -280,6 +421,8 @@ def reply(context, text: str, run: Optional[Callable] = None) -> Optional[str]:
         done = prepare_pi({}, run)
         return ("The Pi's preloaded configs and setup steps are in " + done["folder"] + ". " + " ".join(
             f"{n}. {s}" for n, s in enumerate(done["steps"], 1)))
+    if _SECRET.search(low):
+        return _secret_plan(context, link, low)
     found = _PUSH.search(low)
     if found:
         host = found.group(1)

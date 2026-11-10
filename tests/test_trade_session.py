@@ -5,7 +5,9 @@ tests.test_trade_session
 Walking someone through a job or a diagnosis (core/trade_session.py, core/trade_actions.py, DEC-0149): started by
 their words, one step at a time, never past a hold point until it's checked, why and what to watch for on any step,
 a stop rule's words ending it at once with what to do instead, a job planned as a mission that the steps count toward,
-and a diagnosis worked by yes and no to its cause.
+and a diagnosis worked by yes and no to its cause. And a question about the job in progress ("what tools do I need
+for this job?") answered by the "the job" question plan from code: its step, its tools against the inventory, its
+stop rules.
 """
 
 import pytest
@@ -54,10 +56,12 @@ def test_a_stop_rule_s_words_end_the_job_at_once_with_what_to_do_instead(world):
     assert reply(world, "next") is None  # nothing in progress any more, and "next" alone starts nothing
 
 
-def test_a_job_planned_as_a_mission_is_counted_step_by_step(world):
-    """"Make it a mission": one objective a phase; each step done counts toward its phase."""
-    reply(world, "walk me through building the greenhouse")
-    assert "Added the mission “Build: Hoop-house greenhouse (high tunnel)”" in reply(world, "make it a mission")
+def test_a_job_is_a_mission_from_the_start_counted_step_by_step(world):
+    """Starting a job makes its mission (one objective a phase), said in the reply; "make it a mission" then says
+    it already is one; each step done counts toward its phase."""
+    assert "It's in your Missions as “Build: Hoop-house greenhouse (high tunnel)”" in reply(
+        world, "walk me through building the greenhouse")
+    assert "is already one of your missions" in reply(world, "make it a mission")
     mission = next(m for m in world.missions.all_missions() if m.name.startswith("Build: Hoop-house"))
     assert [o.description for o in mission.objectives] == [p.name for p in trades.JOBS["hoop_house"].phases]
     reply(world, "next")
@@ -80,8 +84,9 @@ def test_words_that_aren_t_for_a_job_are_left_alone(world):
 
 
 def test_finishing_or_stopping_is_kept_and_the_loops_read_it(world):
-    """A diagnosis finished and a job stopped are lines in the person's history; trades.finished reads the share, and
-    trades.depth says how much of the wanted list is written and what's next."""
+    """A diagnosis finished and a job stopped are lines in the person's history, once each (saving again records
+    nothing more); trades.finished reads the share, and trades.depth says how much of the wanted list is written and
+    what's next."""
     from core import life_events
     from core.loops import _trades_depth, _trades_finished
 
@@ -90,11 +95,13 @@ def test_finishing_or_stopping_is_kept_and_the_loops_read_it(world):
     reply(world, "yes")
     reply(world, "walk me through building the coop")
     reply(world, "stop the job")
+    world.trade_session.save()
     kinds = [e.type for e in life_events.events_for(world, types=("trade_finished", "trade_stopped"))]
     assert sorted(kinds) == ["trade_finished", "trade_stopped"]
     assert _trades_finished(world).value == 0.5
     depth = _trades_depth(world)
-    assert depth.n == len(trades.WANTED) and "next: workshop_circuit" in depth.detail
+    upcoming = trades.depth()["next"]
+    assert depth.n == len(trades.WANTED) and f"next: {upcoming}" in depth.detail
 
 
 def test_the_model_is_given_the_job_and_step_it_s_asked_about(world):
@@ -145,3 +152,38 @@ def test_a_symptom_said_starts_its_diagnosis_with_safety_first(world):
     said = reply(world, "my breaker keeps tripping, help me figure it out")
     assert said.startswith("A breaker that keeps tripping") and "Never take the panel cover off" in said
     assert "Unplug or switch off everything on that circuit" in said
+
+
+def test_a_question_about_this_job_gets_its_step_tools_and_stop_rules_from_code(world):
+    """With a job in progress, the "the job" plan's sheet has the job, the step in focus, the tools (any in the
+    inventory marked as had), and its stop rules; with none in progress, "this job" asks to name one, other words step
+    aside, and a job the words name is outlined."""
+    from core import question_plans as qp
+
+    from core.inventory_manager import InventoryManager
+
+    plan = qp.PLAN_BY_NAME["the job"]
+    world.inventory = InventoryManager(world, data_dir=world.my_dir)
+    world.inventory.add_item("Drill/driver", quantity=1, category="tools")
+    reply(world, "walk me through building the coop")
+    sheet = qp.gather(world, plan, "What tools do I need for this job?")
+    text = sheet.as_text()
+    assert "Chicken coop and run" in text and "Where you are:" in text and "Stop and get help if" in text
+    assert "seem to have already" in text and "drill/driver" in text.lower()
+    reply(world, "stop the job")
+    assert "No job or repair is in progress" in qp.gather(world, plan, "What step am I on in this job?").as_text()
+    assert qp.gather(world, plan, "troubleshoot my wifi").facts == []
+    assert "circuit to the workshop" in qp.gather(world, plan, "what tools do I need for the workshop circuit").as_text()
+
+
+def test_the_job_in_progress_is_in_missions_not_on_today(world):
+    """Zac, 2026-11-09: a job walked through belongs in Missions, not Today; neither a job nor a repair being worked
+    out puts anything on Today's list."""
+    from core.today import today_items
+
+    reply(world, "walk me through building the coop")
+    assert any(m.name == "Build: Chicken coop and run" for m in world.missions.all_missions())
+    assert not any(i.title.startswith("Chicken coop") for i in today_items(world))
+    reply(world, "stop the job")
+    reply(world, "help me figure out why my toilet keeps running")
+    assert not any("working it out" in i.title for i in today_items(world))

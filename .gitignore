@@ -119,3 +119,5 @@ pc-check/
 
 # The music library's default folder (core/music_manager.py): a person's songs, and Good News Radio's episodes.
 /music_library/
+
+.claude/settings.local.json

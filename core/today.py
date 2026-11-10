@@ -16,6 +16,10 @@ their own):
   Pets), pantry items expiring.
 - **Waiting on you**: documents in the inbox to file, email drafts not
   sent yet.
+
+A project's own steps are never here (Zac, 2026-11-09): the greenhouse
+setup and a Trade Master job are missions, in Missions and on their own
+app's page, so Today stays what's due in the day.
 - **Soon** (the next 3 days): bills, maintenance, birthdays.
 
 Maintenance on something that belongs to someone else in the household
@@ -284,6 +288,8 @@ def _wallet(context, today: date):
 _SOURCES = (("calendar", _calendar), ("alarms", _alarms), ("bills", _bills), ("maintenance", _maintenance),
             ("tasks", _tasks), ("birthdays", _birthdays), ("pantry", _pantry), ("waiting", _waiting),
             ("health", _health), ("wallet", _wallet))
+# Not here on purpose (Zac, 2026-11-09): the greenhouse setup and a Trade Master job are missions (Missions, and the
+# Greenhouse page's What's Next), not today's items: Today is what's due in the day.
 
 
 def today_items(context, today: Optional[date] = None) -> list[TodayItem]:

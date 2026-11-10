@@ -1,7 +1,8 @@
 """
 Boss battles (DEC-0028): every debt is a boss (max HP is the highest
 balance seen, payments are hits, interest heals it), and any mission can
-be made into one (its objectives are its HP).
+be made into one (its objectives are its HP); and the same by voice
+(core/assistant_game_actions.py).
 """
 
 import pytest
@@ -69,3 +70,19 @@ def test_a_mission_made_into_a_boss(world):
         world.actions.propose(world, "boss.add", {"mission_id": mission.mission_id})
     do(world, "boss.remove", mission_id=mission.mission_id)
     assert bosses(world)["active"] == []
+
+
+def test_the_bosses_are_said_and_a_mission_made_one_by_voice(world):
+    """get_bosses says each boss's HP and its hit from the same data as the page; make_boss makes the named mission a
+    boss through boss.add; an unknown name says so."""
+    from core import assistant_game_actions as voice
+
+    world.budget.add_debt("Car loan", 10000, 6.0, minimum_payment=300)
+    said = voice._get_bosses(world, {})
+    assert said.startswith("Your bosses:") and "Car loan: $10,000.00 of $10,000.00 HP left (Full Strength)" in said
+    do(world, "mission.add", name="Build the shed", reward_xp="200")
+    mission = world.missions.all_missions()[-1]
+    do(world, "objective.add", mission_id=mission.mission_id, description="Pour the slab", target="1")
+    voice._make_boss(world, {"mission": "build the shed"})
+    assert mission.mission_id in world.boss_book.missions
+    assert "don't see a mission" in voice._make_boss(world, {"mission": "climb everest"})

@@ -6,7 +6,7 @@ Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/green
 node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab,
 reads only from the person's own network, and knows the node from its own documents; core/greenhouse_provision.py
 finds the ESP32, flashes it and pushes the node to the Pi only on a yes, with preloaded configs that keep every comment
-and never a password; the node's export server serves its two files and nothing else.
+and never a password; the node's export server serves its two files and its read-only live pages, nothing else.
 """
 
 import json
@@ -212,3 +212,40 @@ def test_the_node_s_export_server_serves_its_two_files_and_nothing_else():
     assert module.allowed("/home_snapshot.json?t=1") == "home_snapshot.json"
     for bad in ("/../mia_homestead.db", "/config/notifications.yaml", "/", "/viewer/state.json"):
         assert module.allowed(bad) is None, bad
+
+
+def test_the_live_link_serves_the_node_s_pages_and_never_its_secrets():
+    """DEC-0150 answer 3c: the dashboard (also at "/"), the digital twin, their nav and the twin's layout are served;
+    the notifications config, the database and any other path still aren't."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parent.parent / "homestead" / "viewer" / "serve_exports.py"
+    spec = importlib.util.spec_from_file_location("homestead_serve_exports_live", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.page("/")[0].name == "dashboard.html" and module.page("/digital_twin.html?x=1")[0].is_file()
+    assert module.page("/config/layout.json")[1] == "application/json"
+    for bad in ("/config/notifications.yaml", "/../mia_homestead.db", "/journal.html", "/viewer/nav.js"):
+        assert module.page(bad) is None, bad
+
+
+def test_how_s_the_greenhouse_reads_it_fresh_and_show_me_live_gives_the_dashboard(world):
+    """"How's the greenhouse?" reads the node again when the last read is old; when it can't be reached it says so
+    and gives the last reading; "show me the greenhouse live" names the node's dashboard."""
+    link = world.greenhouse_link
+    assert "don't have the node's address" in gl.reply(world, "show me the greenhouse live")
+    gl.take_over(world, link, "http://127.0.0.1:8770", lambda url: json.dumps(STATE).encode("utf-8"))
+    assert gl.reply(world, "show me the greenhouse dashboard").startswith(
+        "The greenhouse's live dashboard is at http://127.0.0.1:8770/dashboard.html")
+    link.fetched_at = "2026-01-01T08:00:00"
+    asked = []
+    said = gl.reply(world, "how's the greenhouse?", get=lambda url: asked.append(url) or json.dumps(STATE).encode())
+    assert asked and said.startswith("Greenhouse: Pilot")
+    link.fetched_at = "2026-01-01T08:00:00"
+
+    def down(url):
+        """The node not answering."""
+        raise OSError("refused")
+
+    assert gl.reply(world, "how's the greenhouse?", get=down).startswith("I couldn't reach the node just now; this is "
+                                                                         "from 08:00.")

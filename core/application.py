@@ -110,6 +110,8 @@ from core.assistant_asset_part_actions import register_asset_part_actions
 from core.assistant_health_actions import register_health_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
+from core.assistant_creation_actions import register_creation_actions
+from core.assistant_game_actions import register_game_actions
 from core.failure_actions import register_failure_actions
 from core.assistant_undo_actions import register_undo_actions
 from core.assistant_homestead_actions import register_homestead_actions
@@ -398,6 +400,14 @@ class MIAApplication:
         from core.security_log import SecurityLog
 
         self.context.security_log = SecurityLog()  # who signed in from where (docs/SECURITY.md step 3)
+        from core.security_log import on_account_change
+
+        # A password or email changed at the desktop is logged too (the web logs its own with the device).
+        self.context.events.subscribe("profile.password_changed", on_account_change(self.context, "password_changed"))
+        self.context.events.subscribe("profile.email_changed", on_account_change(self.context, "email_changed"))
+        from core import progress_history
+
+        progress_history.subscribe(self.context)  # a prestige or reward unlocked, kept in that person's history
         from core.insurance import InsuranceBook
 
         self.context.insurance = InsuranceBook(self.context)  # the insurance check-up (DEC-0034)
@@ -1737,6 +1747,8 @@ class MIAApplication:
         register_health_actions(self.context.assistant_actions)  # sleep, visits, medications, records (DEC-0129)
         register_notification_actions(self.context.assistant_actions)  # read out and mark notifications read (DEC-0125)
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
+        register_creation_actions(self.context.assistant_actions)  # screens MIA made for you, by voice (DEC-0091)
+        register_game_actions(self.context.assistant_actions)  # boss battles and questlines by voice (DEC-0028)
         register_loop_actions(self.context.assistant_actions)  # the loop: when things happen (DEC-0047)
         register_checkin_actions(self.context.assistant_actions)  # the Sunday check-in (DEC-0047)
         register_failure_actions(self.context.assistant_actions)  # the Fix-It Log (DEC-0049)
@@ -3848,6 +3860,25 @@ class MIAApplication:
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
+            name="record_property_sale",
+            domain="real_estate",
+            description=("Record that a property in MIA's real estate portfolio was sold: its name, the sale price, and "
+                         "optionally the selling costs and the date."),
+            parameters={
+                "type": "object",
+                "properties": {
+                    "property_name": {"type": "string", "description": "The exact name of the existing property."},
+                    "sale_price": {"type": "number", "description": "What it sold for."},
+                    "selling_costs": {"type": "number", "description": "Optional commissions and closing costs."},
+                    "date": {"type": "string", "description": "Optional sale date, YYYY-MM-DD. Defaults to today."},
+                },
+                "required": ["property_name", "sale_price"],
+            },
+            handler=self._action_record_property_sale,
+            trigger_phrases=("sold the property", "sold my rental", "we sold", "record the sale of", "property sold",
+                             "i sold the house"),
+        ))
+        self.context.assistant_actions.register(AssistantAction(
             name="play_track",
             domain="music",
             description="Play a specific song from MIA's local music library, by title or artist.",
@@ -3958,12 +3989,9 @@ class MIAApplication:
     @staticmethod
     def _action_add_alarm(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_alarm`: sets an alarm at HH:MM with a label ("Alarm" when none). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        label = str(arguments.get("label", "") or "Alarm").strip() or "Alarm"
-        time_str = str(arguments.get("time", "")).strip()
-        if not time_str:
-            return "I need a time (HH:MM) to set an alarm."
-        alarm = context.alarms.add_alarm(label=label, time=time_str)
-        return f"Alarm '{alarm.label}' set for {alarm.time}."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_add_alarm(context, arguments)
 
     @staticmethod
     def _action_list_alarms(context: AppContext, arguments: dict) -> str:
@@ -3977,22 +4005,16 @@ class MIAApplication:
     @staticmethod
     def _action_delete_alarm(context: AppContext, arguments: dict) -> str:
         """Assistant tool `delete_alarm`: deletes the alarm whose label matches (case-insensitive). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        label = str(arguments.get("label", "")).strip().lower()
-        match = next((a for a in context.alarms.all_alarms() if a.label.lower() == label), None)
-        if match is None:
-            return f"I don't have an alarm called '{arguments.get('label', '')}'."
-        context.alarms.delete_alarm(match.alarm_id)
-        return f"Deleted the alarm '{match.label}'."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_delete_alarm(context, arguments)
 
     @staticmethod
     def _action_add_note(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_note`: adds a journal note with a title and body. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        title = str(arguments.get("title", "")).strip()
-        if not title:
-            return "I need a title to add a note."
-        body = str(arguments.get("body", ""))
-        entry = context.journal.add_entry(title=title, body=body)
-        return f"Note '{entry.title}' added."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_add_note(context, arguments)
 
     @staticmethod
     def _action_list_notes(context: AppContext, arguments: dict) -> str:
@@ -4000,69 +4022,44 @@ class MIAApplication:
         retrieve-then-let-the-LLM-answer shape as
         _action_recall_recent_activity, so the model can quote/summarize
         rather than this handler guessing what's relevant."""
-        query = str(arguments.get("query", "") or "").strip()
-        entries = context.journal.search(query) if query else context.journal.all_entries()
-        if not entries:
-            return "No matching notes found." if query else "You have no notes yet."
-        lines = [f"- '{e.title}': {e.body}" if e.body else f"- '{e.title}'" for e in entries]
-        return "Your notes:\n" + "\n".join(lines)
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_list_notes(context, arguments)
 
     @staticmethod
     def _action_delete_note(context: AppContext, arguments: dict) -> str:
         """Assistant tool `delete_note`: deletes the journal note whose title matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        title = str(arguments.get("title", "")).strip().lower()
-        match = next((e for e in context.journal.all_entries() if e.title.lower() == title), None)
-        if match is None:
-            return f"I don't have a note titled '{arguments.get('title', '')}'."
-        context.journal.delete_entry(match.entry_id)
-        return f"Deleted the note '{match.title}'."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_delete_note(context, arguments)
 
     @staticmethod
     def _action_add_inventory_item(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_inventory_item`: adds an item with a quantity (0 when the number can't be read). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        name = str(arguments.get("name", "")).strip()
-        if not name:
-            return "I need an item name to add to inventory."
-        try:
-            quantity = int(arguments.get("quantity", 0) or 0)
-        except (TypeError, ValueError):
-            quantity = 0
-        item = context.inventory.add_item(name=name, quantity=quantity)
-        return f"Added {item.quantity}x '{item.name}' to inventory."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_add_inventory_item(context, arguments)
 
     @staticmethod
     def _action_list_inventory(context: AppContext, arguments: dict) -> str:
         """Assistant tool `list_inventory`: the inventory, or the items matching a query. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        query = str(arguments.get("query", "") or "").strip()
-        items = context.inventory.search(query) if query else context.inventory.all_items()
-        if not items:
-            return "No matching inventory items found." if query else "Your inventory is empty."
-        lines = [f"- {i.quantity}x '{i.name}'" for i in items]
-        return "Your inventory:\n" + "\n".join(lines)
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_list_inventory(context, arguments)
 
     @staticmethod
     def _action_delete_inventory_item(context: AppContext, arguments: dict) -> str:
         """Assistant tool `delete_inventory_item`: removes the inventory item whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        name = str(arguments.get("name", "")).strip().lower()
-        match = next((i for i in context.inventory.all_items() if i.name.lower() == name), None)
-        if match is None:
-            return f"I don't have an inventory item called '{arguments.get('name', '')}'."
-        context.inventory.delete_item(match.item_id)
-        return f"Removed '{match.name}' from inventory."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_delete_inventory_item(context, arguments)
 
     @staticmethod
     def _action_adjust_inventory_quantity(context: AppContext, arguments: dict) -> str:
         """Assistant tool `adjust_inventory_quantity`: changes an item's quantity by a whole-number delta (negative to use some). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        name = str(arguments.get("name", "")).strip().lower()
-        try:
-            delta = int(arguments.get("delta", 0) or 0)
-        except (TypeError, ValueError):
-            return "I need a whole number to adjust the quantity by."
-        match = next((i for i in context.inventory.all_items() if i.name.lower() == name), None)
-        if match is None:
-            return f"I don't have an inventory item called '{arguments.get('name', '')}'."
-        updated = context.inventory.adjust_quantity(match.item_id, delta)
-        return f"'{updated.name}' is now {updated.quantity}."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_adjust_inventory_quantity(context, arguments)
 
     @staticmethod
     def _action_list_waypoints(context: AppContext, arguments: dict) -> str:
@@ -4086,20 +4083,9 @@ class MIAApplication:
     @staticmethod
     def _action_waypoint_distance(context: AppContext, arguments: dict) -> str:
         """Assistant tool `waypoint_distance`: the distance in km and bearing between two named waypoints. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        from_name = str(arguments.get("from_name", "")).strip().lower()
-        to_name = str(arguments.get("to_name", "")).strip().lower()
-        waypoints = {w.name.lower(): w for w in context.waypoints.all_waypoints()}
-        from_wp = waypoints.get(from_name)
-        to_wp = waypoints.get(to_name)
-        if from_wp is None:
-            return f"I don't have a waypoint called '{arguments.get('from_name', '')}'."
-        if to_wp is None:
-            return f"I don't have a waypoint called '{arguments.get('to_name', '')}'."
-        result = context.waypoints.distance_and_bearing(from_wp.waypoint_id, to_wp.waypoint_id)
-        if result is None:
-            return f"Couldn't compute a distance between '{from_wp.name}' and '{to_wp.name}'."
-        distance_km, bearing = result
-        return f"'{from_wp.name}' to '{to_wp.name}': {distance_km:.1f} km, bearing {bearing:.0f}°."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_waypoint_distance(context, arguments)
 
     @staticmethod
     def _action_list_trail_maps(context: AppContext, arguments: dict) -> str:
@@ -4229,18 +4215,9 @@ class MIAApplication:
         testable, same reasoning as core/device_help_manager.py's
         retrieval-then-let-the-LLM-answer shape.
         """
-        keyword = str(arguments.get("keyword", "") or "").strip()
-        try:
-            limit = int(arguments.get("limit", 20) or 20)
-        except (TypeError, ValueError):
-            limit = 20
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
 
-        entries = context.activity_log.search(keyword, limit=limit) if keyword else context.activity_log.recent(limit)
-        if not entries:
-            return "No matching recent activity found." if keyword else "No recent activity recorded yet."
-
-        lines = [f"{e.timestamp.replace('T', ' ')} — {e.summary}" for e in entries]
-        return "\n".join(lines)
+        return core_runtime._action_recall_recent_activity(context, arguments)
 
     @staticmethod
     def _action_list_observations(context: AppContext, arguments: dict) -> str:
@@ -4599,24 +4576,16 @@ class MIAApplication:
     @staticmethod
     def _action_delete_calendar_event(context: AppContext, arguments: dict) -> str:
         """Assistant tool `delete_calendar_event`: deletes the calendar event whose title matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        title = str(arguments.get("title", "")).strip().lower()
-        match = next((e for e in context.calendar.all_events() if e.title.lower() == title), None)
-        if match is None:
-            return f"I don't have a calendar event called '{arguments.get('title', '')}'."
-        context.calendar.delete_event(match.event_id)
-        return f"Deleted the calendar event '{match.title}'."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_delete_calendar_event(context, arguments)
 
     @staticmethod
     def _action_get_power_status(context: AppContext, arguments: dict) -> str:
         """Assistant tool `get_power_status`: battery percent, plugged in or not, and minutes left when known. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        status = context.power.read()
-        if status is None:
-            return "No battery or power status is available on this device."
-        plugged = "plugged in" if status.plugged_in else "on battery"
-        time_part = ""
-        if status.seconds_left is not None:
-            time_part = f", about {status.seconds_left // 60} minutes remaining"
-        return f"Battery: {status.percent:.0f}% ({plugged}{time_part})."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_get_power_status(context, arguments)
 
     @staticmethod
     def _action_add_component(context: AppContext, arguments: dict) -> str:
@@ -5005,83 +4974,37 @@ class MIAApplication:
     @staticmethod
     def _action_list_missions(context: AppContext, arguments: dict) -> str:
         """Assistant tool `list_missions`: every mission with each objective's progress and check mark. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        missions = context.missions.all_missions()
-        if not missions:
-            return "You have no missions yet."
-        lines = []
-        for mission in missions:
-            lines.append(f"- '{mission.name}' ({mission.status})")
-            for index, objective in enumerate(mission.objectives):
-                progress = context.missions.objective_progress(mission.mission_id, index) or 0.0
-                mark = "x" if context.missions.is_objective_complete(mission.mission_id, index) else " "
-                lines.append(f"    [{mark}] {objective.description}: {progress:g} of {objective.target:g}")
-        return "Your missions:\n" + "\n".join(lines)
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_list_missions(context, arguments)
 
     @staticmethod
     def _action_add_objective(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_objective`: adds an objective to a mission (metric type, numeric target). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        mission_name = str(arguments.get("mission_name", "")).strip().lower()
-        description = str(arguments.get("description", "")).strip()
-        if not description:
-            return "I need a description to add an objective."
-        mission = next((m for m in context.missions.all_missions() if m.name.lower() == mission_name), None)
-        if mission is None:
-            return f"I don't have a mission called '{arguments.get('mission_name', '')}'."
-        metric_type = str(arguments.get("metric_type", "") or "tally").strip()
-        if metric_type not in MISSION_METRIC_TYPES:
-            metric_type = "tally"
-        try:
-            target = float(arguments.get("target", 1))
-        except (TypeError, ValueError):
-            return "I need a numeric target for this objective."
-        context.missions.add_objective(mission.mission_id, description, metric_type, target)
-        return f"Objective '{description}' added to mission '{mission.name}'."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_add_objective(context, arguments)
 
     @staticmethod
     def _action_log_mission_progress(context: AppContext, arguments: dict) -> str:
         """Assistant tool `log_mission_progress`: adds to a mission's tally objective (the only one, or the one named) and says how close it is. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        mission_name = str(arguments.get("mission_name", "")).strip().lower()
-        mission = next((m for m in context.missions.all_missions() if m.name.lower() == mission_name), None)
-        if mission is None:
-            return f"I don't have a mission called '{arguments.get('mission_name', '')}'."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
 
-        tally_objectives = [(i, o) for i, o in enumerate(mission.objectives) if o.metric_type == "tally"]
-        objective_description = str(arguments.get("objective_description", "") or "").strip().lower()
-        if objective_description:
-            match_index = next((i for i, o in tally_objectives if o.description.lower() == objective_description), None)
-            if match_index is None:
-                return f"I don't have a tally objective called '{arguments.get('objective_description', '')}' on mission '{mission.name}'."
-        elif len(tally_objectives) == 1:
-            match_index = tally_objectives[0][0]
-        else:
-            return f"Mission '{mission.name}' has {len(tally_objectives)} tally objectives — tell me which one."
-
-        delta = float(arguments.get("delta", 1) or 1)
-        context.missions.increment_tally(mission.mission_id, match_index, delta=delta)
-        new_progress = context.missions.objective_progress(mission.mission_id, match_index)
-        objective = mission.objectives[match_index]
-        done_note = " Objective complete!" if context.missions.is_objective_complete(mission.mission_id, match_index) else ""
-        return f"Logged progress on '{objective.description}': {new_progress:g} of {objective.target:g}.{done_note}"
+        return core_runtime._action_log_mission_progress(context, arguments)
 
     @staticmethod
     def _action_delete_mission(context: AppContext, arguments: dict) -> str:
         """Assistant tool `delete_mission`: deletes the mission whose name matches. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        name = str(arguments.get("name", "")).strip().lower()
-        match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
-        if match is None:
-            return f"I don't have a mission called '{arguments.get('name', '')}'."
-        context.missions.delete_mission(match.mission_id)
-        return f"Deleted the mission '{match.name}'."
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_delete_mission(context, arguments)
 
     @staticmethod
     def _action_complete_mission(context: AppContext, arguments: dict) -> str:
         """Assistant tool `complete_mission`: marks a mission completed. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
-        name = str(arguments.get("name", "")).strip().lower()
-        match = next((m for m in context.missions.all_missions() if m.name.lower() == name), None)
-        if match is None:
-            return f"I don't have a mission called '{arguments.get('name', '')}'."
-        context.missions.update_mission(match.mission_id, status="completed")
-        return f"Marked the mission '{match.name}' as completed. Nice work!"
+        from core import core_runtime  # one body, shared with headless Core (no Qt there)
+
+        return core_runtime._action_complete_mission(context, arguments)
 
     # ------------------------------------------------------------------
     # Maintenance actions — see the registration block's comment above
@@ -5603,6 +5526,34 @@ class MIAApplication:
         date_str = str(arguments.get("date", "") or "").strip() or None
         entry = context.real_estate.record_rental_income(prop.property_id, amount=float(amount), date_str=date_str)
         return f"Recorded {money(entry.amount, '.2f')} rental income for '{prop.name}'."
+
+    @staticmethod
+    def _action_record_property_sale(context: AppContext, arguments: dict) -> str:
+        """Assistant tool `record_property_sale`: records a property as sold (price, costs, date) and says what it came
+        to, the gain as an estimate (core/real_estate_manager.sale_summary). Returns the reply in words (a missing or
+        unknown name, no price, or a property already sold says so, nothing changes)."""
+        from core.real_estate_manager import sale_summary
+
+        property_name = str(arguments.get("property_name", "")).strip()
+        if not property_name:
+            return "I need the property's name to record its sale."
+        try:
+            price = float(arguments.get("sale_price") or 0)
+            costs = float(arguments.get("selling_costs") or 0)
+        except (TypeError, ValueError):
+            return "I need the sale price as a number."
+        prop, error = MIAApplication._resolve_property(context, property_name)
+        if error:
+            return error
+        try:
+            sold = context.real_estate.record_sale(prop.property_id, price, str(arguments.get("date") or "").strip(),
+                                                   costs)
+        except ValueError as problem:
+            return str(problem)
+        summary = sale_summary(sold)
+        return (f"Recorded '{sold.name}' as sold for {money(sold.sale_price, ',.0f')}: about "
+                f"{money(summary['net_proceeds'], ',.0f')} after costs and the loan payoff, and an estimated gain of "
+                f"{money(summary['gain'], ',.0f')} (not a tax figure; your preparer works from the closing statement).")
 
     @staticmethod
     def _action_get_property_summary(context: AppContext, arguments: dict) -> str:

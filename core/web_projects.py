@@ -11,8 +11,11 @@ reason it serves (core/intent_manager.py) and its tasks
 (core/task_manager.py).
 
 `projects_page()` gives them underway first (Active, Planning, On Hold),
-then the finished; each with its tasks, open ones first. Changes are
-actions, so the page and voice agree and "undo that" takes each back:
+then the finished; each with its tasks, open ones first, its missions as
+cards (each opens on the Missions page) and its progress, worked out from
+both (core/mission_projects.py, DEC-0152: one source of truth, never a
+copy). Changes are actions, so the page and voice agree and "undo that"
+takes each back:
 
 - `project.add` / `project.edit` / `project.delete` (the shared record
   table in core/more_actions.py; by voice add_project, delete_project);
@@ -30,7 +33,9 @@ ORDER = {"Active": 0, "Planning": 1, "On Hold": 2, "Complete": 3}
 
 def _card(context, project, tasks_store, names: dict) -> dict:
     """One project for the page: status, due, description, money (budget, spent, left, percent, the biggest kinds of
-    spending), tools bought, the reason it serves, its tasks (open first) and its form values."""
+    spending), tools bought, the reason it serves, its tasks (open first), its missions, its progress from both, and
+    its form values."""
+    from core.mission_projects import mission_card, missions_for, progress
     from core.homestead_costs import build_cost
     from core.region import money
 
@@ -52,13 +57,16 @@ def _card(context, project, tasks_store, names: dict) -> dict:
             "tasks": [{"id": t.task_id, "title": t.title, "done": t.done, "due": t.due_date, "notes": t.notes}
                       for t in tasks],
             "tasks_done": sum(1 for t in tasks if t.done), "tasks_total": len(tasks),
+            "missions": [mission_card(context, m) for m in missions_for(context, project.project_id)],
+            "progress": progress(context, project),
             "values": {"name": project.name, "status": project.status, "due_date": project.due_date,
                        "description": project.description}}
 
 
 def projects_page(context) -> dict:
     """The Projects screen: every project, underway first (Active, Planning, On Hold) then finished, each as `_card`;
-    counts; the forms. {"available": False} without the projects store."""
+    counts (underway, open tasks, all, and each status's, for the filter tabs); the forms. {"available": False} without
+    the projects store."""
     from core.more_actions import forms
 
     projects = getattr(context, "projects", None)
@@ -72,7 +80,8 @@ def projects_page(context) -> dict:
                                                                     p.name.lower()))]
     every = forms()
     return {"available": True, "projects": cards,
-            "counts": {"underway": sum(1 for c in cards if c["status"] != "Complete"),
+            "counts": {"underway": sum(1 for c in cards if c["status"] != "Complete"), "all": len(cards),
+                       "by_status": {s: sum(1 for c in cards if c["status"] == s) for s in ORDER},
                        "open_tasks": sum(c["tasks_total"] - c["tasks_done"] for c in cards)},
             "forms": {"project": every["project"], "task": TASK_FORM}}
 

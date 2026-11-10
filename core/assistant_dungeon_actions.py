@@ -80,10 +80,11 @@ def _get_loot(context, arguments: dict) -> str:
 
 def _log_shift(context, arguments: dict) -> str:
     """Tool log_shift: proposes `dungeon.run` for a shift worked (the day looked back from), with its hours, hard-mode
-    reasons and overtime.
+    reasons, overtime, and any tips and shift differential.
     """
     params = {"date": _when(arguments.get("day"), forward=False), "hours": arguments.get("hours"),
-              "hard_mode": arguments.get("hard_mode") or "", "overtime": arguments.get("overtime") or ""}
+              "hard_mode": arguments.get("hard_mode") or "", "overtime": arguments.get("overtime") or "",
+              "tips": arguments.get("tips") or "", "differential": arguments.get("differential") or ""}
     return _run(context, "dungeon.run", params)
 
 
@@ -131,7 +132,9 @@ def register_dungeon_actions(registry: AssistantActionRegistry) -> None:
             "hours": {"type": "number", "description": "Hours worked."},
             "day": {"type": "string", "description": "today, yesterday, a weekday, or YYYY-MM-DD. Blank: today."},
             "hard_mode": {"type": "string", "description": "What made it hard, comma-separated, only if they said."},
-            "overtime": {"type": "boolean", "description": "True only for a called-in overtime shift."}},
+            "overtime": {"type": "boolean", "description": "True only for a called-in overtime shift."},
+            "tips": {"type": "number", "description": "Tips taken this shift, only if they said."},
+            "differential": {"type": "number", "description": "A shift differential per hour, only if they said."}},
             "required": ["hours"]},
         handler=_log_shift,
         trigger_phrases=("i worked", "worked today", "log my shift", "log the shift", "cleared my shift",

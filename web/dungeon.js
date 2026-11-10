@@ -48,9 +48,9 @@
   const remove = (r) => act({ kind: "dungeon.run_delete", params: { run_id: r.id } });
   const quest = (affix) => act({ kind: "dungeon.quest", params: { challenge: affix.id || affix.name } });
 
-  function clearToday(d, hoursInput, noteInput) {
+  function clearToday(d, hoursInput, noteInput, tipsInput) {
     act({ kind: "dungeon.run", params: { dungeon_id: d.id, hours: hoursInput.value, hard_mode: [...picked].join(","),
-      overtime: calledIn ? "yes" : "", note: noteInput.value } }).then((done) => { if (done) { picked.clear(); calledIn = false; } });
+      overtime: calledIn ? "yes" : "", note: noteInput.value, tips: tipsInput ? tipsInput.value : "" } }).then((done) => { if (done) { picked.clear(); calledIn = false; } });
   }
 
   // ------------------------------------------------------------ views
@@ -73,6 +73,8 @@
     const hours = el("input", { type: "number", step: "any", min: "0", inputmode: "decimal", id: "dg-hours",
       value: String(t ? t.hours : d.values.shift_hours || 8) });
     const note = el("input", { type: "text", id: "dg-note", placeholder: "Anything to remember (optional)" });
+    const tips = el("input", { type: "number", step: "any", min: "0", inputmode: "decimal", id: "dg-tips",
+      placeholder: "0" });
     const chips = page.affixes.map((a) => {
       const b = el("button", { type: "button", class: "chip-button dg-affix", "aria-pressed": String(picked.has(a.id)), title: a.line,
         onclick: () => { picked.has(a.id) ? picked.delete(a.id) : picked.add(a.id); b.setAttribute("aria-pressed", String(picked.has(a.id))); lines(); } },
@@ -100,8 +102,9 @@
       el("div", { class: "dg-affixes dg-overtime" }, boss),
       el("div", { class: "dg-fields" },
         el("label", { class: "form-row", for: "dg-hours" }, el("span", {}, "Hours"), hours),
+        el("label", { class: "form-row", for: "dg-tips" }, el("span", {}, "Tips (optional)"), tips),
         el("label", { class: "form-row", for: "dg-note" }, el("span", {}, "Note (optional)"), note)),
-      el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => clearToday(d, hours, note) }, "Run Cleared"));
+      el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => clearToday(d, hours, note, tips) }, "Run Cleared"));
   }
 
   // The canvas's boss card: overtime is the boss; what it pays, and when it starts this week.

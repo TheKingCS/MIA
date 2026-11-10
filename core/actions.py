@@ -101,6 +101,18 @@ class Proposal:
 # ------------------------------------------------------------------ the actions
 
 
+def run_as_tool(context, kind: str, params: dict) -> str:
+    """Runs an action kind for a voice tool as its screen would: describe's checks first, then execute, returning
+    what happened, or the refusal in its own words (an ActionError, or a store's ValueError). One body for every
+    assistant_*_actions module (2026-11-09: nine copies, three of which skipped describe's checks)."""
+    action = ACTION_TYPES[kind]
+    try:
+        action.describe(context, params)
+        return action.execute(context, params)
+    except ValueError as problem:  # ActionError is one
+        return str(problem)
+
+
 def _need(context, store: str):
     """A store from the context, or ActionError when this MIA doesn't have it."""
     found = getattr(context, store, None)
@@ -373,6 +385,9 @@ import core.starter_actions  # noqa: E402,F401  (starter sets from Settings)
 import core.subscriptions  # noqa: E402,F401  (the "still using it?" mark on a subscription, DEC-0054)
 import core.web_proposals  # noqa: E402,F401  (mission ideas and field captures: accept or set aside, DEC-0125)
 import core.asset_parts  # noqa: E402,F401  (the parts an asset uses, as stated links)
+import core.business_use_actions  # noqa: E402,F401  (business use of a tool, logged from its page, 2026-11-09)
+import core.saga_actions  # noqa: E402,F401  (the moments kept for the Chronicles, marked from the page, 2026-11-09)
+import core.mission_projects  # noqa: E402,F401  (a mission made part of a project, DEC-0152)
 import core.web_comms  # noqa: E402,F401  (Communications: the message limit and breaks, DEC-0129)
 import core.health_actions  # noqa: E402,F401  (Health: sleep, visits, medications, records, DEC-0129)
 import core.id_wallet  # noqa: E402,F401  (the ID wallet: taking a card out; numbers never go through an action)
@@ -413,6 +428,7 @@ import core.power_actions  # noqa: E402,F401  (Power's energy sources, DEC-0125)
 import core.toolbox_actions  # noqa: E402,F401  (the Toolbox's alarms, DEC-0125)
 import core.lab_reading_actions  # noqa: E402,F401  (the Lab's readings, DEC-0125)
 import core.routine_actions  # noqa: E402,F401  (the Household's routines added and paused, DEC-0125)
+import core.greenhouse_setup  # noqa: E402,F401  (the greenhouse setup's next step from Today, DEC-0150)
 import core.web_changes  # noqa: E402,F401  (undo.last: Recent Changes' Undo, as "undo that")
 import core.web_notifications  # noqa: E402,F401  (Notifications: read all, dismiss)
 import core.lab_actions  # noqa: E402,F401  (the development lab, DEC-0058)
@@ -588,7 +604,7 @@ def _moment(context, proposal) -> dict:
         try:
             out["done"], out["total"] = missions.group_objective_progress(mission_id)
         except Exception:
-            pass
+            log.debug("No objective progress for mission %s", mission_id, exc_info=True)
         if proposal.kind == "objective.tick":
             try:
                 index = int(proposal.params.get("index"))

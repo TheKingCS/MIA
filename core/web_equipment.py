@@ -322,7 +322,8 @@ def _asset_card(context, asset, rows: list, today: date) -> dict:
 def equipment_page(context, scope: str = "maintenance", today: Optional[date] = None) -> dict:
     """The data an equipment screen (maintenance, garage, greenhouse, real estate) shows, assembled here: its
     assets' cards (most overdue first), what needs attention, what's next (within 30 days), every task in its bucket,
-    the forms, and for maintenance the calendar of the next 60 days.
+    the forms, for maintenance the calendar of the next 60 days, and for the greenhouse its setup's step while it's
+    being set up (core/greenhouse_setup.page_card; the mission itself is in Missions).
     """
     from core.equipment_actions import form_spec
     from core.maintenance_manager import ASSET_CATEGORIES, next_occurrence_date
@@ -359,6 +360,10 @@ def equipment_page(context, scope: str = "maintenance", today: Optional[date] = 
                 calendar.append({"date": when.isoformat(), "title": task.title, "asset": by_id[task.asset_id].name,
                                  "task_id": task.task_id, "overdue": when < today})
         page["calendar"] = sorted(calendar, key=lambda c: (c["date"], c["title"]))
+    if scope == "greenhouse":
+        from core.greenhouse_setup import page_card
+
+        page["setup"] = page_card(context)
     return page
 
 
@@ -377,7 +382,8 @@ def _upkeep_this_year(context, asset, today: date, recent: int = 5) -> dict:
 def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional[dict]:
     """One asset's page: its photo, details, notes, tasks and what needs attention, its condition, quick stats and
     meter readings (each with its trend), the missions about it, its documents, what it has cost (with a budget: this year's upkeep and the
-    latest spending too), its history (undone changes left out) and its parts with what's on hand; None when it's gone.
+    latest spending too), its history (undone changes left out), its parts with what's on hand, and this year's
+    business use with its Log Use form (None without the log); None when it's gone.
     """
     from core import life_events
     from core.equipment_actions import RECORDS, form_spec
@@ -451,4 +457,7 @@ def asset_page(context, asset_id: str, today: Optional[date] = None) -> Optional
     from core.asset_parts import choices, parts_for
 
     page["parts"] = {"status": "REAL", "items": parts_for(context, asset.asset_id), "choices": choices(context)}
+    from core.business_use_actions import page_section
+
+    page["business_use"] = page_section(context, asset, today)
     return page

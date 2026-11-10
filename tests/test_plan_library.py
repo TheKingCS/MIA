@@ -8,7 +8,7 @@ calculator's counts checked by hand, plans found by name, kept and read
 from files, a shopping list against the workshop's stock, the tools, the
 homestead, garden and woodworking projects, cut lists of a person's
 own parts, and a plan's page (your size, what to buy, plan.keep /
-plan.project / plan.delete, forget_plan by voice).
+plan.project / plan.delete, forget_plan by voice), and Trade Master's hoop house and cold room.
 """
 
 from __future__ import annotations
@@ -241,3 +241,16 @@ def test_a_plans_page_works_out_your_size_and_what_to_buy_and_its_actions_undo(w
     assert tool(world, "forget_plan", name="10 x 4 raised bed") == "Let \"10 x 4 ft raised bed, 11 in tall\" go."
     assert not world.plans.plans
     assert tool(world, "forget_plan", name="raised bed").startswith("I don't have a kept plan")
+
+
+def test_a_hoop_house_and_a_cold_room_are_worked_out_in_code():
+    """A 14 x 24 ft hoop house gets a bow every 4 ft (7) on two posts each and three purlin runs; an 8 x 10 cold room
+    gets foam up to its R-values, its own circuit noted, and ends on the code note; both are reached by name."""
+    tunnel = calcs.hoop_house(14, 24)
+    assert _qty(tunnel, "steel bows") == 7 and _qty(tunnel, "ground posts") == 14
+    assert _qty(tunnel, "cross connectors") == 21
+    room = calcs.cold_room(8, 10)
+    assert "about R-36" in room.to_text() and room.notes[-1] == calcs.CODE_NOTE
+    assert sum(1 for n in room.notes if n == calcs.CODE_NOTE) == 1
+    assert structure_for("a high tunnel") == "hoop_house" and structure_for("walk-in cooler") == "cold_room"
+    assert sizes_for("hoop_house", {"size": "14 by 30"}) == {"width_ft": 14, "length_ft": 30}

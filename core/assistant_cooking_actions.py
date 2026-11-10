@@ -20,14 +20,9 @@ from core.assistant_actions import AssistantAction
 
 def _run(context, kind: str, params: dict) -> str:
     """A cook-mode action kind, checked then run, as the screen does; its own words when it can't."""
-    from core.actions import ACTION_TYPES, ActionError
+    from core.actions import run_as_tool
 
-    action = ACTION_TYPES[kind]
-    try:
-        action.describe(context, params)
-        return action.execute(context, params)
-    except (ActionError, ValueError) as problem:
-        return str(problem)
+    return run_as_tool(context, kind, params)
 
 
 def find_recipe(recipes: list, words: str):

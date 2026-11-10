@@ -1377,3 +1377,16 @@ def test_completing_a_solo_mission_still_only_credits_the_active_profile(isolate
 
     assert context.profiles.get_profile(zac.profile_id).total_xp == 100
     assert context.profiles.get_profile(faith.profile_id).total_xp == 0
+
+
+def test_setting_a_mission_aside_is_kept_in_the_history_with_its_reason(isolated_paths, tmp_path):
+    """An abandoned mission records `mission_abandoned` (its ref and reason), so "what have I set aside?" and the
+    patterns read it from the history."""
+    from core.life_events import LifeEventLog, TYPES
+
+    context = _make_context_with_profiles()
+    mission = context.missions.add_mission(name="Master Angler")
+    context.missions.update_mission(mission.mission_id, status="abandoned", abandon_reason="no time this season")
+    [event] = [e for e in LifeEventLog(None, tmp_path / "data").all_events() if e.type == "mission_abandoned"]
+    assert event.refs == [f"mission:{mission.mission_id}"] and event.payload["reason"] == "no time this season"
+    assert TYPES["mission_abandoned"] == "missions set aside"

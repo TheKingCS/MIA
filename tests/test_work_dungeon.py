@@ -1,6 +1,6 @@
 """The Dungeon (DEC-0046): work as a dungeon you loot every day. Runs and
 their loot, overtime bosses, projected and banked loot, the hard-mode
-record, and the Game Master's quests."""
+record, the Game Master's quests, and tips and shift differentials."""
 
 from datetime import date, timedelta
 
@@ -180,3 +180,29 @@ def test_the_week_counts_its_runs_cleared_out_of_all_of_them():
             R(date="2026-11-05", status="planned"), R(date="2026-11-10", status="planned"),  # next week
             R(date="2026-11-04", status="skipped")]
     assert _week_runs(runs, monday, monday + timedelta(days=6)) == {"runs_cleared": 2, "runs": 3}
+
+
+def test_tips_and_a_shift_differential_count_in_the_loot():
+    """A night shift at $2 an hour extra and $30 in tips: the differential is paid on every hour, at time and a half
+    on the overtime ones (it's part of the regular rate), and the tips are added as they are."""
+    from core.work_dungeon import Dungeon, Run, loot, run_extra
+
+    d = Dungeon("d1", "Work", hourly=20, overtime_after=40, overtime_multiplier=1.5)
+    night = Run("r", "d1", "2026-10-23", 9, differential=2, tips=30)
+    assert run_extra(d, night, 4, 5) == 2 * (4 + 5 * 1.5) + 30 == 53
+    assert loot(d, 4, 5) + run_extra(d, night, 4, 5) == 80 + 150 + 53
+    assert run_extra(d, Run("x", "d1", "2026-10-23", 8), 8, 0) == 0
+
+
+def test_a_run_cleared_with_tips_says_them_and_the_week_counts_them(work):
+    """"I worked 8 hours, $40 in tips": the approval says the tips, the run keeps them, and the week's loot holds them."""
+    from core.web_dungeon import dungeon_page
+
+    d = work.dungeon.add_dungeon("Store", hourly=15)
+    proposal = work.actions.propose(work, "dungeon.run", {"dungeon_id": d.dungeon_id, "hours": "8", "tips": "$40"})
+    assert "$40.00 in tips" in proposal.summary and "about $160.00 loot" in proposal.summary
+    said = work.actions.approve(work, proposal.proposal_id).result
+    assert "$160.00 loot ($40.00 of it tips)" in said
+    assert work.dungeon.runs[0].tips == 40
+    view = dungeon_page(work)["dungeons"][0]
+    assert view["week"]["earned"] == 160

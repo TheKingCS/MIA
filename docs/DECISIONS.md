@@ -2618,7 +2618,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   "yes, flash it"; "prepare the Pi": an SSH key, preloaded configs from the node's own templates with every comment
   kept and the SMTP password left empty, the Imager steps with the Wi-Fi password typed by him; "push the greenhouse
   to <host>": the node and its configs over SSH and its install, on a "yes, push it"); the `greenhouse.reporting`
-  loop. Not yet: the vault-to-node secret push, the live link (answer 3c), a screen (the design session's).
+  loop. The live link (answer 3c) is built too (2026-11-09: the node's dashboard and digital twin served read-only by its export server; "show me the greenhouse live", and "how's the greenhouse?" read fresh). Not yet: a screen (the design session's). The vault-to-node secret push is built (2026-11-09, below).
+  **And (2026-11-08 night):** `core/greenhouse_setup.py`, the whole setup as one ten-step sequence: "let's set up
+  the greenhouse" and "what's next?" name the step, its device, what it needs and the words to say, each step done
+  from the record (a job finished, `mcu_flashed`/`node_pushed`, PlatformIO found, the Pi prepared, the node read).
+  **And (2026-11-09):** the node's email password from the vault (`greenhouse_provision.push_secret`): "send the greenhouse its email password" names the vault login by title, "yes, send it" sends it over SSH on standard input into the node's config (owner-only), the vault never unlocked by MIA, the password never in a command, log or reply; step 8 of the setup sequence.
 - From: Zac, 2026-11-08 ("walk through and execute the steps for building out the aquaponics greenhouse ...
   understand what technologies go into it, what she is able to connect to and configure ... build it and essentially
   pass her to it, so that she can integrate and monitor everything she has set up for monitoring").
@@ -2636,3 +2640,39 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (recommended: fetching snapshots over the home network or Tailscale now, a live link later); (4) MIA monitors and
   proposes, the node acts (recommended: yes); (5) the pilot cell first (recommended: yes).
 - Related: DEC-0030, DEC-0128, DEC-0144, DEC-0145, DEC-0149
+
+### DEC-0151: What MIA runs on, and what breaks without it (the personality plan's phase 3)
+- Status: PROPOSED (built, read-only and removable, under Zac's /goal of 2026-11-09: "build it out to full
+  functionality ... without stopping for my input"; it waits on his approval like any decision)
+- Proposed by: claude, 2026-11-09
+- Decision: phase 3 of `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md` (T-0007), as `core/service_map.py`: every
+  service, device and package MIA relies on (her local model and the models that run in it, speech in and out, OCR,
+  the reference packs, her browser, private search, the internet, bank sync, Tailscale, the phone, the glasses,
+  the greenhouse node, PlatformIO, an email account), what each powers, what still works without it, and what each
+  needs, as derived DEPENDS_ON links in core/links.py's shape, kept apart from the life graph. "What breaks if
+  Ollama stops?", "what does bank sync need?" and "what do you run on?" are answered in code in a turn. Checks only
+  look (an executable on the PATH, a package installed, a store's state, OCR's and PlatformIO's own finders); nothing
+  starts a process or opens a connection.
+- To undo it: delete `core/service_map.py` and `tests/test_service_map.py`, and the `_service_reply` lines in
+  `core/assistant_turn.py`.
+- Related: DEC-0057 (status per capability), DEC-0067 (phase 1), DEC-0142 (core/self_knowledge.py: what she is)
+
+### DEC-0152: Projects and Missions, connected (one record each, progress derived)
+- Status: APPROVED in principle (Zac's architecture handoff, 2026-11-09: "Projects represent what the user is working
+  toward. Missions represent how MIA helps the user accomplish it."); the concrete choices below are Claude's, for
+  Zac to adjust.
+- Proposed by: zac (handoff, written with ChatGPT); built by claude, 2026-11-09
+- Decision: a mission names its project (`Mission.project_id`, which already existed); nothing is copied. A project's
+  missions are the missions naming it; both pages read the same records. `mission.project` (Part Of A Project, and by
+  voice `set_mission_project`) changes it on purpose, recorded in the history; the general edit still can't (the
+  2026-09-11 "pick it at creation" rule gave way because a mission can join a project after it exists). Project
+  progress is derived, never stored: each task done or not, each mission's share of objectives (all once completed;
+  set-aside missions don't count), weighed by `modules.projects.progress_weights` (1 and 1); Complete is 100.
+  Missions stay standalone unless joined. Guided execution is `core/mission_guide.py`: a mission shows the step it's
+  on from whatever guides it (a Trade Master job, the greenhouse setup), with the buttons that move it, so a new kind
+  of guided mission is one more guide, not a new system. The greenhouse setup's mission joins the one unfinished
+  project with "greenhouse" in its name.
+- Not done yet (the handoff's later capabilities): camera checks of progress, estimated times, pictures per project
+  and mission, mission dependencies, participants on a shared project; Zac's concept for the screens is with Muse
+  (H-0101).
+- Related: DEC-0125, DEC-0149, DEC-0150, K-0182, K-0183

@@ -354,8 +354,8 @@ class EdgeDriver(Driver):
         try:
             page.wait_for_load_state("domcontentloaded", timeout=15000)
             page.wait_for_load_state("networkidle", timeout=3000)
-        except Exception:
-            pass
+        except Exception:  # a page that never settles is still a page: go on with what loaded
+            log.debug("The page didn't settle; going on with what loaded", exc_info=True)
 
     def _ref(self, page, ref: int):
         """The element a control number points to."""
@@ -755,8 +755,9 @@ class Browsers:
         if personal is not None and person:
             try:
                 return Path(personal.folder(person)) / "browser" / "profile"
-            except Exception:
-                pass
+            except Exception:  # their own folder is where it belongs: say so when it falls back to the device's
+                log.warning("No personal folder for %s's browser profile; using the device folder", person,
+                            exc_info=True)
         return self.root / (person or "device") / "profile"
 
     def for_person(self, context) -> Browser:

@@ -196,7 +196,8 @@ def months_of(kept: dict, year: int) -> list[dict]:
 
 def chronicle_page(context, today: Optional[date] = None) -> dict:
     """This week (or the one that just ended, on a Sunday), the weeks
-    before it that have a story, and the yearly editions."""
+    before it that have a story, the yearly editions, and the moments
+    kept for the Chronicles with their marks (core/saga_actions.py)."""
     today = today or date.today()
     since = date(today.year - 1, 1, 1)
     try:
@@ -224,4 +225,7 @@ def chronicle_page(context, today: Optional[date] = None) -> dict:
         edition["months"] = months_of(kept, int(edition["id"]))
     for chapter in [this_week, *weeks, *years]:
         chapter["photos"] = photos_between(context, chapter["start"], chapter["end"])  # the memory vault's
-    return {"available": True, "as_of": today.isoformat(), "this_week": this_week, "weeks": weeks, "years": years}
+    from core.saga_actions import kept_moments
+
+    return {"available": True, "as_of": today.isoformat(), "this_week": this_week, "weeks": weeks, "years": years,
+            "kept_moments": kept_moments(context)}

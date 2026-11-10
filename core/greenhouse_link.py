@@ -10,7 +10,9 @@ the node a command.
 - **How the state arrives** (Zac's answer 3): (a) by hand, as before: the node's `home_snapshot.json` dropped in
   `homestead_snapshots/` (core/homestead_manager.py), and its `dashboard_state.json` dropped there too; (b) fetched
   over the home network or Tailscale from the node's read-only export server (`homestead/viewer/serve_exports.py`),
-  every `EVERY_MINUTES`, only from an address on the person's own network; a live link later.
+  every `EVERY_MINUTES`, only from an address on the person's own network; (c) the live link (2026-11-09): the
+  node's own dashboard and digital twin served read-only beside the exports (`live_url`, "show me the greenhouse
+  live"), and "how's the greenhouse?" read fresh when the last read is over `FRESH_SECONDS` old.
 - **What she watches** (`monitors()`): every sensor the node reports, cell by cell, with its latest value and whether
   it's stale. The node decides what exists, so a new probe on the node is a new monitor here with nothing to change.
 - **What reaches the person** (`new_alerts()`): each new critical alert from the node as urgent, each new warning as
@@ -60,8 +62,8 @@ class LinkError(RuntimeError):
 # ------------------------------------------------------------------ the store
 
 class GreenhouseLink:
-    """The link's own state: whether MIA has taken over, the node's address, the last state read and when, and the
-    alerts already raised."""
+    """The link's own state: whether MIA has taken over, the node's address, the last state read and when, the
+    alerts already raised, and where the setup sequence is (core/greenhouse_setup.py)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads the link's state from data/ (or the given folder)."""
@@ -71,7 +73,7 @@ class GreenhouseLink:
         self._load()
 
     def _load(self) -> None:
-        """Reads the state; a missing or unreadable file starts fresh (logged)."""
+        """Reads the state (the setup sequence's place too); a missing or unreadable file starts fresh (logged)."""
         self.taken_over, self.url, self.fetched_at, self.state, self.raised, self.kept = False, "", "", {}, [], {}
         try:
             raw = json.loads(self._file.read_text(encoding="utf-8")) if self._file.exists() else {}
@@ -84,6 +86,8 @@ class GreenhouseLink:
         self.state = raw.get("state") or {}
         self.raised = list(raw.get("raised") or [])[-500:]
         self.kept = dict(raw.get("kept") or {})
+        self.setup_started = bool(raw.get("setup_started"))  # the setup sequence begun (core/greenhouse_setup.py)
+        self.setup_said = list(raw.get("setup_said") or [])  # its steps the person said are done, or skipped
         self.pending: dict = {}  # a device step waiting for its yes (core/greenhouse_provision.py); never saved
 
     def reload(self) -> None:
@@ -91,11 +95,13 @@ class GreenhouseLink:
         self._load()
 
     def save(self) -> None:
-        """Writes the state atomically."""
+        """Writes the state atomically, the setup sequence's place with it."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"taken_over": self.taken_over, "url": self.url,
                                                   "fetched_at": self.fetched_at, "state": self.state,
-                                                  "raised": self.raised[-500:], "kept": self.kept}, indent=1))
+                                                  "raised": self.raised[-500:], "kept": self.kept,
+                                                  "setup_started": self.setup_started,
+                                                  "setup_said": self.setup_said}, indent=1))
 
 
 # ------------------------------------------------------------------ reading the node (pure where it can be)
@@ -321,11 +327,37 @@ _TAKE = re.compile(r"\b(?:take over|watch|monitor|connect to|hook (?:up|into)) (
 _URL = re.compile(r"\bhttps?://[\w.\-:]+\b|\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?\b")
 _HOW = re.compile(r"\b(?:how'?s|how is|status of|check on) (?:the )?greenhouse\b|\bgreenhouse status\b")
 _WHAT = re.compile(r"\bwhat (?:are you|do you) (?:watching|monitoring) in the greenhouse\b")
+_LIVE = re.compile(r"\b(?:show me|open|pull up) (?:the )?greenhouse(?:'?s)? (?:live|dashboard|twin)\b|"
+                   r"\bgreenhouse (?:live|dashboard)\b|\b(?:the )?greenhouse'?s digital twin\b")
+FRESH_SECONDS = 60  # "how's the greenhouse?" reads the node again when the last read is older than this
 
 
-def reply(context, text: str) -> Optional[str]:
+def live_url(link) -> str:
+    """The node's live dashboard (served read-only by its export server, homestead/viewer/serve_exports.py v0.2),
+    or "" when no address is set (DEC-0150 answer 3c)."""
+    url = (getattr(link, "url", "") or "").rstrip("/")
+    return f"{url}/dashboard.html" if url else ""
+
+
+def _fresh(context, link, get=None) -> str:
+    """Reads the node again for a "how's it doing?" when the last read is over FRESH_SECONDS old; says, in front of
+    the status, when it couldn't be reached (the last reading's time said with it)."""
+    if not link.url:
+        return ""
+    if link.fetched_at and (datetime.now() - datetime.fromisoformat(link.fetched_at)).total_seconds() < FRESH_SECONDS:
+        return ""
+    try:
+        fetch(context, link, get=get)
+        link.save()
+        return ""
+    except LinkError:
+        return f"I couldn't reach the node just now; this is from {link.fetched_at[11:16] or 'my last read'}. "
+
+
+def reply(context, text: str, get=None) -> Optional[str]:
     """What MIA says, in code, to "take over the greenhouse" (with the node's address, optionally), "how's the
-    greenhouse?" and "what are you watching in the greenhouse?"; None otherwise."""
+    greenhouse?" (read fresh from the node), "show me the greenhouse live" (its live dashboard's address) and "what
+    are you watching in the greenhouse?"; None otherwise."""
     link = getattr(context, "greenhouse_link", None)
     if link is None:
         return None
@@ -336,9 +368,15 @@ def reply(context, text: str) -> Optional[str]:
         if url and not url.startswith("http"):
             url = f"http://{url}" + ("" if ":" in url else ":8770")
         return take_over(context, link, url)
+    if _LIVE.search(said):
+        url = live_url(link)
+        return (f"The greenhouse's live dashboard is at {url} (the digital twin is beside it), on any device on your "
+                "network. It only shows; the node keeps control." if url else
+                "I don't have the node's address yet. Say \"take over the greenhouse at <its address>\" first.")
     if _HOW.search(said):
-        return status_line(link.state) if link.taken_over else ("I'm not watching the greenhouse yet. Say \"take "
-                                                                "over the greenhouse\" when the node is running.")
+        if not link.taken_over:
+            return "I'm not watching the greenhouse yet. Say \"take over the greenhouse\" when the node is running."
+        return _fresh(context, link, get) + status_line(link.state)
     if _WHAT.search(said):
         found = monitors(link.state)
         if not found:

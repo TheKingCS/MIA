@@ -68,7 +68,7 @@
 |---|---|---|---|---|---|
 | `connections.unlinked` | ties found only by shared words, between kinds her link graph doesn't connect yet, in 30 days | person | ≤ 3 | opens a task | `store:connections` |
 | `dev.audit_code` | places the weekly code audit found to improve | device | trend | shown, never acted on | `dev:self_audit` |
-| `dev.chronicles` | Chronicles candidates waiting | device | trend | shown, never acted on | `dev:chronicles`, `check:chronicle`, `store:saga_moments` |
+| `dev.chronicles` | Chronicles candidates waiting | device | trend | shown, never acted on | `dev:chronicles`, `check:chronicle`, `store:saga_moments`, `action:saga` |
 | `dev.coder` | MIA's coder: shadow attempts passed | device | trend | shown, never acted on | `dev:shadow` |
 | `dev.connected` | store connections made, of those that should exist (weekly audit) | device | trend | shown, never acted on | `dev:self_audit` |
 | `dev.council_cost` | calls per council turn | device | trend | shown, never acted on | `dev:council` |

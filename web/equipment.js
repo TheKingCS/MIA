@@ -150,6 +150,19 @@
     ].filter(Boolean);
   }
 
+  // While the greenhouse is being set up (core/greenhouse_setup.page_card), the step you're on heads What's Next:
+  // what it is, why now, what it needs and what to say, and its mission (each step is ticked in Missions).
+  function setupCard() {
+    const s = page.setup;
+    if (!s) return null;
+    return el("section", { class: "glass gh-needs", "aria-label": "Setting up" },
+      el("p", { class: "pw-label" }, "Setting Up · Step " + s.step + " Of " + s.of),
+      el("div", { class: "gh-need" }, el("div", {}, el("span", { class: "gh-what" }, s.title),
+        el("span", { class: "dim" }, s.why + " You'll need: " + s.needs + "."),
+        el("span", { class: "dim" }, s.say.startsWith("(") ? s.say : "Say \u201c" + s.say + "\u201d.")),
+        s.mission_id ? el("a", { class: "btn btn-ghost btn-small", href: "missions.html" }, "Mission") : null));
+  }
+
   function drawGreenhouse(BUCKETS, views) {
     const c = growPage.counts;
     $("strip").replaceChildren(
@@ -160,7 +173,8 @@
       today: greenhouseToday,
       assets: () => assetsView().concat(...BUCKETS.filter(([id]) => id !== "past_due" && page.tasks.some((r) => r.bucket === id)).map(([id]) => views[id]())),
       growing: grow.views.growing, water: grow.views.water,
-      experiments: grow.views.experiments, harvests: grow.views.harvests, next: grow.views.next,
+      experiments: grow.views.experiments, harvests: grow.views.harvests,
+      next: () => [setupCard()].concat(grow.views.next()).filter(Boolean),
     };
     const TABS = [["today", "Today"], ["assets", "Assets"], ["growing", "Growing"], ["water", "Water"], ["experiments", "Experiments"], ["harvests", "Harvests"], ["next", "What's Next"]];
     if (!all[tab]) tab = "today";

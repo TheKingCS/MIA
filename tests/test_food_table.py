@@ -144,3 +144,11 @@ def test_a_can_size_saved_in_the_name_still_counts():
     result = food_table.recipe_nutrition([{"name": "(10 oz) can Rotel", "quantity": 1, "unit": ""}], 1)
     assert result["complete"] and result["matched"][0]["grams"] == 284
     assert ingredient_key("(10 oz) can Rotel") == ingredient_key("Rotel")
+
+
+def test_a_row_s_portions_are_read_and_one_without_grams_is_left_out():
+    """"1 cup:240|1 tbsp:15" gives both in grams; a part with no colon or no number is left out, the rest kept."""
+    from core.food_table import portions_of
+
+    assert portions_of("1 cup:240|1 tbsp:15|bad|1 oz:about 28") == {"1 cup": 240.0, "1 tbsp": 15.0}
+    assert portions_of("") == {} and portions_of(None) == {}

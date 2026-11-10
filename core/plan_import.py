@@ -127,6 +127,59 @@ def _clean_line(raw: str) -> str:
     return re.sub(r"^[^\w\-•*\[(]+(?=\w)", "", line).strip()
 
 
+def _goal_line(plan: dict, name: str, value: str) -> bool:
+    """Pure logic. One "Label: value" line under GOALS into the plan's targets (and its units); False when the label
+    isn't one MIA knows. A per-pound rate is caught by parse() first, since it needs its own words back."""
+    targets = plan.setdefault("targets", {})
+    if "protein" in name:
+        targets["protein_g"] = _number(value) or ""
+    elif "calor" in name or name in ("kcal", "energy"):
+        targets["calories"] = _number(value) or ""
+    elif "weigh" in name and ("day" in name or "in" in name.split()):
+        targets["weigh_in_days"] = value
+    elif "weight" in name or name == "goal":
+        targets["target_weight"] = _number(value) or ""
+        unit = re.search(r"\b(lb|lbs|pounds?|kg|kilos?)\b", value, re.IGNORECASE)
+        if unit:
+            plan["units"] = "kg" if unit.group(1).lower().startswith("k") else "lb"
+        by = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", value)
+        if by:
+            targets["target_date"] = by.group(1)
+    elif "workout" in name or "session" in name:
+        targets["workouts_per_week"] = _number(value) or ""
+    elif "unit" in name:
+        plan["units"] = "kg" if value.lower().startswith("k") else "lb"
+    elif "date" in name or name in ("by", "goal date"):
+        targets["target_date"] = value
+    elif "approach" in name or "method" in name:
+        targets["calorie_approach"] = value
+    else:
+        return False
+    return True
+
+
+def _meal_line(plan: dict, lunches: list, name: str, value: str) -> bool:
+    """Pure logic. One "Label: value" line under MEALS into the plan's meals (a lunch rotation into `lunches`);
+    False when the label isn't one MIA knows."""
+    meals = plan.setdefault("meals", {})
+    none = value.lower() in ("none", "no", "-")
+    if "lunch" in name and ("pack" in name or "work" in name):
+        meals["packed_lunch"] = value.lower().startswith(("y", "t", "1"))
+    elif "prep" in name:
+        meals["prep_day"] = value
+    elif "rotation" in name or ("lunch" in name and "," in value) or name == "lunches":
+        lunches.extend(n.strip() for n in value.split(",") if n.strip())
+    elif name in ("diet", "style"):
+        meals.setdefault("preferences", {})["diet"] = value
+    elif "allerg" in name:
+        meals.setdefault("preferences", {})["allergies"] = "" if none else value
+    elif "dislike" in name or "don't eat" in name or "dont eat" in name or "avoid" in name:
+        meals.setdefault("preferences", {})["dislikes"] = "" if none else value
+    else:
+        return False
+    return True
+
+
 def parse(text: str) -> dict:
     """Pure logic. The text as {plan: changes for fitness.plan, recipes:
     [...], lunch_rotation: [recipe names], problems: [lines not understood]}."""
@@ -194,32 +247,9 @@ def parse(text: str) -> dict:
         key = _KEY.match(line)
         name, value = (key.group(1).lower().strip(), key.group(2)) if key else ("", "")
         if section == "goals" and key:
-            targets = plan.setdefault("targets", {})
             if re.search(r"\bper\b|/\s*(lb|kg)", value, re.IGNORECASE):
                 problems.append(raw.strip() + " (MIA needs a daily number, like 170 g)")
-            elif "protein" in name:
-                targets["protein_g"] = _number(value) or ""
-            elif "calor" in name or name in ("kcal", "energy"):
-                targets["calories"] = _number(value) or ""
-            elif "weigh" in name and ("day" in name or "in" in name.split()):
-                targets["weigh_in_days"] = value
-            elif "weight" in name or name == "goal":
-                targets["target_weight"] = _number(value) or ""
-                unit = re.search(r"\b(lb|lbs|pounds?|kg|kilos?)\b", value, re.IGNORECASE)
-                if unit:
-                    plan["units"] = "kg" if unit.group(1).lower().startswith("k") else "lb"
-                by = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", value)
-                if by:
-                    targets["target_date"] = by.group(1)
-            elif "workout" in name or "session" in name:
-                targets["workouts_per_week"] = _number(value) or ""
-            elif "unit" in name:
-                plan["units"] = "kg" if value.lower().startswith("k") else "lb"
-            elif "date" in name or name in ("by", "goal date"):
-                targets["target_date"] = value
-            elif "approach" in name or "method" in name:
-                targets["calorie_approach"] = value
-            else:
+            elif not _goal_line(plan, name, value):
                 problems.append(raw.strip())
         elif section == "training":
             if key and "day" in name and day is None:
@@ -241,20 +271,7 @@ def parse(text: str) -> dict:
         elif section == "milestones":
             plan.setdefault("milestones", []).append({"name": _item(line)})
         elif section == "meals" and key:
-            meals = plan.setdefault("meals", {})
-            if "lunch" in name and ("pack" in name or "work" in name):
-                meals["packed_lunch"] = value.lower().startswith(("y", "t", "1"))
-            elif "prep" in name:
-                meals["prep_day"] = value
-            elif "rotation" in name or ("lunch" in name and "," in value) or name == "lunches":
-                lunches.extend(n.strip() for n in value.split(",") if n.strip())
-            elif name in ("diet", "style"):
-                meals.setdefault("preferences", {})["diet"] = value
-            elif "allerg" in name:
-                meals.setdefault("preferences", {})["allergies"] = "" if value.lower() in ("none", "no", "-") else value
-            elif "dislike" in name or "don't eat" in name or "dont eat" in name or "avoid" in name:
-                meals.setdefault("preferences", {})["dislikes"] = "" if value.lower() in ("none", "no", "-") else value
-            else:
+            if not _meal_line(plan, lunches, name, value):
                 problems.append(raw.strip())
         elif section == "recipe" and recipe is not None:
             if key and name in ("ingredients", "ingredient"):

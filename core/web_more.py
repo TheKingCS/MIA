@@ -98,7 +98,9 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
     from core.region import money
 
     today = today or date.today()
-    stores = {name: getattr(context, name, None) for name in ("components", "materials", "products", "jobs", "ledger")}
+    stores = {"components": getattr(context, "components", None), "materials": getattr(context, "materials", None),
+              "products": getattr(context, "products", None), "jobs": getattr(context, "jobs", None),
+              "ledger": getattr(context, "ledger", None)}  # each named, so the self-audit sees the page reach it
     if all(s is None for s in stores.values()):
         return {"available": False}
     parts = [{"id": c.component_id, "name": c.name, "detail": " · ".join(x for x in (c.category, c.value, c.package) if x),

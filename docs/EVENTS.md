@@ -33,11 +33,11 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `notification.updated` | `core/notification_manager.py` | `gui/main_window.py` |
 | `profile.created` | `core/profile_manager.py` | `core/household_manager.py`, `core/personal_data.py` |
 | `profile.deleted` | `core/profile_manager.py` | `core/personal_data.py` |
-| `profile.email_changed` | `core/profile_manager.py` | — |
-| `profile.password_changed` | `core/profile_manager.py` | — |
-| `profile.prestiged` | `core/profile_manager.py` | — |
+| `profile.email_changed` | `core/profile_manager.py` | `core/application.py`, `core/core_runtime.py` |
+| `profile.password_changed` | `core/profile_manager.py` | `core/application.py`, `core/core_runtime.py` |
+| `profile.prestiged` | `core/profile_manager.py` | `core/progress_history.py` |
 | `profile.renamed` | `core/profile_manager.py` | `gui/main_window.py` |
-| `profile.reward_unlocked` | `core/profile_manager.py` | — |
+| `profile.reward_unlocked` | `core/profile_manager.py` | `core/progress_history.py` |
 | `profile.skill_xp_changed` | `core/skill_manager.py` | `modules/skills/module.py` |
 | `profile.switch_requested` | `gui/account_dialogs.py`, `modules/settings/module.py` | `gui/main_window.py` |
 | `profile.switched` | `core/profile_manager.py` | `core/activity_log_manager.py`, `core/personal_data.py`, `modules/web_home/module.py` |
@@ -49,4 +49,4 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 
 **Heard but never sent** (0): none.
 
-**Sent but not heard yet** (9): `dashboard.avatar_device_changed`, `device.attached`, `device.detached`, `mission.abandoned`, `profile.email_changed`, `profile.password_changed`, `profile.prestiged`, `profile.reward_unlocked`, `textbooks.updated`.
+**Sent but not heard yet** (5): `dashboard.avatar_device_changed`, `device.attached`, `device.detached`, `mission.abandoned`, `textbooks.updated`.

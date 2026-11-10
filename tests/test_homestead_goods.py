@@ -1,7 +1,8 @@
 """Homestead goods (DEC-0036): batches in kitchen units, stock with a
 made date and a sell-by, sold oldest first, leftovers tossed as a loss,
-a market day's tally read from the books, and the Builds tab's Sell First
-and Best Earner (DEC-0113)."""
+a market day's tally read from the books, the Builds tab's Sell First
+and Best Earner (DEC-0113), and cups against pounds for materials on the
+density table."""
 
 from datetime import date, timedelta
 
@@ -40,19 +41,23 @@ def test_kitchen_lines_parse_and_check_in_the_stocks_own_unit():
             self.name, self.quantity_on_hand, self.unit, self.unit_cost = name, q, unit, cost
 
     recipe = CraftRecipe(recipe_id="r", name="Hot honey", makes=12, makes_unit="jars",
-                         materials="1 cup Raw honey\n3 Chili peppers\n2 cloves Garlic\n1 cup Flour")
+                         materials="1 cup Raw honey\n3 Chili peppers\n2 cloves Garlic\n1 cup Beeswax")
     stock = [M("Raw honey", 8.2, "cups", 4.0), M("Chili peppers", 12, "", 0.25), M("Garlic", 6, "cloves", 0.1),
-             M("Flour", 5, "lb", 0.6)]
+             M("Beeswax", 5, "lb", 0.6)]
     state = check(recipe, stock, times=2)
-    honey, chili, garlic, flour = state["rows"]
+    honey, chili, garlic, wax = state["rows"]
     assert (honey["need"], honey["have"], honey["after"], honey["status"]) == (2, 8.2, 6.2, "ok")
     assert (chili["need"], chili["after"]) == (6, 6) and garlic["recipe_text"] == "4 cloves"
-    assert flour["mismatch"] and flour["status"] == "check" and not state["ready"]  # cups vs pounds: said, not guessed
+    assert wax["mismatch"] and wax["status"] == "check" and not state["ready"]  # cups vs pounds, not on the table
     assert state["makes"] == 24 and state["est_material_cost"] == round(2 * 4.0 + 6 * 0.25 + 4 * 0.1, 2)
     assert state["per_piece"] == round(state["est_material_cost"] / 24, 2)
     taken = uses(recipe, stock, 1)
     assert [(m.name, q) for m, q in taken["used"]] == [("Raw honey", 1), ("Chili peppers", 3), ("Garlic", 2)]
-    assert taken["mismatched"] == ["Flour (cup vs lb)"]
+    assert taken["mismatched"] == ["Beeswax (cup vs lb)"]
+    # Flour is on the density table (King Arthur's 120 g a cup): cups against pounds convert.
+    bread = CraftRecipe(recipe_id="b2", name="Bread", makes=1, makes_unit="loaf", materials="2 cups Flour")
+    [row] = check(bread, [M("Flour", 5, "lb", 0.6)])["rows"]
+    assert not row["mismatch"] and round(row["need"], 3) == round(2 * 236.5882365 * 0.507 / 453.59237, 3)
     assert makes_text(recipe, 2) == "24 jars" and makes_text(CraftRecipe(recipe_id="b", name="Bench"), 2) == "2 × Bench"
 
 
@@ -163,3 +168,15 @@ def test_the_best_earner_is_the_most_profit_an_hour_from_sold_builds():
             {"name": "New", "actual": {"per_hour": "", "per_hour_value": None}}]
     assert best_earner(rows) == {"name": "Boards", "per_hour_text": "$22.40/h"}
     assert best_earner(rows[2:]) is None  # nothing has earned yet
+
+
+
+def test_weight_and_volume_convert_only_for_a_material_on_the_density_table():
+    """A cup of flour is 120 g (King Arthur's chart), a pound of honey about 1.35 cups, brown sugar isn't sugar; a
+    material off the table (beeswax) still says None rather than a guess."""
+    from core.units import convert, density
+
+    assert round(convert(1, "cup", "g", "All-Purpose Flour")) == 120
+    assert round(convert(1, "lb", "cup", "raw honey"), 2) == 1.35
+    assert density("light brown sugar") == 0.9 and density("sugar") == 0.837
+    assert convert(1, "cup", "lb", "beeswax pellets") is None and convert(1, "cup", "lb") is None

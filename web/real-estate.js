@@ -25,7 +25,7 @@
   const section = (title, actions, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
   const STATUS_TONE = { "Rented": "chip-ok", "Owner Occupied": "chip-ok", "Vacant": "chip-bad", "For Sale": "chip-soon",
-    "For Rent": "chip-soon", "Under Renovation": "chip-soon" };
+    "For Rent": "chip-soon", "Under Renovation": "chip-soon", "Sold": "" };
 
   async function add() {
     const v = await form("Add a property", page.forms.property.fields, {});
@@ -38,6 +38,10 @@
   async function rent(p) {
     const v = await form("Rent from " + p.name, page.forms.rent.fields, { amount: p.rent || "" });
     if (v) act({ kind: "property.rent", params: Object.assign({ property_id: p.id }, v) });
+  }
+  async function sell(p) {
+    const v = await form("Record the sale of " + p.name, page.forms.sell.fields, {});
+    if (v) act({ kind: "property.sell", params: Object.assign({ property_id: p.id }, v) });
   }
   async function expense(p) {
     const v = await form("An expense on " + p.name, page.forms.expense.fields, {});
@@ -103,10 +107,14 @@
         .filter(Boolean).join(" · ")) : null,
       p.depreciation ? el("p", { class: "dim prop-more" }, "Depreciation " + fmt(p.depreciation.year) + " a year · " + fmt(p.depreciation.so_far)
         + " so far (straight-line estimate, not a tax figure)") : null,
+      p.sale ? el("p", { class: "dim prop-more" }, "Sold " + p.sale.date + " for " + fmt(p.sale.price) + " · about "
+        + fmt(p.sale.net_proceeds) + " after costs and the loan · gain about " + fmt(p.sale.gain)
+        + " (an estimate, not a tax figure)") : null,
       attention.length ? el("p", { class: "attention-line" }, "Needs you: " + attention.map((t) => t.title + " (" + (t.due || t.text).toLowerCase() + ")").join(", ")) : null,
       buttons(
-        btn("Record Rent", "btn-ghost", () => rent(p)),
+        p.sale ? null : btn("Record Rent", "btn-ghost", () => rent(p)),
         btn("Add Expense", "btn-ghost", () => expense(p)),
+        p.sale ? null : btn("Record Sale", "btn-ghost", () => sell(p)),
         p.asset_id ? el("a", { class: "btn btn-ghost", href: "asset.html?id=" + encodeURIComponent(p.asset_id) }, "Upkeep")
           : btn("Track upkeep", "btn-ghost", () => act({ kind: "property.track_upkeep", params: { property_id: p.id } })),
         btn("Edit", "btn-ghost", () => edit(p)),

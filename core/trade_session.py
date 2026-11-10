@@ -32,7 +32,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from core import trades
+from core import life_events, trades
 from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
@@ -240,7 +240,8 @@ class TradeStore:
 
     def _load(self) -> None:
         """Reads the session in progress, keeping only the fields it knows; sealed at rest (DEC-0126): one that won't
-        open is copied aside, logged, and means none."""
+        open is copied aside, logged, and means none. Remembers the status it read, so save() knows a session it
+        finishes from one already finished."""
         self.session: Optional[Session] = None
         try:
             raw = json.loads(open_text(self._file)) if self._file.exists() else None
@@ -249,15 +250,25 @@ class TradeStore:
             raw = None
         if raw:
             self.session = Session(**{k: v for k, v in raw.items() if k in Session.__dataclass_fields__})
+        self._saved_status = self.session.status if self.session is not None else None
 
     def reload(self) -> None:
         """Reads the file again (after undo restored it, or another surface changed it)."""
         self._load()
 
     def save(self) -> None:
-        """Writes the session atomically."""
+        """Writes the session atomically. A session this save finishes or stops is a line in the person's history
+        (`trade_finished`, `trade_stopped`, for the trades.finished loop and Natural Momentum), once: saving it again
+        finished records nothing more."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps(asdict(self.session) if self.session else None, indent=1))
+        s = self.session
+        status = s.status if s is not None else None
+        if s is not None and status in (FINISHED, STOPPED) and status != self._saved_status:
+            kind = "trade_finished" if status == FINISHED else "trade_stopped"
+            life_events.record(self, kind, f"{'Finished' if status == FINISHED else 'Stopped'}: {s.title}",
+                               payload={"id": s.item_id})
+        self._saved_status = status
 
     def live(self) -> Optional[Session]:
         """The job or diagnosis being worked now (not one finished or stopped)."""

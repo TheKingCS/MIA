@@ -66,14 +66,17 @@ def _files(root: Path = ROOT) -> list[Path]:
 
 
 def _depth(node: ast.AST) -> int:
-    """How deeply blocks nest inside a function (an if in a for in a with is 3)."""
+    """How deeply blocks nest inside a function (an if in a for in a with is 3). An elif is the same level as its
+    if, though Python's tree keeps it inside the if's else (2026-11-09: a flat chain of a dozen elifs had read as
+    nested a dozen deep)."""
     blocks = (ast.If, ast.For, ast.While, ast.With, ast.Try, ast.AsyncFor, ast.AsyncWith)
     best = 0
     for child in ast.iter_child_nodes(node):
         if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
             continue
         inner = _depth(child)
-        best = max(best, inner + 1 if isinstance(child, blocks) else inner)
+        elif_ = isinstance(node, ast.If) and isinstance(child, ast.If) and node.orelse == [child]
+        best = max(best, inner + 1 if isinstance(child, blocks) and not elif_ else inner)
     return best
 
 
@@ -278,17 +281,57 @@ BY_DESIGN: dict[str, tuple[tuple[str, ...], str]] = {
     "notifications": (("history", "links", "life_state"), "the messages themselves"),
     "online_reminders": (("history", "links", "life_state", "web"), "held only until the internet is back"),
     "saga_moments": (("history", "links", "life_state", "assistant"), "kept for the Chronicles, which tell them"),
-    "data_logger": (("history",), "sensor readings: too many, and too small, to be a life's history"),
-    "freedom_log": (("history", "life_state"), "a daily balance snapshot; the fund itself is in finances"),
-    "insights": (("history",), "what MIA noticed, kept by the gate's log, not the person's history"),
-    "training": (("history", "life_state"), "the live workout; the workout it becomes is in the workout log"),
+    "data_logger": (("history", "links"), "sensor readings: too many, and too small, to be a life's history"),
+    "freedom_log": (("history", "links", "life_state"), "a daily balance snapshot; the fund itself is in finances"),
+    "insights": (("history", "links"), "what MIA noticed, kept by the gate's log, not the person's history"),
+    "training": (("history", "links", "life_state"), "the live workout; the workout it becomes is in the workout log"),
     "plaid": (("history", "links", "life_state"), "the bank connection; what it brings in is the budget's"),
+    # 2026-11-09, from the audit's own list: each of these holds machinery or a copy, and what it stands for is
+    # already kept where it belongs.
+    "cooking": (("history", "links", "life_state"), "the live cook-mode session; the meal it becomes is the kitchen's"),
+    "connections": (("history", "links", "life_state"),
+                    "remarks she holds to raise once; the things they tie together are other stores'"),
+    "net_worth": (("history", "links", "life_state"), "a daily net worth point for Money's line; the money is finances'"),
+    "lite_captures": (("history", "links", "life_state"),
+                      "field captures waiting on a yes; an accepted one is a journal entry, which the history keeps"),
+    "finance": (("history", "links"), "snapshots imported from outside tools; their own history is theirs"),
+    "homestead": (("history", "links"), "the greenhouse node's snapshots; its events are the node's own log"),
+    "memory_vault": (("history", "links", "life_state"),
+                     "safe copies of the phone's photos: a backup of moments, not new ones"),
+    # Her tools and settings: nothing in a life depends on, serves or is blocked by them.
+    "response_style": (("links", "life_state"), "how she phrases answers for the person: a setting"),
+    "browser_routines": (("links", "life_state"), "steps she replays in her browser: her tools"),
+    "trade_session": (("links",), "the job in progress; the job is Trade Master's content, its mission links"),
+    "operating_journal": (("links",), "her running notes on how she operates: hers"),
+    "security": (("links",), "camera frames and settings"),
+    "email_drafts": (("links",), "drafts waiting on a person's Send"),
+    "alarms": (("links",), "a time to ring; nothing waits on it"),
+    "business_use": (("links",), "logged hours back up a percentage; the tool itself links as an asset"),
+    "boss_book": (("links",), "personal bests and bosses beaten, read from the stores that hold the records"),
+    "fitness": (("links",), "one plan, not records; its workouts and rhythms link"),
+    # Links are one store per household: a link names its record, so these would show to everyone in it.
+    "health": (("links",), "personal health records; a household link would name them to the household"),
+    "id_wallet": (("links",), "ID cards; a household link would name them to the household"),
+    "user_memories": (("links",), "what MIA remembers about the person; a household link would name it to others"),
+    "world_map": (("links",), "check-ins are moments on the map; a place to link is the places kind"),
+    "paths": (("links",), "a path is its program's (keyed by it, with no name of its own); its skill and goal link"),
+}
+
+
+# Events published with nothing listening on purpose, and why: never offered as findings (2026-11-09).
+EVENTS_BY_DESIGN: dict[str, str] = {
+    "device.attached": "an announcement for whatever wants it later; whoever polls gets the device lists back",
+    "device.detached": "an announcement for whatever wants it later; whoever polls gets the device lists back",
+    "dashboard.avatar_device_changed": "an announcement; the dashboard reads the chosen camera when it draws",
+    "textbooks.updated": "an announcement; Classroom reads the books each time it's opened",
+    "mission.abandoned": "the mission store records it in the history itself, with the reason",
 }
 
 
 def connection_findings(root: Path = ROOT, rows: Optional[list[dict]] = None) -> list[dict]:
     """Where her parts could reach each other: each store's missing connections (a store missing more weighs more)
-    and the events nobody hears or nobody sends, heaviest first; a connection BY_DESIGN leaves out is never one.
+    and the events nobody hears or nobody sends, heaviest first; a connection BY_DESIGN leaves out, or an unheard
+    event EVENTS_BY_DESIGN names, is never one.
     `rows` are store_connections() when already read."""
     from core import event_catalog
 
@@ -301,7 +344,7 @@ def connection_findings(root: Path = ROOT, rows: Optional[list[dict]] = None) ->
                         "file": f"core ({row['class']})", "missing": missing, "weight": len(missing) * 2,
                         "detail": "; ".join(CONNECTION_WHY[k] for k in missing)})
     orphans = event_catalog.orphans(event_catalog.catalogue(root))
-    for name in orphans["unheard"]:
+    for name in (n for n in orphans["unheard"] if n not in EVENTS_BY_DESIGN):
         out.append({"id": f"event:{name}", "kind": "unheard_event", "name": name, "file": "", "missing": ["heard"],
                     "weight": 3, "detail": f"`{name}` is published and nothing listens: who should react to it?"})
     for name in orphans["unsent"]:

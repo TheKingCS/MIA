@@ -56,14 +56,14 @@ def test_connections_leave_out_what_a_store_goes_without_on_purpose(tmp_path):
         encoding="utf-8")
     full = dict(history=True, links=True, assistant=True, life_state=True, web=True)
     rows = [{"store": "budget", "class": "BudgetManager", **full},
-            {"store": "boss_book", "class": "BossBook", **dict(full, links=False, web=False)},
+            {"store": "workout", "class": "WorkoutManager", **dict(full, links=False, web=False)},
             {"store": "passwords", "class": "PasswordVault", **dict(full, history=False, links=False, assistant=False,
                                                                      life_state=False)}]
     found = sa.connection_findings(tmp_path, rows)
     ids = [f["id"] for f in found]
-    assert "store:boss_book" in ids and "store:budget" not in ids and "store:passwords" not in ids
-    boss = next(f for f in found if f["id"] == "store:boss_book")
-    assert boss["missing"] == ["links", "web"] and "can't depend on" in boss["detail"]
+    assert "store:workout" in ids and "store:budget" not in ids and "store:passwords" not in ids
+    workout = next(f for f in found if f["id"] == "store:workout")
+    assert workout["missing"] == ["links", "web"] and "can't depend on" in workout["detail"]
     assert {"event:thing.done", "event:never.sent"} <= set(ids)
     assert sa.connected_share(rows) == round(9 / 11, 3)  # 5 + 5 wanted, and only the web page of the passwords
 
@@ -73,7 +73,7 @@ def test_the_weekly_audit_keeps_a_report_opens_tasks_once_and_writes_the_practic
     finding that already has one; the practices are written where asked."""
     _code(tmp_path)
     monkeypatch.setattr(sa, "store_connections", lambda root: [
-        {"store": "boss_book", "class": "BossBook", "history": False, "links": False, "assistant": True,
+        {"store": "workout", "class": "WorkoutManager", "history": False, "links": False, "assistant": True,
          "life_state": False, "web": True}])
     store, tasks, log = DevStore(tmp_path / "audit"), tmp_path / "tasks", tmp_path / "activity.jsonl"
     assert sa.due(store=store)
@@ -130,3 +130,14 @@ def test_the_weekly_audit_opens_a_task_for_a_doc_that_disagrees_with_the_reposit
     assert report["docs"]["findings"] == 1 and len(report["tasks"]) == 1
     task = work_tasks.load(tmp_path / "tasks")[report["tasks"][0]]
     assert task.source == "audit:doc:docs/GUIDE.md:core/gone.py" and task.files == ["docs/GUIDE.md"]
+
+
+def test_an_elif_chain_is_one_level_not_one_per_branch():
+    """Ten elifs side by side are as deep as one if; an if inside a for inside an if is still 3."""
+    import ast
+
+    chain = "def f(x):\n    if x == 0:\n        return 0\n" + "".join(
+        f"    elif x == {n}:\n        return {n}\n" for n in range(1, 11))
+    assert sa._depth(ast.parse(chain).body[0]) == 1
+    nested = "def g(x):\n    if x:\n        for y in x:\n            if y:\n                return y\n"
+    assert sa._depth(ast.parse(nested).body[0]) == 3

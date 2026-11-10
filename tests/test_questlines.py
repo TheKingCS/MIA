@@ -1,7 +1,8 @@
 """
 Questlines and seasons (DEC-0028): linked chapters, each one a mission;
 finishing a chapter opens the next with MIA's line for it; seasons follow
-the date and the hemisphere.
+the date and the hemisphere; and the same by voice
+(core/assistant_game_actions.py).
 """
 
 from datetime import date
@@ -123,3 +124,15 @@ def test_child_can_play(world):
     from core.actions import ACTION_TYPES
 
     assert all(ACTION_TYPES[k].child_ok for k in ("quest.start", "quest.add", "quest.remove"))
+
+
+def test_the_questlines_are_said_and_one_started_by_voice(world):
+    """get_questlines names the season and what's on offer; start_questline starts the one named through
+    quest.start; then it's said as being played, chapter 1; a name not on offer says what is."""
+    from core import assistant_game_actions as voice
+
+    said = voice._get_questlines(world, {})
+    assert said.startswith("It's ") and "Learn Something New" in said
+    voice._start_questline(world, {"name": "learn something new"})
+    assert world.quest_book.quests and "Learn Something New: chapter 1 of" in voice._get_questlines(world, {})
+    assert "don't see that questline" in voice._start_questline(world, {"name": "moon landing"})

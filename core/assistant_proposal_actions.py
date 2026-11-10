@@ -18,12 +18,9 @@ from core.assistant_actions import AssistantAction
 
 def _run(context, kind: str, params: dict) -> str:
     """Runs one of core/web_proposals.py's actions and says what happened (or why not)."""
-    from core.actions import ACTION_TYPES, ActionError
+    from core.actions import run_as_tool
 
-    try:
-        return ACTION_TYPES[kind].execute(context, params)
-    except ActionError as problem:
-        return str(problem)
+    return run_as_tool(context, kind, params)
 
 
 def _waiting_idea(context):

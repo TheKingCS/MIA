@@ -40,6 +40,8 @@ SAVING = "plan_saving"  # keeping a plan and starting a project: only when the p
 
 # Words a person uses for a structure -> the calculator that works it out.
 STRUCTURES = (  # in order: "deck stairs" is stairs, "bookshelf" isn't shelving, "woodshed" is a lean-to
+    (("hoop house", "hoophouse", "high tunnel", "greenhouse", "poly tunnel"), "hoop_house"),
+    (("cold room", "walk-in cooler", "walk in cooler", "produce cooler"), "cold_room"),
     (("raised bed", "garden bed", "planter", "raised garden"), "raised_bed"),
     (("cold frame", "coldframe", "hot box"), "cold_frame"),
     (("compost",), "compost_bin"),
@@ -128,6 +130,8 @@ def sizes_for(calc: str, arguments: dict) -> dict:
         "lean_to": {"depth_ft": width, "length_ft": length, "high_ft": height_ft},
         "compost_bin": {"bays": count, "size_ft": width, "height_ft": height_ft},
         "cold_frame": {"width_ft": width, "length_ft": length},
+        "hoop_house": {"width_ft": width, "length_ft": length},
+        "cold_room": {"width_ft": width, "length_ft": length, "height_ft": height_ft},
         "picnic_table": {"length_ft": length},
         "firewood_rack": {"length_ft": length or width, "height_ft": height_ft, "depth_in": depth_in},
         "stairs": {"rise_in": _number(arguments.get("rise_in")) or _number(arguments.get("height_in"))

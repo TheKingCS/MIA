@@ -6,7 +6,7 @@ Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as
 action kinds on the contract in core/actions.py: properties (add, edit,
 delete, with the concept's status, rent and location), recording rent
 received and an expense against a property (both land in Money, tagged to
-it), and "track its upkeep", which gives a property its own Maintenance
+it), recording its sale (2026-11-09: what it came to, kept with it), and "track its upkeep", which gives a property its own Maintenance
 asset so its tasks (HVAC filter, gutters) live in one place. Money and
 property: never for a child.
 """
@@ -53,6 +53,8 @@ _AMOUNT = Field("amount", "Amount", "money", True)
 _DATE = Field("date", "Date", "date")
 _WHAT = Field("description", "What it was", "text", say="for")
 _CATEGORY = Field("category", "Category", "choice", options=_EXPENSES, default="Maintenance")
+_PRICE = Field("sale_price", "Sale price", "money", True, say="for")
+_COSTS = Field("selling_costs", "Selling costs (commission, closing)", "money", default=0.0, say="costs")
 
 
 def _property(context, params):
@@ -126,8 +128,40 @@ def _upkeep(context, params) -> str:
     return f"{prop.name}'s upkeep is tracked. Add its tasks here or in Maintenance."
 
 
+def _describe_sell(context, params) -> str:
+    """The sentence the approval card shows for `property.sell` (Propose); raises ActionError when it can't be done. A
+    property already sold, or no price, is refused."""
+    from core.region import money
+
+    prop = _property(context, params)
+    if prop.sale_date:
+        raise ActionError(f"{prop.name} is already recorded as sold on {prop.sale_date}.")
+    price, costs = parse(_PRICE, params.get("sale_price")), parse(_COSTS, params.get("selling_costs")) or 0.0
+    when = parse(_DATE, params.get("date"))
+    return (f"Record {prop.name} as sold for {money(price)}" + (f" on {when}" if when else " today")
+            + (f", {money(costs)} in selling costs" if costs else "") + "; it leaves the portfolio's totals")
+
+
+def _sell(context, params) -> str:
+    """Does `property.sell` once approved, and says what happened: the cash left after costs and the loan, and the
+    gain as an estimate."""
+    from core.real_estate_manager import sale_summary
+    from core.region import money
+
+    prop = _property(context, params)
+    try:
+        sold = context.real_estate.record_sale(prop.property_id, parse(_PRICE, params.get("sale_price")),
+                                               parse(_DATE, params.get("date")) or "",
+                                               parse(_COSTS, params.get("selling_costs")) or 0.0)
+    except ValueError as problem:
+        raise ActionError(str(problem))
+    s = sale_summary(sold)
+    return (f"{sold.name} is recorded as sold: about {money(s['net_proceeds'])} after costs and the loan payoff, and "
+            f"an estimated gain of {money(s['gain'])} (not a tax figure: give your preparer the closing statement).")
+
+
 def _kinds() -> list[ActionType]:
-    """Every Real Estate action kind: the property record kinds and the rent, expense and upkeep kinds."""
+    """Every Real Estate action kind: the property record kinds and the rent, expense, upkeep and sale kinds."""
     kinds = record_kinds(RECORDS["property"])
     kinds += [
         ActionType("property.rent", "Record rent", {"property_id": "", "amount": "default: its monthly rent", "date": "",
@@ -135,6 +169,8 @@ def _kinds() -> list[ActionType]:
         ActionType("property.expense", "Add expense", {"property_id": "", "amount": "", "category": "", "date": "",
                                                        "description": ""}, _describe_expense, _expense),
         ActionType("property.track_upkeep", "Track upkeep", {"property_id": ""}, _describe_upkeep, _upkeep),
+        ActionType("property.sell", "Record the sale", {"property_id": "", "sale_price": "", "selling_costs": "",
+                                                        "date": ""}, _describe_sell, _sell),
     ]
     return kinds
 
@@ -144,9 +180,10 @@ ACTION_TYPES.update(ESTATE_ACTIONS)
 
 
 def form_spec() -> dict:
-    """The forms the Real Estate screen uses: a property's fields, rent, and an expense."""
+    """The forms the Real Estate screen uses: a property's fields, rent, an expense, and its sale."""
     forms = {"property": record_form(RECORDS["property"])}
     forms["rent"] = {"noun": "rent", "id_param": "property_id", "fields": [field_dict(f) for f in (_AMOUNT, _DATE, _WHAT)]}
     forms["expense"] = {"noun": "expense", "id_param": "property_id",
                         "fields": [field_dict(f) for f in (_AMOUNT, _CATEGORY, _DATE, _WHAT)]}
+    forms["sell"] = {"noun": "sale", "id_param": "property_id", "fields": [field_dict(f) for f in (_PRICE, _COSTS, _DATE)]}
     return forms

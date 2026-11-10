@@ -183,7 +183,7 @@ class MailSender:
             finally:
                 try:
                     client.quit()
-                except Exception:
+                except (smtplib.SMTPException, OSError):  # the server already hung up: the message went
                     pass
         except smtplib.SMTPAuthenticationError as exc:
             raise SendError("The mail server didn't accept the password. For Gmail, use an app password.") from exc

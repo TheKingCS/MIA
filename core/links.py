@@ -34,6 +34,11 @@ the same refs core/life_events.py uses). Two sources:
   waiting words (REQUIRES, DEPENDS_ON, BLOCKED_BY): those are the
   person's own "what waits on what" in the Life State. Status: DERIVED.
 
+What a link can point at is KINDS: each kind's store, the list or
+method that holds its records, and their id and name fields. A store
+may keep objects or dicts (a plan, a creation, a note, a GPS track:
+2026-11-09); `field_of` reads either.
+
 Pure logic where possible; the stores are only read.
 """
 
@@ -151,18 +156,44 @@ KINDS: dict[str, Kind] = {k.kind: k for k in (
     Kind("policy", "insurance policy", "insurance", "policies", "policy_id", "insurer"),
     Kind("customer", "customer", "business", "customers", "customer_id"),
     Kind("flock", "flock", "flock", "flocks", "flock_id"),
+    # 2026-11-09, the self-audit's links column: what a person may want to tie to a goal, project or debt.
+    Kind("subject", "class subject", "classroom", "all_subjects", "subject_id"),
+    Kind("workout_template", "workout", "workout", "all_templates", "template_id"),
+    Kind("grow_batch", "grow-lab batch", "grow_lab", "batches", "batch_id", "crop"),
+    Kind("questline", "questline", "quest_book", "quests", "quest_id"),
+    Kind("workplace", "workplace", "dungeon", "dungeons", "dungeon_id"),
+    Kind("direction", "direction", "direction", "directions", "direction_id", "title"),
+    Kind("campaign", "campaign", "living_worlds", "campaigns", "campaign_id"),
+    Kind("inbox_item", "letter or document", "inbox", "all_items", "item_id", "subject"),
+    Kind("plan", "build plan", "plans", "plans", "id", "title"),  # these four keep dicts
+    Kind("creation", "creation", "creations", "items", "id", "title"),
+    Kind("note", "note", "life_notes", "notes", "id", "what"),  # the refs their history already uses
+    Kind("track", "GPS track", "gps_tracks", "tracks", "id"),
+    Kind("shop_expense", "shop expense", "ledger", "all_expenses", "entry_id", "description"),  # history's refs
+    Kind("shop_revenue", "shop sale or income", "ledger", "all_revenue", "entry_id", "description"),
+    Kind("rhythm", "rhythm of the week", "loop", "rhythms", "rhythm_id"),
+    Kind("record_set", "household record set", "record_sets", "sets", "id"),
+    Kind("my_record_set", "record set", "my_record_sets", "sets", "id"),
+    Kind("play", "game or sport played", "recreation", "entries", "id", "what"),
+    Kind("picture", "picture MIA painted", "art", "items", "id", "description"),
 )}
 
 
+def field_of(record, attr: str, default=""):
+    """One field of a record, whether the store keeps objects or dicts (a plan, a creation, a note: 2026-11-09)."""
+    return record.get(attr, default) if isinstance(record, dict) else getattr(record, attr, default)
+
+
 def _records(context, kind: Kind) -> list:
-    """Every record of a kind, from its store (a method that lists them, or a list the store keeps); [] (logged)
-    when the store is missing or fails."""
+    """Every record of a kind, from its store (a method that lists them, or a list or dict the store keeps: a dict
+    gives its values); [] (logged) when the store is missing or fails."""
     store = getattr(context, kind.store, None)
     lister: Optional[Callable] = getattr(store, kind.lister, None)
     if lister is None:
         return []
     try:
-        return list(lister() if callable(lister) else lister)
+        found = lister() if callable(lister) else lister
+        return list(found.values() if isinstance(found, dict) else found)
     except Exception:
         log.exception("Couldn't list %s for links.", kind.kind)
         return []
@@ -176,7 +207,7 @@ def records(context, kind: str) -> list:
 
 def ref_of(kind: str, record) -> str:
     """A record's reference, "kind:id" (how links point at things, never by copying them)."""
-    return f"{kind}:{getattr(record, KINDS[kind].id_attr)}"
+    return f"{kind}:{field_of(record, KINDS[kind].id_attr)}"
 
 
 def name_of(context, ref: str) -> str:
@@ -186,8 +217,8 @@ def name_of(context, ref: str) -> str:
     if kind is None:
         return ref
     for record in _records(context, kind):
-        if str(getattr(record, kind.id_attr, "")) == record_id:
-            return str(getattr(record, kind.name_attr, "") or ref)
+        if str(field_of(record, kind.id_attr)) == record_id:
+            return str(field_of(record, kind.name_attr) or ref)
     return ref
 
 
@@ -204,12 +235,12 @@ def find(context, text: str, kinds: Optional[Iterable[str]] = None) -> tuple[Opt
     candidates = []
     for kind in (KINDS[k] for k in (kinds or KINDS) if k in KINDS):
         candidates += [(kind.kind, r) for r in _records(context, kind)
-                       if str(getattr(r, kind.name_attr, "") or "").strip()]
+                       if str(field_of(r, kind.name_attr) or "").strip()]
     cleaned = (text or "").strip()
     for article in ("the ", "my ", "our "):
         if cleaned.lower().startswith(article):
             cleaned = cleaned[len(article):]
-    match, problem = resolve_by_name(candidates, cleaned, lambda c: str(getattr(c[1], KINDS[c[0]].name_attr)),
+    match, problem = resolve_by_name(candidates, cleaned, lambda c: str(field_of(c[1], KINDS[c[0]].name_attr)),
                                      "thing")
     if match is None:
         return None, problem

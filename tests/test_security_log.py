@@ -5,7 +5,8 @@ tests.test_security_log
 The security log (core/security_log.py, docs/SECURITY.md step 3): devices said
 in words, events kept per account newest first, never a password; a sign-in
 from a new device and repeated wrong passwords alert the account's owner; and
-"sign out everywhere" ends every other session.
+"sign out everywhere" ends every other session; a password or email changed on this
+computer is logged too, a changed email alerting the owner.
 """
 
 from core import security_log as sl
@@ -38,3 +39,27 @@ def test_a_damaged_line_is_skipped_and_the_log_is_cut_back_when_long(tmp_path, m
         book.record("sign_in", "p1", f"device {i}")
     # Past 6 lines it was cut to the newest 3 (devices 3 to 5); device 6 came after.
     assert [e["device"] for e in book.entries()] == ["device 3", "device 4", "device 5", "device 6"]
+
+
+def test_a_password_or_email_changed_on_this_computer_is_logged_and_a_new_email_alerts(tmp_path):
+    """The listener writes a desktop change to the log as "this computer"; a changed sign-in email also tells the
+    owner at once; a change its caller logs itself (the web, with the device) isn't written twice."""
+    from types import SimpleNamespace
+
+    sent = []
+    notes = SimpleNamespace(notify=lambda title, message, **kw: sent.append(title))
+    context = SimpleNamespace(security_log=sl.SecurityLog(tmp_path), notifications=notes)
+    import core.personal_data as pd
+
+    real = pd.view_for
+    pd.view_for = lambda ctx, pid: ctx
+    try:
+        sl.on_account_change(context, "password_changed")(profile_id="p1")
+        sl.on_account_change(context, "email_changed")(profile_id="p1")
+        with sl.logged_by_caller():
+            sl.on_account_change(context, "password_changed")(profile_id="p1")
+    finally:
+        pd.view_for = real
+    kinds = [(e["kind"], e["device"]) for e in context.security_log.for_person("p1")]
+    assert kinds == [("email_changed", "this computer"), ("password_changed", "this computer")]
+    assert sent == ["Your MIA sign-in email changed"]

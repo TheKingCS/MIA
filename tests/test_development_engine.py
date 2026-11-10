@@ -13,7 +13,8 @@ waiting while cheap foundations remain, the checks with each step, and the catal
 read from their own build targets when they don't give one. The flock and the compost by the same rules (a coop and
 a feed bin before hens, eggs before selling them; slow compost only when nothing quicker), a step's share of the work
 it unlocks, and what a flock in the records says exists; what's on hand is never recommended again; a food stand waits for the rules. The year: preserving in summer, spring prepared in winter,
-food sold only after the cottage-food rules, a payoff months away worth less than one now. The rest are
+food sold only after the cottage-food rules, a payoff months away worth less than one now, and a short season open
+now winning over a build that can wait while goods ready to sell still win (K-0153). The rest are
 unit tests on
 the scoring, the dependency gate, compounding value and the defensive profile reader.
 """
@@ -158,7 +159,7 @@ def test_each_option_says_why_it_is_not_ready_yet():
 
 def test_the_spoken_plan_names_the_move_and_asks_for_a_budget_when_none_was_given():
     said = de.describe(de.plan(SimpleNamespace(), month=4))
-    assert said.startswith("Next on the homestead: Three-bay compost bin")
+    assert said.startswith("Next on the homestead: Raised garden bed")  # April: its window (K-0153)
     assert said.endswith("Tell me your budget and I'll weigh it in.")
     assert "budget" not in de.describe(de.plan(SimpleNamespace(), budget=200, month=4)).split("After that")[-1]
 
@@ -378,3 +379,14 @@ def test_a_stand_for_food_waits_for_the_cottage_food_rules_but_one_for_seedlings
     stand = next(c for c in catalog if c.id == "sales_stand")
     assert de.FOOD_SALE_TAG in de.needs(stand, {"eggs"}) and de.FOOD_SALE_TAG not in de.needs(stand, {"eggs",
                                                                                                     "grown_seedlings"})
+
+
+def test_a_short_season_open_now_beats_a_build_that_can_wait_and_goods_ready_to_sell_still_win():
+    """K-0153: a fresh start in spring gets the raised bed (its season closes for nine months) and in summer the
+    compost bin (buildable any month); with jars put up in September, checking the rules to sell them still comes
+    before a cold frame."""
+    cat = de.homestead_catalog()
+    assert [de.next_step(DevelopmentProfile(month=m), cat)["recommend"]["id"] for m in (3, 5, 7, 11)] == [
+        "raised_bed", "raised_bed", "compost_bin", "compost_bin"]
+    jars = _FOUNDATIONS | {"canning_setup", "pantry_stock", "sales_stand"}
+    assert de.next_step(DevelopmentProfile(month=9), cat, jars)["recommend"]["id"] == "cottage_food_check"

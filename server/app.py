@@ -2777,7 +2777,9 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Your current password isn't right.")
         if len(body.new or "") < MIN_PASSWORD:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Pick a password of at least {MIN_PASSWORD} characters.")
-        with app.state.turn_lock:
+        from core.security_log import logged_by_caller
+
+        with app.state.turn_lock, logged_by_caller():  # logged below with the device, not again by the listener
             context.profiles.set_password(profile_id, body.new)
         this = credentials.credentials if credentials is not None else ""
         for token in [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this]:

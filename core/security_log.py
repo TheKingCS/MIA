@@ -11,8 +11,12 @@ recovery code changes, phones linked, and "sign out everywhere". Each says which
 undo log: "undo that" can't erase a sign-in. It never holds a password, a token or a code; a name tried that matches
 no account is kept cut short. The newest KEEP lines are kept.
 
-**Alerts.** A sign-in from a device this account hasn't used before, and the first wait after repeated wrong
-passwords, each tell the account's owner at once (a direct notification, like an alarm: they're about their
+**Changes made anywhere.** A password or sign-in email changed on this computer (not through the web, which logs
+its own with the device) reaches the log through the event bus (`on_account_change`, wired in core/application.py),
+so a change made at the desktop is never missing from it (2026-11-09).
+
+**Alerts.** A sign-in from a device this account hasn't used before, the first wait after repeated wrong
+passwords, and a changed sign-in email each tell the account's owner at once (a direct notification, like an alarm: they're about their
 safety, not the daily message limit's kind of message), with what to do if it wasn't them.
 """
 
@@ -20,6 +24,7 @@ from __future__ import annotations
 
 import json
 import threading
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -31,10 +36,12 @@ log = get_logger(__name__)
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 KEEP = 5000
 KINDS = ("sign_in", "sign_in_failed", "waiting", "session_ended", "signed_out", "signed_out_everywhere",
-         "password_changed", "recovery_code", "phone_linked", "two_step_on", "two_step_off", "data_key_unopened", "data_key_restored", "data_key_shown", "data_exported")
+         "password_changed", "recovery_code", "phone_linked", "two_step_on", "two_step_off", "data_key_unopened", "data_key_restored", "data_key_shown", "data_exported",
+         "email_changed")
 WORDS = {"sign_in": "Signed in", "sign_in_failed": "Wrong password", "waiting": "Too many wrong passwords: made to wait",
          "session_ended": "Session ended (unused too long)", "signed_out": "Signed out",
          "signed_out_everywhere": "Signed out everywhere", "password_changed": "Password changed",
+         "email_changed": "Sign-in email changed",
          "recovery_code": "New recovery code made", "phone_linked": "A phone linked to this computer",
          "two_step_on": "Two-step sign-in turned on", "two_step_off": "Two-step sign-in turned off",
          "data_key_unopened": "The key to MIA's sealed files couldn't be opened",
@@ -123,6 +130,42 @@ class SecurityLog:
         """Whether this account has signed in from this device before."""
         return any(e.get("kind") == "sign_in" and e.get("profile_id") == profile_id and e.get("device") == device
                    for e in self.entries())
+
+
+_local = threading.local()
+
+
+@contextmanager
+def logged_by_caller():
+    """Inside it, an account change the caller writes to the log itself (the web, which knows the device) isn't
+    written again by the event bus's listener."""
+    _local.depth = getattr(_local, "depth", 0) + 1
+    try:
+        yield
+    finally:
+        _local.depth -= 1
+
+
+def on_account_change(context, kind: str):
+    """An event bus handler for `profile.password_changed` / `profile.email_changed`: writes the change to the log as
+    made on this computer (unless its caller logs it, `logged_by_caller`), and for a changed sign-in email tells the
+    owner at once, since it's how an account is taken over."""
+    def handle(data=None, **kwargs) -> None:
+        """Logs one change (never fails what changed it)."""
+        if getattr(_local, "depth", 0):
+            return
+        profile_id = (data or {}).get("profile_id") if isinstance(data, dict) else kwargs.get("profile_id")
+        book = getattr(context, "security_log", None)
+        try:
+            if book is not None:
+                book.record(kind, profile_id, "this computer")
+        except Exception:
+            log.exception("Couldn't write %s to the security log.", kind)
+        if kind == "email_changed":
+            alert(context, profile_id, "Your MIA sign-in email changed",
+                  "The email you sign in with was changed on this computer. If it wasn't you, change your password "
+                  "and sign out everywhere from Settings, Sign-ins and Security.")
+    return handle
 
 
 def alert(context, profile_id: Optional[str], title: str, message: str) -> None:

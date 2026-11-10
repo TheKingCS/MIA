@@ -127,7 +127,9 @@ def _wins(context, people: list, since: date, until: date) -> dict[str, int]:
 
         logs += [LifeEventLog(context, _profiles_dir() / p.profile_id) for p in people]
     except Exception:
-        pass
+        from core.logger import get_logger
+
+        get_logger(__name__).exception("Couldn't read the party's own histories")
     wins = set(WINS) | {"questline_finished", "explored", "caught_up", "skill_practice", "training_done"}
     for log_ in logs:
         if log_ is None:

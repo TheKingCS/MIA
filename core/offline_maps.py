@@ -191,7 +191,9 @@ def _cut(context, params) -> str:
             try:
                 notifications.notify("🗺 Offline map", said, source="maps")
             except Exception:
-                pass
+                from core.logger import get_logger
+
+                get_logger(__name__).exception("Couldn't show the offline map's notification")
     threading.Thread(target=run, name="mia-map-cut", daemon=True).start()
     return f"Cutting {name}: it'll be on the map in a minute (you'll get a note)."
 

@@ -326,7 +326,7 @@ def remember_command(context, text: str) -> Optional[str]:
         if is_child(context, person_id(context)):
             return None
     except Exception:
-        pass
+        log.exception("Couldn't check whether the saga's reader is a child")
     if m:
         said = (m.group(1) or m.group(2) or "").strip()
         asked = replied = ""

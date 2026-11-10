@@ -1,7 +1,7 @@
 """
 Location quests (DEC-0028 #13): places with what arriving does; the phone
 only gets them when the person switched noticing on; arriving records it
-and clears the map's fog there.
+and clears the map's fog there; and the same by voice (core/assistant_game_actions.py).
 """
 
 import pytest
@@ -63,3 +63,17 @@ def test_just_remind_me():
 
     a = arrival(Place("x", "Library", 0, 0, note="Return the books"))
     assert a == {"say": "📍 You're at Library. Return the books", "open": "", "label": "OK"}
+
+
+def test_places_are_listed_and_an_arrival_said_by_voice(world):
+    """list_places names each place and what arriving does; "I'm at the gym" runs place.arrive by the name said,
+    counts the visit and clears the fog there; an unknown name says so."""
+    from core import assistant_game_actions as voice
+
+    assert "haven't saved any places" in voice._list_places(world, {})
+    do(world, "place.add", name="Gym", lat=40.0, lon=-105.0, on_arrive="Start My Workout")
+    assert voice._list_places(world, {}) == "Your places: Gym (start my workout)."
+    assert "workout" in voice._arrive_place(world, {"name": "the gym"})
+    assert world.places.places[0].arrivals == 1 and world.world_map.checkins[0].label == "Gym"
+    assert "Gym (start my workout, 1 visit)" in voice._list_places(world, {})
+    assert "don't have a place" in voice._arrive_place(world, {"name": "the moon"})

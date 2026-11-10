@@ -58,6 +58,7 @@ from core.map_tile_cache import MapTileCache  # noqa: E402
 from core.material_manager import MaterialManager  # noqa: E402
 from core.memory_manager import MemoryManager  # noqa: E402
 from core.mission_manager import MissionManager  # noqa: E402
+from core.recurring_mission_manager import RecurringMissionManager  # noqa: E402
 from core.skill_manager import SkillManager  # noqa: E402
 from core.module_manager import ModuleManager  # noqa: E402
 from core.music_manager import MusicManager  # noqa: E402
@@ -122,6 +123,7 @@ def main() -> int:
     # core/application.py.
     context.skills = SkillManager(context)
     context.missions = MissionManager(context)
+    context.recurring_missions = RecurringMissionManager(context)  # Household's routines read it
     context.calendar = CalendarManager(context)
     context.alarms = AlarmManager(context)
     context.journal = JournalManager(context)

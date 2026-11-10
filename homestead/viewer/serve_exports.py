@@ -1,6 +1,6 @@
 """
 MIA Homestead — Read-only export server for MIA (DEC-0150)
-v0.1
+v0.2
 
 The node's half of "take over the greenhouse": it serves exactly two exports over HTTP, read-only, on the address
 you give it (the node's home-network or Tailscale address): viewer/home_snapshot.json (the glance-level summary) and
@@ -10,7 +10,11 @@ minutes, for when main.py isn't running (never both at once: they'd write the sa
 command, a write or any other path. Control stays on this node and its safety MCU (docs/SAFETY_SPEC.md).
 
 Zac chose the transport (2026-11-08, DEC-0150 answer 3): the snapshot by hand still works (drop the file in MIA's
-homestead_snapshots/ folder), MIA fetching it over the network now, a live link later.
+homestead_snapshots/ folder), MIA fetching it over the network, and (v0.2, 2026-11-09) the live link: the node's own
+read-only viewer pages served the same way (`PAGES`: the dashboard, the digital twin, their shared nav, and the twin's
+layout file), so "show me the greenhouse live" opens the node's dashboard on its own data from any device on the
+network. Each is an exact file named in code; no request path is ever joined to a folder, and config/ is never
+served except layout.json (the greenhouse's shape, nothing secret).
 
 Usage:
     python viewer/serve_exports.py --bind 100.x.y.z --port 8770              (main.py running: serve its exports)
@@ -25,12 +29,25 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SERVED = ("home_snapshot.json", "dashboard_state.json")
+# The live link's read-only pages: request path -> (the file, under this node, and its type). Exact files only.
+PAGES = {
+    "dashboard.html": (HERE / "dashboard.html", "text/html; charset=utf-8"),
+    "digital_twin.html": (HERE / "digital_twin.html", "text/html; charset=utf-8"),
+    "nav.js": (HERE / "nav.js", "application/javascript; charset=utf-8"),
+    "config/layout.json": (HERE.parent / "config" / "layout.json", "application/json"),
+}
 
 
 def allowed(path: str):
     """The one export file a request path names, or None: only the two exports, nothing else, ever."""
     name = (path or "").split("?", 1)[0].lstrip("/")
     return name if name in SERVED else None
+
+
+def page(path: str):
+    """The live link's page a request path names, as (file, content type), or None. "/" is the dashboard."""
+    name = (path or "").split("?", 1)[0].lstrip("/") or "dashboard.html"
+    return PAGES.get(name)
 
 
 def refresh(db_path: str, out_dir: Path) -> None:
@@ -43,20 +60,22 @@ def refresh(db_path: str, out_dir: Path) -> None:
 
 
 def make_handler(out_dir: Path):
-    """A request handler that serves the two exports from out_dir, and refuses everything else."""
+    """A request handler that serves the two exports from out_dir and the live link's pages, and refuses everything
+    else."""
     class Exports(BaseHTTPRequestHandler):
-        """GET the two exports; any other method or path is refused."""
+        """GET the two exports or a live-link page; any other method or path is refused."""
 
         def do_GET(self):  # noqa: N802 (http.server's name)
-            """Serves an export, or 404."""
+            """Serves an export or a live-link page, or 404."""
             name = allowed(self.path)
-            target = out_dir / name if name else None
+            target, kind = (out_dir / name, "application/json") if name else (page(self.path) or (None, ""))
             if target is None or not target.is_file():
                 self.send_error(404)
                 return
             body = target.read_bytes()
             self.send_response(200)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", kind)
+            self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)

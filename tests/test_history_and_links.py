@@ -75,7 +75,7 @@ def test_a_decorated_store_method_records_its_change(tmp_path):
 
 def test_every_link_kind_points_at_a_real_store_list_and_fields():
     """Each kind's store is one MIA builds, its lister is a method or list the store has, and its records have the
-    id and name fields named."""
+    id and name fields named: a dataclass's fields, or for a store that keeps dicts, the keys it writes."""
     from core.personal_data import HOUSEHOLD_STORES, PERSONAL_STORES
 
     classes = dict(PERSONAL_STORES + HOUSEHOLD_STORES)
@@ -88,8 +88,8 @@ def test_every_link_kind_points_at_a_real_store_list_and_fields():
             continue
         source = inspect.getsource(inspect.getmodule(cls))
         assert f"def {kind.lister}(" in source or f"self.{kind.lister}:" in source, kind.kind
-        assert f"    {kind.id_attr}: str" in source, kind.kind
-        assert f"    {kind.name_attr}: str" in source, kind.kind
+        for attr in (kind.id_attr, kind.name_attr):
+            assert f"    {attr}: str" in source or f'"{attr}": ' in source, (kind.kind, attr)
 
 
 def test_the_history_refs_match_the_link_kinds():

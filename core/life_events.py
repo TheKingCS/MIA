@@ -107,12 +107,29 @@ TYPES = {
     "quest_assigned": "fictional quests set",
     "quest_completed": "fictional quests finished",
     "campaign_turn": "turns played (fictional)",
+    "mission_abandoned": "missions set aside",
+    "trade_finished": "jobs walked through to the end",
+    "trade_stopped": "jobs stopped partway",
+    "property_sold": "properties sold",
+    "mcu_flashed": "greenhouse safety firmware flashed",
+    "node_pushed": "greenhouse node installs",
+    "node_secret_sent": "greenhouse node email set up",
+    "sleep_logged": "nights of sleep logged",
+    "visit_added": "health visits noted",
+    "medication_added": "medications or supplements added",
+    "health_record_added": "health records added",
+    "card_added": "cards added to the wallet",
+    "card_removed": "cards taken out of the wallet",
+    "prestiged": "prestige tiers reached",
+    "mission_project_set": "missions made part of a project",
+    "mission_project_cleared": "missions taken out of a project",
+    "reward_unlocked": "rewards unlocked",
 }
 # Kept for audit, never shown in a feed (wins, "what happened?").
 AUDIT_ONLY = frozenset({"safety_escalation"})
 # Money: never shown to a child account (core/child_accounts.py).
 MONEY_TYPES = frozenset({"bill_paid", "income_received", "expense_added", "income_added", "debt_payment",
-                         "rent_received", "property_expense", "imported", "insurance_switched"})
+                         "rent_received", "property_expense", "imported", "insurance_switched", "property_sold"})
 # What counts as getting something done ("what did I get done?").
 WINS = ("bill_paid", "debt_payment", "mission_completed", "workout_logged", "played", "maintenance_done", "task_done",
         "project_completed", "rent_received", "income_received", "meal_logged", "build_finished", "harvest",

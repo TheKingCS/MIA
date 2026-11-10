@@ -215,8 +215,8 @@ def finish_teaching(browser, store: BrowserRoutines) -> str:
         return "I wasn't learning anything just now."
     try:
         browser._driver().on_record(None)
-    except Exception:
-        pass
+    except Exception:  # the window may already be gone; the routine is kept either way
+        log.debug("Couldn't stop the browser's recording", exc_info=True)
     _note_expect(browser, teaching["steps"])
     browser.teaching = None
     if not teaching["steps"]:

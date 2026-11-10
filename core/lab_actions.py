@@ -31,7 +31,9 @@ def _tell(context, title: str, message: str) -> None:
         try:
             notifications.notify(title, message, source="lab")
         except Exception:
-            pass
+            from core.logger import get_logger
+
+            get_logger(__name__).exception("Couldn't show the lab's notification")
 
 
 def _background(context, title: str, work) -> None:

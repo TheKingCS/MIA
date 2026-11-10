@@ -72,9 +72,10 @@ def _rarity(index: int) -> dict:
 
 def missions_page(context, today: Optional[date] = None) -> dict:
     """The data the Missions screen shows, assembled here (the web only draws it): today's fitness missions made first, then each mission's card
-    (objectives and who each is for, progress, skill rewards, the asset, task or recipes it's tied to, its streak),
-    the skills to pick from, the forms, the person's level, and MIA's mission idea waiting for a yes or no
-    (core/web_proposals.py).
+    (objectives and who each is for, progress, skill rewards, the asset, task or recipes it's tied to, its streak,
+    the project it's part of and, while something guides it, the step it's on: core/mission_projects.py and
+    core/mission_guide.py, DEC-0152), the skills and projects to pick from, the forms, the person's level, and MIA's
+    mission idea waiting for a yes or no (core/web_proposals.py).
     """
     from core.mission_actions import ABANDON_LABELS, RECORDS, form_spec, is_mine
 
@@ -94,6 +95,10 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     skills = getattr(context, "skills", None)
     page["skills"] = [{"id": s.skill_id, "name": f"{s.icon} {s.name}"} for s in
                       sorted(skills.all_skills(), key=lambda s: (s.category, s.name))] if skills is not None else []
+    from core.mission_guide import guide_for
+    from core.mission_projects import project_choices, project_of
+
+    page["projects"] = project_choices(context)
     names = {p.profile_id: p.name for p in context.profiles.list_profiles()} if getattr(context, "profiles", None) else {}
     pathway_of = _pathway_steps(context, pid)
     recurring = getattr(context, "recurring_missions", None)
@@ -119,6 +124,7 @@ def missions_page(context, today: Optional[date] = None) -> dict:
         streak = recurring.current_streak_for_template(m.recurring_template_id, today) \
             if recurring is not None and m.recurring_template_id and m.recurring_kind == "daily" else None
         mine = missions.individual_objective_progress(m.mission_id, pid) if pid and m.participant_profile_ids else None
+        project = project_of(context, m)
         return {
             "id": m.mission_id, "name": m.name, "icon": m.icon, "summary": m.summary, "area": m.region,
             "difficulty": m.difficulty, "type": m.mission_type, "status": m.status,
@@ -133,6 +139,8 @@ def missions_page(context, today: Optional[date] = None) -> dict:
             "pathway": pathway_of.get(m.mission_id),
             "asset": {"id": asset.asset_id, "name": asset.name} if asset is not None else None,
             "task": task.title if task is not None else None, "unlocks_recipes": recipes,
+            "project": {"id": project.project_id, "name": project.name} if project is not None else None,
+            "guide": guide_for(context, m) if m.status == "active" else None,
             "updated": (m.updated_at or m.created_at or "")[:10],
             "values": {f.name: getattr(m, f.name) for f in RECORDS["mission"].fields},
         }

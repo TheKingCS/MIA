@@ -178,7 +178,8 @@ def _status(monkeypatch, gaps=None, failures=()):
 def test_a_boundary_by_design_is_not_partial_but_a_missing_piece_is(monkeypatch):
     rows, _ = _status(monkeypatch)
     assert rows["compliance"]["status"] == "implemented" and "never files" in rows["compliance"]["limit"]
-    assert rows["dungeon"]["status"] == "partial" and "yet" in rows["dungeon"]["why"]
+    assert rows["power"]["status"] == "partial" and "yet" in rows["power"]["why"]
+    assert rows["dungeon"]["status"] == "implemented"  # tips and differentials counted (2026-11-09)
 
 
 def test_what_broke_this_week_is_malfunctioning_and_said_as_inferred(monkeypatch):

@@ -258,10 +258,11 @@ class CraftRecipeBook:
 
 def _stock_amount(line: Line, quantity: float, material) -> Optional[float]:
     """Pure logic. `quantity` of the line in the material's own unit, or
-    None when they can't be compared (cups against pounds)."""
+    None when they can't be compared (cups against pounds of something not
+    on core/units.DENSITIES; flour, sugar, honey and oils convert)."""
     if material is None:
         return quantity
-    return convert(quantity, line.unit, material.unit or "")
+    return convert(quantity, line.unit, material.unit or "", getattr(material, "name", "") or line.name)
 
 
 def check(recipe: CraftRecipe, materials: list, times: int = 1) -> dict:

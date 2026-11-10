@@ -151,8 +151,8 @@
       page.documents.length ? el("div", { class: "rows" }, page.documents.map(documentRow)) : el("p", { class: "dim" }, "Manuals, receipts, warranties: add them here, or send them to MIA's inbox."))],
     costs: () => {
       const c = page.costs;
-      if (!c) return [card("Costs", el("p", { class: "dim" }, "Costs need Money on this MIA."))];
-      return [card("Cost of owning it",
+      if (!c) return [card("Costs", el("p", { class: "dim" }, "Costs need Money on this MIA.")), businessUse()];
+      return [businessUse(), card("Cost of owning it",
         el("div", { class: "money-figures" },
           figure("Bought for", fmt(c.purchase)), figure("Upkeep", fmt(c.upkeep)), figure("Total", fmt(c.total)),
           c.per_hour != null ? figure("Per hour (" + c.hours + " h)", fmt(c.per_hour)) : null),
@@ -187,6 +187,25 @@
       first.action ? el("button", { type: "button", class: "btn btn-big btn-green", onclick: () => done(first) },
         first.action.asks_meter ? "Done · Asks the " + (first.unit || "reading") : "Done") : null,
       rest.length ? el("div", { class: "rows" }, rest.map((r) => taskRow(r, true))) : null)];
+  }
+  // Business use this year (core/business_use_actions.py): the worksheet's figures in brief and the jobs logged,
+  // each with Remove; Log Use is asset.business_use_log, the same as telling MIA "I mowed the duplex for 2 hours".
+  async function logUse() {
+    const values = await form("Log use: " + page.name, page.business_use.form, {});
+    if (values) act({ kind: "asset.business_use_log", params: Object.assign({ asset_id: page.id }, values) });
+  }
+  function businessUse() {
+    const b = page.business_use;
+    if (!b) return null;
+    return card("Business use, " + b.year, btn("Log use", "btn-amber", logUse),
+      b.logged ? el("div", { class: "money-figures" }, b.figures.map((f) => figure(f.label, f.value)))
+        : el("p", { class: "dim" }, "Using it for paid work? Log the hours (or miles) and who it was for, and MIA works out the business share."),
+      b.note ? el("p", { class: "dim" }, b.note) : null,
+      b.jobs.length ? el("div", { class: "rows" }, b.jobs.map((j) => el("div", { class: "row money-row" },
+        el("div", {}, el("div", { class: "row-title" }, j.amount + " " + j.purpose + (j.for ? " · " + j.for : "")),
+          el("div", { class: "row-sub" }, day(j.date) + (j.note ? " · " + j.note : ""))),
+        el("div", { class: "row-meta" }, btn("Remove", "btn-ghost", () => act(j.remove)))))) : null,
+      el("p", { class: "dim" }, "Records and arithmetic, not tax advice."));
   }
   function spentLately() {
     const c = page.costs;

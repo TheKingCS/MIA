@@ -9,7 +9,7 @@
   "use strict";
   const { el } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["weeks", "Weekly"], ["years", "Yearly"]];
+  const TABS = [["weeks", "Weekly"], ["years", "Yearly"], ["kept", "Kept"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "weeks";
 
@@ -50,6 +50,7 @@
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
+    if (tab === "kept") return drawKept();
     const list = tab === "years" ? page.years : [page.this_week, ...page.weeks];
     const [first, ...rest] = list;
     $("panel").replaceChildren(...[first ? lead(first) : null,
@@ -58,6 +59,18 @@
         el("summary", {}, el("span", {}, c.name), el("span", { class: "dim" }, c.title)), chapter(c, false))),
       el("p", { class: "dim" }, tab === "years" ? "The yearly edition grows all year and is finished on Dec 31."
         : "A new chapter is ready every Sunday. A quiet week is a quiet week, never a failure.")].filter(Boolean));
+  }
+
+  // The moments kept for the Chronicles ("remember this for the Chronicles"), each private until marked; the
+  // buttons are saga.mark (core/saga_actions.py), the same as saying "keep that private".
+  function drawKept() {
+    const kept = page.kept_moments || [];
+    $("panel").replaceChildren(...(kept.length ? kept.map((m) => el("div", { class: "glass chron-row" },
+      el("p", {}, m.summary),
+      el("p", { class: "dim" }, m.id + " · " + (m.at || "").slice(0, 10) + " · " + m.privacy_text),
+      el("div", { class: "chron-tags" }, ...m.actions.map((a) => el("button", { type: "button", class: "btn btn-ghost",
+        onclick: () => MIAShell.act(a.action) }, a.label)))))
+      : [el("p", { class: "dim" }, "Say “remember this for the Chronicles” and the moment is kept here, private until you mark it.")]));
   }
 
   MIAShell.start(async () => {

@@ -110,6 +110,8 @@ from core.assistant_asset_part_actions import register_asset_part_actions
 from core.assistant_health_actions import register_health_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
+from core.assistant_creation_actions import register_creation_actions
+from core.assistant_game_actions import register_game_actions
 from core.failure_actions import register_failure_actions
 from core.budget_manager import BudgetManager
 from core.intent_manager import IntentManager
@@ -176,6 +178,14 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     from core.security_log import SecurityLog
 
     context.security_log = SecurityLog()  # who signed in from where (docs/SECURITY.md step 3)
+    from core.security_log import on_account_change
+
+    # A password or email changed here is logged too (the web logs its own with the device).
+    context.events.subscribe("profile.password_changed", on_account_change(context, "password_changed"))
+    context.events.subscribe("profile.email_changed", on_account_change(context, "email_changed"))
+    from core import progress_history
+
+    progress_history.subscribe(context)  # a prestige or reward unlocked, kept in that person's history
     from core.insurance import InsuranceBook
 
     context.insurance = InsuranceBook(context)
@@ -326,6 +336,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_health_actions(registry)  # sleep, visits, medications, records (DEC-0129)
     register_notification_actions(registry)  # read out and mark notifications read (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
+    register_creation_actions(registry)  # screens MIA made for you, by voice (DEC-0091)
+    register_game_actions(registry)  # boss battles and questlines by voice (DEC-0028)
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)
     register_checkin_actions(registry)  # the Sunday check-in (DEC-0047)
     register_failure_actions(registry)  # the Fix-It Log (DEC-0049)

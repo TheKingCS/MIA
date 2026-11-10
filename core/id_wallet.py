@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.atomic_write import atomic_write_text
+from core import life_events
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -121,8 +122,10 @@ class IdWallet:
                 out[key] = value
         return out
 
+    @life_events.on_change("card_added", "a card to the wallet", named=False)
     def add(self, **fields) -> dict:
-        """Adds a card; ValueError without a name or with a date that isn't one."""
+        """Adds a card; ValueError without a name or with a date that isn't one. The history notes it without its name
+        or number (2026-11-09)."""
         clean = self._clean(fields)
         if not clean.get("name"):
             raise ValueError("Give the card a name, like “Texas driver's license”.")
@@ -141,8 +144,10 @@ class IdWallet:
         self._save()
         return card
 
+    @life_events.on_change("card_removed", "a card from the wallet", named=False)
     def remove(self, card_id: str) -> dict:
-        """Takes a card out of the wallet (its photo files stay until removed for good, so undo can bring it back)."""
+        """Takes a card out of the wallet (its photo files stay until removed for good, so undo can bring it back);
+        the history notes it without its name."""
         card = self.get(card_id)
         if card is None:
             raise KeyError("That card isn't in your wallet anymore.")

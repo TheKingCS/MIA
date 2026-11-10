@@ -4,7 +4,8 @@ tests.test_health
 
 Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep,
 visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file
-is sealed at rest; and nothing about a medication's name reaches a shared alarm.
+is sealed at rest; nothing about a medication's name reaches a shared alarm; and each change reaches the
+person's history without its name or details.
 """
 
 from datetime import date, datetime, timedelta
@@ -90,3 +91,20 @@ def test_health_is_sealed_at_rest_and_saved(context, tmp_path):
     assert "health.json" in SEALED
     _log_sleep(context, {"hours": 8})
     assert HealthStore(context, data_dir=tmp_path).sleep[0]["hours"] == 8
+
+
+def test_health_changes_reach_the_history_without_their_names(context, tmp_path):
+    """A night, a visit, a medication and a record each note a life event in the person's own folder; none says
+    the medication's name, the dose or the visit's reason."""
+    from core.life_events import LifeEventLog
+
+    store = context.health
+    store.log_sleep(7.5, rested=4)
+    store.add_visit("Dentist", "2026-11-01", who="Dr. Example", what_for="cleaning")
+    store.add_med("Exampleprofen", dose="200 mg")
+    store.add_record("Allergy", "Penicillin")
+    events = [e for e in LifeEventLog(None, store.data_dir).all_events()]
+    assert [e.type for e in events] == ["sleep_logged", "visit_added", "medication_added", "health_record_added"]
+    said = " ".join(e.summary for e in events)
+    for secret in ("Exampleprofen", "200 mg", "cleaning", "Dr. Example", "Penicillin"):
+        assert secret not in said, secret

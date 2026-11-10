@@ -19,14 +19,9 @@ from core.assistant_actions import AssistantAction, AssistantActionRegistry
 def _run(context, kind: str, params: dict) -> str:
     """An action kind, checked then run, as the screens do; its own
     words when it can't."""
-    from core.actions import ACTION_TYPES, ActionError
+    from core.actions import run_as_tool
 
-    action = ACTION_TYPES[kind]
-    try:
-        action.describe(context, params)
-        return action.execute(context, params)
-    except (ActionError, ValueError) as problem:
-        return str(problem)
+    return run_as_tool(context, kind, params)
 
 
 # ---------------------------------------------------------------- chickens

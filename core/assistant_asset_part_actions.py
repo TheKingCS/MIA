@@ -34,12 +34,9 @@ def _part_ref(context, name: str):
 
 def _run(context, kind: str, params: dict) -> str:
     """Runs asset.part_add or asset.part_remove and says what happened (or why not)."""
-    from core.actions import ACTION_TYPES, ActionError
+    from core.actions import run_as_tool
 
-    try:
-        return ACTION_TYPES[kind].execute(context, params)
-    except ActionError as problem:
-        return str(problem)
+    return run_as_tool(context, kind, params)
 
 
 def _add(context, arguments: dict) -> str:

@@ -229,10 +229,11 @@ class Mission:
     # Connective-infrastructure pass (2026-09-11) — a Mission can
     # optionally be the gamified "face" of a Project, rather than the
     # two staying two unrelated containers for structured work. None
-    # by default (zero migration needed for existing data/missions.json)
-    # and, deliberately, not settable through update_mission() once a
-    # Mission exists — same "pick it at creation, don't reassign later"
-    # rule trip_id already follows.
+    # by default (zero migration needed for existing data/missions.json).
+    # Not settable through update_mission(), so an ordinary edit can't
+    # move it; since DEC-0152 (2026-11-09: Projects and Missions
+    # connected) set_project() changes it on purpose, recorded in the
+    # history, because a mission can join a project after it exists.
     project_id: Optional[str] = None
     status: str = "active"  # "active" | "completed" | "abandoned"
     # The "mission failure/struggle signal" pass (2026-09-11) — why an
@@ -517,8 +518,8 @@ class MissionManager:
         """Changes a mission's fields (what it's tied to and whether rewards were credited can't be set; ValueError for
         an unknown mission or field). On the move to completed: it becomes the signed-in person's if it had no owner, is
         celebrated, credits its rewards once, unlocks its recipes, is recorded in the history and publishes
-        mission.completed. On the move to abandoned: it gets an owner the same way and publishes mission.abandoned with
-        the reason.
+        mission.completed. On the move to abandoned: it gets an owner the same way, is recorded in the history
+        (mission_abandoned, with the reason) and publishes mission.abandoned with the reason.
         """
         mission = self.get_mission(mission_id)
         if mission is None:
@@ -614,6 +615,10 @@ class MissionManager:
                     # regression test" reasoning as rewards_credited
                     # above, the stamp would only ever live in memory.
                     self._save()
+            # 2026-11-09: the history keeps a set-aside mission too (the self-audit found the event unheard), so
+            # "what have I set aside?" and the patterns read it from the same place as everything else.
+            life_events.record(self, "mission_abandoned", f"Set aside the mission {mission.name}",
+                               [f"mission:{mission.mission_id}"], {"reason": mission.abandon_reason or ""})
             self.context.events.publish(
                 "mission.abandoned", mission_id=mission.mission_id, reason=mission.abandon_reason
             )
@@ -739,6 +744,25 @@ class MissionManager:
     def missions_for_maintenance_asset(self, asset_id: str) -> list[Mission]:
         """The missions tied to a maintenance asset."""
         return [m for m in self._missions if m.maintenance_asset_id == asset_id]
+
+    def missions_for_project(self, project_id: str) -> list[Mission]:
+        """The missions that are part of a project (DEC-0152: the mission names it; nothing is copied)."""
+        return [m for m in self._missions if project_id and m.project_id == project_id]
+
+    def set_project(self, mission_id: str, project_id: Optional[str]) -> Mission:
+        """Makes a mission part of a project, or (None) stands it on its own (DEC-0152); recorded in the history.
+        ValueError for an unknown mission."""
+        mission = self.get_mission(mission_id)
+        if mission is None:
+            raise ValueError(f"No mission with id '{mission_id}'.")
+        mission.project_id = project_id or None
+        self._bump_updated_at(mission)
+        self._save()
+        refs = [f"mission:{mission.mission_id}"] + ([f"project:{project_id}"] if project_id else [])
+        life_events.record(self, "mission_project_set" if project_id else "mission_project_cleared",
+                           f"{'Made' if project_id else 'Took'} {mission.name} "
+                           f"{'part of a project' if project_id else 'out of its project'}", refs)
+        return mission
 
     # ------------------------------------------------------------------
     # Objectives

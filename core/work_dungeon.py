@@ -20,6 +20,10 @@ making anyone a villain.
 - **Loot** is gross pay, worked out here: each pay week's hours fill the
   regular hours first, in order, and the rest is overtime. A run with
   overtime in it is a **boss**: its bonus loot is the overtime premium.
+  A run can also carry a shift differential (extra an hour for nights or
+  weekends, paid at the overtime multiple on its overtime hours, as US
+  wage law counts it in the regular rate) and the tips taken that shift
+  (`run_extra`, 2026-11-09).
 - **Projected loot**: this week and this month as cleared plus planned,
   and the year at the last four weeks' pace.
 - **Banked loot** comes from the bank (Plaid imports income into the
@@ -128,7 +132,8 @@ class Dungeon:
 @dataclass
 class Run:
     """A shift, as a run: the day, the paid hours, cleared (worked) or planned, any hard-mode modifiers (AFFIXES or the
-    person's own words), whether they were called in for overtime (a boss), and a note.
+    person's own words), whether they were called in for overtime (a boss), a note, and any shift differential an hour
+    and the tips taken.
     """
     run_id: str
     dungeon_id: str
@@ -138,6 +143,8 @@ class Run:
     affixes: list = field(default_factory=list)  # AFFIX ids, or the person's own words
     boss: bool = False  # called in for overtime (a boss even before the hours say so)
     note: str = ""
+    differential: float = 0.0  # extra pay an hour for this shift (nights, weekends)
+    tips: float = 0.0  # tips taken this shift
     created_at: str = ""
 
 
@@ -188,6 +195,14 @@ def loot(dungeon: Dungeon, regular: float, overtime: float) -> float:
     """Pure logic. Gross pay for these hours."""
     rate = float(dungeon.hourly or 0)
     return round(regular * rate + overtime * rate * float(dungeon.overtime_multiplier or 1), 2)
+
+
+def run_extra(dungeon: Dungeon, run: Run, regular: float, overtime: float) -> float:
+    """Pure logic. What a run earns beyond its hourly loot: its shift differential on every hour (at the overtime
+    multiple on the overtime ones, since the differential is part of the regular rate), plus its tips."""
+    differential = max(0.0, float(getattr(run, "differential", 0) or 0))
+    tips = max(0.0, float(getattr(run, "tips", 0) or 0))
+    return round(differential * (regular + overtime * float(dungeon.overtime_multiplier or 1)) + tips, 2)
 
 
 def boss_bonus(dungeon: Dungeon, overtime: float) -> float:
@@ -349,8 +364,9 @@ class DungeonBook:
         return next((r for r in self.runs if r.dungeon_id == dungeon_id and r.date == on and r.status == "planned"), None)
 
     def add_run(self, dungeon_id: str, on: str, hours: float, status: str = "cleared", affixes=None,
-                boss: bool = False, note: str = "") -> Run:
-        """Adds a run (cleared or planned, 0 to 24 hours); a cleared one is recorded in the history."""
+                boss: bool = False, note: str = "", differential: float = 0.0, tips: float = 0.0) -> Run:
+        """Adds a run (cleared or planned, 0 to 24 hours, with any shift differential an hour and tips, never
+        negative); a cleared one is recorded in the history."""
         if self.get_dungeon(dungeon_id) is None:
             raise ValueError("That dungeon isn't there anymore.")
         if status not in ("cleared", "planned"):
@@ -360,15 +376,17 @@ class DungeonBook:
             raise ValueError("A run is between 0 and 24 hours.")
         run = Run(run_id=uuid.uuid4().hex[:10], dungeon_id=dungeon_id, date=on[:10], hours=round(hours, 2),
                   status=status, affixes=list(affixes or []), boss=bool(boss), note=str(note or "").strip(),
-                  created_at=_now())
+                  created_at=_now(), differential=max(0.0, round(float(differential or 0), 2)),
+                  tips=max(0.0, round(float(tips or 0), 2)))
         self.runs.append(run)
         self._save()
         if status == "cleared":
             self._record(run)
         return run
 
-    def clear_run(self, run_id: str, hours: Optional[float] = None, affixes=None, note: str = "") -> Run:
-        """A planned run, worked: its hours (if they changed), what made it hard."""
+    def clear_run(self, run_id: str, hours: Optional[float] = None, affixes=None, note: str = "",
+                  differential: Optional[float] = None, tips: Optional[float] = None) -> Run:
+        """A planned run, worked: its hours (if they changed), what made it hard, and any differential and tips."""
         run = self.get_run(run_id)
         if run is None:
             raise ValueError("That run isn't there anymore.")
@@ -380,6 +398,10 @@ class DungeonBook:
             run.affixes = list(dict.fromkeys(list(run.affixes) + list(affixes)))
         if note:
             run.note = str(note).strip()
+        if differential is not None:
+            run.differential = max(0.0, round(float(differential or 0), 2))
+        if tips is not None:
+            run.tips = max(0.0, round(float(tips or 0), 2))
         run.status = "cleared"
         self._save()
         self._record(run)

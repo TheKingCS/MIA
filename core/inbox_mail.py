@@ -172,7 +172,7 @@ def fetch_new_messages(
     finally:
         try:
             client.logout()
-        except Exception:
+        except (imaplib.IMAP4.error, OSError):  # the mailbox already closed it: nothing left to do
             pass
 
 
@@ -273,7 +273,7 @@ def fetch_receipts(
     finally:
         try:
             client.logout()
-        except Exception:
+        except (imaplib.IMAP4.error, OSError):  # the mailbox already closed it: nothing left to do
             pass
 
 
