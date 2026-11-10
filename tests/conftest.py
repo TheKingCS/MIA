@@ -190,6 +190,9 @@ greenhouse_provision_module.KEY = _TEST_DEV_DIR / "keys" / "greenhouse_node_ed25
 greenhouse_provision_module._run = lambda command, timeout=60, **kwargs: (1, "no processes in tests")
 greenhouse_provision_module._run_input = lambda command, data, timeout=60: (1, "no processes in tests")
 maintenance_manager_module._DOCUMENT_ROOT = _TEST_DEV_DIR / "maintenance_documents"
+import core.instance_lock as instance_lock_module  # noqa: E402
+
+instance_lock_module.PATH = _TEST_DEV_DIR / ".mia.lock"  # a test that builds the app never locks the real data/
 
 inspection_module._DIR = _TEST_DEV_DIR / "inspections"  # a test that runs an inspection never saves into the real data/
 loops_module._has_repo = lambda: False

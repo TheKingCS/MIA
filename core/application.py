@@ -311,8 +311,10 @@ class MIAApplication:
     """Owns the Qt application object and the startup sequence."""
 
     def __init__(self) -> None:
-        """Builds the whole app before anything is shown: the Qt application and fonts, a restore chosen before the
-        restart (core/backup_manager.apply_pending_restore, before anything reads its files), config, the event bus and AppContext, the
+        """Builds the whole app before anything is shown: the Qt application and fonts, the one-MIA-per-data-folder
+        check (core/instance_lock.py: a second copy says so and quits), a restore chosen before the restart
+        (core/backup_manager.apply_pending_restore, before anything reads its files), config, the event bus, the store
+        lock shared with the phone server (each timer's tick runs under it or skips) and AppContext, the
         theme, profiles and households, then every core service onto the context (each store, the model, voice, the
         communication gate, budget, maps, the sensors that send their own readings...), the module manager and search, the registries (search providers,
         calculators, the Assistant's tools, dashboard widgets) and the timers that run the periodic checks. Only
@@ -328,12 +330,24 @@ class MIAApplication:
             self.qt_app.setWindowIcon(QIcon(str(icon_path)))
         _load_bundled_fonts()
 
+        from core import instance_lock
+
+        if not instance_lock.acquire():  # one MIA per data folder: a second copy would save over the first's changes
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.information(None, "MIA is already running",
+                                    "MIA is already open on this computer. Use the window that's open (it may be "
+                                    "minimised or in the tray).")
+            sys.exit(0)
         from core.backup_manager import apply_pending_restore
 
         apply_pending_restore()  # a restore chosen before the restart, before anything has read its files
         self.config = ConfigManager()
         self.events = EventBus()
         self.context = AppContext(config=self.config, events=self.events)
+        from core.store_lock import StoreLock
+
+        self.context.store_lock = StoreLock()  # shared with the phone server (server/app.py)
         # Lets background threads (the phone server) hand work to the GUI
         # thread safely (core/main_thread.py).
         self._main_thread_invoker = MainThreadInvoker()
@@ -565,7 +579,7 @@ class MIAApplication:
         # 20s is frequent enough that no HH:MM minute window is ever
         # skipped between polls.
         self._alarm_check_timer = QTimer()
-        self._alarm_check_timer.timeout.connect(self._check_alarms)
+        self._alarm_check_timer.timeout.connect(self._while_stores_free(self._check_alarms))
         self._alarm_check_timer.start(20_000)
 
         # Same reasoning as the alarm timer above — a low-battery
@@ -574,7 +588,7 @@ class MIAApplication:
         # frequent enough for a warning to matter without polling
         # psutil needlessly often (battery percentage changes slowly).
         self._power_check_timer = QTimer()
-        self._power_check_timer.timeout.connect(self._check_power)
+        self._power_check_timer.timeout.connect(self._while_stores_free(self._check_power))
         self._power_check_timer.start(30_000)
 
         # Same "always alive for the whole app session" reasoning as
@@ -585,7 +599,7 @@ class MIAApplication:
         # three checks below has its own independent "already ran
         # today" gate rather than sharing one).
         self._daily_occasion_timer = QTimer()
-        self._daily_occasion_timer.timeout.connect(self._check_daily_occasions)
+        self._daily_occasion_timer.timeout.connect(self._while_stores_free(self._check_daily_occasions))
         self._daily_occasion_timer.start(300_000)
 
         # Same "always alive for the whole app session" reasoning as
@@ -597,7 +611,7 @@ class MIAApplication:
         # noticed promptly without polling the filesystem needlessly
         # often for what's normally a rare event.
         self._finance_snapshot_timer = QTimer()
-        self._finance_snapshot_timer.timeout.connect(self._check_finance_snapshots)
+        self._finance_snapshot_timer.timeout.connect(self._while_stores_free(self._check_finance_snapshots))
         self._finance_snapshot_timer.start(60_000)
 
         # Same "always alive for the whole app session" reasoning as
@@ -610,7 +624,7 @@ class MIAApplication:
         # docs/MIA_HOME_SYNC_PLAN.md for why delivery here isn't
         # automated yet.
         self._homestead_snapshot_timer = QTimer()
-        self._homestead_snapshot_timer.timeout.connect(self._check_homestead_snapshots)
+        self._homestead_snapshot_timer.timeout.connect(self._while_stores_free(self._check_homestead_snapshots))
         self._homestead_snapshot_timer.start(60_000)
 
         # Same "always alive for the whole app session" reasoning as
@@ -622,7 +636,7 @@ class MIAApplication:
         # device-side wireless sync exists yet — see that module's own
         # docstring).
         self._lite_capture_timer = QTimer()
-        self._lite_capture_timer.timeout.connect(self._check_lite_captures)
+        self._lite_capture_timer.timeout.connect(self._while_stores_free(self._check_lite_captures))
         self._lite_capture_timer.start(60_000)
 
         # Document inbox (core/inbox_manager.py): take in dropped/uploaded/
@@ -631,17 +645,17 @@ class MIAApplication:
         # cheap); check the mailbox (if set up and unlocked) every 10
         # minutes on its own background thread.
         self._inbox_timer = QTimer()
-        self._inbox_timer.timeout.connect(self._check_inbox)
+        self._inbox_timer.timeout.connect(self._while_stores_free(self._check_inbox))
         self._inbox_timer.start(30_000)
         self._inbox_mail_timer = QTimer()
-        self._inbox_mail_timer.timeout.connect(self._check_inbox_mail)
+        self._inbox_mail_timer.timeout.connect(self._while_stores_free(self._check_inbox_mail))
         self._inbox_mail_timer.start(600_000)
 
         # Offline awareness (core/online_watch.py): tell the owner when the
         # internet drops or returns, and deliver "remind me when I'm back
         # online". Reading .status never blocks (core/connectivity.py).
         self._online_timer = QTimer()
-        self._online_timer.timeout.connect(self._check_online)
+        self._online_timer.timeout.connect(self._while_stores_free(self._check_online))
         self._online_timer.start(60_000)
 
         # Same "always alive for the whole app session" reasoning as the
@@ -653,7 +667,7 @@ class MIAApplication:
         # this is just frequent enough to notice a newly-idle/newly-stale
         # state promptly without polling meaningfully more than needed.
         self._mission_check_timer = QTimer()
-        self._mission_check_timer.timeout.connect(self._check_mission_auto_assignment)
+        self._mission_check_timer.timeout.connect(self._while_stores_free(self._check_mission_auto_assignment))
         self._mission_check_timer.start(300_000)
         # Also run once immediately at boot — QTimer.start() only
         # schedules the *next* firing, so without this a long-idle user
@@ -750,6 +764,25 @@ class MIAApplication:
                 "New field capture ready to review",
                 f"'{proposal.journal_title}' is ready to review in Field Captures.",
             )
+
+    def _while_stores_free(self, slot):
+        """A timer's slot that runs only when no one is reading or changing stores (the phone server mid-request):
+        the lock is tried without waiting, so the desktop never stalls, and a skipped tick runs at the next one."""
+        def tick() -> None:
+            """One tick of the timer, under the store lock or not at all."""
+            lock = self.context.store_lock
+            if lock is None:
+                slot()
+                return
+            if not lock.acquire(blocking=False):
+                log.debug("Skipped a %s tick: the stores are busy.", getattr(slot, "__name__", "timer"))
+                return
+            try:
+                slot()
+            finally:
+                lock.release()
+
+        return tick
 
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,

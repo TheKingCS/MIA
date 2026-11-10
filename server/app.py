@@ -506,8 +506,8 @@ def create_app(context: AppContext) -> FastAPI:
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). The Sign-ins page lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
-    password change unlink them all. Requests that read or change stores hold app.state.turn_lock (a
-    core/store_lock.StoreLock); a turn lets it go while the model thinks and keeps its conversation's turns in order
+    password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
+    store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
     with that conversation's own lock."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
@@ -892,7 +892,10 @@ def create_app(context: AppContext) -> FastAPI:
     from core.store_lock import StoreLock, conversation_lock
 
     # Held while a request reads or changes stores; a turn lets it go while the model thinks (core/store_lock.py).
-    app.state.turn_lock = StoreLock()
+    # The desktop's own lock when there is one, so its timers and the server never write at once.
+    if getattr(context, "store_lock", None) is None:
+        context.store_lock = StoreLock()
+    app.state.turn_lock = context.store_lock
 
     # Two-way sync with the home computer (core/sync.py): a linked device keeps at it in the background.
     def _start_sync() -> None:

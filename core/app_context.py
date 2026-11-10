@@ -22,7 +22,7 @@ and constructed in core/application.py, not scattered as ad-hoc imports.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Any, TYPE_CHECKING, Callable, Optional
 
 from core.assistant_actions import AssistantActionRegistry
 from core.calculator_engine import CalculatorEngine
@@ -139,10 +139,13 @@ if TYPE_CHECKING:
 @dataclass
 class AppContext:
     """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
-    sensors that send readings)."""
+    sensors that send readings), and the one store lock the server and the desktop's timers share."""
 
     config: ConfigManager
     events: EventBus
+    # The one lock for reading and changing stores (core/store_lock.py): the server's requests hold it, a turn lets it
+    # go while the model thinks, and the desktop's timers skip a tick while it's taken (2026-11-10).
+    store_lock: Optional[Any] = field(default=None, repr=False)
     # Assigned by MIAApplication right after construction (each of
     # these takes an AppContext, so none can be created in the same
     # dataclass __init__ call — see core/application.py). Optional here

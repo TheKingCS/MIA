@@ -46,6 +46,11 @@ def _log_uncaught_exceptions(exc_type, exc_value, exc_traceback) -> None:
 
 def main() -> int:
     sys.excepthook = _log_uncaught_exceptions
+    from core import instance_lock
+
+    if not instance_lock.acquire():  # one MIA per data folder (the desktop may be running on it)
+        log.error("Another MIA is already running on this data folder; MIA Core won't start a second.")
+        return 1
 
     config = ConfigManager()
     events = EventBus()
