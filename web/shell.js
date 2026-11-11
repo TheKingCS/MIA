@@ -393,11 +393,12 @@
     const here = document.body.dataset.app || "web_home";
     const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
-    // DEC-0153: the Dashboard first in every look, then Home (the household's destination).
+    // DEC-0153 (Zac, 2026-11-11): Dashboard, Apps, MIA (talk to her, from any page), Search.
     bar.replaceChildren(
       tab("index.html", "web_home", "dashboard", "🏠", "Dashboard"),
-      tab("hub.html?area=home", "hub_home", "household", "⌂", "Home"),
       tab("apps.html", "module_browser", "apps", "▦", "Apps"),
+      el("button", { type: "button", class: "bottom-search bottom-mia", "aria-label": "Talk to MIA", onclick: () => toggleTalk(true) },
+        el("span", { class: "ico", "aria-hidden": "true" }, icon("mia", "◎")), "MIA"),
       el("button", { type: "button", class: "bottom-search", onclick: () => openSearch() },
         el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"));
   }

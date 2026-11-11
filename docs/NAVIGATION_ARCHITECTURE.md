@@ -42,8 +42,10 @@ He also decided three things beyond the questions:
   A hub shows its subdashboards first, then its apps, its shortcuts and
   the way back up. The sidebar lists the Dashboard, then the
   destinations, each opening to its subdashboards and apps. The Apps page
-  lists every destination and subdashboard. The phone's bottom bar is
-  Dashboard, Home, Apps and Search. MIA opens on the Dashboard in every
+  lists each destination with only what's directly in it (its
+  subdashboards and its own apps, alphabetically; a search still looks
+  through everything). The phone's bottom bar is Dashboard, Apps, MIA
+  (talk to her) and Search. Both per Zac, later on 2026-11-11. MIA opens on the Dashboard in every
   look.
 - **Step 2, voice.** "Take me to the homestead", "open AI tools", "go to
   the dashboard" and the old names ("plants and animals") all resolve.

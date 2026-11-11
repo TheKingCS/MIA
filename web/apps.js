@@ -98,15 +98,15 @@
       const all = data.groups.flatMap((g) => g.apps).filter((a) => a.id !== "module_browser");
       const byId = Object.fromEntries(all.map((a) => [a.id, a]));
       const favs = data.favorites.map((id) => byId[id]).filter((a) => a && matches(a, words));
-      // The destinations and their subdashboards (DEC-0153): each heading opens its hub, and every app is under the
-      // one that owns it. Pages that aren't apps of their own (Projects, Pets...) are plain rows. Older engines
-      // without areas keep the life groups.
+      // The destinations (DEC-0153): each heading opens its hub, with its subdashboards and own apps under it; a
+      // search looks through every subdashboard too. Pages that aren't apps of their own (Projects, Pets...) and
+      // subdashboards are plain rows. Older engines without areas keep the life groups.
       const pageRow = (m) => el("a", { class: "apps-row", href: m.page }, el("span", { class: "apps-row-icon", "aria-hidden": "true" },
         (window.MIAIcons && (MIAIcons.svg(m.id) || MIAIcons.svg(m.icon))) || "•"), el("span", { class: "apps-row-name" }, m.name),
         el("span", { class: "apps-row-tag" }, m.tagline || ""));
       const pageMatch = (m) => !words || words.split(/\s+/).every((w) => (m.name + " " + (m.tagline || "")).toLowerCase().includes(w));
       const groups = areas.length
-        ? areas.map((ar) => [ar, ar.members.filter((m) => m.id !== "module_browser").map((m) => byId[m.id]
+        ? (words ? everywhere : areas).map((ar) => [ar, ar.members.filter((m) => m.id !== "module_browser").map((m) => !m.sub && byId[m.id]
             ? (byId[m.id].shown && matches(byId[m.id], words) ? row(byId[m.id]) : null) : (pageMatch(m) ? pageRow(m) : null)).filter(Boolean)])
           .filter(([, rows]) => rows.length)
         : data.groups.map((g) => [{ name: g.name }, g.apps.filter((a) => a.id !== "module_browser" && a.shown && matches(a, words)).map(row)])
@@ -137,13 +137,17 @@
     $("nothing").hidden = shown > 0;
   }
 
-  let areas = [];
+  let areas = [], everywhere = [];
   async function render() {
     data = await MIA.apps();
-    // DEC-0153: each destination, then each of its subdashboards as its own list ("Home › Kitchen").
+    // DEC-0153 (Zac, 2026-11-11): each destination with only what's directly in it, its subdashboards and its own apps,
+    // in alphabetical order (a subdashboard opens to the rest). A search still looks through everything.
     try {
-      areas = ((await MIA.shell()).areas || []).flatMap((a) => [a].concat((a.subs || []).map((s) => ({ ...s, name: a.name + " › " + s.name }))));
-    } catch (e) { areas = []; }
+      const top = ((await MIA.shell()).areas || []).filter((a) => a.id !== "dashboard");
+      const byName = (x, y) => x.name.localeCompare(y.name);
+      areas = top.map((a) => ({ ...a, members: [].concat(a.subs || [], a.members).sort(byName) }));
+      everywhere = top.flatMap((a) => [a].concat(a.subs || []));
+    } catch (e) { areas = []; everywhere = []; }
     const c = data.counts;
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.apps), el("span", { class: "t" }, "apps")),
