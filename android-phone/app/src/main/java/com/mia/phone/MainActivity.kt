@@ -283,6 +283,7 @@ class MainActivity : Activity() {
             addJavascriptInterface(Relay, "MIARelay")
             addJavascriptInterface(permissions, "MIAPhonePermissions")
             addJavascriptInterface(glassesCamera, "MIAGlassesCamera")
+            addJavascriptInterface(MusicBridge(applicationContext), "MIAPhoneMusic")
             // Signed in: straight to Home (or the Inbox, after a share). Not
             // yet: the screen asks to make an account (first start) or to
             // sign in (after logging out).

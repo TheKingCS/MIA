@@ -858,6 +858,7 @@
       let shell = null;
       try { shell = await MIA.shell(); renderNav(shell); } catch (e) { say(e.message); }
       if (!options || options.talk !== false) { mountTalk(); if (shell) sayLine(shell); }
+      mountPlayer();
       if (MIA.pageOpened) MIA.pageOpened(location.pathname.split("/").pop() || "index.html").catch(() => {});  // a count (page-usage audit)
       loading();
       await refresh();
@@ -943,9 +944,44 @@
     else if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); openSearch(); }
   });
 
+  // The song that's playing, on every page (player.js): what it is, previous, play or pause, next and stop.
+  // The Music page has its own, larger one. A page that doesn't name player.js gets it from here.
+  let playerAsked = null;
+  function mountPlayer() {
+    if (document.body.dataset.app === "music") return;
+    if (!playerAsked) playerAsked = new Promise((done) => {
+      if (window.MIAPlayer) { done(); return; }
+      const script = el("script", { src: "player.js" });
+      script.onload = script.onerror = done;
+      document.head.append(script);
+    });
+    playerAsked.then(() => {
+      if (!window.MIAPlayer || $("#now-playing")) return;
+      const bar = el("aside", { class: "now-playing", id: "now-playing", "aria-label": "Now playing", hidden: true });
+      document.body.append(bar);
+      const ctl = (label, text, what) => el("button", { type: "button", class: "np-ctl", "aria-label": label, title: label,
+        onclick: () => MIAPlayer.control(what).catch((e) => say(e.message)) }, text);
+      let drawn = "";
+      MIAPlayer.on((now) => {
+        bar.hidden = !now.track;
+        document.body.classList.toggle("has-now-playing", !!now.track);
+        const key = now.track + "|" + now.title + "|" + now.playing;
+        if (!now.track || key === drawn) return;
+        drawn = key;
+        bar.replaceChildren(
+          el("a", { class: "np-song", href: "music.html", title: "Open Music" },
+            el("span", { class: "np-title" }, now.title || "Playing"), now.artist ? el("span", { class: "np-artist" }, now.artist) : null),
+          ctl("Previous song", "⏮", "previous"),
+          now.playing ? ctl("Pause", "❚❚", "pause") : ctl("Play", "▶", "resume"),
+          ctl("Next song", "⏭", "next"), ctl("Stop the music", "■", "stop"));
+      });
+    });
+  }
+
   async function frame() {
     try { renderNav(await MIA.shell()); } catch (e) { return; }
     if (talkHere) mountTalk();
+    mountPlayer();
   }
 
   // Gear condition (DEC-0028): an asset's upkeep as a health bar, from the

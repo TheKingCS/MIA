@@ -1,9 +1,10 @@
 /*
  * music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened
  * a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists
- * and Artists. A song plays right here, in the browser, streamed from MIA
- * (/api/music/track/<id>/audio, fetched with this tab's sign-in); the next
- * one in the list follows. Playlists and Scan Library are actions.
+ * and Artists. A song plays through the shared player (player.js; Zac,
+ * 2026-11-10: it has to keep playing with this page closed), so it carries
+ * on in the other apps; the next one in the list follows. Playlists and
+ * Scan Library are actions.
  */
 (function () {
   "use strict";
@@ -12,16 +13,9 @@
   const TABS = [["songs", "Songs"], ["playlists", "Playlists"], ["artists", "Artists"]];
   let page = null, query = "", openList = null, artist = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "songs";
-  let queue = [], at = -1, url = null;
-  const audio = el("audio", { preload: "none", class: "music-audio" });
-  audio.addEventListener("ended", () => playAt(at + 1));
-  // The canvas's Now Playing bar (DEC-0113): its progress line follows the song.
-  audio.addEventListener("timeupdate", () => {
-    const fill = document.querySelector(".mu-progress .meter-fill");
-    if (fill && audio.duration) fill.style.width = Math.round(100 * audio.currentTime / audio.duration) + "%";
-  });
-  audio.addEventListener("play", () => drawPlayer());
-  audio.addEventListener("pause", () => drawPlayer());
+  // What's playing is the shared player's (player.js), not this page's: it keeps going when the page closes.
+  let now = MIAPlayer.now(), shown = "";
+  const progress = () => (now.length ? Math.min(100, Math.round(100 * now.seconds / now.length)) : 0) + "%";
 
   // Songs already on the phone: Android has to say yes first (Permissions.kt).
   const phoneAsks = () => { try { return window.MIAPhonePermissions && !JSON.parse(window.MIAPhonePermissions.status()).music; } catch (e) { return false; } };
@@ -30,43 +24,35 @@
   const buttons = (...list) => el("div", { class: "row-buttons" }, list.filter(Boolean));
   const section = (title, actions, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
-  const byId = (id) => page.tracks.find((t) => t.id === id);
+  const byId = (id) => (page ? page.tracks.find((t) => t.id === id) : null);
 
-  async function playAt(i) {
-    if (i < 0 || i >= queue.length) { at = -1; drawPlayer(); return; }
-    at = i;
-    const t = byId(queue[i]);
-    drawPlayer("Loading…");
-    try {
-      const blob = await MIA.download("/api/music/track/" + encodeURIComponent(t.id) + "/audio");
-      if (url) URL.revokeObjectURL(url);
-      url = URL.createObjectURL(blob);
-      audio.src = url;
-      await audio.play();
-      drawPlayer();
-    } catch (e) {
-      drawPlayer();
-      say(MIA.demo ? "Songs play from your MIA, not in the demo." : "Couldn't play " + t.title + ".");
-    }
-  }
-  const play = (ids, start) => { queue = ids.slice(); playAt(start || 0); };
+  const play = (ids, start) => MIAPlayer.play(ids.map((id) => byId(id) || id), start || 0).catch((e) => say(e.message));
+  const control = (what) => MIAPlayer.control(what).catch((e) => say(e.message));
 
-  function drawPlayer(note) {
-    const t = at >= 0 ? byId(queue[at]) : null;
-    const icon = (label, text, onclick) => el("button", { type: "button", class: "mu-ctl", "aria-label": label, onclick }, text);
+  // The canvas's Now Playing bar (DEC-0113): the song, its controls, and a progress line that follows it.
+  function drawPlayer() {
+    if (!$("player")) return;
+    const t = now.track ? (byId(now.track) || now) : null;
+    const icon = (label, text, what) => el("button", { type: "button", class: "mu-ctl", "aria-label": label, title: label, onclick: () => control(what) }, text);
     $("player").replaceChildren(
       el("div", { class: "mu-bar" },
         el("div", { class: "music-now" }, el("span", { class: "mu-label" }, "Now Playing"),
-          el("strong", {}, t ? t.title : "Nothing playing"),
-          el("span", { class: "dim" }, note || (t ? [t.artist, t.album].filter(Boolean).join(" · ") : "Pick a song to play it here."))),
-        t ? el("div", { class: "mu-ctls" }, icon("Previous", "⏮", () => playAt(Math.max(0, at - 1))),
-          icon(audio.paused ? "Play" : "Pause", audio.paused ? "▶" : "❚❚", () => (audio.paused ? audio.play() : audio.pause())),
-          icon("Next", "⏭", () => playAt(at + 1))) : null),
-      el("div", { class: "mu-progress" }, el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:0%" }))),
-      audio);
+          el("strong", {}, t ? t.title || "Playing" : "Nothing playing"),
+          el("span", { class: "dim" }, now.loading ? "Loading…" : (t ? [t.artist, t.album].filter(Boolean).join(" · ") : "Pick a song to play it here."))),
+        t ? el("div", { class: "mu-ctls" }, icon("Previous", "⏮", "previous"),
+          now.playing ? icon("Pause", "❚❚", "pause") : icon("Play", "▶", "resume"),
+          icon("Next", "⏭", "next"), icon("Stop", "■", "stop")) : null),
+      el("div", { class: "mu-progress" }, el("div", { class: "meter" }, el("div", { class: "meter-fill", style: "width:" + progress() }))));
     $("player").hidden = !t;
-    document.querySelectorAll(".music-row").forEach((r) => r.classList.toggle("playing", !!t && r.dataset.id === (t && t.id)));
+    document.querySelectorAll(".music-row").forEach((r) => r.classList.toggle("playing", !!t && r.dataset.id === now.track));
   }
+  MIAPlayer.on((state) => {
+    const key = state.track + "|" + state.playing + "|" + !!state.loading;
+    now = state;
+    if (key !== shown) { shown = key; drawPlayer(); return; }
+    const fill = document.querySelector(".mu-progress .meter-fill");
+    if (fill) fill.style.width = progress();
+  });
 
   async function toPlaylist(t) {
     if (!page.playlists.length) { say("Make a playlist first (Playlists → New Playlist)."); return; }
@@ -106,7 +92,7 @@
     if (!ids.length) return el("p", { class: "empty" }, "No songs here.");
     return el("div", { class: "mu-rows" }, ids.map((id, i) => {
       const t = byId(id);
-      const playing = at >= 0 && queue[at] === id;
+      const playing = now.track === id;
       // The canvas's song row: tap it to play; title and artist, its length on the right; the one playing in cyan.
       return el("div", { class: "music-row" + (playing ? " playing" : ""), "data-id": id },
         el("button", { type: "button", class: "mu-song", "aria-label": "Play " + t.title, onclick: () => play(ids, i) },

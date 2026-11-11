@@ -528,3 +528,68 @@ def test_a_folder_that_reads_empty_keeps_its_songs(isolated_paths, tmp_path):
     (phone / "song.wav").unlink()
     manager.scan_library(as_of=time.time() + 60)
     assert [t.title for t in manager.all_tracks()] == ["Phone Song"]
+
+
+# ------------------------------------------------------------------
+# A page's list of songs, and playing from another thread (2026-11-10:
+# the web pages ask this MIA to play, on the server's thread)
+# ------------------------------------------------------------------
+
+def _three_songs(tmp_path) -> MusicManager:
+    """A manager with three songs (t0, t1, t2) and the fake player."""
+    manager = _make_manager(_make_context())
+    for i in range(3):
+        f = tmp_path / f"song{i}.mp3"
+        f.write_bytes(b"fake")
+        manager._tracks.append(Track(track_id=f"t{i}", file_path=str(f), title=f"Song {i}"))
+    _install_fake_player(manager)
+    return manager
+
+
+def test_a_list_of_songs_plays_from_the_one_picked(isolated_paths, tmp_path):
+    manager = _three_songs(tmp_path)
+    assert manager.play_queue(["t0", "t1", "t2"], 1) is True
+    now = manager.now_playing()
+    assert (now.track_id, now.queue_position, now.queue_length, now.playlist_id) == ("t1", 1, 3, None)
+    assert manager.next_track() is True and manager.now_playing().track_id == "t2"
+
+
+def test_a_song_gone_from_the_library_is_left_out_of_the_list(isolated_paths, tmp_path):
+    manager = _three_songs(tmp_path)
+    assert manager.play_queue(["gone", "t1", "t2"], 2) is True
+    now = manager.now_playing()
+    assert (now.track_id, now.queue_position, now.queue_length) == ("t2", 1, 2)
+    assert manager.play_queue(["gone"], 0) is False
+    assert manager.play_queue(["t0"], 3) is False and manager.play_queue([], 0) is False
+
+
+def test_a_song_asked_for_from_another_thread_is_played_on_the_gui_thread(isolated_paths, tmp_path):
+    import queue
+    import threading
+
+    manager = _three_songs(tmp_path)
+    handed, played_on, answer = queue.Queue(), [], {}
+    manager.context.main_thread_call = handed.put
+    load = manager._load_track_into_player
+    manager._load_track_into_player = lambda track: (played_on.append(threading.current_thread()), load(track))[1]
+    asker = threading.Thread(target=lambda: answer.update(value=manager.play_queue(["t0", "t1"], 1)))
+    asker.start()
+    handed.get(timeout=5)()  # this test's thread stands in for the window's
+    asker.join(5)
+    assert answer == {"value": True}
+    assert played_on == [threading.main_thread()] and manager.now_playing().track_id == "t1"
+
+
+def test_a_window_too_busy_to_answer_gives_nothing_back_and_plays_later(isolated_paths, tmp_path, monkeypatch):
+    import threading
+
+    monkeypatch.setattr(music_manager_module, "_GUI_WAIT_SECONDS", 0.05)
+    manager = _three_songs(tmp_path)
+    waiting, answer = [], {}
+    manager.context.main_thread_call = waiting.append
+    asker = threading.Thread(target=lambda: answer.update(value=manager.play_track("t0")))
+    asker.start()
+    asker.join(5)
+    assert answer == {"value": None} and manager.now_playing() is None
+    waiting[0]()
+    assert manager.now_playing().track_id == "t0"

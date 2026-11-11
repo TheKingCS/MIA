@@ -51,10 +51,23 @@ path, playback methods would return success but produce no real audio.
 The normal GUI boot path, and the GUI's own Assistant chat path
 (confirmed: the actual action-handler call happens on the main GUI
 thread, not inside ChatWorker's QThread), are both safe.
+
+**The web pages ask this player too (2026-11-10).** A song used to play
+in the Music page's own audio element and stopped when another page
+opened. In the desktop window the pages now ask this manager instead
+(core/web_more.music_play / music_control, `play_queue()` for the
+page's list of songs), so the song belongs to MIA and not to a page.
+Those calls arrive on the server's thread, and a QMediaPlayer only
+plays on the window's: every playback method is wrapped in
+`_on_gui_thread`, which hands the work to `context.main_thread_call`
+and waits a few seconds for the answer (None when the window was too
+busy to give one; the work still runs when it gets there).
 """
 
 from __future__ import annotations
 
+import functools
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -264,10 +277,42 @@ def read_track_tags(path: Path) -> dict:
     return result
 
 
+# How long a caller on another thread waits for the GUI thread to do what it asked of the player.
+_GUI_WAIT_SECONDS = 4.0
+
+
+def _on_gui_thread(method):
+    """Makes a playback method run on the GUI thread, whoever calls it (2026-11-10): QMediaPlayer only plays on the
+    thread with the window's event loop, and a song asked for from a web page or from Talk arrives on the server's
+    thread. Called there, the method is handed over through context.main_thread_call and its answer waited for (None
+    when the window is too busy to answer in time; the method still runs when it is free). On the GUI thread, or with
+    no hand-off (tests, no window), it runs directly."""
+    @functools.wraps(method)
+    def run(self, *args, **kwargs):
+        """Runs the method here or on the GUI thread, and gives back what it returned."""
+        call = getattr(self.context, "main_thread_call", None)
+        if call is None or threading.current_thread() is threading.main_thread():
+            return method(self, *args, **kwargs)
+        done, answer = threading.Event(), {}
+
+        def work():
+            """The method, run on the GUI thread; its answer is left for the waiting caller."""
+            try:
+                answer["value"] = method(self, *args, **kwargs)
+            finally:
+                done.set()
+
+        call(work)
+        done.wait(_GUI_WAIT_SECONDS)
+        return answer.get("value")
+    return run
+
+
 class MusicManager:
     """The music library and player: songs scanned from the music folder (music.library_root_path), playlists, and a
     QMediaPlayer made only when something first plays. Tracks and playlists are saved as JSON through
-    atomic_write_text; the queue and position live only in memory.
+    atomic_write_text; the queue and position live only in memory. The playback methods may be called from any
+    thread (_on_gui_thread): the player itself only ever runs on the GUI thread.
     """
     def __init__(self, context: AppContext) -> None:
         """Loads the library and playlists. The player isn't made here (cheap boot): _ensure_player makes it on first use."""
@@ -608,6 +653,20 @@ class MusicManager:
         player.play()
         return True
 
+    @_on_gui_thread
+    def play_queue(self, track_ids: list[str], start_index: int = 0) -> bool:
+        """Plays a list of songs from a position, the rest following (a page's list: every song, an artist's, a
+        search). Songs no longer in the library are left out; False when none is left or the position isn't there."""
+        known = [i for i in track_ids if self.get_track(i) is not None]
+        if not known or not (0 <= start_index < len(track_ids)):
+            return False
+        started = track_ids[start_index]
+        self._queue = known
+        self._queue_index = known.index(started) if started in known else 0
+        self._queue_playlist_id = None
+        return self._load_track_into_player(self.get_track(self._queue[self._queue_index]))
+
+    @_on_gui_thread
     def play_track(self, track_id: str) -> bool:
         """Plays one song on its own (a queue of one)."""
         track = self.get_track(track_id)
@@ -618,6 +677,7 @@ class MusicManager:
         self._queue_playlist_id = None
         return self._load_track_into_player(track)
 
+    @_on_gui_thread
     def play_playlist(self, playlist_id: str, start_index: int = 0) -> bool:
         """Plays a playlist from a position; False when it's empty or the position isn't on it."""
         tracks = self.tracks_for_playlist(playlist_id)
@@ -628,16 +688,19 @@ class MusicManager:
         self._queue_playlist_id = playlist_id
         return self._load_track_into_player(tracks[start_index])
 
+    @_on_gui_thread
     def pause(self) -> None:
         """Pauses (nothing when nothing has played)."""
         if self._player is not None:
             self._player.pause()
 
+    @_on_gui_thread
     def resume(self) -> None:
         """Resumes after a pause."""
         if self._player is not None:
             self._player.play()
 
+    @_on_gui_thread
     def stop(self) -> None:
         """Stops and clears the queue."""
         if self._player is not None:
@@ -646,6 +709,7 @@ class MusicManager:
         self._queue_index = 0
         self._queue_playlist_id = None
 
+    @_on_gui_thread
     def next_track(self) -> bool:
         """Plays the next song in the queue, skipping songs no longer in the library; False at the end."""
         if not self._queue or self._queue_index + 1 >= len(self._queue):
@@ -656,6 +720,7 @@ class MusicManager:
             return self.next_track()
         return self._load_track_into_player(track)
 
+    @_on_gui_thread
     def previous_track(self) -> bool:
         """Plays the song before, skipping ones no longer in the library; False at the start."""
         if not self._queue or self._queue_index <= 0:
@@ -666,11 +731,13 @@ class MusicManager:
             return self.previous_track()
         return self._load_track_into_player(track)
 
+    @_on_gui_thread
     def seek(self, position_seconds: float) -> None:
         """Jumps to a position in the song, in seconds."""
         if self._player is not None:
             self._player.setPosition(int(position_seconds * 1000))
 
+    @_on_gui_thread
     def set_volume(self, percent: int) -> None:
         """Sets the volume (0-100), remembered as music.last_volume."""
         percent = max(0, min(100, percent))
@@ -678,6 +745,7 @@ class MusicManager:
         self._audio_output.setVolume(percent / 100.0)
         self.context.config.set("music.last_volume", percent)
 
+    @_on_gui_thread
     def now_playing(self) -> Optional[NowPlaying]:
         """What's playing (or paused) now with its position and queue place, or None when nothing is."""
         if self._player is None or not self._queue:

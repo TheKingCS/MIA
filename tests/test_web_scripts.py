@@ -13,7 +13,8 @@ from pathlib import Path
 WEB = Path(__file__).resolve().parent.parent / "web"
 
 # A shared script and the global it must define for the pages that load it.
-MODULES = {"grow.js": "window.MIAGrow", "shell.js": "window.MIAShell", "mia.js": "MIA", "icons.js": "MIAIcons"}
+MODULES = {"grow.js": "window.MIAGrow", "shell.js": "window.MIAShell", "mia.js": "MIA", "icons.js": "MIAIcons",
+           "player.js": "window.MIAPlayer"}
 
 
 def test_every_script_a_page_loads_is_there():

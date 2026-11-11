@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1369 files, 304,228 lines; 1369 files describe themselves; 16,750 of 16,844 classes and functions are documented.
+1370 files, 304,794 lines; 1370 files describe themselves; 16,768 of 16,862 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-516 files, 149,410 lines; 7,678 of 7,764 classes and functions documented
+516 files, 149,535 lines; 7,684 of 7,770 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -527,7 +527,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,161 lines; 50 of 50 classes and functions documented
+2 files, 4,209 lines; 52 of 52 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -804,7 +804,7 @@
 
 ## tests/: the test suite: what each part must do
 
-473 files, 79,194 lines; 6,770 of 6,778 classes and functions documented
+473 files, 79,334 lines; 6,780 of 6,788 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1282,7 +1282,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-105 files, 19,622 lines
+106 files, 19,841 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1342,7 +1342,7 @@
 - `web/missions.js`: missions.js — the Missions screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.missions() (core/web_progress.py): active missions (ready to complete first), daily missions with streaks, and completed ones; each opens to its objectives (+1, add, remove), rewards and the skills it teaches,
 - `web/model-test.js`: model-test.js — the model test (claude, 2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Renders MIA.modelTest() (core/local_model.py): each small model with Download / Start / Delete, the running model, a test run's progress, and each model's last results: how often it picked MIA's right tool, and 
 - `web/money.js`: money.js — the Money screen (claude, 2026-10-06, DEC-0017). Renders MIA.money(); every button proposes a money action and the engine decides. Only formatting here (the currency symbol comes from the engine).
-- `web/music.js`: music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists and Artists. A song plays right here, in the browser, streamed from MIA (/api/music/track/<id>/audio, fetched with this tab's sign-in); the next one in
+- `web/music.js`: music.js — the Music screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.music() (core/web_more.py): Songs (search), Playlists and Artists. A song plays through the shared player (player.js; Zac, 2026-11-10: it has to keep playing with this page closed), so it carries on in the
 - `web/navigation.js`: navigation.js — Navigation (claude, 2026-11-06). Renders MIA.navigation(start, end) (core/navigation_web.py): the waypoints with their grid references, the distance and bearing between two on a compass (the design canvas, DEC-0113), and the sun and moon at the first. Read only; a waypoint is added b
 - `web/news.js`: news.js — Good News Radio (claude, 2026-11-07, DEC-0096; the station itself 2026-11-10, Zac: "it should list the news stories so I can read more about them, should have an audio card playing the station where I can play or pause it, maybe follow a story"). Renders MIA.news() (core/good_news.py scree
 - `web/nexus.js`: nexus.js — the Nexus (DEC-0130, claude, 2026-11-08). Draws MIA.nexus() (core/web_nexus.nexus): a portal per area on MIASpatial.ring, each in its hue and glowing amber with a count when something inside needs you; the HUD (Today, Browser, Settings, Search, MIA; you, your level and XP); the vapor in t
@@ -1357,6 +1357,7 @@
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
+- `web/player.js`: player.js — the one music player every page shares (claude, 2026-11-10; Zac: a song has to keep playing with the Music app closed and while moving through the other apps). A song used to live in the Music page's own <audio>, so it stopped the moment another page opened. Now whoever can keep playing 
 - `web/portals.js`: portals.js — Portal Pictures (claude, 2026-11-08, DEC-0140 / DEC-0130). Renders MIA.portals() (core/portal_pictures.py): each area's portal in the Nexus with the picture it shows (your painting, the original, or none yet), and three ways to change it: Paint One (MIA paints it on the PC's graphics ca
 - `web/power.js`: power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power, DEC-0113). Renders MIA.power() (core/web_power.py): Energy Sources (each with its latest reading per meter, a meter for a percent, when it was logged, Log Reading) and Battery (this device's). Adding a source, logging a readi
 - `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py) as the design canvas has it (DEC-0113): your name, email, country, what MIA helps with, the password and the recovery code; no household (DEC-0119). Name, email, country and int
@@ -1392,7 +1393,7 @@
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 
-18 files, 3,190 lines
+18 files, 3,224 lines
 
 - `android-phone/app/src/main/java/com/mia/phone/AutofillActivity.kt`: "Fill from MIA" (MiaAutofillService): the person's own choice of which login goes into the boxes. Asks MIA's engine on the phone (127.0.0.1, the signed-in person's session) for the logins that fit the site or app, titles and usernames only; with the vault locked it asks for the master password first
 - `android-phone/app/src/main/java/com/mia/phone/Engine.kt`: MIA's engine and server inside this app (mia_phone.py), started once per app process. Its own object, not MainActivity's, so the listening service (ListenService) can start MIA by itself when the glasses are tapped and the app isn't open: Android may have closed the screen, or the whole app, since M

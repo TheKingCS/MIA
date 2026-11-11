@@ -547,6 +547,11 @@
     musicPlay: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),
     musicControl: () => demo ? Promise.resolve(DEMO_PLAYING) : Promise.reject(new MiaError(400, "Music plays from the glasses' page.")),
     musicNow: () => Promise.resolve(demo ? DEMO_PLAYING : {}),
+    // MIA's own player on the computer (core/music_manager.py): the desktop window's pages play through it,
+    // so a song keeps playing from page to page (player.js). here: false where the page has to play.
+    playerNow: () => demo ? Promise.resolve({ here: false, track: "", playing: false }) : call("GET", "/api/music/now"),
+    playerPlay: (ids, at) => call("POST", "/api/music/play", { ids, at: at || 0 }),
+    playerControl: (what) => call("POST", "/api/music/control", { do: what }),
     // The glasses' log: the thread and the conversations before it.
     history: (limit) => demo ? MIA.thread(limit) : call("GET", "/api/talk/thread?limit=" + (limit || 200) + "&earlier=1"),
     // The first mission and tours (core/welcome.py). In the demo, only with ?welcome=<stage>.

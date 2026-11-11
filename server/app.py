@@ -374,6 +374,18 @@ class TrailLinkRequest(BaseModel):
     notes: str = Field("", max_length=300)
 
 
+class MusicPlayRequest(BaseModel):
+    """Library songs for this MIA's own player to play (core/web_more.music_play): their ids, and which one first."""
+    ids: list[str] = Field(..., min_length=1, max_length=500)
+    at: int = Field(0, ge=0, le=499)
+
+
+class MusicControlRequest(BaseModel):
+    """One word for the player (pause, resume, next, previous, stop), or seconds to jump to in the song."""
+    do: str = Field("", max_length=12)
+    seconds: Optional[float] = Field(None, ge=0, le=86400)
+
+
 class ContinueRequest(BaseModel):
     """A past conversation for Talk to pick back up (core/web_conversations.pick_up)."""
     conversation_id: str = Field(..., max_length=40)
@@ -517,7 +529,9 @@ def create_app(context: AppContext) -> FastAPI:
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
     store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
     with that conversation's own lock. Good News Radio's page says when it played an episode
-    (/api/news/heard, core/good_news.note_listened)."""
+    (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
+    herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
+    lock, because the song is handed to the window's thread."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2368,6 +2382,40 @@ def create_app(context: AppContext) -> FastAPI:
         if path is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That song isn't in the library anymore.")
         return FileResponse(path, headers={"Cache-Control": "private, max-age=86400"})
+
+    def _player(profile_id: str, ask):
+        """One call to this MIA's own music player for a signed-in person allowed the Music app. Outside the turn
+        lock: the player answers from the window's thread, which must never be waited on while a turn is held."""
+        from core.child_accounts import ASK_A_PARENT, app_allowed
+
+        view = view_for(context, profile_id)
+        if not app_allowed(view, "music"):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+        try:
+            return ask(view)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    @app.get("/api/music/now")
+    def web_music_now(profile_id: str = Depends(require_profile_id)) -> dict:
+        """What this MIA is playing herself (core/web_more.music_now); here: false where the page has to play."""
+        from core.web_more import music_now
+
+        return _player(profile_id, music_now)
+
+    @app.post("/api/music/play")
+    def web_music_play(body: MusicPlayRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """This MIA plays these songs herself, so they keep playing whatever page is open."""
+        from core.web_more import music_play
+
+        return _player(profile_id, lambda view: music_play(view, body.ids, body.at))
+
+    @app.post("/api/music/control")
+    def web_music_control(body: MusicControlRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Pause, resume, next, previous, stop, or a jump within the song, on this MIA's own player."""
+        from core.web_more import music_control
+
+        return _player(profile_id, lambda view: music_control(view, body.do, body.seconds))
 
     @app.get("/api/files")
     def web_files(path: str = "", profile_id: str = Depends(require_profile_id)) -> dict:

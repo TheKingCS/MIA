@@ -8,6 +8,8 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.PowerManager
 import android.util.Log
+import android.webkit.JavascriptInterface
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -142,4 +144,35 @@ object Music {
             preparing = false
         }
     }
+}
+
+/**
+ * The pages' way to this phone's player (web/player.js, as MIAPhoneMusic): a
+ * song picked on the Music page is played here, not by the page, so it keeps
+ * playing from page to page and with the screen off. Library tracks only, by
+ * id; each call answers with what's playing now.
+ */
+class MusicBridge(private val context: Context) {
+    /** Play these tracks (a JSON list of ids), starting at this one. "" when it isn't a list of track ids. */
+    @JavascriptInterface
+    fun play(idsJson: String, at: Int): String = try {
+        val list = JSONArray(idsJson)
+        val ids = (0 until minOf(list.length(), Music.MAX_QUEUE)).map { list.optString(it) }
+        if (ids.isEmpty() || !ids.all { Music.TRACK.matches(it) }) "" else {
+            Music.play(context, ids, at)
+            Music.now()
+        }
+    } catch (e: Exception) {
+        ""
+    }
+
+    /** pause, resume, next, previous or stop; any other word changes nothing. */
+    @JavascriptInterface
+    fun control(what: String): String {
+        Music.control(what)
+        return Music.now()
+    }
+
+    @JavascriptInterface
+    fun now(): String = Music.now()
 }

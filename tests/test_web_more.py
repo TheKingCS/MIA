@@ -26,8 +26,8 @@ from core.music_manager import MusicManager
 from core.my_files import MyFiles, clean_name, kind_of, size_text
 from core.product_manager import ProductManager
 from core.trip_manager import TripManager
-from core.web_more import (duration_text, expeditions_page, files_page, journal_page, music_page, preview,
-                           track_path, workshop_page)
+from core.web_more import (duration_text, expeditions_page, files_page, journal_page, music_control, music_now,
+                           music_page, music_play, preview, track_path, workshop_page)
 from tests.engine_world import build_world
 
 TODAY = date.today()
@@ -360,3 +360,77 @@ def test_a_product_is_listed_and_taken_off_on_the_page_and_by_voice(world):
     said, _ = do(world, "listing.remove", product_id=bowl["id"],
                  listing_id=workshop_page(world, TODAY)["products"][0]["listings"][0]["id"])
     assert said == "Take Walnut bowl off Local market" and workshop_page(world, TODAY)["products"][0]["listings"] == []
+
+
+# --- the player every page shares (web/player.js): on the PC this MIA plays the song herself
+
+def _she_plays(world) -> list:
+    """This MIA plays songs herself: a hand-off to the window's thread (run at once here), the fake player, and two
+    more songs in the library. Returns the three track ids in the page's order."""
+    from tests.test_music_manager import _install_fake_player
+
+    for name in ("Robin - Noon.mp3", "Robin - Night.mp3"):
+        song = world.music._resolve_root_path() / name
+        song.write_bytes(b"ID3" + b"\0" * 200)
+        os.utime(song, (time.time() - 3600, time.time() - 3600))
+    world.music.scan_library()
+    world.main_thread_call = lambda work: work()
+    _install_fake_player(world.music)
+    return [t["id"] for t in music_page(world)["tracks"]]
+
+
+def test_without_a_window_the_page_is_told_to_play_the_song_itself(world):
+    world.music.scan_library()
+    track = music_page(world)["tracks"][0]["id"]
+    assert music_now(world) == {"here": False, "track": "", "playing": False}
+    with pytest.raises(ValueError):
+        music_play(world, [track])
+    with pytest.raises(ValueError):
+        music_control(world, "pause")
+
+
+def test_she_plays_a_pages_list_herself_and_says_what_is_playing(world):
+    ids = _she_plays(world)
+    assert music_now(world) == {"here": True, "track": "", "playing": False}
+    now = music_play(world, ids, 1)
+    assert (now["here"], now["track"], now["number"], now["total"], now["playing"]) == (True, ids[1], 2, 3, True)
+    assert now["title"] and now["length"] == 200
+    assert music_control(world, "pause")["playing"] is False
+    assert music_control(world, "resume")["playing"] is True
+    assert music_control(world, "previous")["track"] == ids[0]
+    assert music_control(world, "next")["track"] == ids[1]
+    assert music_control(world, "", seconds=42)["seconds"] == 42
+    with pytest.raises(ValueError):
+        music_control(world, "louder")
+    with pytest.raises(ValueError):
+        music_play(world, ["not-a-song"])
+
+
+def test_next_after_the_last_song_stops_the_music(world):
+    ids = _she_plays(world)
+    music_play(world, ids, 2)
+    assert music_control(world, "next") == {"here": True, "track": "", "playing": False}
+    music_play(world, ids, 0)
+    assert music_control(world, "stop")["track"] == ""
+
+
+def test_the_pages_reach_her_player_through_the_server(world):
+    from fastapi.testclient import TestClient
+
+    from server.app import create_app
+
+    app = create_app(world)
+    app.state.sessions["t"] = world.profiles.list_profiles()[0].profile_id
+    client = TestClient(app, headers={"Authorization": "Bearer t"})
+    world.music.scan_library()
+    one = music_page(world)["tracks"][0]["id"]
+    assert client.get("/api/music/now").json() == {"here": False, "track": "", "playing": False}
+    assert client.post("/api/music/play", json={"ids": [one]}).status_code == 409  # no window: the page plays
+    ids = _she_plays(world)
+    played = client.post("/api/music/play", json={"ids": ids, "at": 2})
+    assert played.status_code == 200 and played.json()["track"] == ids[2]
+    assert client.get("/api/music/now").json()["playing"] is True
+    assert client.post("/api/music/control", json={"do": "pause"}).json()["playing"] is False
+    assert client.post("/api/music/control", json={"do": "louder"}).status_code == 409
+    assert client.post("/api/music/play", json={"ids": []}).status_code == 422
+    assert TestClient(app).get("/api/music/now").status_code == 401

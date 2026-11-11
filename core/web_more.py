@@ -14,8 +14,12 @@ its screen shows; every change is an action in core/more_actions.py.
   (with what they used and made, and their cost), sales and costs.
 - `expeditions_page`: expeditions, each with its trips (status, packing
   list, distance, journal entries).
-- `music_page`: the music library and playlists; songs play in the
-  browser, streamed from MIA (/api/music/track/<id>/audio).
+- `music_page`: the music library and playlists. One player is shared
+  by every page (web/player.js) so a song carries on from page to page:
+  in the desktop window MIA plays it herself (`music_now`, `music_play`,
+  `music_control`, onto core/music_manager.py), the phone app plays it
+  on the phone, and a plain browser plays it in the page, streamed from
+  MIA (/api/music/track/<id>/audio).
 - `files_page`: the person's own files folder (core/my_files.py).
 - `people_page`: people and pets, birthdays in the next 60 days, and the
   one person to catch up with (`catch_up`).
@@ -322,6 +326,59 @@ def track_path(context, track_id: str):
         return None
     path = Path(track.file_path)
     return path if path.is_file() else None
+
+
+# What a page may ask of the player, the same words the phone's own player takes (android-phone Music.kt).
+MUSIC_CONTROLS = ("pause", "resume", "next", "previous", "stop")
+
+
+def music_plays_here(context) -> bool:
+    """Whether this MIA can play a song herself, so it keeps playing whichever page is open or closed: only where she
+    has a window's event loop to play on (the PC app sets context.main_thread_call). On the phone the app's own
+    player does it, and in a plain browser the page does."""
+    return getattr(context, "music", None) is not None and getattr(context, "main_thread_call", None) is not None
+
+
+def music_now(context) -> dict:
+    """What this MIA is playing, for the player every page shows: {here: whether she plays at all, track (its id,
+    "" when nothing), title, artist, album, number and total in the queue, playing, seconds, length}."""
+    here = music_plays_here(context)
+    now = context.music.now_playing() if here else None
+    if now is None:
+        return {"here": here, "track": "", "playing": False}
+    return {"here": True, "track": now.track_id, "title": now.title or "Untitled", "artist": now.artist or "",
+            "album": now.album or "", "number": now.queue_position + 1, "total": now.queue_length,
+            "playing": bool(now.is_playing), "seconds": int(now.position_seconds), "length": int(now.duration_seconds)}
+
+
+def music_play(context, ids: list, at: int = 0) -> dict:
+    """Plays a list of library songs from a position on this MIA's own player, and says what's playing. Raises
+    ValueError when she can't play here or none of the songs is in the library."""
+    if not music_plays_here(context):
+        raise ValueError("This MIA doesn't play music herself; the page plays it.")
+    if not context.music.play_queue([str(i) for i in ids][:500], int(at or 0)):
+        raise ValueError("Couldn't play that: the song isn't in the library anymore.")
+    return music_now(context)
+
+
+def music_control(context, what: str, seconds=None) -> dict:
+    """Pause, resume, next, previous or stop on this MIA's own player (or, with seconds, jump to that place in the
+    song), and says what's playing now. Raises ValueError for anything else."""
+    if not music_plays_here(context):
+        raise ValueError("This MIA doesn't play music herself; the page plays it.")
+    music = context.music
+    if seconds is not None:
+        music.seek(max(0.0, float(seconds)))
+    elif what not in MUSIC_CONTROLS:
+        raise ValueError("That isn't something the player does.")
+    elif what == "next":
+        if music.next_track() is False:  # the last song: nothing follows it
+            music.stop()
+    elif what == "previous":
+        music.previous_track()
+    elif what in ("pause", "resume", "stop"):
+        getattr(music, what)()
+    return music_now(context)
 
 
 # ------------------------------------------------------------------ files
