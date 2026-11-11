@@ -2,7 +2,9 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-10 (the audit, tier 1, then tier 2 and 3), by claude.*
+session. Last updated: 2026-11-10 (the audit and its fixes; how she talks; music across pages; two plans), by claude.*
+
+**2026-11-10, night (Claude: how she talks, music, and two plans).** Asked about herself (an app, a decision, how she works with the glasses) MIA now answers from her own records with where each line came from, not from a help page that shared a word; a chat can be copied, exported and summarised. A song keeps playing while you move between apps and with Music closed, with a small bar on every page (in the desktop window MIA plays it, in the phone app the phone does). Good News Radio is a real page: the station, the stories, follow one. The Browser page says how to teach her a task. The PC's flashing window is fixed and guarded by a test. Two documents wait for Zac, with nothing built from them: a plan for talking with her like a phone call (`docs/CONVERSATION_MODE_PLAN.md`) and a review of how everything is organized, proposing eight rooms in place of sixteen portals and one page that is MIA herself (`docs/ORGANIZATION_REVIEW.md`). His spec for her organizing herself is saved for later (`docs/specs/SELF_ORGANIZATION.md`). Untried by hand: music on the real phone and in the real window.
 
 **2026-11-10, evening (Claude: tier 2 and 3).** Replies no longer freeze the phone and pages (the lock is let go while the model thinks); one store lock shared with the desktop's timers; one MIA per data folder; web pages keep late changes, don't redraw over typing, and show loading, offline and failed states; every page opened in CI; a scripted-model turn harness; the phone's libraries pinned and tested in CI; thread errors logged. CI green. The rest of tier 2 waits on Zac's decisions.
 
