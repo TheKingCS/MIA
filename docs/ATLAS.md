@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1370 files, 304,794 lines; 1370 files describe themselves; 16,768 of 16,862 classes and functions are documented.
+1370 files, 305,113 lines; 1370 files describe themselves; 16,786 of 16,880 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-516 files, 149,535 lines; 7,684 of 7,770 classes and functions documented
+516 files, 149,707 lines; 7,695 of 7,781 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -346,7 +346,7 @@
 - `core/plan_library.py`: The Library's plans shelf (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Three kinds of plan, found together by `find()`:
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe.
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h
-- `core/portal_pictures.py`: The picture inside each area's portal in the Nexus, chosen by the person (DEC-0140's "portal pictures painted by MIA", DEC-0130's Nexus).
+- `core/portal_pictures.py`: The picture inside each portal in the Nexus, chosen by the person (DEC-0140's "portal pictures painted by MIA"; since DEC-0153 the Nexus's portals are the person's Living Worlds stories, core/web_nexus.worlds, and the word "area" in the setting and the action means a portal's id).
 - `core/power_actions.py`: Power's changes on the web (DEC-0113 canvas, DEC-0125 parity: Power had no phone screen). Energy sources (solar, a generator, propane, a battery bank) are added, renamed and removed through the shared record kinds (`energy_source.add` / `.edit` / `.delete`, core/record_actions.py), and a reading is 
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
 - `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
@@ -464,7 +464,7 @@
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/web_about.py`: About MIA (web/about.html, DEC-0142): what MIA can honestly say about herself, on one page, every line from the facts and never from the model: what she is and her real scale (the system map, DEC-0139: files of code, tools, improvement loops, decisions on record, what's sealed on disk, what she's le
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
-- `core/web_areas.py`: MIA's areas and their hubs (DEC-0129, Zac 2026-11-08; Kitchen added as its own area by DEC-0130): the sidebar is the Dashboard and then the areas (Home, Garage, Plants and Animals, Health and Fitness, Recreation, Security, Browser, Settings and Diagnostics, Finances, Business, Personal, Learning, Mi
+- `core/web_areas.py`: MIA's eight destinations, their subdashboards and their hubs (DEC-0153, Zac 2026-11-11, superseding DEC-0129's fifteen areas): Dashboard, Home, Garage, Finances, Health + Fitness, AI Tools, Missions and Settings. A subdashboard is an area with a `parent` (Home's Kitchen, Smart Devices, Homestead, Re
 - `core/web_backups.py`: Backups from the web's Settings (DEC-0125: Backup & Restore was on the desktop's Settings only). For the PC's owner (the first account) only, since a backup holds everyone's data on this MIA.
 - `core/web_browser.py`: The Browser screen's data (DEC-0117, 2026-11-07): MIA's own browser as the person sees it on the web, so held steps and taught tasks aren't only reachable by talking to her.
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Put together here from cor
@@ -488,7 +488,7 @@
 - `core/web_lookup.py`: Look It Up Online on the web (web/lookup.html; DEC-0053, T-0017's screen control; core/online_lookup.py is the engine). Typing words and pressing Search is the person asking, so the search runs then: only the scrubbed words leave the computer, through their own SearXNG, and the page shows exactly wh
 - `core/web_money.py`: The Money screen's data (2026-10-06, DEC-0017): everything the PC app's Budget screen shows, assembled here so `web/` holds no logic. Served as `/api/money`; changes go through the action kinds in core/money_actions.py.
 - `core/web_more.py`: The Journal, Workshop, Expeditions, Music, Files and People screens on the web (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"). Each assembler reads its stores and returns what its screen shows; every change is an action in core/more_actions.py.
-- `core/web_nexus.py`: The Nexus (DEC-0130, Zac 2026-11-08): MIA's spatial home. A chamber of portals, one per area (core/web_areas.AREAS), around MIA's orb, with the HUD across the top. This module is what the page shows; `web/nexus.html` and `web/spatial.js` only draw it.
+- `core/web_nexus.py`: The Nexus (DEC-0130; since DEC-0153, Zac 2026-11-11, only the gateway to Living Worlds): a chamber of portals around MIA's orb, one per story you can step into (each campaign in core/living_worlds.py, with its world), and one to make a new world. It is no longer how MIA's apps are found: those are t
 - `core/web_notifications.py`: Notifications on the web (the screens review's missing notifications, docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125). Each notification (core/notification_manager.py), newest first: its title and message, a tone for its level (amber for a warning, red only for a real error: DEC-0014), where
 - `core/web_power.py`: Power's web screen (DEC-0113 canvas, DEC-0125: Power had no phone screen). Two parts:
 - `core/web_progress.py`: Missions, Skills and Character on the web (2026-10-06, DEC-0017/0018, answering H-0013): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/missions`, `/api/skills` and `/api/character`; changes are the action kinds in core/mission_actions.py. The Characte
@@ -804,7 +804,7 @@
 
 ## tests/: the test suite: what each part must do
 
-473 files, 79,334 lines; 6,780 of 6,788 classes and functions documented
+473 files, 79,451 lines; 6,787 of 6,795 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1102,7 +1102,7 @@
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002).
 - `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, the tools, the homestead, 
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
-- `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140 / DEC-0130): the person puts one of their own paintings in an area's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the stand-in ComfyUI from tests/test_art_studio.py.
+- `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140; the Nexus's portals are the person's stories since DEC-0153): the person puts one of their own paintings in a story's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the 
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
@@ -1218,7 +1218,7 @@
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
 - `tests/test_web_about.py`: About MIA (DEC-0142, DEC-0057): the page reads every line from the facts, a missing source is a quiet gap, and how her apps are doing is counted by status on the asking device.
-- `tests/test_web_areas.py`: MIA's areas and hubs (DEC-0129, core/web_areas.py; Kitchen and the area hues from DEC-0130): every app has an area, shared apps sit in each of their hubs, every page an area links to exists, a hub lists only what the person can open, and no area's hue is a status color.
+- `tests/test_web_areas.py`: MIA's eight destinations and their subdashboards (DEC-0153, core/web_areas.py; the area hues from DEC-0130): the eight in Zac's order, every app and page with exactly one owner, every web page owned or listed as part of the frame, old area ids still opening, a hub listing its subdashboards, what the
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
 - `tests/test_web_changes.py`: Recent Changes on the web (core/web_changes.py, DEC-0125): what MIA can put back, newest first, in the history's own words; the fortnight's history by day with undone ones marked; and Undo as the action undo.last, which never leaves a change of its own behind.
 - `tests/test_web_comms.py`: Communications (DEC-0129, core/web_comms.py): people to catch up with (longest first, only those you can write to), and the message limit and breaks as undoable actions on the real communication gate.
@@ -1237,7 +1237,7 @@
 - `tests/test_web_lookup.py`: Look It Up Online on the web (DEC-0053, T-0017): the page says whether a lookup may run and the rules; a search the person asks for sends only the scrubbed words and shows what was sent; a problem is said, never thrown.
 - `tests/test_web_money.py`: DEC-0017 (2026-10-06): Money on the web does everything the PC app's Budget screen does. The page's data (core/web_money.py) and every change as an action kind (core/money_actions.py): add, edit, delete bills, income sources, income, expenses and debts; pay a debt; set budgets; sort a bank charge to
 - `tests/test_web_more.py`: The Journal, Workshop, Expeditions (with what has to happen before a trip), Music, Files and People screens (Zac, 2026-10-16: on the phone they "are empty right now and just bring up a chat with MIA"): core/web_more.py builds each page, core/more_actions.py makes every change through Propose → Appro
-- `tests/test_web_nexus.py`: The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096); the Nexus and an area's room share one 3D engine.
+- `tests/test_web_nexus.py`: The Nexus (DEC-0130; Living Worlds only since DEC-0153, core/web_nexus.py): what needs you counted in each area and its destination, going to a destination, subdashboard, the Dashboard or the Nexus by voice, the screen's portals (each story, in play first, then "Make a World") with the HUD; a portal
 - `tests/test_web_notifications.py`: Notifications on the web (core/web_notifications.py, DEC-0125): newest first, a tone for each level (amber for a warning, red only for an error), why MIA sent the ones she sent on her own, Mark All Read and Dismiss as actions, and the same by voice (core/assistant_notification_actions.py); and the r
 - `tests/test_web_power.py`: Power on the web (DEC-0125, the design canvas's Power, DEC-0113: core/web_power.py and core/power_actions.py): energy sources with their latest reading per meter, a meter for a percent (amber when low), when it was logged, and every change as an action; the device's battery when it has one.
 - `tests/test_web_progress.py`: DEC-0017/0018 (2026-10-06), H-0013: Missions, Skills and Character on the web. The pages (core/web_progress.py) and every change as an action kind (core/mission_actions.py), each proposed, approved, recorded and undoable, with rewards going to the person who approved it.
@@ -1282,7 +1282,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-106 files, 19,841 lines
+106 files, 19,871 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1322,7 +1322,7 @@
 - `web/health.js`: health.js — Health (DEC-0129, claude, 2026-11-08). Renders MIA.health() (core/health_actions.health_page): what's coming up, the week's sleep (tap a night's hours to log it), medications and supplements (Taken, reminders at their times, refills), visits, and records. Every change is an action, so un
 - `web/home.js`: home.js — MIA's Home (muse, 2026-10-05).
 - `web/household.js`: household.js — the household's routines (claude, 2026-11-06; the design canvas's Household, DEC-0113, 2026-11-07). Renders MIA.household() (core/household_routines.py): Done Today with its meter, then a card per routine (what it is, daily or this week, its streak in words) with Did It, or Done; what
-- `web/hub.js`: hub.js — an area's hub (DEC-0129, claude, 2026-11-08). Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the other areas to jump to. Which apps are in which area is decided in core; this only lays them out. An area with its own space (cor
+- `web/hub.js`: hub.js — a destination's or subdashboard's hub (DEC-0129, claude, 2026-11-08; DEC-0153's eight, 2026-11-11). Renders MIA.hub(area) (core/web_areas.hub): its subdashboards and then its apps and pages as tiles, each opening its own page, the shortcuts to what other areas own, the way back up, then the
 - `web/icons.js`: icons.js — MIA's interface icons (claude, 2026-10-15, DEC-0023). One line-icon set for the frame (navigation, the bottom bar, header badges, app tiles): 24-unit grid, 1.6 stroke, round joins, drawn in currentColor so the theme colors them. Content keeps its own icons (a mission's or a skill's emoji 
 - `web/inbox.js`: inbox.js — the Inbox screen (claude, 2026-10-16; Zac: "build the inbox for sending stuff to MIA"). Send To MIA: a photo, a file or a note (and from any app, the phone's Share menu). Waiting: what MIA read in each one and where she proposes it goes; File It opens the proposal to check (what it's for,
 - `web/insurance.js`: insurance.js — the insurance check-up (claude, 2026-10-19, DEC-0034). Renders MIA.insurance() (core/insurance.py) in tabs: My Policies (each policy, what it costs a year, what's worth a look), Shop It (what an agent asks for, the quote request MIA drafts, the quotes side by side against what you hav

@@ -18,9 +18,9 @@
   function hud(page) {
     const link = (href, label, ico) => el("a", { href, "aria-label": label }, icon(ico), el("span", { class: "nav-label" }, label));
     $("hud-nav").replaceChildren(
-      link("index.html?today=1", "Today", "calendar"),
-      link("browser.html", "Browser", "search"),
-      link("settings.html", "Settings", "settings"),
+      link("index.html", "Dashboard", "dashboard"),
+      link("hub.html?area=recreation", "Recreation", "expeditions"),
+      link("worlds.html", "Your worlds", "character"),
       el("button", { type: "button", "aria-label": "Search", onclick: () => MIAShell.search() }, icon("search"), el("span", { class: "nav-label" }, "Search")),
       el("button", { type: "button", "aria-label": "Talk to MIA", onclick: () => MIAShell.talk(true) }, icon("mia"), el("span", { class: "nav-label" }, "MIA")));
     const h = page.hud;
@@ -63,7 +63,7 @@
     box.replaceChildren(head, el("p", { class: "n3-card-line" }, p.line),
       el("p", { class: "n3-card-needs" + (p.needs ? " attn" : "") }, needsText(p)),
       el("button", { type: "button", class: "btn n3-enter", onclick: go }, "Enter ", el("span", { "aria-hidden": "true" }, "›")),
-      el("a", { class: "n3-card-pic", tabindex: "-1", href: "portals.html?area=" + encodeURIComponent(p.id) }, "Change its picture"));  // the card is for the eye; Settings › Portal Pictures is the keyboard way
+      el("a", { class: "n3-card-pic", tabindex: "-1", href: "portals.html?area=" + encodeURIComponent(p.id) }, "Change its picture"));  // the card is for the eye; Recreation › Portal Pictures is the keyboard way
   }
 
   MIAShell.start(async () => {

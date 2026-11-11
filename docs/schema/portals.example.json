@@ -1,160 +1,30 @@
 {
  "areas": [
   {
-   "id": "home",
-   "name": "Home",
+   "id": "f5562096f8",
+   "name": "The Long Orbit",
    "hue": "#35d4ff",
-   "icon": "household",
-   "picture": "img/portals/home.jpg",
-   "source": "original",
+   "icon": "character",
+   "picture": "",
+   "source": "none",
    "art_id": "",
-   "original": "img/portals/home.jpg"
+   "original": ""
   },
   {
-   "id": "garage",
-   "name": "Garage",
-   "hue": "#8fa7bf",
-   "icon": "garage",
-   "picture": "img/portals/garage.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/garage.jpg"
-  },
-  {
-   "id": "plants_animals",
-   "name": "Plants and Animals",
-   "hue": "#35d4ff",
-   "icon": "greenhouse",
-   "picture": "img/portals/plants_animals.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/plants_animals.jpg"
-  },
-  {
-   "id": "kitchen",
-   "name": "Kitchen",
-   "hue": "#e9d4a8",
-   "icon": "kitchen",
-   "picture": "img/portals/kitchen.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/kitchen.jpg"
-  },
-  {
-   "id": "health",
-   "name": "Health and Fitness",
-   "hue": "#ff8a3d",
-   "icon": "workout",
-   "picture": "img/portals/health.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/health.jpg"
-  },
-  {
-   "id": "recreation",
-   "name": "Recreation",
+   "id": "13690da436",
+   "name": "The Ember Road",
    "hue": "#9b6bff",
-   "icon": "expeditions",
-   "picture": "img/portals/recreation.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/recreation.jpg"
-  },
-  {
-   "id": "security",
-   "name": "Security",
-   "hue": "#c0c8d4",
-   "icon": "security",
-   "picture": "img/portals/security.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/security.jpg"
-  },
-  {
-   "id": "browser",
-   "name": "Browser",
-   "hue": "#bfefff",
-   "icon": "search",
-   "picture": "img/portals/browser.jpg",
-   "source": "original",
-   "art_id": "",
-   "original": "img/portals/browser.jpg"
-  },
-  {
-   "id": "system",
-   "name": "Settings and Diagnostics",
-   "hue": "#dfe9f2",
-   "icon": "settings",
+   "icon": "character",
    "picture": "",
    "source": "none",
    "art_id": "",
    "original": ""
   },
   {
-   "id": "finances",
-   "name": "Finances",
-   "hue": "#3f7bff",
-   "icon": "budget",
-   "picture": "",
-   "source": "none",
-   "art_id": "",
-   "original": ""
-  },
-  {
-   "id": "business",
-   "name": "Business",
-   "hue": "#7f95ff",
-   "icon": "business",
-   "picture": "",
-   "source": "none",
-   "art_id": "",
-   "original": ""
-  },
-  {
-   "id": "personal",
-   "name": "Personal",
-   "hue": "#ff8ad8",
-   "icon": "notes",
-   "picture": "",
-   "source": "none",
-   "art_id": "",
-   "original": ""
-  },
-  {
-   "id": "learning",
-   "name": "Learning",
-   "hue": "#6a5cff",
-   "icon": "classroom",
-   "picture": "",
-   "source": "none",
-   "art_id": "",
-   "original": ""
-  },
-  {
-   "id": "missions",
-   "name": "Missions",
-   "hue": "#c86bff",
-   "icon": "missions",
-   "picture": "",
-   "source": "none",
-   "art_id": "",
-   "original": ""
-  },
-  {
-   "id": "projects",
-   "name": "Projects",
-   "hue": "#b9a8ff",
-   "icon": "workshop",
-   "picture": "img/portals/recreation.jpg",
-   "source": "yours",
-   "art_id": "a1b2c3d4e5f6",
-   "original": ""
-  },
-  {
-   "id": "communications",
-   "name": "Communications",
-   "hue": "#6fc6ff",
-   "icon": "inbox",
+   "id": "new_world",
+   "name": "Make a World",
+   "hue": "#35d4ff",
+   "icon": "plus",
    "picture": "",
    "source": "none",
    "art_id": "",

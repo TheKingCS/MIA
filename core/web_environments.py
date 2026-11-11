@@ -83,25 +83,32 @@ def garage(context, today: Optional[date] = None) -> dict:
 def room(context, area_id: str, today: Optional[date] = None) -> Optional[dict]:
     """Any other area as a room (DEC-0130 M5's first pass, 2026-11-08): its apps and pages stand round MIA's orb as
     doors, each with how many of today's overdue or due items wait in it, and the area's list of what needs you (today's
-    overdue and due items whose app is in the area, at most six). The page draws it only in the Spatial look where the
+    overdue and due items whose app is in the area, at most six). A destination's subdashboards are doors too
+    (DEC-0153), each counting the items of the apps inside it. The page draws it only in the Spatial look where the
     graphics card allows; the Cards look and every other device keep the area's tiles. None for an unknown area."""
-    from core.web_areas import AREAS_BY_ID, _entries
+    from core.web_areas import _entries, _sub_entry, children, resolve
 
-    area = AREAS_BY_ID.get(area_id)
+    area = resolve(area_id)
     if area is None:
         return None
     from core.web_nexus import _today
 
     today = today or date.today()
     items = [i for i in _today(context, today) if i.get("when") in ("overdue", "today")]
-    doors = []
-    for entry in _entries(context, area):
-        mine = [i for i in items if i.get("module_id") == entry["id"]]
-        doors.append({**entry, "needs": len(mine)})
-    ids = {d["id"] for d in doors}
+    doors, page_of = [], {}
+    for sub_area in children(area.id):
+        inside = _entries(context, sub_area.members)
+        if not inside:
+            continue
+        ids = {e["id"] for e in inside}
+        page_of.update({e["id"]: e["page"] for e in inside})
+        doors.append({**_sub_entry(sub_area), "needs": sum(1 for i in items if i.get("module_id") in ids)})
+    for entry in _entries(context, area.members):
+        page_of[entry["id"]] = entry["page"]
+        doors.append({**entry, "needs": sum(1 for i in items if i.get("module_id") == entry["id"])})
     needs = [{"title": i.get("title", ""), "text": i.get("detail") or ("overdue" if i["when"] == "overdue" else "today"),
-              "app": i.get("module_id", ""), "page": next((d["page"] for d in doors if d["id"] == i.get("module_id")), "")}
-             for i in items if i.get("module_id") in ids][:6]
+              "app": i.get("module_id", ""), "page": page_of[i.get("module_id")]}
+             for i in items if i.get("module_id") in page_of][:6]
     return {"kind": "room", "available": bool(doors), "doors": doors, "needs": needs}
 
 

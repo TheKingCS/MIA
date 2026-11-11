@@ -5,7 +5,33 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-11 (Zac's eight destinations: the architecture, for his review)*
+*Last updated: 2026-11-11 (Zac's eight destinations: approved and mostly built)*
+
+**New 2026-11-11, later (Claude).** Zac approved the architecture and answered its questions (DEC-0153 holds his answers). **Built and pushed:**
+- the eight destinations and their subdashboards in `core/web_areas.py`, each item with one owner, enforced by a test;
+- hubs, the sidebar, the Apps page and the phone's bottom bar;
+- MIA opening on the Dashboard;
+- voice ("open the homestead");
+- the glasses' three screens (orb, menu, Nexus);
+- the Nexus as Living Worlds (a portal per story, opened from Living Worlds in Recreation);
+- Portal Pictures on stories;
+- the camera app shown as Cameras.
+
+K-0218, K-0219.
+
+**Next, in order:**
+1. **The Dashboard** (step 3):
+   - a **Your Week** tab: what's due this week, from the same due items as Today;
+   - **Agent Activity**: her own changes, screens she made, messages she held back, plus the Council and the Development board's latest;
+   - **weather** online (Zac said yes; Open-Meteo, no account; the place from the region setting; the life state's `weather` stops being PLANNED);
+   - the active mission by name with its next objective.
+2. **Upkeep as scheduled missions** (his decision). Home upkeep and asset maintenance become scheduled missions, each attached to its property or asset (`Mission.project_id`'s pattern, a ref through `core/links.py`), shown in the Calendar and on Your Week. Read `core/maintenance_manager.py` and `core/missions` first: a maintenance task already has a schedule, so the likely shape is the task stays the record and its due occurrence becomes a mission, never a second copy. Plan it before building; it touches stores.
+3. **Businesses** (his decision):
+   - the Businesses subdashboard with a quick view per `BusinessEntity` (income and expenses from tagged transactions);
+   - a dashboard per business;
+   - orders and quotes per business (`core/business_book.py` gains a business field).
+4. Health's meals widget.
+5. A handoff to Muse for the destinations' pictures and the world portals' art.
 
 **New 2026-11-11 (Claude, engine session on the PC).** Zac decided MIA's navigation: eight destinations (Dashboard, Home, Garage, Finances, Health + Fitness, AI Tools, Missions, Settings) with subdashboards, one owner per feature, and the Nexus only for Living Worlds; the glasses get three screens (orb, menu, Nexus). DEC-0153, his spec `docs/specs/NAVIGATION.md`. Stages 1 to 3 are written as `docs/NAVIGATION_ARCHITECTURE.md`: the audit, the hierarchy, every app id and page to one owner, the hard cases, and a seven-step migration that keeps every id, route and store (`core/web_areas.py` gains `parent` and `shortcuts`, old area ids alias to the new ones). **Next:** nothing moves until Zac reviews it and answers its section 4; then step 1 (registry, hubs, sidebar, the single-owner test). Muse will need a handoff for the destinations' pictures and the world portals.
 

@@ -2,162 +2,38 @@
  "date": "Sunday, November 8",
  "portals": [
   {
-   "id": "home",
-   "name": "Home",
-   "icon": "household",
+   "id": "f5562096f8",
+   "name": "The Long Orbit",
+   "icon": "character",
    "hue": "#35d4ff",
-   "line": "The house, the kitchen and what keeps it running.",
-   "page": "hub.html?area=home",
-   "needs": 1,
-   "art": "img/portals/home.jpg"
-  },
-  {
-   "id": "garage",
-   "name": "Garage",
-   "icon": "garage",
-   "hue": "#8fa7bf",
-   "line": "Vehicles, tools and the work on them.",
-   "page": "hub.html?area=garage",
-   "needs": 3,
-   "art": "img/portals/garage.jpg"
-  },
-  {
-   "id": "plants_animals",
-   "name": "Plants and Animals",
-   "icon": "greenhouse",
-   "hue": "#35d4ff",
-   "line": "What grows and who you feed.",
-   "page": "hub.html?area=plants_animals",
+   "line": "Starfall · The ship's mind is lying about the fuel.",
+   "page": "worlds.html?campaign=f5562096f8",
+   "status": "active",
+   "world": "Starfall",
    "needs": 0,
-   "art": "img/portals/plants_animals.jpg"
+   "art": ""
   },
   {
-   "id": "kitchen",
-   "name": "Kitchen",
-   "icon": "kitchen",
-   "hue": "#e9d4a8",
-   "line": "Meals, recipes and the pantry.",
-   "page": "hub.html?area=kitchen",
-   "needs": 1,
-   "art": "img/portals/kitchen.jpg"
-  },
-  {
-   "id": "health",
-   "name": "Health and Fitness",
-   "icon": "workout",
-   "hue": "#ff8a3d",
-   "line": "Training, food and how you feel.",
-   "page": "hub.html?area=health",
-   "needs": 2,
-   "art": "img/portals/health.jpg"
-  },
-  {
-   "id": "recreation",
-   "name": "Recreation",
-   "icon": "expeditions",
+   "id": "13690da436",
+   "name": "The Ember Road",
+   "icon": "character",
    "hue": "#9b6bff",
-   "line": "Trips, maps, music and play.",
-   "page": "hub.html?area=recreation",
-   "needs": 0,
-   "art": "img/portals/recreation.jpg"
-  },
-  {
-   "id": "security",
-   "name": "Security",
-   "icon": "security",
-   "hue": "#c0c8d4",
-   "line": "Cameras, passwords and sign-ins.",
-   "page": "hub.html?area=security",
-   "needs": 0,
-   "art": "img/portals/security.jpg"
-  },
-  {
-   "id": "browser",
-   "name": "Browser",
-   "icon": "search",
-   "hue": "#bfefff",
-   "line": "She browses. You approve.",
-   "page": "hub.html?area=browser",
-   "needs": 0,
-   "art": "img/portals/browser.jpg"
-  },
-  {
-   "id": "system",
-   "name": "Settings and Diagnostics",
-   "icon": "settings",
-   "hue": "#dfe9f2",
-   "line": "Make MIA yours, and see how she's doing.",
-   "page": "hub.html?area=system",
+   "line": "Dragon Coast · The caravan reached the cliffs at dusk.",
+   "page": "worlds.html?campaign=13690da436",
+   "status": "active",
+   "world": "Dragon Coast",
    "needs": 0,
    "art": ""
   },
   {
-   "id": "finances",
-   "name": "Finances",
-   "icon": "budget",
-   "hue": "#3f7bff",
-   "line": "Money in, money out, and the way out.",
-   "page": "hub.html?area=finances",
-   "needs": 1,
-   "art": ""
-  },
-  {
-   "id": "business",
-   "name": "Business",
-   "icon": "business",
-   "hue": "#7f95ff",
-   "line": "Customers, products and the paperwork.",
-   "page": "hub.html?area=business",
-   "needs": 0,
-   "art": ""
-  },
-  {
-   "id": "personal",
-   "name": "Personal",
-   "icon": "notes",
-   "hue": "#ff8ad8",
-   "line": "Your days, your people, your words.",
-   "page": "hub.html?area=personal",
-   "needs": 0,
-   "art": ""
-  },
-  {
-   "id": "learning",
-   "name": "Learning",
-   "icon": "classroom",
-   "hue": "#6a5cff",
-   "line": "Study, the library and skills.",
-   "page": "hub.html?area=learning",
-   "needs": 0,
-   "art": ""
-  },
-  {
-   "id": "missions",
-   "name": "Missions",
-   "icon": "missions",
-   "hue": "#c86bff",
-   "line": "Quests, levels and rewards.",
-   "page": "hub.html?area=missions",
-   "needs": 0,
-   "art": ""
-  },
-  {
-   "id": "projects",
-   "name": "Projects",
-   "icon": "workshop",
-   "hue": "#b9a8ff",
-   "line": "Things you're building.",
-   "page": "hub.html?area=projects",
-   "needs": 0,
-   "art": ""
-  },
-  {
-   "id": "communications",
-   "name": "Communications",
-   "icon": "inbox",
-   "hue": "#6fc6ff",
-   "line": "Email, MIA's messages and people.",
-   "page": "hub.html?area=communications",
+   "id": "new_world",
+   "name": "Make a World",
+   "icon": "plus",
+   "hue": "#35d4ff",
+   "line": "A new world, a campaign and your character in it.",
+   "page": "worlds.html",
+   "status": "",
+   "world": "",
    "needs": 0,
    "art": ""
   }
@@ -170,5 +46,5 @@
   "xp_for_level": 900,
   "missions": 3
  },
- "day": "8 things need you today"
+ "day": "2 stories in play"
 }

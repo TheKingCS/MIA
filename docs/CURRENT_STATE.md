@@ -2,7 +2,9 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-11 (the eight destinations, planned), by claude.*
+session. Last updated: 2026-11-11 (the eight destinations, built), by claude.*
+
+**2026-11-11, later (Claude: the eight destinations, built).** MIA now opens on the Dashboard, and her sidebar is Zac's eight: Dashboard, Home, Garage, Finances, Health and Fitness, AI Tools, Missions, Settings. Home opens to Kitchen, Smart Devices, Homestead, Recreation, Personal Tools and Learning. Every app has one home. Old links still land. "Open the homestead" works by voice. The Nexus is now Living Worlds' screen, a portal for each story, reached from Living Worlds in Recreation. The glasses have three screens: the orb, the menu of the eight, and the Nexus. Still to come: the Dashboard's Your Week, Agent Activity and weather; upkeep as scheduled missions; a dashboard for each business.
 
 **2026-11-11 (Claude: the eight destinations, planned).** Zac decided how MIA is organized (DEC-0153): eight destinations, each feature with one owner, and the Nexus only for Living Worlds; on the glasses, the orb, the menu and the Nexus. `docs/NAVIGATION_ARCHITECTURE.md` maps every app and page to its new owner and plans the move. Nothing has moved yet: it waits for his review.
 

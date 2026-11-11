@@ -294,44 +294,49 @@
         el("span", { class: "ico", "aria-hidden": "true" }, "＋"), el("span", { class: "label" }, "Make Something"))]);
   }
 
-  /** The sidebar as the canvas draws it (DEC-0113): Home and Apps, the person's Pinned apps, then each life area
-   *  folded (the one you're in opens), then what MIA made, the owner's pages and Make Something. Every app stays one
-   *  click away, as DEC-0045 asks; the groups only stop the list being a wall. */
+  /** The sidebar (DEC-0153): the Dashboard and Start Here, the person's Pinned apps, then the other seven
+   *  destinations folded (the one you're in opens to its subdashboards and apps, and the subdashboard you're in to its
+   *  apps), then what MIA made, the owner's pages and Make Something. Every app stays a click or two away, as DEC-0045
+   *  asks; the Nexus is reached from Living Worlds in Recreation, never from here. */
   function sideLinks(shell) {
     const here = document.body.dataset.app || "web_home";
     const link = (a) => el("a", { class: "nav", href: a.page, "aria-current": a.id === here ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, icon(a.icon, a.icon))), el("span", { class: "label" }, a.name));
     const byId = Object.fromEntries(shell.apps.map((a) => [a.id, a]));
     const out = [];
-    // Spatial (DEC-0135): the Nexus first (DEC-0130), then Today (the Dashboard, DEC-0129). Cards: Home (the
-    // Dashboard) first, the Nexus after it. Then Start Here and Apps.
-    const nexus = link({ id: "nexus", name: "Nexus", icon: "mia", page: "nexus.html" });
-    if (look() === "cards") {
-      if (byId.web_home) out.push(link({ ...byId.web_home, name: "Home", page: "index.html" }));
-      out.push(nexus);
-    } else {
-      out.push(nexus);
-      if (byId.web_home) out.push(link({ ...byId.web_home, name: "Today", page: "index.html?today=1" }));
-    }
+    // DEC-0153: the Dashboard first, in every look; then Start Here.
+    if (byId.web_home) out.push(link({ ...byId.web_home, name: "Dashboard", icon: "dashboard", page: "index.html" }));
     out.push(el("a", { class: "nav side-start", href: "start.html", "aria-current": here === "start" ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, "?"), el("span", { class: "label" }, "Start Here")));
     const pinned = (shell.favorites || []).map((id) => byId[id]).filter((a) => a && a.id !== "web_home");
     if (pinned.length) out.push(el("div", { class: "side-section" }, el("span", { class: "side-head" }, "Pinned"), ...pinned.map(link)));
-    // The areas (core/web_areas.py): each opens its hub; the one this page belongs to also lists its apps under it.
+    // The destinations (core/web_areas.py): each opens its hub; the one this page is in also lists its subdashboards
+    // and apps under it, and the subdashboard this page is in its apps.
     const params = new URLSearchParams(location.search);
     const hubHere = location.pathname.endsWith("hub.html") ? params.get("area") : null;
     const page = location.pathname.split("/").pop() + location.search;
-    const areas = shell.areas || [];
-    const mine = hubHere || (areas.find((a) => a.members.some((m) => m.id === here || m.page === page)) || {}).id;
+    const areas = (shell.areas || []).filter((a) => a.id !== "dashboard");
+    const isHere = (m) => m.id === here || m.page === page;
+    const subHere = (s) => s.id === hubHere || s.members.some(isHere);
+    const mine = (areas.find((a) => a.id === hubHere || a.members.some(isHere) || (a.subs || []).some(subHere)) || {}).id;
     if (areas.length) {
-      out.push(el("span", { class: "side-head side-areas-head" }, "Areas"));
+      out.push(el("span", { class: "side-head side-areas-head" }, "Destinations"));
+      const row = (m) => el("a", { class: "nav nav-sub", href: m.page, "aria-current": isHere(m) ? "page" : null },
+        el("span", { class: "label" }, m.name));
       areas.forEach((area) => {
         const open = area.id === mine;
         out.push(el("a", { class: "nav side-area" + (open ? " open" : ""), href: area.page, "aria-current": hubHere === area.id ? "page" : null,
           "aria-expanded": String(open) },
           el("span", { class: "ico", "aria-hidden": "true" }, icon(area.icon, "•")), el("span", { class: "label" }, area.name)));
-        if (open) out.push(el("div", { class: "side-area-apps" }, area.members.map((m) => el("a", { class: "nav nav-sub", href: m.page,
-          "aria-current": m.id === here || m.page === page ? "page" : null }, el("span", { class: "label" }, m.name)))));
+        if (!open) return;
+        const inner = [];
+        (area.subs || []).forEach((s) => {
+          inner.push(el("a", { class: "nav nav-sub side-sub" + (subHere(s) ? " open" : ""), href: s.page,
+            "aria-current": s.id === hubHere ? "page" : null }, el("span", { class: "label" }, s.name)));
+          if (subHere(s)) inner.push(el("div", { class: "side-area-apps side-sub-apps" }, s.members.map(row)));
+        });
+        inner.push(...area.members.map(row));
+        out.push(el("div", { class: "side-area-apps" }, inner));
       });
     } else {
       out.push(...shell.apps.filter((a) => a.id !== "web_home").map(link));  // older engine: no areas
@@ -387,10 +392,10 @@
     const here = document.body.dataset.app || "web_home";
     const tab = (href, id, glyph, emoji, label) => el("a", { href, "aria-current": here === id ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(glyph, emoji)), label);
-    const cards = look() === "cards";  // DEC-0135: the cards look's first tab is Home, the spatial look's the Nexus
+    // DEC-0153: the Dashboard first in every look, then Home (the household's destination).
     bar.replaceChildren(
-      cards ? tab("index.html", "web_home", "home", "🏠", "Home") : tab("nexus.html", "nexus", "home", "🏠", "Nexus"),
-      cards ? tab("nexus.html", "nexus", "mia", "◎", "Nexus") : tab("index.html?today=1", "web_home", "calendar", "📅", "Today"),
+      tab("index.html", "web_home", "dashboard", "🏠", "Dashboard"),
+      tab("hub.html?area=home", "hub_home", "household", "⌂", "Home"),
       tab("apps.html", "module_browser", "apps", "▦", "Apps"),
       el("button", { type: "button", class: "bottom-search", onclick: () => openSearch() },
         el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"));

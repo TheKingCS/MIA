@@ -130,7 +130,7 @@ APPS: tuple[App, ...] = (
     App("insurance", "Insurance", "☂️", "Covered, for less.", "insurance.html",
         "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).", MONEY, ("insurance",),
         "When does my car insurance renew?"),
-    App("security", "Security", "🛡️", "Your cameras, at home.", "security.html",
+    App("security", "Cameras", "🛡️", "Your cameras, at home.", "security.html",
         "Your home cameras, watched live from MIA over your own network, no cloud (DEC-0033).", HOME, ("cameras",),
         "Are the cameras working?"),
     App("power", "Power", "🔋", "Energy, tracked.", "power.html",

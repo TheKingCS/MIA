@@ -19,7 +19,7 @@ _PORTAL_WORDS = ("portal", "door", "gateway")
 
 def _action_paint(context, arguments: dict) -> str:
     """Tool paint_picture: MIA paints from the description on this PC's graphics card; as the background (the default)
-    it goes up by itself when it's done, and one for an area's portal ("portal") goes in that portal."""
+    it goes up by itself when it's done, and one for a Nexus portal ("portal": a story's) goes in that portal."""
     from core.art_studio import start
 
     description = str(arguments.get("description") or "").strip()
@@ -39,7 +39,7 @@ def _action_paint(context, arguments: dict) -> str:
 
 
 def _action_portal_picture(context, arguments: dict) -> str:
-    """Tool set_portal_picture: one of the person's paintings (by its words) in an area's portal in the Nexus, or
+    """Tool set_portal_picture: one of the person's paintings (by its words) in a portal in the Nexus (a story's, DEC-0153), or
     "original" to put that portal back (core/portal_pictures; undoable)."""
     from core.actions import ActionError
     from core.art_studio import find
@@ -47,7 +47,7 @@ def _action_portal_picture(context, arguments: dict) -> str:
 
     area = find_area(context, str(arguments.get("portal") or ""))
     if area is None:
-        return "Which area's portal? Say its name, like the Garage or the Kitchen."
+        return "Which portal? Say the story's or the world's name, as the Nexus shows it."
     words = str(arguments.get("picture") or "").strip().lower()
     art = ""
     if words not in ("", "original", "the original", "default", "none", "back", "reset"):
@@ -108,7 +108,7 @@ def register_art_actions(registry: AssistantActionRegistry) -> None:
             "description": {"type": "string", "description": "what to paint, in the user's words."},
             "use": {"type": "string", "description": "optional: 'background' (default) or 'portal'."},
             "as_background": {"type": "boolean", "description": "optional: put it up as the background (default true)."},
-            "portal": {"type": "string", "description": "optional: the area whose Nexus portal it's for ('the Garage')."},
+            "portal": {"type": "string", "description": "optional: the Nexus portal it's for, by the story's or world's name."},
         }, "required": ["description"]},
         handler=_action_paint,
         trigger_phrases=("paint me", "paint a", "draw me", "generate a background", "generate an image", "make a background",
@@ -128,10 +128,10 @@ def register_art_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="set_portal_picture", domain="accessibility",
-        description="Put one of the user's paintings (by a word from what it shows) in an area's portal in the Nexus, "
+        description="Put one of the user's paintings (by a word from what it shows) in a story's portal in the Nexus (Living Worlds), "
                     "or picture='original' to put that portal back to its original picture.",
         parameters={"type": "object", "properties": {
-            "portal": {"type": "string", "description": "the area: 'Garage', 'Kitchen', 'Plants and Animals'..."},
+            "portal": {"type": "string", "description": "the portal: the story's or world's name, as the Nexus shows it."},
             "picture": {"type": "string", "description": "words from the painting's description, or 'original'."},
         }, "required": ["portal", "picture"]},
         handler=_action_portal_picture,

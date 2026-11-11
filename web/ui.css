@@ -1778,6 +1778,13 @@ body.mod-maps .hero { display: none; }
 .hub-tile .hub-name { font-weight: 600; }
 .hub-tile .hub-line { font-size: 13px; color: var(--text-dim); }
 .hub-areas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+/* DEC-0153: a subdashboard's tile is a way in, a shortcut is something another area owns. */
+.hub-tile.hub-sub { border-color: rgba(var(--rgb-accent), .35); background: rgba(var(--rgb-accent), .05); }
+.hub-tile.hub-sub .hub-name::after { content: " ›"; color: var(--accent); }
+.hub-shortcuts { margin-top: 18px; }
+.hub-head { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); margin: 0 0 8px; }
+.side-sub.open { color: var(--text); }
+.side-area-apps.side-sub-apps { margin: 0 0 4px 12px; }
 .hub-areas .btn { text-transform: none; }
 .apps-area-link { display: inline-block; text-decoration: none; }
 .apps-area-link:hover { color: var(--accent); }

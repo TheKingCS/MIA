@@ -98,8 +98,9 @@
       const all = data.groups.flatMap((g) => g.apps).filter((a) => a.id !== "module_browser");
       const byId = Object.fromEntries(all.map((a) => [a.id, a]));
       const favs = data.favorites.map((id) => byId[id]).filter((a) => a && matches(a, words));
-      // The areas (DEC-0129): each heading opens its hub; an app in two areas is listed under both. Pages that aren't
-      // apps of their own (Projects, Pets...) are plain rows. Older engines without areas keep the life groups.
+      // The destinations and their subdashboards (DEC-0153): each heading opens its hub, and every app is under the
+      // one that owns it. Pages that aren't apps of their own (Projects, Pets...) are plain rows. Older engines
+      // without areas keep the life groups.
       const pageRow = (m) => el("a", { class: "apps-row", href: m.page }, el("span", { class: "apps-row-icon", "aria-hidden": "true" },
         (window.MIAIcons && (MIAIcons.svg(m.id) || MIAIcons.svg(m.icon))) || "•"), el("span", { class: "apps-row-name" }, m.name),
         el("span", { class: "apps-row-tag" }, m.tagline || ""));
@@ -139,7 +140,10 @@
   let areas = [];
   async function render() {
     data = await MIA.apps();
-    try { areas = (await MIA.shell()).areas || []; } catch (e) { areas = []; }
+    // DEC-0153: each destination, then each of its subdashboards as its own list ("Home › Kitchen").
+    try {
+      areas = ((await MIA.shell()).areas || []).flatMap((a) => [a].concat((a.subs || []).map((s) => ({ ...s, name: a.name + " › " + s.name }))));
+    } catch (e) { areas = []; }
     const c = data.counts;
     $("strip").replaceChildren(
       el("div", { class: "cell ok" }, el("span", { class: "n" }, c.apps), el("span", { class: "t" }, "apps")),

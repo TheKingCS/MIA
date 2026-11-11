@@ -52,8 +52,8 @@
   let data = null;           // MIA.glasses(): {apps, others, pinned, hint}
   let view = "home";         // home | cards | menu | panel | confirm | result | reward | hud | log | boot | sync | welcome
   let showingAll = false;    // browsing the apps that aren't pinned
-  let nexus = null;          // the Nexus (DEC-0130): null, "ring" (the areas), or an area's id (its apps)
-  let nexusArea = 0;         // where on the ring you stepped in from
+  let nexus = null;          // DEC-0153: null (the menu's top: the eight), "ring" (the Nexus: the stories), or an area's id
+  let trail = [];            // the areas stepped into from the menu's top, each with where you were: [{id, at}]
   let appIndex = 0, row = 0;
   let panel = null, proposal = null, resultText = "", after = "menu", busy = false, crumbs = [], panelItem = "";
   const LIVE_MS = 2000;  // a live panel (the workout going now) keeps itself current
@@ -86,30 +86,41 @@
   const LOG_CARD = { id: "__log", name: "Conversation", status: "Everything you and MIA have said" };
   const WELCOME_CARD = { id: "__welcome", name: "Know Your System", status: "Your first mission and the tours" };
   const SYNC_CARD = { id: "__sync", name: "Getting To Know You", status: "Pick up where we left off" };
-  const NEXUS_CARD = { id: "__nexus", name: "Nexus", status: "Your areas, and what needs you in each" };
-  const NEXUS_BACK = { id: "__nexus_back", name: "Back", status: "To the Nexus" };
-  // The Nexus on the glasses: the areas as a ring of names (each an "__area" card), then one area's apps.
+  const NEXUS_CARD = { id: "__nexus", name: "Nexus", status: "Your stories in Living Worlds" };
+  const NEXUS_BACK = { id: "__nexus_back", name: "Back", status: "To the menu" };
+  // DEC-0153, the glasses' three screens: her orb, the menu, the Nexus. The menu's top is the eight destinations (each
+  // an "__area" card); a destination holds its subdashboards and apps, a subdashboard its apps; Back goes up a level.
+  // The Nexus is the stories in Living Worlds as a ring of names.
+  function areaCard(r) {
+    const inside = (r.subs || []).length + (r.apps || []).length;
+    return { id: "__area", area: r.id, name: r.name, short: r.short, icon: r.icon, hue: r.hue, needs: r.needs || 0,
+      tone: r.needs ? "attention" : "", status: r.needs ? r.needs + (r.needs === 1 ? " needs you" : " need you")
+        : inside + (inside === 1 ? " thing inside" : " things inside") };
+  }
   function nexusCards() {
     const d = data || {};
     const areas = d.areas || [];
     if (nexus === "ring") {
-      return areas.map((r) => ({ id: "__area", area: r.id, name: r.name, short: r.short, hue: r.hue, needs: r.needs || 0,
-        tone: r.needs ? "attention" : "", status: r.needs ? r.needs + (r.needs === 1 ? " needs you" : " need you") : r.apps.length + (r.apps.length === 1 ? " app" : " apps") }))
-        .concat([Object.assign({}, BACK_CARD, { status: "To your apps" })]);
+      return (d.worlds || []).map((w) => ({ id: "__world", world: w.id, name: w.name, short: w.name, icon: "character", hue: w.hue, status: w.line }))
+        .concat([Object.assign({}, BACK_CARD, { status: (d.worlds || []).length ? "To the menu" : "No stories yet: make a world on a screen or by voice" })]);
     }
-    const area = areas.find((r) => r.id === nexus) || { apps: [] };
+    const area = areas.find((r) => r.id === nexus) || { apps: [], subs: [] };
     const all = (d.apps || []).concat(d.others || []);
-    return area.apps.map((id) => all.find((c) => c.id === id)).filter(Boolean).concat([NEXUS_BACK]);
+    const up = trail.length > 1 ? (areas.find((r) => r.id === trail[trail.length - 2].id) || {}).name : "the menu";
+    return (area.subs || []).map((id) => areas.find((r) => r.id === id)).filter(Boolean).map(areaCard)
+      .concat((area.apps || []).map((id) => all.find((c) => c.id === id)).filter(Boolean))
+      .concat([Object.assign({}, NEXUS_BACK, { status: "To " + up })]);
   }
   function cards() {
     const d = data || {};
     if (nexus) return nexusCards();
     if (showingAll) return (d.others || []).concat([BACK_CARD]);
-    const nx = (d.areas || []).length ? [NEXUS_CARD] : [];
-    const list = (syncLeft ? [SYNC_CARD] : welcomeLeft ? [WELCOME_CARD] : []).concat(nx, d.apps || []);
-    // The log comes last: one move back from the orb reaches it.
-    return (d.pinned && (d.others || []).length
-      ? list.concat([Object.assign({}, ALL, { status: d.others.length + " more apps" })]) : list).concat([LOG_CARD]);
+    const top = (d.areas || []).filter((r) => !r.parent).map(areaCard);
+    const list = (syncLeft ? [SYNC_CARD] : welcomeLeft ? [WELCOME_CARD] : []).concat(top.length ? top : d.apps || []);
+    // An older engine with no destinations keeps its pinned apps and All Apps. The log comes last: one move back
+    // from the orb reaches it, and the Nexus sits just before it.
+    const old = !top.length && d.pinned && (d.others || []).length ? [Object.assign({}, ALL, { status: d.others.length + " more apps" })] : [];
+    return list.concat(old, top.length ? [NEXUS_CARD] : [], [LOG_CARD]);
   }
   function app() { return cards()[appIndex] || null; }
 
@@ -277,7 +288,8 @@
   }
   function badge(a) {
     const icon = window.MIAIcons && MIAIcons.svg(a.id === "__all" ? "apps" : a.id === "__nexus" ? "mia"
-      : a.id === "__back" || a.id === "__nexus_back" || a.id === "__log" ? "mia" : a.id);
+      : a.id === "__back" || a.id === "__nexus_back" || a.id === "__log" ? "mia"
+      : a.id === "__area" || a.id === "__world" ? a.icon : a.id);  // a destination's or story's own icon (DEC-0153)
     const b = el("div", "badge");
     if (icon) b.append(icon); else b.textContent = (a.name || "?").trim().charAt(0).toUpperCase();
     return b;
@@ -353,8 +365,9 @@
   // Home and the app menu, from the boards: her orb and the time, what matters
   // now, and every app as a tile, eight to a page. Move walks the tiles.
   const TILES_A_PAGE = 8;
-  // The Nexus's ring: every area's name around a ring on black, each lit faintly in its own hue (its frame and glow
-  // only, DEC-0130), the chosen one bright in the middle with what needs you. No particles: black is see-through.
+  // The Nexus's ring (DEC-0153: the stories in Living Worlds): every story's name around a ring on black, each lit
+  // faintly in its world's hue (frame and glow only), the chosen one bright in the middle with its line. No particles:
+  // black is see-through.
   function nexusRing(list, a) {
     const wrap = el("div", "sync app-screen dash nexus-ring");
     ["tl", "tr", "bl", "br"].forEach((k) => wrap.append(el("i", "rc " + k)));
@@ -376,7 +389,7 @@
     if (a.hue) mid.style.setProperty("--hue", a.hue);
     mid.append(el("p", "n-big", esc(a.name)), el("p", "w-sum" + (a.tone === "attention" ? " attn" : ""), esc(a.status || "")));
     ring.append(mid);
-    wrap.append(top, ring, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> step in &nbsp;·&nbsp; <b>▼</b> back"));
+    wrap.append(top, ring, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> choose &nbsp;·&nbsp; <b>▼</b> back"));
     return wrap;
   }
   function dashScreen(list, a) {
@@ -407,7 +420,7 @@
     box.append(el("div", "s-top", "<span>" + esc(a.name) + "</span><span>" + (appIndex + 1) + " of " + list.length + "</span>"));
     const line = a.status || a.tagline || "";
     if (line) box.append(el("p", "w-sum" + (a.tone === "attention" ? " attn" : ""), esc(line)));
-    wrap.append(grid, box, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> open &nbsp;·&nbsp; <b>▼</b> " + (nexus ? "the Nexus" : "her orb")));
+    wrap.append(grid, box, el("p", "s-hint", "<b>▶</b> move &nbsp;·&nbsp; <b>●</b> open &nbsp;·&nbsp; <b>▼</b> " + (nexus ? "back" : "her orb")));
     return wrap;
   }
   // A mission, from the Phase 6 board: its card, each objective ticked or not, the XP.
@@ -1032,8 +1045,11 @@
     if (c.open !== undefined) {
       if (!c.open) { show("home"); answer(c.text, 5); return; }
       let i = (data && data.apps || []).findIndex((a) => a.id === c.open);
-      nexus = null;
-      showingAll = i < 0;
+      // DEC-0153: an app is found inside the destination or subdashboard that owns it, so Back walks up from there.
+      const owner = (data && data.areas || []).find((r) => (r.apps || []).includes(c.open));
+      nexus = owner ? owner.id : null;
+      trail = owner ? (owner.parent ? [{ id: owner.parent, at: 0 }] : []).concat([{ id: owner.id, at: 0 }]) : [];
+      showingAll = !owner && i < 0;
       i = cards().findIndex((a) => a.id === c.open);  // in the list as shown (the Nexus card or sync card come first)
       if (i >= 0) { appIndex = i; menuIndex = 0; row = 0; panel = null; show("menu"); return; }
     }
@@ -1165,7 +1181,11 @@
       if (a.id === "__log") { await openLog(); return; }
       if (a.id === "__all") { showingAll = true; appIndex = 0; render(); return; }
       if (a.id === "__nexus") { nexus = "ring"; appIndex = 0; render(); return; }
-      if (a.id === "__area") { nexusArea = appIndex; nexus = a.area; appIndex = 0; render(); return; }
+      if (a.id === "__area") { trail.push({ id: a.area, at: appIndex }); nexus = a.area; appIndex = 0; render(); return; }
+      if (a.id === "__world") {  // a story: how to play it from here (play_world_turn), since play is by voice
+        resultText = a.name + ". " + (a.status || "") + " Say \u201cnext turn in " + a.name + ": I\u2026\u201d to play.";
+        after = "cards"; show("result"); return;
+      }
       if (a.id === "__nexus_back") { leaveArea(); return; }
       if (a.id === "__back" && nexus) { leaveNexus(); return; }
       if (a.id === "__back") { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
@@ -1290,12 +1310,13 @@
     };
   }
   async function leaveResult() {
+    if (after === "cards") { show("cards"); return; }
     if (after === "panel") { await load(); show("panel"); await refreshPanel(); return; }
     if (after === "reload") {  // pins changed: re-read the cards, stay with this app
       const id = (app() || {}).id;
       await load();
       const d = data || {};
-      if (nexus && !cards().some((c) => c.id === id)) nexus = null;
+      if (nexus && !cards().some((c) => c.id === id)) { nexus = null; trail = []; }
       showingAll = !nexus && !!d.pinned && !(d.apps || []).some((c) => c.id === id);
       const at = cards().findIndex((c) => c.id === id);
       appIndex = at >= 0 ? at : 0; row = 0; show("cards");
@@ -1329,9 +1350,13 @@
     if (showingAll) { showingAll = false; appIndex = Math.max(0, cards().length - 1); render(); return; }
     show("home");
   }
-  // Out of an area to the ring (on the area you came from), and out of the ring to the Nexus card.
-  function leaveArea() { nexus = "ring"; appIndex = nexusArea; render(); }
-  function leaveNexus() { nexus = null; appIndex = Math.max(0, cards().findIndex((c) => c.id === "__nexus")); render(); }
+  // Up a level from an area (on the card you came in by), and out of the Nexus to its card in the menu.
+  function leaveArea() {
+    const was = trail.pop() || { at: 0 };
+    nexus = trail.length ? trail[trail.length - 1].id : null;
+    appIndex = was.at; render();
+  }
+  function leaveNexus() { nexus = null; trail = []; appIndex = Math.max(0, cards().findIndex((c) => c.id === "__nexus")); render(); }
 
   // ------------------------------------------------------------ input
   document.addEventListener("keydown", (e) => {

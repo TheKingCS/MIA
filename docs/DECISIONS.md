@@ -2704,5 +2704,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (the worlds).
 - Supersedes: DEC-0129's fifteen areas, DEC-0130's Nexus as MIA's home and Kitchen's own portal, and the eight rooms
   proposed in `docs/ORGANIZATION_REVIEW.md` section 4. App ids, routes, stores, tools and action kinds stay.
-- Not done yet: everything; the architecture waits on Zac's review and the questions in its section 4.
+- Zac's answers (2026-11-11, same day):
+  - Weather: she may fetch it online.
+  - Agent Activity: both her own actions and the development agents.
+  - The Nexus: opens from Living Worlds in Recreation on the PC and
+    phone, and is the third screen on the glasses; it has no sidebar
+    entry.
+  - Toolbox, Trade Master, the Lab and Field Kit: he's unsure, so they
+    stay as proposed for now.
+  - Personal Tools: includes Memories, no split.
+  - Cameras: in Smart Devices.
+  - Home upkeep and asset maintenance: become scheduled missions,
+    attached to their property or asset, shown in the Calendar and on a
+    Your Week tab on the Dashboard.
+  - Businesses: a subdashboard under Finances with a quick view of each
+    business, each opening its own dashboard, and orders and quotes
+    belong to each business.
+- Built 2026-11-11: the registry, hubs, sidebar, voice, the glasses' three screens, and the Nexus as Living Worlds
+  (`docs/NAVIGATION_ARCHITECTURE.md`, "What's built"). Not done yet: the Dashboard's Your Week, Agent Activity and
+  weather; upkeep as scheduled missions; the Businesses page and per-business orders and quotes; Health's meals.
 - Related: DEC-0129, DEC-0130, DEC-0134 (Living Worlds), DEC-0152 (Projects and Missions)

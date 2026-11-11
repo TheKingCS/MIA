@@ -1495,7 +1495,7 @@
   },
   {
    "id": "security",
-   "name": "Security",
+   "name": "Cameras",
    "full_name": "Security",
    "tagline": "Your cameras, at home.",
    "status": "Front Door",
@@ -1979,14 +1979,38 @@
  ],
  "areas": [
   {
+   "id": "dashboard",
+   "name": "Dashboard",
+   "short": "Dashboard",
+   "icon": "dashboard",
+   "hue": "#35d4ff",
+   "parent": "",
+   "apps": [
+    "good_news",
+    "missions",
+    "music",
+    "calendar"
+   ],
+   "subs": [],
+   "needs": 0
+  },
+  {
    "id": "home",
    "name": "Home",
    "short": "Home",
+   "icon": "household",
    "hue": "#35d4ff",
+   "parent": "",
    "apps": [
-    "household",
+    "household"
+   ],
+   "subs": [
     "kitchen",
-    "power"
+    "smart_devices",
+    "homestead",
+    "recreation",
+    "personal_tools",
+    "learning"
    ],
    "needs": 0
   },
@@ -1994,19 +2018,87 @@
    "id": "garage",
    "name": "Garage",
    "short": "Garage",
+   "icon": "garage",
    "hue": "#8fa7bf",
+   "parent": "",
    "apps": [
-    "garage"
+    "garage",
+    "toolbox"
    ],
-   "needs": 1
+   "subs": [],
+   "needs": 0
   },
   {
-   "id": "plants_animals",
-   "name": "Plants and Animals",
-   "short": "Plants & Animals",
-   "hue": "#35d4ff",
+   "id": "finances",
+   "name": "Finances",
+   "short": "Finances",
+   "icon": "budget",
+   "hue": "#3f7bff",
+   "parent": "",
    "apps": [
-    "greenhouse"
+    "budget",
+    "insurance",
+    "compliance"
+   ],
+   "subs": [
+    "businesses"
+   ],
+   "needs": 0
+  },
+  {
+   "id": "health",
+   "name": "Health and Fitness",
+   "short": "Health & Fitness",
+   "icon": "workout",
+   "hue": "#ff8a3d",
+   "parent": "",
+   "apps": [
+    "workout"
+   ],
+   "subs": [],
+   "needs": 0
+  },
+  {
+   "id": "ai_tools",
+   "name": "AI Tools",
+   "short": "AI Tools",
+   "icon": "assistant",
+   "hue": "#6fc6ff",
+   "parent": "",
+   "apps": [
+    "browser",
+    "inbox"
+   ],
+   "subs": [],
+   "needs": 0
+  },
+  {
+   "id": "missions",
+   "name": "Missions",
+   "short": "Missions",
+   "icon": "missions",
+   "hue": "#c86bff",
+   "parent": "",
+   "apps": [
+    "missions",
+    "dungeon",
+    "skills",
+    "character",
+    "reward_shop"
+   ],
+   "subs": [],
+   "needs": 0
+  },
+  {
+   "id": "settings",
+   "name": "Settings",
+   "short": "Settings",
+   "icon": "settings",
+   "hue": "#dfe9f2",
+   "parent": "",
+   "apps": [],
+   "subs": [
+    "system"
    ],
    "needs": 0
   },
@@ -2014,135 +2106,124 @@
    "id": "kitchen",
    "name": "Kitchen",
    "short": "Kitchen",
+   "icon": "kitchen",
    "hue": "#e9d4a8",
+   "parent": "home",
    "apps": [
     "kitchen"
    ],
-   "needs": 1
+   "subs": [],
+   "needs": 0
   },
   {
-   "id": "health",
-   "name": "Health and Fitness",
-   "short": "Health & Fitness",
-   "hue": "#ff8a3d",
+   "id": "smart_devices",
+   "name": "Smart Devices",
+   "short": "Smart Devices",
+   "icon": "power",
+   "hue": "#bfefff",
+   "parent": "home",
    "apps": [
-    "workout",
-    "kitchen"
+    "security",
+    "power",
+    "lab",
+    "field_kit"
    ],
+   "subs": [],
+   "needs": 0
+  },
+  {
+   "id": "homestead",
+   "name": "Homestead",
+   "short": "Homestead",
+   "icon": "greenhouse",
+   "hue": "#35d4ff",
+   "parent": "home",
+   "apps": [
+    "greenhouse",
+    "flock"
+   ],
+   "subs": [],
    "needs": 0
   },
   {
    "id": "recreation",
    "name": "Recreation",
    "short": "Recreation",
+   "icon": "expeditions",
    "hue": "#9b6bff",
+   "parent": "home",
    "apps": [
+    "music",
+    "play",
     "expeditions",
     "maps",
-    "navigation",
-    "memories",
-    "music"
+    "navigation"
    ],
+   "subs": [],
    "needs": 0
   },
   {
-   "id": "security",
-   "name": "Security",
-   "short": "Security",
-   "hue": "#c0c8d4",
-   "apps": [
-    "field_kit"
-   ],
-   "needs": 0
-  },
-  {
-   "id": "system",
-   "name": "Settings and Diagnostics",
-   "short": "Settings",
-   "hue": "#dfe9f2",
-   "apps": [
-    "diagnostics"
-   ],
-   "needs": 0
-  },
-  {
-   "id": "finances",
-   "name": "Finances",
-   "short": "Finances",
-   "hue": "#3f7bff",
-   "apps": [
-    "budget",
-    "real_estate",
-    "inbox"
-   ],
-   "needs": 0
-  },
-  {
-   "id": "business",
-   "name": "Business",
-   "short": "Business",
-   "hue": "#7f95ff",
-   "apps": [
-    "workshop",
-    "real_estate"
-   ],
-   "needs": 0
-  },
-  {
-   "id": "personal",
-   "name": "Personal",
-   "short": "Personal",
+   "id": "personal_tools",
+   "name": "Personal Tools",
+   "short": "Personal Tools",
+   "icon": "notes",
    "hue": "#ff8ad8",
+   "parent": "home",
    "apps": [
     "calendar",
     "notes",
+    "life_notes",
+    "operating_journal",
+    "memories",
+    "vault",
+    "files",
     "relationships",
     "observations"
    ],
+   "subs": [],
    "needs": 0
   },
   {
    "id": "learning",
    "name": "Learning",
    "short": "Learning",
+   "icon": "classroom",
    "hue": "#6a5cff",
+   "parent": "home",
    "apps": [
     "classroom",
-    "skills"
+    "knowledge"
    ],
+   "subs": [],
    "needs": 0
   },
   {
-   "id": "missions",
-   "name": "Missions",
-   "short": "Missions",
-   "hue": "#c86bff",
+   "id": "businesses",
+   "name": "Businesses",
+   "short": "Businesses",
+   "icon": "business",
+   "hue": "#7f95ff",
+   "parent": "finances",
    "apps": [
-    "missions",
-    "skills",
-    "character"
-   ],
-   "needs": 0
-  },
-  {
-   "id": "projects",
-   "name": "Projects",
-   "short": "Projects",
-   "hue": "#b9a8ff",
-   "apps": [
+    "real_estate",
     "workshop",
-    "lab"
+    "business"
    ],
+   "subs": [],
    "needs": 0
   },
   {
-   "id": "communications",
-   "name": "Communications",
-   "short": "Communications",
-   "hue": "#6fc6ff",
+   "id": "system",
+   "name": "System",
+   "short": "System",
+   "icon": "diagnostics",
+   "hue": "#dfe9f2",
+   "parent": "settings",
    "apps": [
-    "inbox"
+    "diagnostics",
+    "issues"
    ],
+   "subs": [],
    "needs": 0
   }
  ],
@@ -2151,5 +2232,21 @@
   "rgb": "53, 212, 255",
   "soft": "#aeeeff",
   "deep": "#1d748c"
- }
+ },
+ "worlds": [
+  {
+   "id": "f5562096f8",
+   "name": "The Long Orbit",
+   "hue": "#35d4ff",
+   "line": "Starfall · The ship's mind is lying about the fuel.",
+   "status": "active"
+  },
+  {
+   "id": "13690da436",
+   "name": "The Ember Road",
+   "hue": "#9b6bff",
+   "line": "Dragon Coast · The caravan reached the cliffs at dusk.",
+   "status": "active"
+  }
+ ]
 }

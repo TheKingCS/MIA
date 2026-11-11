@@ -2,8 +2,10 @@
 tests.test_web_nexus
 ======================
 
-The Nexus (DEC-0130, core/web_nexus.py): what needs you in each portal, going to an area by voice, and the screen's
-data in sidebar order with each area's hue; a portal's picture only once it exists (H-0096); the Nexus and an area's room share one 3D engine.
+The Nexus (DEC-0130; Living Worlds only since DEC-0153, core/web_nexus.py): what needs you counted in each area and
+its destination, going to a destination, subdashboard, the Dashboard or the Nexus by voice, the screen's portals (each
+story, in play first, then "Make a World") with the HUD; a portal's picture only once it exists (H-0096); the Nexus
+and an area's room share one 3D engine.
 """
 
 from types import SimpleNamespace
@@ -12,26 +14,43 @@ import core.web_surfaces as surfaces
 from core.web_nexus import nexus, portal_status, wants_area
 
 
-def test_what_needs_you_counts_in_every_area_its_app_is_in():
+def test_what_needs_you_counts_in_the_owning_area_and_its_destination():
     items = [{"when": "overdue", "module_id": "garage"}, {"when": "today", "module_id": "kitchen"},
              {"when": "soon", "module_id": "garage"}, {"when": "today", "module_id": "budget"}]
-    assert portal_status(items) == {"garage": 1, "kitchen": 1, "home": 1, "health": 1, "finances": 1}
+    assert portal_status(items) == {"garage": 1, "kitchen": 1, "home": 1, "finances": 1}
 
 
-def test_going_to_an_area_by_its_name_or_an_everyday_name():
+def test_going_to_a_destination_or_subdashboard_by_its_name_or_an_everyday_name():
     assert wants_area("Take me to the garage") == ("hub.html?area=garage", "Garage")
-    assert wants_area("open plants and animals") == ("hub.html?area=plants_animals", "Plants and Animals")
+    assert wants_area("open the homestead") == ("hub.html?area=homestead", "Homestead")
+    assert wants_area("open plants and animals") == ("hub.html?area=homestead", "Homestead")
     assert wants_area("go to my money") == ("hub.html?area=finances", "Finances")
+    assert wants_area("open AI tools") == ("hub.html?area=ai_tools", "AI Tools")
+    assert wants_area("show me personal tools") == ("hub.html?area=personal_tools", "Personal Tools")
+    assert wants_area("open health & fitness") == ("hub.html?area=health", "Health and Fitness")
+    assert wants_area("go to the dashboard") == ("index.html", "the Dashboard")
     assert wants_area("Hey MIA, take me to the Nexus.") == ("nexus.html", "the Nexus")
+    assert wants_area("open living worlds") == ("nexus.html", "the Nexus")
     assert wants_area("open the garage door") is None
     assert wants_area("what's in the garage?") is None
 
 
-def test_the_screen_has_portals_in_order_with_hues_and_the_hud(monkeypatch):
-    monkeypatch.setattr(surfaces, "_visible", lambda context, app: True)
+def test_the_screen_has_a_portal_per_story_in_play_first_then_make_a_world(tmp_path):
+    from core.living_worlds import LivingWorldsBook
+
     page = nexus(SimpleNamespace())
-    assert page["portals"][0]["id"] == "home" and page["portals"][1]["hue"] == "#8fa7bf"
-    assert {"level", "missions"} <= set(page["hud"]) and page["day"] == "Nothing needs you today"
+    assert [p["id"] for p in page["portals"]] == ["new_world"] and page["day"].startswith("No story in play")
+    book = LivingWorldsBook(None, data_dir=tmp_path)
+    coast = book.create_universe("Dragon Coast", "fantasy")
+    old = book.create_campaign(coast.universe_id, "The Long Winter")
+    old.status = "ended"
+    road = book.create_campaign(coast.universe_id, "The Ember Road", "Smugglers on the coast road.")
+    page = nexus(SimpleNamespace(living_worlds=book))
+    assert [p["name"] for p in page["portals"]] == ["The Ember Road", "The Long Winter", "Make a World"]
+    first = page["portals"][0]
+    assert first["page"] == f"worlds.html?campaign={road.campaign_id}" and first["line"].startswith("Dragon Coast · ")
+    assert first["hue"] == page["portals"][1]["hue"]  # one world, one colour
+    assert {"level", "missions"} <= set(page["hud"]) and page["day"] == "1 story in play"
 
 
 def test_a_portal_carries_its_picture_only_once_muses_art_is_there(monkeypatch, tmp_path):

@@ -1,10 +1,72 @@
 # MIA's navigation: eight destinations, one owner each
 
 *Claude, 2026-11-11, answering Zac's spec `docs/specs/NAVIGATION.md`
-(stages 1 to 3). Decision: DEC-0153. Status: **for Zac to review.**
-Nothing has been moved yet. It replaces the proposal in section 4 of
-`docs/ORGANIZATION_REVIEW.md` (Zac chose his own eight). The facts and
-per-app verdicts in that review still hold.*
+(stages 1 to 3). Decision: DEC-0153. Status: **approved by Zac the same
+day, with the answers below; steps 1, 2, 4 and 5 are built.** It replaces
+the proposal in section 4 of `docs/ORGANIZATION_REVIEW.md` (Zac chose his
+own eight). The facts and per-app verdicts in that review still hold.*
+
+## Zac's answers (2026-11-11)
+
+1. **Weather:** yes, she may fetch it online.
+2. **Agent Activity:** all of it, both what MIA did on her own and the
+   development team's agents.
+3. **The Nexus:** the third screen on the glasses. On the phone and the
+   PC it is the screen that opens when you open Living Worlds under
+   Recreation, to move between the worlds. It has no sidebar entry.
+4. **Toolbox, Trade Master, the Lab, Field Kit:** he isn't sure what's in
+   them. They stay where section 4.6 proposed (Garage, Garage, Smart
+   Devices, Smart Devices) until he has seen them.
+5. **Personal Tools** holds the journal, the calendar and the like,
+   Memories included. No split.
+
+He also decided three things beyond the questions:
+
+- **Cameras** go in Smart Devices. The app now shows as "Cameras"; its id
+  `security` and its page stay.
+- **Upkeep becomes scheduled missions.** Home upkeep, like maintenance
+  for cars and tools, is scheduled missions. Each one is attached to its
+  property or asset, appears in the Calendar, and appears on a new **Your
+  Week** tab on the Dashboard that shows what is due this week.
+- **Businesses:** a subdashboard under Finances with a quick view of
+  each business. Clicking a business opens its own dashboard. **Orders
+  and quotes** become a section under each business, holding only that
+  business's own.
+
+## What's built (2026-11-11)
+
+- **Step 1, the registry, hubs and sidebar.** `core/web_areas.py` holds
+  the eight and their subdashboards: `parent`, `shortcuts`, `OLD_IDS`,
+  `resolve`. Each item has one owner, and
+  `tests/test_web_areas.py` fails on a second owner or an unowned page.
+  A hub shows its subdashboards first, then its apps, its shortcuts and
+  the way back up. The sidebar lists the Dashboard, then the
+  destinations, each opening to its subdashboards and apps. The Apps page
+  lists every destination and subdashboard. The phone's bottom bar is
+  Dashboard, Home, Apps and Search. MIA opens on the Dashboard in every
+  look.
+- **Step 2, voice.** "Take me to the homestead", "open AI tools", "go to
+  the dashboard" and the old names ("plants and animals") all resolve.
+  "Open living worlds" opens the Nexus.
+- **Step 4, the glasses.** Their three screens are the orb; the menu
+  (the eight destinations, then subdashboards, then apps, with Back going
+  up one level); and the Nexus (the stories). "Open the greenhouse" steps
+  into Homestead.
+- **Step 5, the Nexus as Living Worlds.** Each campaign has a portal, the
+  ones in play first, plus "Make a World". Portal Pictures puts paintings
+  on stories' portals, and the painting tools speak of stories.
+
+**Still to build:**
+
+- **Step 3, the Dashboard:** the Your Week tab, Agent Activity, weather
+  and the active mission.
+- **Step 6:**
+  - upkeep as scheduled missions;
+  - the Businesses page with a dashboard per business;
+  - orders and quotes per business;
+  - Health's meals widget.
+- **Muse's handoff:** the destinations' pictures and the world portals'
+  art.
 
 This document has five parts:
 

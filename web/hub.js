@@ -1,7 +1,7 @@
 /*
- * hub.js — an area's hub (DEC-0129, claude, 2026-11-08).
- * Renders MIA.hub(area) (core/web_areas.hub): the area's apps and pages as tiles, each opening its own page, then the
- * other areas to jump to. Which apps are in which area is decided in core; this only lays them out. An area with its own
+ * hub.js — a destination's or subdashboard's hub (DEC-0129, claude, 2026-11-08; DEC-0153's eight, 2026-11-11).
+ * Renders MIA.hub(area) (core/web_areas.hub): its subdashboards and then its apps and pages as tiles, each opening its
+ * own page, the shortcuts to what other areas own, the way back up, then the other destinations to jump to. Which apps are in which area is decided in core; this only lays them out. An area with its own
  * space (core/web_environments.py) draws that instead; the Garage's is a 3D room on the Nexus's engine where the
  * graphics card allows (garageRoom), its flat layout otherwise. Every other area is a room of its apps in the Spatial
  * look (areaRoom), its tiles otherwise.
@@ -16,7 +16,7 @@
     const ico = el("span", { class: "hub-ico", "aria-hidden": "true" });
     const pic = window.MIAIcons && (MIAIcons.svg(a.id) || MIAIcons.svg(a.icon));  // the app's own icon, else the page's
     if (pic) ico.append(pic); else ico.textContent = "•";
-    return el("a", { class: "glass hub-tile", href: a.page }, ico,
+    return el("a", { class: "glass hub-tile" + (a.sub ? " hub-sub" : ""), href: a.page }, ico,
       el("span", { class: "hub-name" }, a.name), el("span", { class: "hub-line" }, a.tagline || ""));
   }
 
@@ -122,7 +122,7 @@
     const bench = el("nav", { class: "room-bench", "aria-label": "The bench" }, env.bench.map((t) => el("a", { class: "bench-tool", href: t.page, title: t.line },
       el("span", { class: "bench-ico", "aria-hidden": "true" }, ico(t.id, t.icon)), el("strong", {}, t.name))));
     const head = el("header", { class: "room-head" },
-      el("a", { class: "btn btn-ghost btn-small", href: "nexus.html" }, "‹ Nexus"),
+      el("a", { class: "btn btn-ghost btn-small", href: h.back.page }, "‹ " + h.back.name),
       el("div", {}, el("h1", {}, h.name), el("p", { class: "tagline" }, env.bays.length + " bays · " + (env.needs.length ? env.needs.length + " need you" : "nothing needs you"))),
       el("a", { class: "btn btn-ghost btn-small", href: "garage.html" }, "Manage ›"));
     const ui = el("div", { class: "room-ui" }, head, el("div", { class: "room-spacer" }), card, side, bench, list);
@@ -192,7 +192,7 @@
           el("strong", {}, n.title), el("span", {}, n.text))))
           : el("p", { class: "dim" }, "Nothing here is due today.")));
     const head = el("header", { class: "room-head" },
-      el("a", { class: "btn btn-ghost btn-small", href: "nexus.html" }, "‹ Nexus"),
+      el("a", { class: "btn btn-ghost btn-small", href: h.back.page }, "‹ " + h.back.name),
       el("div", {}, el("h1", {}, h.name), el("p", { class: "tagline" }, doors.length + " apps · " + (waiting ? waiting + " need you" : "nothing needs you"))),
       el("a", { class: "btn btn-ghost btn-small", href: "hub.html?area=" + encodeURIComponent(h.id) + "&flat" }, "Tiles ›"));
     const ui = el("div", { class: "room-ui" }, head, el("div", { class: "room-spacer" }), card, side, list);
@@ -215,6 +215,19 @@
     return true;
   }
 
+  // The way back up (the destination, or the Dashboard) and the other destinations, at the foot of every layout.
+  function others(h) {
+    return el("nav", { class: "hub-areas", "aria-label": "Other destinations" },
+      el("a", { class: "btn btn-ghost btn-small", href: h.back.page }, "‹ " + h.back.name),
+      h.areas.filter((x) => x.id !== h.id && x.page !== h.back.page).map((x) => el("a", { class: "btn btn-ghost btn-small", href: x.page }, x.name)));
+  }
+
+  // Shortcuts: what another area owns, reached from here (never a copy), each saying where it lives.
+  function shortcuts(h) {
+    return (h.shortcuts || []).length ? el("div", { class: "hub-shortcuts" }, el("h2", { class: "hub-head" }, "Also here"),
+      el("div", { class: "hub-grid" }, h.shortcuts.map(tile))) : null;
+  }
+
   function paint(h) {
     document.title = h.name + " — MIA";
     $("hub-name").textContent = h.name;
@@ -230,16 +243,12 @@
       const vapor = $("vapor");
       vapor.hidden = false;
       MIASpatial.vapor(vapor, [h.hue, h.hue, "#35d4ff"]);
-      $("panel").replaceChildren(...env(h.environment).filter(Boolean),
-        el("nav", { class: "hub-areas", "aria-label": "Other areas" },
-          el("a", { class: "btn btn-ghost btn-small", href: "nexus.html" }, "‹ Nexus"),
-          h.areas.filter((x) => x.id !== h.id).map((x) => el("a", { class: "btn btn-ghost btn-small", href: "hub.html?area=" + x.id }, x.name))));
+      $("panel").replaceChildren(...env(h.environment).filter(Boolean), others(h));
       return;
     }
-    $("panel").replaceChildren(
+    $("panel").replaceChildren(...[
       h.apps.length ? el("div", { class: "hub-grid" }, h.apps.map(tile)) : el("p", { class: "empty" }, "Nothing here yet."),
-      el("nav", { class: "hub-areas", "aria-label": "Other areas" },
-        h.areas.filter((x) => x.id !== h.id).map((x) => el("a", { class: "btn btn-ghost btn-small", href: "hub.html?area=" + x.id }, x.name))));
+      shortcuts(h), others(h)].filter(Boolean));
   }
 
   MIAShell.start(async () => { paint(await MIA.hub(area)); });

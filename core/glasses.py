@@ -15,9 +15,11 @@ menu. Assembled here, in code, so `web/glasses.js` holds no logic
   rest wait behind an "All apps" card. With no favorites, every app shows
   in the glasses' order. Served as `/api/glasses`, with Home's one line
   (`priority`) and its tone (`priority_tone`: amber orb when it needs you,
-  the canvas's GlassesHome, DEC-0113), and `areas` for the Nexus's ring
-  (`glasses_areas`: each area with its apps here, hue and what needs you;
-  `short_name` fits its name on the ring; DEC-0130).
+  the canvas's GlassesHome, DEC-0113), `areas` for the menu (DEC-0153's
+  three screens: the orb, the menu, the Nexus; `glasses_areas`: the eight
+  destinations and their subdashboards, each with its apps here, hue and
+  what needs you; `short_name` fits a name on a tile) and `worlds` for the
+  Nexus (`glasses_worlds`: the stories in Living Worlds).
 - Every app has a card but Passwords (no secrets on the display) and Look (the
   glasses' own camera, still to come): the apps that only had an ask got
   theirs in core/glasses_cards.py (2026-11-08), merged into PANELS below.
@@ -1439,7 +1441,8 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
     """The person's glasses cards: their pinned apps (favorites), then the
     rest behind "All apps". Each card has a status line (its at-a-glance line, or for the cards drawn 2026-11-08 their
     first panel's first line: core/glasses_cards.status) and its menu; Home's
-    line is `priority`, with `priority_tone` for her orb; `areas` is the Nexus's ring (glasses_areas)."""
+    line is `priority`, with `priority_tone` for her orb; `areas` is the menu of the eight destinations and their
+    subdashboards (glasses_areas) and `worlds` the Nexus's stories (glasses_worlds), DEC-0153."""
     from core.focus_presets import favorite_apps
     from core.web_surfaces import dashboard
 
@@ -1483,8 +1486,10 @@ def glasses_apps(context, today: Optional[date] = None, mission_id: Optional[str
             "apps": pinned or others, "others": others if pinned else [],
             "hint": "" if pinned else "Star your favorite apps to pin them here.",
             "kinds": sorted(GLASSES_KINDS),
-            # DEC-0130 (NEXUS_PLAN M4): the Nexus on the glasses, a flat ring of areas, each with its apps here
+            # DEC-0153: the menu, the eight destinations and their subdashboards, each with its apps here
             "areas": glasses_areas(context, [c["id"] for c in pinned + others], today),
+            # DEC-0153: the Nexus, the third screen: the person's stories in Living Worlds
+            "worlds": glasses_worlds(context),
             # DEC-0136: only a theme's accent travels to the lens (black is see-through), lifted to read on it
             "accent": _accent(context)}
 
@@ -1500,27 +1505,45 @@ def _accent(context) -> dict:
 
 
 def short_name(name: str) -> str:
-    """Pure logic. An area's name short enough for the glasses' ring: "and" becomes "&", and Settings and Diagnostics
-    is Settings."""
-    return "Settings" if name.startswith("Settings") else name.replace(" and ", " & ")
+    """Pure logic. An area's name short enough for the glasses: "and" becomes "&", and You and Your Accounts is
+    Accounts."""
+    return "Accounts" if name == "You and Your Accounts" else name.replace(" and ", " & ")
 
 
 def glasses_areas(context, app_ids: list[str], today: date) -> list[dict]:
-    """The Nexus on the glasses (DEC-0130): each area (in order) that has an app on the glasses, with its hue, those
-    apps' ids, and how many of today's items in it need you. No particles or depth here: the display shows light and
-    black is see-through, so it's names on black."""
+    """The glasses' menu (DEC-0153): the eight destinations, then their subdashboards, each as {id, name, short, hue,
+    icon, parent, apps: its apps that are on the glasses, subs: its subdashboards that have any, needs: today's items in it
+    that need you}. A subdashboard or destination with nothing on the glasses is left out, except the Dashboard, which
+    always has a place (with Missions, Music and Calendar from its shortcuts when they're here). Names on black: the
+    display shows light and black is see-through."""
     from core.web_areas import AREAS
     from core.web_nexus import _today, portal_status
 
     have = set(app_ids)
     status = portal_status(_today(context, today))
+    apps = {a.id: [m for m in a.members if isinstance(m, str) and m in have] for a in AREAS}
+    apps["dashboard"] = apps["dashboard"] + [s for s in AREAS[0].shortcuts if s in have]
+    subs = {a.id: [s.id for s in AREAS if s.parent == a.id and apps[s.id]] for a in AREAS if not a.parent}
     out = []
     for area in AREAS:
-        ids = [m for m in area.members if isinstance(m, str) and m in have]
-        if ids:
-            out.append({"id": area.id, "name": area.name, "short": short_name(area.name), "hue": area.hue, "apps": ids,
-                        "needs": status.get(area.id, 0)})
+        mine = subs.get(area.id, [])
+        if apps[area.id] or mine or area.id == "dashboard":
+            out.append({"id": area.id, "name": area.name, "short": short_name(area.name), "icon": area.icon, "hue": area.hue,
+                        "parent": area.parent, "apps": apps[area.id], "subs": mine, "needs": status.get(area.id, 0)})
     return out
+
+
+def glasses_worlds(context) -> list[dict]:
+    """The Nexus on the glasses (DEC-0153): each story in Living Worlds (core/web_nexus.worlds, in play first) as
+    {id, name, hue, line, status}; making a world is done by voice or on a screen, so it isn't here."""
+    try:
+        from core.web_nexus import NEW_WORLD, worlds
+
+        return [{"id": w["id"], "name": w["name"], "hue": w["hue"], "line": w["line"], "status": w["status"]}
+                for w in worlds(context) if w["id"] != NEW_WORLD]
+    except Exception:  # noqa: BLE001 - the Nexus is empty rather than the glasses failing
+        log.exception("Glasses: the worlds couldn't be read")
+        return []
 
 
 def glasses_panel(context, app_id: str, item_id: str, today: Optional[date] = None,

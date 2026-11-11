@@ -3,8 +3,8 @@ The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041
 Phase 2; core/glasses.py): the person's own apps as cards, each with a
 menu; a panel's lines carry only glasses-safe actions, and money stays
 readouts; a change goes Propose -> Approve like everywhere else. Every ask
-reaches one of its app's own tools (DEC-0125). The Nexus's areas come with
-them (DEC-0130).
+reaches one of its app's own tools (DEC-0125). The menu of the eight
+destinations and the Nexus's stories come with them (DEC-0153).
 """
 
 import json
@@ -310,17 +310,34 @@ def test_good_news_on_the_glasses_is_heard_by_its_quick_command():
     assert all(_ASK.match(say) for say in ASKS["good_news"])
 
 
-def test_the_nexus_on_the_glasses_lists_areas_with_their_glasses_apps_and_needs(world):
-    """DEC-0130 (NEXUS_PLAN M4): the glasses get the areas in order, each with only apps that are on the glasses, its
-    hue, and what needs you there; an area with none of the glasses' apps is left out."""
+def test_the_glasses_menu_is_the_eight_destinations_and_their_subdashboards(world):
+    """DEC-0153: the glasses' menu has the destinations in order (the Dashboard always), then the subdashboards, each
+    with only apps that are on the glasses, its hue, its parent and what needs you; one with nothing here is left out,
+    and a destination lists only the subdashboards that are."""
     from core.web_areas import AREAS
 
     data = glasses_apps(world, TODAY)
     on_glasses = {a["id"] for a in data["apps"] + data["others"]}
     areas = data["areas"]
-    assert areas and [r["id"] for r in areas] == [a.id for a in AREAS if any(r["id"] == a.id for r in areas)]
+    assert [r["id"] for r in areas] == [a.id for a in AREAS if any(r["id"] == a.id for r in areas)]
+    assert areas[0]["id"] == "dashboard" and all(r["parent"] in ("", "home", "finances", "settings") for r in areas)
+    ids = {r["id"] for r in areas}
     for r in areas:
-        assert r["apps"] and set(r["apps"]) <= on_glasses and r["hue"].startswith("#") and r["needs"] >= 0
+        assert set(r["apps"]) <= on_glasses and r["hue"].startswith("#") and r["needs"] >= 0
+        assert r["apps"] or r["subs"] or r["id"] == "dashboard"
+        assert set(r["subs"]) <= ids
     garage = next(r for r in areas if r["id"] == "garage")
     assert "garage" in garage["apps"]
-    assert "browser" not in {r["id"] for r in areas} or "browser" in on_glasses
+
+
+def test_the_glasses_nexus_is_the_stories_in_living_worlds(world, tmp_path):
+    """DEC-0153: the Nexus is the glasses' third screen, the person's stories (no "Make a World" there)."""
+    from core.glasses import glasses_worlds
+    from core.living_worlds import LivingWorldsBook
+
+    assert glasses_worlds(world) == [] or all(w["id"] != "new_world" for w in glasses_worlds(world))
+    book = LivingWorldsBook(None, data_dir=tmp_path / "worlds")
+    road = book.create_campaign(book.create_universe("Dragon Coast").universe_id, "The Ember Road")
+    world.living_worlds = book
+    assert [w["name"] for w in glasses_worlds(world)] == ["The Ember Road"]
+    assert glasses_apps(world, TODAY)["worlds"][0]["id"] == road.campaign_id

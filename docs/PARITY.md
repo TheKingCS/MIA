@@ -26,7 +26,7 @@ Of 50 apps: by voice 49, on the PC 50, on the phone 50, on the glasses 47.
 | Workshop | yes | yes | yes | yes |
 | Orders & Quotes | yes | yes | yes | yes |
 | Insurance | yes | yes | yes | yes |
-| Security | yes | yes | yes | yes |
+| Cameras | yes | yes | yes | yes |
 | Power | yes | yes | yes | yes |
 | Character | yes | yes | yes | yes |
 | Reward Shop | yes | yes | yes | yes |

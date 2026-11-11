@@ -88,21 +88,8 @@
     $("home-mia-ask").replaceChildren(...ASK.map((q) => el("a", { class: "btn btn-ghost", href: "assistant.html?ask=" + encodeURIComponent(q) }, q)));
   }
 
-  // DEC-0130: the Nexus opens first. Opening MIA (a new session, not a link from inside her) goes on to the Nexus;
-  // "Today" from the Nexus or the sidebar (index.html?today=1) stays here.
-  function nexusFirst() {
-    const q = new URLSearchParams(location.search);
-    if (q.has("today")) return false;
-    if (MIAShell.look && MIAShell.look() !== "spatial") return false;  // the cards look opens here (DEC-0135)
-    let seen = null;
-    try { seen = sessionStorage.getItem("mia.nexus.opened"); sessionStorage.setItem("mia.nexus.opened", "1"); } catch (e) { return false; }
-    if (seen) return false;
-    location.replace("nexus.html" + (q.has("demo") ? "?demo" : ""));
-    return true;
-  }
-
+  // DEC-0153: MIA opens here, on the Dashboard, in every look (the Nexus is Living Worlds' screen now).
   async function render() {
-    if (nexusFirst()) return;
     const [home, shell] = await Promise.all([MIA.dashboard(), MIA.shell()]);
     $("greeting").textContent = home.greeting;
     hearIt(home.briefing);
