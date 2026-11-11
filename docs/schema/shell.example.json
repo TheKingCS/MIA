@@ -448,8 +448,19 @@
     "Settings"
   ],
   "weather": {
-    "status": "PLANNED",
-    "text": null
+    "status": "REAL",
+    "place": "Springfield, Illinois",
+    "text": "48°F, partly cloudy",
+    "temp": 48,
+    "words": "Partly cloudy",
+    "high": 54,
+    "low": 39,
+    "tomorrow": {
+      "high": 51,
+      "low": 36,
+      "words": "Light rain"
+    },
+    "unit": "°F"
   },
   "sound": {
     "on": true,
@@ -836,6 +847,13 @@
               "icon": "classroom",
               "tagline": "A learning path, stage by stage.",
               "page": "guitar.html"
+            },
+            {
+              "id": "trades",
+              "name": "Trade Master",
+              "icon": "workshop",
+              "tagline": "Any job or diagnosis, walked through step by step.",
+              "page": "trades.html"
             }
           ]
         }
@@ -862,13 +880,6 @@
           "tagline": "Quick tools.",
           "page": "toolbox.html",
           "ask": "Convert 5 gallons to liters."
-        },
-        {
-          "id": "trades",
-          "name": "Trade Master",
-          "icon": "workshop",
-          "tagline": "Any job or diagnosis, walked through step by step.",
-          "page": "trades.html"
         }
       ],
       "subs": []
@@ -918,7 +929,7 @@
           "name": "Businesses",
           "icon": "business",
           "tagline": "Each business: its money, its work, its customers.",
-          "page": "hub.html?area=businesses",
+          "page": "businesses.html",
           "sub": true,
           "members": [
             {

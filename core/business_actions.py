@@ -30,6 +30,7 @@ CUSTOMER = Record("customer", "customer", "customer_id", "get_customer", "add_cu
 QUOTE = Record("quote", "quote", "quote_id", "get_quote", "add_quote", "update_quote", "delete_quote",
                store="business", fields=(
                    Field("title", "What it's for", "text", True),
+                   Field("entity_id", "Business", "pick", options=("businesses",), say="business"),
                    Field("customer_id", "Customer", "pick", options=("customers",), say="customer"),
                    Field("recipe_id", "From a recipe", "pick", options=("recipes",), say="recipe"),
                    Field("quantity", "How many", "int", default=1),
@@ -42,6 +43,7 @@ QUOTE = Record("quote", "quote", "quote_id", "get_quote", "add_quote", "update_q
 ORDER = Record("order", "order", "order_id", "get_order", "add_order", "update_order", "delete_order",
                store="business", fields=(
                    Field("title", "What it is", "text", True),
+                   Field("entity_id", "Business", "pick", options=("businesses",), say="business"),
                    Field("customer_id", "Customer", "pick", options=("customers",), say="customer"),
                    Field("recipe_id", "From a recipe", "pick", options=("recipes",), say="recipe"),
                    Field("quantity", "How many", "int", default=1),
@@ -69,8 +71,12 @@ def _who(context, customer_id: str) -> str:
 
 
 def _check_refs(context, params) -> None:
-    """Refuses a customer or recipe id that no longer exists (ActionError), before a quote or order is changed."""
+    """Refuses a customer, recipe or business (DEC-0153) id that no longer exists (ActionError), before a quote or order
+    is changed."""
     book = _book(context)
+    budget = getattr(context, "budget", None)
+    if params.get("entity_id") and (budget is None or budget.get_business_entity(str(params["entity_id"])) is None):
+        raise ActionError("That business isn't there anymore.")
     if params.get("customer_id") and book.get_customer(str(params["customer_id"])) is None:
         raise ActionError("That customer isn't there anymore.")
     recipes = getattr(context, "craft_recipes", None)
@@ -152,12 +158,14 @@ def _accept_describe(context, params) -> str:
 
 
 def _accept(context, params) -> str:
-    """Does `quote.accept` once approved, and says what happened. An order is made from the quote, and the quote is marked accepted with it."""
+    """Does `quote.accept` once approved, and says what happened. An order is made from the quote, for the same business
+    (DEC-0153), and the quote is marked accepted with it and keeps the order's id."""
     q = _quote(context, params)
     book = _book(context)
     price = quote_figures(context, q)["price"]
     order = book.add_order(q.title, customer_id=q.customer_id, recipe_id=q.recipe_id, quantity=q.quantity,
-                           price=price, due_date=str(params.get("due_date") or ""), notes=q.notes, quote_id=q.quote_id)
+                           price=price, due_date=str(params.get("due_date") or ""), notes=q.notes, quote_id=q.quote_id,
+                           entity_id=q.entity_id)  # DEC-0153: the order is the same business's
     book.update_quote(q.quote_id, status="Accepted", order_id=order.order_id)
     return f"Accepted. {q.title} is an order now."
 

@@ -145,6 +145,10 @@
    "status": "none",
    "why": "taking a card out of the wallet is the person's own choice; nothing of MIA's to improve"
   },
+  "action:weather": {
+   "status": "none",
+   "why": "which town the weather is for is the person's own choice (DEC-0153); the forecast is Open-Meteo's, nothing of MIA's to improve"
+  },
   "action:why": {
    "status": "none",
    "why": "the person's own reasons, linked, unlinked or marked achieved by hand on My Why (DEC-0125); MIA never invents a reason, so there's nothing of hers to improve"

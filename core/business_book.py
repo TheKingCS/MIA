@@ -67,9 +67,9 @@ class Customer:
 
 @dataclass
 class Quote:
-    """A price offered to a customer: for a recipe and quantity, worked out from its materials and hours at the labor rate,
-    plus extras and the margin (percent), unless a price is set by hand (0: use the suggested one). Draft, Sent,
-    Accepted (then it has its order) or Declined.
+    """A price offered to a customer by one of the businesses (DEC-0153): for a recipe and quantity, worked out from its
+    materials and hours at the labor rate, plus extras and the margin (percent), unless a price is set by hand (0: use
+    the suggested one). Draft, Sent, Accepted (then it has its order, of the same business) or Declined.
     """
     quote_id: str
     title: str
@@ -85,12 +85,13 @@ class Quote:
     status: str = "Draft"
     order_id: str = ""
     created_at: str = ""
+    entity_id: str = ""  # DEC-0153: the business it's for (core.budget_manager.BusinessEntity); "" not sorted yet
 
 
 @dataclass
 class Order:
-    """What was agreed: the customer, quote and recipe, quantity, price, due date, status, the builds (jobs) made for it
-    and the payments taken (ledger revenue entries).
+    """What was agreed: the customer, quote and recipe, quantity, price, due date, status, the builds (jobs) made for it,
+    the payments taken (ledger revenue entries) and the business it's for (DEC-0153).
     """
     order_id: str
     title: str
@@ -105,6 +106,7 @@ class Order:
     job_ids: list[str] = field(default_factory=list)
     payment_ids: list[str] = field(default_factory=list)  # ledger revenue entries
     created_at: str = ""
+    entity_id: str = ""  # DEC-0153: the business it's for (core.budget_manager.BusinessEntity); "" not sorted yet
 
 
 @dataclass
@@ -184,11 +186,11 @@ class BusinessBook:
 
     @staticmethod
     def _set(item, fields: dict, numbers=(), ints=()) -> None:
-        """Sets a record's fields, refusing unknown ones and ids other than the customer and recipe they point at; money
-        fields are never negative and counts at least 1.
+        """Sets a record's fields, refusing unknown ones and ids other than the customer, recipe and business they point
+        at; money fields are never negative and counts at least 1.
         """
         for name, value in fields.items():
-            if not hasattr(item, name) or name.endswith("_id") and name not in ("customer_id", "recipe_id"):
+            if not hasattr(item, name) or name.endswith("_id") and name not in ("customer_id", "recipe_id", "entity_id"):
                 raise ValueError(f"No field '{name}'.")
             if name in numbers:
                 value = max(0.0, float(value or 0))
@@ -250,13 +252,18 @@ class BusinessBook:
         return q
 
     def update_quote(self, quote_id: str, **fields) -> Quote:
-        """Changes a quote's fields, its status one of QUOTE_STATUSES (ValueError otherwise)."""
+        """Changes a quote's fields, its status one of QUOTE_STATUSES (ValueError otherwise). `order_id` is set only
+        here, by accepting it (core/business_actions._accept), never through a form: _set refuses ids, and before
+        2026-11-11 that refusal came after the status, so an accepted quote lost the order it became."""
         q = self.get_quote(quote_id)
         if q is None:
             raise ValueError("That quote isn't there anymore.")
         if "status" in fields and fields["status"] not in QUOTE_STATUSES:
             raise ValueError("Unknown status.")
+        order_id = fields.pop("order_id", None)
         self._set(q, fields, self._Q_NUM, self._Q_INT)
+        if order_id is not None:
+            q.order_id = str(order_id)
         self._save()
         return q
 

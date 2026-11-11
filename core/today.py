@@ -5,7 +5,9 @@ core.today
 "Today" (2026-10-01): one list of what needs you today, from every app,
 so nobody has to open eight screens to find out. Shown at the top of
 Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the
-Assistant ("what's on today?").
+Assistant ("what's on today?"). `week_days` is the Dashboard's Your Week
+(DEC-0153): today, then what falls due on each of the next six days, from
+the dated sources only (`WEEK_SOURCES`).
 
 What it gathers, for the signed-in person (their household's things and
 their own):
@@ -307,6 +309,35 @@ def today_items(context, today: Optional[date] = None) -> list[TodayItem]:
         items += _safe(name, lambda g=gather: g(context, today))
     # Overdue, then today (timed things in time order first), waiting, soon.
     return sorted(items, key=lambda i: (_ORDER[i.when], i.time == "" if i.when == TODAY else 0, i.time))
+
+
+# Your Week (DEC-0153): the sources with dated things. Alarms ring every day, the pantry and the inbox aren't dated, and
+# the wallet's renewals are months out: those stay on Today only.
+WEEK_SOURCES = ("calendar", "bills", "maintenance", "tasks", "birthdays", "health")
+
+
+def week_days(context, today: Optional[date] = None, days: int = 7) -> list[dict]:
+    """The Dashboard's Your Week (DEC-0153, Zac 2026-11-11: "what is due this week"): today (everything overdue,
+    today's and waiting, as on Today), then each of the next days with what falls due on it, from the same sources as
+    Today (WEEK_SOURCES), each item once. [{date, items: [TodayItem as dict]}], a day with nothing left in."""
+    today = today or date.today()
+    out = [{"date": today.isoformat(), "items": [i.as_dict() for i in today_items(context, today) if i.when != SOON]}]
+    seen = {(i["module_id"], i["record_id"], i["title"]) for i in out[0]["items"]}
+    sources = [(n, g) for n, g in _SOURCES if n in WEEK_SOURCES]
+    for n in range(1, days):
+        day = today + timedelta(days=n)
+        found = []
+        for name, gather in sources:
+            found += [i for i in _safe(name, lambda g=gather: g(context, day)) if i.when == TODAY]
+        found.sort(key=lambda i: (i.time == "", i.time))
+        items = []
+        for i in found:
+            mark = (i.module_id, i.record_id, i.title)
+            if mark not in seen:
+                seen.add(mark)
+                items.append(i.as_dict())
+        out.append({"date": day.isoformat(), "items": items})
+    return [d for d in out if d["items"] or d["date"] == today.isoformat()]
 
 
 def describe(items: list[TodayItem], limit: int = 8) -> str:

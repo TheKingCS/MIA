@@ -630,7 +630,10 @@
     shop: () => read("/api/shop", "shop"),
     journal: () => read("/api/journal", "journal"),
     people: () => read("/api/people", "people"),
-    business: () => read("/api/business", "business"),
+    business: (id) => demo ? read("", "business") : call("GET", "/api/business" + (id ? "?business=" + encodeURIComponent(id) : "")),
+    businesses: () => read("/api/businesses", "businesses"),
+    oneBusiness: (id) => demo ? read("", "biz").then((d) => d.by_id[id] || Object.values(d.by_id)[0])
+      : call("GET", "/api/businesses/" + encodeURIComponent(id)),
     // Email drafts (core/email_drafts.py): MIA only drafts; an email goes only when Send is pressed.
     emailDrafts: () => demo ? Promise.resolve({ drafts: [], can_send: false }) : call("GET", "/api/email/drafts"),
     sendDraft: (id) => demo ? demoOnly() : call("POST", "/api/email/drafts/" + encodeURIComponent(id) + "/send"),

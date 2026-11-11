@@ -1796,6 +1796,24 @@ a.comms-row:hover .row-title { color: var(--accent); }
 /* The Dashboard's life cards (DEC-0129, core/web_surfaces.life_cards), 2026-11-08. */
 .home-life { display: grid; gap: 12px; margin: 16px 0; }
 .life-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+/* DEC-0153: the Dashboard's tabs, Your Week, the weather and mission cards, and Agent Activity. */
+.home-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+.home-week { margin-bottom: var(--gap); }
+.week-day + .week-day { margin-top: 14px; }
+.week-day .focus-list li { display: flex; align-items: center; gap: 12px; }
+.life-weather-row { display: flex; gap: 6px; }
+.life-weather-row input { flex: 1; min-width: 0; }
+.life-mission .xpbar { margin-top: 4px; }
+.home-activity { margin-top: var(--gap); }
+.activity-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
+.activity-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.activity-list a { display: grid; gap: 2px; color: inherit; text-decoration: none; }
+.activity-list a:hover span { color: var(--accent); }
+/* Finances › Businesses (DEC-0153). */
+.biz-card .biz-facts { display: block; margin-top: 4px; color: var(--text-faint); }
+.biz-card .biz-net.neg { color: var(--attention); }
+.biz-unsorted { display: block; margin-top: 12px; padding: 12px 14px; color: var(--accent); text-decoration: none; }
+.biz-in { color: var(--ok); }
 .life-card { display: grid; gap: 4px; padding: 14px; color: inherit; text-decoration: none; }
 .life-card strong { font-size: 16px; }
 .life-card:hover, .life-pictures:hover { border-color: rgba(var(--rgb-accent), .5); }

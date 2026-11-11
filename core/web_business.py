@@ -5,7 +5,10 @@ core.web_business
 The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed,
 the build's progress, and where each is on the stage rail with the step
 that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of),
-customers, and the portfolio of finished builds. Put together here from
+customers, and the portfolio of finished builds. Since DEC-0153 each order
+and quote belongs to a business (`entity_id`, Money's business entities),
+and the screen can show one business's own (`business=`; "none" for the
+ones not sorted yet). Put together here from
 core/business_book.py, crafting recipes, builds and the workshop ledger;
 the web only formats.
 """
@@ -51,8 +54,20 @@ def order_stage(status: str, has_recipe: bool, has_build: bool, left: float, ord
     return {"index": index, "name": STAGES[index], "names": list(STAGES), "next": step}
 
 
-def business_page(context, today: Optional[date] = None) -> dict:
-    """The Business screen's data: customers, quotes (with their figures) and orders, each with its customer, the build or recipe it's for, its revenue entry, its stage and next step, and its form, plus the craft section (builds and recipes). Not available without a business book."""
+def business_names(context) -> dict:
+    """{entity id: name} for the businesses Money keeps (core.budget_manager.BusinessEntity); {} without a budget."""
+    budget = getattr(context, "budget", None)
+    try:
+        return {e.entity_id: e.name for e in budget.all_business_entities()} if budget is not None else {}
+    except Exception:  # noqa: BLE001 - no businesses to name
+        return {}
+
+
+def business_page(context, today: Optional[date] = None, business: Optional[str] = None) -> dict:
+    """The Business screen's data: customers, quotes (with their figures) and orders, each with its customer, its
+    business (DEC-0153), the build or recipe it's for, its revenue entry, its stage and next step, and its form, plus
+    the craft section (builds and recipes). `business`: only that business's orders and quotes ("none": the ones with no
+    business yet); the customers stay everyone's. Not available without a business book."""
     from core.business_actions import CUSTOMER, ORDER, QUOTE, quote_figures
     from core.record_actions import record_form
     from core.web_craft import craft_section
@@ -61,6 +76,12 @@ def business_page(context, today: Optional[date] = None) -> dict:
     if book is None:
         return {"available": False}
     today = today or date.today()
+    entities = business_names(context)
+    want = None if business is None else ("" if business == "none" else business)
+
+    def mine(record) -> bool:
+        """Whether an order or quote is the asked-for business's (every one when none was asked for)."""
+        return want is None or record.entity_id == want
     ledger = getattr(context, "ledger", None)
     revenue = {r.entry_id: r for r in ledger.all_revenue()} if ledger is not None else {}
     names = {c.customer_id: c.name for c in book.customers}
@@ -69,11 +90,12 @@ def business_page(context, today: Optional[date] = None) -> dict:
     recipes = {r["id"]: r["name"] for r in craft["recipes"]}
 
     orders = []
-    for o in sorted(book.orders, key=lambda o: (o.status in ("Delivered", "Cancelled"), o.due_date or "9999", o.created_at)):
+    for o in sorted([o for o in book.orders if mine(o)], key=lambda o: (o.status in ("Delivered", "Cancelled"), o.due_date or "9999", o.created_at)):
         paid = round(sum(revenue[i].amount for i in o.payment_ids if i in revenue), 2)
         build = builds.get(o.job_ids[0]) if o.job_ids else None
         orders.append({
             "id": o.order_id, "title": o.title, "customer": names.get(o.customer_id, ""), "status": o.status,
+            "business": entities.get(o.entity_id, ""),
             "quantity": o.quantity, "recipe": recipes.get(o.recipe_id, ""), "has_recipe": bool(o.recipe_id),
             "price": _money(o.price), "paid": _money(paid), "left": _money(max(0.0, o.price - paid)),
             "left_value": round(max(0.0, o.price - paid), 2), "due": o.due_date,
@@ -85,10 +107,11 @@ def business_page(context, today: Optional[date] = None) -> dict:
             "values": {f.name: getattr(o, f.name) for f in ORDER.fields}})
 
     quotes = []
-    for q in sorted(book.quotes, key=lambda q: (q.status in ("Accepted", "Declined"), q.created_at), reverse=False):
+    for q in sorted([q for q in book.quotes if mine(q)], key=lambda q: (q.status in ("Accepted", "Declined"), q.created_at), reverse=False):
         f = quote_figures(context, q)
         quotes.append({
             "id": q.quote_id, "title": q.title, "customer": names.get(q.customer_id, ""), "status": q.status,
+            "business": entities.get(q.entity_id, ""),
             "quantity": q.quantity, "recipe": f["recipe"], "price": _money(f["price"]),
             "suggested": _money(f["suggested"]) if f["suggested"] else "", "custom_price": bool(q.price),
             "parts": [p for p in (
@@ -127,7 +150,10 @@ def business_page(context, today: Optional[date] = None) -> dict:
         "orders": orders, "quotes": quotes, "customers": customers, "portfolio": portfolio,
         "counts": {"open_orders": sum(1 for o in orders if o["open"]), "open_quotes": sum(1 for q in quotes if q["open"]),
                    "customers": len(customers), "owed": _money(owed)},
+        # DEC-0153: whose orders and quotes these are (None: every business's)
+        "business": None if want is None else {"id": business, "name": entities.get(want, "Not sorted yet")},
         "picks": {"customers": [{"id": c.customer_id, "name": c.name} for c in book.customers],
+                  "businesses": [{"id": i, "name": n} for i, n in entities.items()],
                   "recipes": [{"id": r["id"], "name": r["name"]} for r in craft["recipes"]]},
         "forms": {"customer": record_form(CUSTOMER), "quote": record_form(QUOTE), "order": record_form(ORDER)},
     }

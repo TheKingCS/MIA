@@ -50,12 +50,43 @@
   const ASK = ["What should I focus on today?", "What's due this week?", "How are my finances?"];
   // The life cards (DEC-0129, core/web_surfaces.life_cards): what's playing, today's good news, the current or next
   // trip, and the newest pictures kept at home. Each opens its app; a card with nothing to show isn't drawn.
-  function life(l) {
+  // DEC-0153: the weather (or a box to name your town) and the mission in play come first.
+  function weatherCard(w) {
+    if (!w) return null;
+    if (w.set) {
+      const input = el("input", { name: "place", placeholder: "Your town", autocomplete: "address-level2", "aria-label": "Your town, for the weather" });
+      return el("form", { class: "glass life-card life-weather-set", onsubmit: (e) => {
+        e.preventDefault();
+        if (input.value.trim()) MIAShell.act({ kind: "weather.place", params: { place: input.value.trim() } }, { quick: true });
+      } }, el("span", { class: "pw-label" }, "Weather"), el("span", { class: "dim" }, "Which town is the weather for?"),
+        el("div", { class: "life-weather-row" }, input, el("button", { type: "submit", class: "btn btn-small" }, "Use")));
+    }
+    if (w.loading || !w.text) return el("div", { class: "glass life-card" }, el("span", { class: "pw-label" }, "Weather · " + (w.place || "")),
+      el("span", { class: "dim" }, "Getting the forecast…"));
+    const t = w.tomorrow;
+    return el("div", { class: "glass life-card life-weather" }, el("span", { class: "pw-label" }, "Weather · " + w.place),
+      el("strong", {}, w.text), el("span", { class: "dim" }, "Today " + w.high + "° / " + w.low + "°"
+        + (t ? " · Tomorrow " + t.words.toLowerCase() + ", " + t.high + "°" : "")));
+  }
+
+  function missionCard(m) {
+    if (!m) return el("a", { class: "glass life-card", href: "missions.html" }, el("span", { class: "pw-label" }, "Mission"),
+      el("strong", {}, "No mission in play"), el("span", { class: "dim" }, "Pick one up in Missions"));
+    return el("a", { class: "glass life-card life-mission", href: m.page }, el("span", { class: "pw-label" }, "Mission in play"
+      + (m.others ? " · " + m.others + " more" : "")), el("strong", {}, m.name),
+      el("span", { class: "dim" }, m.next ? "Next: " + m.next : (m.total ? "Every objective done" : "No objectives yet")),
+      m.total ? el("span", { class: "xpbar" }, el("span", { class: "xpbar-track" }, el("span", { class: "xpbar-fill",
+        style: "width:" + Math.round(100 * m.done / m.total) + "%" }))) : null);
+  }
+
+  function life(l, home) {
     const box = $("life");
     if (!l) { box.hidden = true; return; }
     const card = (href, label, title, sub) => el("a", { class: "glass life-card", href },
       el("span", { class: "pw-label" }, label), el("strong", {}, title), sub ? el("span", { class: "dim" }, sub) : null);
     const cards = [
+      weatherCard(home && home.weather),
+      home && "mission" in home ? missionCard(home.mission) : null,
       l.music ? card("music.html", l.music.playing ? "Now Playing" : "Paused", l.music.title, l.music.artist) : null,
       l.news ? card("news.html", "Good News", l.news.title, l.news.count > 1 ? l.news.count + " stories today" : l.news.tag) : null,
       l.trip ? card("expeditions.html", "Trip · " + l.trip.words, l.trip.name, l.trip.when) : null,
@@ -72,6 +103,40 @@
     }
     box.hidden = !cards.length && !strip;
     box.replaceChildren(cards.length ? el("div", { class: "life-cards" }, cards) : null, strip);
+  }
+
+  // Your Week (DEC-0153): each day with what's due on it; Today stays the first tab.
+  function week(days) {
+    $("week").replaceChildren(...days.filter((d) => d.items.length).map((d) => el("div", { class: "week-day" },
+      el("h3", { class: "pw-label" }, d.label), el("ul", { class: "focus-list" }, d.items.map(focusRow)))));
+    $("week-empty").hidden = days.some((d) => d.items.length);
+  }
+  function showTab(which) {
+    const weekOn = which === "week";
+    $("tab-week").setAttribute("aria-selected", String(weekOn));
+    $("tab-today").setAttribute("aria-selected", String(!weekOn));
+    $("week-panel").hidden = !weekOn;
+    $("today-panel").hidden = weekOn;
+    try { sessionStorage.setItem("mia.home.tab", which); } catch (e) { /* fine: Today next time */ }
+  }
+  $("tab-today").onclick = () => showTab("today");
+  $("tab-week").onclick = () => showTab("week");
+  try { if (sessionStorage.getItem("mia.home.tab") === "week" || location.hash === "#week") showTab("week"); } catch (e) { /* Today */ }
+
+  // Agent Activity (DEC-0153): what she did on her own, what she held back, what she made, and (for the owner) the
+  // team building her. Every line opens where it came from.
+  function activity(a) {
+    const box = $("activity");
+    box.hidden = !a || !a.any;
+    if (!a || !a.any) return;
+    const col = (title, rows, line) => rows.length ? el("div", { class: "activity-col" }, el("h3", { class: "pw-label" }, title),
+      el("ul", { class: "activity-list" }, rows.map((r) => el("li", {}, el("a", { href: r.page }, line(r)))))) : null;
+    $("activity-cols").replaceChildren(...[
+      col("MIA Did", a.mine, (r) => [el("span", {}, r.what), el("small", { class: "dim" }, r.when)]),
+      col("Held Back Today", a.held, (r) => [el("span", {}, r.what), el("small", { class: "dim" }, r.why)]),
+      col("Made For You", a.made, (r) => [el("span", {}, r.what)]),
+      col("The Team", a.team, (r) => [el("span", {}, el("strong", {}, r.who + " "), r.what), el("small", { class: "dim" }, r.when)]),
+    ].filter(Boolean));
   }
 
   async function miaColumn() {
@@ -103,7 +168,9 @@
     $("focus").replaceChildren(...home.focus.slice(0, 6).map(focusRow));
     $("focus-empty").hidden = home.focus.length > 0;
     // MIA Remembers (DEC-0029): what you told her, as it's about to matter.
-    life(home.life);
+    life(home.life, home);
+    week(home.week || []);
+    activity(home.activity);
     const remember = home.remember || [];
     $("remember").hidden = !remember.length;
     $("remember-list").replaceChildren(...remember.map((r) => el("li", {},

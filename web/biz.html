@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Business — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="businesses" data-icon="business" class="mod-businesses" data-say="How is this business doing?">
+  <!--
+    One business's own dashboard (DEC-0153): its money, its properties, its orders and quotes, its debts and the apps
+    it uses. MIA.oneBusiness(id) (core/web_businesses.business_dashboard). Built by claude, 2026-11-11.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1 id="hero-name">Business</h1>
+        <p class="tagline" id="biz-sub"></p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="biz.js"></script>
+</body>
+</html>

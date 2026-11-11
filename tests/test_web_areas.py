@@ -19,7 +19,7 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 # Pages no area owns, on purpose: the frame's own screens, detail pages opened from their app, redirects, and the
 # glasses' and phone's views.
 NOT_OWNED = {"index.html", "hub.html", "nexus.html", "glasses.html", "presence.html", "start.html", "asset.html",
-             "recipe.html", "grow.html", "dev-window.html", "finances.html", "worlds.html", "dashboard.html",
+             "recipe.html", "grow.html", "dev-window.html", "finances.html", "worlds.html", "dashboard.html", "biz.html",
              "maintenance.html", "property.html", "diagnostics.html", "settings.html"}
 
 
@@ -45,8 +45,10 @@ def test_every_app_and_page_has_exactly_one_owner():
 
 
 def test_every_web_page_is_owned_or_part_of_the_frame():
+    """Every page in web/ is an app's, a member page, an area's own page (the Dashboard, Businesses), or listed as the
+    frame's."""
     owned = {m.page.split("?")[0].split("#")[0] for a in AREAS for m in a.members if isinstance(m, Page)}
-    owned |= {app.page for app in surfaces.APPS if app.page}
+    owned |= {app.page for app in surfaces.APPS if app.page} | {a.page for a in AREAS if a.page}
     unowned = {p.name for p in WEB.glob("*.html")} - owned - NOT_OWNED
     assert unowned == set()
 

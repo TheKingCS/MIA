@@ -7,6 +7,28 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-11 (Zac's eight destinations: approved and mostly built)*
 
+**New 2026-11-11, latest (Claude, after Zac's "lets build it"; Trade Master moved to Home › Learning).** Built and pushed:
+- **The Dashboard's DEC-0153 cards:**
+  - Today and **Your Week** tabs;
+  - **weather**: Open-Meteo; you name your town once on the card or by voice ("my town is ..."), `core/weather.py`;
+  - **the mission in play** with its next objective;
+  - **Agent Activity**: her changes, what she held back, what she made, and for the owner the Council and the dev log (`core/agent_activity.py`).
+- **Businesses**:
+  - `businesses.html`: a card per business from Money's entities and their tagged money;
+  - `biz.html?id=`: each business's own dashboard with its Orders & Quotes section;
+  - orders and quotes carry their business.
+- **Upkeep as scheduled missions** (`core/upkeep_missions.py`): one mission per due upkeep this week, attached to its asset, Done either way.
+
+Two things found on the way:
+- an accepted quote never kept its order (fixed, K-0222);
+- a test of mine wrote ten test missions into the PC's real `data/missions.json`. I removed them the same minute by their `upkeep:` keys; nothing else under `data/` changed (K-0224).
+
+**Next:**
+- Health's meals widget.
+- The Muse handoff (the destinations' pictures, the world portals' art).
+- Zac's look at Toolbox, Trade Master, the Lab and Field Kit (WAITING_ON 0j).
+- Tagging existing orders and quotes to their business (Businesses shows a link while any aren't).
+
 **New 2026-11-11, later (Claude).** Zac approved the architecture and answered its questions (DEC-0153 holds his answers). **Built and pushed:**
 - the eight destinations and their subdashboards in `core/web_areas.py`, each item with one owner, enforced by a test;
 - hubs, the sidebar, the Apps page and the phone's bottom bar;

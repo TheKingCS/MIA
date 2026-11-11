@@ -93,6 +93,7 @@ from core.assistant_why_actions import register_why_actions
 from core.assistant_direction_actions import register_direction_actions
 from core.assistant_answer_style_actions import register_answer_style_actions
 from core.assistant_world_actions import register_world_actions
+from core.assistant_business_view_actions import register_business_view_actions
 from core.assistant_connection_actions import register_connection_actions
 from core.assistant_self_actions import register_capability_actions, register_self_actions
 from core.assistant_cooking_actions import register_cooking_actions
@@ -272,6 +273,9 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
     context.kitchen = KitchenManager(context)
     context.relationships = RelationshipsManager(context)
     context.recurring_missions = RecurringMissionManager(context)
+    from core import upkeep_missions
+
+    upkeep_missions.wire(context)  # DEC-0153: an upkeep mission done marks its upkeep done
     from core.life_events import LifeEventLog
 
     context.life_events = LifeEventLog(context)
@@ -309,7 +313,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, the Security
     cameras, the energy sources read and logged, and fixing groceries, recipes, the meal plan, bills and expenses,
     playlists, and "remember that", orders paid, weigh-ins, missions and journal lines (DEC-0125), so the phone can ask about them too, cook mode's tools
-    (core/assistant_cooking_actions.py), the Toolbox's (board feet, concrete, alarms on or off:
+    (core/assistant_cooking_actions.py), the Businesses (DEC-0153: core/assistant_business_view_actions.py), the Toolbox's (board feet, concrete, alarms on or off:
     core/assistant_toolbox_actions.py), the Lab's delete_lab_reading (core/assistant_lab_actions.py) and the
     Household's pause_household_routine (core/assistant_household_actions.py), change_waypoint
     (core/assistant_waypoint_actions.py), a trip's route and checkpoints (core/assistant_trip_route_actions.py), the backup status
@@ -325,6 +329,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_direction_actions(registry)  # My Directions by voice (DEC-0141)
     register_answer_style_actions(registry)  # how MIA answers, by voice (DEC-0138)
     register_world_actions(registry)  # Living Worlds by voice (DEC-0134)
+    register_business_view_actions(registry)  # the Businesses by voice (DEC-0153)
     register_connection_actions(registry)  # "don't bring that up" (DEC-0146)
     register_self_actions(registry)  # "what model are you?" from the runtime
     register_capability_actions(registry)  # what MIA can do, how she's built (DEC-0041)

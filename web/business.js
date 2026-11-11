@@ -4,7 +4,8 @@
  * owed, Payment, Start Build, Ready / Delivered), Quotes (what the price
  * is made of, Sent / Accepted / Declined), Customers, and the Portfolio of
  * finished builds (Feature). Every button proposes an action from
- * core/business_actions.py. Formatting only.
+ * core/business_actions.py. Formatting only. DEC-0153: ?business=<id> shows one business's own orders and quotes
+ * ("none": the ones not sorted yet), and adding one there starts it in that business; each row says its business.
  */
 (function () {
   "use strict";
@@ -12,6 +13,7 @@
   const $ = (id) => document.getElementById(id);
   const TABS = [["orders", "Orders"], ["quotes", "Quotes"], ["customers", "Customers"], ["portfolio", "Portfolio"]];
   let page = null;
+  const only = new URLSearchParams(location.search).get("business") || "";
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "orders";
 
   const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
@@ -24,8 +26,9 @@
     Draft: "", Sent: "chip-soon", Accepted: "chip-ok", Declined: "chip-bad" };
 
   async function add(key, title) {
-    const v = await form(title, page.forms[key].fields, {}, page.picks);
-    if (v) act({ kind: key + ".add", params: v });
+    const start = only && only !== "none" && key !== "customer" ? { entity_id: only } : {};
+    const v = await form(title, page.forms[key].fields, start, page.picks);
+    if (v) act({ kind: key + ".add", params: Object.assign({}, start, v) });
   }
   async function edit(key, item, name) {
     const v = await form("Edit " + name, page.forms[key].fields, item.values, page.picks);
@@ -59,7 +62,7 @@
     return el("article", { class: "glass ord-card" + (o.overdue ? " overdue" : "") },
       el("div", { class: "ord-line" }, el("h3", {}, o.title), el("span", { class: "ord-price" }, o.price)),
       el("div", { class: "ord-line ord-sub" },
-        el("span", { class: "dim" }, [o.customer, o.quantity > 1 ? o.quantity + " ×" : null, o.due ? (o.overdue ? "was due " : "due ") + day(o.due) : null]
+        el("span", { class: "dim" }, [only ? null : o.business, o.customer, o.quantity > 1 ? o.quantity + " ×" : null, o.due ? (o.overdue ? "was due " : "due ") + day(o.due) : null]
           .filter(Boolean).join(" · ")),
         el("span", { class: "ord-owed" + (o.left_value > 0 ? " owed" : " paid") }, o.left_value > 0 ? o.left + " owed" : "Paid")),
       st.index != null ? el("div", { class: "ord-rail", role: "img", "aria-label": "Stage: " + st.name },
@@ -78,7 +81,7 @@
     return el("article", { class: "glass craft-card" },
       el("div", { class: "craft-head static" },
         el("div", {}, el("h3", {}, q.title), el("p", { class: "dim" },
-          [q.customer, q.quantity > 1 ? q.quantity + " ×" : null, q.recipe, q.valid_until ? "good until " + day(q.valid_until) : null].filter(Boolean).join(" · "))),
+          [only ? null : q.business, q.customer, q.quantity > 1 ? q.quantity + " ×" : null, q.recipe, q.valid_until ? "good until " + day(q.valid_until) : null].filter(Boolean).join(" · "))),
         chip(q.status, STATUS[q.status])),
       el("div", { class: "craft-tiles" },
         el("div", { class: "craft-tile ok" }, el("span", { class: "dim" }, "Price"), el("strong", {}, q.price)),
@@ -146,7 +149,12 @@
   }
 
   MIAShell.start(async () => {
-    page = await MIA.business();
+    page = await MIA.business(only);
+    if (page.business) {  // one business's own (DEC-0153)
+      $("hero-tagline").replaceChildren(page.business.name + " · ",
+        el("a", { href: only === "none" ? "business.html" : "biz.html?id=" + encodeURIComponent(only) }, only === "none" ? "every business" : "its dashboard"),
+        " · ", el("a", { href: "business.html" }, "all orders and quotes"));
+    }
     if (!page.available) {
       $("panel").replaceChildren(el("p", { class: "empty" }, "Orders & Quotes isn't set up on this MIA."));
       return;

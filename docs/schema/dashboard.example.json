@@ -11,7 +11,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "7a4464beaf",
-      "icon": "\ud83d\udd27",
+      "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -30,7 +30,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "58cb39bfd5",
-      "icon": "\ud83d\udd27",
+      "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -49,7 +49,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "6cbf096c22",
-      "icon": "\ud83d\udd27",
+      "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -68,7 +68,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "68e719deaa",
-      "icon": "\ud83d\udd27",
+      "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -87,7 +87,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "cd4ef5ed1b",
-      "icon": "\ud83d\udd27",
+      "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -106,7 +106,7 @@
       "time": "15:00",
       "module_id": "calendar",
       "record_id": "fc01b54f3c",
-      "icon": "\ud83d\udcc5",
+      "icon": "📅",
       "action": null,
       "page": "calendar.html",
       "kind": "Today",
@@ -119,7 +119,7 @@
       "time": "",
       "module_id": "calendar",
       "record_id": "03332a99b7",
-      "icon": "\ud83d\udcc5",
+      "icon": "📅",
       "action": null,
       "page": "calendar.html",
       "kind": "Today",
@@ -132,7 +132,7 @@
       "time": "",
       "module_id": "kitchen",
       "record_id": null,
-      "icon": "\ud83e\udd6c",
+      "icon": "🥬",
       "action": null,
       "page": "kitchen.html",
       "kind": "Today",
@@ -147,7 +147,7 @@
       "time": "",
       "module_id": "maintenance",
       "record_id": "d4364f8f41",
-      "icon": "\ud83d\udd27",
+      "icon": "🔧",
       "action": {
         "kind": "maintenance.done",
         "label": "Done",
@@ -165,35 +165,35 @@
     {
       "id": "quick_add",
       "label": "Quick Add",
-      "icon": "\u2795",
+      "icon": "➕",
       "talk": "Add ",
       "href": "assistant.html?draft=Add%20"
     },
     {
       "id": "voice",
       "label": "Voice",
-      "icon": "\ud83c\udf99",
+      "icon": "🎙",
       "talk": "",
       "href": "assistant.html?voice=1"
     },
     {
       "id": "calendar",
       "label": "Calendar",
-      "icon": "\ud83d\udcc5",
+      "icon": "📅",
       "talk": "What's on my calendar this week?",
       "href": "calendar.html"
     },
     {
       "id": "journal",
       "label": "Journal",
-      "icon": "\ud83d\udcd3",
+      "icon": "📓",
       "talk": "I want to journal.",
       "href": "assistant.html?draft=I%20want%20to%20journal."
     },
     {
       "id": "assistant",
       "label": "MIA Assistant",
-      "icon": "\ud83d\udde8",
+      "icon": "🗨",
       "talk": "",
       "href": "assistant.html"
     }
@@ -201,47 +201,47 @@
   "glance": [
     {
       "app": "budget",
-      "icon": "\ud83d\udcb0",
+      "icon": "💰",
       "title": "Money",
-      "line": "Insurance $340.00 in 4d \u00b7 $2,290.00 left each month after bills \u00b7 net worth $251,400.00",
+      "line": "Insurance $340.00 in 4d · $2,290.00 left each month after bills · net worth $251,400.00",
       "tone": "calm",
       "page": "money.html"
     },
     {
       "app": "garage",
-      "icon": "\ud83d\ude97",
+      "icon": "🚗",
       "title": "Equipment",
-      "line": "7 tracked \u00b7 5 overdue \u00b7 next: Replace filter (Furnace)",
+      "line": "7 tracked · 5 overdue · next: Replace filter (Furnace)",
       "tone": "attention",
       "page": "garage.html"
     },
     {
       "app": "real_estate",
-      "icon": "\ud83c\udfd8",
+      "icon": "🏘",
       "title": "Real Estate",
-      "line": "3 properties \u00b7 $232,000.00 equity",
+      "line": "3 properties · $232,000.00 equity",
       "tone": "calm",
       "page": "real-estate.html"
     },
     {
       "app": "kitchen",
-      "icon": "\ud83c\udf73",
+      "icon": "🍳",
       "title": "Kitchen",
-      "line": "9 recipes \u00b7 4 on the grocery list \u00b7 chicken expires in 0d",
+      "line": "9 recipes · 4 on the grocery list · chicken expires in 0d",
       "tone": "attention",
       "page": "kitchen.html"
     },
     {
       "app": "workout",
-      "icon": "\ud83c\udfcb",
+      "icon": "🏋",
       "title": "Workout",
-      "line": "4 sessions this week \u00b7 last: Beginner full body (2026-10-15)",
+      "line": "4 sessions this week · last: Beginner full body (2026-10-15)",
       "tone": "calm",
       "page": "workout.html"
     },
     {
       "app": "missions",
-      "icon": "\ud83c\udfc6",
+      "icon": "🏆",
       "title": "Missions",
       "line": "15 active",
       "tone": "calm",
@@ -249,17 +249,17 @@
     },
     {
       "app": "observations",
-      "icon": "\ud83d\udd0d",
+      "icon": "🔍",
       "title": "Observations",
-      "line": "3 things noticed \u00b7 1 needs you \u00b7 Pay Insurance before payday",
+      "line": "3 things noticed · 1 needs you · Pay Insurance before payday",
       "tone": "attention",
       "page": "observations.html"
     },
     {
       "app": "inbox",
-      "icon": "\ud83d\udce5",
+      "icon": "📥",
       "title": "Inbox",
-      "line": "2 captures to file \u00b7 Hardware store receipt",
+      "line": "2 captures to file · Hardware store receipt",
       "tone": "attention",
       "page": "inbox.html"
     }
@@ -308,7 +308,7 @@
   "remember": [
     {
       "key": "event:demo:2026-10-18",
-      "icon": "\ud83d\udcc5",
+      "icon": "📅",
       "title": "Tomorrow: Dinner with Sam",
       "lines": [
         "You told me: your friend Sam is vegetarian."
@@ -318,7 +318,7 @@
     },
     {
       "key": "birthday:demo:2026-10-24:7",
-      "icon": "\ud83c\udf82",
+      "icon": "🎂",
       "title": "Casey's birthday is in 7 days (turning 30)",
       "lines": [
         "Gift ideas you noted: Trail running socks."
@@ -401,8 +401,181 @@
       "id": "t1",
       "name": "Ozark Trail, Section 2",
       "status": "planned",
-      "when": "Nov 14 \u2013 16",
+      "when": "Nov 14 – 16",
       "words": "In 6 days"
     }
+  },
+  "weather": {
+    "status": "REAL",
+    "place": "Springfield, Illinois",
+    "text": "48°F, partly cloudy",
+    "temp": 48,
+    "words": "Partly cloudy",
+    "high": 54,
+    "low": 39,
+    "tomorrow": {
+      "high": 51,
+      "low": 36,
+      "words": "Light rain"
+    },
+    "unit": "°F"
+  },
+  "mission": {
+    "id": "m1",
+    "name": "Build the chicken coop",
+    "icon": "🐔",
+    "next": "Frame the walls",
+    "done": 2,
+    "total": 5,
+    "others": 2,
+    "page": "missions.html"
+  },
+  "week": [
+    {
+      "label": "Today",
+      "date": "2026-11-08",
+      "items": [
+        {
+          "when": "overdue",
+          "title": "Change the oil on the truck",
+          "detail": "3 days late",
+          "time": "",
+          "module_id": "garage",
+          "record_id": null,
+          "icon": "🔧",
+          "action": null,
+          "page": "garage.html",
+          "kind": "attention",
+          "label": "Overdue"
+        },
+        {
+          "when": "today",
+          "title": "Pay Electric",
+          "detail": "$84.20, due today",
+          "time": "",
+          "module_id": "budget",
+          "record_id": null,
+          "icon": "💸",
+          "action": null,
+          "page": "money.html",
+          "kind": "accent",
+          "label": "Today"
+        }
+      ]
+    },
+    {
+      "label": "Tomorrow",
+      "date": "2026-11-09",
+      "items": [
+        {
+          "when": "today",
+          "title": "Dentist",
+          "detail": "9:30",
+          "time": "",
+          "module_id": "calendar",
+          "record_id": null,
+          "icon": "📅",
+          "action": null,
+          "page": "calendar.html",
+          "kind": "accent",
+          "label": "Today"
+        }
+      ]
+    },
+    {
+      "label": "Wednesday, Nov 11",
+      "date": "2026-11-11",
+      "items": [
+        {
+          "when": "today",
+          "title": "Replace the furnace filter",
+          "detail": "due",
+          "time": "",
+          "module_id": "maintenance",
+          "record_id": null,
+          "icon": "🔧",
+          "action": null,
+          "page": "calendar.html",
+          "kind": "accent",
+          "label": "Today"
+        },
+        {
+          "when": "today",
+          "title": "Sam's birthday",
+          "detail": "turns 30",
+          "time": "",
+          "module_id": "relationships",
+          "record_id": null,
+          "icon": "🎂",
+          "action": null,
+          "page": "people.html",
+          "kind": "accent",
+          "label": "Today"
+        }
+      ]
+    },
+    {
+      "label": "Saturday, Nov 14",
+      "date": "2026-11-14",
+      "items": [
+        {
+          "when": "today",
+          "title": "Water bill",
+          "detail": "$41.00",
+          "time": "",
+          "module_id": "budget",
+          "record_id": null,
+          "icon": "💸",
+          "action": null,
+          "page": "money.html",
+          "kind": "accent",
+          "label": "Today"
+        }
+      ]
+    }
+  ],
+  "activity": {
+    "mine": [
+      {
+        "what": "Logged 6 eggs from your note",
+        "when": "6:12 PM",
+        "page": "changes.html"
+      },
+      {
+        "what": "Filed the hardware store receipt",
+        "when": "2:05 PM",
+        "page": "changes.html"
+      }
+    ],
+    "held": [
+      {
+        "what": "Feed is low",
+        "why": "waiting for a better moment",
+        "page": "communications.html"
+      }
+    ],
+    "made": [
+      {
+        "what": "Egg Count by Week",
+        "page": "made.html?id=c1"
+      }
+    ],
+    "team": [
+      {
+        "who": "Claude",
+        "what": "T-0057 the eight destinations",
+        "at": "2026-11-08T17:40:00",
+        "page": "dev.html",
+        "when": "5:40 PM"
+      },
+      {
+        "who": "Muse",
+        "what": "Portal art for the worlds is next",
+        "at": "2026-11-08T16:02:00",
+        "page": "council.html",
+        "when": "4:02 PM"
+      }
+    ],
+    "any": true
   }
 }

@@ -2261,10 +2261,28 @@ def create_app(context: AppContext) -> FastAPI:
         return _screen(profile_id, "workshop", build)
 
     @app.get("/api/business")
-    def web_business(profile_id: str = Depends(require_profile_id)) -> dict:
+    def web_business(business: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Orders & Quotes (core/web_business.py): every business's, or one's (`business`, DEC-0153)."""
         from core.web_business import business_page
 
-        return _screen(profile_id, "business", business_page)
+        return _screen(profile_id, "business", lambda view: business_page(view, business=business[:40] or None))
+
+    @app.get("/api/businesses")
+    def web_businesses(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Businesses subdashboard (core/web_businesses.businesses_page, DEC-0153): a quick view of each business."""
+        from core.web_businesses import businesses_page
+
+        return _screen(profile_id, "business", businesses_page)
+
+    @app.get("/api/businesses/{entity_id}")
+    def web_one_business(entity_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One business's own dashboard (core/web_businesses.business_dashboard, DEC-0153)."""
+        from core.web_businesses import business_dashboard
+
+        found = _screen(profile_id, "business", lambda view: business_dashboard(view, entity_id[:40]))
+        if found is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No business like that.")
+        return found
 
     @app.get("/api/people")
     def web_people(profile_id: str = Depends(require_profile_id)) -> dict:

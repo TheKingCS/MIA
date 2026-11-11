@@ -317,7 +317,8 @@
     const page = location.pathname.split("/").pop() + location.search;
     const areas = (shell.areas || []).filter((a) => a.id !== "dashboard");
     const isHere = (m) => m.id === here || m.page === page;
-    const subHere = (s) => s.id === hubHere || s.members.some(isHere);
+    // a subdashboard with its own page (Businesses, DEC-0153) is "here" on that page and on pages that name it
+    const subHere = (s) => s.id === hubHere || s.id === here || s.page === page || s.members.some(isHere);
     const mine = (areas.find((a) => a.id === hubHere || a.members.some(isHere) || (a.subs || []).some(subHere)) || {}).id;
     if (areas.length) {
       out.push(el("span", { class: "side-head side-areas-head" }, "Destinations"));

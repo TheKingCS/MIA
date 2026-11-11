@@ -2720,7 +2720,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   - Businesses: a subdashboard under Finances with a quick view of each
     business, each opening its own dashboard, and orders and quotes
     belong to each business.
+- Later the same day Zac moved Trade Master to Home › Learning ("I think Trade Master should be a part of Learning in
+  Home but the rest is great, lets build it").
 - Built 2026-11-11: the registry, hubs, sidebar, voice, the glasses' three screens, and the Nexus as Living Worlds
   (`docs/NAVIGATION_ARCHITECTURE.md`, "What's built"). Not done yet: the Dashboard's Your Week, Agent Activity and
-  weather; upkeep as scheduled missions; the Businesses page and per-business orders and quotes; Health's meals.
+  weather (built the same day), upkeep as scheduled missions (built the same day), the Businesses page and per-business orders and
+  quotes (built the same day), Health's meals.
 - Related: DEC-0129, DEC-0130, DEC-0134 (Living Worlds), DEC-0152 (Projects and Missions)

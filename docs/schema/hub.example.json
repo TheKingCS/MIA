@@ -367,13 +367,6 @@
      "tagline": "Quick tools.",
      "page": "toolbox.html",
      "ask": "Convert 5 gallons to liters."
-    },
-    {
-     "id": "trades",
-     "name": "Trade Master",
-     "icon": "workshop",
-     "tagline": "Any job or diagnosis, walked through step by step.",
-     "page": "trades.html"
     }
    ],
    "shortcuts": [],
@@ -587,7 +580,7 @@
      "name": "Businesses",
      "icon": "business",
      "tagline": "Each business: its money, its work, its customers.",
-     "page": "hub.html?area=businesses",
+     "page": "businesses.html",
      "sub": true
     },
     {
@@ -1699,6 +1692,13 @@
      "icon": "classroom",
      "tagline": "A learning path, stage by stage.",
      "page": "guitar.html"
+    },
+    {
+     "id": "trades",
+     "name": "Trade Master",
+     "icon": "workshop",
+     "tagline": "Any job or diagnosis, walked through step by step.",
+     "page": "trades.html"
     }
    ],
    "shortcuts": [

@@ -70,6 +70,7 @@ from core.assistant_why_actions import register_why_actions
 from core.assistant_direction_actions import register_direction_actions
 from core.assistant_answer_style_actions import register_answer_style_actions
 from core.assistant_world_actions import register_world_actions
+from core.assistant_business_view_actions import register_business_view_actions
 from core.assistant_connection_actions import register_connection_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_email_actions import register_email_actions
@@ -484,6 +485,9 @@ class MIAApplication:
         # Recurring Missions — same "subscribes to mission.completed at
         # construction" ordering rule as Pathways just above.
         self.context.recurring_missions = RecurringMissionManager(self.context)
+        from core import upkeep_missions
+
+        upkeep_missions.wire(self.context)  # DEC-0153: an upkeep mission done marks its upkeep done
         # Discovery references skills/projects/intents/missions (all
         # read-only, to build its generation prompt), so it's
         # constructed after all four already are — same reasoning as
@@ -1493,7 +1497,8 @@ class MIAApplication:
         # preventing duplicates.
         """The daily recurring-missions check: once a day, makes sure every active template has its current mission
         (ensure_current_missions is idempotent, so the gate is only a cheap skip), plus the fitness plan's missions for
-        whoever is signed in. Once ever, it also removes the old calendar copies of chores (DEC-0052).
+        whoever is signed in, and this week's upkeep as scheduled missions (core/upkeep_missions.py, DEC-0153). Once
+        ever, it also removes the old calendar copies of chores (DEC-0052).
         """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_recurring_mission_check_date"), today_iso):
@@ -1508,6 +1513,11 @@ class MIAApplication:
             from core.fitness_missions import ensure as ensure_fitness_missions
 
             ensure_fitness_missions(self.context, now.date())
+            # Upkeep as scheduled missions (DEC-0153): this week's, and the ones done since.
+            from core import upkeep_missions
+
+            upkeep_missions.settle(self.context, now.date())
+            upkeep_missions.ensure(self.context, now.date())
             config.set("system.last_recurring_mission_check_date", today_iso)
             config.save()
 
@@ -1821,6 +1831,7 @@ class MIAApplication:
         register_direction_actions(self.context.assistant_actions)  # My Directions by voice (DEC-0141)
         register_answer_style_actions(self.context.assistant_actions)  # how MIA answers, by voice (DEC-0138)
         register_world_actions(self.context.assistant_actions)  # Living Worlds by voice (DEC-0134)
+        register_business_view_actions(self.context.assistant_actions)  # the Businesses by voice (DEC-0153)
         register_connection_actions(self.context.assistant_actions)  # "don't bring that up" (DEC-0146)
         register_starter_actions(self.context.assistant_actions)
         register_life_event_actions(self.context.assistant_actions)

@@ -24,7 +24,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `inbox.updated` | `core/application.py` | `modules/inbox/module.py` |
 | `menu.shown` | `gui/main_window.py` | `gui/character_panel.py` |
 | `mission.abandoned` | `core/mission_manager.py` | — |
-| `mission.completed` | `core/mission_manager.py` | `core/pathway_manager.py`, `core/recurring_mission_manager.py`, `core/rewards_manager.py` |
+| `mission.completed` | `core/mission_manager.py` | `core/pathway_manager.py`, `core/recurring_mission_manager.py`, `core/rewards_manager.py`, `core/upkeep_missions.py` |
 | `module.opened` | `gui/main_window.py` | `core/activity_log_manager.py`, `core/usage_tracker.py`, `gui/character_panel.py` |
 | `modules.enabled_changed` | `core/module_manager.py` | `gui/main_window.py` |
 | `modules.rescanned` | `core/module_manager.py` | `gui/main_window.py` |

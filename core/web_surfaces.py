@@ -10,9 +10,9 @@ the upcoming list and the at-a-glance cards.
 
 - `shell(context)`: the sidebar (the person's apps, each with its life
   area, child-safe and respecting the apps they've tucked away; their
-  favorites for the Pinned list; the areas with their hubs, DEC-0129,
-  core/web_areas.py), their level and XP, today's date. Served as
-  `/api/shell`.
+  favorites for the Pinned list; the eight destinations with their
+  subdashboards and hubs, DEC-0153, core/web_areas.py), their level and XP,
+  today's date, the weather. Served as `/api/shell`.
 - `dashboard(context)`: Home's data (the canvas's Home, DEC-0113): the
   greeting and date, the status strip (`home_strip`), the one thing MIA
   noticed across apps (`_top_finding`, from core/findings.py), Today's
@@ -20,9 +20,12 @@ the upcoming list and the at-a-glance cards.
   at-a-glance cards (Life State's, net worth on Money's, then Observations
   and the Inbox: `glance_counts`), and the life cards (DEC-0129,
   `life_cards`: what's playing, today's good news, recent pictures, the
-  trip from `pick_trip` with its dates from `span_text`), and all of it
-  in a few sentences for Hear It (`briefing`). Served as
-  `/api/dashboard`; `web/index.html` shows it.
+  trip from `pick_trip` with its dates from `span_text`), the DEC-0153
+  cards (the weather from core/weather.py, the mission in play from
+  `active_mission`, Your Week from `your_week` with `day_label`, Agent
+  Activity from core/agent_activity.py), and all of it in a few sentences
+  for Hear It (`briefing`). Served as `/api/dashboard`; `web/index.html`
+  shows it.
 - `apps_page(context)`: every app, grouped, with what MIA can do in each.
   Served as `/api/apps`.
 
@@ -299,9 +302,10 @@ def greeting(hour: int, name: Optional[str]) -> str:
 
 def shell(context, today: Optional[date] = None) -> dict:
     """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
-    (each with its life area and its ask, shown as "Say: …" on its screen), the sidebar's areas with their hubs
-    (DEC-0129, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA made, the owner's
-    pages, sound, places, and the person's display style (DEC-0135: spatial or cards).
+    (each with its life area and its ask, shown as "Say: …" on its screen), the sidebar's eight destinations with
+    their subdashboards (DEC-0153, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA
+    made, the owner's pages, the weather (core/weather.py), sound, places, and the person's display style (DEC-0135:
+    spatial or cards).
     """
     from core.child_accounts import is_child
 
@@ -324,7 +328,7 @@ def shell(context, today: Optional[date] = None) -> dict:
         "on_pc_only": [a.name for a in apps if not a.page],
         "made": _made(context),
         "owner": _owner_pages(context, pid),
-        "weather": {"status": "PLANNED", "text": None},
+        "weather": _weather(context),  # DEC-0153: online, once the person names their town (core/weather.py)
         "sound": _sound(context),
         "places": _places(context),
         # DEC-0135: the person's look; the page decides "auto" itself (only it knows it's on a phone)
@@ -405,6 +409,58 @@ def _display(context) -> dict:
     except Exception:
         log.exception("Shell: display style failed")
         return {"style": "auto", "theme": clean_theme(as_data(THEMES[DEFAULT_THEME]))}
+
+
+def _weather(context) -> dict:
+    """The weather card (core/weather.card); PLANNED when it can't be put together."""
+    try:
+        from core.weather import card
+
+        return card(context)
+    except Exception:
+        log.exception("Weather failed")
+        return {"status": "PLANNED", "text": None}
+
+
+def day_label(day: date, today: date) -> str:
+    """Pure logic. A day in Your Week: "Today", "Tomorrow", else its weekday and date ("Friday, Nov 14")."""
+    gap = (day - today).days
+    return "Today" if gap == 0 else "Tomorrow" if gap == 1 else f"{day:%A}, {day:%b} {day.day}"
+
+
+def your_week(context, today: date) -> list[dict]:
+    """Your Week (DEC-0153): each day of the next seven with what's due on it (core/today.week_days), each item with
+    its page and kind, as [{label, date, items}]; [] if it can't be put together."""
+    from core.today import week_days
+
+    page_of = {a.module_id: a.page for a in APPS}
+    page_of.update({"maintenance": "calendar.html"})
+    try:
+        days = week_days(context, today)
+    except Exception:
+        log.exception("Your Week failed")
+        return []
+    return [{"label": day_label(date.fromisoformat(d["date"]), today), "date": d["date"],
+             "items": [{**i, "page": page_of.get(i.get("module_id")), **due_kind(i.get("when"))} for i in d["items"]]}
+            for d in days]
+
+
+def active_mission(context) -> Optional[dict]:
+    """The mission in play (the most recently worked active one) with its next objective and how far along it is, for
+    the Dashboard (DEC-0153); None with no active mission. Missions owns it; this only shows it."""
+    store = getattr(context, "missions", None)
+    try:
+        active = [m for m in (store.all_missions() if store is not None else []) if m.status == "active"]
+        if not active:
+            return None
+        m = max(active, key=lambda m: m.updated_at or m.created_at or "")
+        done = [store.is_objective_complete(m.mission_id, i) for i in range(len(m.objectives))]
+        nxt = next((o.description for o, d in zip(m.objectives, done) if not d), "")
+        return {"id": m.mission_id, "name": m.name, "icon": m.icon, "next": nxt, "done": sum(done),
+                "total": len(done), "others": len(active) - 1, "page": "missions.html"}
+    except Exception:
+        log.exception("Dashboard: the active mission failed")
+        return None
 
 
 def _sound(context) -> dict:
@@ -559,8 +615,8 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
     """Home's data: the greeting, the date, what needs doing today (from the life state's due items, each with its
     kind), what's coming, the status strip, the one thing MIA noticed across apps, quick actions, the glance (Life
     State's cards, then Observations and the Inbox), recent wins (only real wins, never spending), something to remember,
-    and the life cards (life_cards: music, good news, recent pictures, the trip); and all of it said in a few
-    sentences for "Hear It" (`briefing`).
+    and the life cards (life_cards: music, good news, recent pictures, the trip); the weather, the mission in play,
+    Your Week and Agent Activity (DEC-0153); and all of it said in a few sentences for "Hear It" (`briefing`).
     """
     from core.context_assembler import assemble_life_state_v2
 
@@ -599,7 +655,23 @@ def dashboard(context, now: Optional[datetime] = None) -> dict:
         "remember": _remember(context, today),
         # DEC-0129 (Zac, 2026-11-08): what's playing, today's good news, recent pictures, the current or next trip.
         "life": life_cards(context, today),
+        # DEC-0153 (Zac, 2026-11-11): the weather, the mission in play, Your Week, and Agent Activity.
+        "weather": _weather(context),
+        "mission": active_mission(context),
+        "week": your_week(context, today),
+        "activity": _activity(context, _pid, now),
     }
+
+
+def _activity(context, profile_id, now: datetime) -> dict:
+    """Agent Activity (core/agent_activity.activity); empty when it can't be put together."""
+    try:
+        from core.agent_activity import activity
+
+        return activity(context, profile_id, now)
+    except Exception:
+        log.exception("Agent activity failed")
+        return {"mine": [], "held": [], "made": [], "team": [], "any": False}
 
 
 PICTURES = 6  # recent pictures on the Dashboard

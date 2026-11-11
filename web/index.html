@@ -52,7 +52,15 @@
       <div class="stat-strip" id="strip" aria-label="Today at a glance"></div>
       <section class="finding" id="finding" aria-labelledby="finding-h" hidden></section>
 
-      <div class="home-cols">
+      <div class="ptabs home-tabs" role="tablist" aria-label="Today or this week">
+        <button type="button" role="tab" id="tab-today" aria-selected="true" aria-controls="today-panel">Today</button>
+        <button type="button" role="tab" id="tab-week" aria-selected="false" aria-controls="week-panel">Your Week</button>
+      </div>
+      <section class="glass home-week" id="week-panel" role="tabpanel" aria-labelledby="tab-week" hidden>
+        <div id="week"></div>
+        <p class="dim" id="week-empty" hidden>Nothing is due this week.</p>
+      </section>
+      <div class="home-cols" id="today-panel" role="tabpanel" aria-labelledby="tab-today">
         <section class="glass glow home-focus" aria-labelledby="focus-h">
           <h2 id="focus-h">Today's Focus</h2>
           <ul class="focus-list" id="focus"></ul>
@@ -65,7 +73,11 @@
         </section>
       </div>
 
-      <section class="home-life" id="life" aria-label="Music, good news, pictures and trips" hidden></section>
+      <section class="home-life" id="life" aria-label="Weather, the mission in play, music, good news, pictures and trips" hidden></section>
+      <section class="glass home-activity" id="activity" aria-labelledby="activity-h" hidden>
+        <h2 id="activity-h">Agent Activity</h2>
+        <div class="activity-cols" id="activity-cols"></div>
+      </section>
 
       <a class="glass home-sync" id="sync-link" href="sync.html" hidden>
         <strong>Getting To Know You</strong>

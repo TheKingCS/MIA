@@ -31,7 +31,8 @@
         "quantity": 1,
         "price": 306.0,
         "due_date": "2026-11-15",
-        "notes": ""
+        "notes": "",
+        "entity_id": "biz1"
       },
       "stage": {
         "index": 1,
@@ -53,7 +54,8 @@
             }
           }
         }
-      }
+      },
+      "business": "Oak & Pine Woodshop"
     },
     {
       "id": "a1b2c3d4e5",
@@ -79,7 +81,8 @@
         "quantity": 1,
         "price": 306.0,
         "due_date": "2026-11-15",
-        "notes": ""
+        "notes": "",
+        "entity_id": "biz1"
       },
       "stage": {
         "index": 2,
@@ -101,7 +104,8 @@
             }
           }
         }
-      }
+      },
+      "business": "Oak & Pine Woodshop"
     },
     {
       "id": "f6e5d4c3b2",
@@ -127,7 +131,8 @@
         "quantity": 1,
         "price": 306.0,
         "due_date": "2026-11-15",
-        "notes": ""
+        "notes": "",
+        "entity_id": "biz1"
       },
       "stage": {
         "index": 0,
@@ -148,7 +153,8 @@
             }
           }
         }
-      }
+      },
+      "business": "Oak & Pine Woodshop"
     }
   ],
   "quotes": [
@@ -176,8 +182,10 @@
         "extras": 0.0,
         "price": 140.0,
         "valid_until": "",
-        "notes": "Cedar, 24 x 12 in"
-      }
+        "notes": "Cedar, 24 x 12 in",
+        "entity_id": "biz1"
+      },
+      "business": "Oak & Pine Woodshop"
     },
     {
       "id": "e0da60942f",
@@ -220,8 +228,10 @@
         "extras": 20.0,
         "price": 0.0,
         "valid_until": "",
-        "notes": ""
-      }
+        "notes": "",
+        "entity_id": "biz1"
+      },
+      "business": "Oak & Pine Woodshop"
     }
   ],
   "customers": [
@@ -292,6 +302,16 @@
         "id": "63f4e559ee",
         "name": "Farmhouse Bench"
       }
+    ],
+    "businesses": [
+      {
+        "id": "biz1",
+        "name": "Oak & Pine Woodshop"
+      },
+      {
+        "id": "biz2",
+        "name": "Maple Rentals LLC"
+      }
     ]
   },
   "forms": {
@@ -343,6 +363,16 @@
           "type": "text",
           "required": true,
           "options": [],
+          "default": null
+        },
+        {
+          "name": "entity_id",
+          "label": "Business",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "businesses"
+          ],
           "default": null
         },
         {
@@ -436,6 +466,16 @@
           "default": null
         },
         {
+          "name": "entity_id",
+          "label": "Business",
+          "type": "pick",
+          "required": false,
+          "options": [
+            "businesses"
+          ],
+          "default": null
+        },
+        {
           "name": "customer_id",
           "label": "Customer",
           "type": "pick",
@@ -489,5 +529,6 @@
         }
       ]
     }
-  }
+  },
+  "business": null
 }

@@ -216,9 +216,13 @@ def _meter_value(params):
 
 
 def _do_maintenance(context, params) -> str:
-    """Does `maintenance.done` once approved, and says what happened."""
+    """Does `maintenance.done` once approved, and says what happened; the upkeep's scheduled mission is completed with
+    it (core/upkeep_missions.settle, DEC-0153)."""
     task, asset = _maintenance_task(context, params)
     context.maintenance.mark_complete(task.task_id, meter_value=_meter_value(params))
+    from core.upkeep_missions import settle
+
+    settle(context)  # DEC-0153: its scheduled mission is done too
     return f"{task.title} is done" + (f" on {asset.name}" if asset else "") + "."
 
 
@@ -399,7 +403,8 @@ import core.web_trails  # noqa: E402,F401  (Trail Maps: taking one out, its PDF 
 import core.web_conversations  # noqa: E402,F401  (past conversations: deleting one, undoable)
 import core.conversation_export  # noqa: E402,F401  (a conversation saved to Files as Markdown or JSON)
 import core.web_connections  # noqa: E402,F401  (connections: don't bring that up, allow again, DEC-0146)
-import core.portal_pictures  # noqa: E402,F401  (Portal Pictures: your painting in an area's portal, DEC-0140)
+import core.portal_pictures  # noqa: E402,F401  (Portal Pictures: your painting in a story's portal, DEC-0140)
+import core.weather  # noqa: E402,F401  (the Dashboard's weather: which town, DEC-0153)
 import core.art_studio  # noqa: E402  (pictures MIA painted: deleting one, DEC-0140)
 core.art_studio._register()
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)

@@ -1,0 +1,88 @@
+{
+ "available": true,
+ "as_of": "2026-11-08",
+ "businesses": [
+  {
+   "id": "a9f9acb724",
+   "name": "Maple Rentals LLC",
+   "type": "LLC",
+   "page": "biz.html?id=a9f9acb724",
+   "month": {
+    "income": "$2,775.00",
+    "expenses": "$212.40",
+    "net": "$2,562.60",
+    "net_value": 2562.6,
+    "income_value": 2775.0,
+    "expenses_value": 212.4
+   },
+   "year": {
+    "income": "$2,775.00",
+    "expenses": "$212.40",
+    "net": "$2,562.60",
+    "net_value": 2562.6,
+    "income_value": 2775.0,
+    "expenses_value": 212.4
+   },
+   "owes": "$142,000.00",
+   "owes_value": 142000.0,
+   "properties": 2,
+   "open_orders": 0,
+   "open_quotes": 0,
+   "apps": [
+    {
+     "id": "real_estate",
+     "name": "Real Estate",
+     "page": "real-estate.html"
+    }
+   ]
+  },
+  {
+   "id": "44d2f9a0de",
+   "name": "Oak & Pine Woodshop",
+   "type": "Sole Proprietorship",
+   "page": "biz.html?id=44d2f9a0de",
+   "month": {
+    "income": "$640.00",
+    "expenses": "$134.50",
+    "net": "$505.50",
+    "net_value": 505.5,
+    "income_value": 640.0,
+    "expenses_value": 134.5
+   },
+   "year": {
+    "income": "$640.00",
+    "expenses": "$134.50",
+    "net": "$505.50",
+    "net_value": 505.5,
+    "income_value": 640.0,
+    "expenses_value": 134.5
+   },
+   "owes": "$0.00",
+   "owes_value": 0,
+   "properties": 0,
+   "open_orders": 1,
+   "open_quotes": 1,
+   "apps": [
+    {
+     "id": "business",
+     "name": "Orders & Quotes",
+     "page": "business.html?business=44d2f9a0de"
+    },
+    {
+     "id": "workshop",
+     "name": "Workshop",
+     "page": "workshop.html"
+    }
+   ]
+  }
+ ],
+ "totals": {
+  "month_net": "$3,068.10",
+  "month_net_value": 3068.1,
+  "open_orders": 1
+ },
+ "unsorted": {
+  "count": 1,
+  "page": "business.html?business=none"
+ }
+}

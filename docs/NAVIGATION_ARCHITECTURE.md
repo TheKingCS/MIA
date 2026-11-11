@@ -56,14 +56,45 @@ He also decided three things beyond the questions:
   ones in play first, plus "Make a World". Portal Pictures puts paintings
   on stories' portals, and the painting tools speak of stories.
 
+- **Step 3, the Dashboard** (built after Zac's go-ahead, 2026-11-11):
+  - Today and **Your Week** tabs (`core/today.week_days`: today, then what
+    falls due on each of the next six days);
+  - the **weather** (`core/weather.py`: Open-Meteo, the town set once by
+    the person, undoable, `weather.place`);
+  - the **mission in play** with its next objective;
+  - **Agent Activity** (`core/agent_activity.py`: her own changes, what
+    she held back, what she made, and for the owner the Council and the
+    development work).
+
+  By voice: "what's due this week?", "what's the weather?", "my town is
+  …".
+- **Trade Master** moved to Home › Learning (Zac, 2026-11-11).
+- **Businesses** (step 6, part):
+  - `web/businesses.html`, the subdashboard's own page: a card per
+    business with this month's and this year's money, what it owes, its
+    properties and open orders and quotes;
+  - `web/biz.html?id=`, each business's own dashboard: its money and
+    where it went, the latest lines, its properties, its own Orders &
+    Quotes section with Add Quote and Add Order, and its debts;
+  - orders and quotes carry their business (`entity_id`); the ones not
+    sorted yet are one link away;
+  - by voice: "how are my businesses doing?" and "how is the woodshop
+    doing?".
+
+  This also fixed an accepted quote that never kept its order (K-0222).
+- **Upkeep as scheduled missions** (`core/upkeep_missions.py`). Each
+  piece of upkeep due this week becomes its own mission, attached to its
+  task and asset; a property's upkeep goes through its maintenance asset.
+  - Done on the upkeep, anywhere, completes the mission.
+  - Completing the mission marks the upkeep done.
+  - It runs in the daily check.
+  - The Calendar and Your Week show the same occurrence.
+
+  K-0223, K-0224.
+
 **Still to build:**
 
-- **Step 3, the Dashboard:** the Your Week tab, Agent Activity, weather
-  and the active mission.
 - **Step 6:**
-  - upkeep as scheduled missions;
-  - the Businesses page with a dashboard per business;
-  - orders and quotes per business;
   - Health's meals widget.
 - **Muse's handoff:** the destinations' pictures and the world portals'
   art.
