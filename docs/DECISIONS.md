@@ -2686,3 +2686,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   and mission, mission dependencies, participants on a shared project; Zac's concept for the screens is with Muse
   (H-0101).
 - Related: DEC-0125, DEC-0149, DEC-0150, K-0182, K-0183
+
+### DEC-0153: Eight destinations; the Nexus is for Living Worlds only
+- Status: APPROVED in principle (Zac's navigation handoff, 2026-11-11, `docs/specs/NAVIGATION.md`: "The following
+  eight primary destinations are my preferred structure. Treat this as the intended direction and source of truth.";
+  and the same day: "we have decided on 3 main screens for the glasses view. The orb, the menu, and the nexus."). The
+  concrete architecture (`docs/NAVIGATION_ARCHITECTURE.md`) is Claude's proposal, for Zac to review before anything
+  moves.
+- Proposed by: zac (handoff, written with ChatGPT); architecture by claude, 2026-11-11
+- Decision: MIA's everyday navigation is eight destinations: Dashboard, Home, Garage, Finances, Health + Fitness,
+  AI Tools, Missions, Settings, each with subdashboards (Home: Kitchen, Smart Devices, Homestead, Recreation, Personal
+  Tools, Learning; Finances: Businesses, each business its own). Every feature has one canonical owner; other places
+  show widgets and shortcuts, never copies. Missions reach across everything but own no other area's data. The
+  Dashboard is an overview. Talk, Search and notifications stay in the frame on every page. The Nexus stops being
+  navigation and becomes the gateway to Living Worlds and the Convergence, with portals for worlds, timelines and
+  stories. The glasses have three screens: the orb, the menu (the eight, then subdashboards, then apps) and the Nexus
+  (the worlds).
+- Supersedes: DEC-0129's fifteen areas, DEC-0130's Nexus as MIA's home and Kitchen's own portal, and the eight rooms
+  proposed in `docs/ORGANIZATION_REVIEW.md` section 4. App ids, routes, stores, tools and action kinds stay.
+- Not done yet: everything; the architecture waits on Zac's review and the questions in its section 4.
+- Related: DEC-0129, DEC-0130, DEC-0134 (Living Worlds), DEC-0152 (Projects and Missions)

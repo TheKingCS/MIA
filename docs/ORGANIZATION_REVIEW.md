@@ -1,5 +1,7 @@
 # Organization review: what MIA holds, and how it could be grouped
 
+*2026-11-11: Zac chose his own eight destinations (DEC-0153, `docs/specs/NAVIGATION.md`); the architecture is `docs/NAVIGATION_ARCHITECTURE.md`. This review's section 4 is superseded; its counts and per-app verdicts still hold.*
+
 *Claude, 2026-11-10. A proposal for Zac. Nothing in the app has been
 moved: the areas, the Nexus and every page are as they were. The
 choices in section 6 are his.*
