@@ -307,7 +307,7 @@ Watch, the Neural Band, and future devices.
 - [ ] Customization
 - [ ] The same experience on every device
 - [ ] **Glasses:** the orb, the menu (the eight) and the Nexus (da378961)
-- [ ] **Phone bottom bar:** see question 1 below
+- [x] **Phone bottom bar:** Dashboard, Apps, MIA, Search (Zac confirmed 2026-11-12; built in 3c9bd222)
 - [ ] **Apps menu, two views:** Broad (every app and area alphabetically)
   and Organized (eight destination cards). Today only the organized
   list exists (3c9bd222).
@@ -374,7 +374,4 @@ Watch, the Neural Band, and future devices.
 
 ## Questions for Zac
 
-1. **The phone's bottom bar.** The handoff lists Apps, Search, Home and
-   MIA. What was built on 2026-11-11, per your message that day, is
-   Dashboard, Apps, MIA and Search. Which order, and is "Home" the
-   Dashboard?
+None open. (2026-11-12: Zac confirmed the bottom bar as Dashboard, Apps, MIA, Search.)
