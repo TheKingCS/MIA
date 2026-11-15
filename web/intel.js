@@ -47,7 +47,7 @@
       el("p", { class: "empty" }, page.watches.length ? "Nothing found yet. Finds show up here, each with where it came from." : "Tell MIA what to watch for, and what she finds shows up here."))];
     return [off, ...page.finds.map((f) => el("article", { class: "glass closet-pick" },
       el("div", { class: "row-title" }, f.link ? el("a", { href: f.link, target: "_blank", rel: "noopener noreferrer" }, f.title) : f.title,
-        f.status === "saved" ? chip("saved", "ok") : chip("new")),
+        f.status === "saved" ? chip("saved", "ok") : chip("new"), f.fits ? chip(f.fits, f.fits === "fits your plans" ? "ok" : "") : null),
       el("p", { class: "pw-label" }, "From " + f.source + (f.published ? " · " + f.published : "") + " · found " + f.found),
       f.summary ? el("p", { class: "dim" }, f.summary) : null,
       f.why.length ? el("p", { class: "dim" }, f.why.join(" · ")) : null,

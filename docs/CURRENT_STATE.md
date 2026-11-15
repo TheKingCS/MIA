@@ -4,6 +4,10 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, night (Claude: World Intelligence knows what matters to you).**
+- **Finds are ranked by your own records:** a find that fits your goals, projects, missions, the homestead plan's next step, what you're learning or what you own comes first, and says which ("fits your project “Greenhouse”").
+- **MIA makes watches herself** for each open goal, project and mission, the plan's next step and your equipment. They read public feeds and match on your PC, so nothing about them is sent anywhere. One stops when its project is done; one you stop is never made again.
+
 **2026-11-15, evening (Claude: the Living System adopted; MIA eases off by herself).**
 - **Approved:** the Living System doctrine (DEC-0173), and who checks the work: Fable reviews everything built with Opus; Copilot, Claude, ChatGPT and Muse check independently where it fits (DEC-0174).
 - **MIA eases off by herself, and says so:** her background extras (World Intelligence, Good News, Night School, the system map...) wait while the PC is busy, offline, on low battery or nearly out of disk, and a job that keeps failing is tried less often until it works. Each time, you get one notice saying why.

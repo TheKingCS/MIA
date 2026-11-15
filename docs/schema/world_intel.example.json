@@ -16,7 +16,12 @@
       ],
       "why": [
         "matches your watch “Greenhouse panels”: polycarbonate sheets",
-        "published in the last day"
+        "published in the last day",
+        "fits your project “Greenhouse” (greenhouse, polycarbonate)"
+      ],
+      "fits": "fits your plans",
+      "refs": [
+        "project:p1"
       ]
     },
     {
@@ -32,7 +37,12 @@
         "Local AI"
       ],
       "why": [
-        "matches your watch “Local AI”: local llm"
+        "matches your watch “Local AI”: local llm",
+        "fits your goal “Run MIA locally” (llm, local)"
+      ],
+      "fits": "fits your plans",
+      "refs": [
+        "intent:i1"
       ]
     },
     {
@@ -50,7 +60,9 @@
       "why": [
         "matches your watch “Local AI”: llama.cpp",
         "published in the last day"
-      ]
+      ],
+      "fits": "",
+      "refs": []
     }
   ],
   "counts": {
@@ -106,6 +118,40 @@
       ],
       "search": true,
       "every_hours": 24,
+      "max_price": 0.0,
+      "paused": false,
+      "last_run": "this morning",
+      "found": 0,
+      "refused": []
+    },
+    {
+      "id": "w4",
+      "name": "Greenhouse",
+      "words": "Greenhouse",
+      "made_by": "mia",
+      "reason": "For your project “Greenhouse”.",
+      "areas": [
+        "every source"
+      ],
+      "search": false,
+      "every_hours": 12,
+      "max_price": 0.0,
+      "paused": false,
+      "last_run": "this morning",
+      "found": 0,
+      "refused": []
+    },
+    {
+      "id": "w5",
+      "name": "Run MIA locally",
+      "words": "Run MIA locally",
+      "made_by": "mia",
+      "reason": "For your goal “Run MIA locally”.",
+      "areas": [
+        "every source"
+      ],
+      "search": false,
+      "every_hours": 12,
       "max_price": 0.0,
       "paused": false,
       "last_run": "this morning",

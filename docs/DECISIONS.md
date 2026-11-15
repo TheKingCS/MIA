@@ -2982,8 +2982,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   catalog and the feed and search adapters (`core/world_sources.py`), six actions with undo, the World page
   (`web/intel.html`: Finds, Watches, Sources), eight voice tools, a glasses card, and the `world_intel` job every
   10 minutes (fetching on one worker thread; the store changes on the job's thread). Every find names its source.
-  Off until switched on (`world.on`). Items over 14 days old are skipped. K-0236. Next: W2 (relevance from his
-  records), W1b (MIA's own watches), then listings (W3) and procurement (P1).
+  Off until switched on (`world.on`). Items over 14 days old are skipped. K-0236.
+- **Built, W2 and W1b (2026-11-15):** relevance from his own records (`core/relevance.py`: goals, projects, missions,
+  the homestead plan's next step, learning paths, equipment), each fit a reason naming the record, re-ranked as the
+  records change; and MIA's own watches, one per open record, made daily, matched on the PC with no search, stopping
+  with their record and never remade once he stops one. Each feed is fetched once per run for every watch. K-0238.
+  Next: the source loop, listings (W3) and procurement (P1).
 - Related: DEC-0053, DEC-0096, DEC-0117, DEC-0122, DEC-0123, DEC-0144, DEC-0156, DEC-0165, DEC-0166, DEC-0167,
   DEC-0168
 

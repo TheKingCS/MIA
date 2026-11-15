@@ -21,12 +21,21 @@ on one worker thread (`Runner`), scoped to this module (CLAUDE.md: a network tas
 the thread only reads the web and returns raw items; the store is changed only on the job's own thread when it
 collects them (`WorldBook.ingest`).
 
+**Watches MIA makes herself** (`sync_own_watches`, W1b; Zac, 2026-11-15: "it should also automate watching for
+things not just ones I set"): once a day, every open goal, live project, active mission, the homestead plan's next
+step and goal, and each machine owned (its maker and model) gets a watch of its own, marked as hers, with the record
+it serves as its reason. They read whole public feeds and match on the PC, so no word of them leaves it (no search).
+One stops by itself when its record does (finished, removed); one the person stops is never made again for that
+record (`declined`). At most `OWN_MAX` at a time, strongest records first.
+
 **Telling** (`offers`): the new finds best first, each a candidate for the communication gate under the topic
 `world_find`, its message naming the source. The gate paces them (four a day to start, learned from what the person
 does with them: saving or researching a find counts as engaging, "not for me" as passing, DEC-0171).
 
-**Scoring in W1** (`score`) is simple and explained: how many of the watch's words it holds, and how recent it is.
-Relevance from the person's own records (projects, intents, the development engine) is phase W2.
+**Scoring** (`score`) is explained, point by point: how many of the watch's words it holds, how recent it is, and
+(W2, `core/relevance.py`) which of the person's own records it fits: their goals, projects, missions, the homestead
+plan's next step, what they're learning, what they own. Each fit is a reason naming the record, and its `kind:id` is
+kept on the find (`refs`) for links. Finds not yet offered are re-ranked whenever the records change (`rescore`).
 
 Off until the person switches it on (`world.on`, their own setting; DEC-0053: switching it on is the asking).
 `WorldBook` keeps `world_intel.json` in their folder, sealed at rest (what someone watches for says a lot about them),
@@ -62,6 +71,8 @@ KEEP_DAYS = 90  # a find nobody saved is let go after this long
 PER_RUN = 20  # at most this many new finds a watch keeps from one run
 MAX_AGE_DAYS = 14  # an item published longer ago than this is old news: a first run doesn't bring up a backlog
 MIN_HOURS = 1  # no watch is read more often than this
+OWN_MAX = 12  # at most this many watches MIA made herself at a time
+OWN_HOURS = 12  # how often hers look
 _TRACKING = re.compile(r"^(utm_|fbclid$|gclid$|mc_|ref$|ref_src$)")
 _WORD = re.compile(r"[a-z0-9][a-z0-9+.#-]*")
 
@@ -103,7 +114,7 @@ class Watch:
 
 @dataclass
 class Discovery:
-    """One thing a watch found (see the module's opening)."""
+    """One thing a watch found (see the module's opening), with the person's records it fits (`refs`, `fits`)."""
     discovery_id: str
     key: str  # what makes it the same thing again (dedupe_key)
     title: str
@@ -120,6 +131,8 @@ class Discovery:
     offered_at: str = ""
     score: float = 0.0
     why: list = field(default_factory=list)
+    refs: list = field(default_factory=list)  # kind:id of the person's records it fits (core/relevance.py)
+    fits: str = ""  # "fits your plans" / "may fit your plans" / "" (only matched a watch's words)
 
 
 # ------------------------------------------------------------------ pure logic
@@ -160,8 +173,8 @@ def dedupe_key(item: dict) -> str:
 
 
 def score(watch: Watch, item: dict, hits: list[str], now: datetime) -> tuple[float, list[str]]:
-    """Pure logic. W1's score and its reasons: each phrase matched counts, and a recent item more (published in the
-    last day, week). Relevance from the person's records joins in W2."""
+    """Pure logic. The watch's part of the score and its reasons: each phrase matched counts, and a recent item more
+    (published in the last day, week). The records' part is added by `_relevant`."""
     points = 10.0 * len(hits)
     why = [f"matches your watch “{watch.name}”: {', '.join(hits)}"]
     published = _parse(item.get("published", ""))
@@ -205,6 +218,29 @@ def run_watch(watch: Watch, now: datetime, fetchers: dict, sources: Optional[lis
                 items.append((item, hits))
     return {"watch_id": watch.watch_id, "at": now.isoformat(timespec="seconds"), "items": items[:PER_RUN],
             "refused": refused, "failed": failed}
+
+
+def run_watches(watches: list[Watch], now: datetime, fetchers: dict) -> list[dict]:
+    """Several watches' runs with each feed fetched once and shared between every watch that reads it (a search is
+    per watch: its words differ). Returns one result per watch, as run_watch does."""
+    cache: dict = {}
+
+    def shared(src, watch):
+        """A feed's items, fetched the first time any watch asks; a refusal or failure is remembered and repeated."""
+        if src.kind == "search":
+            return fetchers["search"](src, watch)
+        if src.source_id not in cache:
+            try:
+                cache[src.source_id] = ("ok", fetchers[src.kind](src, watch))
+            except Exception as problem:  # noqa: BLE001 - re-raised for each watch below, as it would be alone
+                cache[src.source_id] = ("err", problem)
+        kind, value = cache[src.source_id]
+        if kind == "err":
+            raise value
+        return value
+
+    wrapped = {kind: shared for kind in fetchers}
+    return [run_watch(w, now, wrapped) for w in watches]
 
 
 def _sources_of(watch: Watch) -> list:
@@ -259,10 +295,13 @@ class WorldBook:
         self._load()
 
     def _load(self) -> None:
-        """Reads watches and finds, keeping only known fields; an unreadable file is logged, reported and starts
-        empty (a sealed one that won't open is copied aside first)."""
+        """Reads watches, finds, the records whose own watch the person stopped and the day MIA last made hers,
+        keeping only known fields; an unreadable file is logged, reported and starts empty (a sealed one that won't
+        open is copied aside first)."""
         self.watches: list[Watch] = []
         self.discoveries: list[Discovery] = []
+        self.declined: list[str] = []  # records whose watch the person stopped: never made again
+        self.own_synced = ""  # the day MIA last made her own watches
         if not self._file.exists():
             return
         try:
@@ -270,6 +309,8 @@ class WorldBook:
             pick = lambda cls, d: cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})  # noqa: E731
             self.watches = [pick(Watch, d) for d in raw.get("watches", [])]
             self.discoveries = [pick(Discovery, d) for d in raw.get("discoveries", [])]
+            self.declined = list(raw.get("declined", []))
+            self.own_synced = str(raw.get("own_synced", ""))
         except (ValueError, OSError, TypeError, AttributeError):
             log.exception("world_intel.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
@@ -279,10 +320,11 @@ class WorldBook:
         self._load()
 
     def _save(self) -> None:
-        """Writes watches and finds atomically."""
+        """Writes watches, finds, the declined records and the last day MIA made hers, atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"watches": [asdict(w) for w in self.watches],
-                                                  "discoveries": [asdict(d) for d in self.discoveries]}, indent=2))
+                                                  "discoveries": [asdict(d) for d in self.discoveries],
+                                                  "declined": self.declined, "own_synced": self.own_synced}, indent=2))
 
     # ---------------------------------------------------------------- watches
 
@@ -333,13 +375,40 @@ class WorldBook:
         return watch
 
     def remove_watch(self, watch_id: str) -> Watch:
-        """Removes a watch (its finds stay, until they're let go); ValueError when it isn't here."""
+        """Removes a watch (its finds stay, until they're let go); one MIA made is never made again for its record.
+        ValueError when it isn't here."""
         watch = self.get_watch(watch_id)
         if watch is None:
             raise ValueError("That watch isn't here any more.")
         self.watches = [w for w in self.watches if w.watch_id != watch_id]
+        if watch.made_by == "mia":
+            self.declined = sorted(set(self.declined) | set(watch.refs))
         self._save()
         return watch
+
+    def sync_own_watches(self, anchors: list, now: Optional[datetime] = None) -> tuple[list[Watch], list[Watch]]:
+        """MIA's own watches made to match the person's records now (see the module's opening): one for each anchor
+        with a name that has none yet and wasn't declined, strongest first, up to OWN_MAX; hers whose record is gone
+        removed. Returns (made, removed); saves when anything changed, and notes the day."""
+        now = now or datetime.now()
+        live = {a.ref: a for a in anchors if a.name and phrases(a.name) and a.ref not in self.declined}
+        removed = [w for w in self.watches if w.made_by == "mia" and not set(w.refs) & set(live)]
+        self.watches = [w for w in self.watches if w not in removed]
+        covered = {r for w in self.watches for r in w.refs}
+        mine = sum(1 for w in self.watches if w.made_by == "mia")
+        made = []
+        for a in sorted(live.values(), key=lambda a: -a.weight):
+            if a.ref in covered or mine >= OWN_MAX:
+                continue
+            words = " ".join(a.name.replace(",", " ").split())
+            watch = Watch(uuid.uuid4().hex[:8], a.name[:80], words, [], [], False, OWN_HOURS, 0.0, "mia",
+                          f"For {a.label}.", [a.ref], created=now.isoformat(timespec="seconds"))
+            self.watches.append(watch)
+            made.append(watch)
+            mine += 1
+        self.own_synced = now.date().isoformat()
+        self._save()
+        return made, removed
 
     def due_watches(self, now: datetime) -> list[Watch]:
         """The watches to run now."""
@@ -362,10 +431,10 @@ class WorldBook:
         self._save()
         return found
 
-    def ingest(self, results: list[dict], now: Optional[datetime] = None) -> list[Discovery]:
+    def ingest(self, results: list[dict], now: Optional[datetime] = None, anchors: Optional[list] = None) -> list[Discovery]:
         """Takes runs' results into the store: each matched item a find (one per dedupe key, the watch added to an
-        existing one), the watch's last run, counts and refused sources recorded, old unsaved finds let go. Returns the
-        finds that are new."""
+        existing one), scored against the person's records when `anchors` are given (core/relevance.py), the watch's
+        last run, counts and refused sources recorded, old unsaved finds let go. Returns the finds that are new."""
         from core import world_sources
 
         now = now or datetime.now()
@@ -388,12 +457,14 @@ class WorldBook:
                     continue
                 src = world_sources.source(item.get("source", ""))
                 points, why = score(watch, item, hits, now)
+                points, why, refs, fits = _relevant(points, why, item, anchors or [])
                 find = Discovery(uuid.uuid4().hex[:10], key, str(item.get("title", ""))[:300],
                                  str(item.get("link", "")), str(item.get("source", "")),
                                  src.name if src is not None else str(item.get("source", "")),
                                  str(item.get("summary", ""))[:600], str(item.get("site", "")),
                                  str(item.get("published", "")), now.isoformat(timespec="seconds"),
-                                 now.isoformat(timespec="seconds"), [watch.watch_id], score=points, why=why)
+                                 now.isoformat(timespec="seconds"), [watch.watch_id], score=points, why=why,
+                                 refs=refs, fits=fits)
                 self.discoveries.append(find)
                 by_key[key] = find
                 new.append(find)
@@ -402,6 +473,26 @@ class WorldBook:
         self.discoveries = [d for d in self.discoveries if d.status == "saved" or d.last_seen >= cutoff]
         self._save()
         return new
+
+    def rescore(self, anchors: list, now: Optional[datetime] = None) -> int:
+        """Re-ranks the finds not offered yet against the person's records as they are now (a new goal pulls, a
+        finished project stops). Returns how many changed; saves only when one did."""
+        changed = 0
+        now = now or datetime.now()
+        names = {w.watch_id: w for w in self.watches}
+        for d in self.discoveries:
+            if d.status != "new" or d.offered_at:
+                continue
+            watch = next((names[w] for w in d.watch_ids if w in names), None)
+            item = {"title": d.title, "summary": d.summary, "published": d.published}
+            base, why = score(watch, item, matches(watch, item), now) if watch else (0.0, [])
+            points, why, refs, fits = _relevant(base, why, item, anchors)
+            if (points, refs) != (d.score, d.refs):
+                d.score, d.why, d.refs, d.fits = points, why, refs, fits
+                changed += 1
+        if changed:
+            self._save()
+        return changed
 
     def offers(self, now: Optional[datetime] = None, limit: int = 8) -> list[Discovery]:
         """The new finds not offered yet, best first (the gate decides how many go out)."""
@@ -419,13 +510,35 @@ class WorldBook:
             self._save()
 
 
+def _relevant(points: float, why: list, item: dict, anchors: list) -> tuple[float, list, list, str]:
+    """The watch's points and reasons plus the records' (core/relevance.py): (points, reasons, refs, fits)."""
+    from core import relevance
+
+    extra, reasons, refs = relevance.relevance(f"{item.get('title', '')} {item.get('summary', '')}", anchors)
+    return points + extra, list(why) + reasons, refs, relevance.describe(extra, reasons) or ""
+
+
+def _anchors(context) -> list:
+    """The person's anchors (core/relevance.anchors), or [] when they can't be read."""
+    from core import relevance
+
+    try:
+        return relevance.anchors(context)
+    except Exception:  # noqa: BLE001 - relevance never stops a run
+        log.exception("World Intelligence: couldn't read the person's records for relevance")
+        return []
+
+
 def candidate_for(find: Discovery):
-    """The gate's candidate for one find: its title and where it's from, with the source always named."""
+    """The gate's candidate for one find: its title, where it's from (the source always named) and, first, the record
+    it fits when it fits one."""
     from core.communication_gate import TIMELY, Candidate
 
     where = find.source_name + (f" ({find.site})" if find.site else "")
+    reason = next((w for w in find.why if w.startswith("fits ")), find.why[0] if find.why else "")
     return Candidate(topic=TOPIC, title=f"Found: {find.title}"[:120],
-                     message=f"From {where}. {find.why[0] if find.why else ''}".strip(), urgency=TIMELY,
+                     message=f"From {where}. {reason[:1].upper() + reason[1:] if reason else ''}".strip(),
+                     urgency=TIMELY,
                      source="world", fingerprint=find.key)
 
 
@@ -447,19 +560,19 @@ class Runner:
         return self._thread is not None and self._thread.is_alive()
 
     def start(self, watches: list[Watch], now: datetime, fetchers: dict) -> bool:
-        """Starts a run over copies of these watches; False when one is already going or there's nothing to run."""
+        """Starts a run over copies of these watches (each feed fetched once for all of them: run_watches); False when
+        one is already going or there's nothing to run."""
         if self.busy() or not watches:
             return False
         copies = [Watch(**asdict(w)) for w in watches]
 
         def work() -> None:
-            """The thread: every watch's run, in turn; results kept for collect()."""
-            results = []
-            for w in copies:
-                try:
-                    results.append(run_watch(w, now, fetchers))
-                except Exception:
-                    log.exception("World Intelligence: the run for %s failed", w.watch_id)
+            """The thread: every watch's run, each feed fetched once for all of them; results kept for collect()."""
+            try:
+                results = run_watches(copies, now, fetchers)
+            except Exception:
+                log.exception("World Intelligence: the run failed")
+                results = []
             with self._lock:
                 self._done = results
 
@@ -491,8 +604,9 @@ def live_fetchers(context) -> dict:
 
 
 def tick(context, now: Optional[datetime] = None, fetchers: Optional[dict] = None) -> list[Discovery]:
-    """The job (core/background_jobs.py, every 10 minutes): when it's on, collect a finished run into the store and
-    offer its best new finds through the gate; then start the due watches on the worker thread. Returns the new finds
+    """The job (core/background_jobs.py, every 10 minutes): when it's on, collect a finished run into the store (scored
+    against the person's records), re-rank what's waiting, make MIA's own watches once a day, and offer the best new
+    finds through the gate; then start the due watches on the worker thread. Returns the new finds
     collected this time."""
     import os
 
@@ -502,7 +616,11 @@ def tick(context, now: Optional[datetime] = None, fetchers: Optional[dict] = Non
     now = now or datetime.now()
     runner = runner_for(book)
     results = runner.collect()
-    new = book.ingest(results, now) if results else []
+    anchors = _anchors(context)
+    new = book.ingest(results, now, anchors) if results else []
+    book.rescore(anchors, now)
+    if book.own_synced != now.date().isoformat():
+        book.sync_own_watches(anchors, now)
     offers = book.offers(now)
     gate = getattr(context, "communication", None)
     if offers and gate is not None:

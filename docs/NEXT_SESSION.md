@@ -38,9 +38,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   1. a3c88483, the gate's learned pace (core/communication_gate.py);
   2. 8e237dd7, World Intelligence W1 (core/world_intel.py, world_sources.py, the worker thread, the actions);
   3. 11685d02, the Living System audit (docs/mia_os/MIA_OS_LIVING_SYSTEM.md): the doctrine's own L5;
-  4. the homeostasis and invariant-tests commit (core/homeostasis.py, core/scheduler.py, tests/test_living_system.py).
+  4. the homeostasis and invariant-tests commit (core/homeostasis.py, core/scheduler.py, tests/test_living_system.py);
+  5. World Intelligence W2 and W1b (core/relevance.py, WorldBook.sync_own_watches, run_watches).
   Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
-- **Next, in order (Opus):** W2, relevance from his records (projects and their material lists, intents, the
+- **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
+  missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
+  one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
+- **Was next, now done:** W2, relevance from his records (projects and their material lists, intents, the
   development engine's needs, inventory, budget, places); W1b, watches MIA makes herself from those records; then
   P1 (requirements per project), W3 (eBay's and GSA's APIs wait for keys Zac skipped; capture and browser skills
   first). **(Fable)** later: W4 grants, the unattended browser review. On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.

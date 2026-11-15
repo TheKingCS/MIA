@@ -6,7 +6,8 @@ The World page (DEC-0170, W1): what World Intelligence found, the watches, and t
 so the web only draws (DEC-0017) and the voice tools say the same thing (DEC-0125).
 
 `world_page(context)`: whether it's on; the finds, best first (new ones, then saved), each with its source named,
-its link, when it was found and published, which watches found it and why; the watches with their words, areas,
+its link, when it was found and published, which watches found it, why, and which of the person's records it fits
+(`fits`, `refs`: core/relevance.py); the watches with their words, areas,
 how often, last run, what they found and any source waiting for the person; and the areas a watch can read. Changes
 are actions in core/world_intel_actions.py.
 """
@@ -20,13 +21,14 @@ SHOWN = 60  # at most this many finds on the page
 
 
 def _find(d, names: dict, now: datetime) -> dict:
-    """One find as the page shows it, always with its source."""
+    """One find as the page shows it, always with its source, and which of the person's records it fits."""
     from core.web_changes import when_words  # here: core.web_changes imports the action contract, which loads pages
 
     return {"id": d.discovery_id, "title": d.title, "link": d.link, "summary": d.summary,
             "source": d.source_name + (f" ({d.site})" if d.site else ""), "status": d.status,
             "found": when_words(d.found_at, now), "published": d.published[:10],
-            "watches": [names.get(w, "") for w in d.watch_ids if names.get(w)], "why": list(d.why)}
+            "watches": [names.get(w, "") for w in d.watch_ids if names.get(w)], "why": list(d.why),
+            "fits": d.fits, "refs": list(d.refs)}
 
 
 def _watch(w, now: datetime) -> dict:
@@ -63,7 +65,8 @@ def world_page(context, now: Optional[datetime] = None) -> dict:
 
 
 def found_sentence(page: dict, limit: int = 3) -> str:
-    """What MIA says for "what have you found?": the best new finds, each with its source, or why there are none."""
+    """What MIA says for "what have you found?": the best new finds, each with its source and the record it fits when
+    it fits one, or why there are none."""
     if not page.get("available"):
         return "World Intelligence isn't on this MIA."
     new = [f for f in page["finds"] if f["status"] == "new"]
@@ -72,6 +75,7 @@ def found_sentence(page: dict, limit: int = 3) -> str:
     if not new:
         return ("Nothing new from your watches." if page["on"]
                 else "World Intelligence is off, so I'm not looking. Say \"turn on world intelligence\".")
-    said = "; ".join(f"{f['title']} (from {f['source']})" for f in new[:limit])
+    said = "; ".join(f"{f['title']} (from {f['source']}" + (", " + next((w for w in f["why"] if w.startswith("fits ")), "")
+                                                          if f.get("fits") else "") + ")" for f in new[:limit])
     more = f" And {len(new) - limit} more on the World page." if len(new) > limit else ""
     return f"{len(new)} new: {said}.{more}"
