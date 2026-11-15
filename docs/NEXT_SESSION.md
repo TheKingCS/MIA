@@ -20,7 +20,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **DEC-0170 approved** (Zac, 2026-11-15). Q-20: within 360 miles. Keys skipped for now. Stores added: auctions,
   home stores, import marketplaces, Amazon, Walmart, Target, Kroger.
 - **Procurement proposed** (prompt 19, `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md`, DEC-0172): requirements per
-  project from plans, specs compared by numbers, price observations, acquisition plans. Waiting on Q-21 to Q-23.
+  project from plans, specs compared by numbers, price observations, acquisition plans. Waiting on Q-21 (approve
+  it). Q-22 (his own trip figures) and Q-23 (his stores, in his own data) answered.
+- **Later device step (Zac, 2026-11-15):** MIA in his vehicle, through the phone or a Pi with a screen and the
+  vehicle's OBD-II port (trips, fuel use, engine codes). Details in his own data (`data/world_local_sources.md`).
 - **Local research for Zac's area** is in his own data (`data/world_local_sources.md`, git-ignored, never committed):
   stores, yards, auctions and surplus to seed his watches when W1 is built.
 - **Next to build: W1 (Opus)**, starting with the gate's learned pacing (DEC-0171), then watches, the discovery

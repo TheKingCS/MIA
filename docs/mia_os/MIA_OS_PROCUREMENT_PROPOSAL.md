@@ -346,5 +346,8 @@ The official APIs (eBay, Kroger, Walmart, GSA) wait for the keys Zac skipped for
 ## 19. Questions
 
 - **Q-21.** Approve procurement as World Intelligence's listings half (DEC-0172), in phases P1 to P6?
-- **Q-22.** His cost per mile for trips (for total cost): use the IRS standard rate as a default, or his own figure?
-- **Q-23.** For groceries, which stores does he actually shop at, and does he want pickup or delivery prices too?
+- **Q-22, answered (Zac, 2026-11-15): his own figures.** Cost per mile is learned from his fill-ups and the miles
+  he drives (the phone's tracks now; his vehicle's OBD-II data later, when MIA runs in it); until then she asks for
+  his usual miles per gallon.
+- **Q-23, answered (Zac, 2026-11-15):** Kroger, Walmart, the dollar stores and three local stores, named in his own
+  data rather than here. Their prices are read by browser skill and their weekly ads watched.

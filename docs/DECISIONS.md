@@ -3017,6 +3017,13 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
       never in the repository.
   11. **The free API keys are skipped for now** (Zac: "Skip the keys for now"): eBay, Kroger, Walmart, GSA and FRED
       wait; their sites are read by browser skill meanwhile.
+  12. **Trip costs from his own figures (Q-22):** cost per mile learned from his fill-ups (bank transactions,
+      receipts) and the miles he drives (the phone's tracks now; his vehicle later, through its OBD-II port, which
+      every US car since 1996 has); until there's enough data, MIA asks for his usual miles per gallon. MIA running in
+      his vehicle is a later device step (the phone or a Pi with a screen), recorded in his own data.
+  13. **His grocery and everyday stores (Q-23):** Kroger, Walmart, the dollar stores, and three local and regional
+      stores (a meat market, a grocery and a farm-and-home store) named in his own data, not here, so the public
+      repository doesn't give away where he lives.
 - Consequences: the gate's change is W1's first step (with `CLAUDE.md`'s "owner's limit: 5/day" line updated when
   it's built). DEC-0170 stays proposed until Zac approves its shape (Q-16).
 - Related: DEC-0053, DEC-0094, DEC-0117, DEC-0170; `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`
