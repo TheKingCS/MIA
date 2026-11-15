@@ -3059,8 +3059,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - **Built, P1 (2026-11-15):** what each project needs (`core/requirements.py`, a household store under the epistemic
   contract): a project started from a plan lists the plan's materials with its quantities; what's in the workshop and
   inventory is marked off; he adds, changes, ticks off and removes needs (five actions, four voice tools, the World
-  page's Needs tab); open needs rank finds and get MIA's own watches. K-0240. Next: P2 (specs, total cost, price
-  observations).
+  page's Needs tab); open needs rank finds and get MIA's own watches. K-0240.
+- **Built, P2 (2026-11-15):** products compared by their specs in code (`core/product_specs.py`: identical,
+  equivalent, similar, not suitable, with reasons), prices remembered per product with store and time
+  (`core/price_book.py`, sealed), a price judged only against what's been seen (never with fewer than three), total
+  cost with every unknown part named, his own cost per mile; four voice tools, prices on the Needs tab. K-0241. Next:
+  P3 (finds linked to needs, the opportunity score, the Procurement view).
 - Related: DEC-0118, DEC-0144, DEC-0152, DEC-0156, DEC-0170, DEC-0171
 
 ### DEC-0173: The Living System doctrine, adopted as invariants on what MIA already is

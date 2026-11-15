@@ -115,6 +115,7 @@ from core.assistant_dungeon_actions import register_checkin_actions, register_du
 from core.assistant_closet_actions import register_closet_actions
 from core.assistant_world_intel_actions import register_world_intel_actions
 from core.assistant_requirement_actions import register_requirement_actions
+from core.assistant_price_actions import register_price_actions
 from core.assistant_taught_skill_actions import register_taught_skill_actions
 from core.assistant_ual_actions import register_ual_actions
 from core.assistant_creation_actions import register_creation_actions
@@ -357,6 +358,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)
     register_world_intel_actions(registry)  # World Intelligence: watches and finds (DEC-0170)
     register_requirement_actions(registry)  # what each project needs (DEC-0172)
+    register_price_actions(registry)  # prices seen, comparisons, trip cost (DEC-0172)
     register_taught_skill_actions(registry)  # taught skills: watch me, run, answer (DEC-0123)
     register_ual_actions(registry)  # the Universal Action Layer: actions on what is given (DEC-0165)
     register_creation_actions(registry)  # screens MIA made for you, by voice (DEC-0091)

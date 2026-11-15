@@ -46,10 +46,11 @@ def _watch(w, now: datetime) -> dict:
 
 def needs(context) -> list[dict]:
     """Each project that isn't finished, with its needs (core/requirements.py, DEC-0172): every line with its quantity,
-    what's on hand, status, ceiling and where it came from, and the project's progress."""
+    what's on hand, status, ceiling, where it came from and its best prices seen (P2), and the project's progress."""
     from core.requirements import progress
 
     book, projects = getattr(context, "requirements", None), getattr(context, "projects", None)
+    prices = getattr(context, "prices", None)
     if book is None or projects is None:
         return []
     out = []
@@ -61,7 +62,25 @@ def needs(context) -> list[dict]:
                     "lines": [{"id": r.requirement_id, "item": r.item, "quantity": r.quantity, "unit": r.unit,
                                "have": r.have, "status": r.status, "max_price": r.max_price, "specs": r.specs,
                                "condition": r.condition, "priority": r.priority, "needed_by": r.needed_by,
-                               "from": "the plan" if r.origin.startswith("plan") else "you"} for r in lines]})
+                               "from": "the plan" if r.origin.startswith("plan") else "you",
+                               "prices": _prices_for(prices, r)} for r in lines]})
+    return out
+
+
+def _prices_for(prices, line) -> list[dict]:
+    """A need's latest price at each store seen (core/price_book.py), cheapest first, each with its fit to the need's
+    specs (core/product_specs.verdict) and how it compares with that product's own history."""
+    if prices is None:
+        return []
+    from core import product_specs
+    from core.price_book import judge
+
+    out = []
+    for o in prices.best(line.item, line.specs)[:3]:
+        earlier = [x for x in prices.for_product(o.product_key) if x.observation_id != o.observation_id]
+        out.append({"store": o.store, "price": round(o.unit_price(), 2), "unit": o.unit, "link": o.link,
+                    "fit": product_specs.verdict(f"{line.item} {line.specs}", o.item)["verdict"],
+                    "compared": judge(earlier, o.unit_price(), datetime.now())["said"], "seen": o.at[:10]})
     return out
 
 

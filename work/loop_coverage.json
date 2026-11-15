@@ -336,6 +336,14 @@
   "action:requirement": {
    "status": "none",
    "why": "adding, changing and ticking off needs is the person's own list; the needs loop (todo) judges the list itself"
+  },
+  "store:prices": {
+   "status": "todo",
+   "why": "a loop over price observations: how old the latest price for each open need is, and lows missed (P3, DEC-0172)"
+  },
+  "action:price": {
+   "status": "none",
+   "why": "a price recorded or a trip cost set is the person's own record; the prices loop (todo) judges what's kept"
   }
  }
 }

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1427 files, 317,803 lines; 1427 files describe themselves; 17,450 of 17,545 classes and functions are documented.
+1432 files, 318,604 lines; 1432 files describe themselves; 17,492 of 17,587 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-549 files, 158,119 lines; 8,151 of 8,237 classes and functions documented
+553 files, 158,792 lines; 8,186 of 8,272 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -64,6 +64,7 @@
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
 - `core/assistant_playlist_actions.py`: Playlists by voice (DEC-0125, 2026-11-08): Music could play a playlist out loud but not make or change one; the screen's five playlist kinds had no voice twin. Five tools, each through the screen's own action (core/assistant_correction_actions.py `_run`, so "undo that" works):
+- `core/assistant_price_actions.py`: Prices and comparisons by voice (Procurement P2, DEC-0172, DEC-0125): "Lowe's has 2x4 studs at $3.98" (`record_price`). "Is $3.98 a good price for 2x4 studs?" (`check_price`): against the prices seen, never a guess. "Compare prices for the greenhouse fans" (`compare_need`): each store's latest price
 - `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
 - `core/assistant_proposal_actions.py`: Mission ideas and field recordings by voice (DEC-0125; the screens are the Missions page's idea card and the Journal's From the Field, core web_proposals.py). "Suggest a mission" asks the model for one idea (checked in code before it's kept); "accept it" / "set it aside" decide it. "Any field record
 - `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
@@ -365,8 +366,11 @@
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
 - `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
 - `core/presence.py`: Presence (DEC-0044, docs/UX_SYSTEM_AUDIT.md): what matters now, across everything MIA keeps, in one ranked list, so nobody has to visit eight screens to find out. Each item says **why** it's there, what **kind** of thing it is (a deadline, a fact, a suggestion, progress), where it came from, where t
+- `core/price_actions.py`: Prices on the action contract (Procurement P2, DEC-0172; core/price_book.py): proposed in plain words, approved, run, undoable.
+- `core/price_book.py`: Prices MIA has seen, and what a thing really costs (Procurement P2, DEC-0172; the proposal's section 5).
 - `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the 
 - `core/product_manager.py`: MIA Home's finished-goods products — the third slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, `core/material_manager.py`'s docstring for the first slice, and `core/job_manager.py`'s for the second), adapted to this project's persisted-JSON-ma
+- `core/product_specs.py`: Products compared by their real specifications, not their titles (Procurement P2, DEC-0172; the proposal's section 5). Everything here is pure code: a model never decides whether two things are the same.
 - `core/profile_manager.py`: Manages MIA user profiles — distinct from ConfigManager, which holds app-wide settings (theme, kiosk mode, etc.) that apply regardless of who's using the device. A "profile" is a person: their display name, when they were created, an optional password, and (going forward) the namespace their persona
 - `core/progress_history.py`: A prestige reached or a reward unlocked, kept in that person's history (2026-11-09, from the self-audit's unheard events). The profile manager publishes `profile.prestiged` and `profile.reward_unlocked`, and until now nothing heard either: a toast said it, and then it was gone, so the Chronicle and 
 - `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage
@@ -838,7 +842,7 @@
 
 ## tests/: the test suite: what each part must do
 
-489 files, 82,376 lines; 6,986 of 6,995 classes and functions documented
+490 files, 82,495 lines; 6,993 of 7,002 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1150,6 +1154,7 @@
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).
 - `tests/test_private_journal_panel.py`: The Private Journal tab (gui/private_journal_panel.py) and the desktop chat surfaces' safety-floor path, offscreen.
+- `tests/test_procurement_prices.py`: Procurement P2 (DEC-0172; core/product_specs.py, core/price_book.py, core/price_actions.py, core/assistant_price_actions.py): specifications are read from words with their units, and a product is judged identical, equivalent, similar or not suitable by numbers, never by its title; prices are kept pe
 - `tests/test_product_manager.py`: Unit tests for core.product_manager. Isolates _DATA_DIR/_PRODUCTS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths.
 - `tests/test_profile_manager.py`: Unit tests for the birthday field added to core.profile_manager.Profile (2026-07-14 aesthetic pass part 5) — not a full ProfileManager test suite (none existed before this addition; out of scope to backfill here). Isolates config_manager's _CONFIG_FILE into a tmp_path scratch area, same "config.save
 - `tests/test_progress_history.py`: A prestige reached or a reward unlocked is kept in that person's history (core/progress_history.py, 2026-11-09): heard on the bus, recorded in their own folder, the reward named from its tier, and nothing for a profile that's gone.
@@ -1332,7 +1337,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,686 lines
+112 files, 20,695 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

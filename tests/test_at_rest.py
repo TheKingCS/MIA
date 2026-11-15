@@ -202,6 +202,7 @@ SEALED_STORES = [
     ("core.work_dungeon", "DungeonBook", "work_dungeon.json"),
     ("core.smart_closet", "ClosetBook", "smart_closet.json"),
     ("core.world_intel", "WorldBook", "world_intel.json"),
+    ("core.price_book", "PriceBook", "price_observations.json"),
     ("core.taught_skills", "SkillBook", "taught_skills.json"),
     ("core.notification_manager", "NotificationManager", "notifications.json"),
     ("core.workout_manager", "WorkoutManager", "workout_exercises.json"),

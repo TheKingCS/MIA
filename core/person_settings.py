@@ -23,6 +23,7 @@ from typing import Any, Optional
 PERSONAL_SETTINGS = (
     "communication.daily_budget",
     "world.on",  # World Intelligence switched on (DEC-0170)
+    "procurement.cost_per_mile", "procurement.mpg", "procurement.fuel_price",  # their own trip cost (DEC-0172)
     "communication.min_spacing_minutes",
     "communication.repeat_days",
     "journal.weekly_reflection",

@@ -4,6 +4,11 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, later (Claude: prices and real comparisons).**
+- **MIA compares products by their real specs:** a pump that moves 400 gallons an hour isn't "the same" as one that moves 800, whatever the title says. She calls each offer identical, equivalent, similar or not suitable for a need, and says why.
+- **She remembers prices** you give her or record on the Needs tab, store by store, and only calls a price good once she's seen it at least three times. A "was" price higher than anything she's seen is called out.
+- **Total cost** lists price, shipping, tax and the trip, and says which parts she doesn't know yet. Tell her your truck's miles per gallon and the fuel price and she'll count trips.
+
 **2026-11-15, late (Claude: what each project needs).**
 - **Projects have needs lists:** start a project from a plan and its materials are listed with the plan's quantities; anything in the workshop or inventory is marked off. Add your own ("the greenhouse needs four fans, used, under $40"), tick them off, or ask "what do I still need for the greenhouse?". On the World page's Needs tab.
 - **Needs feed World Intelligence:** a find that fits something a project needs ranks first, and MIA watches for each open need herself.

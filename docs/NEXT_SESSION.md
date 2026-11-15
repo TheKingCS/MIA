@@ -41,7 +41,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   4. the homeostasis and invariant-tests commit (core/homeostasis.py, core/scheduler.py, tests/test_living_system.py);
   5. World Intelligence W2 and W1b (core/relevance.py, WorldBook.sync_own_watches, run_watches);
   6. the source loop (core/world_intel.source_stats, mute, the world.sources loop);
-  7. Procurement P1 (core/requirements.py, requirement_actions.py, the plan.project hook, needs as anchors).
+  7. Procurement P1 (core/requirements.py, requirement_actions.py, the plan.project hook, needs as anchors);
+  8. Procurement P2 (core/product_specs.py, core/price_book.py, price actions and tools).
   Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
@@ -51,8 +52,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Its five deliverables build on 03–17's documents and on `MIA_OS_LIVING_SYSTEM.md`.
 - **Built 2026-11-15 (Opus): the source loop** (K-0239) and **Procurement P1** (K-0240): each project's needs, from
   plans and his words, marked off against the workshop and inventory, on the World page's Needs tab and by voice;
-  open needs rank finds and get MIA's own watches. **Next (Opus):** P2, product specs compared by numbers, total cost
-  and price observations.
+  open needs rank finds and get MIA's own watches. **Built after it: P2** (K-0241): specs compared by numbers, prices
+  remembered and judged against what's been seen, total cost. **Next (Opus), Zac's order:** Prompt 03 (the MIA OS
+  sequence resumes); then P3.
 - **Was next, now done:** W2, relevance from his records (projects and their material lists, intents, the
   development engine's needs, inventory, budget, places); W1b, watches MIA makes herself from those records; then
   P1 (requirements per project), W3 (eBay's and GSA's APIs wait for keys Zac skipped; capture and browser skills

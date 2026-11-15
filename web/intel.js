@@ -96,6 +96,12 @@
       field("priority", "Priority", "choice", "first", false, ["first", "later", "nice to have"])], {});
     if (v) act({ kind: "requirement.add", params: Object.assign({ project_id: project.id }, v) });
   }
+  async function recordPrice(line) {
+    const v = await form("A Price For " + line.item, [field("store", "Store", "text", "", true),
+      field("price", "Price", "text", "", true), field("quantity", "For how many", "text", "1"),
+      field("specs", "What it is exactly (optional: size, flow, volts...)", "text"), field("link", "Link (optional)", "text")], {});
+    if (v) act({ kind: "price.record", params: Object.assign({ item: line.item, unit: line.unit }, v) });
+  }
   function needs() {
     const head = section("What Your Projects Need", buttons(btn("Check What's On Hand", "btn-ghost", () => act({ kind: "requirement.check", params: {} }, { quick: true }))),
       el("p", { class: "dim" }, "Starting a project from a plan lists its materials here. What's on hand in the workshop and inventory is marked off; a find that fits a need ranks first."));
@@ -108,7 +114,10 @@
             chip(status[l.status] || l.status, ["owned", "acquired"].includes(l.status) ? "ok" : "")),
           el("div", { class: "row-sub" }, [l.specs, l.max_price ? "up to " + l.max_price : "", l.condition !== "any" ? l.condition : "",
             l.priority !== "first" ? l.priority : "", l.have && l.status === "partial" ? l.have + " on hand" : "", "from " + l.from].filter(Boolean).join(" · "))),
+        (l.prices || []).length ? el("div", { class: "row-sub" }, l.prices.map((x) => x.store + " " + x.price + (x.unit ? "/" + x.unit : "") +
+          " (" + x.fit + "; " + x.compared + ")").join(" · ")) : null,
         ["owned", "acquired"].includes(l.status) ? null : buttons(
+          btn("Record A Price", "btn-ghost btn-small", () => recordPrice(l)),
           btn("Got It", "btn-ghost btn-small", () => act({ kind: "requirement.got", params: { requirement_id: l.id } }, { quick: true })),
           btn("Not Needed", "btn-ghost btn-small", () => act({ kind: "requirement.remove", params: { requirement_id: l.id } }))))))
         : null))];
