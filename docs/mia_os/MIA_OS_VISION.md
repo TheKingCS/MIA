@@ -6,6 +6,12 @@ in `README.md` in this folder.*
 
 ## What MIA is becoming
 
+*The foundational doctrine (prompt 20, proposed as DEC-0173,
+[`MIA_OS_LIVING_SYSTEM.md`](MIA_OS_LIVING_SYSTEM.md)): MIA is one Living
+System. Her apps, agents, models and operating system are its parts, not the
+system itself, and each part joins the shared identity, continuity,
+knowledge, initiative, health and feedback rather than keeping its own.*
+
 Today MIA is an application family: a Python engine (`core/`) with one
 web front end (`web/`), hosted on the PC by a desktop app (`main.py`),
 carried inside an Android app on the phone, and shown on the Meta

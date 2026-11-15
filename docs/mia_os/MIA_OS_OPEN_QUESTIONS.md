@@ -34,6 +34,9 @@ folded in here.*
 | Q-21 | **Answered yes (2026-11-15)**: procurement approved | DEC-0172 | — |
 | Q-22 | **Answered (2026-11-15)**: his own figures, learned from fill-ups and miles driven (phone now, his vehicle's OBD-II later) | DEC-0171 | — |
 | Q-23 | **Answered (2026-11-15)**: Kroger, Walmart, the dollar stores and three local stores (named in his own data) | DEC-0171 | — |
+| Q-24 | Adopt the Living System doctrine (prompt 20) as MIA OS's foundation, as DEC-0173 maps it: invariants guarded by tests, homeostasis v1, one epistemic contract, grants, no new "Living System" service? | DEC-0173; `MIA_OS_LIVING_SYSTEM.md` | L1 |
+| Q-25 | Codex: add it to the team as an independent verifier, or keep that role with Fable reviewing Opus (DEC-0166)? | doctrine section 19 | L5 |
+| Q-26 | May MIA defer her own background work while the PC is busy, offline or on low battery, and slow a job that keeps failing, by herself, logged? | homeostasis v1 | L2 |
 | Q-15 | **Answered (2026-11-15)**: Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android. Was: the Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |
 
 ## The original questions (for the record)

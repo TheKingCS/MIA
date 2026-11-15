@@ -4,6 +4,11 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, later still (Claude: the Living System doctrine, answered, nothing built).**
+- **Zac's foundational doctrine** (MIA as one Living System) is mostly what MIA already is; the audit shows it characteristic by characteristic, with the files and tests as evidence (`docs/mia_os/MIA_OS_LIVING_SYSTEM.md`).
+- **What it adds:** permissions enforced in code (grants), MIA easing off her own background work when the PC is busy or something keeps failing, every fact marked as said, seen, inferred or worked out, and goals ranked across her areas. No new "Living System" app.
+- **Waiting on Zac:** adopt it (DEC-0173), whether Codex joins as a checker, and whether MIA may ease off her own work by herself.
+
 **2026-11-15, later on the PC (Claude: the first of World Intelligence, built).**
 - **MIA no longer has a fixed limit of 5 messages a day.** She learns how often you want each kind from what you open, mark useful, act on or dismiss. World Intelligence's finds start at four a day.
 - **World Intelligence's first phase works:** tell her "watch for greenhouse panels" and she reads 40 checked public feeds (news, releases, research, grants, homestead, energy) every few hours, keeps what matches, and tells you the best, always saying where each came from. The World page (under Learning) shows finds, watches and sources. It's off until you turn it on.

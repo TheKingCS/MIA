@@ -5,7 +5,7 @@
 ## At a glance
 
 - **Architecture** — 802 Python files across 544 core, 93 modules, 123 gui, 2 server, 40 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 171 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 172 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 95 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 236 dev entries (work/knowledge/).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (14): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0156, DEC-0157, DEC-0158, DEC-0164, DEC-0169
+**PROPOSED** (15): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0156, DEC-0157, DEC-0158, DEC-0164, DEC-0169, DEC-0173
 
 <details><summary>Every decision</summary>
 
@@ -196,6 +196,7 @@
 - **DEC-0170** [APPROVED] — World Intelligence, a thin subsystem over what MIA already has
 - **DEC-0171** [APPROVED] — Zac's answers on World Intelligence and MIA's own messages
 - **DEC-0172** [APPROVED] — Procurement & Opportunity Intelligence, World Intelligence's listings half
+- **DEC-0173** [PROPOSED] — The Living System doctrine, adopted as invariants on what MIA already is
 
 </details>
 

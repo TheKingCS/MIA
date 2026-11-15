@@ -3051,3 +3051,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   consumable and "last confirmed". Buying, bidding, offering and messaging are never done without his press.
 - Phases P1–P6, slotted after World Intelligence's W phases.
 - Related: DEC-0118, DEC-0144, DEC-0152, DEC-0156, DEC-0170, DEC-0171
+
+### DEC-0173: The Living System doctrine, adopted as invariants on what MIA already is
+- Status: PROPOSED (Zac to approve: Q-24)
+- Proposed by: claude (Opus), 2026-11-15, from Zac's handoff "The Living System: Identity, Continuity, Awareness,
+  Adaptation & Evolution" (prompt 20, kept verbatim), which asked for an audit with repository evidence first
+- Proposal (`docs/mia_os/MIA_OS_LIVING_SYSTEM.md`): the doctrine becomes MIA OS's foundation without a new "Living
+  System" service, app or agent (the doctrine forbids one, and DEC-0137 chose the same). The audit maps its ten
+  characteristics and ten shared services onto existing code with evidence: identity, continuity, integrated
+  knowledge, self-development, adaptability and human purpose exist; awareness, agency, health and permissions are
+  partly there. What it adds: (G1) grants and the six autonomy levels enforced (DEC-0156, Fable); (G2) homeostasis v1
+  in the scheduler (essential and deferrable jobs, deferral when busy, offline or on low battery, backoff for a job
+  that keeps failing); (G3) one epistemic contract (source, when, how: said, observed, inferred, computed; last
+  checked) for new stores; (G4) cross-domain ranking of objectives, with World Intelligence's relevance; and the ten
+  invariants guarded by tests, three of them new. Later MIA OS prompts (04, 05, 07, 08, 13, 14, 16) carry the
+  invariants as acceptance criteria.
+- Open: Codex as a verifier (Q-25); homeostasis acting by itself (Q-26); Fable's challenge review, which the doctrine
+  asks for.
+- Related: DEC-0137, DEC-0094, DEC-0101, DEC-0155, DEC-0156, DEC-0158, DEC-0166, DEC-0170

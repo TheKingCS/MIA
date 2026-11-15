@@ -38,5 +38,9 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0164 | Send to MIA on any selection | absorbed into DEC-0165 |
 | DEC-0165 | The Universal Action Layer | APPROVED as direction; phases await approval |
 | DEC-0166 | Which Claude model does which work | APPROVED as direction |
+| DEC-0170 | World Intelligence | APPROVED; W1 built 2026-11-15 |
+| DEC-0171 | Zac's answers on World Intelligence and MIA's own messages | APPROVED |
+| DEC-0172 | Procurement & Opportunity Intelligence | APPROVED |
+| DEC-0173 | The Living System doctrine, adopted as invariants on what MIA already is | PROPOSED (Q-24) |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

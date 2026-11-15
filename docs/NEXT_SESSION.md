@@ -30,6 +30,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   uses or dismisses; this PC's saved cap set to 0) and **World Intelligence W1** (K-0236): watches, finds with their
   sources, the checked feeds, the World page (Home › Learning › World, `web/intel.html`), voice tools, a glasses card,
   the 10-minute job. Off until Zac turns it on. DEC-0172 (procurement) approved.
+- **The Living System doctrine** (prompt 20, kept verbatim) is answered in `docs/mia_os/MIA_OS_LIVING_SYSTEM.md`
+  (DEC-0173, proposed): most of it is what MIA already is (evidence per characteristic); the additions are grants
+  (G1, **Fable**), homeostasis v1 (G2), one epistemic contract (G3), cross-domain objectives (G4, with W2) and three
+  invariant tests. Waiting on Zac: Q-24 (adopt), Q-25 (Codex), Q-26 (homeostasis acts by itself). **Fable** owes it a
+  challenge review (L5).
 - **Next, in order (Opus):** W2, relevance from his records (projects and their material lists, intents, the
   development engine's needs, inventory, budget, places); W1b, watches MIA makes herself from those records; then
   P1 (requirements per project), W3 (eBay's and GSA's APIs wait for keys Zac skipped; capture and browser skills
