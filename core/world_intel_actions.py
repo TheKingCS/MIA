@@ -10,6 +10,7 @@ approved, run, undoable (every one writes world_intel.json or the person's setti
 - `world_watch.pause` / `world_watch.remove`: pause, resume or remove one.
 - `world_find.save`: keep a find (it stays past 90 days); engaging, for the gate's pace (DEC-0171).
 - `world_find.not_for_me`: "not for me"; passing, for the gate's pace.
+- `world_source.mute`: no watch reads a source (mute: yes), or it's read again (mute: no).
 """
 
 from __future__ import annotations
@@ -179,8 +180,32 @@ def _not_for_me_execute(context, params) -> str:
     return f"Set aside “{f.title}”."
 
 
+def _source(params):
+    """The source the params name (source_id, or `source` by its name); ActionError when none or several."""
+    from core import world_sources
+
+    wanted = str(params.get("source_id") or "")
+    found = world_sources.source(wanted) if wanted else None
+    if found is None:
+        words = " ".join(str(params.get("source") or "").lower().split())
+        some = [s for s in world_sources.CATALOG if words and words in s.name.lower()]
+        found = some[0] if len(some) == 1 else None
+    if found is None:
+        raise ActionError("Which source? Say its name as the World page shows it.")
+    return found
+
+
+def _mute_execute(context, params) -> str:
+    """Does `world_source.mute`."""
+    src = _source(params)
+    mute = _yes(params.get("mute", "yes"))
+    _book(context).set_muted(src.source_id, mute)
+    return f"I won't read {src.name} for your watches." if mute else f"I'll read {src.name} again."
+
+
 def _register() -> None:
-    """Adds World Intelligence's kinds to ACTION_TYPES. Runs once, when this module is imported."""
+    """Adds World Intelligence's kinds to ACTION_TYPES (switch, watches, finds, muting a source). Runs once, when this
+    module is imported."""
     kinds = [
         ActionType("world_intel.switch", "World Intelligence", {"on": "yes to turn on, no to turn off"},
                    _switch_describe, _switch_execute),
@@ -198,6 +223,10 @@ def _register() -> None:
                    lambda c, p: f"Save “{_find(c, p).title}”", _save_execute),
         ActionType("world_find.not_for_me", "Not for Me", {"discovery_id": "the find"},
                    lambda c, p: f"Set aside “{_find(c, p).title}”", _not_for_me_execute),
+        ActionType("world_source.mute", "Mute", {"source_id": "the source", "source": "or its name",
+                                                 "mute": "yes mutes, no reads it again"},
+                   lambda c, p: ("Stop reading " if _yes(p.get("mute", "yes")) else "Read again: ") + _source(p).name,
+                   _mute_execute),
     ]
     for k in kinds:
         ACTION_TYPES[k.kind] = k

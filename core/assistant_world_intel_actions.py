@@ -9,6 +9,7 @@ World Intelligence by voice (DEC-0170, DEC-0125: everything the World page does,
 - "Stop watching for greenhouse panels" (`stop_watching`), "pause the panels watch" (`pause_watch`).
 - "Save that find" / "not for me" (`save_find`, `not_for_me`): the newest find offered, or one named.
 - "Turn on world intelligence" (`world_intelligence_switch`).
+- "Stop reading Phoronix" / "read Phoronix again" (`mute_source`).
 
 Each change goes through the same action the page's button uses (core/world_intel_actions.py), so the checks and the undo
 are the same either way.
@@ -94,9 +95,15 @@ def _switch(context, arguments: dict) -> str:
     return _run(context, "world_intel.switch", {"on": "yes" if on else "no"})
 
 
+def _mute(context, arguments: dict) -> str:
+    """Tool mute_source: proposes `world_source.mute` (or unmute, with again: yes) for the source named."""
+    again = str(arguments.get("again") or "").lower() in ("yes", "true", "1")
+    return _run(context, "world_source.mute", {"source": arguments.get("source") or "", "mute": "no" if again else "yes"})
+
+
 def register_world_intel_actions(registry: AssistantActionRegistry) -> None:
     """Registers World Intelligence's tools: world_finds, watch_for, list_watches, stop_watching, pause_watch,
-    save_find, not_for_me and world_intelligence_switch."""
+    save_find, not_for_me, world_intelligence_switch and mute_source."""
     none = {"type": "object", "properties": {}, "required": []}
     watch_named = {"type": "object", "properties": {"watch": {"type": "string", "description": "the watch's name"}},
                    "required": ["watch"]}
@@ -168,4 +175,14 @@ def register_world_intel_actions(registry: AssistantActionRegistry) -> None:
         trigger_phrases=("turn on world intelligence", "turn off world intelligence", "start watching the world",
                          "stop world intelligence"),
         subjects=("world",),
+    ))
+    registry.register(AssistantAction(
+        name="mute_source", domain="world_intel",
+        description="Stop reading one of World Intelligence's sources, or read it again.",
+        parameters={"type": "object", "properties": {
+            "source": {"type": "string", "description": "the source's name, as the World page shows it"},
+            "again": {"type": "string", "description": "yes to read it again"}}, "required": ["source"]},
+        handler=_mute,
+        trigger_phrases=("stop reading", "mute the source", "unmute the source"),
+        subjects=("source",),
     ))

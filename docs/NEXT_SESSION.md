@@ -39,7 +39,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   2. 8e237dd7, World Intelligence W1 (core/world_intel.py, world_sources.py, the worker thread, the actions);
   3. 11685d02, the Living System audit (docs/mia_os/MIA_OS_LIVING_SYSTEM.md): the doctrine's own L5;
   4. the homeostasis and invariant-tests commit (core/homeostasis.py, core/scheduler.py, tests/test_living_system.py);
-  5. World Intelligence W2 and W1b (core/relevance.py, WorldBook.sync_own_watches, run_watches).
+  5. World Intelligence W2 and W1b (core/relevance.py, WorldBook.sync_own_watches, run_watches);
+  6. the source loop (core/world_intel.source_stats, mute, the world.sources loop).
   Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,

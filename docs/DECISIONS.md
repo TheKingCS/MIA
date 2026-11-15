@@ -2987,7 +2987,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   the homestead plan's next step, learning paths, equipment), each fit a reason naming the record, re-ranked as the
   records change; and MIA's own watches, one per open record, made daily, matched on the PC with no search, stopping
   with their record and never remade once he stops one. Each feed is fetched once per run for every watch. K-0238.
-  Next: the source loop, listings (W3) and procurement (P1).
+- **Built, the source loop (2026-11-15):** each source's last 30 days on the Sources tab, muting suggested for one he
+  keeps setting aside and never saves, a mute action and voice tool, and the `world.sources` loop. Trying new
+  candidate sources isn't built yet. K-0239. Next: procurement (P1), listings (W3).
 - Related: DEC-0053, DEC-0096, DEC-0117, DEC-0122, DEC-0123, DEC-0144, DEC-0156, DEC-0165, DEC-0166, DEC-0167,
   DEC-0168
 

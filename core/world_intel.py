@@ -28,6 +28,11 @@ it serves as its reason. They read whole public feeds and match on the PC, so no
 One stops by itself when its record does (finished, removed); one the person stops is never made again for that
 record (`declined`). At most `OWN_MAX` at a time, strongest records first.
 
+**Sources judged** (`source_stats`, the `world.sources` loop in core/loops.py): for each source over the last 30
+days, how many finds it gave, how many were saved, set aside or are still new. One that gave eight or more, none
+saved and four or more set aside is suggested for muting (`mute_suggestions`); a muted source (`muted`, the action
+`world_source.mute`) isn't read by any watch until it's unmuted.
+
 **Telling** (`offers`): the new finds best first, each a candidate for the communication gate under the topic
 `world_find`, its message naming the source. The gate paces them (four a day to start, learned from what the person
 does with them: saving or researching a find counts as engaging, "not for me" as passing, DEC-0171).
@@ -188,9 +193,30 @@ def score(watch: Watch, item: dict, hits: list[str], now: datetime) -> tuple[flo
     return points, why
 
 
-def run_watch(watch: Watch, now: datetime, fetchers: dict, sources: Optional[list] = None) -> dict:
+def source_stats(discoveries: list, now: datetime, days: int = 30) -> dict:
+    """Pure logic. For each source, its finds found in the last `days`: {source_id: {name, finds, saved, not_for_me,
+    new}}."""
+    since = (now - timedelta(days=days)).isoformat()
+    out: dict = {}
+    for d in discoveries:
+        if d.found_at < since:
+            continue
+        row = out.setdefault(d.source_id, {"name": d.source_name, "finds": 0, "saved": 0, "not_for_me": 0, "new": 0})
+        row["finds"] += 1
+        if d.status in ("saved", "not_for_me", "new"):
+            row[d.status] += 1
+    return out
+
+
+def mute_suggestions(stats: dict, muted=()) -> list[str]:
+    """Pure logic. The sources worth muting: eight or more finds, none saved, four or more set aside; not muted yet."""
+    return sorted(s for s, r in stats.items()
+                  if s not in muted and r["finds"] >= 8 and r["saved"] == 0 and r["not_for_me"] >= 4)
+
+
+def run_watch(watch: Watch, now: datetime, fetchers: dict, sources: Optional[list] = None, skip=()) -> dict:
     """One watch's run: each of its sources read through its kind's fetcher, the items it matches kept (at most
-    PER_RUN; none published more than MAX_AGE_DAYS ago). Returns {watch_id, at, items: [(item, hits)], refused: [source ids], failed: [source ids]}. A fetcher
+    PER_RUN; none published more than MAX_AGE_DAYS ago); sources in `skip` (muted) aren't read. Returns {watch_id, at, items: [(item, hits)], refused: [source ids], failed: [source ids]}. A fetcher
     takes (source, watch) and returns raw items; `fetchers` maps kind -> fetcher."""
     from core import world_sources
 
@@ -198,7 +224,7 @@ def run_watch(watch: Watch, now: datetime, fetchers: dict, sources: Optional[lis
     items, refused, failed = [], [], []
     for src in chosen:
         fetch = fetchers.get(src.kind)
-        if fetch is None or src.source_id in watch.refused:
+        if fetch is None or src.source_id in watch.refused or src.source_id in skip:
             continue
         try:
             raw = fetch(src, watch)
@@ -220,9 +246,10 @@ def run_watch(watch: Watch, now: datetime, fetchers: dict, sources: Optional[lis
             "refused": refused, "failed": failed}
 
 
-def run_watches(watches: list[Watch], now: datetime, fetchers: dict) -> list[dict]:
+def run_watches(watches: list[Watch], now: datetime, fetchers: dict, skip=()) -> list[dict]:
     """Several watches' runs with each feed fetched once and shared between every watch that reads it (a search is
-    per watch: its words differ). Returns one result per watch, as run_watch does."""
+    per watch: its words differ); sources in `skip` (muted) aren't read. Returns one result per watch, as run_watch
+    does."""
     cache: dict = {}
 
     def shared(src, watch):
@@ -240,7 +267,7 @@ def run_watches(watches: list[Watch], now: datetime, fetchers: dict) -> list[dic
         return value
 
     wrapped = {kind: shared for kind in fetchers}
-    return [run_watch(w, now, wrapped) for w in watches]
+    return [run_watch(w, now, wrapped, skip=skip) for w in watches]
 
 
 def _sources_of(watch: Watch) -> list:
@@ -295,12 +322,14 @@ class WorldBook:
         self._load()
 
     def _load(self) -> None:
-        """Reads watches, finds, the records whose own watch the person stopped and the day MIA last made hers,
+        """Reads watches, finds, the records whose own watch the person stopped, the muted sources and the day MIA last
+        made hers,
         keeping only known fields; an unreadable file is logged, reported and starts empty (a sealed one that won't
         open is copied aside first)."""
         self.watches: list[Watch] = []
         self.discoveries: list[Discovery] = []
         self.declined: list[str] = []  # records whose watch the person stopped: never made again
+        self.muted: list[str] = []  # sources no watch reads (world_source.mute)
         self.own_synced = ""  # the day MIA last made her own watches
         if not self._file.exists():
             return
@@ -310,6 +339,7 @@ class WorldBook:
             self.watches = [pick(Watch, d) for d in raw.get("watches", [])]
             self.discoveries = [pick(Discovery, d) for d in raw.get("discoveries", [])]
             self.declined = list(raw.get("declined", []))
+            self.muted = list(raw.get("muted", []))
             self.own_synced = str(raw.get("own_synced", ""))
         except (ValueError, OSError, TypeError, AttributeError):
             log.exception("world_intel.json unreadable — starting empty.")
@@ -320,11 +350,12 @@ class WorldBook:
         self._load()
 
     def _save(self) -> None:
-        """Writes watches, finds, the declined records and the last day MIA made hers, atomically."""
+        """Writes watches, finds, the declined records, the muted sources and the last day MIA made hers, atomically."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"watches": [asdict(w) for w in self.watches],
                                                   "discoveries": [asdict(d) for d in self.discoveries],
-                                                  "declined": self.declined, "own_synced": self.own_synced}, indent=2))
+                                                  "declined": self.declined, "own_synced": self.own_synced,
+                                                  "muted": self.muted}, indent=2))
 
     # ---------------------------------------------------------------- watches
 
@@ -409,6 +440,17 @@ class WorldBook:
         self.own_synced = now.date().isoformat()
         self._save()
         return made, removed
+
+    def set_muted(self, source_id: str, muted: bool) -> None:
+        """Mutes a source (no watch reads it) or unmutes it; ValueError for a source that isn't known."""
+        from core import world_sources
+
+        if world_sources.source(source_id) is None:
+            raise ValueError("That isn't one of my sources.")
+        wanted = set(self.muted)
+        (wanted.add if muted else wanted.discard)(source_id)
+        self.muted = sorted(wanted)
+        self._save()
 
     def due_watches(self, now: datetime) -> list[Watch]:
         """The watches to run now."""
@@ -559,9 +601,9 @@ class Runner:
         """Whether a run is still going."""
         return self._thread is not None and self._thread.is_alive()
 
-    def start(self, watches: list[Watch], now: datetime, fetchers: dict) -> bool:
-        """Starts a run over copies of these watches (each feed fetched once for all of them: run_watches); False when
-        one is already going or there's nothing to run."""
+    def start(self, watches: list[Watch], now: datetime, fetchers: dict, skip=()) -> bool:
+        """Starts a run over copies of these watches (each feed fetched once for all of them: run_watches), muted
+        sources (`skip`) left out; False when one is already going or there's nothing to run."""
         if self.busy() or not watches:
             return False
         copies = [Watch(**asdict(w)) for w in watches]
@@ -569,7 +611,7 @@ class Runner:
         def work() -> None:
             """The thread: every watch's run, each feed fetched once for all of them; results kept for collect()."""
             try:
-                results = run_watches(copies, now, fetchers)
+                results = run_watches(copies, now, fetchers, skip=frozenset(skip))
             except Exception:
                 log.exception("World Intelligence: the run failed")
                 results = []
@@ -606,7 +648,7 @@ def live_fetchers(context) -> dict:
 def tick(context, now: Optional[datetime] = None, fetchers: Optional[dict] = None) -> list[Discovery]:
     """The job (core/background_jobs.py, every 10 minutes): when it's on, collect a finished run into the store (scored
     against the person's records), re-rank what's waiting, make MIA's own watches once a day, and offer the best new
-    finds through the gate; then start the due watches on the worker thread. Returns the new finds
+    finds through the gate; muted sources are left out of the run; then start the due watches on the worker thread. Returns the new finds
     collected this time."""
     import os
 
@@ -628,5 +670,5 @@ def tick(context, now: Optional[datetime] = None, fetchers: Optional[dict] = Non
         book.mark_offered([d.discovery_id for d in offers], now)
     if fetchers is None and os.environ.get("PYTEST_CURRENT_TEST"):
         return new  # never online from a test run
-    runner.start(book.due_watches(now), now, fetchers or live_fetchers(context))
+    runner.start(book.due_watches(now), now, fetchers or live_fetchers(context), skip=book.muted)
     return new

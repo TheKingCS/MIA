@@ -232,6 +232,24 @@ def _path_practice(context) -> Optional[Reading]:
     return Reading(round(share, 2), len(rows), "; ".join(f"{n} {d} of {w} days" for n, d, w in rows))
 
 
+def _world_sources(context) -> Optional[Reading]:
+    """Measure: of World Intelligence's finds judged in the last 30 days (saved or set aside), the share set aside,
+    with the sources suggested for muting (core/world_intel.py, DEC-0170). None before five are judged."""
+    book = getattr(context, "world_intel", None)
+    if book is None:
+        return None
+    from core.world_intel import mute_suggestions, source_stats
+
+    stats = source_stats(book.discoveries, datetime.now())
+    saved = sum(r["saved"] for r in stats.values())
+    aside = sum(r["not_for_me"] for r in stats.values())
+    if saved + aside < 5:
+        return None
+    suggest = mute_suggestions(stats, book.muted)
+    return Reading(round(aside / (saved + aside), 2), saved + aside,
+                   f"{len(stats)} sources; mute suggested for {len(suggest)}" + (f": {', '.join(suggest)}" if suggest else ""))
+
+
 def _browser_runs(context) -> Optional[Reading]:
     """Measure: the share of the last 30 days' runs of taught browser tasks that finished clean (core/browser_routines.py,
     DEC-0117), naming the tasks that stopped. None before any run."""
@@ -1193,6 +1211,9 @@ LOOPS: tuple[Loop, ...] = (
          covers=("dev:night_school",)),
     Loop("paths.practice", "life", "practice days this week on each learning path, of the plan's (DEC-0112)",
          "person", _path_practice, better="higher", acts="watch", files=("core/paths.py",), covers=("store:paths",)),
+    Loop("world.sources", "life", "World Intelligence's judged finds set aside, and sources worth muting (DEC-0170)",
+         "person", _world_sources, floor=0.6, min_n=5, acts="watch", files=("core/world_intel.py", "core/world_sources.py"),
+         covers=("store:world_intel",)),
     Loop("browser.runs", "life", "runs of taught browser tasks that finished clean (DEC-0117)", "person",
          _browser_runs, better="higher", floor=0.8, min_n=3, acts="offer",
          files=("core/browser_routines.py", "core/browser.py"), covers=("store:browser_routines",)),

@@ -72,8 +72,16 @@
   }
 
   function sources() {
-    return page.areas.map((a) => section(a.name, null,
-      a.sources.length ? el("p", { class: "dim" }, a.sources.join(" · ")) : el("p", { class: "dim" }, "Your search engine, and the listings sources in the next phase.")));
+    const mute = (s, yes) => act({ kind: "world_source.mute", params: { source_id: s.id, mute: yes ? "yes" : "no" } }, { quick: true });
+    const rows = (page.sources || []).filter((s) => s.finds || s.muted || s.suggest_mute);
+    const judged = rows.length ? section("How Each Source Is Doing", null,
+      el("p", { class: "dim" }, "The last 30 days. A source that keeps giving finds you set aside, and none you save, is suggested for muting."),
+      el("div", { class: "rows" }, rows.map((s) => el("div", { class: "row money-row" },
+        el("div", {}, el("div", { class: "row-title" }, s.name, s.muted ? chip("muted") : null, s.suggest_mute ? chip("mute?", "attention") : null),
+          el("div", { class: "row-sub" }, s.finds + " found · " + s.saved + " saved · " + s.not_for_me + " set aside")),
+        btn(s.muted ? "Unmute" : "Mute", "btn-ghost btn-small", () => mute(s, !s.muted)))))) : null;
+    return [judged, ...page.areas.map((a) => section(a.name, null,
+      a.sources.length ? el("p", { class: "dim" }, a.sources.join(" · ")) : el("p", { class: "dim" }, "Your search engine, and the listings sources in the next phase.")))];
   }
 
   const VIEWS = { finds, watches, sources };

@@ -5,7 +5,8 @@ core.web_world_intel
 The World page (DEC-0170, W1): what World Intelligence found, the watches, and the sources it reads, assembled here
 so the web only draws (DEC-0017) and the voice tools say the same thing (DEC-0125).
 
-`world_page(context)`: whether it's on; the finds, best first (new ones, then saved), each with its source named,
+`world_page(context)`: whether it's on; each source with its last 30 days (finds, saved, set aside), whether it's
+muted and whether muting it is suggested; the finds, best first (new ones, then saved), each with its source named,
 its link, when it was found and published, which watches found it, why, and which of the person's records it fits
 (`fits`, `refs`: core/relevance.py); the watches with their words, areas,
 how often, last run, what they found and any source waiting for the person; and the areas a watch can read. Changes
@@ -44,7 +45,7 @@ def _watch(w, now: datetime) -> dict:
 
 
 def world_page(context, now: Optional[datetime] = None) -> dict:
-    """The World page's data (see the module's opening)."""
+    """The World page's data (see the module's opening), with each source's last 30 days and mute state."""
     from core import world_sources
     from core.world_intel import is_on
 
@@ -56,12 +57,20 @@ def world_page(context, now: Optional[datetime] = None) -> dict:
     order = {"new": 0, "saved": 1}
     finds = sorted((d for d in book.discoveries if d.status in order),
                    key=lambda d: (order[d.status], -d.score, d.found_at), reverse=False)
+    from core.world_intel import mute_suggestions, source_stats
+
+    stats = source_stats(book.discoveries, now)
+    suggested = set(mute_suggestions(stats, book.muted))
     return {"available": True, "on": is_on(context),
             "finds": [_find(d, names, now) for d in finds[:SHOWN]],
             "counts": {s: sum(1 for d in book.discoveries if d.status == s) for s in ("new", "saved", "not_for_me")},
             "watches": [_watch(w, now) for w in book.watches],
             "areas": [{"id": a, "name": world_sources.AREA_NAMES[a],
-                       "sources": [s.name for s in world_sources.for_areas([a])]} for a in world_sources.AREAS]}
+                       "sources": [s.name for s in world_sources.for_areas([a])]} for a in world_sources.AREAS],
+            "sources": [{"id": s.source_id, "name": s.name, "muted": s.source_id in book.muted,
+                         "suggest_mute": s.source_id in suggested, **{k: stats.get(s.source_id, {}).get(k, 0)
+                                                                      for k in ("finds", "saved", "not_for_me")}}
+                        for s in world_sources.CATALOG]}
 
 
 def found_sentence(page: dict, limit: int = 3) -> str:

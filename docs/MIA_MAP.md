@@ -7,8 +7,8 @@
 - **Architecture** — 804 Python files across 546 core, 93 modules, 123 gui, 2 server, 40 tools (strict one-way layering; see docs/ARCHITECTURE.md).
 - **Decisions** — 173 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
-- **Improvement loops** — 95 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 238 dev entries (work/knowledge/).
+- **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
+- **Knowledge she's written** — 239 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 48 personal + 41 household stores, 53 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -203,9 +203,9 @@
 
 ## How she improves
 
-- **95 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
+- **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 238 entries 35 lesson, 18 debugging, 15 decision, 9 method, 6 test-procedure, 3 failed-experiment, 150 implementation, 2 security-finding.
+- **Dev-knowledge** — 239 entries 35 lesson, 18 debugging, 15 decision, 9 method, 6 test-procedure, 3 failed-experiment, 151 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

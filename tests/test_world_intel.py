@@ -7,7 +7,8 @@ core/web_world_intel.py): a watch's words are matched phrase by phrase; the same
 linked; a run reads each source through its kind's adapter and records one that refuses; the worker thread only
 reads and the store changes when its results are collected; new finds go to the gate under one kind, each naming its
 source; saving a find counts as engaging; the actions, the page and the voice tools agree; nothing runs while it's
-off; and no test goes online (every source is a stand-in).
+off; the source loop judges each source and a muted one isn't read; and no test goes online (every source is a
+stand-in).
 """
 
 from datetime import datetime, timedelta
@@ -225,3 +226,58 @@ def test_the_page_and_the_voice_tools_say_the_same_finds_with_their_sources(cont
     assert page["on"] and page["finds"][0]["source"] == "Hobby Farms" and page["counts"]["new"] == 1
     assert "Greenhouse panels half off (from Hobby Farms)" in say("world_finds")
     assert "Panels (1 found" in say("list_watches")
+
+
+# ------------------------------------------------------------------ the source loop (world.sources)
+
+
+def _judged(book, source, saved, aside, new=0):
+    """Finds from one source with these statuses, found now."""
+    from core.world_intel import Discovery
+
+    for i, status in enumerate(["saved"] * saved + ["not_for_me"] * aside + ["new"] * new):
+        book.discoveries.append(Discovery(f"{source}{i}", f"{source}{i}", "t", "l", source, source.title(),
+                                          found_at=NOW.isoformat(), last_seen=NOW.isoformat(), status=status))
+
+
+def test_a_source_that_keeps_being_set_aside_is_suggested_for_muting_and_a_muted_one_is_not_read(book):
+    from core.world_intel import mute_suggestions, source_stats
+
+    _judged(book, "phoronix", saved=0, aside=5, new=3)
+    _judged(book, "hobby_farms", saved=2, aside=6)
+    stats = source_stats(book.discoveries, NOW)
+    assert stats["phoronix"] == {"name": "Phoronix", "finds": 8, "saved": 0, "not_for_me": 5, "new": 3}
+    assert mute_suggestions(stats) == ["phoronix"] and mute_suggestions(stats, ["phoronix"]) == []
+    book.set_muted("phoronix", True)
+    assert WorldBook(MagicMock(), data_dir=book.data_dir).muted == ["phoronix"]
+    src = world_sources.source("phoronix")
+    result = run_watch(_watch("linux"), NOW, {"feed": lambda s, w: pytest.fail("a muted source was read")},
+                       sources=[src], skip=book.muted)
+    assert result["items"] == [] and result["failed"] == []
+    with pytest.raises(ValueError):
+        book.set_muted("nowhere", True)
+
+
+def test_the_loop_reads_the_share_set_aside_and_names_what_to_mute(context, monkeypatch):
+    from core import loops
+
+    assert loops._world_sources(context) is None  # fewer than five judged
+    _judged(context.world_intel, "phoronix", saved=0, aside=5, new=3)
+    _judged(context.world_intel, "hobby_farms", saved=3, aside=1)
+    monkeypatch.setattr(loops, "datetime", type("D", (), {"now": staticmethod(lambda: NOW)}))
+    reading = loops._world_sources(context)
+    assert reading.value == 0.67 and reading.n == 9 and "phoronix" in reading.detail
+    assert any(loop.id == "world.sources" and "store:world_intel" in loop.covers for loop in loops.LOOPS)
+
+
+def test_muting_by_name_through_the_action_and_the_page_shows_each_source(context):
+    from core.actions import ACTION_TYPES
+    from core.web_world_intel import world_page
+
+    _judged(context.world_intel, "phoronix", saved=0, aside=5, new=3)
+    ACTION_TYPES["world_source.mute"].execute(context, {"source": "phoronix"})
+    assert context.world_intel.muted == ["phoronix"]
+    row = next(s for s in world_page(context, NOW)["sources"] if s["id"] == "phoronix")
+    assert row["muted"] and row["finds"] == 8 and not row["suggest_mute"]  # already muted
+    ACTION_TYPES["world_source.mute"].execute(context, {"source_id": "phoronix", "mute": "no"})
+    assert context.world_intel.muted == []

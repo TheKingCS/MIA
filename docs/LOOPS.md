@@ -2,7 +2,7 @@
 
 *Generated from `core/loops.py` by `python -m core.loop_catalog`; never edit by hand (a test keeps it current). The design and the reasons: `docs/IMPROVEMENT_LOOPS.md`; what each process is watched by: `python -m tools.night_school coverage`.*
 
-95 loops in 8 areas.
+96 loops in 8 areas.
 
 ## Answers
 
@@ -119,6 +119,7 @@
 | `paths.practice` | practice days this week on each learning path, of the plan's (DEC-0112) | person | trend | shown, never acted on | `store:paths` |
 | `recreation.load` | this week's play load against the four weeks before (past 1.5: easing off helps) | person | ≤ 1.5 | shown, never acted on | `store:recreation`, `action:play` |
 | `trades.finished` | jobs and diagnoses walked through to the end, of those started, in 90 days (DEC-0149) | person | ≥ 0.5 (from 3) | shown, never acted on | `store:trade_session`, `action:trade` |
+| `world.sources` | World Intelligence's judged finds set aside, and sources worth muting (DEC-0170) | person | ≤ 0.6 (from 5) | shown, never acted on | `store:world_intel` |
 
 ## Models
 
