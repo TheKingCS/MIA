@@ -1924,8 +1924,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   a `browser.commit` with the exact text shown. Closes the known limit in docs/BROWSER.md.
 - Related: DEC-0117
 
-### DEC-0123: One way to teach MIA anything: taught procedures
-- Status: PROPOSED
+### DEC-0123: One way to teach MIA anything: taught procedures (now "taught skills")
+- Status: APPROVED (Zac, 2026-11-15: "we will say yes to taught skills as well as her ability to write code in the
+  development lab, then testing and getting my approval for skills she doesnt already have"); named **taught
+  skills**; part of MIA's one skills system with learning paths (DEC-0112) and the lab (DEC-0058), see DEC-0167
 - Proposed by: claude, 2026-11-07, from Zac's review ("Browser routines are now teachable, but they're not yet the
   same thing as a universal skill system that can teach MIA workflows across desktop apps, phone features, and
   other tools")
@@ -2856,6 +2858,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Update 2026-11-15 (Zac): UAL phases U1–U3 approved to build now ("11 yes"); scope is system-wide ("it should be
   over all apps, files, code, etc system wide"): every app through layered capture (selection and clipboard,
   accessibility, files, terminal and editor, OCR on request), not a chosen list of apps.
+- Update 2026-11-15 (Zac, Q-12): cloud use is options B and C. Research and verify may search the web with short
+  queries (not the whole selection) when the person picks them. Outside AI (the council, a cloud model) only after
+  MIA shows exactly what would be sent and to whom, and the person says yes. Finances, health, the private journal
+  and passwords never leave the device.
 
 ### DEC-0166: Which Claude model does which work
 - Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models
@@ -2867,3 +2873,24 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   prompts, docs and hub upkeep, tests and CI. NEXT_SESSION marks each task (Fable) or (Opus); a task isn't switched
   mid-way; two failed attempts escalate to Fable. Reviewed after a month of use.
 - Related: `docs/mia_os/MIA_OS_MODEL_ASSIGNMENTS.md`
+
+### DEC-0167: One skills system, for the person and for MIA; "Build a skill" extends it
+- Status: APPROVED (Zac, 2026-11-15: "shouldn't this be an extension of the skills system she already has? ... yes to
+  taught skills as well as her ability to write code in the development lab, then testing and getting my approval for
+  skills she doesnt already have. To me thats the only way this makes sense or else her capabilities are limited to
+  what she is already capable of")
+- Proposed by: zac; worked out by claude
+- Decision: the Universal Action Layer's "Build a skill" doesn't start a new system. It extends the learning-path
+  loop MIA already has (DEC-0112: understand, plan stages, practise, verify by evidence, next stage), which was
+  built for a person and for MIA learning to build herself (Night School, DEC-0107). When the learner is MIA, the
+  path ends in one of two kinds of new skill, chosen by what the skill needs:
+  1. **A taught skill** (DEC-0123) when it can be made from what she can already do (her tools, action kinds, browser
+     routines, workflows, questions to the person): practised with the person watching until two clean runs, then
+     allowed to run on its own within its permissions.
+  2. **A built skill** when it needs something she can't do yet: she writes the code in the development lab's own
+     worktree (DEC-0058), with tests and a review by another model, and it joins her only on Zac's approval of the
+     merge.
+  Either way it's verified by evidence before it's offered (tests passing, clean runs), the source she learned from
+  is kept, and what she has read, verified and tested stay distinct. When the learner is the person, it's a learning
+  path as today. Browser routines and workflows become kinds of taught skill rather than separate systems.
+- Related: DEC-0058, DEC-0092, DEC-0107, DEC-0112, DEC-0117, DEC-0123, DEC-0165

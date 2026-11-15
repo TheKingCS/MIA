@@ -23,8 +23,8 @@ folded in here.*
 | Q-09 | Are each partner's LEP interests private to them, with a shared couple's profile both can see? (suggested default: yes) | privacy between the two accounts | building LEP profiles |
 | Q-10 | Should "Send to MIA" start on the phone (the text-selection menu) before MIA OS? | now part of the UAL (Q-11) | — |
 | Q-11 | **Answered yes (2026-11-15)**: U1–U3 now | DEC-0165 | — |
-| Q-12 | Which cloud use may UAL actions make (online research, council review)? Recommended: lookup only when asked; council for owner-only development | DEC-0165 | U3 |
-| Q-13 | Decide DEC-0123 (taught procedures) before the UAL's "MIA can do this" path? | DEC-0123 | U3 |
+| Q-12 | **Answered B + C (2026-11-15)**: web search on research/verify; outside AI only after showing what is sent and getting a yes | DEC-0165 | — |
+| Q-13 | **Answered yes (2026-11-15)**: taught skills plus lab-built skills with Zac's approval, one skills system | DEC-0123, DEC-0167 | — |
 | Q-14 | **Answered (2026-11-15)**: system-wide, every app, file and piece of code; layered capture (selection, accessibility, files, terminal, OCR on request) | DEC-0165 | — |
 
 ## The original questions (for the record)

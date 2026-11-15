@@ -73,15 +73,25 @@ Existing actions are tagged **without changing their behaviour**. A test fails o
 
 The model is consulted only to phrase the reasons. Each front door calls the same endpoint, `POST /api/ual/offer`. A pick goes through the existing `/api/actions` propose and approve path.
 
-## 4. "Build a skill" means two different things
+## 4. "Build a skill" extends the skills system MIA already has (DEC-0167)
 
-| The person means | MIA's existing home | UAL action |
-|---|---|---|
-| "**I** want to learn this" | learning paths (`core/paths.py`, DEC-0112): stages, practice, homework | `ual.learn_path`: drafts a path from the selection; it starts only on the person's yes |
-| "**MIA** should be able to do this" | a taught procedure (DEC-0123, still proposed) for steps she can already do; a **development task** in the lab (DEC-0058) for new code | `ual.skill_proposal`: researches the selection and writes a proposal (what's needed, existing implementations, tests). For code, it files a lab task; the lab builds it in a worktree with tests; Zac approves the merge. Nothing is registered until it has been tested and approved (handoff §6: read vs verified vs tested) |
+There is one skills system: learning paths (DEC-0112), whose loop already
+serves both a person and MIA learning to build herself. "Build a skill" from
+a selection starts that loop. **Who is learning** decides where it ends:
 
-**DEC-0123 (taught procedures) is a prerequisite** for the "MIA can do this"
-path without code. It should be decided before UAL phase 3.
+| Learner | The path ends in | How it's verified | Who says yes |
+|---|---|---|---|
+| The person ("I want to learn this") | a learning path: stages, lessons, homework missions (as today) | checks heard, recorded, counted or said | the person starts the drafted path |
+| MIA, using what she can already do | a **taught skill** (DEC-0123): a trigger plus steps from her tools, action kinds, browser routines, workflows and questions | practised with the person watching until two clean runs | the person, after the practice runs |
+| MIA, needing something new | a **built skill**: code written in the lab's worktree (DEC-0058), with tests and a review by another model | tests pass in the lab, then a trial run | **Zac approves the merge** |
+
+`ual.build_skill` does the following:
+1. Researches the selection (cloud rules, §5).
+2. Decides which row applies, by checking the needed steps against `core/capabilities.py`: it's a taught skill when every step already exists.
+3. Drafts the path. Nothing becomes one of her skills until it's verified and approved.
+4. Keeps the source as provenance.
+
+Browser routines and workflows fold in as kinds of taught skill.
 
 ## 5. Permission model (fits DEC-0156)
 
@@ -145,7 +155,8 @@ DEC-0156 (grants) on real actions before system actions exist.
   5. **On request only, OCR or the screen** for apps that expose nothing.
 
   Deep app-specific integrations are added on top only where these layers fall short.
-- **Q-12 and Q-13:** Zac asked for more context. It was given in the conversation on 2026-11-15, and the recommendations are below.
+- **Q-12, answered B + C:** web search with short queries for research and verify. Outside AI only after MIA shows what would be sent and to whom, and the person says yes. Finances, health, the journal and passwords never leave the device.
+- **Q-13, answered yes, with more:** taught skills (DEC-0123) are approved, and so are built skills from the lab with Zac's approval. Both extend the one skills system (DEC-0167, §4).
 
 ## 9b. Questions still open
 
