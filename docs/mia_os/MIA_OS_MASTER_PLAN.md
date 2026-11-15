@@ -3,7 +3,7 @@
 *The authoritative consolidated description of the MIA OS initiative
 (Master Directive §13). Claude maintains it; Zac approves.*
 
-*Version 0.2, 2026-11-15, after Prompt 01. Status: planning. Nothing is
+*Version 0.3, 2026-11-15, after Prompt 02. Status: planning. Nothing is
 built and no MIA OS decision is approved.*
 
 ## 1. What we're doing
@@ -29,8 +29,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 |---|---|---|---|
 | 00 | Master Directive | received | `prompts/00_MASTER_DIRECTIVE.md` |
 | first pass | 10-document plan (2026-11-13, before the library) | done; **superseded**, kept in `preliminary/` | `preliminary/*` |
-| **01** | **Existing system audit** | **done; waiting for Zac's review** | listed below |
-| 02 | Feature ecosystem | not started | |
+| 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
+| **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
 | 03–17 | (see `prompts/`) | not started | |
 
 ## 3. Prompt 01 in brief
@@ -68,6 +68,29 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
 
+## 3b. Prompt 02 in brief
+
+The full report is [MIA_OS_FEATURE_ECOSYSTEM.md](MIA_OS_FEATURE_ECOSYSTEM.md).
+
+- **The data layer already makes MIA an ecosystem.** One identity, one set of stores, one action contract, one context, one gate.
+- **Zac's answers (DEC-0159 to DEC-0164):**
+  - MIA OS is for Zac, perhaps close friends later.
+  - The Companion app is retired.
+  - The Life Enrichment Protocol is committed; its spec is in the repo with personal details left out.
+  - Smart Closet is committed, and its minimum version is being built.
+  - MIA must tell who is talking.
+  - "Send to MIA" works on any selection (proposed).
+- **New shared services this needs:**
+  - speaker identification;
+  - a discretionary-money calculation;
+  - an online fetch policy for background discovery;
+  - free time across two people;
+  - a runtime scheduler.
+- **What's still missing for the ecosystem:**
+  - a cross-app planner (Prompt 08);
+  - one owner per fact (R-10);
+  - identity for two people speaking at once.
+
 ## 4. Documents
 
 **Central:**
@@ -90,6 +113,21 @@ The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central doc
 - [Technical debt and risks](MIA_OS_TECHNICAL_DEBT_AND_RISK_REGISTER.md)
 - [Dependency and data-flow map](MIA_OS_DEPENDENCY_AND_DATA_FLOW_MAP.md)
 - [Migration readiness](MIA_OS_MIGRATION_READINESS.md)
+
+**Prompt 02:**
+- [Ecosystem](MIA_OS_FEATURE_ECOSYSTEM.md)
+- [Classification](MIA_OS_CAPABILITY_CLASSIFICATION.md)
+- [Shared services](MIA_OS_SHARED_SERVICES_CATALOG.md)
+- [Dependency map](MIA_OS_CAPABILITY_DEPENDENCY_MAP.md)
+- [Navigation and discovery](MIA_OS_NAVIGATION_AND_DISCOVERY.md)
+- [Workspaces](MIA_OS_WORKSPACE_AND_CONTEXT_MODEL.md)
+- [More than one person](MIA_OS_MULTI_USER_REQUIREMENTS.md)
+- [Device matrix](MIA_OS_DEVICE_CAPABILITY_MATRIX.md)
+- [Future capabilities](MIA_OS_FUTURE_CAPABILITIES.md)
+- [Priorities](MIA_OS_CAPABILITY_PRIORITY_MATRIX.md)
+- [Acceptance requirements](MIA_OS_FUNCTIONAL_ACCEPTANCE_REQUIREMENTS.md)
+- [Application framework requirements](MIA_OS_APPLICATION_FRAMEWORK_REQUIREMENTS.md)
+- The feature inventory, updated
 
 **History:** `preliminary/`, the 2026-11-13 first pass. It is input for Prompts 05, 13, 14 and 16, not authoritative.
 

@@ -14,7 +14,7 @@ their status.*
 | E4 | Proactive, with approval for consequential actions; observe, recommend, prepare and execute are kept apart |
 | E5 | MIA boots by default, with a conventional desktop, recovery, safe mode and a no-AI path |
 
-These have not yet been logged as a DEC entry. Zac can approve logging them as DEC-0159.
+Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close friends later.
 
 ## Proposed (first pass, 2026-11-13; re-examined by later prompts)
 
@@ -25,5 +25,16 @@ These have not yet been logged as a DEC entry. Zac can approve logging them as D
 | DEC-0156 | Capabilities and grants for every tool and action | PROPOSED | 08, 13 |
 | DEC-0157 | PC image: Fedora Atomic (bootc), a cage session plus KDE, dual boot | PROPOSED | 05, 06, 14 |
 | DEC-0158 | System management only through a narrow privileged helper | PROPOSED | 05, 13 |
+
+## Decided on 2026-11-15 (Zac's answers to Prompt 01)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0159 | The five foundations, and who MIA OS is for | APPROVED |
+| DEC-0160 | Retire the Companion app; signing key from secrets | APPROVED |
+| DEC-0161 | The Life Enrichment Protocol | APPROVED as direction |
+| DEC-0162 | Smart Closet | APPROVED |
+| DEC-0163 | MIA tells who's talking | APPROVED as a requirement |
+| DEC-0164 | Send to MIA on any selection | PROPOSED |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

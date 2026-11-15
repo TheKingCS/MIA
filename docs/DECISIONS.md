@@ -2779,3 +2779,64 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   only through the capability framework. Read-only methods come first; each action family is approved by Zac on its own.
 - Why: least privilege; prompt injection or a bad tool call can't reach a shell.
 - Related: `docs/mia_os/preliminary/MIA_OS_SECURITY_MODEL.md`, DEC-0156
+
+### DEC-0159: MIA OS's five foundations, and who it's for
+- Status: APPROVED (Zac, MIA OS Master Directive §3; logging approved 2026-11-15: "Yes and yes")
+- Proposed by: zac
+- Decision: (1) MIA OS is Linux-based; no custom kernel without compelling evidence. (2) The experience is MIA-first,
+  with a conventional desktop always available. (3) Intelligence is hybrid and local-first, useful offline, with cloud
+  models when they help. (4) MIA is proactive, and consequential actions need approval (observe, recommend, prepare and
+  execute stay distinct). (5) The computer boots into MIA by default, with a conventional desktop, a recovery
+  environment, a safe or diagnostic mode and a way to work when MIA's AI is unavailable. MIA OS is for Zac; it may
+  later extend to close friends (Zac, 2026-11-15), so nothing should rule out more than one person, but nothing is
+  built for strangers.
+- Related: `docs/mia_os/prompts/00_MASTER_DIRECTIVE.md`, DEC-0119, DEC-0154 to DEC-0158
+
+### DEC-0160: Retire the Companion app; the phone app's signing key comes from secrets
+- Status: APPROVED (Zac, 2026-11-15: "Yes we can retire the older phone app"; the signing change: "Yes")
+- Proposed by: claude, 2026-11-15 (Prompt 01 audit, R-03 and R-19)
+- Decision: `android/` (the thin "MIA Companion" client and its `android.yml` build) is removed; `android-phone/`
+  (MIA's own engine and screens) is MIA's one Android app. The phone app is signed with a key held in the
+  repository's secrets (`MIA_SIGNING_KEYSTORE_B64`, `MIA_SIGNING_PASSWORD`, optionally `MIA_SIGNING_ALIAS`), decoded in
+  CI; until they're set, builds fall back to the legacy key so nothing breaks. Changing to the new key needs one
+  reinstall of the phone app (Android won't update across keys).
+- Related: `.github/workflows/android-phone.yml`, `android-phone/app/build.gradle.kts`
+
+### DEC-0161: The Life Enrichment Protocol is a major MIA subsystem
+- Status: APPROVED as direction (Zac's handoff, 2026-11-15); the design comes through MIA OS Prompt 02 and its own plan
+- Proposed by: zac (handoff, written with ChatGPT)
+- Decision: LEP helps the person discover and plan experiences (local events, recreation, dates, seasons, travel),
+  budget-aware through the finances, remembered through the Memory Vault, with a long-term destination objective
+  (Japan first) kept as a persistent project. It reuses MIA's calendar, money, places, weather, maps, the communication
+  gate and Memory Vault, and never books or buys without the person's approval. Personal places and names live in the
+  person's data, never in the repo.
+- Related: `docs/specs/LIFE_ENRICHMENT_PROTOCOL.md`, `docs/mia_os/MIA_OS_FEATURE_ECOSYSTEM.md`
+
+### DEC-0162: Smart Closet
+- Status: APPROVED (Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them ... think of
+  what an ai integrated smart closet would be useful for and implement that")
+- Proposed by: zac; design by claude
+- Decision: a personal store of clothes (what, colour, warmth, formality, season, condition, photo, last worn),
+  outfits built from them, ratings, and outfit suggestions worked out in code from the weather, the day's calendar and
+  what hasn't been worn lately; the model only phrases them. Later: photos of the pieces together, laundry and care,
+  what to buy or let go of. Design in `docs/specs/SMART_CLOSET.md`.
+
+### DEC-0163: MIA tells who's talking when two people speak to her
+- Status: APPROVED as a requirement (Zac, 2026-11-15: "My wife and I might both speak to MIA at the same time and it
+  should be able to tell who is talking")
+- Proposed by: zac
+- Decision: shared conversation needs speaker identification, on the device, from voice samples each person gives
+  with consent. Each person's turn runs as that person (their data, their approvals); when MIA can't tell, she asks
+  rather than guesses, and nothing consequential is approved on an unidentified voice. The technology is chosen in
+  MIA OS Prompt 07. Supersedes the "Zac alone" part of DEC-0119 only for being heard as a second voice; DEC-0119's
+  other limits stand.
+
+### DEC-0164: MIA's tools on anything you select, in any app
+- Status: PROPOSED (Zac's idea, 2026-11-15: "highlight a section and right click it and be able to assign MIA to
+  research it, build a skill around it, convert it to another format, draft an email around it")
+- Proposed by: zac
+- Decision: a "Send to MIA" action on selected text (and later files and images) everywhere: on Android through the
+  system's text-selection menu (PROCESS_TEXT) and share sheet; on Windows through a hotkey or context-menu entry; on
+  MIA OS as a system service in every app. Each choice (research, make a skill, convert, draft an email, remember)
+  becomes a proposal through the action contract, never a silent action. The selection is untrusted text.
+- Related: DEC-0117 (`untrusted()`), DEC-0009

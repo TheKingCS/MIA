@@ -5,15 +5,17 @@
 **Phase:** planning.
 
 **Where we are:**
-- Prompt 01 (the audit) is done.
-- **We're waiting for Zac's review** and his go-ahead for Prompt 02.
+- Prompt 01 is done and reviewed.
+- Prompt 02 (the feature ecosystem) is done.
+- **We're waiting for Zac's review** and his go-ahead for Prompt 03.
 
-**Implementation:** none, and none is authorised. The existing app, the phone builds and the glasses are untouched; this initiative has changed only files under `docs/`.
+**Changes outside the planning documents, on Zac's say-so:**
+- The Companion app was retired (DEC-0160).
+- The phone app's signing key now comes from the repository's secrets when they're set (DEC-0160).
+- Smart Closet is being built (DEC-0162).
 
-**Last verified test result:** 6,284 passed, 8 failed, 5 skipped. This was the Linux cloud run on 2026-11-15 at `c0a71610`; see `MIA_OS_TESTING_AND_QUALITY_AUDIT.md`.
-
-**Blockers for Prompt 02:** none, apart from Zac's review.
+**Last verified test result:** the Linux run on 2026-11-15 (see `MIA_OS_TESTING_AND_QUALITY_AUDIT.md`).
 
 **Waiting on Zac:**
-- the private security finding reported on 2026-11-15;
-- the questions marked "Zac" in `MIA_OS_OPEN_QUESTIONS.md`.
+- add the two signing secrets (steps in the hub);
+- Q-08 and Q-09 in `MIA_OS_OPEN_QUESTIONS.md`.

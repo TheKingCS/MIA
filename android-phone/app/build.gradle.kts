@@ -58,12 +58,22 @@ android {
     sourceSets["main"].assets.srcDir(miaAssets)
 
     signingConfigs {
-        // The companion app's fixed key, so a new build installs over the last.
+        // One fixed key, so a new build installs over the last. It comes from the repository's secrets
+        // (MIA_SIGNING_KEYSTORE is the decoded file, written by android-phone.yml); until they're set,
+        // the legacy key the retired Companion app used (DEC-0160).
+        val secretKey = System.getenv("MIA_SIGNING_KEYSTORE")
         create("mia") {
-            storeFile = file("../../android/mia-companion.keystore")
-            storePassword = "mia-companion"
-            keyAlias = "mia"
-            keyPassword = "mia-companion"
+            if (!secretKey.isNullOrBlank()) {
+                storeFile = file(secretKey)
+                storePassword = System.getenv("MIA_SIGNING_PASSWORD")
+                keyAlias = System.getenv("MIA_SIGNING_ALIAS") ?: "mia"
+                keyPassword = System.getenv("MIA_SIGNING_PASSWORD")
+            } else {
+                storeFile = file("../legacy-signing.keystore")
+                storePassword = "mia-companion"
+                keyAlias = "mia"
+                keyPassword = "mia-companion"
+            }
         }
     }
     buildTypes {

@@ -88,7 +88,17 @@ must keep these statuses evidence-based.*
 | Parity (every action a tool and a control) | `core/parity.py` | Verified |
 | Pi kiosk | `deploy/` | Implemented; hardware unverified |
 
-## Zac's named features not in the repo
+## Updated by Prompt 02 (2026-11-15)
+
+- **Smart Closet**: Committed (DEC-0162); a minimum version is being built. See `docs/specs/SMART_CLOSET.md`.
+- **Life Enrichment Protocol**: Committed (DEC-0161). The spec is in `docs/specs/LIFE_ENRICHMENT_PROTOCOL.md`; not built.
+- **Speaker identification and shared conversation**: Committed (DEC-0163); not built.
+- **Send to MIA on a selection**: Proposed (DEC-0164); not built.
+- **The Companion app (`android/`)**: Deprecated and **removed** (DEC-0160).
+
+How these relate is in `MIA_OS_FEATURE_ECOSYSTEM.md` and `MIA_OS_CAPABILITY_CLASSIFICATION.md`.
+
+## Zac's named features not in the repo (as found by Prompt 01)
 
 These were checked by searching the code for their names on 2026-11-15:
 - **Smart Closet**: Documented only. The single code hit is a chore name, "Clear out a closet".

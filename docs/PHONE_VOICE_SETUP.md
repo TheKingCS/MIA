@@ -35,9 +35,9 @@ encrypted connection.
   0.8s" shows where the time went. If MIA feels slow, send Claude a few
   of those lines.
 
-**Android: the native app is here.** It keeps listening with the
-phone locked and works with your headset button. Install steps:
-`android/README.md`. The web app below still works on any phone.
+**Android: the native app is here** (`android-phone/`, the "phone-spike"
+release). The older companion app (`android/`) was retired on 2026-11-15
+(DEC-0160). The web app below still works on any phone.
 
 **Not yet in the web app (fixed by the Android app):**
 - **The screen must stay on with MIA open.** If you lock the phone or

@@ -5,7 +5,25 @@ or the prompt that will answer it). It replaces
 `preliminary/MIA_OS_OPEN_QUESTIONS_FIRST_PASS.md`, whose questions are
 folded in here.*
 
-## For Zac
+## Answered 2026-11-15
+
+- **Q-01:** for Zac, perhaps close friends later (DEC-0159).
+- **Q-02:** retire it (DEC-0160).
+- **Q-03:** LEP handoff given (DEC-0161).
+- **Q-04:** Smart Closet: inventory, outfits, ratings, previews, and more (DEC-0162).
+- **Q-05:** Zac and his wife may talk at once, and MIA must tell who (DEC-0163).
+- **Q-06:** logged (DEC-0159).
+- **Q-07:** fix it (DEC-0160; done once the secrets are added).
+
+## Still open for Zac
+
+| ID | Question | Why | Needed by |
+|---|---|---|---|
+| Q-08 | May MIA go online in the background for LEP's event discovery, and from which kinds of source? Suggestion: a short list of approved sources, once a day, with nothing personal sent | first routine background online use | building LEP discovery |
+| Q-09 | Are each partner's LEP interests private to them, with a shared couple's profile both can see? (suggested default: yes) | privacy between the two accounts | building LEP profiles |
+| Q-10 | Should "Send to MIA" start on the phone (the text-selection menu) before MIA OS? | DEC-0164 | Prompt 03 |
+
+## The original questions (for the record)
 
 | ID | Question | Why it matters | Needed by |
 |---|---|---|---|

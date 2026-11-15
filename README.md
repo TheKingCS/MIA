@@ -55,7 +55,7 @@ Pi-class hardware.
 ## Project layout
 
 ```
-android/      Kotlin/Gradle companion app (CI-built APK)
+android-phone/  The Android app: MIA's own engine and screens (CI-built APK)
 assets/       Icons, images, fonts
 config/       default_config.json (versioned) + config.json (user, gitignored)
 core/         The kernel: config, logging, event bus, module discovery, boot sequencing

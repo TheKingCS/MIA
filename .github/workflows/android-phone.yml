@@ -1,8 +1,8 @@
 # MIA on the phone (DEC-0019, the Phase 1 spike): builds android-phone/
 # (MIA's own engine and screens inside an Android app, no computer),
 # starts it on an Android emulator and checks she comes up and answers,
-# then publishes the APK as the "phone-spike" release. Separate from the
-# companion app (android/, the "android-latest" release).
+# then publishes the APK as the "phone-spike" release. The older companion
+# app (android/) was retired on 2026-11-15 (DEC-0160).
 name: MIA on the phone (spike)
 
 on:
@@ -80,8 +80,23 @@ jobs:
             https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf
           ls -la models
 
+      # The signing key, from the repository's secrets when they're set (DEC-0160); else the legacy key.
+      - name: Signing key
+        env:
+          KEY_B64: ${{ secrets.MIA_SIGNING_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEY_B64" ]; then
+            echo "$KEY_B64" | base64 -d > "$RUNNER_TEMP/mia-signing.keystore"
+            echo "MIA_SIGNING_KEYSTORE=$RUNNER_TEMP/mia-signing.keystore" >> "$GITHUB_ENV"
+            echo "Signing with the key from the repository's secrets."
+          else
+            echo "::warning::MIA_SIGNING_KEYSTORE_B64 isn't set: signing with the legacy key."
+          fi
+
       - name: Build the APK
         working-directory: android-phone
+        env:
+          MIA_SIGNING_PASSWORD: ${{ secrets.MIA_SIGNING_PASSWORD }}
         run: gradle --no-daemon assembleDebug
 
       - name: Size

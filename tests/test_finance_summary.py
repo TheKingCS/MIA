@@ -165,23 +165,3 @@ def test_money_js_handles_unavailable():
     out = subprocess.run([_NODE, str(_HARNESS)], input=json.dumps({"available": False}), capture_output=True, text=True, check=True, timeout=30)
     [section] = json.loads(out.stdout)
     assert "isn't available" in section["note"]
-
-
-# ------------------------------------------------------------------ the Android app's fixture
-
-_ANDROID_FIXTURE = Path(__file__).resolve().parent.parent / "android" / "app" / "src" / "test" / "resources" / "finance_summary.json"
-
-
-def test_android_fixture_matches_the_real_summary(ctx):
-    """android/.../MoneyFormatTest.kt reads this fixture, so the Kotlin
-    formatter is tested against exactly what the server sends. Rewrite
-    it with UPDATE_FIXTURES=1 pytest tests/test_finance_summary.py."""
-    import os
-
-    seed(ctx)
-    summary = build_finance_summary(ctx, TODAY)
-    summary.pop("generated_at")
-    if os.environ.get("UPDATE_FIXTURES"):
-        _ANDROID_FIXTURE.parent.mkdir(parents=True, exist_ok=True)
-        _ANDROID_FIXTURE.write_text(json.dumps(summary, indent=2) + "\n")
-    assert json.loads(_ANDROID_FIXTURE.read_text()) == summary

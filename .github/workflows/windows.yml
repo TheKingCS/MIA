@@ -16,7 +16,6 @@ on:
     branches: [master]
     paths-ignore:
       - "docs/**"
-      - "android/**"
       - "**.md"
   workflow_dispatch:
 

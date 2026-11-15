@@ -13,6 +13,9 @@ report that found it. Rated H, M or L.*
 | R-04 | Unsandboxed modules and scripts | H | M | Prompt 01 | third-party apps | Prompt 03/13 |
 | R-08 | Builds aren't reproducible | M | H | Prompt 01 | image builds | Prompt 15 |
 | R-12 | Docs drift, and a conflict over who MIA is for | M | H | Prompt 01 | Prompt 04 | Zac (Q-01) |
-| R-19 | A release-signing weakness (private) | M | L | Prompt 01 | soon | Zac / Claude |
+| R-19 | A release-signing weakness | M | L | Prompt 01 | soon | **mitigated by DEC-0160 once Zac adds the secrets** |
 | R-03, R-09–R-11, R-13–R-18, R-20 | see `MIA_OS_TECHNICAL_DEBT_AND_RISK_REGISTER.md` | | | Prompt 01 | | |
+| R-03 | Two Android apps | — | — | Prompt 01 | — | **closed: Companion app retired (DEC-0160)** |
+| R-22 | LEP background discovery goes online routinely; scraping is fragile; sources change | M | H | Prompt 02 | building LEP discovery | Zac (Q-08), then adapters with tests |
+| R-23 | Speaker identification errors could expose one partner's data to the other | H | M | Prompt 02 | shared conversation | MU-4/MU-5: ask when unsure; no approvals on an unidentified voice |
 | R-21 | Scope: 17 prompts asking for ~300 documents could bury the engineering | M | M | review of the library | throughout | Claude: keep documents small, and merge where the directive allows ("avoid duplicating") |

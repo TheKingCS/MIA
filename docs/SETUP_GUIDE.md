@@ -377,33 +377,15 @@ network between your own devices. Full detail:
 
 ---
 
-## Part 9: The Android app (hands-free, phone locked)
+## Part 9: The Android app
 
-The web app needs the screen on. The app doesn't. Full detail:
-**`android/README.md`**.
-
-1. On the phone, in Chrome, signed in to GitHub:
-   **https://github.com/TheKingCS/MIA/releases/tag/android-latest**
-2. Tap **MIA-Companion.apk**, open the download, allow **install unknown
-   apps** for Chrome once, go back, and tap **Install**.
-3. Open **MIA**, sign in with the same address, name and password.
-4. Tap **Start hands-free**, allow the **microphone** and
-   **notifications**, then tap **Let MIA run in the background**.
-5. Lock the phone and talk through your headphones. A short beep means
-   she heard you. Try your **headset button** (pause/resume) and saying
-   *"goodbye"*.
-6. Optional: tick **Use my Bluetooth headset's microphone** and compare.
-7. **Share to MIA:** in Gmail, Files or Photos, open a receipt or manual
-   → **Share** → **MIA inbox**. It goes straight to the Inbox at home
-   (Part 10b).
-
-Updates: install the newest APK from the same page; it keeps your
-sign-in.
-
-- [ ] Hands-free works with the phone locked
-- [ ] A file shared to **MIA inbox** shows up in the Inbox
-- [ ] **Show money** in the app (or the **Money** tab in the web app)
-      matches Budget on the computer
+The older hands-free companion app (`android/`, the "android-latest"
+release) was retired on 2026-11-15 (DEC-0160). MIA's Android app is now
+the one with her own engine and screens (`android-phone/`, the
+"phone-spike" release): install **MIA-Phone-Test.apk** from
+**https://github.com/TheKingCS/MIA/releases/tag/phone-spike** the same
+way (allow **install unknown apps** once), sign in, and link it to MIA on
+the computer.
 
 ---
 
