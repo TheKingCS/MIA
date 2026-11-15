@@ -1,0 +1,29 @@
+# MIA OS decisions register
+
+*MIA's decisions live in `docs/DECISIONS.md` (the project's rule: only
+Zac approves). This register lists the ones that belong to MIA OS and
+their status.*
+
+## Established by Zac (Master Directive §3; requirements)
+
+| # | Decision |
+|---|---|
+| E1 | The foundation is Linux; no custom kernel without strong evidence |
+| E2 | MIA-first experience; a conventional desktop is always available |
+| E3 | Hybrid, local-first intelligence; useful offline |
+| E4 | Proactive, with approval for consequential actions; observe, recommend, prepare and execute are kept apart |
+| E5 | MIA boots by default, with a conventional desktop, recovery, safe mode and a no-AI path |
+
+These have not yet been logged as a DEC entry. Zac can approve logging them as DEC-0159.
+
+## Proposed (first pass, 2026-11-13; re-examined by later prompts)
+
+| DEC | Title | Status | Re-examined in |
+|---|---|---|---|
+| DEC-0154 | Intelligence stays independent of the OS | PROPOSED | 04, 05 |
+| DEC-0155 | MIA Runtime: a long-running service, extracted first, on Windows | PROPOSED | 05, 14, 16 |
+| DEC-0156 | Capabilities and grants for every tool and action | PROPOSED | 08, 13 |
+| DEC-0157 | PC image: Fedora Atomic (bootc), a cage session plus KDE, dual boot | PROPOSED | 05, 06, 14 |
+| DEC-0158 | System management only through a narrow privileged helper | PROPOSED | 05, 13 |
+
+Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

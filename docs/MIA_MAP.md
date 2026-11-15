@@ -4,11 +4,11 @@
 
 ## At a glance
 
-- **Architecture** — 754 Python files across 499 core, 93 modules, 123 gui, 2 server, 37 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 149 logged (docs/DECISIONS.md); the why behind every part.
+- **Architecture** — 778 Python files across 521 core, 93 modules, 123 gui, 2 server, 39 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Decisions** — 157 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
-- **Improvement loops** — 94 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 166 dev entries (work/knowledge/).
+- **Improvement loops** — 95 active, 1 processes decided to need none (docs/LOOPS.md).
+- **Knowledge she's written** — 224 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 45 personal + 41 household stores, 50 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -16,12 +16,12 @@
 ## Decisions — why MIA is built the way she is
 
 **ACCEPTED** (5): DEC-0129, DEC-0130, DEC-0135, DEC-0136, DEC-0140
-**APPROVED** (125): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149
+**APPROVED** (128): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153
 **Approach** (1): DEC-0137
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (9): DEC-0103, DEC-0114, DEC-0123, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0150
+**PROPOSED** (14): DEC-0103, DEC-0114, DEC-0123, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158
 
 <details><summary>Every decision</summary>
 
@@ -173,15 +173,23 @@
 - **DEC-0147** [PROPOSED] — The Woodworking Studio — one design of real parts, and one Make pattern for every craft
 - **DEC-0148** [APPROVED] — Natural Momentum — help good mornings happen again, and stay out of their way
 - **DEC-0149** [APPROVED] — Trade Master — professional job procedures, diagnoses and apprentice programs for every trade
-- **DEC-0150** [PROPOSED] — The aquaponics greenhouse: build it with MIA, then hand it to her
+- **DEC-0150** [APPROVED] — The aquaponics greenhouse: build it with MIA, then hand it to her
+- **DEC-0151** [PROPOSED] — What MIA runs on, and what breaks without it (the personality plan's phase 3)
+- **DEC-0152** [APPROVED] — Projects and Missions, connected (one record each, progress derived)
+- **DEC-0153** [APPROVED] — Eight destinations; the Nexus is for Living Worlds only
+- **DEC-0154** [PROPOSED] — MIA OS — the intelligence stays OS-independent; the OS is an environment for it
+- **DEC-0155** [PROPOSED] — The MIA Runtime — a long-running service, extracted first, on Windows
+- **DEC-0156** [PROPOSED] — Capabilities and grants for every tool and action
+- **DEC-0157** [PROPOSED] — The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first
+- **DEC-0158** [PROPOSED] — System management only through a narrow privileged helper
 
 </details>
 
 ## How she improves
 
-- **94 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
+- **95 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 166 entries 31 lesson, 13 debugging, 14 decision, 8 method, 4 test-procedure, 3 failed-experiment, 91 implementation, 2 security-finding.
+- **Dev-knowledge** — 224 entries 35 lesson, 18 debugging, 15 decision, 9 method, 6 test-procedure, 3 failed-experiment, 136 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

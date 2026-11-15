@@ -5,7 +5,19 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-11 (Zac's eight destinations: approved and mostly built)*
+*Last updated: 2026-11-15 (MIA OS planning: Prompt 01 done, waiting for Zac)*
+
+**New 2026-11-15 (Claude: MIA OS).**
+- Zac's MIA OS prompt library is in `docs/mia_os/prompts/` (00 to 17, plus 17b). Work it **one prompt at a time, and stop for Zac's review after each**.
+- Prompt 01 (the existing-system audit) is done: start at `docs/mia_os/MIA_OS_MASTER_PLAN.md`. Prompt 02 starts only on Zac's say-so.
+- Open from the audit:
+  - the questions in `docs/mia_os/MIA_OS_OPEN_QUESTIONS.md` (Q-01 to Q-07, PC checks P-01 to P-05);
+  - a release-signing finding reported to Zac privately on 2026-11-15 (not written here: the repo is public);
+  - the test-isolation leak: `tests/test_id_wallet.py` resets the at-rest key with `use_key(None)`, and later sealing tests fail on Linux. It's a test fix and still to do.
+- Setting up a cloud container for the full suite:
+  1. `pip install -U --ignore-installed wheel setuptools`;
+  2. `pip install -r requirements.txt`, run with `/usr/bin/python3` (3.13);
+  3. `apt-get install libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3 libportaudio2 libglib2.0-0`.
 
 **New 2026-11-11, latest (Claude, after Zac's "lets build it"; Trade Master moved to Home › Learning).** Built and pushed:
 - **The Dashboard's DEC-0153 cards:**

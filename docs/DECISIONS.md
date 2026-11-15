@@ -2727,3 +2727,55 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   weather (built the same day), upkeep as scheduled missions (built the same day), the Businesses page and per-business orders and
   quotes (built the same day), Health's meals.
 - Related: DEC-0129, DEC-0130, DEC-0134 (Living Worlds), DEC-0152 (Projects and Missions)
+
+### DEC-0154: MIA OS — the intelligence stays OS-independent; the OS is an environment for it
+- Status: PROPOSED (Zac's MIA OS Initiative directive, 2026-11-13; planning in `docs/mia_os/`)
+- Proposed by: claude, 2026-11-13
+- Decision: MIA Core (`core/`) never gains OS-specific imports. Everything host-specific goes behind platform
+  adapters (keys, service manager, notifications, power, audio), each an interface with one implementation per host,
+  as `core/voice_manager.py` and `core/llm_manager.py` already do. Windows, Android and the Pi keep running MIA; MIA
+  OS is the deployment where she is native.
+- Why: the engine already runs on Windows, headless and on Android because it never knew its host; keeping that is
+  what makes an OS reachable without a rewrite.
+- Related: `docs/mia_os/preliminary/MIA_OS_TARGET_ARCHITECTURE.md`
+
+### DEC-0155: The MIA Runtime — a long-running service, extracted first, on Windows
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-13
+- Decision: grow `core/core_runtime.py` into the MIA Runtime: one process per data folder that owns the stores and
+  the store lock, runs a plain-Python scheduler (replacing the 10 Qt timers and their ~43 daily checks), hosts the API
+  server, supervises the model server and serves `/api/health`. The Qt window, the web shell, voice and the CLI
+  become its clients. Windows: started at sign-in. Linux and the Pi: a systemd user service.
+- Why: today closing the desktop window stops reminders, backups, the Loop and the phone's server. This is the first
+  step of MIA OS and is valuable on Windows on its own.
+- Related: `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`
+
+### DEC-0156: Capabilities and grants for every tool and action
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-13
+- Decision: every tool and action declares a capability and a tier (observe, suggest, act-with-approval,
+  act-within-grant, never), checked by code in the action contract. Grants are per person, revocable, listed on one
+  screen. System capabilities start at observe or never. Untrusted text can never grant. A test fails on an untagged
+  tool.
+- Why: an OS-level MIA needs permissions finer than child gating; the development platform's tiers (DEC-0069)
+  already work.
+- Related: `docs/mia_os/preliminary/MIA_OS_SECURITY_MODEL.md`
+
+### DEC-0157: The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-13
+- Decision: MIA OS on the PC is a Fedora bootc image built from `os/Containerfile` in the repo, signed, with atomic
+  updates and rollback. Two sessions: MIA (cage + Chromium on the local MIA shell) and KDE Plasma. Ollama on ROCm,
+  LUKS2 unlocked by TPM2 plus a PIN, Flatpak apps, podman/bubblewrap for agents. Prototyped in a VM, then installed on
+  its own drive beside Windows. No new distribution, kernel or ROM.
+- Why: reproducible from files (DEC-0104), recoverable, and no years-long distribution work.
+- Related: `docs/mia_os/preliminary/MIA_OS_TECHNOLOGY_EVALUATION.md`
+
+### DEC-0158: System management only through a narrow privileged helper
+- Status: PROPOSED
+- Proposed by: claude, 2026-11-13
+- Decision: MIA Core never runs as root. On MIA OS, system actions (processes, apps, updates, network, drives) go
+  through a separate System Manager process with a fixed list of D-Bus methods, each authorised by polkit and reached
+  only through the capability framework. Read-only methods come first; each action family is approved by Zac on its own.
+- Why: least privilege; prompt injection or a bad tool call can't reach a shell.
+- Related: `docs/mia_os/preliminary/MIA_OS_SECURITY_MODEL.md`, DEC-0156

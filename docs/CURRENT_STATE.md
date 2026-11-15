@@ -2,7 +2,14 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-11 (the eight destinations, built), by claude.*
+session. Last updated: 2026-11-15 (MIA OS planning, Prompt 01 audit), by claude.*
+
+
+**2026-11-15, latest (Claude: MIA OS planning).**
+- Zac's MIA OS prompt library (the Master Directive, Prompts 01–17 and a supplement) is kept verbatim in `docs/mia_os/prompts/`.
+- **Prompt 01, the audit of what MIA is today, is done.** It waits for Zac's review before Prompt 02. Start at `docs/mia_os/MIA_OS_MASTER_PLAN.md`.
+- The full suite on Linux: 6,284 passed and 8 failed; 6 of the 8 are test-isolation or environment problems, the other 2 not yet isolated.
+- Nothing in the app changed.
 
 **2026-11-11, latest (Claude: the rest of the eight).**
 - **The Dashboard** has Today and Your Week tabs, the weather (once you name your town), the mission in play, and Agent Activity.
