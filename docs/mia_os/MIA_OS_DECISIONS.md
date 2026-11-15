@@ -35,6 +35,8 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0161 | The Life Enrichment Protocol | APPROVED as direction |
 | DEC-0162 | Smart Closet | APPROVED |
 | DEC-0163 | MIA tells who's talking | APPROVED as a requirement |
-| DEC-0164 | Send to MIA on any selection | PROPOSED |
+| DEC-0164 | Send to MIA on any selection | absorbed into DEC-0165 |
+| DEC-0165 | The Universal Action Layer | APPROVED as direction; phases await approval |
+| DEC-0166 | Which Claude model does which work | APPROVED as direction |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

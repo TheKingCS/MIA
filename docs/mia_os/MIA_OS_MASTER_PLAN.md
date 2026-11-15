@@ -129,6 +129,10 @@ The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central doc
 - [Application framework requirements](MIA_OS_APPLICATION_FRAMEWORK_REQUIREMENTS.md)
 - The feature inventory, updated
 
+**Added by Zac, 2026-11-15:**
+- [Universal Action Layer plan](MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md), with the spec in `docs/specs/UNIVERSAL_ACTION_LAYER.md`. Its first three phases (registry and offer, the phone's selection menu, the first action set) are useful before MIA OS.
+- [Model assignments](MIA_OS_MODEL_ASSIGNMENTS.md): Fable 5.2 for prompts 05, 08, 13, 14, 16 and 17 and the foundational refactors; Opus 5.5 for everyday building.
+
 **History:** `preliminary/`, the 2026-11-13 first pass. It is input for Prompts 05, 13, 14 and 16, not authoritative.
 
 ## 5. Which document wins

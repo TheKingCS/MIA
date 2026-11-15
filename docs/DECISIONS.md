@@ -2840,3 +2840,27 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   MIA OS as a system service in every app. Each choice (research, make a skill, convert, draft an email, remember)
   becomes a proposal through the action contract, never a silent action. The selection is untrusted text.
 - Related: DEC-0117 (`untrusted()`), DEC-0009
+
+### DEC-0165: The Universal Action Layer is a foundational MIA OS subsystem
+- Status: APPROVED as direction (Zac's handoff, 2026-11-15: "a foundational MIA OS subsystem"); the build plan
+  (`docs/mia_os/MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md`) waits for Zac's approval of its phases
+- Proposed by: zac (handoff); integration plan by claude
+- Decision: MIA's actions are reachable from anywhere (a selection, a file, an image, code, a page) through one
+  shared registry and execution path. That path is the existing action contract (`core/actions.py`) and tool registry, given
+  input types, tiers (read, prepare, act), outputs, reversibility and where it may run. Every front door (the phone's
+  text-selection menu and share sheet, a Windows hotkey, a browser extension, MIA OS's portal shortcut and AT-SPI,
+  the glasses) only captures context, marked untrusted, and offers the same actions; nothing is executed by a front
+  door. "Build a skill" is either a learning path for the person or, for MIA, a proposal that becomes a taught
+  procedure or a tested lab task, registered only after approval. Absorbs DEC-0164.
+- Related: `docs/specs/UNIVERSAL_ACTION_LAYER.md`, DEC-0009, DEC-0058, DEC-0117, DEC-0123, DEC-0156
+
+### DEC-0166: Which Claude model does which work
+- Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models
+  when needed"); the list itself is Claude's recommendation for Zac to adjust
+- Proposed by: claude, 2026-11-15
+- Decision: Claude Fable 5.2 for the cross-cutting MIA OS prompts (05, 08, 13, 14, 16, 17), security-sensitive design
+  and review, foundational refactors (the runtime extraction, key backends), independent review of Opus-built
+  foundations, and hard root-causing; Claude Opus 5.5 for everyday building on existing patterns, the bounded
+  prompts, docs and hub upkeep, tests and CI. NEXT_SESSION marks each task (Fable) or (Opus); a task isn't switched
+  mid-way; two failed attempts escalate to Fable. Reviewed after a month of use.
+- Related: `docs/mia_os/MIA_OS_MODEL_ASSIGNMENTS.md`
