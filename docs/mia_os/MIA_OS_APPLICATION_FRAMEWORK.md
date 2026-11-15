@@ -1,6 +1,11 @@
 # MIA OS: the application framework (Prompt 03)
 
-*Claude (Opus), 2026-11-15. Planning only: nothing here is built or approved. The prompt is
+*Zac's review (2026-11-15): DEC-0175 approved as the direction of his handoff (prompt 22, planned in
+[MIA_OS_APPLICATION_REGISTRY.md](MIA_OS_APPLICATION_REGISTRY.md)); DEC-0176 approved; DEC-0177 approved with his
+clarification (MIA first-class in the image; MIA-native apps by the runtime, never Flatpak; conventional apps by
+Flatpak); no app store.*
+
+*Claude (Opus), 2026-11-15. Planning only: nothing here is built. The prompt is
 [`prompts/03_MIA_OS_NATIVE_APPLICATION_ECOSYSTEM_APPLICATION_FRAMEWORK.md`](prompts/03_MIA_OS_NATIVE_APPLICATION_ECOSYSTEM_APPLICATION_FRAMEWORK.md).
 This is the summary document; the other sixteen Prompt 03 documents go deeper on one part each (index in section 9).
 The proposed decisions are DEC-0175 to DEC-0177. Fable reviews this work (DEC-0174).*

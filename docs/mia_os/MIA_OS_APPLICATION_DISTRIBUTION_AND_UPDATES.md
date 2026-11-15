@@ -1,5 +1,10 @@
 # MIA OS: packaging, distribution and updates (Prompt 03 §11)
 
+*Approved with Zac's clarification (DEC-0177): MIA is a first-class part of the OS image, the primary operating
+environment, not an app; her native apps are managed by the MIA Runtime's registry and never depend on Flatpak;
+Flatpak is for conventional Linux software, alongside the distribution's other package mechanisms. Coexistence:
+[MIA_OS_APPLICATION_REGISTRY.md](MIA_OS_APPLICATION_REGISTRY.md) section G.*
+
 *Claude (Opus), 2026-11-15. Planning; nothing built. Part of [MIA_OS_APPLICATION_FRAMEWORK.md](MIA_OS_APPLICATION_FRAMEWORK.md).
 DEC-0177 proposed. Research in MIA_OS_APPLICATION_TECHNOLOGY_EVALUATION.md.*
 

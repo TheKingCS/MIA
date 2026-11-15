@@ -37,9 +37,10 @@ folded in here.*
 | Q-24 | **Answered yes (2026-11-15)**: the Living System doctrine adopted | DEC-0173 | — |
 | Q-25 | **Answered (2026-11-15)**: Fable reviews all Opus work; Copilot, Claude, ChatGPT and Muse as independent checkers where it fits, not for everything; no Codex | DEC-0174 | — |
 | Q-26 | **Answered yes (2026-11-15)**: she slows herself down and says so | DEC-0173 | — |
-| Q-27 | Third-party apps: keep the doors (manifests, trust levels, signing) but build no marketplace or third-party SDK, since MIA is for Zac alone (DEC-0119)? | Prompt 03 | Prompt 04 |
-| Q-28 | When grants exist, approve a proof of concept of one sandboxed extension (DEC-0176)? | Prompt 03 | after DEC-0156 |
-| Q-29 | Approve DEC-0175 to DEC-0177 (capability-first apps in the runtime; out-of-process extensions; MIA in the image, Flatpak for GUI apps, no marketplace)? | Prompt 03 | Prompt 04 |
+| Q-27 | **Answered yes (2026-11-15)**: no app marketplace; "the only marketplaces will be the ones i shop from" | DEC-0177 | — |
+| Q-28 | **Answered yes (2026-11-15)**: the sandboxed extension proof of concept, once grants exist | DEC-0176 | — |
+| Q-29 | **Answered (2026-11-15)**: DEC-0175 approved as prompt 22's direction, DEC-0176 yes, DEC-0177 approved with Zac's clarification | — | — |
+| Q-30 | Manifests as JSON in `apps/<id>/manifest.json`, a registry that reads them, code moved into per-app packages only later, one app at a time (DEC-0178)? | prompt 22 | M1 |
 | Q-15 | **Answered (2026-11-15)**: Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android. Was: the Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |
 
 ## The original questions (for the record)

@@ -31,7 +31,7 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | first pass | 10-document plan (2026-11-13, before the library) | done; **superseded**, kept in `preliminary/` | `preliminary/*` |
 | 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
 | **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
-| **03** | **Application framework** | **done; waiting for Zac's review** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
+| **03** | **Application framework** | **done; reviewed by Zac 2026-11-15 (DEC-0175 to 0177; prompt 22 follows)** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
 | 04–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
@@ -148,6 +148,7 @@ The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central doc
 
 **Added by Zac, 2026-11-15:**
 - [World Intelligence proposal](MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md) (prompt 18, 2026-11-15; DEC-0170 proposed): standing watches, one discovery store, relevance worked out in code from MIA's records, built from the pieces she has (news feeds, search, research and verify, her browser, taught skills, the gate, links). Phases W0–W8, beside the MIA OS work.
+- [The runtime-owned application ecosystem](MIA_OS_APPLICATION_REGISTRY.md) (prompt 22, 2026-11-15; DEC-0175 approved, DEC-0178 proposed): one manifest per MIA-native app, an Application Registry in the runtime, MIA Forge, the migration M1–M8, and how MIA-native apps sit on the conventional Linux underneath.
 - [The Living System](MIA_OS_LIVING_SYSTEM.md) (prompt 20, the foundational doctrine, 2026-11-15; DEC-0173 proposed): the doctrine's ten characteristics and ten shared services mapped onto MIA with evidence, the gaps (grants, homeostasis, one epistemic contract, cross-domain objectives), and the invariants as tests. Once approved, every later prompt carries its invariants as acceptance criteria. No new "Living System" service.
 - [Procurement proposal](MIA_OS_PROCUREMENT_PROPOSAL.md) (prompt 19, 2026-11-15; DEC-0172 proposed): World Intelligence's listings half: requirements per project, specifications compared by numbers, price observations, acquisition plans.
 - [Universal Action Layer plan](MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md), with the spec in `docs/specs/UNIVERSAL_ACTION_LAYER.md`. Its first three phases (registry and offer, the phone's selection menu, the first action set) are useful before MIA OS.

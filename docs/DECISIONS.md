@@ -3102,7 +3102,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0166, DEC-0173
 
 ### DEC-0175: Capability-first application model; MIA's own apps stay in the runtime
-- Status: PROPOSED (Prompt 03; Zac to approve: Q-29)
+- Status: APPROVED (Zac, 2026-11-15), as the direction of his handoff "MIA Runtime-Owned Application Ecosystem &
+  Canonical Application Manifest" (prompt 22, kept verbatim): MIA owns the ecosystem, applications own their internal
+  functionality, the runtime governs their integration; every app has one authoritative manifest. The plan is
+  `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`; its format and folder choices are DEC-0178.
 - Proposed by: claude (Opus), 2026-11-15
 - Proposal (`docs/mia_os/MIA_OS_APPLICATION_FRAMEWORK.md` §5): an application is a manifest over capabilities (tools
   and action kinds), with surfaces, stores and jobs, assembled from code (AF-1); MIA's own apps run in the MIA Runtime
@@ -3110,7 +3113,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0125, DEC-0155, DEC-0156, DEC-0165, DEC-0173
 
 ### DEC-0176: Code that isn't MIA's runs out of process, sandboxed, through the capability contract
-- Status: PROPOSED (Prompt 03; Zac to approve: Q-29; proof of concept: Q-28)
+- Status: APPROVED (Zac, 2026-11-15: "0176 yes"); the proof of concept approved for when grants exist (Q-28: "yes")
 - Proposed by: claude (Opus), 2026-11-15
 - Proposal (`docs/mia_os/MIA_OS_APPLICATION_EXTENSION_ARCHITECTURE.md`): extensions run in their own process in a
   bubblewrap or systemd sandbox, reaching MIA only through the local API with grants (DEC-0156); "Add Module" stays
@@ -3118,10 +3121,29 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0156, DEC-0158
 
 ### DEC-0177: MIA in the OS image, Flatpak for GUI apps, signed extensions, no marketplace
-- Status: PROPOSED (Prompt 03; Zac to approve: Q-29; no marketplace: Q-27)
+- Status: APPROVED with Zac's clarification (2026-11-15, verbatim in prompt 22): MIA ships as an integrated,
+  first-class part of the MIA OS image, the primary operating environment and intelligence layer, not an ordinary
+  Linux app. Two categories: **MIA-native applications** (Home, Greenhouse, Finances, Garage, Health & Fitness,
+  Missions, Learning, AI Tools...), managed by the MIA Runtime and its Application Registry, each with its own
+  manifest, never dependent on Flatpak; and **conventional Linux applications** (Firefox, LibreOffice, GIMP, Blender,
+  VS Code...), installed with Flatpak preferred and other Linux package mechanisms where appropriate, which MIA
+  discovers and works with through integrations, permissions and automation capabilities. No app store (Q-27: "the
+  only marketplaces will be the ones i shop from"). The coexistence with the Linux underneath is
+  `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md` section G.
 - Proposed by: claude (Opus), 2026-11-15
 - Proposal (`docs/mia_os/MIA_OS_APPLICATION_DISTRIBUTION_AND_UPDATES.md`): MIA and her apps ship in the signed OS
   image (bootc, cosign) on the PC and as the runtime service on the Pi; ordinary GUI apps come from Flathub; MIA
   extensions are signed by Zac's key; installs by voice are proposed actions run by the System Manager helper with
   fixed arguments, never generated shell commands.
 - Related: DEC-0119, DEC-0157, DEC-0158, DEC-0168
+
+### DEC-0178: Application manifests as JSON in apps/<id>/, a registry that reads them, code moved app by app later
+- Status: PROPOSED (Zac to approve: Q-30)
+- Proposed by: claude (Opus), 2026-11-15, planning prompt 22 (DEC-0175's direction)
+- Proposal (`docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md` B, C, F): one `apps/<id>/manifest.json` per MIA-native app
+  (JSON, as MIA's other machine-readable files; no YAML dependency), validated by a JSON Schema and against the code;
+  `core/app_registry.py` reads them and becomes the one source of the app list (replacing `core/web_surfaces.APPS`
+  as the source); manifests generated from today's code first, so nothing changes behaviour; an app's engine code
+  moves into its own `apps/<id>/` package only later, one app at a time (Greenhouse first, Fable), after the registry
+  registers stores, jobs and capabilities so `core/` imports no app (CLAUDE.md's layering). Phases M1–M8.
+- Related: DEC-0155, DEC-0156, DEC-0166, DEC-0175, DEC-0176, DEC-0177
