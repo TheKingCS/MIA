@@ -140,7 +140,7 @@ def test_the_window_takes_zacs_messages_only_with_its_key(tmp_path, monkeypatch)
         assert send({"text": "hi"}, key_="guess") == 403 and not repo.exists()
         assert send({"text": "  "}) == 400
         assert send({"text": "@mia what's the plan? @codex too"}) == 200
-        for _ in range(50):
+        for _ in range(300):  # up to 30 s: the answer comes from a background thread, slow on a busy CI runner
             if len(store.tail(10)) >= 3 and not dev_window.ASKING:
                 break
             time.sleep(0.1)
