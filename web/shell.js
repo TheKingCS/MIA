@@ -901,7 +901,8 @@
   // each opening its own page. The last rows always offer the library (knowledge.html?q=) and asking MIA.
   // It is also the action palette (the Universal Action Layer, DEC-0165, core/ual.py): opened with text selected on
   // the page, or with a long piece pasted in, it lists what MIA can do with that. A read action shows its result
-  // here; an act action asks first, as every change does.
+  // here (a prepared one may offer one way to keep it, proposed only when pressed); an act action asks first, as
+  // every change does.
   let shellData = null;
   let searchBox = null;
   let picked = "";  // the page's selection when the palette was opened
@@ -954,8 +955,15 @@
           const got = await MIA.ualRun(a.id, capture);
           if (got.tier === "act") { searchBox.close(); await finishProposal(got.proposal); return; }
           const r = got.result || {};
-          list.replaceChildren(el("li", { class: "sr-hint" }, r.text || "Done."),
-            ...(r.results || []).map((x) => row(x.title, x.detail, x.href, "•")));
+          // A prepare result may offer one way to keep it (a skill to teach, a lab proposal): proposed only on a press.
+          const follow = r.follow ? row(r.follow.label, "Asks first", "#", "✎") : null;
+          if (follow) follow.querySelector("a").onclick = async (ev) => {
+            ev.preventDefault();
+            try { const p = await MIA.propose(r.follow.kind, r.follow.params); searchBox.close(); await finishProposal(p); }
+            catch (e) { say(e.message); }
+          };
+          list.replaceChildren(el("li", { class: "sr-hint sr-result" }, r.text || "Done."),
+            ...(r.results || []).map((x) => row(x.title, x.detail, x.href, "•")), follow);
           active = 0; mark();
         } catch (e) { say(e.message); }
       };

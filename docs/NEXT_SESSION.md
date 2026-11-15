@@ -16,8 +16,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   3. Or share a link or text and pick **Do with MIA**.
 - **UAL U3, first part, is built**: Explain, Summarise, Translate, Explain This Code, Pull Out Tasks And Dates,
   Draft An Email (a draft to copy; nothing saved or sent). They use the device's own model.
-- Next in U3: Build A Skill (to a taught skill, or a lab task), Learn This Myself (a learning path), then Research
-  and Verify with the consent step: **(Opus)**.
+- **UAL U3, second part, is built**: Learn This Myself (a path draft, on a yes) and Build A Skill For MIA (steps from
+  her own tools offered as Teach It To MIA, or else Build It In The Lab).
+- Next in U3: Research and Verify (online, with the person's switch), Convert, and the consent step before anything
+  reaches an outside AI: **(Opus)**; the consent step's gate itself is security work: **(Fable)**.
 
 **New 2026-11-15, last (Claude).**
 - **Taught skills, phase 1, is built** (DEC-0123, `core/taught_skills.py`, K-0227). To try on the PC:

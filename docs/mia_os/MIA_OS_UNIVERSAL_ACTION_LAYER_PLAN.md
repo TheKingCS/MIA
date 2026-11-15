@@ -120,6 +120,23 @@ Browser routines and workflows fold in as kinds of taught skill.
 - **Terminal:** a shell function or plugin sending the last command and output to the palette.
 - **Every adapter runs as the person, not root**, and can only *send* captures. It never executes anything itself.
 
+## 6f. U3, second part: Learn This Myself and Build A Skill (2026-11-15)
+
+The two endings of one skills system (DEC-0167):
+- **Learn This Myself** (act): a proposal to draft a learning path for the selection's subject (`path.draft`,
+  `core/path_actions.py`). A subject a program already covers is named instead. Nothing starts until the person says
+  "start it". Undoable.
+- **Build A Skill For MIA** (prepare): the model drafts taught-skill steps, offered only the tools the selection's
+  words point at. Code parses and checks every step, and every tool must be one it was offered.
+  - Steps that hold: the result offers **Teach It To MIA** (`taught_skill.add`), which then practises with the person.
+  - Steps that don't, or a skill needing something she can't do: **Build It In The Lab** (`lab.propose`). Code is
+    written and tested there and joins MIA only on the owner's approval.
+  - Either button is only a proposal, made when pressed, and waits for a yes. The model chooses neither the kind nor
+    whether it runs.
+
+A prepared result may carry one `follow` ({kind, label, params}): the front doors show it as a button that proposes
+it. That is how a prepare action leads to a change without ever making one.
+
 ## 6e. U3, first part: the actions that ask MIA's model (2026-11-15)
 
 Ready now, on the device, through every front door (Ctrl+K, the phone's card, voice):
@@ -133,8 +150,8 @@ and never a request. These are read and prepare actions, which can't name an act
 nothing the model says can change a record. A test sends an injection in the selection and a model that answers with
 a delete command: nothing changes.
 
-Still planned in U3: research and verify (online, with the person's switch), convert, learn path, Build A Skill
-(ending in a taught skill or a lab task), and the consent step for anything that leaves the device.
+Still planned in U3 after the second part: research and verify (online, with the person's switch), convert, and the
+consent step for anything that leaves the device.
 
 ## 6d. U2 is built (2026-11-15)
 

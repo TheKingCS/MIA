@@ -3,7 +3,8 @@
  *
  * The card over another app on the phone: the selection (from the MIASelection bridge, SelectionActivity.kt; in the
  * public demo, a sample), what MIA can do with it, and the pick:
- * - a read action shows its result here, with Copy and links that open MIA;
+ * - a read action shows its result here, with Copy and links that open MIA; a prepared one (a skill drafted from it)
+ *   may offer one way to keep it, proposed only when pressed;
  * - an act action shows the sentence of what it would change and waits for Yes; then Undo is offered.
  * Everything is decided by the engine (core/ual.py through /api/ual/*); this file only formats. Without the bridge
  * (a browser), Close goes back.
@@ -45,10 +46,15 @@
 
   function result(r) {
     const text = r.text || "Done.";
+    // One way to keep a prepared result (a skill to teach MIA, a lab proposal), proposed only when pressed.
+    const follow = r.follow ? btn(r.follow.label, "btn-green", async () => {
+      try { ask(await MIA.propose(r.follow.kind, r.follow.params)); } catch (e) { problem(e); }
+    }) : null;
     return [el("p", { class: "sel-result" }, text),
       (r.results || []).length ? el("ul", { class: "sel-list" }, r.results.map((x) =>
         el("li", {}, el("a", { href: x.href, onclick: open(x.href) }, x.title), x.detail ? el("span", { class: "sel-dim" }, " · " + x.detail) : null))) : null,
-      el("div", { class: "row-buttons" }, bridge ? btn("Copy", "btn-ghost", () => bridge.copy(text)) : null, btn("Done", "btn-green", close))];
+      el("div", { class: "row-buttons" }, follow, bridge ? btn("Copy", "btn-ghost", () => bridge.copy(text)) : null,
+        btn("Done", follow ? "btn-ghost" : "btn-green", close))];
   }
 
   async function approve(proposal) {

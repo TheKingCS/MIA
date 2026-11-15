@@ -2872,6 +2872,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   from an app whose name says money, health or secrets counts as sensitive (`core/ual._SENSITIVE_HINTS`).
 - **U3, first part, built** (claude, 2026-11-15): Explain, Summarise, Translate, Explain This Code, Pull Out Tasks And
   Dates, Draft An Email, on the device's own model; read and prepare only, so the model's words never change a record.
+- **U3, second part, built** (claude, 2026-11-15): Learn This Myself (`path.draft`, on a yes) and Build A Skill For MIA
+  (a prepared draft whose one `follow` is Teach It To MIA or Build It In The Lab, proposed only when pressed).
 
 ### DEC-0166: Which Claude model does which work
 - Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models
@@ -2904,3 +2906,5 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   is kept, and what she has read, verified and tested stay distinct. When the learner is the person, it's a learning
   path as today. Browser routines and workflows become kinds of taught skill rather than separate systems.
 - Related: DEC-0058, DEC-0092, DEC-0107, DEC-0112, DEC-0117, DEC-0123, DEC-0165
+- **Built** (claude, 2026-11-15): "Build A Skill For MIA" (core/ual.py `_build_skill`) ends in a taught skill when the
+  drafted steps hold, else a lab proposal; "Learn This Myself" ends in a learning-path draft (`path.draft`).

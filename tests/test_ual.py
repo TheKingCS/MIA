@@ -4,7 +4,9 @@ catalogue and its tiers, what's offered for a selection, and running a pick
 card: a selection from a banking, health or password app is sensitive, and the
 selection reaches the card only through its bridge. And U3's model actions (Explain,
 Summarise, Translate, Explain This Code, Pull Out Tasks, Draft An Email): the model
-sees the selection only framed, and its answer is only shown, never acted on."""
+sees the selection only framed, and its answer is only shown, never acted on. Learn
+This Myself proposes a path draft; Build A Skill offers to teach steps made of her own
+tools, or sends what they can't do to the lab, each only when pressed and approved."""
 
 import pytest
 
@@ -277,3 +279,71 @@ def test_a_model_action_said_by_voice_answers_with_its_result(shop):  # noqa: F8
     reg = AssistantActionRegistry()
     register_ual_actions(reg)
     assert "It says tomatoes need stakes." in reg.execute(shop, "do_with_this", {"action": "explain", "text": "Stake the tomatoes"})
+
+
+def test_learn_this_myself_proposes_a_path_draft_and_names_one_already_there(shop, monkeypatch):  # noqa: F811
+    """U3: "Learn This Myself" is an act action: a proposal to draft a learning path (DEC-0112), kept only on a yes;
+    an interest a program already covers is named instead of drafted again."""
+    from core import paths
+    from core.paths import PathBook
+
+    shop.paths = PathBook(shop, data_dir=shop.my_dir)
+    got = ual.run(shop, "learn_path", Capture.from_dict({"text": "Learn to weld\nMIG welding for beginners..."}))
+    assert got["tier"] == "act" and got["proposal"]["kind"] == "path.draft"
+    assert got["proposal"]["params"]["interest"] == "Learn to weld" and "nothing starts until you say so" in got["proposal"]["summary"]
+    assert shop.paths.drafts == {}  # nothing drafted before the yes
+    drafted = []
+    monkeypatch.setattr(paths, "draft", lambda c, interest, goal="": drafted.append(interest) or paths.find_program(c, "guitar"))
+    done = shop.actions.approve(shop, got["proposal"]["proposal_id"])
+    assert done.status == "executed" and drafted == ["Learn to weld"] and "start it" in done.result
+    guitar = ual.run(shop, "learn_path", Capture.from_dict({"text": "guitar"}))
+    assert "already here" in guitar["proposal"]["summary"]
+
+
+def _skill_world(shop):
+    """The shop with a tool registry holding one mission tool and the skill tools, and a skill book."""
+    from core.actions import run_as_tool
+    from core.assistant_actions import AssistantAction, AssistantActionRegistry
+    from core.assistant_taught_skill_actions import register_taught_skill_actions
+    from core.taught_skills import SkillBook
+
+    reg = AssistantActionRegistry()
+    register_taught_skill_actions(reg)
+    reg.register(AssistantAction(name="add_a_mission", domain="missions", description="Adds a mission.",
+                                 parameters={"type": "object", "properties": {"name": {"type": "string"}}},
+                                 trigger_phrases=("tomatoes",),
+                                 handler=lambda c, a: run_as_tool(c, "mission.add", {"name": a.get("name")})))
+    shop.assistant_actions = reg
+    shop.taught_skills = SkillBook(shop, data_dir=shop.my_dir)
+    return shop
+
+
+def test_build_a_skill_offers_to_teach_steps_made_of_her_own_tools_and_keeps_nothing(shop):  # noqa: F811
+    w = _skill_world(shop)
+    w.llm = FakeModel(lambda p: '{"name": "Tomato check", "steps": ["tell: Tomato check.", '
+                                '"ask: Which bed? -> bed", "tool: add_a_mission name=Stake {bed}"], "missing": ""}')
+    got = ual.run(w, "build_skill", Capture.from_dict({"text": "Stake the tomatoes in each bed every spring."}))
+    r = got["result"]
+    assert got["tier"] == "prepare" and r["follow"]["kind"] == "taught_skill.add" and r["follow"]["label"] == "Teach It To MIA"
+    assert '"Tomato check"' in r["text"] and 'Do "add a mission"' in r["text"]
+    assert "add_a_mission" in w.llm.prompts[0] and "run_taught_skill" not in w.llm.prompts[0]  # only her own tools
+    assert w.taught_skills.skills == [] and len(w.missions.all_missions()) == 0  # nothing kept, nothing run
+    p = w.actions.propose(w, r["follow"]["kind"], r["follow"]["params"])
+    w.actions.approve(w, p.proposal_id)
+    skill = w.taught_skills.find("tomato check")
+    assert skill is not None and skill.state == "practising" and skill.source.startswith("built from a selection")
+
+
+def test_build_a_skill_sends_what_her_tools_cannot_do_to_the_lab_and_never_trusts_a_made_up_tool(shop):  # noqa: F811
+    w = _skill_world(shop)
+    for reply in ('{"name": "Order seeds", "steps": ["tool: buy_seeds_online kind=tomato"], "missing": ""}',
+                  '{"name": "Order seeds", "steps": ["tell: hi"], "missing": "a way to order from a seed shop"}',
+                  '{"name": "Run it", "steps": ["tool: run_taught_skill skill=x"], "missing": ""}',
+                  '{"name": "Order seeds", "steps": ["fly: away"], "missing": ""}'):
+        w.llm = FakeModel(lambda p, reply=reply: reply)
+        r = ual.run(w, "build_skill", Capture.from_dict({"text": "Order tomato seeds every January."}))["result"]
+        assert r["follow"]["kind"] == "lab.propose" and r["follow"]["label"] == "Build It In The Lab", reply
+        assert "can't do yet" in r["text"] and "Order tomato seeds" in r["follow"]["params"]["evidence"]
+    w.llm = FakeModel(lambda p: "not json at all")
+    with pytest.raises(UalError, match="didn't draft a skill"):
+        ual.run(w, "build_skill", Capture.from_dict({"text": "Order tomato seeds every January."}))

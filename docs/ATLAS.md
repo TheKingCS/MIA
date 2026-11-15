@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1397 files, 311,260 lines; 1397 files describe themselves; 17,092 of 17,187 classes and functions are documented.
+1398 files, 311,509 lines; 1398 files describe themselves; 17,104 of 17,199 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-531 files, 153,746 lines; 7,927 of 8,013 classes and functions documented
+532 files, 153,911 lines; 7,935 of 8,021 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -337,6 +337,7 @@
 - `core/password_autofill.py`: Filling a login into another app or a website on the phone (DEC-0035's next step: "an Android autofill service"; claude, 2026-11-09). The Android side (android-phone/.../MiaAutofillService.kt, AutofillActivity.kt) finds the username and password boxes and asks here which of the person's logins fit; 
 - `core/password_strength.py`: Password strength estimation — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A simple Shannon-entropy-over-character pool-size estimate plus a handful of pattern warnings, not a full zxcvbn-style dictionary/pattern-cracking-time model — "don't over-engineer" for a field tool'
 - `core/password_vault.py`: Passwords (Zac, 2026-10-20, DEC-0035): every login a person has, kept in a vault only their own master password opens.
+- `core/path_actions.py`: Learning paths on the action contract (DEC-0112, core/paths.py): proposed in plain words, approved, run, undoable.
 - `core/paths.py`: Learning paths: how MIA turns a desire into a skill (DEC-0112; Zac, 2026-11-07, after the guitar path: "That whole principle ... should be a principle she uses repeatedly when understanding a desire or interest, planning steps for implementing or improvement, tracking progress, monitoring statistics
 - `core/pathway_manager.py`: Mission Pathways — the user-driven counterpart to the "Discovery" concept from the connective-infrastructure architecture review (deferred, Phase 6: MIA inferring a pattern from history). Here the user picks a skill and MIA hands them a structured, pre-authored sequence of real Missions that build i
 - `core/person_settings.py`: Settings that belong to a person, not the device (2026-10-01, accounts): how many messages MIA may send you a day, the weekly journal reflection, whether she asks what kind of support you want (and what you usually pick), your trusted contact for the safety floor, and which apps you see first (core/
@@ -819,7 +820,7 @@
 
 ## tests/: the test suite: what each part must do
 
-479 files, 80,591 lines; 6,859 of 6,868 classes and functions documented
+479 files, 80,661 lines; 6,863 of 6,872 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1303,7 +1304,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-111 files, 20,523 lines
+111 files, 20,537 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

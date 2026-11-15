@@ -425,6 +425,7 @@ import core.flock_actions  # noqa: E402,F401  (chickens: eggs, feed, birds, DEC-
 import core.dungeon_actions  # noqa: E402,F401  (work as a dungeon: runs, loot, quests, DEC-0046)
 import core.closet_actions  # noqa: E402,F401  (Smart Closet: pieces, outfits, ratings, DEC-0162)
 import core.taught_skill_actions  # noqa: E402,F401  (taught skills: teach, change, forget, watch, DEC-0123)
+import core.path_actions  # noqa: E402,F401  (learning paths: draft one for an interest, DEC-0112)
 import core.loop_actions  # noqa: E402,F401  (the loop: days, times, reminders, DEC-0047)
 import core.failure_actions  # noqa: E402,F401  (the Fix-It Log, DEC-0049)
 import core.freedom_actions  # noqa: E402,F401  (the freedom plan, DEC-0038)

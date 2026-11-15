@@ -93,6 +93,10 @@
    "status": "none",
    "why": "reminders kept by hand for when the internet is back and delivered all at once when it is; nothing there to get better at"
   },
+  "action:path": {
+   "status": "none",
+   "why": "drafting a learning path is a proposal the person approves; the path itself has its own loop (homework, checks and statistics in core/paths.py)"
+  },
   "action:portal": {
    "status": "none",
    "why": "which painting is in a portal is the person's own look (DEC-0140); paintings are watched with the art studio's"
