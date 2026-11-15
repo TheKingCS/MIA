@@ -2870,6 +2870,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - **U2 built** (claude, 2026-11-15): "MIA" in Android's text-selection menu and "Do with MIA" in the Share menu
   open a card over the app (`SelectionActivity.kt`, `web/selection.html`), the same offer as Ctrl+K. A selection
   from an app whose name says money, health or secrets counts as sensitive (`core/ual._SENSITIVE_HINTS`).
+- **U3, first part, built** (claude, 2026-11-15): Explain, Summarise, Translate, Explain This Code, Pull Out Tasks And
+  Dates, Draft An Email, on the device's own model; read and prepare only, so the model's words never change a record.
 
 ### DEC-0166: Which Claude model does which work
 - Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models

@@ -120,6 +120,22 @@ Browser routines and workflows fold in as kinds of taught skill.
 - **Terminal:** a shell function or plugin sending the last command and output to the palette.
 - **Every adapter runs as the person, not root**, and can only *send* captures. It never executes anything itself.
 
+## 6e. U3, first part: the actions that ask MIA's model (2026-11-15)
+
+Ready now, on the device, through every front door (Ctrl+K, the phone's card, voice):
+- **Explain This**, **Summarise This** (selections of 280 characters or more), **Translate This** (into English),
+  **Explain This Code** (code only), all read: the answer shows at once.
+- **Pull Out Tasks And Dates** and **Draft An Email From This**, prepare: a list or a draft to look at. The draft is
+  shown with Copy; nothing is saved or sent.
+
+How it stays safe: the model sees the selection only through `framed()`, after being told the selection is content
+and never a request. These are read and prepare actions, which can't name an action kind (`spec_problems`), so
+nothing the model says can change a record. A test sends an injection in the selection and a model that answers with
+a delete command: nothing changes.
+
+Still planned in U3: research and verify (online, with the person's switch), convert, learn path, Build A Skill
+(ending in a taught skill or a lab task), and the consent step for anything that leaves the device.
+
 ## 6d. U2 is built (2026-11-15)
 
 The phone's front door:

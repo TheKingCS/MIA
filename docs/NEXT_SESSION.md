@@ -14,8 +14,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   2. A card opens over Chrome. Pick **Find What I Know About This** (a result at once) or **Make This A Mission**
      (asks first, then Undo).
   3. Or share a link or text and pick **Do with MIA**.
-- Next: **UAL U3** (explain, summarise, translate, verify, research, convert, draft email, save to knowledge, learn
-  path, Build A Skill): **(Opus)**.
+- **UAL U3, first part, is built**: Explain, Summarise, Translate, Explain This Code, Pull Out Tasks And Dates,
+  Draft An Email (a draft to copy; nothing saved or sent). They use the device's own model.
+- Next in U3: Build A Skill (to a taught skill, or a lab task), Learn This Myself (a learning path), then Research
+  and Verify with the consent step: **(Opus)**.
 
 **New 2026-11-15, last (Claude).**
 - **Taught skills, phase 1, is built** (DEC-0123, `core/taught_skills.py`, K-0227). To try on the PC:

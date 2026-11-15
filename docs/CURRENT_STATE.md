@@ -12,6 +12,7 @@ session. Last updated: 2026-11-15 (taught skills, phase 1), by claude.*
   - paying, buying, sending, publishing and deleting ask every time, learned or not;
   - a failed run, or changing the steps, sends it back to practising.
   - Not yet: schedules and events, browser and phone steps, running on its own.
+- **Explain, Summarise, Translate, Explain This Code, Pull Out Tasks and Draft An Email** now work on any selection (U3, first part), with MIA's own model; they only show an answer and never change anything.
 - **On the phone, "MIA" is in every app's text-selection menu** (U2): a card opens over the app with what she can do with the text. A selection from a banking, health or password app never goes online.
 - **The Universal Action Layer, phase U1, is built** (DEC-0165): select text on any MIA page (or paste it into Ctrl+K) and pick what to do with it. Five actions work; the rest are listed as planned.
 
