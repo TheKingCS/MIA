@@ -18,7 +18,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   with; MIA makes watches herself from his life; Marketplace, Craigslist and eBay by his demonstrated skills; about
   four finds a day. Starting sources checked from the PC (proposal 5b), with a source loop to keep improving them.
 - **Waiting on Zac:** Q-16 (approve DEC-0170's shape), Q-20 (yes to the recommended home place and distances),
-  Q-18's two free keys (eBay developer, FRED). On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
+  Q-18's three free keys (eBay developer, FRED, api.data.gov for GSA Auctions). Auction sites added (proposal 7b). On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
 - **Skipped for now (Zac, 2026-11-15):** the Pi. **Next Fable items:** the phone on the full MIA, the window as a
   client (both need a Fable session).
 

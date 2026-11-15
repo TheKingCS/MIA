@@ -196,7 +196,13 @@ that failed are listed too, so nobody adds them again without a fix.
 | Money and property | Freddie Mac's weekly mortgage survey (its history CSV); Calculated Risk (housing); FRED's API (needs a free key) for rates and prices | CSV, Atom, API |
 | Science | ScienceDaily top science; Phys.org | RSS |
 | General news | NPR; BBC World; Ars Technica; The Verge (Good News Radio's outlets stay as they are) | RSS, Atom |
-| Auctions and listings | Bring a Trailer (vehicles, feed); eBay's Browse API (local pickup by postal code and radius; needs a free developer key); Marketplace, Craigslist, GovDeals and similar by browser skill | RSS, API, browser |
+| Listings | eBay's Browse API (local pickup by postal code and radius; needs a free developer key); Marketplace and Craigslist by browser skill | API, browser |
+| Auctions (Zac, 2026-11-15: "It should watch auction sites too") | **GSA Auctions** (federal surplus: vehicles, tools, equipment) through GSA's official JSON API, with a free api.data.gov key; **by browser skill:** GovDeals and Public Surplus (city, county and school surplus), Purple Wave, BigIron and Machinery Pete (farm and heavy equipment), IronPlanet, Proxibid and BidCal (equipment and local auction houses), EstateSales.net (estate sales near home), Copart (vehicles); Bring a Trailer by its feed | API, browser, RSS |
+
+**Auction sites that refused a plain request** (HTTP 403, checked the same day): HiBid, K-BID, AuctionTime, Ritchie
+Bros, MaxSold, AuctionZip and Liquidation.com. They block automated readers, so they're browser-skill sources at
+most; each one that shows a block or a CAPTCHA to her browser too is left to Zac's own visits and "track this". None
+of the auction sites checked advertises a feed.
 
 **Didn't work as tried** (403, 404 or no feed): USDA Rural Development's feed, CISA's advisories feed, AP, Reuters,
 the IRS newsroom, EurekAlert, ATTRA, SARE, Permaculture News, This Old House, Google DeepMind's blog (a page, not a
@@ -290,6 +296,27 @@ separately, and a commit step inside it still asks every time (DEC-0117).
    and only those scoring "verified opportunity" or higher, each with its reasons.
 8. **What MIA never does here:** message a seller, make an offer, buy, share Zac's location or details. Each of those
    is an action he takes himself, or a `browser.commit` he approves on the spot, one at a time.
+
+## 7b. Auctions: what's different from a listing
+
+An auction is a listing with a clock, and its real price isn't the number shown. Everything else in section 7 holds;
+these are added, in code:
+- **Fields:** current bid, number of bids, reserve (met, not met, none), buyer's premium, sales tax, the end time
+  (and whether it extends on late bids), the inspection days, and the **pickup window and place**: many surplus and
+  farm auctions give a few days to remove the item, on site, with your own loading.
+- **Total cost** = the bid + the buyer's premium + tax + any lot or loading fee + the trip there (with a trailer for
+  big items: the distance by the Q-20 defaults) + stated repairs. Shown as a range for a bid still rising: "at
+  today's bid about $640 all in; it usually closes higher".
+- **A ceiling worked out, not guessed:** from what similar lots sold for. MIA keeps closing prices of every auction
+  she's watched (GSA's API and most sites show them after the end), so her comparables grow each month; until there
+  are enough, she says so and gives the new price for reference.
+- **The clock drives the offers:** a find worth his time is offered when it's found, and again a day before and an
+  hour before it ends, each once, through the gate. One ending in the next hour counts as timely.
+- **Removal checks:** a pickup window that clashes with his calendar, or a lot too big for what he has to haul it,
+  is a named concern.
+- **Never a bid.** Bidding is a commitment: MIA can open the lot in her browser with the amount ready, and the press
+  stays his (a `browser.commit` he approves, one bid at a time), like every other buy. An auto-bid or a "max bid"
+  left on a site is never set by her.
 
 ## 8. Research and opportunity evaluation (deliverable 7)
 
@@ -454,7 +481,7 @@ can be built **beside** the MIA OS work, in phases that each end on a test gate 
 | W1 | The gate's learned pacing (DEC-0171); watches, the discovery store, the feed and search adapters with the starting catalog (5b), dedupe and provenance, the World page (plain), the source loop | W0 | Opus |
 | W1b | Watches MIA makes herself from projects, the development engine, intents and equipment | W1, W2 | Opus |
 | W2 | The relevance engine from real records, with the development engine's needs | W1 | Opus |
-| W3 | Listings: eBay's API, capture through the UAL, evaluation, re-checks and changes | W2; an eBay developer key | Opus |
+| W3 | Listings and auctions: eBay's API, GSA Auctions' API, capture through the UAL, evaluation (with auctions' total cost and clock), re-checks and changes | W2; the eBay developer and api.data.gov keys | Opus |
 | W4 | Grants for this subsystem (DEC-0156's first slice) | W1 | **Fable** |
 | W5 | Browser skills: parameters, extraction rules, list steps, versions, repair (taught skills phase 2's browser steps) | W4 | Opus, with **Fable** for unattended runs |
 | W6 | Dossiers and the class ladder; actions into projects, missions, paths, the lab | W2 | Opus |
@@ -471,8 +498,8 @@ as standing watches come with W5 (their skills), after W4's grants and W8's revi
 - **Q-17, answered (Zac, 2026-11-15):** Marketplace, Craigslist, eBay and sites like them are fine to read with the
   skills he demonstrates; public information, his own steps (DEC-0171).
 - **Q-18, partly answered:** Claude researched and checked the starting sources (section 5b); the source loop keeps
-  improving them. Zac to say only if any area should be added or dropped, and whether to get the two free keys
-  (eBay developer, FRED).
+  improving them. Auction sites added at Zac's word (section 7b). Zac to say only if any area should be added or
+  dropped, and whether to get the three free keys (eBay developer, FRED, api.data.gov for GSA Auctions).
 - **Q-19, answered (Zac, 2026-11-15):** no fixed limit on her own messages; pacing learned from what he engages with;
   World Intelligence starts at about four finds a day (DEC-0171).
 - **Q-20, recommendation, waiting on Zac's yes:**

@@ -3001,6 +3001,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   4. **About four finds a day** to start, moving with what he does with them.
   5. **The sources:** Claude's checked starting list (the proposal's section 5b) and a source loop that keeps
      improving it.
+  6. **Auction sites too** (Zac, 2026-11-15: "It should watch auction sights too"): GSA Auctions through its API,
+     the rest (surplus, farm and heavy equipment, local auction houses, estate sales) by browser skill; total cost
+     with the buyer's premium, tax and pickup; offers timed to the end; never a bid without his press.
 - Consequences: the gate's change is W1's first step (with `CLAUDE.md`'s "owner's limit: 5/day" line updated when
   it's built). DEC-0170 stays proposed until Zac approves its shape (Q-16).
 - Related: DEC-0053, DEC-0094, DEC-0117, DEC-0170; `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`
