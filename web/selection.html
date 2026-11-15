@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Do With This — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="sel-card">
+  <!--
+    Do With This (claude, 2026-11-15, the Universal Action Layer's U2, DEC-0165): the card the phone opens over another
+    app when text is selected and "MIA" is picked (android-phone SelectionActivity.kt), or text is shared with "Do
+    with MIA". What MIA can do with it (MIA.ualOffer, core/ual.offer), the pick run by its tier (MIA.ualRun): a read
+    shows its result here; a change shows what it would do and waits for a yes. The selection comes through the
+    MIASelection bridge, never the address. Frame page: no sidebar, it's a card over someone else's app.
+  -->
+  <main class="sel" id="card" aria-live="polite">
+    <header class="sel-head">
+      <h1>Do With This</h1>
+      <button type="button" class="btn btn-ghost" id="close">Close</button>
+    </header>
+    <p class="sel-from" id="from"></p>
+    <blockquote class="sel-text" id="text"></blockquote>
+    <div id="body"><p class="sel-dim">Looking at what I can do with it…</p></div>
+  </main>
+  <script src="mia.js"></script>
+  <script src="selection.js"></script>
+</body>
+</html>

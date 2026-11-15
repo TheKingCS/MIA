@@ -2867,6 +2867,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   queries (not the whole selection) when the person picks them. Outside AI (the council, a cloud model) only after
   MIA shows exactly what would be sent and to whom, and the person says yes. Finances, health, the private journal
   and passwords never leave the device.
+- **U2 built** (claude, 2026-11-15): "MIA" in Android's text-selection menu and "Do with MIA" in the Share menu
+  open a card over the app (`SelectionActivity.kt`, `web/selection.html`), the same offer as Ctrl+K. A selection
+  from an app whose name says money, health or secrets counts as sensitive (`core/ual._SENSITIVE_HINTS`).
 
 ### DEC-0166: Which Claude model does which work
 - Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models

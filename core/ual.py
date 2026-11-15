@@ -51,7 +51,15 @@ read or prepare action can't name an action kind, and an act action must.
   what would be sent. That consent step is U3; until then no cloud action
   is ready.
 - A capture from one of MIA's own sensitive screens (money, health, the
-  journal, passwords, IDs) never gets an online or cloud action at all.
+  journal, passwords, IDs), or from another app whose name says it holds
+  those (a bank, a pharmacy, a password manager), never gets an online or
+  cloud action at all.
+
+**Front doors**: the PC's Ctrl+K palette (`web/shell.js`), the voice tools
+(`core/assistant_ual_actions.py`), and on the phone "MIA" in any app's
+text-selection menu or "Do with MIA" in the Share menu (U2:
+`android-phone/.../SelectionActivity.kt` and `web/selection.html`). Each
+sends the same capture and gets the same offer.
 
 **Ranking** (`offer`) is code: actions that take this kind of capture, in
 catalogue order, with the person's own most-picked ones first.
@@ -82,6 +90,14 @@ SENSITIVE_APPS = frozenset({"budget", "freedom", "insurance", "business", "compl
                             "wallet", "health", "workout", "journal", "operating_journal", "memories", "vault",
                             "dungeon", "real_estate"})
 
+# Another app's name or package that says it holds money, health or secrets (a selection from the phone names its
+# app "android:<package>"): treated like MIA's own sensitive screens. A list of words can't know every app, so this
+# narrows what may leave the device; it never widens it (online stays off until the person turns it on).
+_SENSITIVE_HINTS = re.compile(r"(^|[.:_\- ])(bank|banking|wallet|pay|paypal|venmo|cashapp|zelle|finance|financial|"
+                              r"credit|card|invest|investing|broker|brokerage|crypto|coinbase|tax|health|medical|"
+                              r"patient|mychart|pharmacy|doctor|clinic|insurance|password|passwords|authenticator|"
+                              r"bitwarden|1password|lastpass|keepass|keepassdx|dashlane|vault|journal|diary)"
+                              r"([.:_\- ]|$)", re.I)
 _URL = re.compile(r"^https?://\S+$", re.I)
 _CODE_APPS = ("terminal", "konsole", "powershell", "cmd", "code", "vscode", "pycharm", "idea", "vim", "emacs")
 _CODE_SIGNS = re.compile(r"(^\s*(def|class|import|from|function|const|let|var|public|private|#include|SELECT|fun)\b"
@@ -134,10 +150,14 @@ class Capture:
 
     @property
     def sensitive(self) -> bool:
-        """Whether it came from one of MIA's own sensitive screens (SENSITIVE_APPS): such a capture never gets an
+        """Whether it came from one of MIA's own sensitive screens (SENSITIVE_APPS), or from another app whose
+        package or name says it holds money, health or secrets (_SENSITIVE_HINTS): such a capture never gets an
         online or cloud action."""
         app = self.source_app
-        return app.startswith("mia:") and app[4:] in SENSITIVE_APPS
+        if app.startswith("mia:"):
+            return app[4:] in SENSITIVE_APPS
+        return bool(app and _SENSITIVE_HINTS.search(app)) or bool(
+            app.startswith("android") and self.title and _SENSITIVE_HINTS.search(self.title))
 
     def where_from(self) -> str:
         """Where it came from, in a few words, for a sentence or a record's note."""

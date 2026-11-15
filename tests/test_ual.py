@@ -1,6 +1,8 @@
 """The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the
 catalogue and its tiers, what's offered for a selection, and running a pick
-(a read action at once; an act action only as a proposal to approve)."""
+(a read action at once; an act action only as a proposal to approve). And U2's phone
+card: a selection from a banking, health or password app is sensitive, and the
+selection reaches the card only through its bridge."""
 
 import pytest
 
@@ -148,3 +150,49 @@ def test_the_voice_tools_use_the_same_catalogue_and_gate(shop):  # noqa: F811
     refused = reg.execute(shop, "do_with_this", {"action": "summarise", "text": "Stake the tomatoes"})
     assert refused.startswith("I can't do that with it.")
     assert reg.execute(shop, "actions_for_this", {"text": ""}) == "Nothing was selected."
+
+
+def test_a_selection_from_a_phone_app_that_holds_money_health_or_secrets_never_leaves_the_device(shop, monkeypatch):  # noqa: F811
+    """U2: the phone names the app a selection came from (android:<package>, its name as the title); a bank's,
+    a pharmacy's or a password manager's is sensitive like MIA's own Money screen, and an ordinary app's isn't."""
+    from core.ual import ActionSpec
+
+    for app, title in (("android:com.chase.sig.android", "Chase Banking"), ("android:com.x8bit.bitwarden", ""),
+                       ("android:com.mychart.app", ""), ("android:com.walgreens.pharmacy", ""),
+                       ("android:com.google.android.apps.walletnfcrel", "Google Wallet"), ("android:org.example.notes", "My Diary")):
+        assert Capture.from_dict({"text": "x", "source_app": app, "title": title}).sensitive, app
+    for app, title in (("android:com.android.chrome", "Chrome"), ("android:com.google.android.gm", "Gmail"),
+                       ("android:org.mozilla.firefox", "Firefox"), ("android", "")):
+        assert not Capture.from_dict({"text": "x", "source_app": app, "title": title}).sensitive, app
+    # A web page's title alone doesn't make a browser selection sensitive (only a phone app's name does).
+    assert not Capture.from_dict({"text": "x", "source_app": "firefox", "title": "Pay your bill"}).sensitive
+
+    online = ActionSpec("look_up", "Look It Up", "Searches the web.", ("text",), ual.READ, where=ual.ONLINE,
+                        ready=True, run=lambda c, k: {"text": "found"})
+    monkeypatch.setattr(ual, "SPECS", ual.SPECS + (online,))
+    monkeypatch.setitem(ual.BY_ID, "look_up", online)
+    monkeypatch.setattr(ual, "online_allowed", lambda context: True)
+    bank = {"text": "Your balance is low", "source_app": "android:com.chase.sig.android", "title": "Chase Banking", "device": "phone"}
+    assert "look_up" not in [a["id"] for a in ual.offer(shop, Capture.from_dict(bank))["actions"]]
+    chrome = {**bank, "source_app": "android:com.android.chrome", "title": "Chrome"}
+    assert "look_up" in [a["id"] for a in ual.offer(shop, Capture.from_dict(chrome))["actions"]]
+
+
+def test_the_phone_card_asks_the_engine_and_never_puts_the_selection_in_an_address():
+    """U2's front door (web/selection.js, SelectionActivity.kt): the selection comes through the MIASelection
+    bridge, the offer and the pick through MIA.ualOffer / MIA.ualRun, a change only through approve; the card's
+    address carries the sign-in token, never the text."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    page = (root / "web" / "selection.js").read_text(encoding="utf-8")
+    assert "MIASelection" in page and "MIA.ualOffer(" in page and "MIA.ualRun(" in page and "MIA.approve(" in page
+    assert "location.hash" not in page and "fetch(" not in page  # no second way in or out
+    kotlin = (root / "android-phone" / "app" / "src" / "main" / "java" / "com" / "mia" / "phone" /
+              "SelectionActivity.kt").read_text(encoding="utf-8")
+    assert 'addJavascriptInterface(bridge, "MIASelection")' in kotlin
+    assert 'selection.html#token=" + Uri.encode(token))' in kotlin and "EXTRA_PROCESS_TEXT" in kotlin
+    assert "setResult(" not in kotlin  # the other app's text is never replaced
+    manifest = (root / "android-phone" / "app" / "src" / "main" / "AndroidManifest.xml").read_text(encoding="utf-8")
+    assert "android.intent.action.PROCESS_TEXT" in manifest and ".SelectionActivity" in manifest
+

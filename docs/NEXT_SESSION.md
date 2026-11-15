@@ -7,6 +7,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-15 (taught skills, phase 1, built)*
 
+**New 2026-11-15, very last (Claude).**
+- **UAL U2 is built: "MIA" on any selection on the phone** (`SelectionActivity.kt`, `web/selection.html`). To try,
+  after installing the next phone build:
+  1. In Chrome (or any app), select some text. Tap the ⋮ in the selection menu if MIA isn't shown at once, then **MIA**.
+  2. A card opens over Chrome. Pick **Find What I Know About This** (a result at once) or **Make This A Mission**
+     (asks first, then Undo).
+  3. Or share a link or text and pick **Do with MIA**.
+- Next: **UAL U3** (explain, summarise, translate, verify, research, convert, draft email, save to knowledge, learn
+  path, Build A Skill): **(Opus)**.
+
 **New 2026-11-15, last (Claude).**
 - **Taught skills, phase 1, is built** (DEC-0123, `core/taught_skills.py`, K-0227). To try on the PC:
   1. In the chat: "watch me: the evening close". Ask her for two or three things. Then "that's it".

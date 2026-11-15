@@ -76,12 +76,14 @@ class MainActivity : Activity() {
         }
     }
 
-    /** Where to open: a place just arrived at (its notification), a share, or where you were last (Home the first
-     *  time). */
+    /** Where to open: a place just arrived at (its notification), a page the selection card asked for ("Open in
+     *  MIA", SelectionActivity), a share, or where you were last (Home the first time). */
     private fun startPage(opened: Intent?, shared: Boolean): String {
         val arrive = opened?.getStringExtra("arrive")
+        val asked = opened?.getStringExtra(SelectionActivity.EXTRA_OPEN)?.takeIf { SelectionActivity.OWN_PAGE.matches(it) }
         return when {
             arrive != null -> "index.html?arrive=" + Uri.encode(arrive)
+            asked != null -> asked
             shared -> "inbox.html"
             else -> lastPlace() ?: "index.html"
         }
@@ -153,7 +155,9 @@ class MainActivity : Activity() {
         setIntent(newIntent)
         val token = Engine.started?.optString("token") ?: return  // still starting: onCreate's thread takes it
         if (Voice.wanted(newIntent)) { listen(); return }
-        if (newIntent.getStringExtra("arrive") != null) { web?.loadUrl(page(startPage(newIntent, false), token)); return }
+        if (newIntent.getStringExtra("arrive") != null || newIntent.getStringExtra(SelectionActivity.EXTRA_OPEN) != null) {
+            web?.loadUrl(page(startPage(newIntent, false), token)); return
+        }
         if (!Share.isShare(newIntent)) return
         Thread {
             if (saveShare(newIntent)) runOnUiThread { web?.loadUrl(page("inbox.html", token)) }

@@ -120,6 +120,22 @@ Browser routines and workflows fold in as kinds of taught skill.
 - **Terminal:** a shell function or plugin sending the last command and output to the palette.
 - **Every adapter runs as the person, not root**, and can only *send* captures. It never executes anything itself.
 
+## 6d. U2 is built (2026-11-15)
+
+The phone's front door:
+- **"MIA" in Android's text-selection menu**, in every app (PROCESS_TEXT), and **"Do with MIA"** in the Share menu
+  for text and links: `android-phone/.../SelectionActivity.kt`.
+- A card opens over the app you're in (`web/selection.html`): what was selected, what MIA can do with it, and the
+  pick. A read action shows its result in the card, with Copy; a change shows its sentence and waits for Yes, then
+  offers Undo. Close returns to the app.
+- The selection reaches the page through a bridge, never in an address. The other app's text is never replaced.
+- A selection from an app whose name says it holds money, health or secrets (a bank, a pharmacy, a password
+  manager) is sensitive, like MIA's own Money screen: nothing from it is ever offered online.
+
+Of U2's acceptance line: the card works offline on the phone (every ready action runs on the device, no model).
+"Explain" and "Draft an email" are U3's actions, so they appear under "Coming" until U3.
+Not built: the old "MIA inbox" share target still saves shared files to the inbox, unchanged.
+
 ## 6c. The taught-skills engine is built (2026-11-15)
 
 Phase 1 of DEC-0123, which "Build A Skill" (U3) will end in: `core/taught_skills.py`.

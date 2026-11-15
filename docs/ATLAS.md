@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1395 files, 310,767 lines; 1395 files describe themselves; 17,080 of 17,174 classes and functions are documented.
+1397 files, 311,101 lines; 1397 files describe themselves; 17,082 of 17,176 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-531 files, 153,648 lines; 7,924 of 8,010 classes and functions documented
+531 files, 153,668 lines; 7,924 of 8,010 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -819,7 +819,7 @@
 
 ## tests/: the test suite: what each part must do
 
-479 files, 80,461 lines; 6,850 of 6,858 classes and functions documented
+479 files, 80,510 lines; 6,852 of 6,860 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1216,7 +1216,7 @@
 - `tests/test_turn_harness.py`: Turns through the real engine with a scripted model (roadmap 2.8, 2026-11-10): the server built on the real headless context (build_core_context), the real model manager with a backend that replies from a script, and the real tools. Each test says what was asked, what the model "chose", and checks w
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password.
 - `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
-- `tests/test_ual.py`: The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the catalogue and its tiers, what's offered for a selection, and running a pick (a read action at once; an act action only as a proposal to approve).
+- `tests/test_ual.py`: The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the catalogue and its tiers, what's offered for a selection, and running a pick (a read action at once; an act action only as a proposal to approve). And U2's phone card: a selection from a banking, health or password app is sens
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g
 - `tests/test_upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, core/upkeep_missions.py): this week's upkeep becomes one mission per task and due date, attached to the task and its asset; it isn't made twice or remade once set aside; Done on the upkeep completes the mission, and completing the mission marks the upkeep done
@@ -1303,7 +1303,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-110 files, 20,419 lines
+111 files, 20,523 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1389,6 +1389,7 @@
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z
 - `web/recipe.js`: recipe.js — one recipe, opened from a meal or recipe card (claude, 2026-10-14, Zac's idea; 2026-11-07, DEC-0113: Start Cooking opens cook mode, web/cook.js). Renders MIA.recipe(id) (core/web_screens. recipe_page): nutrition per serving, each ingredient with whether the house has it, the steps (tick 
 - `web/security.js`: security.js — Security (claude, 2026-10-18, DEC-0033). Renders MIA.security() (core/security_cams.py) in tabs: Cameras (a live grid: each tile asks MIA for the camera's picture every few seconds while it's on screen; tap one for a full view, refreshed every second, with Save Picture), Pictures (what
+- `web/selection.js`: selection.js — Do With This (claude, 2026-11-15, the Universal Action Layer's U2, DEC-0165).
 - `web/sensors.js`: sensors.js — Sensors (claude, 2026-11-09). Renders MIA.sensors() (core/sensors.py): each sensor that sends its own readings, where they go (the Lab, Power or the Greenhouse), its last reading and when, and Remove (sensor.remove). Add a Sensor asks which app, then its name and target there; MIA.senso
 - `web/settings.js`: settings.js — the Settings screen (claude, 2026-10-07; Zac: the gear's Settings). Renders MIA.settings() (core/web_account.py): the person's own settings, grouped as on the PC, the kinds of message MIA is taking a break from, and a way to choose which apps show. Each change is an action (setting.set
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
@@ -1418,7 +1419,7 @@
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 
-18 files, 3,224 lines
+19 files, 3,385 lines
 
 - `android-phone/app/src/main/java/com/mia/phone/AutofillActivity.kt`: "Fill from MIA" (MiaAutofillService): the person's own choice of which login goes into the boxes. Asks MIA's engine on the phone (127.0.0.1, the signed-in person's session) for the logins that fit the site or app, titles and usernames only; with the vault locked it asks for the master password first
 - `android-phone/app/src/main/java/com/mia/phone/Engine.kt`: MIA's engine and server inside this app (mia_phone.py), started once per app process. Its own object, not MainActivity's, so the listening service (ListenService) can start MIA by itself when the glasses are tapped and the app isn't open: Android may have closed the screen, or the whole app, since M
@@ -1435,6 +1436,7 @@
 - `android-phone/app/src/main/java/com/mia/phone/PhoneVoice.kt`: The workout's count, spoken by the phone itself (DEC-0055, Active Training: "MIA counts the pace"). The Workout screen calls `window.MIAPhoneVoice.say("7")` on each beat; speaking it here, not on the computer, keeps the count on time (no round trip), and it comes out wherever the phone's sound goes,
 - `android-phone/app/src/main/java/com/mia/phone/Places.kt`: Location quests while MIA is closed (DEC-0028 #13; Zac, 2026-10-19). MIA's screens hand the places the person watches to Android (window.MIAPhonePlaces.watch, from web/places-watch.js); Android's own proximity alerts then wake MIA when the phone arrives at one, even with MIA closed, and a notificati
 - `android-phone/app/src/main/java/com/mia/phone/Relay.kt`: The phone's side of the sealed relay (DEC-0062, docs/GLASSES_RELAY_PLAN.md). It connects out to the relay, opens what the glasses send, and answers only what's named below: every screen the engine puts on the glasses, cut down here on the phone, so the glasses can't ask for more (DEC-0062). The page
+- `android-phone/app/src/main/java/com/mia/phone/SelectionActivity.kt`: "MIA" on any selection (the Universal Action Layer, phase U2, DEC-0165): text selected in any app has "MIA" in its selection menu (Android's PROCESS_TEXT), and text or a link shared with "Do with MIA" comes here too. A card opens over the app you're in, shows what MIA can do with it (selection.html,
 - `android-phone/app/src/main/java/com/mia/phone/Share.kt`: "Share to MIA" (Zac, 2026-10-16: "the inbox for sending stuff to MIA"): a file or text shared from any app goes into MIA's document inbox on this phone, the same folder core/inbox_manager.py reads. Each file is written whole under a hidden name and then renamed to the inbox's "sent" pattern (YYYYMMD
 - `android-phone/app/src/main/java/com/mia/phone/Unpack.kt`: Puts MIA's files (assets/mia.zip: core/, server/, web/, the defaults) in the app's private storage, where her data folder (data/, config/) can sit beside them as on a computer. A new app version replaces only the code and the shipped defaults; the person's data stays.
 - `android-phone/app/src/main/java/com/mia/phone/Voice.kt`: Talking to MIA through the glasses (core/glasses_voice.py). The Display glasses are this phone's Bluetooth headset, so: listen through their microphone with Android's own speech recognizer (on the phone, offline when the phone can), send the words to MIA on this phone (/api/glasses/voice: "open Kitc

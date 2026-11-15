@@ -107,6 +107,29 @@
             </intent-filter>
         </activity>
 
+        <!-- "MIA" on any selection (SelectionActivity.kt, the Universal Action Layer's U2, DEC-0165): Android's
+             text-selection menu in every app, and "Do with MIA" in the Share menu for text and links. A card over
+             the app you're in; what's selected stays on the phone. -->
+        <activity
+            android:name=".SelectionActivity"
+            android:exported="true"
+            android:label="@string/selection_label"
+            android:theme="@android:style/Theme.DeviceDefault.Dialog.NoActionBar"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter android:label="@string/selection_share_label">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <!-- The Quick Settings tile "Talk to MIA" (ListenTile.kt). -->
         <service
             android:name=".ListenTile"
