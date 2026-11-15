@@ -134,7 +134,20 @@ DEC-0156 (grants) on real actions before system actions exist.
 - **Device tests:** the Android selection entry runs on the CI emulator (the phone workflow already boots one).
 - **Privacy tests:** no capture text reaches logs (the existing no-secrets-in-logs test is extended), and none is sent to the cloud without the allow.
 
-## 9. Decisions needed from Zac
+## 9. Decisions (Zac, 2026-11-15)
+
+- **Q-11, answered yes:** build U1–U3 now, on the PC and phone, before MIA OS.
+- **Q-14, answered "over all apps, files, code, etc, system wide":** the UAL is not a list of chosen apps. Every app, file and piece of code is in scope. The integration levels in §6 are layers that together cover everything, not apps picked one by one:
+  1. **Selection and clipboard** work in any app. This is the universal floor.
+  2. **Accessibility** reads context from any app that exposes it: AT-SPI on Linux, UI Automation on Windows, the accessibility service on Android.
+  3. **Files** come in through the file manager (any file type, through MIA's readers and converters).
+  4. **Code and the terminal** go through the shell hook and the editor's selection.
+  5. **On request only, OCR or the screen** for apps that expose nothing.
+
+  Deep app-specific integrations are added on top only where these layers fall short.
+- **Q-12 and Q-13:** Zac asked for more context. It was given in the conversation on 2026-11-15, and the recommendations are below.
+
+## 9b. Questions still open
 
 - **Q-11:** Start with U1–U3 on the phone and PC now, or wait for MIA OS? Recommend now: it's useful immediately and tests the design.
 - **Q-12:** Which cloud use is allowed for UAL actions (research online, council review)? Recommend: online *lookup* on request only; council for owner-only development tasks.

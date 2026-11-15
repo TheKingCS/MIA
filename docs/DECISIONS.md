@@ -2853,6 +2853,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   door. "Build a skill" is either a learning path for the person or, for MIA, a proposal that becomes a taught
   procedure or a tested lab task, registered only after approval. Absorbs DEC-0164.
 - Related: `docs/specs/UNIVERSAL_ACTION_LAYER.md`, DEC-0009, DEC-0058, DEC-0117, DEC-0123, DEC-0156
+- Update 2026-11-15 (Zac): UAL phases U1–U3 approved to build now ("11 yes"); scope is system-wide ("it should be
+  over all apps, files, code, etc system wide"): every app through layered capture (selection and clipboard,
+  accessibility, files, terminal and editor, OCR on request), not a chosen list of apps.
 
 ### DEC-0166: Which Claude model does which work
 - Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models

@@ -11,7 +11,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - The **Universal Action Layer** (DEC-0165) has a spec (`docs/specs/UNIVERSAL_ACTION_LAYER.md`) and a plan (`docs/mia_os/MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md`). Its phases wait for Zac (Q-11 to Q-14).
 - **Model per task** (DEC-0166, `docs/mia_os/MIA_OS_MODEL_ASSIGNMENTS.md`). The queue, marked:
   - MIA OS Prompt 03, the application framework: **(Opus)**, on Zac's go.
-  - UAL U1, registry and offer: **(Fable)** for the permission tiers and contracts; U2 and U3: **(Opus)**.
+  - UAL U1, registry and offer: **(Fable)**, approved by Zac (Q-11 yes, 2026-11-15; system-wide scope, Q-14); U2 and U3: **(Opus)**. Q-12 (cloud use) and Q-13 (taught procedures) were explained to Zac and are waiting on his answer.
   - The runtime extraction (DEC-0155), once approved: **(Fable)**.
   - The test-isolation fix (the at-rest key reset): **(Opus)**.
   - Smart Closet stage 2 and LEP stage 1: **(Opus)**.
