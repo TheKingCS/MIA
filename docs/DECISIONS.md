@@ -2747,7 +2747,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: `docs/mia_os/preliminary/MIA_OS_TARGET_ARCHITECTURE.md`
 
 ### DEC-0155: The MIA Runtime — a long-running service, extracted first, on Windows
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-15: "Let's do the runtime extraction first. I want MIA OS asap"); next build step
 - Proposed by: claude, 2026-11-13
 - Decision: grow `core/core_runtime.py` into the MIA Runtime: one process per data folder that owns the stores and
   the store lock, runs a plain-Python scheduler (replacing the 10 Qt timers and their ~43 daily checks), hosts the API
@@ -2911,3 +2911,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0092, DEC-0107, DEC-0112, DEC-0117, DEC-0123, DEC-0165
 - **Built** (claude, 2026-11-15): "Build A Skill For MIA" (core/ual.py `_build_skill`) ends in a taught skill when the
   drafted steps hold, else a lab proposal; "Learn This Myself" ends in a learning-path draft (`path.draft`).
+
+### DEC-0168: MIA OS as soon as possible, on two machines: the PC (dual boot) and the Pi 5
+- Status: APPROVED
+- Decided by: zac, 2026-11-15 ("I want MIA OS asap. I intend to dual boot in on my pc and also I am going to connect a
+  claude code session on my pi5 with AI HAT and some other connected devices and we are going to boot MIA OS on it")
+- Decision: MIA OS is now the objective. Its first two homes: the PC, dual booted beside Windows, and a Raspberry Pi 5
+  with the AI HAT+ and other connected devices, worked on from a Claude Code session on the Pi itself. The Pi has
+  phone-like parts and is the start of the **Zeta Astralis**, a wrist-mounted computer and phone; the full Zeta
+  Astralis build is a later project.
+- Consequences:
+  - The order of work: the runtime extraction (DEC-0155) first, then the OS images. New features go only into the
+    engine (`core/`) and the web front end; the Qt desktop app and Windows-only parts get fixes only.
+  - Supersedes DEC-0015's "the Pi is priority 4" for MIA OS: the Pi is now one of the two first OS targets.
+  - Open (Q-15): the Pi's base system. Fedora's Raspberry Pi 5 support is a working minimum in Fedora 44/45 without
+    sound yet, and the AI HAT+ 2's drivers are official only on Raspberry Pi OS (Debian 13 "Trixie"). DEC-0157 chose
+    Fedora bootc for the PC; the Pi may need Raspberry Pi OS. DEC-0154 keeps MIA itself the same on either.
+- Related: DEC-0154, DEC-0155, DEC-0157, DEC-0015, DEC-0166
+

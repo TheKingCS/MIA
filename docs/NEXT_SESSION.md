@@ -7,6 +7,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-15 (taught skills, phase 1, built)*
 
+**New 2026-11-15, MIA OS now (Zac, DEC-0168).**
+- **Zac wants MIA OS as soon as possible**, on the PC (dual boot beside Windows) and on a Raspberry Pi 5 with the AI
+  HAT+ and other devices, worked on from a Claude Code session on the Pi. The Pi starts the Zeta Astralis (a wrist
+  computer and phone), a later project.
+- **Next build step: the runtime extraction (DEC-0155, approved), (Fable).** The plan is
+  `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`.
+- **Stopped:** new features in the Qt desktop app and Windows-only parts (fixes only). The rest of UAL U3 (Convert, the
+  consent step) waits until after the extraction.
+- **Waiting on Zac:** Q-15, the Pi's base system (`docs/mia_os/MIA_OS_OPEN_QUESTIONS.md`).
+
 **New 2026-11-15, very last (Claude).**
 - **UAL U2 is built: "MIA" on any selection on the phone** (`SelectionActivity.kt`, `web/selection.html`). To try,
   after installing the next phone build:
