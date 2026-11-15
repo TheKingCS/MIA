@@ -46,6 +46,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
+- **Prompt 21** (Living System completeness, kept verbatim in `docs/mia_os/prompts/21_LIVING_SYSTEM_COMPLETENESS.md`) is
+  **scheduled after Prompt 17, on Fable** (Zac, 2026-11-15): it assumes Prompts 03–17 are done, and only 00–02 are.
+  Its five deliverables build on 03–17's documents and on `MIA_OS_LIVING_SYSTEM.md`.
 - **Built 2026-11-15 (Opus): the source loop** (K-0239) and **Procurement P1** (K-0240): each project's needs, from
   plans and his words, marked off against the workshop and inventory, on the World page's Needs tab and by voice;
   open needs rank finds and get MIA's own watches. **Next (Opus):** P2, product specs compared by numbers, total cost

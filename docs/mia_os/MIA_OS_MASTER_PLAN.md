@@ -32,6 +32,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
 | **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
 | 03–17 | (see `prompts/`) | not started | |
+| 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
+| 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 
 ## 3. Prompt 01 in brief
 
