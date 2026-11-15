@@ -113,6 +113,7 @@ from core.assistant_health_actions import register_health_actions
 from core.assistant_goods_actions import register_goods_actions
 from core.assistant_dungeon_actions import register_checkin_actions, register_dungeon_actions, register_loop_actions
 from core.assistant_closet_actions import register_closet_actions
+from core.assistant_ual_actions import register_ual_actions
 from core.assistant_creation_actions import register_creation_actions
 from core.assistant_game_actions import register_game_actions
 from core.failure_actions import register_failure_actions
@@ -351,6 +352,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)
+    register_ual_actions(registry)  # the Universal Action Layer: actions on what is given (DEC-0165)
     register_creation_actions(registry)  # screens MIA made for you, by voice (DEC-0091)
     register_game_actions(registry)  # boss battles and questlines by voice (DEC-0028)
     register_loop_actions(registry)  # the loop: when things happen (DEC-0047)

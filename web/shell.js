@@ -899,8 +899,23 @@
   // ---------------------------------------------------------------- Search (Ctrl+K, "/")
   // Apps are matched here (the frame has the person's apps); records come from core/web_search.py (/api/search),
   // each opening its own page. The last rows always offer the library (knowledge.html?q=) and asking MIA.
+  // It is also the action palette (the Universal Action Layer, DEC-0165, core/ual.py): opened with text selected on
+  // the page, or with a long piece pasted in, it lists what MIA can do with that. A read action shows its result
+  // here; an act action asks first, as every change does.
   let shellData = null;
   let searchBox = null;
+  let picked = "";  // the page's selection when the palette was opened
+  const captureOf = (text) => ({ text, source_app: "mia:" + (document.body.dataset.app || "web"),
+    url: location.pathname.split("/").pop() || "", title: document.title,
+    device: /Android|Mobi/.test(navigator.userAgent) ? "phone" : "pc" });
+  async function finishProposal(proposal) {
+    if (!(await confirmBox(proposal.summary))) { MIA.reject(proposal.proposal_id).catch(() => {}); return; }
+    const done = await MIA.approve(proposal.proposal_id);
+    say(done.result || "Done.", done.undoable ? async () => {
+      try { await MIA.undo(done.proposal_id); say("Undone."); refresh(); } catch (e) { say(e.message); }
+    } : null);
+    refresh();
+  }
   function appMatches(q) {
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
     return ((shellData && shellData.apps) || []).filter((a) => {
@@ -909,7 +924,14 @@
     }).sort((a, b) => Number(!a.name.toLowerCase().startsWith(words[0])) - Number(!b.name.toLowerCase().startsWith(words[0]))).slice(0, 5);
   }
   function openSearch() {
-    if (searchBox) { searchBox.showModal(); searchBox.querySelector("input").select(); return; }
+    picked = String(window.getSelection ? window.getSelection() : "").trim();
+    if (searchBox) {
+      searchBox.showModal();
+      const again = searchBox.querySelector("input");
+      if (picked) again.value = "";
+      again.select(); again.dispatchEvent(new Event("input"));
+      return;
+    }
     const input = el("input", { type: "search", class: "search-input", placeholder: "Search apps, things and notes…",
       "aria-label": "Search", autocomplete: "off", role: "combobox", "aria-controls": "mia-search-list", "aria-expanded": "true" });
     const list = el("ul", { id: "mia-search-list", class: "search-list", role: "listbox", "aria-label": "Results" });
@@ -918,9 +940,36 @@
       el("a", { href }, el("span", { class: "sr-ico", "aria-hidden": "true" }, glyph), el("span", { class: "sr-title" }, title),
         detail ? el("span", { class: "sr-detail" }, detail) : null));
     const mark = () => [...list.children].forEach((li, i) => li.setAttribute("aria-selected", String(i === active)));
+    // What MIA can do with a selection (or a long pasted piece): the offer, then the picked action by its tier.
+    async function offerFor(text, mine) {
+      const capture = captureOf(text);
+      const head = el("li", { class: "sr-hint" }, "With “" + (text.length > 60 ? text.slice(0, 60) + "…" : text) + "”:");
+      list.replaceChildren(head, el("li", { class: "sr-hint" }, "Looking at what I can do with it…"));
+      let found;
+      try { found = await MIA.ualOffer(capture); } catch (e) { found = { actions: [], later: [], problem: e.message }; }
+      if (mine !== seq) return;
+      const pick = (a) => async (event) => {
+        event.preventDefault();
+        try {
+          const got = await MIA.ualRun(a.id, capture);
+          if (got.tier === "act") { searchBox.close(); await finishProposal(got.proposal); return; }
+          const r = got.result || {};
+          list.replaceChildren(el("li", { class: "sr-hint" }, r.text || "Done."),
+            ...(r.results || []).map((x) => row(x.title, x.detail, x.href, "•")));
+          active = 0; mark();
+        } catch (e) { say(e.message); }
+      };
+      const rows = found.actions.map((a) => { const li = row(a.label, a.needs_approval ? "Asks first" : "Right away", "#", a.needs_approval ? "✎" : "✦"); li.querySelector("a").onclick = pick(a); return li; });
+      const note = found.problem ? el("li", { class: "sr-hint" }, found.problem)
+        : !rows.length ? el("li", { class: "sr-hint" }, "Nothing I can do with that yet.") : null;
+      const later = found.later && found.later.length ? el("li", { class: "sr-hint" }, "Coming: " + found.later.slice(0, 5).join(", ") + ".") : null;
+      list.replaceChildren(head, ...rows, ...[note, later].filter(Boolean)); active = rows.length ? 1 : 0; mark();
+    }
     async function run() {
       const q = input.value.trim(), mine = ++seq;
-      if (!q) { list.replaceChildren(el("li", { class: "sr-hint" }, "Type to search. Enter opens the first result.")); return; }
+      if (!q && picked) { offerFor(picked, mine); return; }
+      if (q.length >= 80) { offerFor(q, mine); return; }
+      if (!q) { list.replaceChildren(el("li", { class: "sr-hint" }, "Type to search. Enter opens the first result. Select text on a page first to act on it.")); return; }
       const apps = appMatches(q).map((a) => row(a.name, "App", a.page, "▦"));
       const tail = [row("Search the library for \u201c" + q + "\u201d", "Knowledge, offline", "knowledge.html?q=" + encodeURIComponent(q), "📚"),
         row("Ask MIA: \u201c" + q + "\u201d", "Talk", "assistant.html?ask=" + encodeURIComponent(q), "💬")];
@@ -937,7 +986,7 @@
         e.preventDefault(); active = (active + (e.key === "ArrowDown" ? 1 : n - 1)) % Math.max(n, 1); mark();
         const li = list.children[active]; if (li) li.scrollIntoView({ block: "nearest" });
       } else if (e.key === "Enter") {
-        e.preventDefault(); const a = list.children[active] && list.children[active].querySelector("a"); if (a) location.href = a.href;
+        e.preventDefault(); const a = list.children[active] && list.children[active].querySelector("a"); if (a) a.click();
       }
     });
     searchBox = el("dialog", { class: "confirm search-dialog", "aria-label": "Search", onclick: (e) => { if (e.target === searchBox) searchBox.close(); } },

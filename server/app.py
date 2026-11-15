@@ -232,6 +232,12 @@ class OrbStateRequest(BaseModel):
     state: str
 
 
+class UalRequest(BaseModel):
+    """What the person selected (core/ual.Capture as JSON), and for a run, the action they picked."""
+    capture: dict = {}
+    action_id: str = ""
+
+
 class ProposeRequest(BaseModel):
     """An action proposed from a page: its kind (core/actions.py) and parameters."""
     kind: str
@@ -4048,6 +4054,38 @@ def create_app(context: AppContext) -> FastAPI:
         except KeyError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No such proposal.") from None
         except ActionError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    # ------------------------------------------------------------ The Universal Action Layer (core/ual.py, DEC-0165)
+    @app.get("/api/ual/actions")
+    def ual_catalogue(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Every action MIA has for a selection, ready or planned."""
+        from core import ual
+
+        return ual.catalogue()
+
+    @app.post("/api/ual/offer")
+    def ual_offer(body: UalRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """What MIA can do with what the person selected: the same answer for every front door."""
+        from core import ual
+
+        try:
+            with app.state.turn_lock:
+                return ual.offer(view_for(context, profile_id), ual.Capture.from_dict(body.capture))
+        except ual.UalError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+
+    @app.post("/api/ual/run")
+    def ual_run(body: UalRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Does the picked action by its tier: a read or prepare action returns its result; an act action returns
+        a proposal, which runs only when the person approves it (/api/actions/<id>/approve)."""
+        from core import ual
+
+        try:
+            with app.state.turn_lock:
+                return ual.run(view_for(context, profile_id), body.action_id, ual.Capture.from_dict(body.capture),
+                               actions=_actions())
+        except ual.UalError as problem:
             raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
 
     @app.get("/api/actions/kinds")

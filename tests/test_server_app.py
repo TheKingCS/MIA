@@ -1017,3 +1017,26 @@ def test_the_current_conversation_is_exported_and_summarised_and_one_that_is_not
     assert client.get("/api/talk/conversations/nope/export", headers=auth).status_code == 404
     assert client.post("/api/talk/conversations/nope/summary", headers=auth).status_code == 404
     assert client.get("/api/talk/conversations/current/export").status_code == 401
+
+
+def test_a_selection_is_offered_actions_and_an_act_pick_runs_only_when_approved(client, context):
+    """The Universal Action Layer over the API (DEC-0165): the offer, a read action's result, an act action as a
+    proposal that changes nothing until approved, and plain refusals."""
+    auth = _signed_in(client, context)
+    assert client.post("/api/ual/offer", json={"capture": {"text": "x"}}).status_code == 401
+    capture = {"text": "Plan the greenhouse expansion this spring", "source_app": "firefox", "url": "https://example.com/g"}
+    offer = client.post("/api/ual/offer", headers=auth, json={"capture": capture}).json()
+    assert [a["id"] for a in offer["actions"]][:2] == ["find_known", "save_inbox"]
+    assert offer["capture"]["from"] == "https://example.com/g" and "text" not in offer["capture"]
+    read = client.post("/api/ual/run", headers=auth, json={"action_id": "find_known", "capture": capture}).json()
+    assert read["tier"] == "read" and "greenhouse" in read["result"]["searched_for"]
+    before = len(context.missions.all_missions())
+    got = client.post("/api/ual/run", headers=auth, json={"action_id": "make_mission", "capture": capture}).json()
+    assert got["tier"] == "act" and got["proposal"]["status"] == "proposed"
+    assert len(context.missions.all_missions()) == before
+    done = client.post(f"/api/actions/{got['proposal']['proposal_id']}/approve", headers=auth).json()
+    assert done["status"] == "executed" and len(context.missions.all_missions()) == before + 1
+    assert client.post("/api/ual/run", headers=auth, json={"action_id": "summarise", "capture": capture}).status_code == 409
+    assert client.post("/api/ual/offer", headers=auth, json={"capture": {"text": " "}}).status_code == 400
+    listed = client.get("/api/ual/actions", headers=auth).json()["actions"]
+    assert any(a["id"] == "build_skill" and not a["ready"] for a in listed)

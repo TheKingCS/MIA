@@ -120,6 +120,28 @@ Browser routines and workflows fold in as kinds of taught skill.
 - **Terminal:** a shell function or plugin sending the last command and output to the palette.
 - **Every adapter runs as the person, not root**, and can only *send* captures. It never executes anything itself.
 
+## 6b. U1 is built (2026-11-15)
+
+`core/ual.py` holds the capture contract, the catalogue and its tiers, and
+`offer()` and `run()`. It is one module, not the two named in §3.
+
+**The front doors so far:**
+- `/api/ual/offer`, `/api/ual/run` and `/api/ual/actions`;
+- the Ctrl+K palette (`web/shell.js`), which lists actions when text is selected on a page or 80 or more characters are pasted in;
+- two voice tools (`core/assistant_ual_actions.py`).
+
+**Ready actions** (all on the device, no model):
+- Find What I Know About This (read);
+- Save To My Inbox, Make This A Mission, Start A Project From This and Remember This (act: each is a proposal the person approves, with undo).
+
+The other 18 are in the catalogue as planned and are never offered.
+
+**Tests** (`tests/test_ual.py` and one in `tests/test_server_app.py`):
+- the catalogue's rules;
+- an injection text that changes neither the offer nor what runs;
+- sensitive screens and the online switch;
+- the same offer from every front door.
+
 ## 7. Phases (each ends on a test gate; Zac approves each)
 
 | Phase | Builds | Depends on | Done when (acceptance) |

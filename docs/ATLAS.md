@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1386 files, 308,157 lines; 1386 files describe themselves; 16,940 of 17,034 classes and functions are documented.
+1389 files, 308,990 lines; 1389 files describe themselves; 16,985 of 17,079 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-525 files, 151,810 lines; 7,816 of 7,902 classes and functions documented
+527 files, 152,379 lines; 7,848 of 7,934 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -77,6 +77,7 @@
 - `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
 - `core/assistant_trip_route_actions.py`: A trip's route and checkpoints by voice (DEC-0125), the same three action kinds the Expeditions page uses (core/trip_route.py), so "undo that" takes each back:
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act,
+- `core/assistant_ual_actions.py`: The Universal Action Layer by voice (DEC-0165, core/ual.py): "what can you do with this: ..." answers with the same offer the palette and the phone show for the same words. "Save this to my inbox: ..." or "make this a mission: ..." go through the same catalogue. By voice, saying it is the yes, as fo
 - `core/assistant_undo_actions.py`: "Undo that" and "what did you just change?" (core/undo_log.py), plus "why did you tell me that?" and "stop telling me about ..." (core/message_reasons.py, core/communication_gate.py), and "is everything set up?" (core/system_check.py). 2026-10-01.
 - `core/assistant_voice_choice_actions.py`: MIA's own voice, by voice (DEC-0125; the same change as Settings' Voice, core/web_voice.py): "which voices do you have?", "switch to the British voice", "turn your voice effect off", "speak louder". Device-wide, so only the PC's owner changes it; anyone can ask which voices there are.
 - `core/assistant_waypoint_actions.py`: Waypoints by voice, for what Navigation's page added (DEC-0125: full use both ways). "Rename the spring waypoint to Upper Spring", "mark the old gate as a hazard", "note on the spring: dry in August": the same `waypoint.edit` action kind as the page's Edit (core/waypoint_actions.py), so "undo that" 
@@ -451,6 +452,7 @@
 - `core/tts_worker.py`: Runs `VoiceManager.synthesize()` + `.play()` off the GUI thread — docs/ROADMAP.md milestone 5.3. Same reasoning as `core/chat_worker.py`: `play()`'s `sd.wait()` blocks for the full duration of the spoken reply, which scales with reply length and would freeze the GUI thread for that whole time otherw
 - `core/turn_trace.py`: One line per Assistant turn: how MIA got to what she said (DEC-0067, choice 4: native traces before Langfuse; phase 2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed reply, a plain-word command, a question plan, the model), what was asked and said, the tools offered and
 - `core/two_step.py`: Two-step sign-in (docs/SECURITY.md step 4; Zac, 2026-11-08: "fortify our security measures to industry standards and beyond"): signing in from another device asks, after the password, for the 6-digit code an authenticator app shows (Google Authenticator, Microsoft Authenticator, Authy, a password ma
+- `core/ual.py`: The Universal Action Layer, phase U1 (DEC-0165; the plan is `docs/mia_os/MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md`): MIA's actions on whatever the person has selected, from anywhere. This module is the one shared path every front door uses. A front door (the web palette, the phone's selection menu, a h
 - `core/undo_log.py`: "Undo that" (2026-10-01, accounts stage 5): when MIA changes something for you (adds an expense, checks off a chore, logs a reading) and got it wrong, you can take it back.
 - `core/unit_conversion.py`: The unit converter's tables and math (moved from modules/toolbox/calculators/unit_converter.py so the web Toolbox and the convert_units voice tool can use them without Qt; the module re-exports them). Thirteen categories (length, area, volume, weight, temperature, speed, pressure, energy, power, tim
 - `core/units.py`: Kitchen and shop units, and converting between them (DEC-0036). A recipe can say "500 g flour" while the flour is kept in pounds, or "1 cup honey" while the honey is kept in cups: an amount converts when both units measure the same thing (weight to weight, volume to volume, a count to a count). Weig
@@ -536,7 +538,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,269 lines; 52 of 52 classes and functions documented
+2 files, 4,307 lines; 53 of 53 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -813,7 +815,7 @@
 
 ## tests/: the test suite: what each part must do
 
-477 files, 79,964 lines; 6,820 of 6,828 classes and functions documented
+478 files, 80,137 lines; 6,832 of 6,840 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1209,6 +1211,7 @@
 - `tests/test_turn_harness.py`: Turns through the real engine with a scripted model (roadmap 2.8, 2026-11-10): the server built on the real headless context (build_core_context), the real model manager with a backend that replies from a script, and the real tools. Each test says what was asked, what the model "chose", and checks w
 - `tests/test_turn_trace.py`: Turn traces (DEC-0067, core/turn_trace.py): one line per turn, how it was answered and how long it took; never a private turn, never a password.
 - `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
+- `tests/test_ual.py`: The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the catalogue and its tiers, what's offered for a selection, and running a pick (a read action at once; an act action only as a proposal to approve).
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g
 - `tests/test_upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, core/upkeep_missions.py): this week's upkeep becomes one mission per task and due date, attached to the task and its asset; it isn't made twice or remade once set aside; Done on the upkeep completes the mission, and completing the mission marks the upkeep done
@@ -1295,7 +1298,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-109 files, 20,239 lines
+109 files, 20,292 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
