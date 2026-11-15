@@ -2980,3 +2980,27 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Phases W0–W8, beside the MIA OS work (DEC-0168: engine and web only).
 - Related: DEC-0053, DEC-0096, DEC-0117, DEC-0122, DEC-0123, DEC-0144, DEC-0156, DEC-0165, DEC-0166, DEC-0167,
   DEC-0168
+
+### DEC-0171: Zac's answers on World Intelligence and MIA's own messages
+- Status: APPROVED (Zac, 2026-11-15: "There shouldn't be a limit on messages she starts herself for her os. But
+  should learn what you do interact with to adapt to you. Also it should also automate watching for things not just
+  ones I set. Also MIA would only be repeating steps i showed it how to do and could do myself so I am sure its fine
+  for Marketplace and Craigslist and ebay and sights like that. Its just taking down public info." and "Maybe 4
+  finds a day.")
+- Decision:
+  1. **No fixed daily limit** on the messages MIA starts herself, on MIA OS. The communication gate learns her pace
+     from what Zac does with each kind of message (opened, acted on, answered raise it; dismissed or ignored lower
+     it). Spacing, "nothing new", the busy check and urgent-always stay. Supersedes the owner's 5-a-day for her own
+     messages.
+  2. **MIA makes watches herself** from his projects, the development engine's next steps, intents, learning paths
+     and equipment, each marked as hers with its reason, stopping when the reason does; he can stop any.
+  3. **Marketplace, Craigslist, eBay and similar sites** are read by browser skills he demonstrates, at a person's
+     pace, never past a CAPTCHA or block, never committing anything. Claude noted the sites' terms appear to forbid
+     automated collection and that Marketplace sees his own account; Zac decided. An official API (eBay's) is used
+     where there is one.
+  4. **About four finds a day** to start, moving with what he does with them.
+  5. **The sources:** Claude's checked starting list (the proposal's section 5b) and a source loop that keeps
+     improving it.
+- Consequences: the gate's change is W1's first step (with `CLAUDE.md`'s "owner's limit: 5/day" line updated when
+  it's built). DEC-0170 stays proposed until Zac approves its shape (Q-16).
+- Related: DEC-0053, DEC-0094, DEC-0117, DEC-0170; `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`

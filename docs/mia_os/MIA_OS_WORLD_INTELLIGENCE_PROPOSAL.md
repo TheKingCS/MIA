@@ -5,6 +5,11 @@ Browser Automation" (kept verbatim: [`prompts/18_WORLD_INTELLIGENCE_EXPANSION.md
 The handoff's section 16 asks for an investigation and an integrated proposal before anything is built. This is that
 proposal. Nothing here is built or approved. DEC-0170 is the proposed decision; Q-16 to Q-20 are the questions for Zac.*
 
+*Updated the same day with Zac's answers (DEC-0171): no fixed limit on the messages MIA starts herself, pacing learned
+from what he engages with instead; MIA also makes watches herself from his life; Marketplace, Craigslist, eBay and
+sites like them are read by the browser skills he demonstrates; about four finds a day to start. Section 5b lists the
+starting sources, checked from the PC, and how MIA keeps improving them.*
+
 ## 1. The headline
 
 **About two thirds of World Intelligence is already in MIA, in separate pieces.** What's missing is the part in the
@@ -34,27 +39,32 @@ adapters beyond the news feeds, the relevance score, extraction rules in a brows
 
 ## 2. Conflicts with decisions already made, and how this resolves them
 
-1. **DEC-0053: online only when asked.** World Intelligence goes online by itself. **Resolution:** a watch the person
-   sets up is the asking. It says exactly what goes out (its search words, the sources it reads), how often, and it
-   can be paused or deleted. With no watch, nothing goes online. Good News Radio already works this way: switched on
-   once, read daily. The search words follow DEC-0053's scrub, and never include MIA's records about the person.
+1. **DEC-0053: online only when asked.** World Intelligence goes online by itself. **Resolution:** switching World
+   Intelligence on is the asking, once, as Good News Radio is switched on once (DEC-0096). Every watch, whether Zac
+   set it or MIA made it (section 3), says exactly what goes out (its search words, the sources it reads) and how
+   often, and can be paused or deleted. The search words follow DEC-0053's scrub, and never include MIA's records
+   about the person: a watch MIA makes is worded from the *kind* of thing a project needs ("polycarbonate panels"),
+   never from the record itself.
 2. **DEC-0122: she types only the person's own words.** A watch's search words are the person's words, kept with the
    watch, so an approved watch may type them. Words from a listing or a page are never typed anywhere.
-3. **The communication gate's five a day.** Discoveries never bypass it. The feed is pulled, not pushed: everything
-   kept is on the World page, and only the few that score highest are offered through the gate. Each candidate has a
+3. **The communication gate's five a day: changed by Zac (DEC-0171).** On MIA OS there's no fixed daily limit on
+   what she starts herself. The gate learns instead: what he opens, acts on or answers raises that kind of message,
+   what he dismisses or ignores lowers it, per kind (it already pauses a kind he keeps dismissing). The spacing,
+   the "nothing new" rule and the busy check stay. World Intelligence starts at about **four finds a day** and moves
+   with what he does with them. Everything kept is on the World page whatever is offered. Each candidate has a
    fingerprint per listing and change, so an unchanged listing is never offered twice.
 4. **Facts in code, the model only phrases** (CLAUDE.md, DEC-0144). On a 3B model, "is this relevant to my life?"
    can't be the model's call. The relevance score is computed in code from the records (section 4). The model may
    phrase why something matters, from the reasons the code produced, and it may help pull fields out of free text.
    Any price or specification it reads is checked against the page's own text before it's kept.
-5. **Website terms (the handoff's own 5.4) against the Marketplace example (its section 6).** This is the real
-   conflict. As I understand them, Facebook's and Craigslist's terms forbid collecting data by automated means
-   without their permission. That covers an unattended browser that searches Marketplace and reads listings on a
-   schedule, however politely it's paced. I haven't read their current wording in this session, so this must be
-   checked before building (Q-17). If it holds, the honest design for those two sites is the one in section 7: MIA
-   evaluates and tracks the listings Zac himself opens, and the unattended watch uses sources that allow it (eBay's
-   official API, public feeds, sites whose terms permit it). The handoff's section 5.4 takes priority over its
-   section 6 example, as it says.
+5. **Website terms against the Marketplace example: decided by Zac (DEC-0171).** Claude raised that Facebook's and
+   Craigslist's terms appear to forbid automated collection. Zac's answer: MIA only repeats steps he showed her and
+   could do himself, taking down public information, so Marketplace, Craigslist, eBay and sites like them are read
+   by his demonstrated browser skills. What stays from the handoff's 5.4, in code: a person's pace (a few pages a
+   minute, a run a few times a day at most); never past a CAPTCHA, a block or an "unusual traffic" page (the run
+   stops and the source waits for him); never anything that commits. The one risk to know: Marketplace needs a
+   Facebook sign-in, so it's his account the site sees, and a site that objects can restrict that account. Where a
+   site offers an official API (eBay's Browse API), it's used instead of its pages.
 6. **DEC-0156 grants are only proposed.** An unattended browser run is the first thing in MIA that acts with nobody
    watching. It needs grants built first, at least for this subsystem (section 10).
 7. **DEC-0168: MIA OS first; new features only in the engine and the web.** World Intelligence is engine and web
@@ -97,6 +107,19 @@ One loop, each stage an existing system where one exists:
   daily checks. A run that needs the network and finds none waits for the next.
 - **Whose it is:** a person's watches and discoveries live in their own folder (personal stores). A household watch
   is out of scope (DEC-0119: MIA is for Zac).
+
+**Watches MIA makes herself (Zac, DEC-0171: "automate watching for things, not just ones I set").** Each week, and
+whenever a project, intent or plan changes, MIA works out watches from the records, in code:
+- a project's materials still needed (`plan_library`, `build_calcs`) become listing watches with the project's budget
+  as the ceiling;
+- the development engine's next steps and their `needs` become watches for those needs, in the season they're due;
+- open intents and learning paths become topic watches (news, research, courses);
+- equipment and machines become watches for their parts, recalls and manuals, and for newer models when one is old;
+- what MIA is built on becomes the self-development watch (section 14).
+
+Each one is marked "made by MIA" with the record it came from, shown on the Watches tab, and stops by itself when its
+reason does (the project finished, the material bought). Zac can stop or change any of them; one he stops isn't made
+again for that reason. Which ones he engages with shapes which kinds she makes next.
 
 ## 4. Personal Relevance Engine (deliverable 2)
 
@@ -153,6 +176,49 @@ The first adapters, in the order they're safest:
 **Monitoring rules, in code:** each source has a rate limit and a backoff on errors; a run never retries a page
 that refused it; a CAPTCHA, a sign-in wall or an "unusual traffic" page stops the run, marks the source as needing
 Zac, and is never worked around (handoff 5.4). Each run is logged (watch, source, items found, new, changed, time).
+The feed reader uses `certifi`'s certificates: on the PC's Python, arXiv and Grants.gov fail certificate checks
+without it (found in the check below).
+
+## 5b. Starting sources, and how MIA keeps improving them
+
+**Checked from the PC on 2026-11-15** (each address answered with a feed, and its newest item was recent). Addresses
+that failed are listed too, so nobody adds them again without a fix.
+
+| Area | Sources that work | Kind |
+|---|---|---|
+| MIA's own stack (self-development) | releases of Ollama, llama.cpp, Playwright for Python, Home Assistant (GitHub's `releases.atom` for each repository); GitHub's advisory API for pip packages; CISA's Known Exploited Vulnerabilities (JSON) | Atom, JSON API |
+| AI and local models | Hugging Face blog; OpenAI news; Mistral news; Simon Willison's weblog; Hacker News filtered (hnrss.org, by words and points); arXiv cs.AI and cs.CL | RSS, Atom |
+| Linux, hardware, boards | Phoronix (AMD GPUs, ROCm, Linux); LWN headlines; Fedora Magazine; Raspberry Pi news; CNX Software; Tom's Hardware; Hackaday | RSS |
+| Smart home and IoT | Home Assistant blog; Home Assistant releases | Atom |
+| Homestead, farming, building | USDA Agricultural Research Service news; Modern Farmer; Mother Earth News; Hobby Farms; ScienceDaily agriculture and food; Fine Homebuilding; Family Handyman; Make: | RSS |
+| Energy and solar | pv magazine USA; Electrek; Canary Media; CleanTechnica | RSS |
+| Grants, programs, rules | Grants.gov new opportunities (by agency and by category; filter USDA by its program numbers, which start with 10); the Federal Register (RSS and a keyless JSON API, filtered by agency, here the USDA); SBA news | RSS, JSON API |
+| Money and property | Freddie Mac's weekly mortgage survey (its history CSV); Calculated Risk (housing); FRED's API (needs a free key) for rates and prices | CSV, Atom, API |
+| Science | ScienceDaily top science; Phys.org | RSS |
+| General news | NPR; BBC World; Ars Technica; The Verge (Good News Radio's outlets stay as they are) | RSS, Atom |
+| Auctions and listings | Bring a Trailer (vehicles, feed); eBay's Browse API (local pickup by postal code and radius; needs a free developer key); Marketplace, Craigslist, GovDeals and similar by browser skill | RSS, API, browser |
+
+**Didn't work as tried** (403, 404 or no feed): USDA Rural Development's feed, CISA's advisories feed, AP, Reuters,
+the IRS newsroom, EurekAlert, ATTRA, SARE, Permaculture News, This Old House, Google DeepMind's blog (a page, not a
+feed), GovDeals' feed. Each may have a feed at another address; MIA's source loop (below) looks.
+
+These are US sources for a US person; the list follows the person's region (`core/region.py`) where an agency is
+national. None of this is personal: it lives in the code as the starting catalog (`world_sources.py`).
+
+**The source loop (a continuing self-improvement process, DEC-0094's loops):** a loop `world.sources` in
+`core/loops.py`, Observe → Measure → Evaluate → Improve → Verify:
+- **Observe:** every item a source gives, and what Zac does with it (opened, saved, acted on, "not for me", ignored).
+- **Measure, per source:** how often it answers, how fresh it is, how many of its items scored, how many he used, how
+  many were repeats of another source, and how many were wrong (a price or claim later contradicted).
+- **Evaluate, monthly:** a source that's dead, stale, mostly repeats or never used is proposed for retirement; one
+  whose items keep being used is read more often.
+- **Improve:** MIA finds candidates: sites her best finds keep citing, a site's own feed link (its page's
+  `<link rel="alternate">`), and searches for feeds on the topics of open watches. Each candidate is checked the way
+  this table was (it answers, it's a feed, it's recent, it isn't a copy of one she has) and tried for a month on a
+  trial footing before it counts.
+- **Verify:** a trial source stays only if its items were used at least as often as the median source's.
+- The loop's reports go to the World page's Sources tab and to Night School's notes. Adding a source that needs an
+  account or a key, or one that's a browser skill, is proposed to Zac, never done alone.
 
 ## 6. Browser observation, demonstration learning, and reusable browser skills (deliverables 4 and 5)
 
@@ -201,13 +267,15 @@ separately, and a commit step inside it still asks every time (DEC-0117).
    the homestead projects' material lists and the development engine's needs: panels, framing, irrigation, shelving,
    heaters, fans), a price ceiling (asked if none; the projects' budgets suggest one), a distance (asked; the places
    store gives the home point), and what it's for (linked to the homestead intent and its projects).
-2. **Choosing sources by what's allowed** (Q-17 decides): eBay through its API with a local-pickup filter; any local
-   classifieds or auction sites whose terms allow automated reading; and **Marketplace and Craigslist by capture**.
-3. **Marketplace by capture:** Zac browses Marketplace as he normally would (on the phone or in her browser view).
-   "MIA, track this" or the UAL's selection menu sends the listing's address and visible text. MIA reads the fields
-   from that text with the extraction rules, keeps a discovery, and from then on re-checks only that one listing at
-   a modest pace, if its terms allow even that (otherwise Zac's next visit updates it). Zac doing the searching keeps
-   MIA inside the terms; MIA still does the remembering, comparing and telling.
+2. **Choosing sources** (Zac, DEC-0171): eBay through its API with a local-pickup filter; Marketplace, Craigslist and
+   local classified or auction sites through browser skills he demonstrates.
+3. **Marketplace by his demonstration:** Zac does one search in her browser while she watches: Marketplace, the
+   search box, the location and price filters, opening a listing, pointing at the price, the location and the
+   description. She proposes the skill with `{search}`, `{max_price}` and `{radius}` slots and the fields to read;
+   he approves it; after two clean runs with him watching it's learned. Then each Marketplace watch runs it a few
+   times a day at a person's pace, signed in as him in her own browser profile, reading only the result pages and
+   the listings it opens. **Capture** stays as well: "MIA, track this" on a listing he found himself, from the phone
+   or the UAL's selection menu, keeps it the same way.
 4. **Each listing kept** has every field in the handoff's section 6 list. A field not on the page is empty and shown
    as unknown. Photos are kept as their addresses, plus a thumbnail if Zac saves the listing.
 5. **Evaluation (in code):** asking price; comparables from MIA's own record of similar finds and, where an API gives
@@ -278,7 +346,7 @@ filter a site's own search takes, and only when Zac set one.
 |---|---|---|
 | `world.read_feed` (feeds, official APIs) | act-within-grant | Zac, per source |
 | `world.search` (SearXNG with the watch's words) | act-within-grant | Zac, per watch |
-| `world.browse_unattended` (a browser skill on a schedule) | act-within-grant, per site and skill | Zac, only for sites whose terms allow it |
+| `world.browse_unattended` (a browser skill on a schedule) | act-within-grant, per site and skill | Zac, per site and skill, after the skill is learned (DEC-0171) |
 | `world.verify_listing` (re-check one saved listing) | act-within-grant | Zac, per site |
 | `world.offer` (through the gate) | suggest | default on |
 | contact a seller, buy, offer, sign in, post | **never** granted; a person approves each one | — |
@@ -383,32 +451,40 @@ can be built **beside** the MIA OS work, in phases that each end on a test gate 
 | Phase | What | Needs | Model |
 |---|---|---|---|
 | W0 | Zac's answers (Q-16 to Q-20); the terms check for each site he wants | — | either |
-| W1 | Watches, the discovery store, feed and search adapters, dedupe and provenance, the World page (plain), the gate | W0 | Opus |
+| W1 | The gate's learned pacing (DEC-0171); watches, the discovery store, the feed and search adapters with the starting catalog (5b), dedupe and provenance, the World page (plain), the source loop | W0 | Opus |
+| W1b | Watches MIA makes herself from projects, the development engine, intents and equipment | W1, W2 | Opus |
 | W2 | The relevance engine from real records, with the development engine's needs | W1 | Opus |
-| W3 | Listings: eBay's API, capture through the UAL for Marketplace and Craigslist, evaluation, re-checks and changes | W2; an eBay developer key if chosen | Opus |
+| W3 | Listings: eBay's API, capture through the UAL, evaluation, re-checks and changes | W2; an eBay developer key | Opus |
 | W4 | Grants for this subsystem (DEC-0156's first slice) | W1 | **Fable** |
 | W5 | Browser skills: parameters, extraction rules, list steps, versions, repair (taught skills phase 2's browser steps) | W4 | Opus, with **Fable** for unattended runs |
 | W6 | Dossiers and the class ladder; actions into projects, missions, paths, the lab | W2 | Opus |
 | W7 | Self-development watch and model-bench proposals | W1, W6 | Opus |
 | W8 | Fable's review of W4 and W5 before any unattended browser run is switched on | W5 | **Fable** |
 
-W1 to W3 alone deliver the handoff's main experience for sources that allow it, with nothing running unattended in a
-browser.
+W1 to W3 deliver the feeds, eBay and tracked listings without any browser running alone. Marketplace and Craigslist
+as standing watches come with W5 (their skills), after W4's grants and W8's review.
 
 ## 17. Questions for Zac
 
-- **Q-16.** Approve the shape: a thin World Intelligence over the systems MIA has (DEC-0170), built beside MIA OS in
-  the phases above?
-- **Q-17.** Marketplace and Craigslist: if their terms forbid automated collection (to be confirmed), is "you browse,
-  MIA tracks and evaluates what you open" right for them? The alternative is not using them at all; running MIA's
-  browser on them unattended against their terms isn't one I'd recommend.
-- **Q-18.** Which official sources first: eBay's API (a free developer account, its key kept sealed), auction sites,
-  government grants and programs, research (arXiv), GitHub releases? And which news and industry feeds?
-- **Q-19.** How many finds a day may the gate bring up from World Intelligence, within the five a day overall?
-  (I'd suggest at most two, and only "verified opportunity" or higher.)
-- **Q-20.** Your home point and default distance for listings: kept as a place in MIA (never in the repository), or
-  asked per watch?
+- **Q-16, open.** Approve the shape: a thin World Intelligence over the systems MIA has (DEC-0170, with DEC-0171's
+  changes), built beside MIA OS in the phases above?
+- **Q-17, answered (Zac, 2026-11-15):** Marketplace, Craigslist, eBay and sites like them are fine to read with the
+  skills he demonstrates; public information, his own steps (DEC-0171).
+- **Q-18, partly answered:** Claude researched and checked the starting sources (section 5b); the source loop keeps
+  improving them. Zac to say only if any area should be added or dropped, and whether to get the two free keys
+  (eBay developer, FRED).
+- **Q-19, answered (Zac, 2026-11-15):** no fixed limit on her own messages; pacing learned from what he engages with;
+  World Intelligence starts at about four finds a day (DEC-0171).
+- **Q-20, recommendation, waiting on Zac's yes:**
+  - **A home place kept in MIA** (the Places store, his own folder, sealed at rest; never in the repository), set once
+    by voice or on the page. Every watch measures from it unless the watch names another place.
+  - **A default distance by size of thing**, changeable per watch: small items 25 miles, materials and tools
+    50 miles, large equipment, trailers and greenhouse frames 150 miles (worth a drive with a trailer).
+  - **Distance from a listing's stated town or postal code** worked out offline, from GeoNames' free gazetteer of
+    towns and postal codes (Creative Commons, credit given), labelled "about 40 miles (from the town named)". Never
+    a guess when the listing gives none, and nothing is sent anywhere to work it out.
+  - Where a site's own search takes a radius (eBay, Marketplace), the watch's radius is given to it, so fewer far
+    listings are read at all.
 
-Q-08 (the Life Enrichment Protocol's event discovery in the background) is the same question as Q-16 for one kind of
-watch: if World Intelligence is approved, LEP's events become watches over approved event sources, with no separate
-fetcher.
+Q-08 (the Life Enrichment Protocol's event discovery) is the same question as Q-16 for one kind of watch: if World
+Intelligence is approved, LEP's events become watches over approved event sources, with no separate fetcher.

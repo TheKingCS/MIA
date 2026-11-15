@@ -14,10 +14,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   reader, SearXNG lookup, Research This and Verify, her browser and its gate, browser routines, taught skills, the
   gate, links, the development engine). New: watches, a discovery store with provenance, relevance in code, a World
   page. Phases W0–W8, beside MIA OS; W4 (grants) and the unattended browser review are **(Fable)**, the rest **(Opus)**.
-- **The conflict to settle first (Q-17):** Facebook's and Craigslist's terms appear to forbid automated collection
-  (to confirm by reading them); the proposal has Zac browse and MIA track and evaluate what he opens, and the
-  unattended watch use sources that allow it (eBay's API, feeds).
-- **Waiting on Zac:** Q-16 to Q-20 (`docs/mia_os/MIA_OS_OPEN_QUESTIONS.md`). Nothing is built until Q-16.
+- **Zac's answers (DEC-0171, approved):** no fixed limit on her own messages, pacing learned from what he engages
+  with; MIA makes watches herself from his life; Marketplace, Craigslist and eBay by his demonstrated skills; about
+  four finds a day. Starting sources checked from the PC (proposal 5b), with a source loop to keep improving them.
+- **Waiting on Zac:** Q-16 (approve DEC-0170's shape), Q-20 (yes to the recommended home place and distances),
+  Q-18's two free keys (eBay developer, FRED). On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
 - **Skipped for now (Zac, 2026-11-15):** the Pi. **Next Fable items:** the phone on the full MIA, the window as a
   client (both need a Fable session).
 
