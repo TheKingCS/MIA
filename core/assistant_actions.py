@@ -379,6 +379,8 @@ class AssistantActionRegistry:
         Run the named action's handler, or a clear message if the name
         is unknown or the handler raises — a malformed/hallucinated
         tool call from the LLM must never crash the app.
+        While the person is showing her a skill ("watch me",
+        core/taught_skills.py), a tool that ran is noted as one of its steps.
         """
         action = self._actions.get(name)
         if action is None:
@@ -399,9 +401,11 @@ class AssistantActionRegistry:
         # "Undo that" (core/undo_log.py): what this tool changes can be put back.
         undo = getattr(context, "undo", None)
         recording = undo is not None and changes_records(name) and name != "undo_last_change"
+        from core import taught_skills
         from core.life_events import acting
         from core.person_settings import person_id
 
+        shown = taught_skills.mark(context)  # "watch me" (DEC-0123): where what she's shown stood before this tool
         try:
             # What it changes is recorded as MIA's doing, for this person (core/life_events.py).
             with acting("assistant", person_id(context)):
@@ -431,6 +435,10 @@ class AssistantActionRegistry:
         # Open screens re-read their data (core/main_thread.py), also when
         # the change came from the phone, on the server's thread.
         records_changed(context, name)
+        try:  # while she's watching, this is a step of the skill being shown (core/taught_skills.py)
+            taught_skills.observe_tool(context, name, arguments, result, shown)
+        except Exception:  # what she's shown never breaks the tool that just ran
+            log.exception("Couldn't note '%s' as a step", name)
         return result
 
 

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1389 files, 308,990 lines; 1389 files describe themselves; 16,985 of 17,079 classes and functions are documented.
+1395 files, 310,767 lines; 1395 files describe themselves; 17,080 of 17,174 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-527 files, 152,379 lines; 7,848 of 7,934 classes and functions documented
+531 files, 153,648 lines; 7,924 of 8,010 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -72,6 +72,7 @@
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable.
 - `core/assistant_subscription_actions.py`: "Still using it?" by voice (DEC-0054, DEC-0125): "I still use Netflix" marks that subscription in use today (the same `bill.still_using` as Money's button), and "which subscriptions haven't I checked?" lists the ones not said to be in use in three months (core/subscriptions.py).
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
+- `core/assistant_taught_skill_actions.py`: Taught skills by voice (DEC-0123, core/taught_skills.py): "Watch me: the Friday reset" ... "that's it" "What skills have I taught you?" "Run the Friday reset" ... "yes" / "done" / an answer "Stop the skill" "Forget the Friday reset skill"
 - `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer. And the rest of the Dashboard by voice (DEC-0153, 2026-11-11): "what's this week?" (Your Week, core/today.week_days), "what's the weather?" and "my town is Springfield, Illinois" 
 - `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
@@ -429,6 +430,8 @@
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names, 
 - `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way.
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list.
+- `core/taught_skill_actions.py`: Taught skills' actions (DEC-0123, core/taught_skills.py) on the action contract: proposed in plain words, approved, run, undoable.
+- `core/taught_skills.py`: Taught skills, phase 1 (DEC-0123, approved 2026-11-15; part of MIA's one skills system, DEC-0167; the proposal is `docs/PROCEDURES_PROPOSAL.md`): something the person teaches MIA once, made of things she can already do, that she practises with them watching until it's proven.
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ).
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
@@ -509,6 +512,7 @@
 - `core/web_screens.py`: Kitchen, Workout and Real Estate on the web (2026-10-06, DEC-0017/0018): everything the PC app's screens show, assembled here so `web/` holds no logic. Served as `/api/kitchen` (and one recipe, `/api/kitchen/recipe/{id}`, its amounts scaled to `?servings=` by scale_factor and scaled_amount), `/api/w
 - `core/web_search.py`: Search on the web (Ctrl+K or "/" on any page; the Shell row in docs/WEB_PARITY.md). The desktop's Ctrl+K searches apps, profiles and what a few Qt modules registered; the web searches every kind of record MIA keeps, through the catalog core/links.py already has (`links.KINDS`: assets, bills, recipes
 - `core/web_surfaces.py`: What the web front end's shell and Home show (2026-10-06, DEC-0017: the web becomes all of MIA, function first, in the concept's look). Assembled here, in code, so `web/` holds no logic (DEC-0013): which apps a person sees, their level and XP, the greeting, Today's Focus, the upcoming list and the a
+- `core/web_taught_skills.py`: The Taught Skills screen's data (DEC-0123, DEC-0017: assembled here, the web only shows it): each skill with its steps in plain words and as the lines they're edited in, its practice state, what she's being shown right now, and the run that's waiting on the person.
 - `core/web_textbooks.py`: The Classroom's textbooks on the web (DEC-0125: the textbook tutor's library was on the desktop and by voice only). Three parts:
 - `core/web_toolbox.py`: The Toolbox's web screen (DEC-0113 canvas Toolbox, DEC-0125: the Toolbox had no phone screen). Three parts:
 - `core/web_tracks.py`: Tracks on the web (web/tracks.html; core/gps_tracks.py, DEC-0099; claude, 2026-11-09: GPX tracks had no screen, only `python -m tools.tracks` and "how far was my last hike?"). Every walk, ride or drive the person has added, newest first: its name and date, distance, climb and descent, time taken and
@@ -538,7 +542,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,307 lines; 53 of 53 classes and functions documented
+2 files, 4,364 lines; 54 of 54 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -815,7 +819,7 @@
 
 ## tests/: the test suite: what each part must do
 
-478 files, 80,137 lines; 6,832 of 6,840 classes and functions documented
+479 files, 80,461 lines; 6,850 of 6,858 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1193,6 +1197,7 @@
 - `tests/test_system_map.py`: The one map of everything that makes MIA (core/system_map.py, DEC-0139): it assembles every category from the real sources (decisions, loops, knowledge, learnings, stores, preferences, architecture, capabilities), renders a navigable page, and a broken source becomes a noted gap rather than a crash.
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).
+- `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, and the steps that ask every time whatever was learned.
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared.
 - `tests/test_theme_manager.py`: Unit tests for gui.theme_manager. Pure string-lookup logic — no Qt event loop needed.
@@ -1298,7 +1303,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-109 files, 20,292 lines
+110 files, 20,419 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1396,6 +1401,7 @@
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;
 - `web/studio.js`: studio.js — the Theme Studio (DEC-0136, claude, 2026-11-08). Draws MIA.themes() (core/themes.studio): pick a theme to start from, tweak its colours, corners, font, material and the 3D room's light, and see it at once on this whole page (MIAShell.previewTheme, not kept) and in a little room (web/nexu
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
+- `web/taught-skills.js`: taught-skills.js — Taught Skills (claude, 2026-11-15, DEC-0123).
 - `web/toolbox.js`: toolbox.js — the Toolbox (claude, 2026-11-07, DEC-0125; the design canvas's Toolbox, DEC-0113). Renders MIA.toolbox() (core/web_toolbox.py): the open calculator (its boxes, and the answer core works out as you type, MIA.toolboxCalc), the list of calculators, alarms (set, on/off, delete: core/toolbox
 - `web/tracks.js`: tracks.js — Tracks (claude, 2026-11-09, DEC-0099). Renders MIA.tracks() (core/web_tracks.py): the totals (last 30 days and all time), then each walk, ride or drive newest first with its shape (an SVG path worked out in core from its own points), distance, climb and descent, time taken and moving, an
 - `web/trades.js`: trades.js — Trade Master (claude, 2026-11-09, DEC-0149). Renders MIA.trades(item) (core/web_trades.py): the walkthrough, when a job or diagnosis is going: the step in focus large (or the check), why, what to watch for, the hold point (checked or not), where it is in the job, and Next / Checked / Bac

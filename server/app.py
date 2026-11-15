@@ -81,6 +81,9 @@ thread-safe. Memory extraction runs after the response is sent
 Remote login requires the profile to have a password: this API can
 read and change everything MIA knows, so "no password set" (which the
 desktop lock screen treats as open) is refused here.
+Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
+screen; /api/taught-skills/run, /answer and /stop move a run one step at a
+time, each step through its own gate.
 """
 
 from __future__ import annotations
@@ -236,6 +239,12 @@ class UalRequest(BaseModel):
     """What the person selected (core/ual.Capture as JSON), and for a run, the action they picked."""
     capture: dict = {}
     action_id: str = ""
+
+
+class TaughtSkillRequest(BaseModel):
+    """A taught skill to start (its id), or what the person answers the one that's waiting."""
+    skill_id: str = ""
+    text: str = ""
 
 
 class ProposeRequest(BaseModel):
@@ -537,7 +546,8 @@ def create_app(context: AppContext) -> FastAPI:
     with that conversation's own lock. Good News Radio's page says when it played an episode
     (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
     herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
-    lock, because the song is handed to the window's thread."""
+    lock, because the song is handed to the window's thread. Taught skills (DEC-0123) are read at
+    /api/taught-skills and run one move at a time through /api/taught-skills/run, /answer and /stop."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3648,6 +3658,53 @@ def create_app(context: AppContext) -> FastAPI:
         from core.weekly_checkin import checkin
 
         return _screen(profile_id, "missions", checkin)
+
+    # ------------------------------------------------------------ Taught skills (core/taught_skills.py, DEC-0123)
+    @app.get("/api/taught-skills")
+    def web_taught_skills(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Taught Skills screen: each skill with its steps and practice state, what she's being shown, and
+        the run waiting on the person."""
+        from core.web_taught_skills import skills_page
+
+        return _screen(profile_id, "taught_skills", skills_page)
+
+    def _skill_run(profile_id: str, step) -> dict:
+        """Runs one move of a taught skill (start, answer) as this person, one turn at a time; a refusal comes
+        back as a 409 in the engine's own words."""
+        from core.child_accounts import ASK_A_PARENT, is_child
+        from core.profile_manager import crediting
+        from core.taught_skills import SkillError
+
+        view = view_for(context, profile_id)
+        if is_child(view):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ASK_A_PARENT)
+        try:
+            with app.state.turn_lock, crediting(view, profile_id):
+                return step(view)
+        except SkillError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    @app.post("/api/taught-skills/run")
+    def taught_skill_run(body: TaughtSkillRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Starts a skill and runs it until it needs the person or ends: what she said, and what she's waiting
+        for. Each step still goes through its own gate."""
+        from core import taught_skills
+
+        return _skill_run(profile_id, lambda view: taught_skills.start(view, body.skill_id))
+
+    @app.post("/api/taught-skills/answer")
+    def taught_skill_answer(body: TaughtSkillRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Gives the waiting run its answer (an answer, "done", yes or no) and carries on."""
+        from core import taught_skills
+
+        return _skill_run(profile_id, lambda view: taught_skills.answer(view, body.text))
+
+    @app.post("/api/taught-skills/stop")
+    def taught_skill_stop(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Stops the run in progress."""
+        from core import taught_skills
+
+        return _skill_run(profile_id, lambda view: {"stopped": taught_skills.stop(view)})
 
     # ------------------------------------------------------------ Smart Closet (core/web_closet.py, DEC-0162)
     @app.get("/api/closet")

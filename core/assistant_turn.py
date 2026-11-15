@@ -221,7 +221,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # own words asked for, and before the model, which the safety floor
     # never waits on.
     """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a taught skill being shown, started or answered (core/taught_skills.take_turn), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     """
     prepared = pre_turn(context, conversation, prompt)
@@ -271,6 +271,17 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         if out is not None:
             add_message(conversation, "assistant", out[0])
             return AssistantTurn(replies=[out[0]], open=out[1], route="conversation")
+        from core.taught_skills import take_turn
+
+        try:  # "watch me: ...", "that's it", "run <a taught skill>", the answer a running skill asked for (DEC-0123)
+            last = next((m.content for m in reversed(conversation.messages[:-1]) if m.role == "assistant"), "")
+            taught = take_turn(context, last, prompt)
+        except Exception:
+            log.exception("Couldn't follow the taught skill")
+            taught = None
+        if taught is not None:
+            add_message(conversation, "assistant", taught)
+            return AssistantTurn(replies=[taught], route="taught skill")
         from core.trade_actions import reply as job_reply
 
         try:  # a job in progress ("next", "checked", "why?", a stop rule's words) or "walk me through ..." (DEC-0149)

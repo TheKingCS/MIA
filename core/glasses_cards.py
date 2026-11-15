@@ -429,6 +429,25 @@ def _browser_waiting(context, today: date):
     return _panel("Waiting For You", lines, "Nothing waiting, and no tasks taught yet.")
 
 
+def _taught_skills(context, today: date):
+    """Panel: the run waiting on you first, then each taught skill with whether it's learned or how far through
+    practising."""
+    from core.web_taught_skills import skills_page
+
+    page, none = _page("Taught Skills", lambda: skills_page(context), "Taught skills aren't on this MIA.")
+    if none:
+        return none
+    lines = []
+    run = page.get("run")
+    if run and run.get("waiting"):
+        lines.append(_line(run["waiting"]["text"], f"{run['name']} · answer by voice or on your phone", "attention"))
+    if page.get("watching"):
+        lines.append(_line(f"Watching: {page['watching']['name']}", f"{len(page['watching']['steps'])} steps so far"))
+    lines += [_line(s["name"], "learned" if s["state"] == "learned"
+                    else f"practising, {s['clean_runs']} of {page['needed']} clean runs") for s in page["skills"]]
+    return _panel("Taught Skills", lines, "Nothing taught yet. Say \"watch me\" and a name, then do it with her.")
+
+
 # ------------------------------------------------------------ Diagnostics
 
 def _diagnostics_health(context, today: date):
@@ -718,6 +737,7 @@ PANELS = {
     "play": (("week", "This Week", _play_week),),
     "good_news": (("today", "Today's Stories", _news_today),),
     "browser": (("waiting", "Waiting For You", _browser_waiting),),
+    "taught_skills": (("skills", "Taught Skills", _taught_skills),),
     "diagnostics": (("health", "PC Health", _diagnostics_health),),
     "files": (("folder", "MIA Folder", _files_recent),),
 }

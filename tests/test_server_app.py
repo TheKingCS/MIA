@@ -16,6 +16,8 @@ line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
 only on the PC itself, with the password, and logged (DEC-0126). Your Data
 lists the person's files and exports or deletes the account behind the password.
 Good News Radio's page reports an episode played, only for a signed-in person.
+A selection's actions (the Universal Action Layer) and a taught skill's run are
+checked end to end: nothing changes before the person's yes.
 
 Builds a real AppContext via core.core_runtime.build_core_context(),
 same fixture pattern as tests/test_core_runtime.py — proving
@@ -1040,3 +1042,34 @@ def test_a_selection_is_offered_actions_and_an_act_pick_runs_only_when_approved(
     assert client.post("/api/ual/offer", headers=auth, json={"capture": {"text": " "}}).status_code == 400
     listed = client.get("/api/ual/actions", headers=auth).json()["actions"]
     assert any(a["id"] == "build_skill" and not a["ready"] for a in listed)
+
+
+def test_a_taught_skill_is_taught_run_and_answered_over_the_api_and_each_change_still_waits_for_a_yes(client, context, tmp_path):
+    """Taught skills over the API (DEC-0123): taught through the action contract, run through its own endpoints,
+    and a change inside a practising skill happens only after the person's yes."""
+    from core.taught_skills import SkillBook
+
+    auth = _signed_in(client, context)
+    if getattr(context, "taught_skills", None) is None:
+        context.taught_skills = SkillBook(context, data_dir=tmp_path / "taught")
+    assert client.get("/api/taught-skills").status_code == 401
+    assert client.post("/api/taught-skills/run", json={"skill_id": "x"}).status_code == 401
+    steps = "ask: What needs doing? -> thing\naction: mission.add name={thing}"
+    p = client.post("/api/actions/propose", headers=auth, json={"kind": "taught_skill.add",
+                                                                "params": {"name": "Capture it", "steps": steps}}).json()
+    assert client.post(f"/api/actions/{p['proposal_id']}/approve", headers=auth).json()["status"] == "executed"
+    page = client.get("/api/taught-skills", headers=auth).json()
+    row = page["skills"][0]
+    assert row["name"] == "Capture it" and row["state"] == "practising" and [s["asks"] for s in row["steps"]] == [False, True]
+    before = len(context.missions.all_missions())
+    got = client.post("/api/taught-skills/run", headers=auth, json={"skill_id": row["skill_id"]}).json()
+    assert got["status"] == "waiting" and got["waiting"]["kind"] == "ask"
+    assert client.post("/api/taught-skills/run", headers=auth, json={"skill_id": row["skill_id"]}).status_code == 409
+    got = client.post("/api/taught-skills/answer", headers=auth, json={"text": "Oil the hinges"}).json()
+    assert got["waiting"]["kind"] == "confirm" and len(context.missions.all_missions()) == before
+    assert client.get("/api/taught-skills", headers=auth).json()["run"]["waiting"]["kind"] == "confirm"
+    got = client.post("/api/taught-skills/answer", headers=auth, json={"text": "yes"}).json()
+    assert got["status"] == "done" and len(context.missions.all_missions()) == before + 1
+    assert client.post("/api/taught-skills/answer", headers=auth, json={"text": "yes"}).status_code == 409
+    assert client.post("/api/taught-skills/stop", headers=auth).json() == {"stopped": False}
+

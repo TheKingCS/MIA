@@ -1,0 +1,100 @@
+{
+  "available": true,
+  "skills": [
+    {
+      "skill_id": "887404e9af",
+      "name": "Friday reset",
+      "about": "Closing the week.",
+      "state": "practising",
+      "clean_runs": 1,
+      "runs": 1,
+      "last_run": "2026-11-13T17:30:00",
+      "last_result": "finished",
+      "source": "told in steps",
+      "steps": [
+        {
+          "text": "Say: \"Friday reset.\"",
+          "kind": "tell",
+          "asks": false,
+          "always_asks": false
+        },
+        {
+          "text": "Do \"add grocery item\" (name coffee)",
+          "kind": "tool",
+          "asks": true,
+          "always_asks": false
+        },
+        {
+          "text": "Wait for you to: put the bins out",
+          "kind": "you",
+          "asks": false,
+          "always_asks": false
+        },
+        {
+          "text": "Ask you: \"What went well this week?\"",
+          "kind": "ask",
+          "asks": false,
+          "always_asks": false
+        },
+        {
+          "text": "Say: \"Noted: {win}.\"",
+          "kind": "tell",
+          "asks": false,
+          "always_asks": false
+        }
+      ],
+      "steps_text": "tell: Friday reset.\ntool: add_grocery_item name=coffee\nyou: put the bins out\nask: What went well this week? -> win\ntell: Noted: {win}."
+    },
+    {
+      "skill_id": "f28d5ccd6a",
+      "name": "Morning brief",
+      "about": "How the day starts.",
+      "state": "learned",
+      "clean_runs": 2,
+      "runs": 9,
+      "last_run": "2026-11-14T07:02:00",
+      "last_result": "finished",
+      "source": "shown by doing it",
+      "steps": [
+        {
+          "text": "Do \"get weather\"",
+          "kind": "tool",
+          "asks": false,
+          "always_asks": false
+        },
+        {
+          "text": "Do \"get todays plan\"",
+          "kind": "tool",
+          "asks": false,
+          "always_asks": false
+        },
+        {
+          "text": "Ask you: \"What's the one thing today?\"",
+          "kind": "ask",
+          "asks": false,
+          "always_asks": false
+        },
+        {
+          "text": "Say: \"Then today is about {thing}.\"",
+          "kind": "tell",
+          "asks": false,
+          "always_asks": false
+        }
+      ],
+      "steps_text": "tool: get_weather\ntool: get_todays_plan\nask: What's the one thing today? -> thing\ntell: Then today is about {thing}."
+    }
+  ],
+  "watching": null,
+  "run": {
+    "skill_id": "887404e9af",
+    "name": "Friday reset",
+    "step": 3,
+    "of": 5,
+    "waiting": {
+      "kind": "you",
+      "text": "Over to you: put the bins out. Tell me when it's done."
+    }
+  },
+  "needed": 2,
+  "help": "One step a line. tell: words she says. ask: a question -> a name (use it later as {name}). you: something you do. tool: one of her tools, then key=value. action: an action kind, then key=value."
+}

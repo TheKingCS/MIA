@@ -443,6 +443,15 @@
       "ask": "Open the county website."
     },
     {
+      "id": "taught_skills",
+      "name": "Taught Skills",
+      "icon": "🎓",
+      "tagline": "Show her once. Practise together.",
+      "page": "taught-skills.html",
+      "group": "Knowledge, tools & system",
+      "ask": "What skills have I taught you?"
+    },
+    {
       "id": "module_browser",
       "name": "Apps",
       "icon": "🧩",
@@ -1043,6 +1052,14 @@
           "tagline": "She browses. You approve.",
           "page": "browser.html",
           "ask": "Open the county website."
+        },
+        {
+          "id": "taught_skills",
+          "name": "Taught Skills",
+          "icon": "🎓",
+          "tagline": "Show her once. Practise together.",
+          "page": "taught-skills.html",
+          "ask": "What skills have I taught you?"
         },
         {
           "id": "lookup",

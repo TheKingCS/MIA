@@ -124,7 +124,7 @@ AREAS: tuple[Area, ...] = (
     Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", PLAN),
          hue="#ff8a3d", shortcuts=("kitchen",)),
     Area("ai_tools", "AI Tools", "assistant", "What MIA does with you: look, browse, read and write.",
-         ("sight", "browser", LOOKUP, "inbox", COMMS, "assistant", MADE), hue="#6fc6ff"),
+         ("sight", "browser", "taught_skills", LOOKUP, "inbox", COMMS, "assistant", MADE), hue="#6fc6ff"),
     Area("missions", "Missions", "missions", "Goals, projects, levels and rewards.",
          ("missions", PROJECTS, "dungeon", "skills", "character", "reward_shop", PARTY, CHRONICLE, WHY, DIRECTIONS),
          hue="#c86bff"),

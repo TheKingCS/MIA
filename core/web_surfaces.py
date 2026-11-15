@@ -208,6 +208,9 @@ APPS: tuple[App, ...] = (
     App("browser", "Browser", "🌐", "She browses. You approve.", "browser.html",
         "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you "
         "taught her by showing (DEC-0117).", KNOW, ("browser",), "Open the county website."),
+    App("taught_skills", "Taught Skills", "🎓", "Show her once. Practise together.", "taught-skills.html",
+        "What you've taught MIA to do, made of things she can already do: each skill's steps, how practised it is, "
+        "and the run that's waiting on you (DEC-0123).", KNOW, ("taught_skills",), "What skills have I taught you?"),
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
         "System health, logs, and hardware status.", KNOW, (), "How is my system health?"),
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
@@ -219,7 +222,7 @@ APPS: tuple[App, ...] = (
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
 WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock", "freedom", "compliance", "dungeon", "issues",
-                      "operating_journal", "play", "good_news", "sight", "life_notes", "browser", "closet"})
+                      "operating_journal", "play", "good_news", "sight", "life_notes", "browser", "closet", "taught_skills"})
 # Apps folded into others (Zac, 2026-10-16): Garage holds vehicles, equipment
 # and tools; Real Estate holds buildings and appliances; the Calendar shows all
 # upkeep. Shown nowhere; the desktop keeps their modules loaded only because

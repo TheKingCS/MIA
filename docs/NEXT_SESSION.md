@@ -5,7 +5,17 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-15 (MIA OS planning: Prompt 01 done, waiting for Zac)*
+*Last updated: 2026-11-15 (taught skills, phase 1, built)*
+
+**New 2026-11-15, last (Claude).**
+- **Taught skills, phase 1, is built** (DEC-0123, `core/taught_skills.py`, K-0227). To try on the PC:
+  1. In the chat: "watch me: the evening close". Ask her for two or three things. Then "that's it".
+  2. "Run the evening close". Say yes to each step. Do it twice: the second clean run makes it learned.
+  3. AI Tools › Taught Skills shows the steps, and which ones ask every time.
+- **Next for the skills system** (DEC-0167), in order:
+  - UAL U2, the phone's text-selection menu: **(Opus)**.
+  - UAL U3, the first action set, with "Build A Skill" ending in a taught skill, and the consent step for anything leaving the device: **(Opus)**.
+  - Taught skills phase 2: a schedule or an event starts a learned skill; browser steps; her offering after a repeat; the loop over failed runs (`work/loop_coverage.json`, `store:taught_skills`): **(Fable)** for the unattended gate, **(Opus)** for the rest.
 
 **New 2026-11-15, latest (Claude).**
 - The **Universal Action Layer** (DEC-0165) has a spec (`docs/specs/UNIVERSAL_ACTION_LAYER.md`) and a plan (`docs/mia_os/MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md`). Its phases wait for Zac (Q-11 to Q-14).

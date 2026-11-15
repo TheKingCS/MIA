@@ -115,6 +115,7 @@ if TYPE_CHECKING:
     from core.boss_battles import BossBook
     from core.work_dungeon import DungeonBook
     from core.smart_closet import ClosetBook
+    from core.taught_skills import SkillBook
     from core.the_loop import LoopBook
     from core.failure_log import FailureLog
     from core.answer_ratings import AnswerRatings
@@ -140,7 +141,8 @@ if TYPE_CHECKING:
 @dataclass
 class AppContext:
     """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
-    sensors that send readings), and the one store lock the server and the desktop's timers share."""
+    sensors that send readings), the one store lock the server and the desktop's timers share, and each person's
+    stores, the skills they taught her among them (core/taught_skills.py)."""
 
     config: ConfigManager
     events: EventBus
@@ -272,6 +274,7 @@ class AppContext:
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
     dungeon: Optional["DungeonBook"] = field(default=None, repr=False)  # DEC-0046 work as a dungeon: runs, loot
     closet: Optional["ClosetBook"] = field(default=None, repr=False)  # DEC-0162 Smart Closet: clothes, outfits
+    taught_skills: Optional["SkillBook"] = field(default=None, repr=False)  # DEC-0123 what the person taught her
     loop: Optional["LoopBook"] = field(default=None, repr=False)  # DEC-0047 the loop: what recurs, and when
     traces: Optional["TurnTraces"] = field(default=None, repr=False)  # DEC-0067 how each turn was answered
     saga_moments: Optional["SagaMoments"] = field(default=None, repr=False)  # DEC-0084 moments for the Chronicles

@@ -2,7 +2,17 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-15 (MIA OS planning, Prompt 01 audit), by claude.*
+session. Last updated: 2026-11-15 (taught skills, phase 1), by claude.*
+
+**2026-11-15, latest (Claude: the Universal Action Layer's first phase, and taught skills).**
+- **Taught skills, phase 1, is built** (DEC-0123; AI Tools › Taught Skills, by voice, and a glasses card):
+  - teach by showing ("watch me: the Friday reset", do it with her, "that's it") or by writing the steps;
+  - a skill is made only of things she can already do: her tools, action kinds, a question, a task of yours, a sentence;
+  - she practises with you: every change asks first until two clean runs, then it's learned;
+  - paying, buying, sending, publishing and deleting ask every time, learned or not;
+  - a failed run, or changing the steps, sends it back to practising.
+  - Not yet: schedules and events, browser and phone steps, running on its own.
+- **The Universal Action Layer, phase U1, is built** (DEC-0165): select text on any MIA page (or paste it into Ctrl+K) and pick what to do with it. Five actions work; the rest are listed as planned.
 
 
 **2026-11-15, later (Claude: Zac's answers, Prompt 02, Smart Closet).**

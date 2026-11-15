@@ -120,6 +120,17 @@ Browser routines and workflows fold in as kinds of taught skill.
 - **Terminal:** a shell function or plugin sending the last command and output to the palette.
 - **Every adapter runs as the person, not root**, and can only *send* captures. It never executes anything itself.
 
+## 6c. The taught-skills engine is built (2026-11-15)
+
+Phase 1 of DEC-0123, which "Build A Skill" (U3) will end in: `core/taught_skills.py`.
+
+- **Steps:** a tool, an action kind, a question, a task of the person's, a sentence. Nothing else yet.
+- **Taught** by "watch me" or by writing the steps as lines (`taught_skill.add`, which a UAL action can propose).
+- **Gates:** each step runs through the gate it already has. A practising skill asks before every change; a learned
+  one asks only for what always asks (pay, buy, send, publish, delete, profile).
+- **Front doors:** the chat, ten voice tools, the Taught Skills screen, `/api/taught-skills/*`, a glasses card.
+- **Not built:** triggers, browser/phone/desktop steps, unattended runs, lab-built skills (DEC-0167's second ending).
+
 ## 6b. U1 is built (2026-11-15)
 
 `core/ual.py` holds the capture contract, the catalogue and its tiers, and

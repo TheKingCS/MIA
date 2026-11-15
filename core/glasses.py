@@ -1268,6 +1268,7 @@ ASKS: dict[str, tuple[str, ...]] = {
     "play": ("How much have I played this week?",),
     "good_news": ("What's the good news?",),
     "browser": ("Which browser tasks have you learned?",),
+    "taught_skills": ("What skills have I taught you?",),
     "files": ("Which files are in my MIA folder?",),
 }
 

@@ -1938,6 +1938,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   with her ("watch me"), by telling her, or by her offering after seeing a repeat. Browser routines and workflows
   fold into it. Phases: engine and chat teaching; triggers; phone steps; desktop apps (its own decision); glasses.
 - Open: the direction, the name (Skills and Routines are taken), phase 1 first, which desktop apps matter.
+- **Phase 1 is built** (claude, 2026-11-15; `core/taught_skills.py`, K-0227): tool, action, ask, you and tell
+  steps; taught by "watch me" or by writing the steps; a run that stops for the person; practising until two clean
+  watched runs. Paying, buying, sending, publishing, deleting and profile changes ask every time, learned or not.
+  Not built yet: triggers (a schedule or an event), browser, phone and desktop steps, her offering after a repeat,
+  folding browser routines and workflows in, and running unattended (nothing calls it yet).
 - Related: DEC-0092 (workflows), DEC-0112 (learning paths), DEC-0117, DEC-0121, DEC-0122
 
 ### DEC-0124: The desktop opens on the web front end

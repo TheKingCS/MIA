@@ -95,6 +95,7 @@ from core.freedom import FreedomLog
 from core.boss_battles import BossBook
 from core.work_dungeon import DungeonBook
 from core.smart_closet import ClosetBook
+from core.taught_skills import SkillBook
 from core.the_loop import LoopBook
 from core.training_session import TrainingStore
 from core.cooking_session import CookingStore
@@ -168,6 +169,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("boss_book", BossBook),
     ("dungeon", DungeonBook),
     ("closet", ClosetBook),  # Smart Closet (DEC-0162): their clothes and outfits
+    ("taught_skills", SkillBook),  # what they taught her, and how practised each is (DEC-0123)
     ("loop", LoopBook),
     ("training", TrainingStore),  # the live workout session (DEC-0055)
     ("cooking", CookingStore),  # the recipe being cooked in cook mode (DEC-0113)

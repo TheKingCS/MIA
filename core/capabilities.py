@@ -53,6 +53,7 @@ LIMITS = {
     "play": "Training load needs how hard it was; without it she counts a middle effort and asks next time.",
     "closet": "Suggestions are worked out from the pieces you've added, the weather and the day's plans; MIA can't see your clothes, so photos and details are yours to add.",
     "life_notes": "Kept only on your yes, from plain first-person words (\"I promised...\", \"we're going with...\"); some slip by, so tell her again.",
+    "taught_skills": "A taught skill is made only of things she can already do, and runs with you there until two clean runs; anything that pays, buys, sends, publishes or deletes asks every time. Browser, phone and scheduled steps aren't in it yet.",
     "browser": "Her own Edge window on your PC, none of your sign-ins: anything that submits, buys, sends, signs in or deletes waits for your OK, and she never types passwords or card numbers; a taught task stops when a site changes.",
     "sight": "Looks on your PC with a local model: a judgment from the picture, said as one; never who a person is; the photo isn't kept.",
     "good_news": "Reads its 16 sources once a day, only when you switch it on; stories are picked by rules in code, so one can slip through that isn't quite good news: say it was misleading.",
@@ -118,7 +119,8 @@ AREAS = (
 # Diagnostics, the Fix-It Log) gets the closing line instead; Freedom stays out at the
 # owner's request (2026-10-29), though "can you…?" still finds it.
 OVERVIEW_SKIP = {"web_home", "assistant", "module_browser", "settings", "diagnostics", "issues", "freedom",
-                 "browser"}  # her browser is part of her, like the chat (DEC-0117)
+                 "browser",  # her browser is part of her, like the chat (DEC-0117)
+                 "taught_skills"}  # so is what she's been taught (DEC-0123)
 # Each app in a few words, for the overview.
 GIST = {
     "budget": "bills, income, spending and debts", "insurance": "your policies and quotes compared",

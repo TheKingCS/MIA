@@ -201,6 +201,7 @@ SEALED_STORES = [
     ("core.places", "Places", "places.json"),
     ("core.work_dungeon", "DungeonBook", "work_dungeon.json"),
     ("core.smart_closet", "ClosetBook", "smart_closet.json"),
+    ("core.taught_skills", "SkillBook", "taught_skills.json"),
     ("core.notification_manager", "NotificationManager", "notifications.json"),
     ("core.workout_manager", "WorkoutManager", "workout_exercises.json"),
     ("core.workout_manager", "WorkoutManager", "workout_templates.json"),

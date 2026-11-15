@@ -125,6 +125,10 @@
    "status": "none",
    "why": "a pick or a choice of how to be answered is the person's own taste (DEC-0138); the style it teaches is the loop (response_style learns from every pick)"
   },
+  "action:taught_skill": {
+   "status": "none",
+   "why": "teaching, changing and forgetting a skill is the person's own instruction; how well a skill runs is counted by the skill itself (clean runs, core/taught_skills._finish)"
+  },
   "action:textbook": {
    "status": "none",
    "why": "a course made from a book, or a book removed, by the person on the Classroom page or by voice (DEC-0125); the tutor's answers have their own loops"
@@ -296,6 +300,10 @@
   "store:scripts": {
    "status": "none",
    "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"
+  },
+  "store:taught_skills": {
+   "status": "todo",
+   "why": "a loop over each skill's runs: clean against stopped and declined, to notice a skill that keeps failing or a step that's always refused, and offer to fix it (DEC-0123, phase 2)"
   },
   "store:textbooks": {
    "status": "none",

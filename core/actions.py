@@ -103,10 +103,14 @@ class Proposal:
 
 def run_as_tool(context, kind: str, params: dict) -> str:
     """Runs an action kind for a voice tool as its screen would: describe's checks first, then execute, returning
-    what happened, or the refusal in its own words (an ActionError, or a store's ValueError). One body for every
+    what happened, or the refusal in its own words (an ActionError, or a store's ValueError). Inside a taught skill, a
+    kind that pays, sends or deletes is refused until the person has said yes to that step (taught_skills.guard). One body for every
     assistant_*_actions module (2026-11-09: nine copies, three of which skipped describe's checks)."""
     action = ACTION_TYPES[kind]
     try:
+        from core.taught_skills import guard
+
+        guard(kind)  # inside a taught skill, a tool can't pay, send or delete without the person's yes (DEC-0123)
         action.describe(context, params)
         return action.execute(context, params)
     except ValueError as problem:  # ActionError is one
@@ -420,6 +424,7 @@ import core.goods_actions  # noqa: E402,F401  (homestead goods and market days, 
 import core.flock_actions  # noqa: E402,F401  (chickens: eggs, feed, birds, DEC-0037)
 import core.dungeon_actions  # noqa: E402,F401  (work as a dungeon: runs, loot, quests, DEC-0046)
 import core.closet_actions  # noqa: E402,F401  (Smart Closet: pieces, outfits, ratings, DEC-0162)
+import core.taught_skill_actions  # noqa: E402,F401  (taught skills: teach, change, forget, watch, DEC-0123)
 import core.loop_actions  # noqa: E402,F401  (the loop: days, times, reminders, DEC-0047)
 import core.failure_actions  # noqa: E402,F401  (the Fix-It Log, DEC-0049)
 import core.freedom_actions  # noqa: E402,F401  (the freedom plan, DEC-0038)
@@ -508,7 +513,10 @@ class ActionCenter:
 
     def approve(self, context, proposal_id: str) -> Proposal:
         """Steps 2 to 5: the person said yes. Executes through the store,
-        which records the history; the change is kept for undo."""
+        which records the history; the change is kept for undo. While she's
+        being shown a skill ("watch me", core/taught_skills.py), the change
+        is noted as one of its steps; and a tool running inside a taught
+        skill can't approve a kind that always asks (taught_skills.guard)."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
@@ -517,6 +525,9 @@ class ActionCenter:
         proposal = self.get(proposal_id, _who(context))
         if proposal.status != PROPOSED:
             raise ActionError(f"That was already {proposal.status}.")
+        from core.taught_skills import guard
+
+        guard(proposal.kind)  # a tool inside a taught skill can't approve a payment or a delete for the person
         action = ACTION_TYPES[proposal.kind]
         source = "assistant" if proposal.proposed_by == "mia" else "manual"
         before = _moment(context, proposal)
@@ -546,6 +557,12 @@ class ActionCenter:
             except Exception:  # the record never breaks the change
                 log.exception("Couldn't keep the correction record for %s.", proposal.kind)
             publish(context, "records.changed", action=f"action_{proposal.kind}")
+            try:  # "watch me" (DEC-0123): a change approved while she's watching is a step of that skill
+                from core.taught_skills import observe_action
+
+                observe_action(context, proposal.kind, proposal.params)
+            except Exception:  # what she's shown never breaks the change
+                log.exception("Couldn't note %s as a step.", proposal.kind)
             try:
                 proposal.reward = reward_for(before, _moment(context, proposal), proposal.kind)
             except Exception:  # a celebration never breaks the change itself
