@@ -42,11 +42,15 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   5. World Intelligence W2 and W1b (core/relevance.py, WorldBook.sync_own_watches, run_watches);
   6. the source loop (core/world_intel.source_stats, mute, the world.sources loop);
   7. Procurement P1 (core/requirements.py, requirement_actions.py, the plan.project hook, needs as anchors);
-  8. Procurement P2 (core/product_specs.py, core/price_book.py, price actions and tools).
+  8. Procurement P2 (core/product_specs.py, core/price_book.py, price actions and tools);
+  9. Prompt 03, the application framework (docs/mia_os/MIA_OS_APPLICATION_*.md, DEC-0175 to DEC-0177).
   Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
+- **Prompt 03 done (2026-11-15, Opus):** `docs/mia_os/MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen supporting
+  documents. Capability-first; DEC-0175 to 0177 proposed; waiting on Zac: Q-27 to Q-29, then Prompt 04. Added to
+  Fable's review queue (item 9). Prompt 04 is Opus's.
 - **Prompt 21** (Living System completeness, kept verbatim in `docs/mia_os/prompts/21_LIVING_SYSTEM_COMPLETENESS.md`) is
   **scheduled after Prompt 17, on Fable** (Zac, 2026-11-15): it assumes Prompts 03–17 are done, and only 00–02 are.
   Its five deliverables build on 03–17's documents and on `MIA_OS_LIVING_SYSTEM.md`.

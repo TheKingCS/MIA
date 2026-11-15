@@ -1,5 +1,7 @@
 # MIA OS: capability classification (Prompt 02 §5)
 
+*Prompt 03 classifies applications, capabilities, agents, skills, extensions, connectors and the rest: [MIA_OS_APPLICATION_MODEL.md](MIA_OS_APPLICATION_MODEL.md). The capability is the unit MIA invokes.*
+
 *Claude, 2026-11-15.*
 
 *Roles:*

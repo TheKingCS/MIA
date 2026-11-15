@@ -1,5 +1,7 @@
 # MIA OS: existing capability inventory (Prompt 01 §7)
 
+*Prompt 03 maps today's apps onto the application framework (56 apps, 419 tools in 88 domains, 466 action kinds, 35 Qt modules, 106 web pages, 277 routes, 91 stores at 2026-11-15): [MIA_OS_APPLICATION_FRAMEWORK.md](MIA_OS_APPLICATION_FRAMEWORK.md) §4.*
+
 *Claude, 2026-11-15, at `c0a71610`. These are the status words from the
 system audit (Verified, Implemented, Partial, Experimental, Documented
 only, Planned, Unverified, Deprecated, Broken).*

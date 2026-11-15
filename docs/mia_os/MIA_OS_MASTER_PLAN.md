@@ -31,7 +31,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | first pass | 10-document plan (2026-11-13, before the library) | done; **superseded**, kept in `preliminary/` | `preliminary/*` |
 | 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
 | **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
-| 03–17 | (see `prompts/`) | not started | |
+| **03** | **Application framework** | **done; waiting for Zac's review** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
+| 04–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 
@@ -69,6 +70,20 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3c. Prompt 03 in brief
+
+The full report is [MIA_OS_APPLICATION_FRAMEWORK.md](MIA_OS_APPLICATION_FRAMEWORK.md) (with sixteen supporting
+documents).
+
+- **MIA already has an application framework, and it's capability-first:** what MIA invokes is a capability (419 tools,
+  466 action kinds, the UAL's actions); an app is a bundle of surfaces over capabilities, with its stores and jobs.
+- **Four gaps:** one manifest per app (its parts are in five places), declared side effects and permissions per
+  capability (DEC-0156), out-of-process code for anything not MIA's own (R-04), and app status from one place.
+- **Proposed:** DEC-0175 (capability-first; MIA's own apps stay in the runtime), DEC-0176 (other code runs out of
+  process, sandboxed, through the capability contract), DEC-0177 (MIA in the OS image, Flatpak for GUI apps, signed
+  extensions, no marketplace).
+- **Questions for Zac:** Q-27 to Q-29.
 
 ## 3b. Prompt 02 in brief
 

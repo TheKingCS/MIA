@@ -1,5 +1,7 @@
 # MIA OS: shared services catalogue (Prompt 02 §8)
 
+*Prompt 03 gives each service its contract (inputs, outputs, boundary, failure) and the local API for out-of-process callers: [MIA_OS_APPLICATION_API_ARCHITECTURE.md](MIA_OS_APPLICATION_API_ARCHITECTURE.md).*
+
 *Claude, 2026-11-15. These are services every app should use instead of
 building its own. "Exists" is from Prompt 01's evidence; "New" are
 proposals.*

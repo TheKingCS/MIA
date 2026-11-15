@@ -1,5 +1,7 @@
 # MIA OS: capability dependency map (Prompt 02 §6)
 
+*Prompt 03 adds the application-level dependencies (manifest, local API, extension host, grants): [MIA_OS_APPLICATION_ARCHITECTURE_DIAGRAMS.md](MIA_OS_APPLICATION_ARCHITECTURE_DIAGRAMS.md).*
+
 *Claude, 2026-11-15. Solid lines are dependencies that exist today; dashed
 lines are new (committed or proposed).*
 

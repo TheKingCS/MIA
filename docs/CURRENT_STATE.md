@@ -4,6 +4,10 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, evening (Claude: MIA OS Prompt 03, the application framework).**
+- **Planning only.** MIA already works as one intelligence with many screens: what she does is a capability (a tool and an action), and an app is a set of screens over those. The plan keeps that, gives each app one record of its parts, lets outside code run only in a sandbox, and installs ordinary Linux apps as Flatpaks. No app store.
+- **Waiting on Zac:** three yes/no questions (Q-27 to Q-29) and the go-ahead for Prompt 04.
+
 **2026-11-15, later (Claude: prices and real comparisons).**
 - **MIA compares products by their real specs:** a pump that moves 400 gallons an hour isn't "the same" as one that moves 800, whatever the title says. She calls each offer identical, equivalent, similar or not suitable for a need, and says why.
 - **She remembers prices** you give her or record on the Needs tab, store by store, and only calls a price good once she's seen it at least three times. A "was" price higher than anything she's seen is called out.

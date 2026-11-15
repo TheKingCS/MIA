@@ -1,5 +1,7 @@
 # MIA OS: application framework requirements (Prompt 02 §16)
 
+*Answered by Prompt 03: [MIA_OS_APPLICATION_FRAMEWORK.md](MIA_OS_APPLICATION_FRAMEWORK.md); each AF requirement's status is in [MIA_OS_APPLICATION_FRAMEWORK_ACCEPTANCE_CRITERIA.md](MIA_OS_APPLICATION_FRAMEWORK_ACCEPTANCE_CRITERIA.md).*
+
 *Claude, 2026-11-15. Requirements for Prompt 03; no design is done here.*
 
 ## The kinds of app MIA has, or will have

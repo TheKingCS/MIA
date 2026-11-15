@@ -43,5 +43,8 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0172 | Procurement & Opportunity Intelligence | APPROVED |
 | DEC-0173 | The Living System doctrine, adopted as invariants on what MIA already is | APPROVED; L1 and L2 built 2026-11-15 |
 | DEC-0174 | Fable reviews all Opus work; four independent checkers where it fits | APPROVED |
+| DEC-0175 | Capability-first application model; MIA's own apps stay in the runtime | PROPOSED (Prompt 03, Q-29) |
+| DEC-0176 | Code that isn't MIA's runs out of process, sandboxed, through the capability contract | PROPOSED (Prompt 03, Q-29) |
+| DEC-0177 | MIA in the OS image, Flatpak for GUI apps, signed extensions, no marketplace | PROPOSED (Prompt 03, Q-29) |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

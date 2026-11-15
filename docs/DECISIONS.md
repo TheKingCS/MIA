@@ -3100,3 +3100,28 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Consequences: `docs/NEXT_SESSION.md` keeps a queue of Opus work awaiting Fable's review; a Fable session works it
   first. `docs/mia_os/MIA_OS_MODEL_ASSIGNMENTS.md` says so.
 - Related: DEC-0166, DEC-0173
+
+### DEC-0175: Capability-first application model; MIA's own apps stay in the runtime
+- Status: PROPOSED (Prompt 03; Zac to approve: Q-29)
+- Proposed by: claude (Opus), 2026-11-15
+- Proposal (`docs/mia_os/MIA_OS_APPLICATION_FRAMEWORK.md` §5): an application is a manifest over capabilities (tools
+  and action kinds), with surfaces, stores and jobs, assembled from code (AF-1); MIA's own apps run in the MIA Runtime
+  as today; only capabilities act, through the action contract, whoever asks (app, agent, skill, extension).
+- Related: DEC-0125, DEC-0155, DEC-0156, DEC-0165, DEC-0173
+
+### DEC-0176: Code that isn't MIA's runs out of process, sandboxed, through the capability contract
+- Status: PROPOSED (Prompt 03; Zac to approve: Q-29; proof of concept: Q-28)
+- Proposed by: claude (Opus), 2026-11-15
+- Proposal (`docs/mia_os/MIA_OS_APPLICATION_EXTENSION_ARCHITECTURE.md`): extensions run in their own process in a
+  bubblewrap or systemd sandbox, reaching MIA only through the local API with grants (DEC-0156); "Add Module" stays
+  first-party only until then (R-04). WebAssembly is the alternative to prototype later.
+- Related: DEC-0058, DEC-0156, DEC-0158
+
+### DEC-0177: MIA in the OS image, Flatpak for GUI apps, signed extensions, no marketplace
+- Status: PROPOSED (Prompt 03; Zac to approve: Q-29; no marketplace: Q-27)
+- Proposed by: claude (Opus), 2026-11-15
+- Proposal (`docs/mia_os/MIA_OS_APPLICATION_DISTRIBUTION_AND_UPDATES.md`): MIA and her apps ship in the signed OS
+  image (bootc, cosign) on the PC and as the runtime service on the Pi; ordinary GUI apps come from Flathub; MIA
+  extensions are signed by Zac's key; installs by voice are proposed actions run by the System Manager helper with
+  fixed arguments, never generated shell commands.
+- Related: DEC-0119, DEC-0157, DEC-0158, DEC-0168
