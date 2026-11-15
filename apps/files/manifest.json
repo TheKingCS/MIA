@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "personal_tools",
+  "order": 44,
   "retired": false,
+  "ask": "What's in my MIA folder?",
+  "domains": [
+    "files"
+  ],
   "entry": "web:files.html",
   "components": {
     "interface": {

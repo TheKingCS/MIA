@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "system",
+  "order": 54,
   "retired": false,
+  "ask": "How is my system health?",
+  "domains": [],
   "entry": "qt",
   "components": {
     "interface": {

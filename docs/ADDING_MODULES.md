@@ -136,7 +136,11 @@ whenever there's real content to write.
 ## 5c. Its manifest (required for one of MIA's apps)
 
 Every app MIA lists has one record of its parts, `apps/<id>/manifest.json`
-(DEC-0178; format: `docs/schema/app_manifest.schema.json`). It claims the
+(DEC-0178; format: `docs/schema/app_manifest.schema.json`). Since M3 the
+manifests *are* the app list: the sidebar, `/api/shell` and the Apps page
+read `core/web_surfaces.APPS`, which is built from them (its name, icon,
+tagline, page, life area, `order` in the sidebar, `ask` and tool
+`domains`), so a new app is a new manifest, not a line of code. It claims the
 app's tools, action kinds, stores, jobs and daily checks, its pages and
 cards, and the devices it runs on. `tests/test_app_registry.py` fails when
 something in the code isn't claimed by exactly one manifest, so a new tool

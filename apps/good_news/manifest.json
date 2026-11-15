@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "dashboard",
+  "order": 49,
   "retired": false,
+  "ask": "What's the good news?",
+  "domains": [],
   "entry": "web:news.html",
   "components": {
     "interface": {

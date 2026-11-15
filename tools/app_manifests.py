@@ -2,8 +2,10 @@
 tools.app_manifests
 =====================
 
-Writes the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1;
-`docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from today's code so nothing changes behaviour:
+Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1;
+`docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the
+manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` now keeps each app's
+name, icon, words, page, order, ask and domains as its manifest has them and re-derives the rest from the code:
 
     python -m tools.app_manifests write     # apps/<id>/manifest.json for every app, and apps/mia/ for MIA herself
     python -m tools.app_manifests check     # what core/app_registry.py would refuse, without writing
@@ -14,7 +16,7 @@ action kind, store or job is added to its app's manifest by hand (or by the scaf
 `--force`, so it can't silently undo a hand edit.
 
 **Who owns what** comes from the code where the code says it and from tables here where it doesn't:
-- tools: by tool domain, from each app's `domains` in `core/web_surfaces.APPS` (a domain listed by two apps goes to
+- tools: by tool domain, from each app's `domains` (its manifest, through `core/web_surfaces.APPS`; a domain listed by two apps goes to
   the first in `SHARED_DOMAIN_OWNER`, the other lists it under `uses`);
 - action kinds: by family (the part before the dot), from `FAMILY_OWNER`, checked by hand against what each family
   does, because a family's name often isn't an app's (only 24 of 140 match);
@@ -125,7 +127,8 @@ def _safe_name(path: Path) -> str:
 
 
 def build() -> dict[str, dict]:
-    """Every manifest, from today's code: {app id: manifest}. Pure apart from reading the code's registries."""
+    """Every manifest, from the code and the app list (itself read from the manifests since M3): {app id: manifest}.
+    Pure apart from reading the code's registries; `write` then keeps what only a person writes."""
     import core.actions  # noqa: F401  (the action contract first, as MIA loads it)
     from core import parity
     from core.actions import ACTION_TYPES
@@ -148,14 +151,14 @@ def build() -> dict[str, dict]:
             domain_owner.setdefault(d, SHARED_DOMAIN_OWNER.get(d, app.module_id))
     ids = {a.module_id for a in APPS}
     out = {}
-    for app in APPS:
+    for order, app in enumerate(APPS, start=1):
         qt = ROOT / "modules" / app.module_id / "module.py"
         row = devices.get(app.module_id, {})
         out[app.module_id] = {
             "manifest_version": SCHEMA_VERSION, "id": app.module_id, "name": app.name, "icon": app.icon,
             "tagline": app.tagline, "description": app.description, "version": "1.0.0",
-            "group": app.group, "area": area_of.get(app.module_id, ""),
-            "retired": app.module_id in RETIRED,
+            "group": app.group, "area": area_of.get(app.module_id, ""), "order": order,
+            "retired": app.module_id in RETIRED, "ask": app.ask, "domains": list(app.domains),
             "entry": f"web:{app.page}" if app.page else ("qt" if qt.exists() else "voice"),
             "components": {"interface": {"web": [app.page] if app.page else [],
                                          "qt": [_safe_name(qt.parent)] if qt.exists() else [],
@@ -172,7 +175,7 @@ def build() -> dict[str, dict]:
                         "background": []},
         }
     out["mia"] = {"manifest_version": SCHEMA_VERSION, **PLATFORM, "version": "1.0.0", "group": "", "area": "",
-                  "retired": False, "entry": "voice",
+                  "order": 0, "retired": False, "ask": "", "domains": [], "entry": "voice",
                   "components": {"interface": {"web": [], "qt": [], "glasses": []}, "services": [], "data": [],
                                  "agents": [], "workflows": [], "integrations": []},
                   "capabilities": {"tools": [], "actions": []}, "uses": [], "permissions": [], "dependencies": [],
@@ -195,14 +198,36 @@ def build() -> dict[str, dict]:
     return out
 
 
+HAND_FIELDS = ("version", "permissions", "dependencies")  # kept as written: the code doesn't know them
+HAND_COMPONENTS = ("services", "agents", "workflows", "integrations")
+
+
+def _keep_hand_fields(manifest: dict, target: Path) -> dict:
+    """The generated manifest with the fields only a person writes (its version, permissions, dependencies, engine
+    files, agents, workflows, integrations, and any x- extensions) kept from the manifest already at `target`."""
+    try:
+        old = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return manifest
+    for key in HAND_FIELDS:
+        if key in old:
+            manifest[key] = old[key]
+    for key in HAND_COMPONENTS:
+        if key in old.get("components", {}):
+            manifest["components"][key] = old["components"][key]
+    manifest.update({k: v for k, v in old.items() if k.startswith("x-")})
+    return manifest
+
+
 def write(force: bool = False, folder: Path = APPS_DIR) -> list[str]:
-    """Writes apps/<id>/manifest.json for each app (and MIA herself); refuses when manifests exist unless forced.
-    Returns the ids written."""
+    """Writes apps/<id>/manifest.json for each app (and MIA herself); refuses when manifests exist unless forced, and
+    then keeps what only a person writes (`_keep_hand_fields`). Returns the ids written."""
     if any(folder.glob("*/manifest.json")) and not force:
         raise SystemExit("Manifests already exist: they're the source now. Edit them, or pass --force to regenerate.")
     written = []
     for app_id, manifest in build().items():
         target = folder / app_id / "manifest.json"
+        manifest = _keep_hand_fields(manifest, target)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         written.append(app_id)

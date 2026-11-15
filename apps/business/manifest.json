@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "businesses",
+  "order": 23,
   "retired": false,
+  "ask": "How much profit did I make this month?",
+  "domains": [
+    "ledger"
+  ],
   "entry": "web:business.html",
   "components": {
     "interface": {

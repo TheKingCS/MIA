@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Home, homestead & equipment",
   "area": "smart_devices",
+  "order": 25,
   "retired": false,
+  "ask": "Are the cameras working?",
+  "domains": [
+    "cameras"
+  ],
   "entry": "web:security.html",
   "components": {
     "interface": {

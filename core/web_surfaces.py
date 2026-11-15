@@ -66,162 +66,28 @@ MONEY, HOME, LIFE, OUTDOORS, KNOW = ("Money & business", "Home, homestead & equi
                                      "Outdoors & field", "Knowledge, tools & system")
 GROUPS = (LIFE, MONEY, HOME, OUTDOORS, KNOW)
 
-# The order of the concept's sidebar first, then the rest of MIA.
-APPS: tuple[App, ...] = (
-    App("web_home", "Home", "✨", "MIA, and a chat with her.", "index.html",
-        "MIA herself: her presence, today's one thing, and a chat with her.", LIFE, (), "How are you, MIA?"),
-    App("dashboard", "Dashboard", "📊", "Your life. In sync.", "dashboard.html",
-        "Recent activity, active missions, memories, and upcoming items at a glance.", LIFE,
-        ("today", "alarms", "projects", "life_events", "links", "why", "directions", "connections"), "What's on today?"),
-    App("dungeon", "The Dungeon", "🏰", "Clear the run. Bank the loot.", "dungeon.html",
-        "Work as a dungeon you loot every day: runs, hard mode, overtime bosses, projected and banked loot (DEC-0046).",
-        MONEY, ("dungeon", "loop"), "How much loot this week?"),
-    App("issues", "Fix-It Log", "🛠", "Where MIA stumbled, so it gets fixed.", "issues.html",
-        "Where MIA got it wrong, broke or was slow, grouped and ranked, ready to be fixed; what she learned you mean (DEC-0049).",
-        KNOW, ("issues",), "What's been going wrong?"),
-    App("freedom", "Freedom", "🌄", "Your way out, in numbers.", "freedom.html",
-        "What you're saving toward, how far along you are, and the day it's within reach (DEC-0038).", MONEY,
-        ("freedom",), "When can I work from home?"),
-    App("compliance", "Compliance", "📋", "Every deadline, on time.", "compliance.html",
-        "Tax filings and payments, permits, licences and renewals, each with its official source (DEC-0040).",
-        MONEY, ("compliance",), "What's due for taxes?"),
-    App("calendar", "Calendar", "📅", "Everything with a date.", "calendar.html",
-        "Your events, plus upkeep, bills, meals, training and birthdays, by day.", LIFE,
-        ("calendar",), "What's on my calendar this week?"),
-    App("greenhouse", "Greenhouse", "🌱", "Grow food. Grow freedom.", "greenhouse.html",
-        "At-a-glance status for garden, greenhouse, and aquaponics assets.", HOME, ("maintenance", "development"),
-        "What needs doing in the greenhouse?"),
-    App("flock", "Chickens", "🐔", "Eggs, every day.", "flock.html",
-        "Your flock: eggs collected, the lay rate, feed cost per dozen, and cartons for the stand (DEC-0037).", HOME,
-        ("flock",), "How many eggs this week?"),
-    App("garage", "Garage", "🚗", "Keep it running. Keep it ready.", "garage.html",
-        "At-a-glance status for vehicles and motorized equipment.", HOME, ("maintenance", "ownership"),
-        "What upkeep is due on my vehicles?"),
-    App("kitchen", "Kitchen", "🍳", "Good food. Good mood.", "kitchen.html",
-        "Recipes, pantry, grocery list, and meal tracking.", HOME, ("kitchen", "groceries"),
-        "What can I make with what's in the pantry?"),
-    App("household", "Household", "🧺", "A home that runs itself.", "household.html",
-        "Daily and weekly household routines — laundry, dishes, chores.", HOME, ("household",),
-        "I did the dishes."),
-    App("world_intel", "World", "🌐", "What the world has for you.", "intel.html",
-        "World Intelligence: watches on news, releases, research, grants and listings, and what they found, each "
-        "with its source (DEC-0170).", KNOW, ("world_intel", "requirements", "prices"), "What have you found?"),
-    App("closet", "Smart Closet", "👕", "Dressed for the day.", "closet.html",
-        "Your clothes and outfits: what to wear today from the weather and your plans, ratings, and what you never wear (DEC-0162).",
-        LIFE, ("closet",), "What should I wear today?"),
-    App("workout", "Workout", "🏋", "Stronger body. Clearer mind.", "workout.html",
-        # "health" (2026-11-08): sleep, visits, medications and records (core/assistant_health_actions.py) live on
-        # the Health page in the same area, which isn't an app of its own
-        "Exercises, guided sessions, and progress.", LIFE, ("workout", "health"), "Log a 30 minute workout."),
-    App("real_estate", "Real Estate", "🏘", "Cash flow. Equity. Freedom.", "real-estate.html",
-        "Property values, equity, rental income, and linked maintenance.", MONEY, ("real_estate", "inventory"),
-        "How are my rentals doing this month?"),
-    App("missions", "Missions", "🏆", "Explore. Complete. Level up.", "missions.html",
-        "Gamified goals and objectives, tied to a trip or general.", LIFE, ("missions",),
-        "Add a mission to build a chicken coop."),
-    App("skills", "Skills", "⚔", "Do the thing. Earn the level. Unlock the next thing.", "skills.html",
-        "My Hero's Path — skill tree and character progression.", LIFE, ("skills",), "Which skills am I growing?"),
-    App("budget", "Money", "💰", "Know where it goes.", "money.html",
-        "Household bills, income, expenses, and tax-relevant totals.", MONEY,
-        ("budget", "debts", "homestead_costs", "business_use", "business_tags"), "Which debt should I pay first?"),
-    App("maintenance", "Maintenance", "🔧", "Everything you own, cared for.", "maintenance.html",
-        "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.", HOME,
-        (), "I put 120 hours on the mower."),
-    App("property", "Property", "🏠", "The house, the appliances, the tools.", "property.html",
-        "At-a-glance status for the house, appliances, and tools.", HOME, (),
-        "Do I have any furnace filters left?"),
-    App("workshop", "Workshop", "🔩", "Parts, jobs and products.", "workshop.html",
-        "Recipes and builds, materials, homestead goods in batches, market days, labels, and the shop's sales.", MONEY,
-        ("components", "materials", "jobs", "products", "ledger", "goods"), "How much plywood do I have?"),
-    App("business", "Orders & Quotes", "🧾", "Customers, quotes and orders.", "business.html",
-        "Quotes from your recipes, customers, orders and payments, and a portfolio of what you've built (DEC-0030).",
-        MONEY, ("ledger",), "How much profit did I make this month?"),
-    App("insurance", "Insurance", "☂️", "Covered, for less.", "insurance.html",
-        "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).", MONEY, ("insurance",),
-        "When does my car insurance renew?"),
-    App("security", "Cameras", "🛡️", "Your cameras, at home.", "security.html",
-        "Your home cameras, watched live from MIA over your own network, no cloud (DEC-0033).", HOME, ("cameras",),
-        "Are the cameras working?"),
-    App("power", "Power", "🔋", "Energy, tracked.", "power.html",
-        "Battery status and manual energy/utility tracking.", HOME, ("power",), "How's the battery?"),
-    App("character", "Character", "👤", "Your story so far.", "character.html",
-        "A living record of what you've actually done.", LIFE, ("character",), "What level am I?"),
-    App("reward_shop", "Reward Shop", "🎁", "Spend what you earn.", "shop.html",
-        "Real rewards you set, bought with the credits you earn (DEC-0028).", LIFE, ("reward_shop",), "What can I buy with my credits?"),
-    App("observations", "Observations", "🔍", "What MIA noticed.", "observations.html",
-        "What MIA has noticed across your maintenance and missions.", LIFE, (), "What have you noticed lately?"),
-    App("relationships", "People", "👥", "The ones who matter.", "people.html",
-        "Relationship profiles and pet profiles.", LIFE, ("relationships",), "When is the next birthday?"),
-    App("notes", "Journal", "📓", "Write it down.", "journal.html",
-        "Dated, searchable, taggable journal entries.", LIFE, ("notes", "journal", "private_journal"),
-        "Make a note: call the plumber Friday."),
-    App("classroom", "Classroom", "🎓", "Keep learning.", "classroom.html",
-        "Your own subjects, courses, and lessons.", LIFE, ("classroom", "textbooks", "learning"), "How is my learning progress?"),
-    App("inbox", "Inbox", "📥", "Paperwork, handled.", "inbox.html",
-        "Receipts, manuals and documents MIA files for you.", MONEY, ("inbox", "email"),
-        "What's waiting in my inbox?"),
-    App("expeditions", "Expeditions", "🏕", "Plan the trip.", "expeditions.html",
-        "Expedition Mode: trip routes, gear, weather, and logged speed/distance for any outing.", OUTDOORS,
-        ("expeditions",), "Plan a weekend camping trip."),
-    App("vault", "Memory Vault", "🗄", "Your photos, kept safe.", "vault.html",
-        "Your phone's photos and videos, kept safe on your home computer, so the phone can let them go (DEC-0030).",
-        LIFE, ("vault",), "Are my photos backed up?"),
-    App("memories", "Memories", "📸", "Remember the trip.", "memories.html",
-        "Trip recaps, stats, and photos from your Expeditions.", OUTDOORS, ("expeditions",), "Show me my last trip."),
-    App("maps", "Maps", "🗺", "Know the ground.", "maps.html",
-        "Waypoints, a real offline basemap, and official trail maps.", OUTDOORS, ("maps",),
-        "Which trail maps do I have?"),
-    App("navigation", "Navigation", "🧭", "Find the way.", "navigation.html",
-        "Waypoints, distance/bearing, and sun/moon reference.", OUTDOORS, ("waypoints",),
-        "How far is camp from the trailhead?"),
-    App("knowledge", "Knowledge", "📚", "The offline library.", "knowledge.html",
-        "Offline reference material and personal knowledge base.", KNOW, ("knowledge", "plans", "plan_buying", "plan_saving"), "How do I purify water?"),
-    App("toolbox", "Toolbox", "🧰", "Quick tools.", "toolbox.html",
-        "Calculators, unit conversion, and other quick tools.", KNOW, ("toolbox",), "Convert 5 gallons to liters."),
-    App("lab", "The Lab", "🧪", "Experiments and sensors.", "lab.html",
-        "Sensor testing, experiments, calibration, and graphs.", KNOW, ("lab",), "Start a temperature experiment."),
-    App("field_kit", "Field Kit", "🛠", "Devices and scripts.", "field-kit.html",
-        "Detect and manage connected devices; run your own scripts.", KNOW, ("field_kit", "security"),
-        "What devices are connected?"),
-    App("passwords", "Passwords", "🔐", "Every login, locked.", "passwords.html",
-        "Your logins in a vault only your master password opens; MIA's assistant never sees them (DEC-0035).", KNOW,
-        (), ""),
-    App("files", "Files", "🗂", "Your files.", "files.html", "Browse and manage local files and data.", KNOW, ("files",),
-        "What's in my MIA folder?"),
-    App("music", "Music", "🎵", "Your music.", "music.html", "Local audio library, playlists, and playback.", KNOW,
-        ("music",), "Play something relaxing."),
-    App("operating_journal", "Operating Journal", "🧭", "How you mean to live, and how you do.", "operating.html",
-        "Your values, priorities, ideal day and week and rules, each checked against your records or rated by you "
-        "(DEC-0097).", LIFE, ("operating_journal",), "Am I living how I said I want to?"),
-    App("life_notes", "Kept", "📌", "What you said you'd do.", "kept.html",
-        "The promises, decisions, ideas and goals set aside you asked MIA to keep, from what you said (DEC-0054).",
-        LIFE, ("life_notes",), "What did I promise?"),
-    App("play", "Play", "🏓", "Games and sports, counted.", "play.html",
-        "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).", LIFE, ("play", "worlds"),
-        "Played pickleball for an hour, it was hard."),
-    App("good_news", "Good News Radio", "📻", "What went right today.", "news.html",
-        "Good news from credible sources, each story saying how it's known, read by four radio personalities "
-        "(DEC-0096).", KNOW, (), "What's the good news?"),
-    App("sight", "Look", "👁", "Show MIA something.", "look.html",
-        "A photo and a question (what is this, read this label, inspect this part), answered on your PC; never who "
-        "a person is (build plan step 15).", KNOW, (), "What is this?"),
-    App("assistant", "MIA Assistant", "🗨", "Always here. Always with you.", "assistant.html",
-        "Conversational assistant and local AI.", KNOW, ("communication", "undo", "system", "memory", "creations", "ual"),
-        "Undo that."),
-    App("browser", "Browser", "🌐", "She browses. You approve.", "browser.html",
-        "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you "
-        "taught her by showing (DEC-0117).", KNOW, ("browser",), "Open the county website."),
-    App("taught_skills", "Taught Skills", "🎓", "Show her once. Practise together.", "taught-skills.html",
-        "What you've taught MIA to do, made of things she can already do: each skill's steps, how practised it is, "
-        "and the run that's waiting on you (DEC-0123).", KNOW, ("taught_skills",), "What skills have I taught you?"),
-    App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
-        "System health, logs, and hardware status.", KNOW, (), "How is my system health?"),
-    App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
-        "View, enable/disable, install, and rescan modules.", KNOW, ("app_registry",)),
-    App("settings", "Settings", "⚙", "Make MIA yours.", None,
-        "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters", "humor", "backup", "answer_style"),
-        "Make the text bigger."),
-)
+# Every app, in sidebar order, read from its manifest (apps/<id>/manifest.json; DEC-0178, migration phase M3): the
+# registry is the source, and this is a thin view of it for the screens. A new app is a new manifest, never a line
+# here. A manifest that can't be read is logged and left out (tests/test_app_registry.py fails on it).
+
+
+def _apps_from_manifests() -> tuple[tuple[App, ...], frozenset]:
+    """Every app and the retired ones' ids, from the Application Registry's manifests, in their `order`."""
+    from core import app_registry
+
+    reg = app_registry.load()
+    for problem in reg.load_problems:
+        log.error("An app's manifest was left out: %s", problem)
+    manifests = sorted((m for i, m in reg.manifests.items() if i != "mia"), key=lambda m: (m.get("order", 0), m["id"]))
+    if not manifests:
+        log.error("No app manifests in %s: MIA has no apps to show", app_registry.APPS_DIR)
+    apps = tuple(App(m["id"], m["name"], m.get("icon", ""), m.get("tagline", ""),
+                     (m["components"]["interface"].get("web") or [None])[0], m.get("description", ""),
+                     m.get("group", ""), tuple(m.get("domains", ())), m.get("ask", "")) for m in manifests)
+    return apps, frozenset(m["id"] for m in manifests if m.get("retired"))
+
+
+APPS, _RETIRED = _apps_from_manifests()
 APPS_BY_ID = {a.module_id: a for a in APPS}
 # Apps that exist only as web screens (no PySide6 module of their own).
 WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault", "insurance", "passwords", "flock", "freedom", "compliance", "dungeon", "issues",
@@ -232,7 +98,7 @@ WEB_ONLY = frozenset({"calendar", "reward_shop", "business", "security", "vault"
 # Garage and Greenhouse open Maintenance to add and edit things.
 # Zac, 2026-10-16: the Dashboard said what Home says; Home took its Upcoming
 # list and the Dashboard went (its /api/dashboard data still feeds Home).
-RETIRED = frozenset({"maintenance", "property", "dashboard"})
+RETIRED = _RETIRED  # each retired app's manifest says "retired": true
 
 # Never personal: general encouragement, one a day (STATIC).
 SAYINGS = (

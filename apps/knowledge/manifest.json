@@ -8,7 +8,15 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "learning",
+  "order": 39,
   "retired": false,
+  "ask": "How do I purify water?",
+  "domains": [
+    "knowledge",
+    "plans",
+    "plan_buying",
+    "plan_saving"
+  ],
   "entry": "web:knowledge.html",
   "components": {
     "interface": {

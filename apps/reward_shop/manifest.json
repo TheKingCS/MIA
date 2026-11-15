@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "missions",
+  "order": 28,
   "retired": false,
+  "ask": "What can I buy with my credits?",
+  "domains": [
+    "reward_shop"
+  ],
   "entry": "web:shop.html",
   "components": {
     "interface": {

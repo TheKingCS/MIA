@@ -4,7 +4,7 @@
   "title": "MIA application manifest, version 1",
   "description": "One MIA-native application's canonical manifest (apps/<id>/manifest.json; DEC-0175, DEC-0178; docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md section B). An index of the app's parts, not its code. core/app_registry.py checks it against the code: every tool, action kind, store, job and daily check is claimed by exactly one manifest. Keys starting with x- are extensions, kept and ignored.",
   "type": "object",
-  "required": ["manifest_version", "id", "name", "icon", "tagline", "description", "version", "group", "area", "retired",
+  "required": ["manifest_version", "id", "name", "icon", "tagline", "description", "version", "group", "area", "order", "retired", "ask", "domains",
                "entry", "components", "capabilities", "uses", "permissions", "dependencies", "runtime"],
   "properties": {
     "manifest_version": {"type": "integer", "enum": [1]},
@@ -16,7 +16,10 @@
     "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "group": {"type": "string"},
     "area": {"type": "string"},
+    "order": {"type": "integer", "description": "Its place in the sidebar and app lists (1 first); 0 for MIA herself."},
     "retired": {"type": "boolean"},
+    "ask": {"type": "string", "description": "An example of what to say to MIA about it."},
+    "domains": {"type": "array", "items": {"type": "string"}, "description": "The Assistant tool domains that work in it, its own and the ones it shares (uses)."},
     "entry": {"type": "string", "pattern": "^(web:[a-z0-9_.-]+\\.html|qt|voice)$"},
     "components": {
       "type": "object",

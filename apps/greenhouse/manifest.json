@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Home, homestead & equipment",
   "area": "homestead",
+  "order": 8,
   "retired": false,
+  "ask": "What needs doing in the greenhouse?",
+  "domains": [
+    "maintenance",
+    "development"
+  ],
   "entry": "web:greenhouse.html",
   "components": {
     "interface": {

@@ -15,15 +15,17 @@ The manifest is an index; it holds no code.
 
 **Checking** (`Registry.problems`): every tool, action kind, store, job and daily check in the code is claimed by
 exactly one manifest, and every one a manifest claims exists; every web page and Qt module named exists; ids are
-unique and match their folders; dependencies name apps that exist; the schema version is known. `tests/test_app_registry.py`
+unique and match their folders; dependencies name apps that exist; no two apps share a sidebar place; the domains an
+app shares are in its own list of domains; the schema version is known. `tests/test_app_registry.py`
 fails on any problem, so adding a capability without claiming it, or removing one a manifest still names, is caught.
 
 **Asking** (the queries MIA's own understanding of her ecosystem is built from, phase M2): the inventory, an app's
 capabilities, the app behind a capability, the apps that depend on one, the apps that can run on a device. Answers come
 from the manifests and the code, never from a model.
 
-Nothing here changes behaviour yet: the app list still comes from `core/web_surfaces.APPS` until phase M3, and a test
-keeps the two in agreement.
+Since phase M3 the manifests are the app list's source: `core/web_surfaces.APPS` (and so the sidebar, `/api/shell`, the
+Apps page) is built from them in their `order`, with each app's `ask` and tool `domains`, and `RETIRED` from their
+`retired` flags.
 """
 
 from __future__ import annotations
@@ -108,9 +110,14 @@ class Registry:
             for folder in iface.get("qt", []):
                 if not (CODE_ROOT / folder / "module.py").is_file():
                     out.append(f"{app_id}: its Qt module {folder} doesn't exist")
+            if not set(m.get("uses", [])) <= set(m.get("domains", m.get("uses", []))):
+                out.append(f"{app_id}: shares domains its own list of domains doesn't name")
             for dep in m.get("dependencies", []):
                 if dep.get("application_id") not in self.manifests:
                     out.append(f"{app_id}: depends on {dep.get('application_id')}, which isn't an app")
+        orders = [m.get("order") for i, m in self.manifests.items() if i != "mia"]
+        for o in sorted({o for o in orders if orders.count(o) > 1}, key=str):
+            out.append(f"two apps share the sidebar place {o}")
         return out
 
 

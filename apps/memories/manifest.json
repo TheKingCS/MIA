@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Outdoors & field",
   "area": "personal_tools",
+  "order": 36,
   "retired": false,
+  "ask": "Show me my last trip.",
+  "domains": [
+    "expeditions"
+  ],
   "entry": "web:memories.html",
   "components": {
     "interface": {

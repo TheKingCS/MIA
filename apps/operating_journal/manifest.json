@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 46,
   "retired": false,
+  "ask": "Am I living how I said I want to?",
+  "domains": [
+    "operating_journal"
+  ],
   "entry": "web:operating.html",
   "components": {
     "interface": {

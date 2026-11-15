@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "ai_tools",
+  "order": 33,
   "retired": false,
+  "ask": "What's waiting in my inbox?",
+  "domains": [
+    "inbox",
+    "email"
+  ],
   "entry": "web:inbox.html",
   "components": {
     "interface": {

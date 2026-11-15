@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Outdoors & field",
   "area": "recreation",
+  "order": 37,
   "retired": false,
+  "ask": "Which trail maps do I have?",
+  "domains": [
+    "maps"
+  ],
   "entry": "web:maps.html",
   "components": {
     "interface": {

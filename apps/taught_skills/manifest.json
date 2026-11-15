@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "ai_tools",
+  "order": 53,
   "retired": false,
+  "ask": "What skills have I taught you?",
+  "domains": [
+    "taught_skills"
+  ],
   "entry": "web:taught-skills.html",
   "components": {
     "interface": {

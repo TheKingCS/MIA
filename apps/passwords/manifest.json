@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "security",
+  "order": 43,
   "retired": false,
+  "ask": "",
+  "domains": [],
   "entry": "web:passwords.html",
   "components": {
     "interface": {

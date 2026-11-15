@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Outdoors & field",
   "area": "recreation",
+  "order": 38,
   "retired": false,
+  "ask": "How far is camp from the trailhead?",
+  "domains": [
+    "waypoints"
+  ],
   "entry": "web:navigation.html",
   "components": {
     "interface": {

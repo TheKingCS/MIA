@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "finances",
+  "order": 24,
   "retired": false,
+  "ask": "When does my car insurance renew?",
+  "domains": [
+    "insurance"
+  ],
   "entry": "web:insurance.html",
   "components": {
     "interface": {

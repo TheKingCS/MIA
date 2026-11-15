@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "missions",
+  "order": 3,
   "retired": false,
+  "ask": "How much loot this week?",
+  "domains": [
+    "dungeon",
+    "loop"
+  ],
   "entry": "web:dungeon.html",
   "components": {
     "interface": {

@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 47,
   "retired": false,
+  "ask": "What did I promise?",
+  "domains": [
+    "life_notes"
+  ],
   "entry": "web:kept.html",
   "components": {
     "interface": {

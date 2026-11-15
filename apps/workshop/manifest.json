@@ -8,7 +8,17 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "businesses",
+  "order": 22,
   "retired": false,
+  "ask": "How much plywood do I have?",
+  "domains": [
+    "components",
+    "materials",
+    "jobs",
+    "products",
+    "ledger",
+    "goods"
+  ],
   "entry": "web:workshop.html",
   "components": {
     "interface": {

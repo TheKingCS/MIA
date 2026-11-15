@@ -4,10 +4,10 @@ tests.test_app_registry
 
 The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every
 MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action
-kind, store, job and daily check in the code exactly once, and name nothing that isn't there; the registry agrees
-with today's app list (core/web_surfaces.APPS) until it becomes the source in M3; its queries answer from the
-manifests; a manifest that can't be read or names itself wrongly is a problem, not a crash; and the generator never
-overwrites manifests that exist unless forced.
+kind, store, job and daily check in the code exactly once, and name nothing that isn't there; since M3 the app list
+(core/web_surfaces.APPS, RETIRED) is read from the manifests in their order; its queries answer from the manifests; a
+manifest that can't be read or names itself wrongly is a problem, not a crash; two apps can't share a sidebar place;
+and the generator never overwrites manifests unless forced, and then keeps what only a person writes.
 """
 
 import json
@@ -33,14 +33,31 @@ def test_the_manifests_claim_everything_in_the_code_exactly_once_and_nothing_tha
     assert registry.problems() == []
 
 
-def test_the_registry_agrees_with_todays_app_list(registry):
+def test_the_app_list_is_read_from_the_manifests_in_their_order(registry):
     from core.web_surfaces import APPS, RETIRED
 
-    assert set(registry.manifests) == {a.module_id for a in APPS} | {"mia"}
+    ordered = sorted((m for i, m in registry.manifests.items() if i != "mia"), key=lambda m: m["order"])
+    assert [a.module_id for a in APPS] == [m["id"] for m in ordered]
+    assert APPS[0].module_id == "web_home"
     for app in APPS:
         m = registry.get(app.module_id)
-        assert (m["name"], m["icon"], m["retired"]) == (app.name, app.icon, app.module_id in RETIRED)
-        assert m["components"]["interface"]["web"] == ([app.page] if app.page else [])
+        assert (app.name, app.icon, app.tagline, app.description, app.group, app.ask) == (
+            m["name"], m["icon"], m["tagline"], m["description"], m["group"], m["ask"])
+        assert app.domains == tuple(m["domains"]) and (app.page or None) == (m["components"]["interface"]["web"] or [None])[0]
+    assert RETIRED == {m["id"] for m in ordered if m["retired"]}
+
+
+def test_the_phone_app_carries_the_manifests_it_reads_its_app_list_from():
+    from pathlib import Path
+
+    gradle = Path(__file__).resolve().parent.parent / "android-phone" / "app" / "build.gradle.kts"
+    assert '"apps/*/manifest.json"' in gradle.read_text(encoding="utf-8")
+
+
+def test_two_apps_cant_share_a_sidebar_place(registry):
+    twin = dict(registry.get("greenhouse"), order=registry.get("kitchen")["order"])
+    doubled = app_registry.Registry(manifests={**registry.manifests, "greenhouse": twin})
+    assert any("share the sidebar place" in p for p in doubled.problems())
 
 
 def test_the_queries_answer_from_the_manifests(registry):
@@ -76,3 +93,16 @@ def test_the_generator_never_overwrites_manifests_unless_forced(tmp_path):
     with pytest.raises(SystemExit):
         app_manifests.write(folder=tmp_path)
     assert (tmp_path / "x" / "manifest.json").read_text(encoding="utf-8") == "{}"
+
+
+def test_regenerating_keeps_what_only_a_person_writes(tmp_path):
+    from tools import app_manifests
+
+    target = tmp_path / "manifest.json"
+    target.write_text(json.dumps({"version": "2.1.0", "permissions": ["network:feeds"], "x-note": "kept",
+                                  "components": {"services": ["core/world_intel.py"]}}), encoding="utf-8")
+    fresh = {"version": "1.0.0", "permissions": [], "components": {"services": [], "data": ["a"]}}
+    kept = app_manifests._keep_hand_fields(fresh, target)
+    assert kept["version"] == "2.1.0" and kept["permissions"] == ["network:feeds"] and kept["x-note"] == "kept"
+    assert kept["components"] == {"services": ["core/world_intel.py"], "data": ["a"]}
+    assert app_manifests._keep_hand_fields({"v": 1}, tmp_path / "none.json") == {"v": 1}

@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Home, homestead & equipment",
   "area": "garage",
+  "order": 10,
   "retired": false,
+  "ask": "What upkeep is due on my vehicles?",
+  "domains": [
+    "maintenance",
+    "ownership"
+  ],
   "entry": "web:garage.html",
   "components": {
     "interface": {

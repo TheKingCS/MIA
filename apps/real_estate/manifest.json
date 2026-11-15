@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "businesses",
+  "order": 16,
   "retired": false,
+  "ask": "How are my rentals doing this month?",
+  "domains": [
+    "real_estate",
+    "inventory"
+  ],
   "entry": "web:real-estate.html",
   "components": {
     "interface": {

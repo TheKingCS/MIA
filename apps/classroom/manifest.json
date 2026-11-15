@@ -8,7 +8,14 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "learning",
+  "order": 32,
   "retired": false,
+  "ask": "How is my learning progress?",
+  "domains": [
+    "classroom",
+    "textbooks",
+    "learning"
+  ],
   "entry": "web:classroom.html",
   "components": {
     "interface": {

@@ -8,7 +8,19 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "",
+  "order": 2,
   "retired": true,
+  "ask": "What's on today?",
+  "domains": [
+    "today",
+    "alarms",
+    "projects",
+    "life_events",
+    "links",
+    "why",
+    "directions",
+    "connections"
+  ],
   "entry": "web:dashboard.html",
   "components": {
     "interface": {

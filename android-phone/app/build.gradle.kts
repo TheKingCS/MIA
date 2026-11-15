@@ -29,6 +29,7 @@ val bundleMia by tasks.registering(Zip::class) {
     from(miaRoot) {
         include(
             "core/**/*.py", "server/**", "modules/__init__.py", "modules/module_base.py", "web/**",
+            "apps/*/manifest.json", // the app list (DEC-0178: core/web_surfaces.APPS reads them)
             "config/default_config.json", "data/mission_pathways.json", "data/skill_definitions.json",
             "data/model_bench_cases.json", "data/foods.tsv",
         )

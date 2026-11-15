@@ -4,8 +4,8 @@
 [`prompts/22_RUNTIME_OWNED_APPLICATION_ECOSYSTEM.md`](prompts/22_RUNTIME_OWNED_APPLICATION_ECOSYSTEM.md)), his reply to
 DEC-0175. DEC-0175 is approved as this handoff's direction; the format and folder choices below are DEC-0178
 (approved 2026-11-15). **M1 is built** (`core/app_registry.py`, `apps/*/manifest.json`, `docs/schema/app_manifest.schema.json`,
-`tests/test_app_registry.py`), and so is **M2** (`core/app_ecosystem.py`: her apps asked about by voice and on the Apps
-page); M3 onward are still plans. Fable reviews it (DEC-0174).*
+`tests/test_app_registry.py`), and so are **M2** (`core/app_ecosystem.py`: her apps asked about by voice and on the Apps
+page) and **M3** (the app list read from the manifests); M4 onward are still plans. Fable reviews it (DEC-0174).*
 
 ## A. Architecture assessment (the handoff's §11 questions, answered from the repository)
 
@@ -130,7 +130,7 @@ Built from what exists, in the lab, never in production:
 |---|---|---|---|
 | M1 | Schema + `core/app_registry.py` + manifests for all 56 apps, generated from today's code; a test that manifests and code agree (every capability, store, job and page claimed exactly once) | no | Opus |
 | M2 | Registry queries as tools and a page section: "what apps do I have", "what can X do", "what depends on Y", "which are unhealthy", duplicates, gaps | adds | Opus; **built 2026-11-15** (`core/app_ecosystem.py`, four tools, the Apps page's "Her apps, checked") |
-| M3 | `APPS` and `/api/shell` read from the registry; `core/web_surfaces.APPS` becomes a thin view | no (same data) | Opus |
+| M3 | `APPS` and `/api/shell` read from the registry; `core/web_surfaces.APPS` becomes a thin view | no (same data) | Opus; **built 2026-11-15** (manifests gained `order`, `ask`, `domains`) |
 | M4 | Declared permissions enforced (DEC-0156 grants) | yes, gated | **Fable** |
 | M5 | Lifecycle: per-app status, dependency checks at start, activation | adds | Opus |
 | M6 | Per-app packages, Greenhouse first, registry-driven registration; others as they're touched | no (same behaviour) | **Fable** |

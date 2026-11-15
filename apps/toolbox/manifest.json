@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "garage",
+  "order": 40,
   "retired": false,
+  "ask": "Convert 5 gallons to liters.",
+  "domains": [
+    "toolbox"
+  ],
   "entry": "web:toolbox.html",
   "components": {
     "interface": {

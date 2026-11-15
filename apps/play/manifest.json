@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "recreation",
+  "order": 48,
   "retired": false,
+  "ask": "Played pickleball for an hour, it was hard.",
+  "domains": [
+    "play",
+    "worlds"
+  ],
   "entry": "web:play.html",
   "components": {
     "interface": {

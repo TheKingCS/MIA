@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "ai_tools",
+  "order": 52,
   "retired": false,
+  "ask": "Open the county website.",
+  "domains": [
+    "browser"
+  ],
   "entry": "web:browser.html",
   "components": {
     "interface": {

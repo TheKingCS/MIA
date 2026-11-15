@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "system",
+  "order": 4,
   "retired": false,
+  "ask": "What's been going wrong?",
+  "domains": [
+    "issues"
+  ],
   "entry": "web:issues.html",
   "components": {
     "interface": {

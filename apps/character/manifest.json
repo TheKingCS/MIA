@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "missions",
+  "order": 27,
   "retired": false,
+  "ask": "What level am I?",
+  "domains": [
+    "character"
+  ],
   "entry": "web:character.html",
   "components": {
     "interface": {

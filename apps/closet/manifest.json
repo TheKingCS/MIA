@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 14,
   "retired": false,
+  "ask": "What should I wear today?",
+  "domains": [
+    "closet"
+  ],
   "entry": "web:closet.html",
   "components": {
     "interface": {

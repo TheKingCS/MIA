@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "smart_devices",
+  "order": 42,
   "retired": false,
+  "ask": "What devices are connected?",
+  "domains": [
+    "field_kit",
+    "security"
+  ],
   "entry": "web:field-kit.html",
   "components": {
     "interface": {

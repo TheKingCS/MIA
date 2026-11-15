@@ -8,7 +8,16 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "finances",
+  "order": 19,
   "retired": false,
+  "ask": "Which debt should I pay first?",
+  "domains": [
+    "budget",
+    "debts",
+    "homestead_costs",
+    "business_use",
+    "business_tags"
+  ],
   "entry": "web:money.html",
   "components": {
     "interface": {

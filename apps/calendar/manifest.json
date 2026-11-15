@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 7,
   "retired": false,
+  "ask": "What's on my calendar this week?",
+  "domains": [
+    "calendar"
+  ],
   "entry": "web:calendar.html",
   "components": {
     "interface": {

@@ -8,7 +8,17 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "settings",
+  "order": 56,
   "retired": false,
+  "ask": "Make the text bigger.",
+  "domains": [
+    "accessibility",
+    "apps",
+    "starters",
+    "humor",
+    "backup",
+    "answer_style"
+  ],
   "entry": "qt",
   "components": {
     "interface": {

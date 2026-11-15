@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "smart_devices",
+  "order": 41,
   "retired": false,
+  "ask": "Start a temperature experiment.",
+  "domains": [
+    "lab"
+  ],
   "entry": "web:lab.html",
   "components": {
     "interface": {

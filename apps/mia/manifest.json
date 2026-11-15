@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "",
   "area": "",
+  "order": 0,
   "retired": false,
+  "ask": "",
+  "domains": [],
   "entry": "voice",
   "components": {
     "interface": {

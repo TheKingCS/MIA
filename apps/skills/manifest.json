@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "missions",
+  "order": 18,
   "retired": false,
+  "ask": "Which skills am I growing?",
+  "domains": [
+    "skills"
+  ],
   "entry": "web:skills.html",
   "components": {
     "interface": {

@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Home, homestead & equipment",
   "area": "home",
+  "order": 12,
   "retired": false,
+  "ask": "I did the dishes.",
+  "domains": [
+    "household"
+  ],
   "entry": "web:household.html",
   "components": {
     "interface": {

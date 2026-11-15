@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "Knowledge, tools & system",
   "area": "ai_tools",
+  "order": 50,
   "retired": false,
+  "ask": "What is this?",
+  "domains": [],
   "entry": "web:look.html",
   "components": {
     "interface": {

@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 30,
   "retired": false,
+  "ask": "When is the next birthday?",
+  "domains": [
+    "relationships"
+  ],
   "entry": "web:people.html",
   "components": {
     "interface": {

@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "",
+  "order": 1,
   "retired": false,
+  "ask": "How are you, MIA?",
+  "domains": [],
   "entry": "web:index.html",
   "components": {
     "interface": {

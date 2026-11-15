@@ -8,7 +8,10 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 29,
   "retired": false,
+  "ask": "What have you noticed lately?",
+  "domains": [],
   "entry": "web:observations.html",
   "components": {
     "interface": {

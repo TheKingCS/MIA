@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Outdoors & field",
   "area": "recreation",
+  "order": 34,
   "retired": false,
+  "ask": "Plan a weekend camping trip.",
+  "domains": [
+    "expeditions"
+  ],
   "entry": "web:expeditions.html",
   "components": {
     "interface": {

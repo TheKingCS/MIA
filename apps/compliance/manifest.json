@@ -8,7 +8,12 @@
   "version": "1.0.0",
   "group": "Money & business",
   "area": "finances",
+  "order": 6,
   "retired": false,
+  "ask": "What's due for taxes?",
+  "domains": [
+    "compliance"
+  ],
   "entry": "web:compliance.html",
   "components": {
     "interface": {

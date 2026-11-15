@@ -8,7 +8,14 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "personal_tools",
+  "order": 31,
   "retired": false,
+  "ask": "Make a note: call the plumber Friday.",
+  "domains": [
+    "notes",
+    "journal",
+    "private_journal"
+  ],
   "entry": "web:journal.html",
   "components": {
     "interface": {

@@ -8,7 +8,13 @@
   "version": "1.0.0",
   "group": "Life, goals & self",
   "area": "health",
+  "order": 15,
   "retired": false,
+  "ask": "Log a 30 minute workout.",
+  "domains": [
+    "workout",
+    "health"
+  ],
   "entry": "web:workout.html",
   "components": {
     "interface": {
