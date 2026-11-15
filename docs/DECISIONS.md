@@ -3004,6 +3004,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   6. **Auction sites too** (Zac, 2026-11-15: "It should watch auction sights too"): GSA Auctions through its API,
      the rest (surplus, farm and heavy equipment, local auction houses, estate sales) by browser skill; total cost
      with the buyer's premium, tax and pickup; offers timed to the end; never a bid without his press.
+  7. **Retail and import marketplaces too** (Zac, 2026-11-15: "She could also look on things like Alibaba, Tem,
+     Wish ... I would eventually like to use this for home building materials and stuff too and like lowes, home
+     depot, etc."): home stores, lumber yards and ReStores, and Alibaba, Temu, Wish, AliExpress, by browser skill;
+     a plan's material list priced per store; code-and-safety, shipping and seller checks on imported parts.
+  8. **Every find always names its source** (Zac: "It should just always list the source"), in every view, card,
+     message and spoken answer; enforced by a test.
 - Consequences: the gate's change is W1's first step (with `CLAUDE.md`'s "owner's limit: 5/day" line updated when
   it's built). DEC-0170 stays proposed until Zac approves its shape (Q-16).
 - Related: DEC-0053, DEC-0094, DEC-0117, DEC-0170; `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`

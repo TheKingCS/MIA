@@ -199,6 +199,9 @@ that failed are listed too, so nobody adds them again without a fix.
 | Listings | eBay's Browse API (local pickup by postal code and radius; needs a free developer key); Marketplace and Craigslist by browser skill | API, browser |
 | Auctions (Zac, 2026-11-15: "It should watch auction sites too") | **GSA Auctions** (federal surplus: vehicles, tools, equipment) through GSA's official JSON API, with a free api.data.gov key; **by browser skill:** GovDeals and Public Surplus (city, county and school surplus), Purple Wave, BigIron and Machinery Pete (farm and heavy equipment), IronPlanet, Proxibid and BidCal (equipment and local auction houses), EstateSales.net (estate sales near home), Copart (vehicles); Bring a Trailer by its feed | API, browser, RSS |
 
+| Building materials and home stores (Zac, 2026-11-15) | **by browser skill:** Lowe's, Menards, 84 Lumber, Walmart; Home Depot, Ace Hardware, Harbor Freight and Tractor Supply refused or timed out on a plain request, so they're tried in her browser and fall back to "track this" if blocked there too; **Habitat for Humanity ReStores** near home (donated, discounted building materials, a strong fit for the homestead); local lumber yards and salvage yards Zac names | browser |
+| Import marketplaces (Zac, 2026-11-15) | **by browser skill:** Alibaba (bulk, from manufacturers), AliExpress, Temu, Wish; Amazon | browser |
+
 **Auction sites that refused a plain request** (HTTP 403, checked the same day): HiBid, K-BID, AuctionTime, Ritchie
 Bros, MaxSold, AuctionZip and Liquidation.com. They block automated readers, so they're browser-skill sources at
 most; each one that shows a block or a CAPTCHA to her browser too is left to Zac's own visits and "track this". None
@@ -317,6 +320,37 @@ these are added, in code:
 - **Never a bid.** Bidding is a commitment: MIA can open the lot in her browser with the amount ready, and the press
   stays his (a `browser.commit` he approves, one bid at a time), like every other buy. An auto-bid or a "max bid"
   left on a site is never set by her.
+
+## 7c. Building materials: pricing a whole build
+
+Zac wants this for home-building materials too. The development engine and `core/build_calcs.py` already turn a
+plan into a material and cut list (DEC-0118). World Intelligence adds the prices:
+- **Price this build:** for a plan's material list, MIA looks up each line at the stores he uses (Lowe's, Menards,
+  84 Lumber, Home Depot, Walmart, a local yard, a ReStore) and shows each line's price **per store, with the store
+  named**, the cheapest mix (counting a second trip or delivery as a cost), and the single-store total for
+  comparison. The quantities come from `build_calcs` in code, never the model; a price is matched to a line only
+  when the product's size and grade match (a 2x6x8 #2 SPF, not "lumber").
+- **Watching it:** a project's material list becomes a standing watch (section 3, watches MIA makes herself), so a
+  sale, a clearance, a ReStore donation or a cheaper used lot is offered with what it saves on that build.
+- **Local stock** where the store's page shows it for the nearest store, with the date it was read.
+- **Import marketplaces for building and electrical parts** (Alibaba, Temu, Wish, AliExpress) carry extra checks,
+  shown as concerns, in code:
+  - **Code and safety:** wiring, breakers, panels, outlets, gas parts, structural fasteners and anything for a
+    permitted build must carry a recognised listing mark (UL, ETL, CSA); an item whose listing doesn't name one is
+    flagged "not for a permitted build without checking", the same professional note `build_calcs` ends with.
+  - **Real cost and time:** shipping, import duty where it applies, the minimum order (Alibaba's MOQ) and the
+    delivery estimate are part of the total; a three-week wait is weighed against the project's schedule.
+  - **Seller standing:** rating, years, number of orders where the page shows them; a new seller with a price far
+    below the rest is a named concern.
+
+## Every find names its source
+
+Zac, 2026-11-15: "It should just always list the source." A rule in code, not a style: **every find, everywhere it
+appears, shows where it came from** (the site or outlet by name, and a link to the page): on the World page and a
+find's sheet, in a message from the gate, on the phone and the glasses cards, and spoken ("from Lowe's, $8.47 a
+board, read this morning"). A comparison names each line's store. A summary across sources lists them all. A
+discovery can't be stored without a source, and a test fails if any view, card or spoken template can show a find
+without it.
 
 ## 8. Research and opportunity evaluation (deliverable 7)
 
@@ -482,6 +516,7 @@ can be built **beside** the MIA OS work, in phases that each end on a test gate 
 | W1b | Watches MIA makes herself from projects, the development engine, intents and equipment | W1, W2 | Opus |
 | W2 | The relevance engine from real records, with the development engine's needs | W1 | Opus |
 | W3 | Listings and auctions: eBay's API, GSA Auctions' API, capture through the UAL, evaluation (with auctions' total cost and clock), re-checks and changes | W2; the eBay developer and api.data.gov keys | Opus |
+| W3b | Building materials: "price this build" from `build_calcs` lists, per store, with the import checks (7c) | W3, W5 (the store skills) | Opus |
 | W4 | Grants for this subsystem (DEC-0156's first slice) | W1 | **Fable** |
 | W5 | Browser skills: parameters, extraction rules, list steps, versions, repair (taught skills phase 2's browser steps) | W4 | Opus, with **Fable** for unattended runs |
 | W6 | Dossiers and the class ladder; actions into projects, missions, paths, the lab | W2 | Opus |
