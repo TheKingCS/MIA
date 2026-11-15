@@ -1,0 +1,115 @@
+{
+  "manifest_version": 1,
+  "id": "workshop",
+  "name": "Workshop",
+  "icon": "🔩",
+  "tagline": "Parts, jobs and products.",
+  "description": "Recipes and builds, materials, homestead goods in batches, market days, labels, and the shop's sales.",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "businesses",
+  "retired": false,
+  "entry": "web:workshop.html",
+  "components": {
+    "interface": {
+      "web": [
+        "workshop.html"
+      ],
+      "qt": [
+        "modules/workshop"
+      ],
+      "glasses": [
+        "job"
+      ]
+    },
+    "services": [],
+    "data": [
+      "components",
+      "craft_recipes",
+      "jobs",
+      "materials",
+      "products"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_component",
+      "add_job",
+      "add_material",
+      "add_product",
+      "adjust_component_quantity",
+      "adjust_material_quantity",
+      "adjust_product_stock",
+      "consume_material",
+      "delete_component",
+      "list_components",
+      "list_goods_on_hand",
+      "list_jobs",
+      "list_materials",
+      "list_product",
+      "list_products",
+      "produce_product",
+      "sell_goods",
+      "unlist_product",
+      "update_material"
+    ],
+    "actions": [
+      "component.add",
+      "component.adjust",
+      "component.delete",
+      "component.edit",
+      "craft.cost",
+      "craft.finish",
+      "craft.photo_delete",
+      "craft.receive",
+      "craft.sell",
+      "craft.start",
+      "craft.step",
+      "craft_recipe.add",
+      "craft_recipe.delete",
+      "craft_recipe.edit",
+      "craft_recipe.starter",
+      "goods.add",
+      "goods.label",
+      "goods.sell",
+      "goods.toss",
+      "job.add",
+      "job.delete",
+      "job.edit",
+      "job.make",
+      "job.use",
+      "listing.add",
+      "listing.remove",
+      "market.close",
+      "market.start",
+      "material.add",
+      "material.adjust",
+      "material.delete",
+      "material.edit",
+      "product.add",
+      "product.adjust",
+      "product.delete",
+      "product.edit",
+      "product.sell",
+      "sale.add",
+      "sale.delete"
+    ]
+  },
+  "uses": [
+    "ledger"
+  ],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

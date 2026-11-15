@@ -1,0 +1,45 @@
+{
+  "manifest_version": 1,
+  "id": "diagnostics",
+  "name": "Diagnostics",
+  "icon": "🩺",
+  "tagline": "How MIA is doing.",
+  "description": "System health, logs, and hardware status.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "system",
+  "retired": false,
+  "entry": "qt",
+  "components": {
+    "interface": {
+      "web": [],
+      "qt": [
+        "modules/diagnostics"
+      ],
+      "glasses": [
+        "health"
+      ]
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

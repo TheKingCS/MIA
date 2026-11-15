@@ -1,0 +1,60 @@
+{
+  "manifest_version": 1,
+  "id": "field_kit",
+  "name": "Field Kit",
+  "icon": "🛠",
+  "tagline": "Devices and scripts.",
+  "description": "Detect and manage connected devices; run your own scripts.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "smart_devices",
+  "retired": false,
+  "entry": "web:field-kit.html",
+  "components": {
+    "interface": {
+      "web": [
+        "field-kit.html"
+      ],
+      "qt": [
+        "modules/field_kit"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "data_logger",
+      "lite_captures",
+      "scripts"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "calculate_subnet",
+      "check_password_strength",
+      "identify_hash",
+      "list_connected_devices",
+      "list_scripts",
+      "scan_ports"
+    ],
+    "actions": [
+      "sensor.remove"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "lite_captures"
+    ]
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "manifest_version": 1,
+  "id": "observations",
+  "name": "Observations",
+  "icon": "🔍",
+  "tagline": "What MIA noticed.",
+  "description": "What MIA has noticed across your maintenance and missions.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:observations.html",
+  "components": {
+    "interface": {
+      "web": [
+        "observations.html"
+      ],
+      "qt": [
+        "modules/observations"
+      ],
+      "glasses": [
+        "connections"
+      ]
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

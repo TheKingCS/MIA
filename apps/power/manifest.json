@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "power",
+  "name": "Power",
+  "icon": "🔋",
+  "tagline": "Energy, tracked.",
+  "description": "Battery status and manual energy/utility tracking.",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "smart_devices",
+  "retired": false,
+  "entry": "web:power.html",
+  "components": {
+    "interface": {
+      "web": [
+        "power.html"
+      ],
+      "qt": [
+        "modules/power"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "energy"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_energy",
+      "get_power_status",
+      "log_energy_reading"
+    ],
+    "actions": [
+      "energy.reading",
+      "energy_source.add",
+      "energy_source.delete",
+      "energy_source.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "power"
+    ]
+  }
+}

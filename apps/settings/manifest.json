@@ -1,0 +1,84 @@
+{
+  "manifest_version": 1,
+  "id": "settings",
+  "name": "Settings",
+  "icon": "⚙",
+  "tagline": "Make MIA yours.",
+  "description": "Configure MIA — theme, user info, module options.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "settings",
+  "retired": false,
+  "entry": "qt",
+  "components": {
+    "interface": {
+      "web": [],
+      "qt": [
+        "modules/settings"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_starter_set",
+      "answer_two_ways",
+      "delete_picture",
+      "delete_theme",
+      "design_theme",
+      "get_answer_style",
+      "get_app_focus",
+      "get_backup_status",
+      "list_mia_voices",
+      "list_starter_sets",
+      "mix_themes",
+      "paint_picture",
+      "read_screen",
+      "reset_answer_style",
+      "set_answer_style",
+      "set_app_focus",
+      "set_app_visibility",
+      "set_display_style",
+      "set_high_contrast",
+      "set_humor",
+      "set_mia_voice",
+      "set_portal_picture",
+      "set_text_size",
+      "tweak_theme",
+      "use_backdrop"
+    ],
+    "actions": [
+      "app.favorite",
+      "app.visibility",
+      "connect.file",
+      "connect.rental_calendar",
+      "profile.edit",
+      "setting.set",
+      "starter.add",
+      "style.compare",
+      "style.pick",
+      "style.reset",
+      "style.set",
+      "theme.delete",
+      "theme.import",
+      "theme.save"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "none",
+      "voice": true
+    },
+    "background": []
+  }
+}

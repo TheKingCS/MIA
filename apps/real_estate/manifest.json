@@ -1,0 +1,71 @@
+{
+  "manifest_version": 1,
+  "id": "real_estate",
+  "name": "Real Estate",
+  "icon": "🏘",
+  "tagline": "Cash flow. Equity. Freedom.",
+  "description": "Property values, equity, rental income, and linked maintenance.",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "businesses",
+  "retired": false,
+  "entry": "web:real-estate.html",
+  "components": {
+    "interface": {
+      "web": [
+        "real-estate.html"
+      ],
+      "qt": [
+        "modules/real_estate"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "inventory",
+      "real_estate"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_inventory_item",
+      "add_property",
+      "adjust_inventory_quantity",
+      "delete_inventory_item",
+      "get_property_summary",
+      "list_inventory",
+      "list_properties",
+      "record_property_sale",
+      "record_rental_income"
+    ],
+    "actions": [
+      "inventory.add",
+      "inventory.adjust",
+      "inventory.delete",
+      "inventory.edit",
+      "property.add",
+      "property.delete",
+      "property.edit",
+      "property.expense",
+      "property.list_sale",
+      "property.rent",
+      "property.sell",
+      "property.track_upkeep"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

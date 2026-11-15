@@ -1,0 +1,65 @@
+{
+  "manifest_version": 1,
+  "id": "knowledge",
+  "name": "Knowledge",
+  "icon": "📚",
+  "tagline": "The offline library.",
+  "description": "Offline reference material and personal knowledge base.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "learning",
+  "retired": false,
+  "entry": "web:knowledge.html",
+  "components": {
+    "interface": {
+      "web": [
+        "knowledge.html"
+      ],
+      "qt": [
+        "modules/knowledge"
+      ],
+      "glasses": [
+        "packs"
+      ]
+    },
+    "services": [],
+    "data": [
+      "plans"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "ask_specialist",
+      "cut_list",
+      "find_plans",
+      "forget_plan",
+      "keep_plan",
+      "material_list",
+      "plan_shopping_list",
+      "plan_sources",
+      "show_plan",
+      "start_plan_project"
+    ],
+    "actions": [
+      "plan.delete",
+      "plan.import",
+      "plan.keep",
+      "plan.project"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

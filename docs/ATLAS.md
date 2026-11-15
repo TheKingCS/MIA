@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1432 files, 318,604 lines; 1432 files describe themselves; 17,492 of 17,587 classes and functions are documented.
+1435 files, 319,075 lines; 1435 files describe themselves; 17,514 of 17,609 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-553 files, 158,792 lines; 8,186 of 8,272 classes and functions documented
+554 files, 158,956 lines; 8,197 of 8,283 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -21,6 +21,7 @@
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py).
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
+- `core/app_registry.py`: The Application Registry (DEC-0175, DEC-0178; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`, migration phase M1): MIA's authoritative inventory of her own applications, read from one manifest per app (`apps/<id>/manifest.json`), and checked against the code so the manifests can't drift from what's re
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
@@ -797,8 +798,9 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-40 files, 4,269 lines; 139 of 139 classes and functions documented
+41 files, 4,498 lines; 143 of 143 classes and functions documented
 
+- `tools/app_manifests.py`: Writes the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from today's code so nothing changes behaviour:
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17).
@@ -842,7 +844,7 @@
 
 ## tests/: the test suite: what each part must do
 
-490 files, 82,495 lines; 6,993 of 7,002 classes and functions documented
+491 files, 82,573 lines; 7,000 of 7,009 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -863,6 +865,7 @@
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
+- `tests/test_app_registry.py`: The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action kind, store, job and daily check in the code exactly once, and name 
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.

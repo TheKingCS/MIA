@@ -1,0 +1,81 @@
+{
+  "manifest_version": 1,
+  "id": "play",
+  "name": "Play",
+  "icon": "🏓",
+  "tagline": "Games and sports, counted.",
+  "description": "Games and sports you play: who with, how long, how hard, and your training load (DEC-0098).",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "recreation",
+  "retired": false,
+  "entry": "web:play.html",
+  "components": {
+    "interface": {
+      "web": [
+        "play.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "campaign",
+        "week"
+      ]
+    },
+    "services": [],
+    "data": [
+      "living_worlds",
+      "quest_book",
+      "recreation",
+      "world_map"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_world_quest",
+      "finish_world_quest",
+      "get_play",
+      "list_worlds",
+      "make_world",
+      "play_world_turn",
+      "set_campaign_status",
+      "start_campaign"
+    ],
+    "actions": [
+      "party.leaderboard",
+      "place.add",
+      "place.arrive",
+      "place.delete",
+      "play.delete",
+      "play.log",
+      "quest.add",
+      "quest.remove",
+      "quest.start",
+      "raid.add",
+      "raid.start",
+      "shop.buy",
+      "world.campaign_add",
+      "world.campaign_status",
+      "world.character_add",
+      "world.quest_add",
+      "world.quest_done",
+      "world.turn",
+      "world.universe_add",
+      "world.version_add"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

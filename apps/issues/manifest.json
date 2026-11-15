@@ -1,0 +1,56 @@
+{
+  "manifest_version": 1,
+  "id": "issues",
+  "name": "Fix-It Log",
+  "icon": "🛠",
+  "tagline": "Where MIA stumbled, so it gets fixed.",
+  "description": "Where MIA got it wrong, broke or was slow, grouped and ranked, ready to be fixed; what she learned you mean (DEC-0049).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "system",
+  "retired": false,
+  "entry": "web:issues.html",
+  "components": {
+    "interface": {
+      "web": [
+        "issues.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "open"
+      ]
+    },
+    "services": [],
+    "data": [
+      "failures"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_issues"
+    ],
+    "actions": [
+      "failures.forget",
+      "failures.report",
+      "failures.status",
+      "failures.thumbs"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "fix_report"
+    ]
+  }
+}

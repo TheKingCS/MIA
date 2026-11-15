@@ -1,0 +1,59 @@
+{
+  "manifest_version": 1,
+  "id": "flock",
+  "name": "Chickens",
+  "icon": "🐔",
+  "tagline": "Eggs, every day.",
+  "description": "Your flock: eggs collected, the lay rate, feed cost per dozen, and cartons for the stand (DEC-0037).",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "homestead",
+  "retired": false,
+  "entry": "web:flock.html",
+  "components": {
+    "interface": {
+      "web": [
+        "flock.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "eggs"
+      ]
+    },
+    "services": [],
+    "data": [
+      "flock"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_eggs",
+      "log_eggs"
+    ],
+    "actions": [
+      "flock.add",
+      "flock.birds",
+      "flock.delete",
+      "flock.edit",
+      "flock.eggs",
+      "flock.entry_delete",
+      "flock.feed",
+      "flock.use"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

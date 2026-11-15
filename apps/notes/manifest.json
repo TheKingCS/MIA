@@ -1,0 +1,63 @@
+{
+  "manifest_version": 1,
+  "id": "notes",
+  "name": "Journal",
+  "icon": "📓",
+  "tagline": "Write it down.",
+  "description": "Dated, searchable, taggable journal entries.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:journal.html",
+  "components": {
+    "interface": {
+      "web": [
+        "journal.html"
+      ],
+      "qt": [
+        "modules/notes"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "journal",
+      "private_journal"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_note",
+      "decide_field_recording",
+      "delete_note",
+      "get_journal_reflection",
+      "get_journal_themes",
+      "list_field_recordings",
+      "list_notes",
+      "read_private_journal"
+    ],
+    "actions": [
+      "journal.add",
+      "journal.delete",
+      "journal.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "journal_reflection"
+    ]
+  }
+}

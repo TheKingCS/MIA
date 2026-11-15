@@ -1,0 +1,63 @@
+{
+  "manifest_version": 1,
+  "id": "inbox",
+  "name": "Inbox",
+  "icon": "📥",
+  "tagline": "Paperwork, handled.",
+  "description": "Receipts, manuals and documents MIA files for you.",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "ai_tools",
+  "retired": false,
+  "entry": "web:inbox.html",
+  "components": {
+    "interface": {
+      "web": [
+        "inbox.html"
+      ],
+      "qt": [
+        "modules/inbox"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "email_drafts",
+      "inbox"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "dismiss_inbox_item",
+      "draft_email",
+      "file_inbox_item",
+      "list_inbox",
+      "set_receipt_autofile",
+      "undo_receipt"
+    ],
+    "actions": [
+      "inbox.dismiss",
+      "inbox.file",
+      "inbox.note",
+      "inbox.unfile"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "inbox",
+      "inbox_mail"
+    ]
+  }
+}

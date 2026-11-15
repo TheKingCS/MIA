@@ -1,0 +1,45 @@
+{
+  "manifest_version": 1,
+  "id": "passwords",
+  "name": "Passwords",
+  "icon": "🔐",
+  "tagline": "Every login, locked.",
+  "description": "Your logins in a vault only your master password opens; MIA's assistant never sees them (DEC-0035).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "security",
+  "retired": false,
+  "entry": "web:passwords.html",
+  "components": {
+    "interface": {
+      "web": [
+        "passwords.html"
+      ],
+      "qt": [],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "passwords"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "none",
+      "voice": false
+    },
+    "background": []
+  }
+}

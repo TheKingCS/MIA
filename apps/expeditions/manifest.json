@@ -1,0 +1,78 @@
+{
+  "manifest_version": 1,
+  "id": "expeditions",
+  "name": "Expeditions",
+  "icon": "🏕",
+  "tagline": "Plan the trip.",
+  "description": "Expedition Mode: trip routes, gear, weather, and logged speed/distance for any outing.",
+  "version": "1.0.0",
+  "group": "Outdoors & field",
+  "area": "recreation",
+  "retired": false,
+  "entry": "web:expeditions.html",
+  "components": {
+    "interface": {
+      "web": [
+        "expeditions.html"
+      ],
+      "qt": [
+        "modules/expeditions"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "expeditions",
+      "trips"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_expedition",
+      "add_gear_item",
+      "add_route_stop",
+      "add_trip",
+      "add_trip_log_entry",
+      "delete_expedition",
+      "delete_trip",
+      "get_trip_route",
+      "get_trip_summary",
+      "list_expeditions",
+      "list_trips",
+      "log_arrival",
+      "recall_expedition",
+      "toggle_gear_packed"
+    ],
+    "actions": [
+      "expedition.add",
+      "expedition.delete",
+      "expedition.edit",
+      "expedition.media_delete",
+      "gear.add",
+      "gear.remove",
+      "gear.toggle",
+      "trip.add",
+      "trip.arrived",
+      "trip.delete",
+      "trip.edit",
+      "trip.route_add",
+      "trip.route_remove",
+      "trip.status"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

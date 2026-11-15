@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "reward_shop",
+  "name": "Reward Shop",
+  "icon": "🎁",
+  "tagline": "Spend what you earn.",
+  "description": "Real rewards you set, bought with the credits you earn (DEC-0028).",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "missions",
+  "retired": false,
+  "entry": "web:shop.html",
+  "components": {
+    "interface": {
+      "web": [
+        "shop.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "rewards"
+      ]
+    },
+    "services": [],
+    "data": [
+      "reward_shop"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "buy_reward",
+      "list_rewards"
+    ],
+    "actions": [
+      "shop_expense.add",
+      "shop_expense.delete",
+      "shop_reward.add",
+      "shop_reward.delete",
+      "shop_reward.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "rewards"
+    ]
+  }
+}

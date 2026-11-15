@@ -1,0 +1,45 @@
+{
+  "manifest_version": 1,
+  "id": "module_browser",
+  "name": "Apps",
+  "icon": "🧩",
+  "tagline": "Everything MIA can do.",
+  "description": "View, enable/disable, install, and rescan modules.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "settings",
+  "retired": false,
+  "entry": "web:apps.html",
+  "components": {
+    "interface": {
+      "web": [
+        "apps.html"
+      ],
+      "qt": [
+        "modules/module_browser"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "none",
+      "voice": true
+    },
+    "background": []
+  }
+}

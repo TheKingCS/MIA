@@ -1,0 +1,43 @@
+{
+  "manifest_version": 1,
+  "id": "sight",
+  "name": "Look",
+  "icon": "👁",
+  "tagline": "Show MIA something.",
+  "description": "A photo and a question (what is this, read this label, inspect this part), answered on your PC; never who a person is (build plan step 15).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "ai_tools",
+  "retired": false,
+  "entry": "web:look.html",
+  "components": {
+    "interface": {
+      "web": [
+        "look.html"
+      ],
+      "qt": [],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "compliance",
+  "name": "Compliance",
+  "icon": "📋",
+  "tagline": "Every deadline, on time.",
+  "description": "Tax filings and payments, permits, licences and renewals, each with its official source (DEC-0040).",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "finances",
+  "retired": false,
+  "entry": "web:compliance.html",
+  "components": {
+    "interface": {
+      "web": [
+        "compliance.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "due"
+      ]
+    },
+    "services": [],
+    "data": [
+      "obligations"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_deadlines"
+    ],
+    "actions": [
+      "obligation.add",
+      "obligation.delete",
+      "obligation.edit",
+      "obligation.starters",
+      "obligation.status",
+      "obligation.verify"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "obligation_reminders"
+    ]
+  }
+}

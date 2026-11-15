@@ -40,7 +40,7 @@ folded in here.*
 | Q-27 | **Answered yes (2026-11-15)**: no app marketplace; "the only marketplaces will be the ones i shop from" | DEC-0177 | — |
 | Q-28 | **Answered yes (2026-11-15)**: the sandboxed extension proof of concept, once grants exist | DEC-0176 | — |
 | Q-29 | **Answered (2026-11-15)**: DEC-0175 approved as prompt 22's direction, DEC-0176 yes, DEC-0177 approved with Zac's clarification | — | — |
-| Q-30 | Manifests as JSON in `apps/<id>/manifest.json`, a registry that reads them, code moved into per-app packages only later, one app at a time (DEC-0178)? | prompt 22 | M1 |
+| Q-30 | **Answered yes (2026-11-15)**: manifests as JSON in `apps/<id>/manifest.json`, a registry that reads them, code moved app by app later; M1 built | DEC-0178 | — |
 | Q-15 | **Answered (2026-11-15)**: Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android. Was: the Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |
 
 ## The original questions (for the record)

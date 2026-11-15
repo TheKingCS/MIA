@@ -1,0 +1,66 @@
+{
+  "manifest_version": 1,
+  "id": "mia",
+  "name": "MIA",
+  "icon": "✦",
+  "tagline": "Herself: the platform every app stands on.",
+  "description": "MIA's own platform: the communication gate, the history, links, the scheduler's daily tick, model access, sync and the other shared services (DEC-0173, DEC-0175).",
+  "version": "1.0.0",
+  "group": "",
+  "area": "",
+  "retired": false,
+  "entry": "voice",
+  "components": {
+    "interface": {
+      "web": [],
+      "qt": [],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "life_events",
+      "links",
+      "personal_life_events"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "auto_backup",
+      "capability_gaps",
+      "capability_reminder",
+      "checkin",
+      "daily_occasions",
+      "dependency_audit",
+      "direction_nudge",
+      "findings",
+      "loops",
+      "memory_callback",
+      "momentum",
+      "night_school",
+      "pattern_insight",
+      "promises",
+      "season",
+      "self_report",
+      "smart_suggestion",
+      "system_map",
+      "walkthrough_suggestion",
+      "workflows"
+    ]
+  }
+}

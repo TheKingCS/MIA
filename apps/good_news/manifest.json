@@ -1,0 +1,54 @@
+{
+  "manifest_version": 1,
+  "id": "good_news",
+  "name": "Good News Radio",
+  "icon": "📻",
+  "tagline": "What went right today.",
+  "description": "Good news from credible sources, each story saying how it's known, read by four radio personalities (DEC-0096).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "dashboard",
+  "retired": false,
+  "entry": "web:news.html",
+  "components": {
+    "interface": {
+      "web": [
+        "news.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "today"
+      ]
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": [
+      "news.follow",
+      "news.make",
+      "news.misleading",
+      "news.turn_off",
+      "news.turn_on",
+      "news.unfollow"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "good_news"
+    ]
+  }
+}

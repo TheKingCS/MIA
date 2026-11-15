@@ -1,0 +1,100 @@
+{
+  "manifest_version": 1,
+  "id": "workout",
+  "name": "Workout",
+  "icon": "🏋",
+  "tagline": "Stronger body. Clearer mind.",
+  "description": "Exercises, guided sessions, and progress.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "health",
+  "retired": false,
+  "entry": "web:workout.html",
+  "components": {
+    "interface": {
+      "web": [
+        "workout.html"
+      ],
+      "qt": [
+        "modules/workout"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "fitness",
+      "health",
+      "training",
+      "workout"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_health_record",
+      "add_health_visit",
+      "add_medication",
+      "delete_last_weigh_in",
+      "get_health",
+      "get_personal_record",
+      "get_wallet",
+      "get_workout_summary",
+      "log_sleep",
+      "log_workout",
+      "stop_medication",
+      "took_medication"
+    ],
+    "actions": [
+      "exercise.add",
+      "exercise.delete",
+      "exercise.edit",
+      "fitness.food",
+      "fitness.food_delete",
+      "fitness.habit",
+      "fitness.milestone",
+      "fitness.plan",
+      "fitness.protein",
+      "fitness.skill",
+      "fitness.step",
+      "fitness.training_done",
+      "fitness.weigh_in",
+      "fitness.weigh_in_delete",
+      "med.add",
+      "med.delete",
+      "med.edit",
+      "med.take",
+      "record.add",
+      "record.delete",
+      "sleep.delete",
+      "sleep.log",
+      "training.correct",
+      "training.finish",
+      "training.pause",
+      "training.rest_more",
+      "training.resume",
+      "training.set",
+      "training.skip",
+      "training.skip_rest",
+      "training.start",
+      "visit.add",
+      "visit.delete",
+      "visit.edit",
+      "workout.delete",
+      "workout.log"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

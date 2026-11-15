@@ -1,0 +1,84 @@
+{
+  "manifest_version": 1,
+  "id": "world_intel",
+  "name": "World",
+  "icon": "🌐",
+  "tagline": "What the world has for you.",
+  "description": "World Intelligence: watches on news, releases, research, grants and listings, and what they found, each with its source (DEC-0170).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "learning",
+  "retired": false,
+  "entry": "web:intel.html",
+  "components": {
+    "interface": {
+      "web": [
+        "intel.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "finds"
+      ]
+    },
+    "services": [],
+    "data": [
+      "prices",
+      "requirements",
+      "world_intel"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_need",
+      "check_price",
+      "compare_need",
+      "drop_need",
+      "got_need",
+      "list_watches",
+      "mute_source",
+      "not_for_me",
+      "pause_watch",
+      "project_needs",
+      "record_price",
+      "save_find",
+      "set_trip_cost",
+      "stop_watching",
+      "watch_for",
+      "world_finds",
+      "world_intelligence_switch"
+    ],
+    "actions": [
+      "price.record",
+      "price.trip_cost",
+      "requirement.add",
+      "requirement.check",
+      "requirement.got",
+      "requirement.remove",
+      "requirement.update",
+      "world_find.not_for_me",
+      "world_find.save",
+      "world_intel.switch",
+      "world_source.mute",
+      "world_watch.add",
+      "world_watch.pause",
+      "world_watch.remove"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "world_intel"
+    ]
+  }
+}

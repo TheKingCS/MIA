@@ -1,0 +1,71 @@
+{
+  "manifest_version": 1,
+  "id": "dungeon",
+  "name": "The Dungeon",
+  "icon": "🏰",
+  "tagline": "Clear the run. Bank the loot.",
+  "description": "Work as a dungeon you loot every day: runs, hard mode, overtime bosses, projected and banked loot (DEC-0046).",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "missions",
+  "retired": false,
+  "entry": "web:dungeon.html",
+  "components": {
+    "interface": {
+      "web": [
+        "dungeon.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "week"
+      ]
+    },
+    "services": [],
+    "data": [
+      "dungeon",
+      "loop"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_dungeon_loot",
+      "get_loop",
+      "get_weekly_checkin",
+      "log_shift",
+      "plan_shift",
+      "set_schedule",
+      "start_quest"
+    ],
+    "actions": [
+      "dungeon.add",
+      "dungeon.delete",
+      "dungeon.edit",
+      "dungeon.plan",
+      "dungeon.quest",
+      "dungeon.run",
+      "dungeon.run_delete",
+      "dungeon.tips",
+      "loop.checkin_done",
+      "loop.delete",
+      "loop.forget",
+      "loop.set"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "loop"
+    ]
+  }
+}

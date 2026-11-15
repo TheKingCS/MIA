@@ -1,0 +1,73 @@
+{
+  "manifest_version": 1,
+  "id": "greenhouse",
+  "name": "Greenhouse",
+  "icon": "🌱",
+  "tagline": "Grow food. Grow freedom.",
+  "description": "At-a-glance status for garden, greenhouse, and aquaponics assets.",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "homestead",
+  "retired": false,
+  "entry": "web:greenhouse.html",
+  "components": {
+    "interface": {
+      "web": [
+        "greenhouse.html"
+      ],
+      "qt": [
+        "modules/greenhouse"
+      ],
+      "glasses": [
+        "next"
+      ]
+    },
+    "services": [],
+    "data": [
+      "grow_lab",
+      "homestead"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_homestead_next_step"
+    ],
+    "actions": [
+      "batch.add",
+      "batch.delete",
+      "batch.edit",
+      "batch.harvest",
+      "batch.lost",
+      "experiment.add",
+      "experiment.conclude",
+      "experiment.delete",
+      "experiment.edit",
+      "experiment.include",
+      "grow.range",
+      "grow.reading",
+      "grow.system",
+      "grow.system_remove"
+    ]
+  },
+  "uses": [
+    "maintenance"
+  ],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "greenhouse",
+      "grow_alert",
+      "homestead_snapshots"
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "manifest_version": 1,
+  "id": "browser",
+  "name": "Browser",
+  "icon": "🌐",
+  "tagline": "She browses. You approve.",
+  "description": "MIA's own web browser: what she's on, the steps waiting for your OK with their screenshots, and the tasks you taught her by showing (DEC-0117).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "ai_tools",
+  "retired": false,
+  "entry": "web:browser.html",
+  "components": {
+    "interface": {
+      "web": [
+        "browser.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "waiting"
+      ]
+    },
+    "services": [],
+    "data": [
+      "browser_routines"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "browse",
+      "browser_back",
+      "browser_click",
+      "browser_close",
+      "browser_read",
+      "browser_type",
+      "do_browser_task",
+      "learn_browser_task",
+      "list_browser_tasks"
+    ],
+    "actions": [
+      "browser.back",
+      "browser.close",
+      "browser.commit",
+      "browser.forget_task",
+      "browser.learn",
+      "browser.learn_done",
+      "browser.open",
+      "browser.run_task"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

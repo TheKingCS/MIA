@@ -1,0 +1,49 @@
+{
+  "manifest_version": 1,
+  "id": "memories",
+  "name": "Memories",
+  "icon": "📸",
+  "tagline": "Remember the trip.",
+  "description": "Trip recaps, stats, and photos from your Expeditions.",
+  "version": "1.0.0",
+  "group": "Outdoors & field",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:memories.html",
+  "components": {
+    "interface": {
+      "web": [
+        "memories.html"
+      ],
+      "qt": [
+        "modules/memories"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [
+    "expeditions"
+  ],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "seasons_of_memory"
+    ]
+  }
+}

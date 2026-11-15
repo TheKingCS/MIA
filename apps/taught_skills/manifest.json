@@ -1,0 +1,65 @@
+{
+  "manifest_version": 1,
+  "id": "taught_skills",
+  "name": "Taught Skills",
+  "icon": "🎓",
+  "tagline": "Show her once. Practise together.",
+  "description": "What you've taught MIA to do, made of things she can already do: each skill's steps, how practised it is, and the run that's waiting on you (DEC-0123).",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "ai_tools",
+  "retired": false,
+  "entry": "web:taught-skills.html",
+  "components": {
+    "interface": {
+      "web": [
+        "taught-skills.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "skills"
+      ]
+    },
+    "services": [],
+    "data": [
+      "taught_skills"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "answer_taught_skill",
+      "change_taught_skill",
+      "forget_taught_skill",
+      "keep_taught_skill",
+      "list_taught_skills",
+      "run_taught_skill",
+      "stop_taught_skill",
+      "stop_watching_me",
+      "teach_skill_in_steps",
+      "watch_me_teach"
+    ],
+    "actions": [
+      "taught_skill.add",
+      "taught_skill.cancel",
+      "taught_skill.delete",
+      "taught_skill.keep",
+      "taught_skill.steps",
+      "taught_skill.watch"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

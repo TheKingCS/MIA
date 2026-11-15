@@ -1,0 +1,55 @@
+{
+  "manifest_version": 1,
+  "id": "character",
+  "name": "Character",
+  "icon": "👤",
+  "tagline": "Your story so far.",
+  "description": "A living record of what you've actually done.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "missions",
+  "retired": false,
+  "entry": "web:character.html",
+  "components": {
+    "interface": {
+      "web": [
+        "character.html"
+      ],
+      "qt": [
+        "modules/character"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "boss_book",
+      "saga_moments"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_character"
+    ],
+    "actions": [
+      "boss.add",
+      "boss.remove",
+      "character.prestige",
+      "saga.mark"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "manifest_version": 1,
+  "id": "classroom",
+  "name": "Classroom",
+  "icon": "🎓",
+  "tagline": "Keep learning.",
+  "description": "Your own subjects, courses, and lessons.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "learning",
+  "retired": false,
+  "entry": "web:classroom.html",
+  "components": {
+    "interface": {
+      "web": [
+        "classroom.html"
+      ],
+      "qt": [
+        "modules/classroom"
+      ],
+      "glasses": [
+        "practice"
+      ]
+    },
+    "services": [],
+    "data": [
+      "classroom",
+      "paths",
+      "textbooks",
+      "trade_session"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_course",
+      "add_lesson",
+      "add_lesson_notes",
+      "complete_lesson",
+      "get_learning_progress",
+      "get_lesson_notes",
+      "learning_check",
+      "learning_lesson",
+      "learning_progress",
+      "list_textbooks",
+      "log_practice",
+      "make_textbook_course",
+      "remove_textbook",
+      "search_textbook",
+      "set_lesson_skill",
+      "start_learning"
+    ],
+    "actions": [
+      "course.add",
+      "course.delete",
+      "lesson.add",
+      "lesson.delete",
+      "lesson.done",
+      "lesson.notes",
+      "lesson.skill",
+      "path.draft",
+      "subject.add",
+      "subject.delete",
+      "textbook.course",
+      "textbook.remove",
+      "trade.answer",
+      "trade.back",
+      "trade.check",
+      "trade.next",
+      "trade.plan",
+      "trade.start",
+      "trade.stop"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

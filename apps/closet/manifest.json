@@ -1,0 +1,64 @@
+{
+  "manifest_version": 1,
+  "id": "closet",
+  "name": "Smart Closet",
+  "icon": "👕",
+  "tagline": "Dressed for the day.",
+  "description": "Your clothes and outfits: what to wear today from the weather and your plans, ratings, and what you never wear (DEC-0162).",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:closet.html",
+  "components": {
+    "interface": {
+      "web": [
+        "closet.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "today"
+      ]
+    },
+    "services": [],
+    "data": [
+      "closet"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_clothing",
+      "closet_laundry",
+      "closet_report",
+      "rate_outfit",
+      "save_outfit",
+      "what_to_wear",
+      "wore_outfit"
+    ],
+    "actions": [
+      "closet.laundry",
+      "closet.outfit",
+      "closet.outfit_delete",
+      "closet.rate",
+      "closet.wore",
+      "closet_piece.add",
+      "closet_piece.delete",
+      "closet_piece.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

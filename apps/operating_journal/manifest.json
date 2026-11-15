@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "operating_journal",
+  "name": "Operating Journal",
+  "icon": "🧭",
+  "tagline": "How you mean to live, and how you do.",
+  "description": "Your values, priorities, ideal day and week and rules, each checked against your records or rated by you (DEC-0097).",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:operating.html",
+  "components": {
+    "interface": {
+      "web": [
+        "operating.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "directions",
+        "how",
+        "runs"
+      ]
+    },
+    "services": [],
+    "data": [
+      "operating_journal"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_operating_journal",
+      "remove_operating_line"
+    ],
+    "actions": [
+      "operating.add",
+      "operating.rate",
+      "operating.remove"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "operating_journal"
+    ]
+  }
+}

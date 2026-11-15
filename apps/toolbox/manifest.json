@@ -1,0 +1,60 @@
+{
+  "manifest_version": 1,
+  "id": "toolbox",
+  "name": "Toolbox",
+  "icon": "🧰",
+  "tagline": "Quick tools.",
+  "description": "Calculators, unit conversion, and other quick tools.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "garage",
+  "retired": false,
+  "entry": "web:toolbox.html",
+  "components": {
+    "interface": {
+      "web": [
+        "toolbox.html"
+      ],
+      "qt": [
+        "modules/toolbox"
+      ],
+      "glasses": [
+        "alarms"
+      ]
+    },
+    "services": [],
+    "data": [
+      "alarms"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "calculate_board_feet",
+      "calculate_concrete",
+      "calculate_ohms_law",
+      "convert_units"
+    ],
+    "actions": [
+      "alarm.add",
+      "alarm.delete",
+      "alarm.switch"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "alarms"
+    ]
+  }
+}

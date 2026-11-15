@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "navigation",
+  "name": "Navigation",
+  "icon": "🧭",
+  "tagline": "Find the way.",
+  "description": "Waypoints, distance/bearing, and sun/moon reference.",
+  "version": "1.0.0",
+  "group": "Outdoors & field",
+  "area": "recreation",
+  "retired": false,
+  "entry": "web:navigation.html",
+  "components": {
+    "interface": {
+      "web": [
+        "navigation.html"
+      ],
+      "qt": [
+        "modules/navigation"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "waypoints"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_waypoint",
+      "change_waypoint",
+      "delete_waypoint",
+      "get_sun_moon_info",
+      "list_waypoints",
+      "waypoint_distance"
+    ],
+    "actions": [
+      "waypoint.add",
+      "waypoint.delete",
+      "waypoint.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

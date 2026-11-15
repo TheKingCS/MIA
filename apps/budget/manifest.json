@@ -1,0 +1,109 @@
+{
+  "manifest_version": 1,
+  "id": "budget",
+  "name": "Money",
+  "icon": "💰",
+  "tagline": "Know where it goes.",
+  "description": "Household bills, income, expenses, and tax-relevant totals.",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "finances",
+  "retired": false,
+  "entry": "web:money.html",
+  "components": {
+    "interface": {
+      "web": [
+        "money.html"
+      ],
+      "qt": [
+        "modules/budget"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "budget",
+      "business_use",
+      "finance",
+      "net_worth",
+      "plaid"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_bill",
+      "add_debt",
+      "add_expense",
+      "add_income",
+      "add_income_source",
+      "change_bill",
+      "delete_bill",
+      "delete_expense",
+      "get_budget_summary",
+      "get_build_costs",
+      "get_business_use",
+      "get_debt_payoff_plan",
+      "get_financial_checkin",
+      "get_receipt",
+      "get_tool_costs",
+      "list_bills",
+      "list_build_purchases",
+      "list_debts",
+      "list_unchecked_subscriptions",
+      "list_untagged_charges",
+      "log_build_expense",
+      "log_business_use",
+      "mark_bill_paid",
+      "mark_income_received",
+      "record_debt_payment",
+      "record_tool_purchase",
+      "set_budget_target",
+      "set_build_budget",
+      "still_using_subscription",
+      "tag_charge",
+      "update_debt"
+    ],
+    "actions": [
+      "bill.add",
+      "bill.delete",
+      "bill.edit",
+      "bill.pay",
+      "bill.still_using",
+      "budget_target.delete",
+      "budget_target.set",
+      "debt.add",
+      "debt.delete",
+      "debt.edit",
+      "debt.pay",
+      "expense.add",
+      "expense.business",
+      "expense.delete",
+      "expense.edit",
+      "income.add",
+      "income.delete",
+      "income.edit",
+      "income.receive",
+      "income_source.add",
+      "income_source.delete",
+      "income_source.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "budget_nudge",
+      "finance_snapshots"
+    ]
+  }
+}

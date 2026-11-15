@@ -1,0 +1,47 @@
+{
+  "manifest_version": 1,
+  "id": "maintenance",
+  "name": "Maintenance",
+  "icon": "🔧",
+  "tagline": "Everything you own, cared for.",
+  "description": "Recurring upkeep tracking for vehicles, equipment, appliances, property, and tools.",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "",
+  "retired": true,
+  "entry": "web:maintenance.html",
+  "components": {
+    "interface": {
+      "web": [
+        "maintenance.html"
+      ],
+      "qt": [
+        "modules/maintenance"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "maintenance"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "none",
+      "glasses": "none",
+      "voice": false
+    },
+    "background": []
+  }
+}

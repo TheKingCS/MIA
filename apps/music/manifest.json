@@ -1,0 +1,69 @@
+{
+  "manifest_version": 1,
+  "id": "music",
+  "name": "Music",
+  "icon": "🎵",
+  "tagline": "Your music.",
+  "description": "Local audio library, playlists, and playback.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "recreation",
+  "retired": false,
+  "entry": "web:music.html",
+  "components": {
+    "interface": {
+      "web": [
+        "music.html"
+      ],
+      "qt": [
+        "modules/music"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_to_playlist",
+      "delete_playlist",
+      "get_now_playing",
+      "list_playlists",
+      "make_playlist",
+      "next_track",
+      "pause_music",
+      "play_playlist",
+      "play_track",
+      "previous_track",
+      "remove_from_playlist",
+      "rename_playlist",
+      "resume_music",
+      "set_music_volume",
+      "stop_music"
+    ],
+    "actions": [
+      "music.scan",
+      "playlist.add",
+      "playlist.add_track",
+      "playlist.delete",
+      "playlist.remove_track",
+      "playlist.rename",
+      "track.delete"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

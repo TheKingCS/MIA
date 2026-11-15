@@ -133,6 +133,18 @@ instead (`docs/user_help/organizing.md`, `docs/user_help/system_and_files.md`)
 it won't get the filename confidence bonus, so prefer a dedicated file
 whenever there's real content to write.
 
+## 5c. Its manifest (required for one of MIA's apps)
+
+Every app MIA lists has one record of its parts, `apps/<id>/manifest.json`
+(DEC-0178; format: `docs/schema/app_manifest.schema.json`). It claims the
+app's tools, action kinds, stores, jobs and daily checks, its pages and
+cards, and the devices it runs on. `tests/test_app_registry.py` fails when
+something in the code isn't claimed by exactly one manifest, so a new tool
+or store goes into its app's manifest by hand (or add the owner to the
+tables in `tools/app_manifests.py` and regenerate with
+`python -m tools.app_manifests write --force`). Check with
+`python -m tools.app_manifests check`.
+
 ## 6. Enabling, disabling, and rescanning
 
 Every module can be turned off from the **Modules** screen without

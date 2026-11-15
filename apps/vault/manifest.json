@@ -1,0 +1,52 @@
+{
+  "manifest_version": 1,
+  "id": "vault",
+  "name": "Memory Vault",
+  "icon": "🗄",
+  "tagline": "Your photos, kept safe.",
+  "description": "Your phone's photos and videos, kept safe on your home computer, so the phone can let them go (DEC-0030).",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:vault.html",
+  "components": {
+    "interface": {
+      "web": [
+        "vault.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "status"
+      ]
+    },
+    "services": [],
+    "data": [
+      "memory_vault"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "find_photos",
+      "get_vault_status"
+    ],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "vault_captions"
+    ]
+  }
+}

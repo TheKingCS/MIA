@@ -1,0 +1,61 @@
+{
+  "manifest_version": 1,
+  "id": "insurance",
+  "name": "Insurance",
+  "icon": "☂️",
+  "tagline": "Covered, for less.",
+  "description": "Your policies in one place, what's worth a look, and quotes compared fairly (DEC-0034).",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "finances",
+  "retired": false,
+  "entry": "web:insurance.html",
+  "components": {
+    "interface": {
+      "web": [
+        "insurance.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "renewals"
+      ]
+    },
+    "services": [],
+    "data": [
+      "insurance"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_insurance"
+    ],
+    "actions": [
+      "insurance.choose",
+      "insurance.request",
+      "insurance.switched",
+      "insurance_policy.add",
+      "insurance_policy.delete",
+      "insurance_policy.edit",
+      "insurance_quote.add",
+      "insurance_quote.delete",
+      "insurance_quote.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "insurance_renewal"
+    ]
+  }
+}

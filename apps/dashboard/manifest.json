@@ -1,0 +1,103 @@
+{
+  "manifest_version": 1,
+  "id": "dashboard",
+  "name": "Dashboard",
+  "icon": "📊",
+  "tagline": "Your life. In sync.",
+  "description": "Recent activity, active missions, memories, and upcoming items at a glance.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "",
+  "retired": true,
+  "entry": "web:dashboard.html",
+  "components": {
+    "interface": {
+      "web": [
+        "dashboard.html"
+      ],
+      "qt": [
+        "modules/dashboard"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "direction",
+      "insights",
+      "intents",
+      "projects",
+      "tasks"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_alarm",
+      "add_direction",
+      "add_project",
+      "add_task",
+      "delete_alarm",
+      "delete_project",
+      "delete_task",
+      "dont_bring_that_up",
+      "get_life_events",
+      "get_links",
+      "get_today",
+      "get_weather",
+      "get_week",
+      "link_my_reason",
+      "link_things",
+      "list_alarms",
+      "list_connections",
+      "list_directions",
+      "list_projects",
+      "list_tasks",
+      "mark_goal_achieved",
+      "mark_task_done",
+      "pause_direction",
+      "remove_direction",
+      "resume_direction",
+      "set_weather_place",
+      "show_my_why",
+      "switch_alarm",
+      "todays_seed",
+      "unlink_my_reason",
+      "unlink_things"
+    ],
+    "actions": [
+      "direction.add",
+      "direction.edit",
+      "direction.pause",
+      "direction.remove",
+      "direction.resume",
+      "project.add",
+      "project.budget",
+      "project.delete",
+      "project.edit",
+      "task.add",
+      "task.delete",
+      "task.done",
+      "task.reopen",
+      "why.achieve",
+      "why.link",
+      "why.unlink"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "none",
+      "glasses": "none",
+      "voice": false
+    },
+    "background": [
+      "chronicle",
+      "chronicle_issue"
+    ]
+  }
+}

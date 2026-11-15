@@ -3,7 +3,8 @@
 *Claude (Opus), 2026-11-15, answering Zac's handoff (kept verbatim:
 [`prompts/22_RUNTIME_OWNED_APPLICATION_ECOSYSTEM.md`](prompts/22_RUNTIME_OWNED_APPLICATION_ECOSYSTEM.md)), his reply to
 DEC-0175. DEC-0175 is approved as this handoff's direction; the format and folder choices below are DEC-0178
-(proposed). Planning only: nothing is built until the plan's first phase is approved. Fable reviews it (DEC-0174).*
+(approved 2026-11-15). **M1 is built** (`core/app_registry.py`, `apps/*/manifest.json`, `docs/schema/app_manifest.schema.json`,
+`tests/test_app_registry.py`); M2 onward are still plans. Fable reviews it (DEC-0174).*
 
 ## A. Architecture assessment (the handoff's §11 questions, answered from the repository)
 

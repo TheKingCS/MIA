@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "lab",
+  "name": "The Lab",
+  "icon": "🧪",
+  "tagline": "Experiments and sensors.",
+  "description": "Sensor testing, experiments, calibration, and graphs.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "smart_devices",
+  "retired": false,
+  "entry": "web:lab.html",
+  "components": {
+    "interface": {
+      "web": [
+        "lab.html"
+      ],
+      "qt": [
+        "modules/lab"
+      ],
+      "glasses": [
+        "sensors"
+      ]
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "delete_lab_reading",
+      "list_lab_readings",
+      "list_lab_series",
+      "log_lab_reading"
+    ],
+    "actions": [
+      "lab.approve",
+      "lab.propose",
+      "lab.reject",
+      "lab_reading.add",
+      "lab_reading.delete"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

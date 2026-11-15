@@ -1,0 +1,50 @@
+{
+  "manifest_version": 1,
+  "id": "web_home",
+  "name": "Home",
+  "icon": "✨",
+  "tagline": "MIA, and a chat with her.",
+  "description": "MIA herself: her presence, today's one thing, and a chat with her.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "",
+  "retired": false,
+  "entry": "web:index.html",
+  "components": {
+    "interface": {
+      "web": [
+        "index.html"
+      ],
+      "qt": [
+        "modules/web_home"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": [
+      "firstboot.advance",
+      "firstboot.skip",
+      "portal.picture",
+      "weather.place"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

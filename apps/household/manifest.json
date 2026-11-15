@@ -1,0 +1,55 @@
+{
+  "manifest_version": 1,
+  "id": "household",
+  "name": "Household",
+  "icon": "🧺",
+  "tagline": "A home that runs itself.",
+  "description": "Daily and weekly household routines — laundry, dishes, chores.",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "home",
+  "retired": false,
+  "entry": "web:household.html",
+  "components": {
+    "interface": {
+      "web": [
+        "household.html"
+      ],
+      "qt": [
+        "modules/household"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_household_routine",
+      "list_household_routines",
+      "log_household_routine",
+      "pause_household_routine"
+    ],
+    "actions": [
+      "routine.add",
+      "routine.log",
+      "routine.pause",
+      "routine.resume"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

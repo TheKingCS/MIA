@@ -1,0 +1,51 @@
+{
+  "manifest_version": 1,
+  "id": "files",
+  "name": "Files",
+  "icon": "🗂",
+  "tagline": "Your files.",
+  "description": "Browse and manage local files and data.",
+  "version": "1.0.0",
+  "group": "Knowledge, tools & system",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:files.html",
+  "components": {
+    "interface": {
+      "web": [
+        "files.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "folder"
+      ]
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "find_my_files"
+    ],
+    "actions": [
+      "myfile.delete",
+      "myfile.folder",
+      "myfile.rename"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

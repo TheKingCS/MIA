@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TheKingCS/MIA/docs/schema/app_manifest.schema.json",
+  "title": "MIA application manifest, version 1",
+  "description": "One MIA-native application's canonical manifest (apps/<id>/manifest.json; DEC-0175, DEC-0178; docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md section B). An index of the app's parts, not its code. core/app_registry.py checks it against the code: every tool, action kind, store, job and daily check is claimed by exactly one manifest. Keys starting with x- are extensions, kept and ignored.",
+  "type": "object",
+  "required": ["manifest_version", "id", "name", "icon", "tagline", "description", "version", "group", "area", "retired",
+               "entry", "components", "capabilities", "uses", "permissions", "dependencies", "runtime"],
+  "properties": {
+    "manifest_version": {"type": "integer", "enum": [1]},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "name": {"type": "string"},
+    "icon": {"type": "string"},
+    "tagline": {"type": "string"},
+    "description": {"type": "string"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "group": {"type": "string"},
+    "area": {"type": "string"},
+    "retired": {"type": "boolean"},
+    "entry": {"type": "string", "pattern": "^(web:[a-z0-9_.-]+\\.html|qt|voice)$"},
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface", "services", "data", "agents", "workflows", "integrations"],
+      "properties": {
+        "interface": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["web", "qt", "glasses"],
+          "properties": {
+            "web": {"type": "array", "items": {"type": "string"}},
+            "qt": {"type": "array", "items": {"type": "string"}},
+            "glasses": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "services": {"type": "array", "items": {"type": "string"}},
+        "data": {"type": "array", "items": {"type": "string"}},
+        "agents": {"type": "array", "items": {"type": "string"}},
+        "workflows": {"type": "array", "items": {"type": "string"}},
+        "integrations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tools", "actions"],
+      "properties": {
+        "tools": {"type": "array", "items": {"type": "string"}},
+        "actions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "uses": {"type": "array", "items": {"type": "string"}},
+    "permissions": {"type": "array", "items": {"type": "string"}},
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["application_id"],
+        "properties": {
+          "application_id": {"type": "string"},
+          "version_constraint": {"type": "string"}
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["devices", "background"],
+      "properties": {
+        "devices": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pc", "phone", "glasses", "voice"],
+          "properties": {
+            "pc": {"type": "string", "enum": ["full", "view", "none"]},
+            "phone": {"type": "string", "enum": ["full", "view", "none"]},
+            "glasses": {"type": "string", "enum": ["full", "view", "none"]},
+            "voice": {"type": "boolean"}
+          }
+        },
+        "background": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

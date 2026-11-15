@@ -1,0 +1,54 @@
+{
+  "manifest_version": 1,
+  "id": "security",
+  "name": "Cameras",
+  "icon": "🛡️",
+  "tagline": "Your cameras, at home.",
+  "description": "Your home cameras, watched live from MIA over your own network, no cloud (DEC-0033).",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "smart_devices",
+  "retired": false,
+  "entry": "web:security.html",
+  "components": {
+    "interface": {
+      "web": [
+        "security.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "cameras"
+      ]
+    },
+    "services": [],
+    "data": [
+      "security"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "list_cameras",
+      "save_camera_picture"
+    ],
+    "actions": [
+      "camera.remove",
+      "security.picture_delete",
+      "security.save_picture"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

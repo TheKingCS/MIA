@@ -1,0 +1,68 @@
+{
+  "manifest_version": 1,
+  "id": "relationships",
+  "name": "People",
+  "icon": "👥",
+  "tagline": "The ones who matter.",
+  "description": "Relationship profiles and pet profiles.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:people.html",
+  "components": {
+    "interface": {
+      "web": [
+        "people.html"
+      ],
+      "qt": [
+        "modules/relationships"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "connections",
+      "relationships"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_person",
+      "add_pet",
+      "get_person",
+      "get_pet",
+      "list_upcoming_birthdays",
+      "update_person",
+      "update_pet"
+    ],
+    "actions": [
+      "connection.allow",
+      "connection.decline",
+      "person.add",
+      "person.caught_up",
+      "person.delete",
+      "person.edit",
+      "pet.add",
+      "pet.delete",
+      "pet.edit"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "birthday"
+    ]
+  }
+}

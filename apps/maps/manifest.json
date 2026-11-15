@@ -1,0 +1,64 @@
+{
+  "manifest_version": 1,
+  "id": "maps",
+  "name": "Maps",
+  "icon": "🗺",
+  "tagline": "Know the ground.",
+  "description": "Waypoints, a real offline basemap, and official trail maps.",
+  "version": "1.0.0",
+  "group": "Outdoors & field",
+  "area": "recreation",
+  "retired": false,
+  "entry": "web:maps.html",
+  "components": {
+    "interface": {
+      "web": [
+        "maps.html"
+      ],
+      "qt": [
+        "modules/maps"
+      ],
+      "glasses": [
+        "tracks"
+      ]
+    },
+    "services": [],
+    "data": [
+      "gps_tracks",
+      "places"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_trail_map_from_url",
+      "arrive_place",
+      "delete_trail_map",
+      "list_places",
+      "list_trail_maps"
+    ],
+    "actions": [
+      "gps_track.add",
+      "gps_track.delete",
+      "map.area_keep",
+      "map.area_remove",
+      "map.checkin",
+      "map.tak_share",
+      "trail_map.delete"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

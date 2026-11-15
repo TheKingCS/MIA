@@ -1,0 +1,53 @@
+{
+  "manifest_version": 1,
+  "id": "freedom",
+  "name": "Freedom",
+  "icon": "🌄",
+  "tagline": "Your way out, in numbers.",
+  "description": "What you're saving toward, how far along you are, and the day it's within reach (DEC-0038).",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "finances",
+  "retired": false,
+  "entry": "web:freedom.html",
+  "components": {
+    "interface": {
+      "web": [
+        "freedom.html"
+      ],
+      "qt": [],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "freedom_log"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_freedom_progress"
+    ],
+    "actions": [
+      "freedom.build",
+      "freedom.build_edit",
+      "freedom.build_move",
+      "freedom.fund_account",
+      "freedom.plan"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}

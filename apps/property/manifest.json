@@ -1,0 +1,45 @@
+{
+  "manifest_version": 1,
+  "id": "property",
+  "name": "Property",
+  "icon": "🏠",
+  "tagline": "The house, the appliances, the tools.",
+  "description": "At-a-glance status for the house, appliances, and tools.",
+  "version": "1.0.0",
+  "group": "Home, homestead & equipment",
+  "area": "",
+  "retired": true,
+  "entry": "web:property.html",
+  "components": {
+    "interface": {
+      "web": [
+        "property.html"
+      ],
+      "qt": [
+        "modules/property"
+      ],
+      "glasses": []
+    },
+    "services": [],
+    "data": [],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [],
+    "actions": []
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "none",
+      "glasses": "none",
+      "voice": false
+    },
+    "background": []
+  }
+}

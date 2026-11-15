@@ -46,6 +46,6 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0175 | Capability-first; MIA owns her app ecosystem, one manifest per app (prompt 22) | APPROVED |
 | DEC-0176 | Code that isn't MIA's runs out of process, sandboxed, through the capability contract | APPROVED |
 | DEC-0177 | MIA first-class in the OS image; MIA-native apps by the runtime, conventional apps by Flatpak; no app store | APPROVED (Zac's clarification) |
-| DEC-0178 | Manifests as JSON in apps/<id>/, a registry that reads them, code moved app by app later | PROPOSED (Q-30) |
+| DEC-0178 | Manifests as JSON in apps/<id>/, a registry that reads them, code moved app by app later | APPROVED; M1 built |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

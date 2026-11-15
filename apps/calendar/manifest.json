@@ -1,0 +1,54 @@
+{
+  "manifest_version": 1,
+  "id": "calendar",
+  "name": "Calendar",
+  "icon": "📅",
+  "tagline": "Everything with a date.",
+  "description": "Your events, plus upkeep, bills, meals, training and birthdays, by day.",
+  "version": "1.0.0",
+  "group": "Life, goals & self",
+  "area": "personal_tools",
+  "retired": false,
+  "entry": "web:calendar.html",
+  "components": {
+    "interface": {
+      "web": [
+        "calendar.html"
+      ],
+      "qt": [],
+      "glasses": []
+    },
+    "services": [],
+    "data": [
+      "calendar"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "add_calendar_event",
+      "delete_calendar_event",
+      "list_calendar_events"
+    ],
+    "actions": [
+      "event.add",
+      "event.delete"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": [
+      "calendar_digest"
+    ]
+  }
+}

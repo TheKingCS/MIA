@@ -1,0 +1,73 @@
+{
+  "manifest_version": 1,
+  "id": "business",
+  "name": "Orders & Quotes",
+  "icon": "🧾",
+  "tagline": "Customers, quotes and orders.",
+  "description": "Quotes from your recipes, customers, orders and payments, and a portfolio of what you've built (DEC-0030).",
+  "version": "1.0.0",
+  "group": "Money & business",
+  "area": "businesses",
+  "retired": false,
+  "entry": "web:business.html",
+  "components": {
+    "interface": {
+      "web": [
+        "business.html"
+      ],
+      "qt": [],
+      "glasses": [
+        "orders",
+        "quotes"
+      ]
+    },
+    "services": [],
+    "data": [
+      "business",
+      "ledger"
+    ],
+    "agents": [],
+    "workflows": [],
+    "integrations": []
+  },
+  "capabilities": {
+    "tools": [
+      "get_business",
+      "get_businesses",
+      "get_ledger_summary",
+      "order_paid",
+      "record_sale"
+    ],
+    "actions": [
+      "customer.add",
+      "customer.delete",
+      "customer.edit",
+      "order.add",
+      "order.build",
+      "order.delete",
+      "order.edit",
+      "order.pay",
+      "order.status",
+      "portfolio.feature",
+      "quote.accept",
+      "quote.add",
+      "quote.decline",
+      "quote.delete",
+      "quote.edit",
+      "quote.email",
+      "quote.send"
+    ]
+  },
+  "uses": [],
+  "permissions": [],
+  "dependencies": [],
+  "runtime": {
+    "devices": {
+      "pc": "full",
+      "phone": "full",
+      "glasses": "view",
+      "voice": true
+    },
+    "background": []
+  }
+}
