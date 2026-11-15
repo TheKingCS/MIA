@@ -8,7 +8,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `accessibility.read_screen` | `core/assistant_accessibility_actions.py`, `modules/settings/module.py` | `gui/main_window.py` |
 | `activity.logged` | `core/kitchen_manager.py`, `core/maintenance_manager.py`, `core/project_manager.py`, `core/workout_manager.py` | `core/rewards_manager.py` |
 | `apps.arrangement_changed` | `core/focus_presets.py` | `gui/main_window.py` |
-| `assistant.open_module_requested` | `core/application.py`, `gui/home_dashboard.py`, `gui/today_card.py`, `gui/widgets/asset_missions_panel.py`, `modules/field_kit/module.py`, `modules/garage/module.py`, `modules/greenhouse/module.py`, `modules/household/module.py`, `modules/maintenance/module.py`, `modules/property/module.py`, `modules/web_home/module.py` | `gui/main_window.py` |
+| `assistant.open_module_requested` | `core/assistant_tools.py`, `gui/home_dashboard.py`, `gui/today_card.py`, `gui/widgets/asset_missions_panel.py`, `modules/field_kit/module.py`, `modules/garage/module.py`, `modules/greenhouse/module.py`, `modules/household/module.py`, `modules/maintenance/module.py`, `modules/property/module.py`, `modules/web_home/module.py` | `gui/main_window.py` |
 | `capture.accepted` | `modules/toolbox/tools/lite_captures_tool.py` | `gui/home_dashboard.py` |
 | `conversation.active_changed` | `core/conversation_manager.py` | `gui/character_panel.py`, `modules/assistant/module.py` |
 | `conversation.updated` | `core/conversation_manager.py` | `gui/character_panel.py`, `modules/assistant/module.py` |
@@ -33,8 +33,8 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `notification.updated` | `core/notification_manager.py` | `gui/main_window.py` |
 | `profile.created` | `core/profile_manager.py` | `core/household_manager.py`, `core/personal_data.py` |
 | `profile.deleted` | `core/profile_manager.py` | `core/personal_data.py` |
-| `profile.email_changed` | `core/profile_manager.py` | `core/application.py`, `core/core_runtime.py` |
-| `profile.password_changed` | `core/profile_manager.py` | `core/application.py`, `core/core_runtime.py` |
+| `profile.email_changed` | `core/profile_manager.py` | `core/core_runtime.py`, `core/runtime.py` |
+| `profile.password_changed` | `core/profile_manager.py` | `core/core_runtime.py`, `core/runtime.py` |
 | `profile.prestiged` | `core/profile_manager.py` | `core/progress_history.py` |
 | `profile.renamed` | `core/profile_manager.py` | `gui/main_window.py` |
 | `profile.reward_unlocked` | `core/profile_manager.py` | `core/progress_history.py` |
@@ -44,7 +44,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `profile.xp_changed` | `core/profile_manager.py` | `gui/main_window.py`, `modules/skills/module.py` |
 | `records.changed` | `core/actions.py`, `core/child_accounts.py`, `core/imports.py`, `core/main_thread.py`, `core/starter_templates.py`, `core/undo_log.py` | `gui/main_window.py` |
 | `textbooks.updated` | `core/background_jobs.py` | — |
-| `theme.changed` | `core/application.py`, `modules/settings/module.py` | `core/application.py` |
+| `theme.changed` | `core/assistant_tools.py`, `modules/settings/module.py` | `core/application.py` |
 | `user.setup_complete` | `core/event_bus.py`, `gui/setup_wizard.py` | `core/event_bus.py` |
 
 **Heard but never sent** (0): none.

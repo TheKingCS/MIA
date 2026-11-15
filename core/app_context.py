@@ -141,8 +141,9 @@ if TYPE_CHECKING:
 @dataclass
 class AppContext:
     """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
-    sensors that send readings), the one store lock the server and the desktop's timers share, and each person's
-    stores, the skills they taught her among them (core/taught_skills.py)."""
+    sensors that send readings), the one store lock the server and the background schedule share, each person's
+    stores, the skills they taught her among them (core/taught_skills.py), and, when MIA runs with no window, the
+    runtime she belongs to and its schedule (core/runtime.py)."""
 
     config: ConfigManager
     events: EventBus
@@ -262,6 +263,10 @@ class AppContext:
     # The phone API server (server/app.py), switched on/off from Settings
     # (core/phone_server.py).
     phone_server: Optional["PhoneServer"] = field(default=None, repr=False)
+    # The headless MIA Runtime this context belongs to (core/runtime.py, DEC-0155); None inside the desktop app.
+    runtime: Optional[object] = field(default=None, repr=False)
+    # The background schedule (core/scheduler.py): set by the desktop app and the runtime, read by /api/runtime/health.
+    scheduler: Optional[object] = field(default=None, repr=False)
     # Runs a function on the main (GUI) thread; set by core/application.py.
     # Used by core/main_thread.publish() so events raised on the phone
     # server's thread reach screens safely.

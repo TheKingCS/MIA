@@ -2756,6 +2756,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: today closing the desktop window stops reminders, backups, the Loop and the phone's server. This is the first
   step of MIA OS and is valuable on Windows on its own.
 - Related: `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`
+- **Built so far** (claude, 2026-11-15; K-0232, K-0233): the jobs and daily checks (`core/background_jobs.py`) on a
+  plain scheduler (`core/scheduler.py`); the full tool registry (`core/assistant_tools.py`); one builder of every
+  service (`core/runtime.build_services`) used by the desktop and by `core.runtime.Runtime`, the MIA with no window
+  (`python -m core.runtime`); `/api/runtime/health`; a systemd user unit and installer (not yet run on a machine).
+  Not yet: the window as the runtime's client, autostart on Windows, the model server's supervision.
 
 ### DEC-0156: Capabilities and grants for every tool and action
 - Status: PROPOSED

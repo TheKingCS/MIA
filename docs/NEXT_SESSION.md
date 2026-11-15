@@ -16,13 +16,23 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   - **Done, steps 1 to 3:** the ten timers and 43 daily checks are out of the desktop window's class, in
     `core/background_jobs.py` (no Qt), on `core/scheduler.py`. The desktop runs them through one timer; nothing
     else changed for you. `tests/test_background_jobs.py` pins both lists.
-  - **Found on the way, and the next step:** the *whole* MIA only exists inside the desktop window's class. The
-    headless builder (`core/core_runtime.build_core_context`, what the phone runs) has 63 of the desktop's 91
-    services and 41 of its 62 tool families: no communication gate, no daily checks, no insights. So step 4 starts
-    with **one builder of the full MIA with no Qt**, used by both the desktop and the runtime
-    (`python -m core.runtime`), then `/api/health`.
-  - Then: the window as a client of the runtime (step 5), autostart (a systemd user service on Linux and the Pi,
-    Task Scheduler on Windows), then the OS images.
+  - **Done, step 4:** `python -m core.runtime` runs the whole MIA with no window: 95 services, the same 401 tools
+    as the desktop, the schedule on a thread, the phone server when it's on. One function builds her for both
+    (`core/runtime.build_services`); the tools are `core/assistant_tools.py`. `/api/runtime/health` reports it.
+  - **Done, step 6 (Linux half), not yet run on a real machine:** `deploy/mia-runtime.service` and
+    `deploy/install_runtime.sh` (a systemd user service). First real test: the Pi.
+  - **Next, in order:**
+    1. **A data folder outside the code** (new finding): every store hard-codes `<the code>/data`. An OS image is
+       read-only and the Pi needs her data under the person's home. One setting (an environment variable, then
+       `~/.local/share/mia`) that every store follows. **(Fable)**
+    2. **The phone runs the full MIA too**: `android-phone/.../mia_phone.py` still uses the smaller
+       `core/core_runtime.build_core_context`; fold the two builders into one. **(Fable)**
+    3. **The window as a client** (step 5): the desktop window (and the MIA OS session, a browser on her web
+       screens) attaches to a running runtime instead of building its own MIA. **(Fable)**
+    4. Then the images: `os/Containerfile` for the PC (Fedora bootc), and the Pi's setup on Raspberry Pi OS.
+  - **On the Pi, when the Claude Code session there is connected:** clone, make the venv, install requirements,
+    `bash deploy/install_runtime.sh`, then `systemctl --user status mia-runtime`. The Qt packages aren't needed
+    for the runtime (it imports none of them), which a requirements split should make real.
 - **Stopped:** new features in the Qt desktop app and Windows-only parts (fixes only). The rest of UAL U3 (Convert, the
   consent step) waits until after the extraction.
 - **Answered by Zac:** Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android (Q-15).

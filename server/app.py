@@ -547,7 +547,9 @@ def create_app(context: AppContext) -> FastAPI:
     (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
     herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
     lock, because the song is handed to the window's thread. Taught skills (DEC-0123) are read at
-    /api/taught-skills and run one move at a time through /api/taught-skills/run, /answer and /stop."""
+    /api/taught-skills and run one move at a time through /api/taught-skills/run, /answer and /stop.
+    /api/runtime/health says how MIA is running: her schedule's jobs, and under the headless runtime (DEC-0155) its
+    uptime, the model and the phone server."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2891,6 +2893,19 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return health_page(view_for(context, profile_id))
+
+    @app.get("/api/runtime/health")
+    def runtime_health(profile_id: str = Depends(require_profile_id)) -> dict:
+        """How this MIA is running (DEC-0155): under the headless runtime, its schedule's jobs (last run, skips,
+        failures), uptime, the model and the phone server (core/runtime.Runtime.health); inside the desktop app,
+        the same schedule's jobs with `window` true."""
+        runtime = getattr(context, "runtime", None)
+        if runtime is not None:
+            return runtime.health()
+        scheduler = getattr(context, "scheduler", None)
+        jobs = scheduler.status() if scheduler is not None else []
+        return {"running": scheduler is not None, "window": True, "jobs": jobs,
+                "jobs_failing": [j["name"] for j in jobs if j["last_error"]]}
 
     @app.get("/api/communications")
     def web_communications(profile_id: str = Depends(require_profile_id)) -> dict:

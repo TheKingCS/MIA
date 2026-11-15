@@ -10,9 +10,11 @@ coordinates) via the `astral` package. `core/waypoint_manager.py`'s
 manager for a future "distance between two waypoints" UI addition;
 not surfaced in this first cut to keep the widget simple.
 
-format_waypoint_row()/format_moon_phase_name()/format_sun_moon_summary()
-are free functions (not methods) — testable without Qt, see
-tests/test_navigation_module.py.
+format_waypoint_row() is a free function (not a method) — testable without
+Qt, see tests/test_navigation_module.py. format_moon_phase_name() and
+format_sun_moon_summary() live in core/sun_moon.py since 2026-11-15 (the
+get_sun_moon_info tool needs them without this screen) and are re-exported
+here.
 
 "Offline maps, trails, elevation" from this section's full described
 scope wait for real GPS/mapping hardware/data; this milestone is the
@@ -24,9 +26,6 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from astral import Observer
-from astral import moon as astral_moon
-from astral.sun import sun as astral_sun
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -41,6 +40,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.sun_moon import format_moon_phase_name, format_sun_moon_summary  # noqa: F401  (moved to core, 2026-11-15)
 from core.waypoint_manager import Waypoint
 from gui.add_edit_waypoint_dialog import AddEditWaypointDialog
 from modules.module_base import ModuleBase
@@ -50,46 +50,6 @@ def format_waypoint_row(waypoint: Waypoint) -> str:
     """Pure formatting logic — testable without Qt (see tests/test_navigation_module.py)."""
     category = f"[{waypoint.category}] " if waypoint.category else ""
     return f"{category}{waypoint.name}  ({waypoint.latitude:.4f}, {waypoint.longitude:.4f})"
-
-
-def format_moon_phase_name(phase: float) -> str:
-    """
-    astral.moon.phase() returns 0-27.99 (days into the ~29.5-day
-    synodic month), documented by astral itself as exactly these four
-    buckets — matched here as-is rather than inventing a finer 8-phase
-    scale the underlying calculation doesn't actually support:
-    0-6.99 New moon, 7-13.99 First quarter, 14-20.99 Full moon,
-    21-27.99 Last quarter.
-    """
-    if phase < 7:
-        return "New Moon"
-    if phase < 14:
-        return "First Quarter"
-    if phase < 21:
-        return "Full Moon"
-    return "Last Quarter"
-
-
-def format_sun_moon_summary(latitude: float, longitude: float, for_date: date) -> str:
-    """Pure formatting logic (astral calls only, no Qt) — testable, see tests/test_navigation_module.py."""
-    observer = Observer(latitude=latitude, longitude=longitude)
-    try:
-        sun_times = astral_sun(observer, date=for_date)
-    except ValueError as exc:
-        # astral raises ValueError for latitudes with no sunrise/sunset
-        # on a given date (inside the polar circles) — a real, not
-        # hypothetical, edge case for a "survival/field device" tool.
-        return f"Sun times unavailable for this location/date: {exc}"
-
-    sunrise_local = sun_times["sunrise"].astimezone()
-    sunset_local = sun_times["sunset"].astimezone()
-    phase = astral_moon.phase(for_date)
-
-    return "\n".join([
-        f"Sunrise: {sunrise_local.strftime('%H:%M')}",
-        f"Sunset: {sunset_local.strftime('%H:%M')}",
-        f"Moon phase: {format_moon_phase_name(phase)}",
-    ])
 
 
 class NavigationModule(ModuleBase):

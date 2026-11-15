@@ -79,12 +79,12 @@ def test_every_link_kind_points_at_a_real_store_list_and_fields():
     from core.personal_data import HOUSEHOLD_STORES, PERSONAL_STORES
 
     classes = dict(PERSONAL_STORES + HOUSEHOLD_STORES)
-    app = Path(__file__).resolve().parent.parent / "core" / "application.py"
+    app = Path(__file__).resolve().parent.parent / "core" / "runtime.py"  # build_services: where MIA is put together
     built = app.read_text(encoding="utf-8")
     for kind in links.KINDS.values():
         cls = classes.get(kind.store)
         if cls is None:
-            assert f"self.context.{kind.store} =" in built, kind.kind  # a device-level store the app builds
+            assert f"    context.{kind.store} =" in built, kind.kind  # a device-level store MIA builds
             continue
         source = inspect.getsource(inspect.getmodule(cls))
         assert f"def {kind.lister}(" in source or f"self.{kind.lister}:" in source, kind.kind

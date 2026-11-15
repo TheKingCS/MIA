@@ -935,7 +935,7 @@ def test_scan_ports_checks_the_three_fixed_ports_and_reports_open_ones(context, 
     # already covered by tests/test_port_scanner.py's ephemeral-port
     # tests. This test only verifies _action_scan_ports' own behavior:
     # which ports it asks for, and how it formats the result.
-    import core.application as application_module
+    import core.assistant_tools as application_module  # where the tools live since 2026-11-15 (DEC-0155)
     from core.port_scanner import PortScanResult
 
     captured = {}
@@ -957,7 +957,7 @@ def test_scan_ports_checks_the_three_fixed_ports_and_reports_open_ones(context, 
 
 
 def test_scan_ports_reports_no_open_ports(context, monkeypatch):
-    import core.application as application_module
+    import core.assistant_tools as application_module  # where the tools live since 2026-11-15 (DEC-0155)
     from core.port_scanner import PortScanResult
 
     monkeypatch.setattr(
@@ -969,7 +969,7 @@ def test_scan_ports_reports_no_open_ports(context, monkeypatch):
 
 
 def test_scan_ports_reports_resolution_error(context, monkeypatch):
-    import core.application as application_module
+    import core.assistant_tools as application_module  # where the tools live since 2026-11-15 (DEC-0155)
     from core.port_scanner import PortScanResult
 
     monkeypatch.setattr(
@@ -1805,7 +1805,7 @@ def test_get_life_state_reflects_a_real_active_mission(context):
 
 def test_scan_ports_stays_on_your_own_network(context, monkeypatch):
     """DEC-0056: an active scan of someone else's machine isn't done from a request."""
-    import core.application as application_module
+    import core.assistant_tools as application_module  # where the tools live since 2026-11-15 (DEC-0155)
 
     called = []
     monkeypatch.setattr(application_module, "scan_ports", lambda *a, **k: called.append(a))

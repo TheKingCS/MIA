@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1402 files, 312,167 lines; 1402 files describe themselves; 17,147 of 17,242 classes and functions are documented.
+1406 files, 312,767 lines; 1406 files describe themselves; 17,164 of 17,259 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-534 files, 154,265 lines; 7,955 of 8,041 classes and functions documented
+537 files, 154,757 lines; 7,967 of 8,053 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -76,6 +76,7 @@
 - `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer. And the rest of the Dashboard by voice (DEC-0153, 2026-11-11): "what's this week?" (Your Week, core/today.week_days), "what's the weather?" and "my town is Springfield, Illinois" 
 - `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
+- `core/assistant_tools.py`: The desktop's own Assistant tools, without the window (the MIA Runtime, DEC-0155, step 4).
 - `core/assistant_trip_route_actions.py`: A trip's route and checkpoints by voice (DEC-0125), the same three action kinds the Expeditions page uses (core/trip_route.py), so "undo that" takes each back:
 - `core/assistant_turn.py`: One Assistant turn — user text in, the things MIA should say back out — shared by every voice surface: the headless Core loop (`core/voice_loop.py`) and the phone voice endpoint (`server/app.py`). Pulled out of `VoiceLoopController._handle_turn()` unchanged in behavior, so both surfaces answer, act,
 - `core/assistant_ual_actions.py`: The Universal Action Layer by voice (DEC-0165, core/ual.py): "what can you do with this: ..." answers with the same offer the palette and the phone show for the same words. "Save this to my inbox: ..." or "make this a mission: ..." go through the same catalogue. By voice, saying it is the yes, as fo
@@ -389,6 +390,7 @@
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo
 - `core/routine_actions.py`: The Household's routines changed from the screen (DEC-0113 canvas Household, DEC-0125: routines could only be added by voice). `routine.add` sets one up (core/household_routines.add_routine, the same as the add_household_routine voice tool); `routine.pause` stops it making new missions while keeping
+- `core/runtime.py`: The MIA Runtime (DEC-0155; step 4 of `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`): the whole MIA, running with no window.
 - `core/safety_escalation.py`: When a child's message triggers the safety floor (Q-0002, approved by the owner 2026-10-05, H-0011): the child gets the immediate safety reply (core/safety_floor.py) and is told plainly that a parent who looks after their account will be told; each guardian (core/child_accounts.py) gets a notificati
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t
 - `core/saga.py`: The Chronicle Archive for *MIA: The Chronicles* (DEC-0084; Zac and ChatGPT, H-0081: "a dedicated structure that continuously gathers and organizes information that could become part of future comic issues"; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 7). Not `core/chronicle.py`: that's each pers
@@ -425,6 +427,7 @@
 - `core/store_lock.py`: The lock the server holds while a request reads or changes MIA's stores, let go of while the model thinks (roadmap 2.3, 2026-11-10).
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
 - `core/subscriptions.py`: DEC-0054's "still using it?" mark on subscriptions (2026-11-07; the unused-subscription finding core/findings.py listed as not built "for want of data": nothing recorded use). Now the person records it: "I still use Netflix", or Still Using on the bill in Money, stamps the bill's `still_using_on` wi
+- `core/sun_moon.py`: Sunrise, sunset and the moon's phase for a place and a day, in words (the Navigation app's summary and the `get_sun_moon_info` tool). Moved here from `modules/navigation/module.py` on 2026-11-15 so the tool works without the desktop's Qt screens (the MIA Runtime, DEC-0155). Pure formatting over `ast
 - `core/support_choice.py`: "When it's ambiguous, MIA asks instead of guessing" (2026-09-28), the part of slice B that was deferred (docs/COGNITIVE_EXTENSION_PROPOSAL.md, sections 8 and 9).
 - `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
 - `core/system_check.py`: "Is everything set up?" (2026-10-01, accounts stage 5): one list that says what works on this device, what's missing, and exactly what to do about each, so a new person (or a new Raspberry Pi) doesn't have to guess why voice or photos of receipts don't work.
@@ -545,7 +548,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,364 lines; 54 of 54 classes and functions documented
+2 files, 4,379 lines; 54 of 54 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -680,7 +683,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,670 lines; 1,027 of 1,027 classes and functions documented
+93 files, 22,630 lines; 1,025 of 1,025 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -822,7 +825,7 @@
 
 ## tests/: the test suite: what each part must do
 
-481 files, 80,964 lines; 6,886 of 6,895 classes and functions documented
+482 files, 81,097 lines; 6,893 of 6,902 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1157,6 +1160,7 @@
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths.
+- `tests/test_runtime.py`: The MIA Runtime (core/runtime.py, DEC-0155): the whole MIA built with no window, the same services and tools the desktop has, her schedule on a thread, and how she says she's doing.
 - `tests/test_safety_escalation.py`: Q-0002 (approved 2026-10-05, H-0011): when a child triggers the safety floor, the child gets the safety reply and is told plainly that a parent will be told; each guardian gets a minimal, direct alert (who and when, never what was written); it's recorded for audit in the child's and the guardians' o
 - `tests/test_safety_floor.py`: Safety floor corpus (core/safety_floor.py): what must trigger, what must not.
 - `tests/test_saga.py`: The Chronicle Archive (DEC-0084, core/saga.py): story material found in the real records by rule, joined only by Zac, personal moments never in the repo.

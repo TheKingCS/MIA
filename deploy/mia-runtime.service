@@ -1,0 +1,48 @@
+# deploy/mia-runtime.service
+#
+# The MIA Runtime as a systemd USER service (DEC-0155): the whole MIA with
+# no window (python -m core.runtime). Her schedule, reminders, backups and
+# the phone's server keep running whether or not any screen is open. This is
+# what MIA OS on the PC and Raspberry Pi OS on the Pi start at sign-in.
+#
+# A user service, not a system one: MIA runs as the person, never as root
+# (DEC-0158), with their files and their session's audio. To keep her
+# running while nobody is signed in at the screen (a headless Pi), the
+# installer turns on lingering for the user (loginctl enable-linger).
+#
+# It needs no display: unlike deploy/mia.service (the Qt kiosk window), it
+# doesn't wait for a graphical session. Only one MIA runs per data folder
+# (core/instance_lock.py), so don't enable both on the same install.
+#
+# This file is a TEMPLATE. deploy/install_runtime.sh fills in the paths for
+# the machine: edit that script, not the placeholders below.
+#
+# Logs: journalctl --user -u mia-runtime -f
+
+[Unit]
+Description=MIA Runtime (MIA with no window)
+After=network.target
+# A persistent crash loop stops after this many tries and shows in
+# `systemctl --user status mia-runtime` instead of spinning unnoticed.
+StartLimitIntervalSec=120
+StartLimitBurst=10
+
+[Service]
+Type=simple
+WorkingDirectory=__MIA_INSTALL_DIR__
+ExecStart=__MIA_VENV_PYTHON__ -m core.runtime
+# SIGTERM is what the runtime waits for: it finishes the job in progress,
+# stops the phone server and exits (core/runtime.py run_until_stopped).
+KillSignal=SIGTERM
+TimeoutStopSec=45
+Restart=on-failure
+RestartSec=5
+# Exit code 1 means another MIA already holds this data folder: not a crash.
+RestartPreventExitStatus=1
+# A user service already can't touch other people's files; these narrow it
+# further without getting in MIA's way.
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=default.target

@@ -7,7 +7,8 @@ session. Last updated: 2026-11-15 (MIA OS: the runtime extraction begun), by cla
 **2026-11-15, MIA OS now (Claude; Zac's decisions DEC-0155 and DEC-0168).**
 - **MIA OS is the objective**: the PC (dual boot, Fedora) and a Raspberry Pi 5 with the AI HAT+ (Raspberry Pi OS), the start of the Zeta Astralis. New features go only into the engine and the web screens.
 - **The runtime extraction has begun.** MIA's background jobs (alarms, reminders, the daily checks, backups, the inbox) no longer live inside the desktop window's code: they're in `core/background_jobs.py` on a plain scheduler, with no Qt. On the PC nothing looks different yet.
-- **Next:** one way to build the whole MIA without the window, so she keeps running with it closed, then as a service on Linux and the Pi.
+- **MIA now runs with no window at all**: `python -m core.runtime` starts the whole of her (every service, all 401 tools, her schedule, the phone's server). The desktop app builds her through the same code. A Linux service file and installer are written (`deploy/install_runtime.sh`); they haven't been run on a real machine yet.
+- **Next:** her data in a folder outside the code (an OS image is read-only), the phone on the full MIA, then the window attaching to a running MIA, then the PC and Pi images.
 
 **2026-11-15, latest (Claude: the Universal Action Layer's first phase, and taught skills).**
 - **Taught skills, phase 1, is built** (DEC-0123; AI Tools › Taught Skills, by voice, and a glasses card):
