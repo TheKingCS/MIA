@@ -130,6 +130,7 @@ The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central doc
 - The feature inventory, updated
 
 **Added by Zac, 2026-11-15:**
+- [World Intelligence proposal](MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md) (prompt 18, 2026-11-15; DEC-0170 proposed): standing watches, one discovery store, relevance worked out in code from MIA's records, built from the pieces she has (news feeds, search, research and verify, her browser, taught skills, the gate, links). Phases W0–W8, beside the MIA OS work.
 - [Universal Action Layer plan](MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md), with the spec in `docs/specs/UNIVERSAL_ACTION_LAYER.md`. Its first three phases (registry and offer, the phone's selection menu, the first action set) are useful before MIA OS.
 - [Model assignments](MIA_OS_MODEL_ASSIGNMENTS.md): Fable 5.2 for prompts 05, 08, 13, 14, 16 and 17 and the foundational refactors; Opus 5.5 for everyday building.
 

@@ -2960,3 +2960,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   (`LoadCredentialEncrypted=`). A MIA with no window exits with 3 rather than start over sealed files she can't
   open. Not yet run on a real Linux machine.
 - Related: DEC-0126, DEC-0155, DEC-0157, DEC-0168
+
+### DEC-0170: World Intelligence, a thin subsystem over what MIA already has
+- Status: PROPOSED (Zac to approve: Q-16)
+- Proposed by: claude, 2026-11-15, from Zac's handoff "World Intelligence, Opportunity Discovery &
+  Demonstration-Based Browser Automation" (prompt 18, kept verbatim), which asked for an investigation first
+- Proposal (`docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`): standing **watches** the person sets up (the
+  "asked" of DEC-0053), read by **source adapters** in the runtime's schedule (feeds, official APIs, SearXNG,
+  browser skills where a site's terms allow, and capture of what the person opens), kept in one **discovery store**
+  with provenance and change history, and scored by a **relevance engine in code** from the person's intents,
+  projects, equipment, budget, places and the development engine's needs. The model only phrases reasons the code
+  produced. Finds are pulled on a World page; only the top few go through the communication gate. A find becomes a
+  project resource, mission, purchase consideration, learning path or lab proposal through links and the action
+  contract. Browser skills are taught skills with browser steps (DEC-0123 phase 2), with parameters, extraction
+  rules, versions and repair.
+- Conflicts resolved: DEC-0053 (a watch is the asking), DEC-0122 (a watch's words are the person's), the gate's
+  limit (pull, not push), facts in code. Open: website terms (Q-17); grants (DEC-0156) built for this subsystem first
+  and reviewed by Fable before any unattended browser run.
+- Phases W0–W8, beside the MIA OS work (DEC-0168: engine and web only).
+- Related: DEC-0053, DEC-0096, DEC-0117, DEC-0122, DEC-0123, DEC-0144, DEC-0156, DEC-0165, DEC-0166, DEC-0167,
+  DEC-0168

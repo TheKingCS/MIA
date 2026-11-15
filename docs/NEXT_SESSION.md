@@ -5,7 +5,21 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-15 (taught skills, phase 1, built)*
+*Last updated: 2026-11-15 (sealed files on Linux built; World Intelligence proposed)*
+
+**New 2026-11-15, on the PC (Claude): World Intelligence, proposed (prompt 18, DEC-0170).**
+- Zac's handoff "World Intelligence, Opportunity Discovery & Demonstration-Based Browser Automation" is kept verbatim
+  in `docs/mia_os/prompts/18_WORLD_INTELLIGENCE_EXPANSION.md`. It asked for an investigation before building.
+- The proposal: `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`. About two thirds exists (Good News Radio's feed
+  reader, SearXNG lookup, Research This and Verify, her browser and its gate, browser routines, taught skills, the
+  gate, links, the development engine). New: watches, a discovery store with provenance, relevance in code, a World
+  page. Phases W0–W8, beside MIA OS; W4 (grants) and the unattended browser review are **(Fable)**, the rest **(Opus)**.
+- **The conflict to settle first (Q-17):** Facebook's and Craigslist's terms appear to forbid automated collection
+  (to confirm by reading them); the proposal has Zac browse and MIA track and evaluate what he opens, and the
+  unattended watch use sources that allow it (eBay's API, feeds).
+- **Waiting on Zac:** Q-16 to Q-20 (`docs/mia_os/MIA_OS_OPEN_QUESTIONS.md`). Nothing is built until Q-16.
+- **Skipped for now (Zac, 2026-11-15):** the Pi. **Next Fable items:** the phone on the full MIA, the window as a
+  client (both need a Fable session).
 
 **New 2026-11-15, MIA OS now (Zac, DEC-0168).**
 - **Zac wants MIA OS as soon as possible**, on the PC (dual boot beside Windows) and on a Raspberry Pi 5 with the AI

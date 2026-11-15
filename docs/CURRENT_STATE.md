@@ -2,7 +2,13 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-15 (MIA OS: sealed files on Linux), by claude.*
+session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
+
+**2026-11-15, on the PC (Claude: World Intelligence, proposed, nothing built).**
+- **Zac's new handoff** asks MIA to watch the outside world (news, releases, marketplaces, research) for what matters to his life, learn website tasks by being shown, and bring up only what's worth it. Kept verbatim as prompt 18.
+- **The proposal** (`docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, DEC-0170): most pieces exist already; what's new is a standing watch, one store of finds with where each fact came from, and a relevance score worked out in code from his projects, goals, equipment, budget and the homestead plan's next steps.
+- **One conflict:** Marketplace and Craigslist appear not to allow automated reading. Proposed: he browses, MIA tracks and judges what he opens; the automatic watches use sources that allow it.
+- **Waiting on Zac:** Q-16 to Q-20. The Pi is skipped for now.
 
 **2026-11-15, on the PC (Claude: sealed files on Linux, the blocker for the dual boot).**
 - **Built: MIA's sealed files can open on Linux.** There the key to them is kept by the system for your account on that machine, using its TPM security chip where it has one (the PC does; the Pi doesn't). Nothing is typed at start, as on Windows.
