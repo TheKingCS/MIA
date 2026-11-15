@@ -73,6 +73,9 @@ SETTINGS: tuple[Setting, ...] = (
             "0 means no fixed limit: she learns how often you want each kind of message from what you open, use or "
             "dismiss (DEC-0171). Set a number to cap her own messages a day. Urgent things, alarms you set and "
             "answers to you don't count.", low=0, high=20),
+    Setting("world.on", "When MIA speaks up", "World Intelligence", "toggle", False,
+            "MIA reads public feeds (and your own search engine, when a watch asks) for your watches' words, a few "
+            "times a day, and tells you what's worth it. Only your watches' words go out (DEC-0170)."),
     Setting("journal.weekly_reflection", "When MIA speaks up", "Weekly journal reflection", "toggle", False,
             "If you journaled that week, MIA lets you know a reflection is ready. The notice never shows what "
             "you wrote."),

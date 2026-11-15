@@ -77,7 +77,7 @@ def test_with_a_home_set_mia_runs_whole_and_writes_nothing_into_the_codes_folder
     line = next((l for l in done.stdout.splitlines() if l.startswith("RESULT ")), None)
     assert line, done.stdout[-1500:] + done.stderr[-3000:]
     got = json.loads(line[7:])
-    assert got["ran"] == 10 and got["failing"] == [] and got["skills"] > 0
+    assert got["ran"] == 11 and got["failing"] == [] and got["skills"] > 0  # every job, World Intelligence's too
     assert got["home"] == {"home": str(home.resolve()), "code": str(ROOT), "separate": True, "from": "MIA_HOME"}
     assert (home / "config" / "config.json").is_file() and (home / "data" / "missions.json").is_file()
     assert (home / "logs" / "mia.log").is_file() and (home / "data" / "profiles").is_dir()

@@ -126,6 +126,22 @@ def _closet_today(context, today: date):
     return _panel("Today's Outfit", lines, "Nothing clean to wear.")
 
 
+# ------------------------------------------------------------ World Intelligence (DEC-0170)
+
+def _world_finds(context, today: date):
+    """Panel: the newest finds from World Intelligence's watches, each with its source (always named)."""
+    from core.web_world_intel import world_page
+
+    page, none = _page("World Finds", lambda: world_page(context), "World Intelligence isn't on this MIA.")
+    if none:
+        return none
+    if not page["on"]:
+        return _panel("World Finds", [], "World Intelligence is off.")
+    new = [f for f in page["finds"] if f["status"] == "new"]
+    lines = [_line(f["title"], "from " + f["source"]) for f in new[:4]]
+    return _panel("World Finds", lines, "Nothing new from your watches.", more=max(0, len(new) - 4))
+
+
 # ------------------------------------------------------------ the Fix-It Log
 
 def _issues_open(context, today: date):
@@ -720,6 +736,7 @@ EXTRA = {
 PANELS = {
     "dungeon": (("week", "This Week", _dungeon_week),),
     "closet": (("today", "Today's Outfit", _closet_today),),
+    "world_intel": (("finds", "World Finds", _world_finds),),
     "issues": (("open", "Open Issues", _issues_open),),
     "compliance": (("due", "Deadlines", _compliance_due),),
     "flock": (("eggs", "Eggs", _flock_today),),

@@ -2978,6 +2978,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   limit (pull, not push), facts in code. Open: website terms (Q-17); grants (DEC-0156) built for this subsystem first
   and reviewed by Fable before any unattended browser run.
 - Phases W0–W8, beside the MIA OS work (DEC-0168: engine and web only).
+- **Built, W1 (2026-11-15):** watches and finds (`core/world_intel.py`, sealed `world_intel.json`), the checked feed
+  catalog and the feed and search adapters (`core/world_sources.py`), six actions with undo, the World page
+  (`web/intel.html`: Finds, Watches, Sources), eight voice tools, a glasses card, and the `world_intel` job every
+  10 minutes (fetching on one worker thread; the store changes on the job's thread). Every find names its source.
+  Off until switched on (`world.on`). Items over 14 days old are skipped. K-0236. Next: W2 (relevance from his
+  records), W1b (MIA's own watches), then listings (W3) and procurement (P1).
 - Related: DEC-0053, DEC-0096, DEC-0117, DEC-0122, DEC-0123, DEC-0144, DEC-0156, DEC-0165, DEC-0166, DEC-0167,
   DEC-0168
 

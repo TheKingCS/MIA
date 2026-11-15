@@ -40,6 +40,7 @@ from core.assistant_browser_actions import register_browser_actions
 from core.assistant_business_view_actions import register_business_view_actions
 from core.assistant_camera_actions import register_camera_actions
 from core.assistant_closet_actions import register_closet_actions
+from core.assistant_world_intel_actions import register_world_intel_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_connection_actions import register_connection_actions
 from core.assistant_cooking_actions import register_cooking_actions
@@ -225,6 +226,7 @@ class AssistantTools:
         register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_closet_actions(self.context.assistant_actions)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)
+        register_world_intel_actions(self.context.assistant_actions)  # World Intelligence: watches and finds (DEC-0170)
         register_taught_skill_actions(self.context.assistant_actions)  # taught skills: watch me, run, answer (DEC-0123)
         register_ual_actions(self.context.assistant_actions)  # the Universal Action Layer: actions on what is given (DEC-0165)
         register_creation_actions(self.context.assistant_actions)  # screens MIA made for you, by voice (DEC-0091)

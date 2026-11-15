@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1411 files, 314,394 lines; 1411 files describe themselves; 17,238 of 17,333 classes and functions are documented.
+1418 files, 315,937 lines; 1418 files describe themselves; 17,339 of 17,434 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-539 files, 155,648 lines; 7,998 of 8,084 classes and functions documented
+544 files, 156,852 lines; 8,079 of 8,165 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -85,6 +85,7 @@
 - `core/assistant_waypoint_actions.py`: Waypoints by voice, for what Navigation's page added (DEC-0125: full use both ways). "Rename the spring waypoint to Upper Spring", "mark the old gate as a hazard", "note on the spring: dry in August": the same `waypoint.edit` action kind as the page's Edit (core/waypoint_actions.py), so "undo that" 
 - `core/assistant_why_actions.py`: Assistant tools for the owner's chain of reasons, slice B ("Remember Why") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. The chain lives on Intents (core/intent_manager.py: `serves_intent_id`, `reason`); the evidence is computed by core/why_graph.py.
 - `core/assistant_world_actions.py`: Living Worlds by voice (DEC-0134 Phase 1, DEC-0125's both-ways rule; the screen is web/worlds.html): "what worlds do I have?", "make a world called Emberfall, a fantasy frontier", "start a campaign in Emberfall called The Salt Road", "set a quest in The Salt Road: find the lost cartographer", "I fin
+- `core/assistant_world_intel_actions.py`: World Intelligence by voice (DEC-0170, DEC-0125: everything the World page does, said): "What have you found?" (`world_finds`): the best new finds, each with its source. "Watch for greenhouse panels" (`watch_for`): proposes `world_watch.add` in the person's own words. "What are you watching for?" (`
 - `core/at_rest.py`: MIA encrypts her own data at rest (DEC-0126, docs/SECURITY.md step 2): the most private stores' files are sealed with AES-256-GCM under one data key, so a drive read on another computer (a stolen PC, a pulled disk, a backup copied off) shows nothing but noise.
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
 - `core/auto_backup.py`: A backup every night without anyone pressing a button (2026-11-10). Until now `core/backup_manager.create_backup` ran only from the two Backup buttons, so a person who never pressed one had none.
@@ -528,6 +529,7 @@
 - `core/web_trails.py`: Trail Maps on the web (web/trails.html, DEC-0017 parity with the Qt Maps module's Trail Maps tab): the official park and trail map PDFs kept on this MIA (core/trail_map_library.py), by state, each opening in the browser's own PDF viewer. Added by sending a PDF from the device (`/api/trail-maps/uploa
 - `core/web_voice.py`: MIA's voice from the web's Settings and by voice (DEC-0125: the voice, the AI voice effect and the volume were on the desktop's Settings only). Device-wide, like the model: one voice for this computer, so only its owner changes it.
 - `core/web_why.py`: "My Why" on the web (DEC-0125: the why chain was voice-only; "Remember Why", docs/COGNITIVE_EXTENSION_PROPOSAL.md slice B). The person's reasons as chains ("Factory work → Pay off debt → Control over my time"), each link with the reason in their own words, whether it's done (and why), and the facts 
+- `core/web_world_intel.py`: The World page (DEC-0170, W1): what World Intelligence found, the watches, and the sources it reads, assembled here so the web only draws (DEC-0017) and the voice tools say the same thing (DEC-0125).
 - `core/web_worlds.py`: Living Worlds on the web (web/worlds.html, DEC-0134 Phases 1 and 2, approved): the person's fictional universes, the campaigns in each, their central character and its version in each world, and each campaign's quests, over the living_worlds store (core/living_worlds.py). Everything here is fiction:
 - `core/weekly_checkin.py`: The Sunday check-in (DEC-0047 rule 5; Zac, 2026-10-27): Sunday morning, a recap of the week just past and the layout of the week ahead.
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
@@ -545,12 +547,15 @@
 - `core/workout_actions.py`: Every change the Workout screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: exercises (add, edit, delete) and logging a session the way the concept's form does (an exercise, reps, sets, weight, how long, notes). Workout templates are gone (Zac, 2026-10-16):
 - `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
 - `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc
+- `core/world_intel.py`: World Intelligence's store and its watch runs (DEC-0170, DEC-0171; the plan is `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, phase W1).
+- `core/world_intel_actions.py`: World Intelligence's actions (DEC-0170, core/world_intel.py) on the action contract: proposed in plain words, approved, run, undoable (every one writes world_intel.json or the person's settings through the atomic write).
 - `core/world_map.py`: The world map with fog of war (DEC-0028, the game layer's sixth idea; Zac, 2026-10-17): the places you've actually been clear the fog, photos are pinned where they were taken, and new ground earns achievements.
+- `core/world_sources.py`: Where World Intelligence reads (DEC-0170, `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md` sections 5 and 5b): the source adapters and the starting catalog.
 - `core/your_data.py`: Your Data (docs/SECURITY.md step 8, "beyond"): exactly what MIA keeps about a person, and what she read to answer them, for the web page Settings → Your Data (web/yourdata.html) beside export and delete (core/account_data.py).
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,379 lines; 54 of 54 classes and functions documented
+2 files, 4,387 lines; 54 of 54 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -828,7 +833,7 @@
 
 ## tests/: the test suite: what each part must do
 
-484 files, 81,585 lines; 6,927 of 6,936 classes and functions documented
+485 files, 81,815 lines; 6,947 of 6,956 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1310,6 +1315,7 @@
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why).
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo
+- `tests/test_world_intel.py`: World Intelligence, phase W1 (DEC-0170; core/world_intel.py, core/world_sources.py, core/world_intel_actions.py, core/web_world_intel.py): a watch's words are matched phrase by phrase; the same find is kept once however it's linked; a run reads each source through its kind's adapter and records one 
 - `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP, and the closest one not earned is shown next.
 - `tests/test_your_data.py`: Your Data (core/your_data.py, docs/SECURITY.md step 8): every file in the person's folder listed with what it is, how many records and whether it's sealed (DEC-0126), never the temporary or set-aside copies; records counted for lists, objects of lists and JSON lines; her latest answers with the tool
 - `tests/test_your_data_and_undo.py`: Accounts stage 5 (2026-10-01): export and delete your account (core/account_data.py), "undo that" (core/undo_log.py), "why did you tell me that?" / "stop telling me about ..." (core/message_reasons.py), and the setup checker (core/system_check.py).
@@ -1317,7 +1323,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-111 files, 20,547 lines
+112 files, 20,648 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1364,6 +1370,7 @@
 - `web/icons.js`: icons.js — MIA's interface icons (claude, 2026-10-15, DEC-0023). One line-icon set for the frame (navigation, the bottom bar, header badges, app tiles): 24-unit grid, 1.6 stroke, round joins, drawn in currentColor so the theme colors them. Content keeps its own icons (a mission's or a skill's emoji 
 - `web/inbox.js`: inbox.js — the Inbox screen (claude, 2026-10-16; Zac: "build the inbox for sending stuff to MIA"). Send To MIA: a photo, a file or a note (and from any app, the phone's Share menu). Waiting: what MIA read in each one and where she proposes it goes; File It opens the proposal to check (what it's for,
 - `web/insurance.js`: insurance.js — the insurance check-up (claude, 2026-10-19, DEC-0034). Renders MIA.insurance() (core/insurance.py) in tabs: My Policies (each policy, what it costs a year, what's worth a look), Shop It (what an agent asks for, the quote request MIA drafts, the quotes side by side against what you hav
+- `web/intel.js`: intel.js — World (claude, 2026-11-15, DEC-0170, World Intelligence phase W1).
 - `web/issues.js`: issues.js — the Fix-It Log (claude, 2026-10-27, DEC-0049). Renders MIA.failures() (core/failure_actions.py): open issues first, worst first, each with what happened (the latest examples) and Mark Fixed / Ignore; what MIA learned you mean, with Forget; Report A Problem; and the fix report, ready for 
 - `web/journal.js`: journal.js — the Journal screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.journal() (core/web_more.py): entries newest first, search, tags; an entry opens to read in full with Edit and Delete. Write Entry proposes journal.add. Talk It Out opens the chat to journal with MIA (
 - `web/kept.js`: kept.js — Kept (claude, 2026-11-06, DEC-0054). Renders MIA.lifeNotes() (core/life_notes.py): the promises, decisions, ideas and goals set aside the person asked MIA to keep. Done and Forget go through actions (life_note.done / .forget), so undo takes them back. Formatting only; laid out as the desig

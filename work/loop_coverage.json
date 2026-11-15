@@ -312,6 +312,22 @@
   "store:textbooks": {
    "status": "none",
    "why": "the books and chapters they added; the tutor keeps no quiz answers to grade, so there is nothing to measure until it records them"
+  },
+  "store:world_intel": {
+   "status": "todo",
+   "why": "the source loop world.sources (World Intelligence proposal 5b): per source, how fresh it is, its repeats, how many of its finds were saved or set aside, retiring dead or noisy ones and trying new candidates for a month (DEC-0170, DEC-0171)"
+  },
+  "action:world_watch": {
+   "status": "none",
+   "why": "adding, pausing and removing watches is the person's own choice of what to look for; the finds' loop judges the watches by what they find"
+  },
+  "action:world_find": {
+   "status": "none",
+   "why": "saving a find or setting it aside is the person's judgement; it already feeds the gate's learned pace for World Intelligence's messages (DEC-0171)"
+  },
+  "action:world_intel": {
+   "status": "none",
+   "why": "on or off is the person's switch (DEC-0053: switching it on is the asking)"
   }
  }
 }

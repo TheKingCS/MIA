@@ -3721,6 +3721,14 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _skill_run(profile_id, lambda view: {"stopped": taught_skills.stop(view)})
 
+    # ------------------------------------------------------------ World Intelligence (core/web_world_intel.py, DEC-0170)
+    @app.get("/api/world-intel")
+    def web_world_intel(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The World page: what World Intelligence found (each with its source), the watches and the areas."""
+        from core.web_world_intel import world_page
+
+        return _screen(profile_id, "world_intel", world_page)
+
     # ------------------------------------------------------------ Smart Closet (core/web_closet.py, DEC-0162)
     @app.get("/api/closet")
     def web_closet(profile_id: str = Depends(require_profile_id)) -> dict:

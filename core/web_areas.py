@@ -144,7 +144,8 @@ AREAS: tuple[Area, ...] = (
          ("calendar", "notes", "life_notes", "operating_journal", "memories", "vault", "closet", "files", "relationships",
           CHECKIN, "observations", CONNECTIONS), hue="#ff8ad8", parent="home"),
     Area("learning", "Learning", "classroom", "Study, the library and what you're learning.",
-         ("classroom", "knowledge", GUITAR, TRADES), hue="#6a5cff", parent="home", shortcuts=("skills",)),
+         ("classroom", "knowledge", "world_intel", GUITAR, TRADES), hue="#6a5cff", parent="home",
+         shortcuts=("skills",)),
     # ---- Finances' subdashboard
     Area("businesses", "Businesses", "business", "Each business: its money, its work, its customers.",
          ("real_estate", "workshop", "business", LABELS, SHOWOFF), hue="#7f95ff", parent="finances",

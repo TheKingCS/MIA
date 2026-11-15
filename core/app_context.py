@@ -115,6 +115,7 @@ if TYPE_CHECKING:
     from core.boss_battles import BossBook
     from core.work_dungeon import DungeonBook
     from core.smart_closet import ClosetBook
+    from core.world_intel import WorldBook
     from core.taught_skills import SkillBook
     from core.the_loop import LoopBook
     from core.failure_log import FailureLog
@@ -279,6 +280,7 @@ class AppContext:
     boss_book: Optional["BossBook"] = field(default=None, repr=False)  # DEC-0028
     dungeon: Optional["DungeonBook"] = field(default=None, repr=False)  # DEC-0046 work as a dungeon: runs, loot
     closet: Optional["ClosetBook"] = field(default=None, repr=False)  # DEC-0162 Smart Closet: clothes, outfits
+    world_intel: Optional["WorldBook"] = field(default=None, repr=False)  # DEC-0170 World Intelligence: watches, finds
     taught_skills: Optional["SkillBook"] = field(default=None, repr=False)  # DEC-0123 what the person taught her
     loop: Optional["LoopBook"] = field(default=None, repr=False)  # DEC-0047 the loop: what recurs, and when
     traces: Optional["TurnTraces"] = field(default=None, repr=False)  # DEC-0067 how each turn was answered

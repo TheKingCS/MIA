@@ -99,6 +99,7 @@ SEALED = frozenset({
     "places.json",  # the places they keep
     "work_dungeon.json",  # their job, its pay and hours
     "smart_closet.json",  # their clothes and outfits (DEC-0162)
+    "world_intel.json",  # what they watch the world for, and what it found (DEC-0170)
     "taught_skills.json",  # what they taught her: steps hold their own words and records (DEC-0123)
     "notifications.json",  # what MIA told them
     "workout_exercises.json", "workout_templates.json", "workout_sessions.json",  # their training

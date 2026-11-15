@@ -110,6 +110,15 @@
       "ask": "I did the dishes."
     },
     {
+      "id": "world_intel",
+      "name": "World",
+      "icon": "🌐",
+      "tagline": "What the world has for you.",
+      "page": "intel.html",
+      "group": "Knowledge, tools & system",
+      "ask": "What have you found?"
+    },
+    {
       "id": "closet",
       "name": "Smart Closet",
       "icon": "👕",

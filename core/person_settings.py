@@ -22,6 +22,7 @@ from typing import Any, Optional
 
 PERSONAL_SETTINGS = (
     "communication.daily_budget",
+    "world.on",  # World Intelligence switched on (DEC-0170)
     "communication.min_spacing_minutes",
     "communication.repeat_days",
     "journal.weekly_reflection",

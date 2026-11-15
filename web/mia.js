@@ -672,6 +672,8 @@
     dungeon: () => read("/api/dungeon", "dungeon"),
     // Smart Closet (core/web_closet.py, DEC-0162): today's picks, pieces, outfits, insights.
     closet: () => read("/api/closet", "closet"),
+    // World Intelligence (core/web_world_intel.py, DEC-0170): finds with their sources, watches, areas.
+    worldIntel: () => read("/api/world-intel", "world_intel"),
     // Taught skills (core/taught_skills.py, DEC-0123): the screen, and a run's moves (each step passes its own gate).
     taughtSkills: () => read("/api/taught-skills", "taught-skills"),
     taughtSkillRun: (skill_id) => demo ? demoOnly() : call("POST", "/api/taught-skills/run", { skill_id }),

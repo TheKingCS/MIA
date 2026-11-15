@@ -658,6 +658,29 @@
       "name": "Knowledge, tools & system",
       "apps": [
         {
+          "id": "world_intel",
+          "name": "World",
+          "icon": "🌐",
+          "tagline": "What the world has for you.",
+          "description": "World Intelligence: watches on news, releases, research, grants and listings, and what they found, each with its source (DEC-0170).",
+          "page": "intel.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What have you found?",
+          "tools": [
+            "world_finds",
+            "watch_for",
+            "list_watches",
+            "stop_watching",
+            "pause_watch",
+            "save_find",
+            "not_for_me",
+            "world_intelligence_switch"
+          ],
+          "favorite": false
+        },
+        {
           "id": "knowledge",
           "name": "Knowledge",
           "icon": "📚",
@@ -907,8 +930,8 @@
     "garage"
   ],
   "counts": {
-    "apps": 39,
-    "on_web": 20,
+    "apps": 40,
+    "on_web": 21,
     "tools": 32
   }
 }

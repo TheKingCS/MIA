@@ -54,6 +54,7 @@ LIMITS = {
     "operating_journal": "Lines MIA can't see in your records (sleep, mood, focus) are yours to rate; she never judges the gap.",
     "play": "Training load needs how hard it was; without it she counts a middle effort and asks next time.",
     "closet": "Suggestions are worked out from the pieces you've added, the weather and the day's plans; MIA can't see your clothes, so photos and details are yours to add.",
+    "world_intel": "Reads public feeds and your own search engine for your watches' words; ranking by your projects and goals, MIA's own watches, listings and store prices come in the next phases.",
     "life_notes": "Kept only on your yes, from plain first-person words (\"I promised...\", \"we're going with...\"); some slip by, so tell her again.",
     "taught_skills": "A taught skill is made only of things she can already do, and runs with you there until two clean runs; anything that pays, buys, sends, publishes or deletes asks every time. Browser, phone and scheduled steps aren't in it yet.",
     "browser": "Her own Edge window on your PC, none of your sign-ins: anything that submits, buys, sends, signs in or deletes waits for your OK, and she never types passwords or card numbers; a taught task stops when a site changes.",
@@ -122,7 +123,8 @@ AREAS = (
 # owner's request (2026-10-29), though "can you…?" still finds it.
 OVERVIEW_SKIP = {"web_home", "assistant", "module_browser", "settings", "diagnostics", "issues", "freedom",
                  "browser",  # her browser is part of her, like the chat (DEC-0117)
-                 "taught_skills"}  # so is what she's been taught (DEC-0123)
+                 "taught_skills",  # so is what she's been taught (DEC-0123)
+                 "world_intel"}  # and what she watches the world for: it speaks up through her own messages (DEC-0170)
 # Each app in a few words, for the overview.
 GIST = {
     "budget": "bills, income, spending and debts", "insurance": "your policies and quotes compared",

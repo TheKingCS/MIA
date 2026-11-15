@@ -26,8 +26,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   vehicle's OBD-II port (trips, fuel use, engine codes). Details in his own data (`data/world_local_sources.md`).
 - **Local research for Zac's area** is in his own data (`data/world_local_sources.md`, git-ignored, never committed):
   stores, yards, auctions and surplus to seed his watches when W1 is built.
-- **Next to build: W1 (Opus)**, starting with the gate's learned pacing (DEC-0171), then watches, the discovery
-  store, feeds, the World page; P1 (requirements) follows once Q-21 is answered. On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
+- **Built 2026-11-15 (Opus):** the gate's learned pace (DEC-0171; no fixed cap, each kind paced by what Zac opens,
+  uses or dismisses; this PC's saved cap set to 0) and **World Intelligence W1** (K-0236): watches, finds with their
+  sources, the checked feeds, the World page (Home › Learning › World, `web/intel.html`), voice tools, a glasses card,
+  the 10-minute job. Off until Zac turns it on. DEC-0172 (procurement) approved.
+- **Next, in order (Opus):** W2, relevance from his records (projects and their material lists, intents, the
+  development engine's needs, inventory, budget, places); W1b, watches MIA makes herself from those records; then
+  P1 (requirements per project), W3 (eBay's and GSA's APIs wait for keys Zac skipped; capture and browser skills
+  first). **(Fable)** later: W4 grants, the unattended browser review. On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
 - **Skipped for now (Zac, 2026-11-15):** the Pi. **Next Fable items:** the phone on the full MIA, the window as a
   client (both need a Fable session).
 

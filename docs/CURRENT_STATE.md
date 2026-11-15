@@ -4,6 +4,11 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, later on the PC (Claude: the first of World Intelligence, built).**
+- **MIA no longer has a fixed limit of 5 messages a day.** She learns how often you want each kind from what you open, mark useful, act on or dismiss. World Intelligence's finds start at four a day.
+- **World Intelligence's first phase works:** tell her "watch for greenhouse panels" and she reads 40 checked public feeds (news, releases, research, grants, homestead, energy) every few hours, keeps what matches, and tells you the best, always saying where each came from. The World page (under Learning) shows finds, watches and sources. It's off until you turn it on.
+- **Next:** ranking finds by your own projects and goals, watches she makes herself, then listings and store prices.
+
 **2026-11-15, on the PC (Claude: World Intelligence, proposed, nothing built).**
 - **Zac's new handoff** asks MIA to watch the outside world (news, releases, marketplaces, research) for what matters to his life, learn website tasks by being shown, and bring up only what's worth it. Kept verbatim as prompt 18.
 - **The proposal** (`docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, DEC-0170): most pieces exist already; what's new is a standing watch, one store of finds with where each fact came from, and a relevance score worked out in code from his projects, goals, equipment, budget and the homestead plan's next steps.

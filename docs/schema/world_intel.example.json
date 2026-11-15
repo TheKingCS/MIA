@@ -1,0 +1,236 @@
+{
+  "available": true,
+  "on": true,
+  "finds": [
+    {
+      "id": "d1",
+      "title": "Twin-wall polycarbonate sheets for a small greenhouse",
+      "link": "https://example.org/hobby-farms/panels",
+      "summary": "What to look for in panels: thickness, UV coating and how long they last.",
+      "source": "Hobby Farms",
+      "status": "new",
+      "found": "this morning",
+      "published": "2026-11-15",
+      "watches": [
+        "Greenhouse panels"
+      ],
+      "why": [
+        "matches your watch “Greenhouse panels”: polycarbonate sheets",
+        "published in the last day"
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "Running a local LLM on a mini PC: a month in",
+      "link": "https://example.org/hn/12345",
+      "summary": "",
+      "source": "Hacker News (local LLMs)",
+      "status": "new",
+      "found": "this morning",
+      "published": "2026-11-13",
+      "watches": [
+        "Local AI"
+      ],
+      "why": [
+        "matches your watch “Local AI”: local llm"
+      ]
+    },
+    {
+      "id": "d3",
+      "title": "llama.cpp b7012",
+      "link": "https://example.org/llama.cpp/releases/b7012",
+      "summary": "Faster prompt processing on AMD GPUs.",
+      "source": "llama.cpp releases",
+      "status": "saved",
+      "found": "this morning",
+      "published": "2026-11-15",
+      "watches": [
+        "Local AI"
+      ],
+      "why": [
+        "matches your watch “Local AI”: llama.cpp",
+        "published in the last day"
+      ]
+    }
+  ],
+  "counts": {
+    "new": 2,
+    "saved": 1,
+    "not_for_me": 0
+  },
+  "watches": [
+    {
+      "id": "w1",
+      "name": "Greenhouse panels",
+      "words": "greenhouse panels, polycarbonate sheets",
+      "made_by": "person",
+      "reason": "",
+      "areas": [
+        "Homestead, farming and building"
+      ],
+      "search": false,
+      "every_hours": 6,
+      "max_price": 300.0,
+      "paused": false,
+      "last_run": "this morning",
+      "found": 1,
+      "refused": []
+    },
+    {
+      "id": "w2",
+      "name": "Local AI",
+      "words": "local LLM, llama.cpp",
+      "made_by": "person",
+      "reason": "",
+      "areas": [
+        "AI and local models",
+        "MIA's own software"
+      ],
+      "search": false,
+      "every_hours": 12,
+      "max_price": 0.0,
+      "paused": false,
+      "last_run": "this morning",
+      "found": 2,
+      "refused": []
+    },
+    {
+      "id": "w3",
+      "name": "Solar grants",
+      "words": "solar grant, rural energy",
+      "made_by": "person",
+      "reason": "",
+      "areas": [
+        "Grants, programs and rules",
+        "Energy and solar"
+      ],
+      "search": true,
+      "every_hours": 24,
+      "max_price": 0.0,
+      "paused": false,
+      "last_run": "this morning",
+      "found": 0,
+      "refused": []
+    }
+  ],
+  "areas": [
+    {
+      "id": "self",
+      "name": "MIA's own software",
+      "sources": [
+        "Ollama releases",
+        "llama.cpp releases",
+        "Playwright for Python releases",
+        "Home Assistant releases"
+      ]
+    },
+    {
+      "id": "ai",
+      "name": "AI and local models",
+      "sources": [
+        "Hugging Face blog",
+        "OpenAI news",
+        "Mistral news",
+        "Simon Willison's weblog",
+        "Hacker News (local LLMs)",
+        "arXiv cs.AI",
+        "arXiv cs.CL"
+      ]
+    },
+    {
+      "id": "tech",
+      "name": "Linux, hardware and boards",
+      "sources": [
+        "Phoronix",
+        "LWN",
+        "Fedora Magazine",
+        "Raspberry Pi news",
+        "CNX Software",
+        "Tom's Hardware",
+        "Hackaday",
+        "Make:",
+        "Ars Technica",
+        "The Verge"
+      ]
+    },
+    {
+      "id": "smart_home",
+      "name": "Smart home",
+      "sources": [
+        "Home Assistant blog"
+      ]
+    },
+    {
+      "id": "homestead",
+      "name": "Homestead, farming and building",
+      "sources": [
+        "Hackaday",
+        "USDA Agricultural Research Service",
+        "Modern Farmer",
+        "Mother Earth News",
+        "Hobby Farms",
+        "ScienceDaily: agriculture and food",
+        "Fine Homebuilding",
+        "Family Handyman",
+        "Make:",
+        "Federal Register (USDA)"
+      ]
+    },
+    {
+      "id": "energy",
+      "name": "Energy and solar",
+      "sources": [
+        "pv magazine USA",
+        "Electrek",
+        "Canary Media",
+        "CleanTechnica"
+      ]
+    },
+    {
+      "id": "grants",
+      "name": "Grants, programs and rules",
+      "sources": [
+        "Grants.gov (new, by agency)",
+        "Federal Register (USDA)",
+        "SBA news"
+      ]
+    },
+    {
+      "id": "money",
+      "name": "Money and property",
+      "sources": [
+        "SBA news",
+        "Calculated Risk (housing)"
+      ]
+    },
+    {
+      "id": "science",
+      "name": "Science",
+      "sources": [
+        "arXiv cs.AI",
+        "arXiv cs.CL",
+        "USDA Agricultural Research Service",
+        "ScienceDaily: agriculture and food",
+        "ScienceDaily",
+        "Phys.org"
+      ]
+    },
+    {
+      "id": "news",
+      "name": "General news",
+      "sources": [
+        "NPR",
+        "BBC World",
+        "Ars Technica",
+        "The Verge"
+      ]
+    },
+    {
+      "id": "listings",
+      "name": "Auctions and listings",
+      "sources": [
+        "Bring a Trailer (auctions)"
+      ]
+    }
+  ]
+}

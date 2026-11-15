@@ -6,9 +6,10 @@ Everything MIA does on a schedule, with no window needed (the MIA Runtime,
 DEC-0155; steps 1 and 3 of
 `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`).
 
-What it is: the ten periodic jobs (`JOBS`: alarms, the battery, the daily
+What it is: the periodic jobs (`JOBS`: alarms, the battery, the daily
 checks, the watched folders, the inbox and its mail, the connection,
-missions she assigns) and the daily checks one of them runs
+missions she assigns, and since 2026-11-15 World Intelligence's watches,
+DEC-0170) and the daily checks one of them runs
 (`DAILY_CHECKS`: birthdays, the calendar, insights, the Loop, the nightly
 backup and the rest). Until 2026-11-15 these were methods of the desktop
 window's `MIAApplication` on ten `QTimer`s, so closing the window stopped
@@ -81,6 +82,7 @@ JOBS: tuple[tuple[str, int, str], ...] = (
     ("inbox_mail", 600, "_check_inbox_mail"),  # the mailbox, when set up and unlocked
     ("online", 60, "_check_online"),  # the connection dropping or returning; "remind me when I'm back online"
     ("mission_auto_assignment", 300, "_check_mission_auto_assignment"),
+    ("world_intel", 600, "_check_world_intel"),  # World Intelligence: due watches run, new finds offered (DEC-0170)
 )
 
 # The once-a-day checks, in the order they run: (name, the method). Each has its own "already ran today" gate.
@@ -402,6 +404,13 @@ class BackgroundJobs:
                 path.write_text(system_map.render(), encoding="utf-8")
         except Exception:
             log.exception("Couldn't regenerate the system map")
+
+    def _check_world_intel(self) -> None:
+        """World Intelligence (core/world_intel.py, DEC-0170): when it's on, a finished run's finds are kept and the
+        best offered through the gate, and the due watches start on its worker thread (which only reads the web)."""
+        from core import world_intel
+
+        world_intel.tick(self.context)
 
     def _check_good_news(self, now: datetime, today_iso: str) -> None:
         """Good News Radio (core/good_news.py, DEC-0096): when someone switched it on, today's episode is made
