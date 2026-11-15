@@ -2874,6 +2874,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   Dates, Draft An Email, on the device's own model; read and prepare only, so the model's words never change a record.
 - **U3, second part, built** (claude, 2026-11-15): Learn This Myself (`path.draft`, on a yes) and Build A Skill For MIA
   (a prepared draft whose one `follow` is Teach It To MIA or Build It In The Lab, proposed only when pressed).
+- **U3, third part, built** (claude, 2026-11-15): Research This and Verify These Claims (online, Zac's "B"), behind the
+  per-person switch `ual.online` (off by default; Settings and voice). Verify's "supported"/"contradicted" needs one of
+  that claim's own sources, checked in code.
 
 ### DEC-0166: Which Claude model does which work
 - Status: APPROVED as direction (Zac, 2026-11-15: "lets designate those tasks going forward and we will switch models

@@ -35,10 +35,11 @@
     if (bridge) { try { return JSON.parse(bridge.capture()); } catch (e) { return {}; } }
     return demo ? SAMPLE : {};
   }
-  // A result's link opens that page in MIA (on the phone, MIA comes forward and the card closes).
+  // A result's link to one of MIA's pages opens it in MIA (on the phone, MIA comes forward and the card closes); a
+  // source on the web opens in the browser (the card's web view hands any outside address to it).
   function open(href) {
     return (event) => {
-      if (!bridge) return;
+      if (!bridge || /^[a-z]+:/i.test(href)) return;
       event.preventDefault();
       bridge.openInMia(href);
     };

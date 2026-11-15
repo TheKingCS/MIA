@@ -1038,10 +1038,10 @@ def test_a_selection_is_offered_actions_and_an_act_pick_runs_only_when_approved(
     assert len(context.missions.all_missions()) == before
     done = client.post(f"/api/actions/{got['proposal']['proposal_id']}/approve", headers=auth).json()
     assert done["status"] == "executed" and len(context.missions.all_missions()) == before + 1
-    assert client.post("/api/ual/run", headers=auth, json={"action_id": "research", "capture": capture}).status_code == 409
+    assert client.post("/api/ual/run", headers=auth, json={"action_id": "convert", "capture": capture}).status_code == 409
     assert client.post("/api/ual/offer", headers=auth, json={"capture": {"text": " "}}).status_code == 400
     listed = client.get("/api/ual/actions", headers=auth).json()["actions"]
-    assert any(a["id"] == "research" and not a["ready"] for a in listed)
+    assert any(a["id"] == "convert" and not a["ready"] for a in listed)
 
 
 def test_a_taught_skill_is_taught_run_and_answered_over_the_api_and_each_change_still_waits_for_a_yes(client, context, tmp_path):

@@ -120,6 +120,21 @@ Browser routines and workflows fold in as kinds of taught skill.
 - **Terminal:** a shell function or plugin sending the last command and output to the palette.
 - **Every adapter runs as the person, not root**, and can only *send* captures. It never executes anything itself.
 
+## 6g. U3, third part: Research and Verify (2026-11-15)
+
+Zac's "B": web searches for research and verify, off until turned on.
+- **The switch**: Settings, "Let selections search the web" (`ual.online`, per person, off by default), or by voice
+  ("let selections search the web"). Never for a sensitive selection, whatever the switch says.
+- **Research This**: one search for the selection's key terms, scrubbed (no emails, long numbers or anything after
+  "password"), through the person's own SearXNG (`core/online_lookup.py`). The model writes a short report from the
+  results only, each fact with its source's number; the sources are listed. Without a model, the sources alone.
+- **Verify These Claims**: up to three sentences, each searched on its own key terms. A claim is marked supported or
+  contradicted only when the verdict names one of that claim's own results (checked in code); anything else is
+  "couldn't verify". Every report says it's from search snippets, not the full pages.
+
+Still to build in U3: Convert, and the consent step for outside AI (the council), which is the gate for anything
+that would send the selection itself off the device.
+
 ## 6f. U3, second part: Learn This Myself and Build A Skill (2026-11-15)
 
 The two endings of one skills system (DEC-0167):

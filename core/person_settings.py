@@ -71,6 +71,9 @@ PERSONAL_SETTINGS = (
     "freedom.shift_hours",
     "freedom.fund_accounts",
     "freedom.build_order",
+    # DEC-0165: the Universal Action Layer (core/ual.py): may selections search the web, and which actions they pick
+    "ual.online",
+    "ual.picks",
 )
 
 

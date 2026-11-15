@@ -83,6 +83,11 @@ SETTINGS: tuple[Setting, ...] = (
             "Or tell her: \"be funnier\", \"tone down the jokes\", \"no jokes for now\".",
             options=(("off", "No jokes"), ("rare", "The odd joke"), ("sometimes", "Now and then, when it fits"),
                      ("often", "Often"), ("lots", "As funny as she can be"))),
+    # DEC-0165 (Zac's answer to Q-12, "B and C"): Research This and Verify These Claims, off until turned on.
+    Setting("ual.online", "MIA", "Let selections search the web", "toggle", False,
+            "Research This and Verify These Claims search your own search engine with a few words from what you "
+            "selected, never all of it. Never for anything from a money, health, journal or password app.",
+            child_ok=False),
     Setting("assistant.ask_support_kind", "Support and safety", "When I sound worn down, ask what kind of support "
             "I want", "toggle", True, "Just listen, help figure it out, or remind me why. After the same answer "
             "three times, MIA uses it without asking."),

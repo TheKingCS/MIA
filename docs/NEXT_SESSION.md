@@ -18,8 +18,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Draft An Email (a draft to copy; nothing saved or sent). They use the device's own model.
 - **UAL U3, second part, is built**: Learn This Myself (a path draft, on a yes) and Build A Skill For MIA (steps from
   her own tools offered as Teach It To MIA, or else Build It In The Lab).
-- Next in U3: Research and Verify (online, with the person's switch), Convert, and the consent step before anything
-  reaches an outside AI: **(Opus)**; the consent step's gate itself is security work: **(Fable)**.
+- **UAL U3, third part, is built**: Research This and Verify These Claims, offered only once Settings › "Let selections
+  search the web" is on. They need SearXNG on the PC (`docs/ONLINE_LOOKUP.md`). Not checked yet: on the phone, the engine address
+  (`online.searxng_url`) defaults to the phone itself, so it likely needs the PC's home-network address to work there.
+- Left in U3: Convert (to a note, table, list or document) **(Opus)**, and the consent step before a selection reaches
+  an outside AI (the council) **(Fable)**: security work.
 
 **New 2026-11-15, last (Claude).**
 - **Taught skills, phase 1, is built** (DEC-0123, `core/taught_skills.py`, K-0227). To try on the PC:

@@ -12,6 +12,7 @@ session. Last updated: 2026-11-15 (taught skills, phase 1), by claude.*
   - paying, buying, sending, publishing and deleting ask every time, learned or not;
   - a failed run, or changing the steps, sends it back to practising.
   - Not yet: schedules and events, browser and phone steps, running on its own.
+- **Research This** and **Verify These Claims** on any selection, once you turn on Settings › "Let selections search the web": a few words go to your own search engine, never the selection. Verify only calls a claim supported or contradicted with a named source.
 - **Build A Skill For MIA** on any selection drafts steps from her own tools and offers to teach them, or to build what's missing in the lab; **Learn This Myself** drafts a learning path. Both wait for a yes.
 - **Explain, Summarise, Translate, Explain This Code, Pull Out Tasks and Draft An Email** now work on any selection (U3, first part), with MIA's own model; they only show an answer and never change anything.
 - **On the phone, "MIA" is in every app's text-selection menu** (U2): a card opens over the app with what she can do with the text. A selection from a banking, health or password app never goes online.
