@@ -3056,6 +3056,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   **acquisition plan** per project (best option per line, trips, budget, missions). Inventory gains specs, condition,
   consumable and "last confirmed". Buying, bidding, offering and messaging are never done without his press.
 - Phases P1–P6, slotted after World Intelligence's W phases.
+- **Built, P1 (2026-11-15):** what each project needs (`core/requirements.py`, a household store under the epistemic
+  contract): a project started from a plan lists the plan's materials with its quantities; what's in the workshop and
+  inventory is marked off; he adds, changes, ticks off and removes needs (five actions, four voice tools, the World
+  page's Needs tab); open needs rank finds and get MIA's own watches. K-0240. Next: P2 (specs, total cost, price
+  observations).
 - Related: DEC-0118, DEC-0144, DEC-0152, DEC-0156, DEC-0170, DEC-0171
 
 ### DEC-0173: The Living System doctrine, adopted as invariants on what MIA already is

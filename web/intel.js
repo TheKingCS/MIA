@@ -2,6 +2,8 @@
  * intel.js — World (claude, 2026-11-15, DEC-0170, World Intelligence phase W1).
  *
  * Renders MIA.worldIntel() (core/web_world_intel.py) in three tabs:
+ * - Needs: what each project still needs (Procurement P1, DEC-0172), with
+ *   Add A Need, Got It and Not Needed.
  * - Finds: what the watches turned up, new first, each with its source named
  *   (always, Zac's rule), its link, when, which watches and why; Save or
  *   Not For Me.
@@ -17,7 +19,7 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["finds", "Finds"], ["watches", "Watches"], ["sources", "Sources"]];
+  const TABS = [["finds", "Finds"], ["needs", "Needs"], ["watches", "Watches"], ["sources", "Sources"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "finds";
 
@@ -84,7 +86,35 @@
       a.sources.length ? el("p", { class: "dim" }, a.sources.join(" · ")) : el("p", { class: "dim" }, "Your search engine, and the listings sources in the next phase.")))];
   }
 
-  const VIEWS = { finds, watches, sources };
+  // Needs (core/requirements.py, DEC-0172): what each project still needs; a find that fits one ranks first.
+  async function addNeed(project) {
+    const v = await form("What Does " + project.name + " Need?", [
+      field("item", "Item", "text", "", true), field("quantity", "How many", "text", "1"),
+      field("unit", "Unit (optional)", "text"), field("specs", "What it has to be (optional)", "text"),
+      field("max_price", "Most it should cost (optional)", "text"),
+      field("condition", "Condition", "choice", "any", false, ["any", "new", "used"]),
+      field("priority", "Priority", "choice", "first", false, ["first", "later", "nice to have"])], {});
+    if (v) act({ kind: "requirement.add", params: Object.assign({ project_id: project.id }, v) });
+  }
+  function needs() {
+    const head = section("What Your Projects Need", buttons(btn("Check What's On Hand", "btn-ghost", () => act({ kind: "requirement.check", params: {} }, { quick: true }))),
+      el("p", { class: "dim" }, "Starting a project from a plan lists its materials here. What's on hand in the workshop and inventory is marked off; a find that fits a need ranks first."));
+    if (!(page.needs || []).length) return [head, el("p", { class: "empty" }, "No projects yet. Start one from a plan in the Library, or on the Projects page.")];
+    const status = { needed: "needed", partial: "some on hand", owned: "on hand", found: "found", ordered: "ordered", acquired: "got it" };
+    return [head, ...page.needs.map((p) => section(p.name, buttons(btn("Add A Need", "btn-green", () => addNeed(p))),
+      el("p", { class: "dim" }, p.progress.lines ? p.progress.open + " still to get · " + p.progress.done + " on hand or got" : "Nothing listed yet."),
+      p.lines.length ? el("div", { class: "rows" }, p.lines.map((l) => el("div", { class: "row money-row" },
+        el("div", {}, el("div", { class: "row-title" }, l.quantity + " " + (l.unit ? l.unit + " " : "") + l.item,
+            chip(status[l.status] || l.status, ["owned", "acquired"].includes(l.status) ? "ok" : "")),
+          el("div", { class: "row-sub" }, [l.specs, l.max_price ? "up to " + l.max_price : "", l.condition !== "any" ? l.condition : "",
+            l.priority !== "first" ? l.priority : "", l.have && l.status === "partial" ? l.have + " on hand" : "", "from " + l.from].filter(Boolean).join(" · "))),
+        ["owned", "acquired"].includes(l.status) ? null : buttons(
+          btn("Got It", "btn-ghost btn-small", () => act({ kind: "requirement.got", params: { requirement_id: l.id } }, { quick: true })),
+          btn("Not Needed", "btn-ghost btn-small", () => act({ kind: "requirement.remove", params: { requirement_id: l.id } }))))))
+        : null))];
+  }
+
+  const VIEWS = { finds, needs, watches, sources };
 
   function draw() {
     $("strip").replaceChildren(

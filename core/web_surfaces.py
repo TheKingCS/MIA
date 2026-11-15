@@ -105,7 +105,7 @@ APPS: tuple[App, ...] = (
         "I did the dishes."),
     App("world_intel", "World", "🌐", "What the world has for you.", "intel.html",
         "World Intelligence: watches on news, releases, research, grants and listings, and what they found, each "
-        "with its source (DEC-0170).", KNOW, ("world_intel",), "What have you found?"),
+        "with its source (DEC-0170).", KNOW, ("world_intel", "requirements"), "What have you found?"),
     App("closet", "Smart Closet", "👕", "Dressed for the day.", "closet.html",
         "Your clothes and outfits: what to wear today from the weather and your plans, ratings, and what you never wear (DEC-0162).",
         LIFE, ("closet",), "What should I wear today?"),

@@ -5,7 +5,7 @@ core.web_world_intel
 The World page (DEC-0170, W1): what World Intelligence found, the watches, and the sources it reads, assembled here
 so the web only draws (DEC-0017) and the voice tools say the same thing (DEC-0125).
 
-`world_page(context)`: whether it's on; each source with its last 30 days (finds, saved, set aside), whether it's
+`world_page(context)`: whether it's on; each unfinished project's needs (`needs`, Procurement P1); each source with its last 30 days (finds, saved, set aside), whether it's
 muted and whether muting it is suggested; the finds, best first (new ones, then saved), each with its source named,
 its link, when it was found and published, which watches found it, why, and which of the person's records it fits
 (`fits`, `refs`: core/relevance.py); the watches with their words, areas,
@@ -44,6 +44,27 @@ def _watch(w, now: datetime) -> dict:
             "refused": [getattr(world_sources.source(s), "name", s) for s in w.refused]}
 
 
+def needs(context) -> list[dict]:
+    """Each project that isn't finished, with its needs (core/requirements.py, DEC-0172): every line with its quantity,
+    what's on hand, status, ceiling and where it came from, and the project's progress."""
+    from core.requirements import progress
+
+    book, projects = getattr(context, "requirements", None), getattr(context, "projects", None)
+    if book is None or projects is None:
+        return []
+    out = []
+    for p in projects.all_projects():
+        if str(getattr(p, "status", "")).lower() in ("complete", "completed", "cancelled"):
+            continue
+        lines = book.for_project(p.project_id)
+        out.append({"id": p.project_id, "name": p.name, "progress": progress(lines),
+                    "lines": [{"id": r.requirement_id, "item": r.item, "quantity": r.quantity, "unit": r.unit,
+                               "have": r.have, "status": r.status, "max_price": r.max_price, "specs": r.specs,
+                               "condition": r.condition, "priority": r.priority, "needed_by": r.needed_by,
+                               "from": "the plan" if r.origin.startswith("plan") else "you"} for r in lines]})
+    return out
+
+
 def world_page(context, now: Optional[datetime] = None) -> dict:
     """The World page's data (see the module's opening), with each source's last 30 days and mute state."""
     from core import world_sources
@@ -67,6 +88,7 @@ def world_page(context, now: Optional[datetime] = None) -> dict:
             "watches": [_watch(w, now) for w in book.watches],
             "areas": [{"id": a, "name": world_sources.AREA_NAMES[a],
                        "sources": [s.name for s in world_sources.for_areas([a])]} for a in world_sources.AREAS],
+            "needs": needs(context),
             "sources": [{"id": s.source_id, "name": s.name, "muted": s.source_id in book.muted,
                          "suggest_mute": s.source_id in suggested, **{k: stats.get(s.source_id, {}).get(k, 0)
                                                                       for k in ("finds", "saved", "not_for_me")}}

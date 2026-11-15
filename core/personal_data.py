@@ -98,6 +98,7 @@ from core.boss_battles import BossBook
 from core.work_dungeon import DungeonBook
 from core.smart_closet import ClosetBook
 from core.world_intel import WorldBook
+from core.requirements import RequirementBook
 from core.taught_skills import SkillBook
 from core.the_loop import LoopBook
 from core.training_session import TrainingStore
@@ -237,6 +238,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("expeditions", ExpeditionManager),
     ("trips", TripManager),
     ("projects", ProjectManager),
+    ("requirements", RequirementBook),  # what each project needs (DEC-0172), beside the projects
     ("tasks", TaskManager),
     ("business_use", BusinessUseManager),
     ("textbooks", TextbookManager),

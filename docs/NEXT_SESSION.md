@@ -40,11 +40,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   3. 11685d02, the Living System audit (docs/mia_os/MIA_OS_LIVING_SYSTEM.md): the doctrine's own L5;
   4. the homeostasis and invariant-tests commit (core/homeostasis.py, core/scheduler.py, tests/test_living_system.py);
   5. World Intelligence W2 and W1b (core/relevance.py, WorldBook.sync_own_watches, run_watches);
-  6. the source loop (core/world_intel.source_stats, mute, the world.sources loop).
+  6. the source loop (core/world_intel.source_stats, mute, the world.sources loop);
+  7. Procurement P1 (core/requirements.py, requirement_actions.py, the plan.project hook, needs as anchors).
   Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
+- **Built 2026-11-15 (Opus): the source loop** (K-0239) and **Procurement P1** (K-0240): each project's needs, from
+  plans and his words, marked off against the workshop and inventory, on the World page's Needs tab and by voice;
+  open needs rank finds and get MIA's own watches. **Next (Opus):** P2, product specs compared by numbers, total cost
+  and price observations.
 - **Was next, now done:** W2, relevance from his records (projects and their material lists, intents, the
   development engine's needs, inventory, budget, places); W1b, watches MIA makes herself from those records; then
   P1 (requirements per project), W3 (eBay's and GSA's APIs wait for keys Zac skipped; capture and browser skills

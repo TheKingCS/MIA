@@ -13,7 +13,8 @@ that names the record it came from, so "why is this here?" always has an answer.
 - the homestead plan's next step and the goal it leads to (`core/development_engine.plan`): weight 4, the strongest
   reason there is ("this provides what your next step needs");
 - a learning path being followed: weight 2;
-- a machine or piece of equipment owned (maker, model, name): weight 1 ("fits something you own").
+- a machine or piece of equipment owned (maker, model, name): weight 1 ("fits something you own");
+- something a project still needs (core/requirements.py, Procurement P1): weight 3 ("what the Greenhouse needs").
 They're read fresh each time, so a finished project stops pulling finds and a new goal starts.
 
 **Matching** (`relevance(text, anchors)`): an anchor counts when the find's title and summary hold its significant
@@ -94,7 +95,8 @@ def _safe(read, what: str) -> list:
 
 
 def anchors(context) -> list[Anchor]:
-    """The person's anchors now (see the module's opening), read from their own view of the stores."""
+    """The person's anchors now (see the module's opening), read from their own view of the stores, open project
+    needs included."""
     out: list[Anchor] = []
 
     def add(ref: str, label: str, text: str, weight: float, name: str = "") -> None:
@@ -123,6 +125,11 @@ def anchors(context) -> list[Anchor]:
     paths = getattr(context, "paths", None)
     for path_id in _safe(lambda: paths.started(), "learning paths") if paths is not None else []:
         add(f"path:{path_id}", f"what you're learning ({str(path_id).replace('_', ' ')})", str(path_id).replace("_", " "), 2)
+    requirements = getattr(context, "requirements", None)
+    names = {p.project_id: p.name for p in (_safe(lambda: projects.all_projects(), "projects") if projects is not None else [])}
+    for req in _safe(lambda: requirements.open_items(), "project needs") if requirements is not None else []:
+        project = names.get(req.project_id, "a project")
+        add(f"requirement:{req.requirement_id}", f"what {project} needs, {req.item.lower()}", req.item, 3, req.item)
     out.extend(_plan_anchors(context))
     return out
 

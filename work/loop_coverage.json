@@ -328,6 +328,14 @@
   "action:world_source": {
    "status": "none",
    "why": "muting a source is the person's choice; the world.sources loop already judges each source and suggests what to mute"
+  },
+  "store:requirements": {
+   "status": "todo",
+   "why": "a loop over needs: how long lines stay open, how many are found by World Intelligence before bought elsewhere, and needs nobody updates (P3, DEC-0172)"
+  },
+  "action:requirement": {
+   "status": "none",
+   "why": "adding, changing and ticking off needs is the person's own list; the needs loop (todo) judges the list itself"
   }
  }
 }

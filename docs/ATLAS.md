@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1423 files, 317,065 lines; 1423 files describe themselves; 17,405 of 17,500 classes and functions are documented.
+1427 files, 317,803 lines; 1427 files describe themselves; 17,450 of 17,545 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-546 files, 157,532 lines; 8,113 of 8,199 classes and functions documented
+549 files, 158,119 lines; 8,151 of 8,237 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -67,6 +67,7 @@
 - `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
 - `core/assistant_proposal_actions.py`: Mission ideas and field recordings by voice (DEC-0125; the screens are the Missions page's idea card and the Journal's From the Field, core web_proposals.py). "Suggest a mission" asks the model for one idea (checked in code before it's kept); "accept it" / "set it aside" decide it. "Any field record
 - `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
+- `core/assistant_requirement_actions.py`: What each project needs, by voice (Procurement P1, DEC-0172, DEC-0125): "What do I still need for the greenhouse?" (`project_needs`). "The greenhouse needs four ventilation fans" (`add_need`). "I got the fans for the greenhouse" (`got_need`), "the greenhouse doesn't need the fans" (`drop_need`).
 - `core/assistant_screen_tools.py`: Voice tools for screens that had none (claude, 2026-11-09; DEC-0125: every feature works by voice and without it):
 - `core/assistant_self_actions.py`: MIA about herself (2026-10-21, the intelligence spec's first slice): "What AI model are you using?" answered from the runtime (core/model_registry.py), never from the model's guess about itself.
 - `core/assistant_starter_actions.py`: "What starter sets are there?", "set me up with the homestead starter set", "add the student starter but not the weekly plan" (core/starter_templates.py, 2026-10-01). Adding one is undoable.
@@ -390,6 +391,8 @@
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US.
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/relevance.py`: The Personal Relevance Engine (World Intelligence W2, DEC-0170; the proposal's section 4): how much a find matters to this person, worked out in code from their own records, never guessed by a model. Every point comes with a reason that names the record it came from, so "why is this here?" always ha
+- `core/requirement_actions.py`: What each project needs, on the action contract (Procurement P1, DEC-0172; core/requirements.py): proposed in plain words, approved, run, undoable (requirements.json writes through the atomic write).
+- `core/requirements.py`: What each project needs (Procurement P1, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 6): one line per thing a project needs, with how many, what it has to be, the most it should cost, and how far along it is.
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces:
 - `core/response_style.py`: Learning how the person likes MIA to answer (DEC-0138): now and then she offers the *same* answer two ways — "do you prefer this response, or this one?" — differing on one dimension of style (how long, how it's laid out, its tone, whether it leads with the answer). The person picks; MIA records it a
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
@@ -835,7 +838,7 @@
 
 ## tests/: the test suite: what each part must do
 
-488 files, 82,255 lines; 6,979 of 6,988 classes and functions documented
+489 files, 82,376 lines; 6,986 of 6,995 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1171,6 +1174,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
+- `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half.
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
@@ -1328,7 +1332,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,656 lines
+112 files, 20,686 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

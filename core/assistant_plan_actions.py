@@ -395,7 +395,8 @@ def _action_keep_plan(context, arguments: dict) -> str:
 
 
 def _action_start_project(context, arguments: dict) -> str:
-    """Tool start_plan_project: starts a project from a plan, its materials and steps in the description."""
+    """Tool start_plan_project: starts a project from a plan, its materials and steps in the description and its
+    materials on its needs list."""
     library, projects = _library(context), getattr(context, "projects", None)
     plan = library.best(str(arguments.get("name") or "")) if library is not None else None
     if plan is None or projects is None:
@@ -408,7 +409,11 @@ def _action_start_project(context, arguments: dict) -> str:
     if plan.get("steps"):
         description += "\nSteps:\n" + "\n".join(f"{i}. {s}" for i, s in enumerate(plan["steps"], 1))
     project = projects.add_project(name=title[:1].upper() + title[1:], description=description)
-    return f"Started the project \"{project.name}\" with the plan's materials and steps."
+    from core.plan_actions import _needs_from
+
+    needs = _needs_from(context, project, materials, plan)
+    return f"Started the project \"{project.name}\" with the plan's materials and steps." + (
+        f" Its {needs} materials are on its needs list." if needs else "")
 
 
 def _action_forget_plan(context, arguments: dict) -> str:

@@ -4,6 +4,11 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, late (Claude: what each project needs).**
+- **Projects have needs lists:** start a project from a plan and its materials are listed with the plan's quantities; anything in the workshop or inventory is marked off. Add your own ("the greenhouse needs four fans, used, under $40"), tick them off, or ask "what do I still need for the greenhouse?". On the World page's Needs tab.
+- **Needs feed World Intelligence:** a find that fits something a project needs ranks first, and MIA watches for each open need herself.
+- **Sources are judged:** the World page shows how each source is doing, suggests muting one you keep setting aside, and you can mute or unmute any.
+
 **2026-11-15, night (Claude: World Intelligence knows what matters to you).**
 - **Finds are ranked by your own records:** a find that fits your goals, projects, missions, the homestead plan's next step, what you're learning or what you own comes first, and says which ("fits your project “Greenhouse”").
 - **MIA makes watches herself** for each open goal, project and mission, the plan's next step and your equipment. They read public feeds and match on your PC, so nothing about them is sent anywhere. One stops when its project is done; one you stop is never made again.

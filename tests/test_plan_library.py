@@ -8,7 +8,8 @@ calculator's counts checked by hand, plans found by name, kept and read
 from files, a shopping list against the workshop's stock, the tools, the
 homestead, garden and woodworking projects, cut lists of a person's
 own parts, and a plan's page (your size, what to buy, plan.keep /
-plan.project / plan.delete, forget_plan by voice), and Trade Master's hoop house and cold room.
+plan.project / plan.delete, forget_plan by voice), Trade Master's hoop house and cold room, and a project started
+from a plan listing the plan's materials as its needs (DEC-0172).
 """
 
 from __future__ import annotations
@@ -254,3 +255,16 @@ def test_a_hoop_house_and_a_cold_room_are_worked_out_in_code():
     assert sum(1 for n in room.notes if n == calcs.CODE_NOTE) == 1
     assert structure_for("a high tunnel") == "hoop_house" and structure_for("walk-in cooler") == "cold_room"
     assert sizes_for("hoop_house", {"size": "14 by 30"}) == {"width_ft": 14, "length_ft": 30}
+
+
+def test_a_project_started_from_a_plan_lists_the_plans_materials_as_its_needs(world, tmp_path):
+    """DEC-0172 (Procurement P1): by voice and by the screen's action, the new project's needs are the plan's
+    materials at the plan's quantities, checked against what's on hand."""
+    from core.requirements import RequirementBook
+
+    world.requirements = RequirementBook(world, data_dir=tmp_path / "needs")
+    said = tool(world, "start_plan_project", name="workbench")
+    project = world.projects.all_projects()[0]
+    lines = world.requirements.for_project(project.project_id)
+    assert lines and f"Its {len(lines)} materials are on its needs list." in said
+    assert all(r.how == "computed" and r.origin.startswith("plan:") for r in lines)

@@ -79,7 +79,7 @@ def _describe_project(context, params) -> str:
 
 def _project(context, params) -> str:
     """Does plan.project: a Workshop project named for the plan at this size, its materials and steps written into
-    the description (as start_plan_project does by voice)."""
+    the description and its materials listed as its needs (as start_plan_project does by voice)."""
     from core.assistant_plan_actions import _materials_text
 
     plan, materials, _ = _worked(context, params)
@@ -87,7 +87,19 @@ def _project(context, params) -> str:
     if plan.get("steps"):
         description += "\nSteps:\n" + "\n".join(f"{i}. {s}" for i, s in enumerate(plan["steps"], 1))
     project = context.projects.add_project(name=_title(plan, materials), description=description)
-    return f"Started the project \"{project.name}\"."
+    needs = _needs_from(context, project, materials, plan)
+    return f"Started the project \"{project.name}\"." + (f" Its {needs} materials are on its needs list." if needs else "")
+
+
+def _needs_from(context, project, materials: dict, plan: dict) -> int:
+    """The plan's materials as the new project's needs (core/requirements.py, DEC-0172), checked against what's on
+    hand; how many were listed (0 without a requirements store)."""
+    book = getattr(context, "requirements", None)
+    if book is None:
+        return 0
+    added = book.from_materials(project.project_id, materials, plan.get("id", ""))
+    book.refresh_owned(context)
+    return len(added)
 
 
 def _describe_delete(context, params) -> str:
