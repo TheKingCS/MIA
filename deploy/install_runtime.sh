@@ -15,9 +15,13 @@
 #      with MIA_HOME: where her data lives (~/.local/share/mia unless you set
 #      MIA_HOME yourself). A checkout that already holds a MIA is never
 #      started empty elsewhere: the script says how to copy her first;
-#   3. turns on lingering, so MIA keeps running with nobody signed in at
+#   3. makes this machine's unlock secret (python -m tools.data_key protect),
+#      which protects the key to her sealed files the way the Windows sign-in
+#      does on the PC. Made once and never replaced. Where systemd can't keep
+#      one (older than 256), her files stay plain, as before;
+#   4. turns on lingering, so MIA keeps running with nobody signed in at
 #      the screen (loginctl may ask for your password);
-#   4. enables and starts the service.
+#   5. enables and starts the service.
 #
 # It doesn't install Python packages: do that first (see CLAUDE.md,
 # "Commands"). It refuses to run while the kiosk window service (mia.service)
@@ -63,8 +67,18 @@ if [ -f "${MIA_DIR}/config/config.json" ] && [ ! -d "${MIA_DATA_HOME}/data" ] &&
 fi
 mkdir -p "${MIA_DATA_HOME}"
 
+# The unlock secret for her sealed files (DEC-0126). The unit names it only when it's there and opens.
+CRED_LINE="# (no unlock secret on this machine: sealed files are off, files stay plain)"
+if (cd "${MIA_DIR}" && MIA_HOME="${MIA_DATA_HOME}" "${VENV_PYTHON}" -m tools.data_key protect); then
+    CRED_FILE="$(cd "${MIA_DIR}" && "${VENV_PYTHON}" -c 'from core import key_unlock; print(key_unlock.credential_file())')"
+    CRED_LINE="LoadCredentialEncrypted=mia-data-key:${CRED_FILE}"
+else
+    echo "Carrying on without sealed files. Her data will be kept plain on this machine." >&2
+fi
+
 mkdir -p "${UNIT_DIR}"
 sed \
+    -e "s|__MIA_CREDENTIAL_LINE__|${CRED_LINE}|g" \
     -e "s|__MIA_HOME__|${MIA_DATA_HOME}|g" \
     -e "s|__MIA_INSTALL_DIR__|${MIA_DIR}|g" \
     -e "s|__MIA_VENV_PYTHON__|${VENV_PYTHON}|g" \
@@ -81,6 +95,8 @@ systemctl --user restart mia-runtime.service
 
 echo
 echo "The MIA Runtime is installed. Her data is in ${MIA_DATA_HOME}."
+echo "If she doesn't start because sealed files from another computer can't be opened, enter its recovery key:"
+echo "  MIA_HOME=${MIA_DATA_HOME} ${VENV_PYTHON} -m tools.data_key restore"
 echo "  systemctl --user status mia-runtime      # is she running"
 echo "  journalctl --user -u mia-runtime -f      # her log"
 echo "  systemctl --user restart mia-runtime     # after updating the code"

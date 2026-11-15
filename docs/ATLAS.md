@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1409 files, 313,503 lines; 1409 files describe themselves; 17,185 of 17,280 classes and functions are documented.
+1411 files, 314,137 lines; 1411 files describe themselves; 17,225 of 17,320 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-538 files, 155,139 lines; 7,971 of 8,057 classes and functions documented
+539 files, 155,454 lines; 7,990 of 8,076 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -261,6 +261,7 @@
 - `core/job_manager.py`: MIA Home's fabrication jobs — the second slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section and `core/material_manager.py`'s docstring for the first slice), adapted to this project's persisted-JSON-manager convention. Same shape as every other man
 - `core/journal_manager.py`: Backs the Notes module (modules/notes/module.py) — milestone 3.4 in docs/ROADMAP.md, which upgrades that module from a placeholder into the "Notes/Journal Engine" described in ROADMAP.md's shared core services table: dated, searchable, taggable entries. It's a core service (not module-local) specifi
 - `core/journal_reflection.py`: The opt-in weekly journal reflection (2026-09-28), the follow-up to Cognitive Extension slice C: once a week (Sunday evening by default), if the owner journaled that week, MIA says a reflection is ready. The details (what came up most, how the mood moved) are given only when the owner asks ("how was
+- `core/key_unlock.py`: Where the secret that opens MIA's data key comes from on Linux (DEC-0126's Linux step, for MIA OS and the Pi: DEC-0168). On Windows the data key in data/.keys/ is protected by DPAPI; Linux has no DPAPI, so there `core.at_rest` wraps the data key under an **unlock secret**, and this module is the onl
 - `core/kitchen_actions.py`: Every change the Kitchen screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py, from the shared table in core/record_actions.py: recipes (add, edit, delete, their ingredients written one per line), the pantry (add, edit, delete), the grocery list (add, check of
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials.
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
@@ -782,7 +783,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-40 files, 4,226 lines; 138 of 138 classes and functions documented
+40 files, 4,269 lines; 139 of 139 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -827,7 +828,7 @@
 
 ## tests/: the test suite: what each part must do
 
-483 files, 81,256 lines; 6,902 of 6,911 classes and functions documented
+484 files, 81,531 lines; 6,922 of 6,931 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1027,6 +1028,7 @@
 - `tests/test_job_manager.py`: Unit tests for core.job_manager. Isolates _DATA_DIR/_JOBS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. consume_material() total_cost()/produce_product() also need core.material_manager core.product_manager isolated in the same tmp_path, s
 - `tests/test_journal_manager.py`: Unit tests for core.journal_manager. Isolates _DATA_DIR/_ENTRIES_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_journal_reflection.py`: The opt-in weekly journal reflection (core/journal_reflection.py): when it's due, the content-free notice, the reflection itself, and that asking for it is a private turn.
+- `tests/test_key_unlock.py`: MIA's data key on Linux (DEC-0126's Linux step; core/key_unlock.py, core/at_rest.py): where there's no DPAPI the data key is wrapped under an unlock secret that systemd keeps for this user on this machine. Checked here, with stand-ins for systemd so it runs on any system: the key file holds only the
 - `tests/test_kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9): the pantry is the materials; "I Made This" takes what the batches used out of it, and what runs out goes on the grocery list.
 - `tests/test_kitchen_manager.py`: Unit tests for core.kitchen_manager. Isolates _DATA_DIR/the four per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_real_estate_manager.py's isolated_paths.
 - `tests/test_kitchen_module.py`: Unit tests for modules.kitchen.module's pure row formatters — no Qt event loop needed, same shape as tests/test_budget_module.py.
@@ -1315,7 +1317,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-111 files, 20,538 lines
+111 files, 20,539 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

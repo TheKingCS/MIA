@@ -2940,3 +2940,23 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
     Fedora bootc for the PC; the Pi may need Raspberry Pi OS. DEC-0154 keeps MIA itself the same on either.
 - Related: DEC-0154, DEC-0155, DEC-0157, DEC-0015, DEC-0166
 
+\n
+### DEC-0169: On Linux, the system keeps the key to MIA's sealed files (the TPM where there is one)
+- Status: PROPOSED (built 2026-11-15 so the dual boot isn't blocked; Zac to approve or change)
+- Proposed by: claude, 2026-11-15, from the finding that files sealed on Windows (DEC-0126) can't be opened on
+  Linux, which blocks MIA OS using the PC's data (DEC-0168)
+- Proposal: on Linux the data key is wrapped under an unlock secret that systemd keeps encrypted for the person's
+  account on that machine (`systemd-creds`, systemd 256 or later), bound to the machine's TPM chip where it has one.
+  This matches what DEC-0126 chose for Windows: nothing to type when MIA starts, and the key file is useless on
+  another computer. The recovery key stays the way in from another computer or after a reinstall.
+- What it doesn't cover: a machine with no TPM and no disk encryption (the Pi as it ships) keeps the system's own
+  key on the same drive as the data, so a stolen drive can be read. There it protects copies of MIA's folder
+  (backups, sync), not the drive. The PC image has an encrypted drive unlocked by TPM and PIN (DEC-0157).
+- The alternative, not built: a passphrase typed at every start. Stronger on the Pi, but MIA couldn't come back by
+  herself after a power cut, and DEC-0126 left the passphrase open. It can be added on top later.
+- Consequences: `core/key_unlock.py` (where the secret comes from), `core/at_rest.py` (each key entry says how it's
+  protected; a system opens its own and keeps the others, so one key file serves Windows and Linux),
+  `python -m tools.data_key protect` and `restore`, `deploy/install_runtime.sh` and the unit
+  (`LoadCredentialEncrypted=`). A MIA with no window exits with 3 rather than start over sealed files she can't
+  open. Not yet run on a real Linux machine.
+- Related: DEC-0126, DEC-0155, DEC-0157, DEC-0168

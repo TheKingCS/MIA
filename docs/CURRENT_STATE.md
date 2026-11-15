@@ -2,15 +2,22 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-15 (MIA OS: the runtime extraction begun), by claude.*
+session. Last updated: 2026-11-15 (MIA OS: sealed files on Linux), by claude.*
+
+**2026-11-15, on the PC (Claude: sealed files on Linux, the blocker for the dual boot).**
+- **Built: MIA's sealed files can open on Linux.** There the key to them is kept by the system for your account on that machine, using its TPM security chip where it has one (the PC does; the Pi doesn't). Nothing is typed at start, as on Windows.
+- **Your PC's files open on Fedora once you enter the recovery key there** (`python -m tools.data_key restore`; it asks for the key without showing it). Windows keeps opening them as before: one key file serves both.
+- **A MIA with no window refuses to start over sealed files she can't open**, and says to enter the recovery key, instead of starting those parts empty.
+- **Not yet run on a real Linux machine** (this PC has none): the first run on Fedora or the Pi checks it. Tests stand in for the system's part.
+- **Waiting on Zac:** save the recovery key (WAITING_ON), and approve DEC-0169 (the system keeps the key, against typing a passphrase at every start).
+- **Next:** the phone on the full MIA, the window attaching to a running MIA, then the PC and Pi images.
 
 **2026-11-15, MIA OS now (Claude; Zac's decisions DEC-0155 and DEC-0168).**
 - **MIA OS is the objective**: the PC (dual boot, Fedora) and a Raspberry Pi 5 with the AI HAT+ (Raspberry Pi OS), the start of the Zeta Astralis. New features go only into the engine and the web screens.
 - **The runtime extraction has begun.** MIA's background jobs (alarms, reminders, the daily checks, backups, the inbox) no longer live inside the desktop window's code: they're in `core/background_jobs.py` on a plain scheduler, with no Qt. On the PC nothing looks different yet.
 - **MIA now runs with no window at all**: `python -m core.runtime` starts the whole of her (every service, all 401 tools, her schedule, the phone's server). The desktop app builds her through the same code. A Linux service file and installer are written (`deploy/install_runtime.sh`); they haven't been run on a real machine yet.
 - **Her data can now live outside the code**: one setting (`MIA_HOME`) that every store follows. On the PC nothing moved. `python -m tools.move_home` copies a MIA to a new folder, checks every file and leaves the old one alone.
-- **Found:** files sealed on Windows can't be opened on Linux yet (the key is tied to the Windows account). That has to be built before Fedora uses the PC's data.
-- **Next:** the key store for Linux, the phone on the full MIA, the window attaching to a running MIA, then the PC and Pi images.
+- **Found:** files sealed on Windows couldn't be opened on Linux (the key is tied to the Windows account). Built since: see above.
 
 **2026-11-15, latest (Claude: the Universal Action Layer's first phase, and taught skills).**
 - **Taught skills, phase 1, is built** (DEC-0123; AI Tools › Taught Skills, by voice, and a glasses card):

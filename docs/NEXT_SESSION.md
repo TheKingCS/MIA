@@ -26,11 +26,17 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
        (`core/data_root.py`); all 131 files that named the data folder follow it. Not set (the PC today): nothing
        moves. `python -m tools.move_home <folder>` copies a MIA to a new home, checks every file, and never touches
        the old folder. The Linux service installer sets `MIA_HOME` to `~/.local/share/mia`.
-    1b. **Sealed files on Linux (new finding, blocks moving the PC's data to Fedora).** Files sealed on Windows
-       (DEC-0126) open with a key Windows protects for that Windows account; Linux has no key store yet, so MIA there
-       can't read them (she copies them aside and starts those stores empty; nothing is lost, but nothing shows).
-       Needed before the dual boot uses the PC's data: a Linux key store (a passphrase or the TPM), taking the
-       recovery key. **(Fable)** Zac: keep the recovery key now (`python -m tools.data_key recovery` on the PC).
+    1b. **Done 2026-11-15 (built, not yet run on a real Linux machine): sealed files on Linux** (DEC-0169,
+       proposed: Zac to approve the choice). The data key is wrapped under an unlock secret that systemd keeps for
+       this user on this machine, with the TPM where there is one (`core/key_unlock.py`; `at_rest` entries say how
+       they're protected, and each system keeps the other's). `python -m tools.data_key protect` makes the secret
+       (the installer runs it and names it in the unit); `restore` takes the PC's recovery key (asked for, not
+       shown); the runtime exits with 3 rather than start over sealed files it can't open. K-0235.
+       **First run on Fedora or the Pi must check:** `systemd-creds --user encrypt/decrypt` and
+       `LoadCredentialEncrypted=` in a user unit (systemd 256+), then `python -m tools.data_key` says "protected by
+       secret". Moving the PC's data: `tools.move_home <folder> --sealed-ok`, then on Linux `protect`, `restore`.
+       Not built: a passphrase typed at each start (stronger on a Pi with no TPM; waits on Zac, DEC-0169).
+       Zac: keep the recovery key now (`.venv\Scripts\python -m tools.data_key recovery`, run inside the MIA folder).
     2. **The phone runs the full MIA too**: `android-phone/.../mia_phone.py` still uses the smaller
        `core/core_runtime.build_core_context`; fold the two builders into one. **(Fable)**
     3. **The window as a client** (step 5): the desktop window (and the MIA OS session, a browser on her web

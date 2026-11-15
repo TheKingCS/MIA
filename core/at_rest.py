@@ -17,16 +17,22 @@ lines from before reading as they are and a line that won't open kept as it is, 
 sealed because the history repeats what sealed stores keep ("Added a person: ..."). Its older plain lines are sealed
 only when the person asks, once, with MIA closed (`seal_history`, `python -m tools.data_key seal --history`).
 
-**The data key.** 32 random bytes, kept in data/.keys/data_key.json protected by Windows DPAPI (`_protect`): tied to
-the Windows sign-in, so there's nothing to type when MIA starts, and the file is useless anywhere else. A sealed file
-names the key it was sealed with (`_kid`); the key file can hold more than one, so a recovered key (`restore`) opens
-old files while new ones use the current key. Where DPAPI isn't (Linux, the phone until its Keystore step) nothing is
-sealed: files stay plain and `status()` says so.
+**The data key.** 32 random bytes, kept in data/.keys/data_key.json, protected the way the system it's on can
+(`_own_kind`). On Windows, by DPAPI (`_protect`): tied to the Windows sign-in. On Linux (MIA OS, the Pi), wrapped
+under an unlock secret that systemd keeps encrypted for this user on this machine, with the TPM chip where there is
+one (`_wrap`, `core/key_unlock.py`). Either way there's nothing to type when MIA starts, and the file is useless
+anywhere else. A sealed file names the key it was sealed with (`_kid`); the key file can hold more than one, so a
+recovered key (`restore`) opens old files while new ones use the current key. Each entry says how it's protected
+(`by`; none means DPAPI), a system opens only its own kind and keeps the others as they are, so one key file can
+serve Windows and Linux on a dual boot. Where nothing protects a key (the phone until its Keystore step, a Linux
+with no unlock secret made) nothing is sealed: files stay plain and `status()` says so.
 
 **Never losing a file.** Two rules: a file that can't be opened (a key that's gone, a damaged file) is copied aside
 (`<name>.unreadable-<time>`) before the error goes up, because a store that can't read its file starts empty and its
 next save would replace it; and a key file that exists but won't open (another Windows account, Windows reinstalled)
 is never replaced: sealing stops (`status()` reports it, the security log alerts) until the recovery key is entered.
+And a MIA with no window doesn't start at all over files she can't open (`start_problem`, asked by
+`core.runtime`): she'd start those stores empty with no screen to say so.
 The recovery key (`recovery_key()`, `python -m tools.data_key recovery`) is the data key written out to keep in a
 password manager: with it, the files open on any computer.
 
@@ -58,6 +64,7 @@ KEY_DIR = DATA_DIR / ".keys"
 KEY_NAME = "data_key.json"
 PREFIX = "MIA-SEALED-1:"
 _ENTROPY = b"MIA data key (DEC-0126)"
+SCRYPT = {"n": 2 ** 17, "r": 8, "p": 1}  # the cost of deriving the wrapping key from the unlock secret (Linux)
 
 # The files sealed, most private first (DEC-0126: moved store by store). A name here is sealed in every folder.
 SEALED = frozenset({
@@ -193,6 +200,71 @@ def _unprotect(blob: bytes) -> bytes:
     return _dpapi(blob, False)
 
 
+# ------------------------------------------------------------------ an unlock secret (Linux)
+
+
+def _own_kind() -> str:
+    """How this system protects the data key: "dpapi" on Windows, else "secret" (wrapped under an unlock secret)."""
+    return "dpapi" if dpapi_available() else "secret"
+
+
+def _unlock_secret() -> tuple[Optional[bytes], str]:
+    """This system's unlock secret, or None and why there isn't one (core/key_unlock.py)."""
+    from core import key_unlock
+
+    return key_unlock.find()
+
+
+def _wrapping_key(secret: bytes, salt: bytes, cost: dict) -> bytes:
+    """The 32-byte key that wraps the data key, derived from the unlock secret with scrypt at the cost stored
+    beside it."""
+    from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+    return Scrypt(salt=salt, length=32, n=int(cost["n"]), r=int(cost["r"]), p=int(cost["p"])).derive(secret)
+
+
+def _wrap(key: bytes, secret: bytes) -> dict:
+    """A key-file entry holding `key` wrapped under the unlock secret: AES-256-GCM with a fresh salt and nonce, the
+    key's id bound in so an entry can't be passed off as another key's."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    kid, salt, nonce = _kid(key), secrets.token_bytes(16), secrets.token_bytes(12)
+    blob = AESGCM(_wrapping_key(secret, salt, SCRYPT)).encrypt(nonce, key, _ENTROPY + kid.encode("ascii"))
+    return {"id": kid, "by": "secret", "salt": base64.b64encode(salt).decode("ascii"),
+            "blob": base64.b64encode(nonce + blob).decode("ascii"), **SCRYPT}
+
+
+def _unwrap(entry: dict, secret: bytes) -> bytes:
+    """The key in a wrapped entry; ValueError when the secret isn't the one it was wrapped under, or the entry was
+    changed."""
+    from cryptography.exceptions import InvalidTag
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    raw = base64.b64decode(entry["blob"])
+    kek = _wrapping_key(secret, base64.b64decode(entry["salt"]), entry)
+    try:
+        key = AESGCM(kek).decrypt(raw[:12], raw[12:], _ENTROPY + str(entry["id"]).encode("ascii"))
+    except InvalidTag:
+        raise ValueError("the unlock secret doesn't open this key") from None
+    if _kid(key) != entry["id"]:
+        raise ValueError("the key isn't the one its entry names")
+    return key
+
+
+def _entry(key: bytes, secret: Optional[bytes]) -> dict:
+    """A key-file entry for `key`, protected the way this system does."""
+    if _own_kind() == "dpapi":
+        return {"id": _kid(key), "blob": base64.b64encode(_protect(key)).decode("ascii")}
+    return _wrap(key, secret)
+
+
+def _open_entry(entry: dict, secret: Optional[bytes]) -> bytes:
+    """The key in one of this system's own entries; OSError or ValueError when it won't open."""
+    if entry.get("by", "dpapi") == "dpapi":
+        return _unprotect(base64.b64decode(entry["blob"]))
+    return _unwrap(entry, secret)
+
+
 # ------------------------------------------------------------------ the data key
 
 
@@ -207,7 +279,7 @@ def key_file() -> Path:
 
 
 def use_key(key: Optional[bytes]) -> None:
-    """For tests: seal with this key instead of DPAPI's (None goes back to the real one)."""
+    """For tests: seal with this key instead of the key file's (None goes back to the real one)."""
     global _test_key
     _test_key = key
     forget()
@@ -221,35 +293,51 @@ def forget() -> None:
 
 
 def _save(entries: list[dict], current: str) -> None:
-    """Writes the key file (directly, never through atomic_write_text: it isn't a store, and must never be undone)."""
+    """Writes the key file (directly, never through atomic_write_text: it isn't a store, and must never be undone),
+    saying which kind of protection wrote it; off Windows it's made readable by the person only."""
     KEY_DIR.mkdir(parents=True, exist_ok=True)
     tmp = key_file().with_name(KEY_NAME + ".tmp")
-    tmp.write_text(json.dumps({"v": 1, "protection": "dpapi", "current": current, "keys": entries}, indent=1),
+    tmp.write_text(json.dumps({"v": 1, "protection": _own_kind(), "current": current, "keys": entries}, indent=1),
                    encoding="utf-8")
+    if sys.platform != "win32":
+        os.chmod(tmp, 0o600)
     os.replace(tmp, key_file())
 
 
 def _open_keys() -> None:
-    """Opens the key file once (making the first key when there's none). Sets `_blocked` when it can't."""
+    """Opens the key file once (making the first key when there's none). Sets `_blocked` when it can't. Only this
+    system's own kind of entry is opened; another system's are left alone."""
     global _keys, _current, _blocked
     if _keys is not None or _blocked:
         return
     if _test_key is not None:
         _keys, _current = {_kid(_test_key): _test_key}, _kid(_test_key)
         return
-    if not dpapi_available():
-        _blocked = "this system has no DPAPI; files stay plain"
-        return
+    kind, secret, why = _own_kind(), None, ""
+    if kind == "secret":
+        secret, why = _unlock_secret()
     path = key_file()
     if not path.exists():
+        if kind == "secret" and secret is None:
+            _blocked = f"nothing here protects a data key ({why}); files stay plain"
+            return
         key = secrets.token_bytes(32)
-        _save([{"id": _kid(key), "blob": base64.b64encode(_protect(key)).decode("ascii")}], _kid(key))
+        _save([_entry(key, secret)], _kid(key))
         _keys, _current = {_kid(key): key}, _kid(key)
-        log.info("Made MIA's data key (DEC-0126), protected by this Windows sign-in")
+        log.info("Made MIA's data key (DEC-0126), protected by %s",
+                 "this Windows sign-in" if kind == "dpapi" else "this machine's unlock secret")
         return
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
-        opened = {e["id"]: _unprotect(base64.b64decode(e["blob"])) for e in record["keys"]}
+        mine = [e for e in record["keys"] if e.get("by", "dpapi") == kind]
+        if kind == "secret" and mine and secret is None:
+            _blocked = f"the data key is locked ({why})"
+            log.error("MIA's data key is locked: %s", why)
+            _alert("data_key_unopened")
+            return
+        opened = {e["id"]: _open_entry(e, secret) for e in mine}
+        if record["current"] not in opened:
+            raise KeyError(record["current"])
         _keys, _current = opened, record["current"]
     except (OSError, ValueError, KeyError, TypeError) as problem:
         _blocked = f"the data key couldn't be opened ({type(problem).__name__}); enter the recovery key"
@@ -411,10 +499,11 @@ def open_bytes(path: Path) -> bytes:
 
 
 def status() -> dict:
-    """Whether sealing works here, how the key is protected, which files are sealed, and which a line at a time."""
+    """Whether sealing works here, how the key is protected ("dpapi" on Windows, "secret" on Linux, "none" when it
+    isn't), why not when it doesn't, which files are sealed, and which a line at a time."""
     held = _current_key()
     return {"sealing": held is not None, "protection": "test" if _test_key is not None else
-            ("dpapi" if held is not None else "none"), "why_not": _blocked, "files": sorted(SEALED),
+            (_own_kind() if held is not None else "none"), "why_not": _blocked, "files": sorted(SEALED),
             "lines": sorted(LINE_SEALED),
             "key_id": held[0] if held else ""}
 
@@ -433,8 +522,9 @@ def recovery_key() -> str:
 
 
 def restore(code: str) -> str:
-    """Takes a recovery key back: protected for this Windows user and made the current key, keeping any other key
-    the key file opens. Returns its id. ValueError for a code that isn't a key."""
+    """Takes a recovery key back: protected the way this system does and made the current key, keeping any other key
+    the key file opens, and every entry that belongs to another system (a Windows entry on Linux, and the other way)
+    as it is. Returns its id. ValueError for a code that isn't a key, or when nothing here can protect one."""
     global _keys, _current, _blocked
     clean = "".join(c for c in code.upper() if c.isalnum())
     try:
@@ -443,29 +533,82 @@ def restore(code: str) -> str:
         raise ValueError("that isn't a recovery key") from None
     if len(key) != 32:
         raise ValueError("that isn't a recovery key")
-    if not dpapi_available() and _test_key is None:
-        raise ValueError("this system has no DPAPI to protect it")
+    kind, secret = _own_kind(), None
+    if _test_key is None and kind == "secret":
+        secret, why = _unlock_secret()
+        if secret is None:
+            raise ValueError(f"nothing here protects a data key ({why})")
     with _lock:
         entries, held = [], {}
         if _test_key is None and key_file().exists():
             try:
                 for e in json.loads(key_file().read_text(encoding="utf-8"))["keys"]:
+                    if e.get("by", "dpapi") != kind:
+                        entries.append(e)  # another system's entry: kept as it is, for when the file is read there
+                        continue
                     try:
-                        held[e["id"]] = _unprotect(base64.b64decode(e["blob"]))
+                        held[e["id"]] = _open_entry(e, secret)
                         entries.append(e)
-                    except OSError:
-                        pass  # a key this Windows user can't open: the recovered one replaces it
+                    except (OSError, ValueError, KeyError, TypeError):
+                        pass  # a key this system can no longer open: the recovered one replaces it
             except (OSError, ValueError, KeyError, TypeError):
                 pass
         kid = _kid(key)
         if _test_key is None:
             if kid not in held:
-                entries.append({"id": kid, "blob": base64.b64encode(_protect(key)).decode("ascii")})
+                entries.append(_entry(key, secret))
             _save(entries, kid)
         held[kid] = key
         _keys, _current, _blocked = held, kid, ""
     _alert("data_key_restored")
     return kid
+
+
+# ------------------------------------------------------------------ before a MIA with no window starts
+
+
+def data_folders(data: Optional[Path] = None) -> list[Path]:
+    """The data folder and each profile's and household's folder in it: everywhere a sealed file can be."""
+    data = Path(data) if data is not None else DATA_DIR
+    out = [data]
+    for parent in (data / "profiles", data / "households"):
+        if parent.is_dir():
+            out += sorted(p for p in parent.iterdir() if p.is_dir() and not p.name.startswith("_deleted_"))
+    return out
+
+
+def unopenable(folders: Optional[list[Path]] = None) -> list[Path]:
+    """The sealed files in these folders (every data folder when not given) whose key isn't held here. Reads only
+    each file's first bytes: the mark and the key's id."""
+    out = []
+    mark = PREFIX.encode("ascii")
+    for folder in (folders if folders is not None else data_folders()):
+        for name in sorted(SEALED):
+            path = Path(folder) / name
+            try:
+                with open(path, "rb") as handle:
+                    head = handle.read(len(mark) + 32)
+            except OSError:
+                continue
+            if head.startswith(mark):
+                kid = head[len(mark):].split(b":", 1)[0].decode("ascii", "replace")
+                if _key_for(kid) is None:
+                    out.append(path)
+    return out
+
+
+def start_problem(folders: Optional[list[Path]] = None) -> str:
+    """Why a MIA with no window mustn't start on this data, or "" when she may: a data key that's there but won't
+    open, or sealed files whose key isn't held here (her data copied from another computer before the recovery key
+    was entered). Started anyway, she would copy each aside and start those stores empty, with no screen to say so."""
+    _current_key()
+    if _blocked and _test_key is None and key_file().exists():
+        return f"MIA's sealed files can't be opened here: {_blocked}."
+    stuck = unopenable(folders)
+    if stuck:
+        return (f"{len(stuck)} sealed files here were sealed with a key this system doesn't hold "
+                f"(the first: {stuck[0].name}). Enter the recovery key: python -m tools.data_key restore")
+    return ""
 
 
 def seal_history(folders: list[Path]) -> int:

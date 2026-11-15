@@ -26,12 +26,13 @@ old folder stays as the fallback until the person removes it themselves.
 It refuses a target that already holds a MIA (a `data` folder with
 anything in it), and a target inside the folder being copied.
 
-Sealed files (DEC-0126): files sealed on Windows are opened with a key
-that Windows protects for that Windows account. They copy fine and open
-again on the same computer and account. Where that protection isn't
-available (Linux, until its own key store is built), they can't be opened:
-this tool counts them and says so before copying, and stops unless
-`--sealed-ok` is given.
+Sealed files (DEC-0126): sealed files open with a data key that the
+computer protects for one account (the Windows sign-in; on Linux, the
+machine's unlock secret, core/key_unlock.py). They copy fine and open
+again on the same computer and account. On a system that doesn't hold
+the key, they can't be opened until the recovery key is entered there
+(`python -m tools.data_key restore`): this tool counts them and says so
+before copying, and stops unless `--sealed-ok` is given.
 """
 
 from __future__ import annotations
@@ -144,8 +145,7 @@ def copy(source: Path, target: Path) -> dict:
 def main(argv: Optional[list] = None) -> int:
     """`python -m tools.move_home TARGET [--check] [--sealed-ok]`: 0 when the copy is made and checked (or, with
     --check, could be), 1 with the reason otherwise."""
-    from core import instance_lock
-    from core.at_rest import dpapi_available
+    from core import at_rest, instance_lock
 
     args = list(argv if argv is not None else sys.argv[1:])
     only_check, sealed_ok = "--check" in args, "--sealed-ok" in args
@@ -165,10 +165,14 @@ def main(argv: Optional[list] = None) -> int:
     print(f"From {source}\n  to {target}\n{len(files)} files, {size / 1e6:.1f} MB.")
     if locked:
         print(f"{len(locked)} of them are sealed (DEC-0126).")
-        if not dpapi_available():
-            print("This system can't open sealed files yet (they were sealed on Windows, for that Windows account).\n"
-                  "They would copy, but MIA here couldn't read them. On the Windows PC, keep the recovery key\n"
-                  "(python -m tools.data_key recovery); opening sealed files on Linux is a step still to build.")
+        if not at_rest.status()["sealing"]:
+            print("This system doesn't hold the key that opens them (they were sealed on another computer or "
+                  "account).\n"
+                  "They would copy, but MIA here can't read them until the recovery key is entered. On the computer\n"
+                  "that sealed them, keep the recovery key (python -m tools.data_key recovery). Then copy with\n"
+                  f"--sealed-ok and, with {data_root.ENV} set to the new folder:\n"
+                  "  python -m tools.data_key protect    (Linux, once)\n"
+                  "  python -m tools.data_key restore")
             if not sealed_ok and not only_check:
                 print("Nothing was copied. Add --sealed-ok to copy anyway.")
                 return 1

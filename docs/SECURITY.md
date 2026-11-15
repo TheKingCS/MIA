@@ -62,6 +62,15 @@ most likely first:
    Done in the one place every store already writes through (`core/atomic_write.py`) plus a matching read, store by
    store, the most private first (journal, conversations, memories, money, people). A copied `data/` folder, a
    backup or a synced file is then unreadable on its own. ⏸
+   **On Linux (MIA OS, the Pi; built 2026-11-15, DEC-0169 proposed, not yet run on a real machine):** the data key
+   is wrapped (scrypt, AES-256-GCM) under an unlock secret that systemd keeps encrypted for this user on this
+   machine (`core/key_unlock.py`, `python -m tools.data_key protect`, run by `deploy/install_runtime.sh`): with the
+   TPM chip where there is one (the PC), so nothing is typed at start and the file is useless elsewhere. With no
+   TPM and no disk encryption (the Pi as it ships) the machine's key is on the same drive as the data, so this
+   protects a copied folder or backup there, not a stolen drive. The PC's sealed files open on Linux once the
+   recovery key is entered (`python -m tools.data_key restore`, which asks for it without showing it); one key
+   file can hold a Windows entry and a Linux entry, and each system leaves the other's alone. A MIA with no
+   window doesn't start over sealed files she can't open (`at_rest.start_problem`), so no store comes up empty.
 3. ~~**A security log and alerts.**~~ **Done 2026-11-08** (`core/security_log.py`, Settings → Sign-ins and
    Security): every sign-in with its device, wrong passwords, waits, ended sessions, password and recovery code
    changes and phone links, append-only and outside the undo log; an alert on a sign-in from a new device, on

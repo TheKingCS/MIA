@@ -146,10 +146,10 @@ def test_the_tool_stops_before_copying_sealed_files_to_a_system_that_cannot_open
 
     old, new = _a_mia(tmp_path / "old"), tmp_path / "new"
     monkeypatch.setattr(data_root, "HOME", old)
-    monkeypatch.setattr(at_rest, "dpapi_available", lambda: False)
+    monkeypatch.setattr(at_rest, "status", lambda: {"sealing": False})
     monkeypatch.setattr(instance_lock, "acquire", lambda *a, **k: True)
     assert move_home.main([str(new)]) == 1 and not new.exists()
-    assert "can't open sealed files yet" in capsys.readouterr().out
+    assert "doesn't hold the key that opens them" in capsys.readouterr().out
     assert move_home.main([str(new), "--check"]) == 0 and not new.exists()
     assert move_home.main([str(new), "--sealed-ok"]) == 0 and (new / "data" / "missions.json").is_file()
     said = capsys.readouterr().out

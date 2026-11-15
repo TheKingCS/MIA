@@ -82,7 +82,8 @@
     return box;
   }
 
-  // Sealed files (core/at_rest.py): the key opens only for this Windows account; the recovery key opens them anywhere.
+  // Sealed files (core/at_rest.py): the key opens only for this account on this computer (the Windows sign-in, or
+  // on Linux the machine's unlock secret); the recovery key opens them anywhere.
   function sealed(page) {
     const s = page.at_rest || {};
     const box = el("section", { class: "glass money-section", "aria-label": "Your files on this computer" });
@@ -93,11 +94,11 @@
       try { got = await MIA.recoveryKey(v.password); } catch (e) { say(e.message); return; }
       box.replaceChildren(el("h2", {}, "Your Recovery Key"),
         el("p", { class: "ts-key" }, got.key),
-        el("p", {}, "Put this in your password manager now, not in a file on this computer. With it, your files open on a new computer or after Windows is reinstalled; without it, they can't."),
+        el("p", {}, "Put this in your password manager now, not in a file on this computer. With it, your files open on a new computer or after the system is reinstalled; without it, they can't."),
         el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: async () => draw(await MIA.securityLog()) }, "Done")));
     };
     box.append(el("h2", {}, "Your Files on This Computer"),
-      el("p", {}, s.sealing ? "Encrypted. Your conversations, memories, notes, people, finances and other private records are sealed on disk; only your Windows account on this computer opens them."
+      el("p", {}, s.sealing ? "Encrypted. Your conversations, memories, notes, people, finances and other private records are sealed on disk; only your " + (s.protection === "dpapi" ? "Windows account" : "account") + " on this computer opens them."
         : "Not encrypted" + (s.why_not ? ": " + s.why_not : "") + "."),
       page.on_this_pc && s.sealing
         ? el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: show }, "Show the Recovery Key"))

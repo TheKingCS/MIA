@@ -448,7 +448,15 @@ class Runtime(BackgroundJobs, AssistantTools):
 
 def main() -> int:
     """`python -m core.runtime`: runs MIA with no window until told to stop. 1 when another MIA already holds this
-    data folder."""
+    data folder; 3 when her sealed files can't be opened here (`at_rest.start_problem`): with no screen to say so,
+    she doesn't start over stores that would come up empty."""
+    from core import at_rest
+
+    locked = at_rest.start_problem()
+    if locked:
+        log.error("The MIA Runtime didn't start: %s", locked)
+        print(locked)
+        return 3
     try:
         runtime = Runtime()
     except RuntimeError as problem:

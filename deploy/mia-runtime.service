@@ -32,6 +32,9 @@ Type=simple
 WorkingDirectory=__MIA_INSTALL_DIR__
 # Where the person's MIA lives (core/data_root.py): her data, config and logs, apart from the code.
 Environment=MIA_HOME=__MIA_HOME__
+# The secret that opens her sealed files (DEC-0126, core/key_unlock.py): systemd keeps it encrypted for this
+# user on this machine and hands it to this service only, in $CREDENTIALS_DIRECTORY/mia-data-key.
+__MIA_CREDENTIAL_LINE__
 ExecStart=__MIA_VENV_PYTHON__ -m core.runtime
 # SIGTERM is what the runtime waits for: it finishes the job in progress,
 # stops the phone server and exits (core/runtime.py run_until_stopped).
@@ -39,8 +42,9 @@ KillSignal=SIGTERM
 TimeoutStopSec=45
 Restart=on-failure
 RestartSec=5
-# Exit code 1 means another MIA already holds this data folder: not a crash.
-RestartPreventExitStatus=1
+# Exit code 1 means another MIA already holds this data folder; 3 means her
+# sealed files can't be opened here (enter the recovery key): not crashes.
+RestartPreventExitStatus=1 3
 # A user service already can't touch other people's files; these narrow it
 # further without getting in MIA's way.
 NoNewPrivileges=yes
