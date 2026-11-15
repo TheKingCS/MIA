@@ -110,6 +110,15 @@
       "ask": "I did the dishes."
     },
     {
+      "id": "closet",
+      "name": "Smart Closet",
+      "icon": "👕",
+      "tagline": "Dressed for the day.",
+      "page": "closet.html",
+      "group": "Life, goals & self",
+      "ask": "What should I wear today?"
+    },
+    {
       "id": "workout",
       "name": "Workout",
       "icon": "🏋",
@@ -776,6 +785,14 @@
               "tagline": "Your photos, kept safe.",
               "page": "vault.html",
               "ask": "Are my photos backed up?"
+            },
+            {
+              "id": "closet",
+              "name": "Smart Closet",
+              "icon": "👕",
+              "tagline": "Dressed for the day.",
+              "page": "closet.html",
+              "ask": "What should I wear today?"
             },
             {
               "id": "files",

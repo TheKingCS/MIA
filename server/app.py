@@ -3643,6 +3643,48 @@ def create_app(context: AppContext) -> FastAPI:
 
         return _screen(profile_id, "missions", checkin)
 
+    # ------------------------------------------------------------ Smart Closet (core/web_closet.py, DEC-0162)
+    @app.get("/api/closet")
+    def web_closet(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Smart Closet screen: today's picks with why, the pieces, the outfits and the insights."""
+        from core.web_closet import closet_page
+
+        return _screen(profile_id, "closet", closet_page)
+
+    @app.get("/api/closet/piece/{piece_id}/photo")
+    def closet_photo(piece_id: str, profile_id: str = Depends(require_profile_id)):
+        """A piece's photo file (404 when it has none)."""
+        from fastapi.responses import FileResponse
+
+        closet = getattr(view_for(context, profile_id), "closet", None)
+        path = closet.photo_path(piece_id) if closet is not None else None
+        if path is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No photo for that.")
+        return FileResponse(path, headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.post("/api/closet/piece/{piece_id}/photo")
+    async def closet_photo_upload(piece_id: str, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Sets a piece's photo from the picture sent as the raw body (JPG, PNG or WebP, up to 10 MB)."""
+        closet = getattr(view_for(context, profile_id), "closet", None)
+        piece = closet.get_piece(piece_id) if closet is not None else None
+        if piece is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That piece isn't in the closet.")
+        data = await request.body()
+        if not data:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No picture received.")
+        if len(data) > 10 * 1024 * 1024:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "That picture is over 10 MB.")
+        name = Path(unquote(request.headers.get("x-filename", "photo.jpg"))).name.strip() or "photo.jpg"
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / name
+            source.write_bytes(data)
+            try:
+                with app.state.turn_lock:
+                    closet.set_photo(piece_id, source)
+            except ValueError as problem:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
+        return {"message": f"{piece.name} has a photo now."}
+
     # ------------------------------------------------------------ The Dungeon (core/web_dungeon.py, DEC-0046)
     @app.get("/api/dungeon")
     def web_dungeon(profile_id: str = Depends(require_profile_id)) -> dict:

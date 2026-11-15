@@ -670,6 +670,8 @@
     checkin: () => read("/api/checkin", "checkin"),
     // The Dungeon (core/web_dungeon.py, DEC-0046): runs, loot earned / projected / banked, bosses, hard mode.
     dungeon: () => read("/api/dungeon", "dungeon"),
+    // Smart Closet (core/web_closet.py, DEC-0162): today's picks, pieces, outfits, insights.
+    closet: () => read("/api/closet", "closet"),
     // Chickens (core/web_flock.py, DEC-0037): eggs, lay rate, feed cost per dozen, cartons.
     flock: () => read("/api/flock", "flock"),
     // The insurance check-up (core/insurance.py): policies, checks, quotes side by side.

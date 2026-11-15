@@ -25,6 +25,14 @@
    "status": "none",
    "why": "the person keeps or leaves out a recording (DEC-0125); a kept one is a journal entry, which has its own loop"
   },
+  "action:closet": {
+   "status": "none",
+   "why": "saving, wearing, rating and laundry are the person's own record; the ratings already change the suggestions in code (core/smart_closet.suggest)"
+  },
+  "action:closet_piece": {
+   "status": "none",
+   "why": "adding and editing clothes is the person's own inventory; nothing of MIA's to judge"
+  },
   "action:comms": {
    "status": "none",
    "why": "the person's own settings for how often MIA speaks up (DEC-0129); the communication gate already learns from dismissals and logs every decision"
@@ -196,6 +204,10 @@
   "store:business_use": {
    "status": "proposed",
    "task": "T-0055"
+  },
+  "store:closet": {
+   "status": "todo",
+   "why": "a loop counting suggestions worn against skipped, to tune the weights in core/smart_closet.suggest (DEC-0162)"
   },
   "store:data_logger": {
    "status": "none",

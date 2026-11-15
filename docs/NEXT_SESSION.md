@@ -7,6 +7,22 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-15 (MIA OS planning: Prompt 01 done, waiting for Zac)*
 
+**New 2026-11-15, later (Claude).**
+- **Prompt 02 is done**; Prompt 03 waits for Zac's say-so.
+- **Smart Closet is built.** Its next stages are in `docs/specs/SMART_CLOSET.md`: the morning card, laundry flow, collage previews, packing lists, the partner's closet, the learning loop.
+- **Zac's step, the phone signing key.** Until he does this, builds use the legacy key.
+  1. On the PC, create a key: `keytool -genkeypair -v -keystore mia-signing.keystore -alias mia -keyalg RSA -keysize 4096 -validity 10000`. `keytool` comes with Android Studio's JDK. Choose a strong password.
+  2. Keep the file and the password somewhere safe, outside the repo.
+  3. Copy the key as text: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("mia-signing.keystore")) | Set-Clipboard`.
+  4. On GitHub, under Settings › Secrets and variables › Actions, add `MIA_SIGNING_KEYSTORE_B64` (the pasted text) and `MIA_SIGNING_PASSWORD`.
+  5. **Before reinstalling:** sync the phone with the PC. The phone app keeps its own data, and uninstalling deletes it.
+  6. Then uninstall the old app, install the next build, sign in, link, and sync.
+- **After the secrets are in:** remove the legacy fallback and `android-phone/legacy-signing.keystore` (DEC-0160).
+- **Waiting on Zac:**
+  - Q-08: may LEP go online in the background, and from which sources?
+  - Q-09: are LEP interests private per partner?
+  - Q-10: should Send to MIA start on the phone first?
+
 **New 2026-11-15 (Claude: MIA OS).**
 - Zac's MIA OS prompt library is in `docs/mia_os/prompts/` (00 to 17, plus 17b). Work it **one prompt at a time, and stop for Zac's review after each**.
 - Prompt 01 (the existing-system audit) is done: start at `docs/mia_os/MIA_OS_MASTER_PLAN.md`. Prompt 02 starts only on Zac's say-so.

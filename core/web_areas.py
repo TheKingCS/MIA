@@ -141,7 +141,7 @@ AREAS: tuple[Area, ...] = (
          ("music", "play", "expeditions", "maps", "navigation", TRAILS, TRACKS, WORLD, PLACES, WORLDS, PORTALS),
          hue="#9b6bff", parent="home"),
     Area("personal_tools", "Personal Tools", "notes", "Your days, your words, your people and what you keep.",
-         ("calendar", "notes", "life_notes", "operating_journal", "memories", "vault", "files", "relationships",
+         ("calendar", "notes", "life_notes", "operating_journal", "memories", "vault", "closet", "files", "relationships",
           CHECKIN, "observations", CONNECTIONS), hue="#ff8ad8", parent="home"),
     Area("learning", "Learning", "classroom", "Study, the library and what you're learning.",
          ("classroom", "knowledge", GUITAR, TRADES), hue="#6a5cff", parent="home", shortcuts=("skills",)),

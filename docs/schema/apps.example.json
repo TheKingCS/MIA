@@ -48,6 +48,28 @@
           "favorite": false
         },
         {
+          "id": "closet",
+          "name": "Smart Closet",
+          "icon": "👕",
+          "tagline": "Dressed for the day.",
+          "description": "Your clothes and outfits: what to wear today from the weather and your plans, ratings, and what you never wear (DEC-0162).",
+          "page": "closet.html",
+          "on_web": true,
+          "shown": true,
+          "can_hide": true,
+          "ask": "What should I wear today?",
+          "tools": [
+            "what_to_wear",
+            "closet_report",
+            "add_clothing",
+            "save_outfit",
+            "wore_outfit",
+            "rate_outfit",
+            "closet_laundry"
+          ],
+          "favorite": false
+        },
+        {
           "id": "workout",
           "name": "Workout",
           "icon": "🏋",

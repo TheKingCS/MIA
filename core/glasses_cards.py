@@ -106,6 +106,26 @@ def _dungeon_week(context, today: date):
     return _panel("This Week", lines, "No shifts yet this week.")
 
 
+# ------------------------------------------------------------ Smart Closet (DEC-0162)
+
+def _closet_today(context, today: date):
+    """Panel: the day (weather, occasion) and today's best two outfits with why, from the Smart Closet page."""
+    from core.web_closet import closet_page
+
+    page, none = _page("Today's Outfit", lambda: closet_page(context, today), "There's no closet on this MIA.")
+    if none:
+        return none
+    if not page["count"]:
+        return _panel("Today's Outfit", [], "Add clothes in Smart Closet first.")
+    plan, day = page["suggestion"], page["day"]
+    lines = [_line(day["weather_text"] or "No weather yet", day["occasion"])]
+    for i, pick in enumerate(plan["picks"][:2]):
+        lines.append(_line(("Wear " if i == 0 else "Or ") + pick["name"], " · ".join(pick["why"][:2])))
+    if plan["missing"]:
+        lines.append(_line("The closet needs", ", ".join(plan["missing"])))
+    return _panel("Today's Outfit", lines, "Nothing clean to wear.")
+
+
 # ------------------------------------------------------------ the Fix-It Log
 
 def _issues_open(context, today: date):
@@ -680,6 +700,7 @@ EXTRA = {
 
 PANELS = {
     "dungeon": (("week", "This Week", _dungeon_week),),
+    "closet": (("today", "Today's Outfit", _closet_today),),
     "issues": (("open", "Open Issues", _issues_open),),
     "compliance": (("due", "Deadlines", _compliance_due),),
     "flock": (("eggs", "Eggs", _flock_today),),

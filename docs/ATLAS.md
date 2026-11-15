@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1380 files, 306,655 lines; 1380 files describe themselves; 16,853 of 16,947 classes and functions are documented.
+1386 files, 308,157 lines; 1386 files describe themselves; 16,940 of 17,034 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-521 files, 150,679 lines; 7,742 of 7,828 classes and functions documented
+525 files, 151,810 lines; 7,816 of 7,902 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -34,6 +34,7 @@
 - `core/assistant_business_view_actions.py`: The Businesses subdashboard by voice (DEC-0153, 2026-11-11): "how are my businesses doing?" (each business's month and year, from core/web_businesses.businesses_page) and "how is the rental business doing?" (one business's dashboard: its money, open orders and quotes, properties and what it owes). F
 - `core/assistant_camera_actions.py`: The cameras by voice (DEC-0125, 2026-11-07): the Security screen (core/security_cams.py, DEC-0033) had no tool, so "are the cameras working?" reached the network utilities that share its area. Two tools, in their own area `cameras`:
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
+- `core/assistant_closet_actions.py`: Smart Closet by voice (DEC-0162): "What should I wear today?" "Add my navy hoodie to the closet" "Save the hoodie and jeans as an outfit" "I wore the hoodie and jeans" "Rate that outfit 4 stars" "Laundry's done" "What haven't I worn in ages?"
 - `core/assistant_comm_actions.py`: Assistant tools for the communication gate (core/communication_gate.py, Cognitive Extension slice C): asking what MIA chose not to say, and changing how often she speaks up on her own.
 - `core/assistant_connection_actions.py`: Connections by voice (DEC-0146, DEC-0125's both-ways rule; the screen is web/connections.html): "don't bring that up" after MIA ties something you said to a project from weeks ago (it runs `connection.decline` on the connection she just raised, or the newest one waiting), and "what connections have 
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
@@ -121,6 +122,7 @@
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`).
 - `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson's notes written (lesson.notes, as "add to my notes for..." does by voice), the skill a lesson trains and its XP (lesso
 - `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for 
+- `core/closet_actions.py`: Smart Closet's actions (DEC-0162, core/smart_closet.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/code_atlas.py`: Documentation for everything MIA is made of (DEC-0104, Zac 2026-11-06: "every line of code ... should have documentation that explains what it is and what it does and how it does it, so that if MIA ever needed to redo this entire process herself, she could. And this should be an ongoing thing").
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag.
 - `core/component_manager.py`: Backs the Component DB (modules/workshop/module.py) — docs/ROADMAP.md milestone 8.3. Same persisted-JSON pattern as core/inventory_manager.py: data/components.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
@@ -408,6 +410,7 @@
 - `core/skill_leveling.py`: Pure XP/Level math for a single Skill in "My Hero's Path" — same "derive it, don't persist a second copy that can drift" philosophy as core/leveling.py's profile-wide Level, but scaled down: a single skill's XP pool fills from a handful of small per-activity grants (core.gamification.grant_xp()'s sk
 - `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built 
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
+- `core/smart_closet.py`: Smart Closet (DEC-0162; Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them, maybe let me see what they would look like together"). The design is `docs/specs/SMART_CLOSET.md`.
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
@@ -474,6 +477,7 @@
 - `core/web_business.py`: The Orders & Quotes screen (DEC-0030 phase C): orders (what's owed, the build's progress, and where each is on the stage rail with the step that moves it on: `order_stage`, DEC-0113), quotes (with what the price is made of), customers, and the portfolio of finished builds. Since DEC-0153 each order 
 - `core/web_businesses.py`: Finances › Businesses (DEC-0153, Zac 2026-11-11): "a sub dashboard under Finances with a quick view of each businesses info where you can click into each business to bring up its own dashboard", and "orders and quotes will be a section under each business with info specific to that business".
 - `core/web_changes.py`: Recent Changes on the web (the screens review's missing "Recent changes Undo history", docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125: "undo that" and "what did you just change?" were voice-only). Two parts:
+- `core/web_closet.py`: Smart Closet's screen data (DEC-0162), assembled here so the web page only formats it (`/api/closet`, `MIA.closet()`). Everything comes from code:
 - `core/web_comms.py`: Communications (DEC-0129, Zac 2026-11-08): one screen for what was spread over four: the email drafts MIA wrote (she only drafts; an email goes when the person presses Send, core/mail_send.py), the mailbox MIA reads for receipts (core/inbox_mail.py), what MIA said on her own today and what she held 
 - `core/web_compliance.py`: The Compliance screen (DEC-0040): every obligation, sorted the way deadlines are read: **Overdue**, **Next 30 days**, **Later**, **To check** (unverified, or undated), and **Done**. Each says when it's really due (moved off a weekend or holiday, an extension to file kept apart from the money's date)
 - `core/web_connections.py`: Connections (web/connections.html, DEC-0146): the ties MIA noticed between something said in passing and something started weeks ago (core/connections.py), so the person can see what she's holding and say "don't bring that up". Shown: the ones waiting to be raised (what was said, when, what it ties 
@@ -532,7 +536,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,227 lines; 52 of 52 classes and functions documented
+2 files, 4,269 lines; 52 of 52 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -809,7 +813,7 @@
 
 ## tests/: the test suite: what each part must do
 
-476 files, 79,795 lines; 6,807 of 6,815 classes and functions documented
+477 files, 79,964 lines; 6,820 of 6,828 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1167,6 +1171,7 @@
 - `tests/test_skill_manager.py`: Unit tests for core.skill_manager.SkillManager — isolates _DATA_DIR _SKILL_DEFINITIONS_FILE/_SKILL_PROGRESS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. Definitions are written directly to the isolated file per test (not the real seeded data/skill_def
 - `tests/test_skill_patterns.py`: Unit tests for core.skill_patterns — isolates _DATA_DIR for profile/skill/insight files into a tmp_path scratch area, same monkeypatch pattern as test_mission_patterns.py's own isolated_paths.
 - `tests/test_skills_module.py`: Unit tests for modules.skills.module's pure functions, same style as tests/test_missions_module.py (no Qt event loop, no fixtures).
+- `tests/test_smart_closet.py`: Smart Closet (DEC-0162): pieces and outfits, ratings, the day's suggestion worked out in code (weather, occasion, rest, colour), insights, the actions with undo, the page and the voice tools.
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py.
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
@@ -1290,7 +1295,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-108 files, 20,079 lines
+109 files, 20,239 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1309,6 +1314,7 @@
 - `web/checkin.js`: checkin.js — the Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5). Renders MIA.checkin() (core/weekly_checkin.py): last week (the story, the loop's honest score, loot, what MIA noticed, quests finished) and the week ahead, day by day (runs with projected loot, rhythms, calendar events), quests 
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Laid out as the design canvas's Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open. Read only; formatting 
 - `web/classroom.js`: classroom.js — the Classroom (claude, 2026-11-06). Renders MIA.classroom() (core/classroom_manager.py): the course to continue (the design canvas's card, DEC-0113), then each subject, its courses and their lessons, how far along each is. Adding, ticking a lesson done (its skill XP credited once) and
+- `web/closet.js`: closet.js — Smart Closet (claude, 2026-11-15, DEC-0162).
 - `web/communications.js`: communications.js — Communications (DEC-0129, claude, 2026-11-08). Renders MIA.communications() (core/web_comms.comms_page): email drafts (opened in the frame's draft view: Send only when you press it), the mailbox, what MIA said on her own today and held back, her daily limit (comms.limit), the kin
 - `web/compliance.js`: compliance.js — the Compliance screen (claude, 2026-10-21, DEC-0040). Renders MIA.compliance() (core/web_compliance.py): Overdue, Next 30 Days, Later, To Check and Done. Every change proposes an action (core/obligation_actions.py): add, edit, verify (the only way an obligation becomes verified), whe
 - `web/connect.js`: connect.js — Connect Apps (claude, 2026-11-08). Renders MIA.connect() (core/connectors.py): each source MIA can import from. A file (calendar, contacts, bank statement) or a rental's calendar link is previewed first (MIA.connectPreview: what's new, what's already here, what couldn't be read), and on

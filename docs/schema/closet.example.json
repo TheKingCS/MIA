@@ -1,0 +1,726 @@
+{
+  "available": true,
+  "today": "2026-11-16",
+  "day": {
+    "weather_text": "44°F, light rain",
+    "place": "Springfield",
+    "events": [],
+    "work_day": true,
+    "occasion": "work"
+  },
+  "suggestion": {
+    "occasion": "work",
+    "temp_f": 48.0,
+    "wet": true,
+    "warmth": [
+      "medium",
+      "warm"
+    ],
+    "outerwear": true,
+    "weather_known": true,
+    "picks": [
+      {
+        "outfit_id": "",
+        "name": "Red flannel + Khaki chinos + Work boots + Rain shell",
+        "piece_ids": [
+          "ad5f4cd32f",
+          "d3f45738dd",
+          "b47919165d",
+          "a16af32c4f"
+        ],
+        "score": 4.5,
+        "why": [
+          "right for work",
+          "not worn yet",
+          "the red stands out against neutrals"
+        ],
+        "saved": false,
+        "pieces": [
+          {
+            "piece_id": "ad5f4cd32f",
+            "name": "Red flannel",
+            "category": "top",
+            "color": "red",
+            "warmth": "warm",
+            "occasions": [
+              "everyday",
+              "work"
+            ],
+            "waterproof": false,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          },
+          {
+            "piece_id": "d3f45738dd",
+            "name": "Khaki chinos",
+            "category": "bottom",
+            "color": "khaki",
+            "warmth": "medium",
+            "occasions": [
+              "everyday",
+              "date"
+            ],
+            "waterproof": false,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          },
+          {
+            "piece_id": "b47919165d",
+            "name": "Work boots",
+            "category": "shoes",
+            "color": "brown",
+            "warmth": "medium",
+            "occasions": [
+              "everyday",
+              "work",
+              "outdoors"
+            ],
+            "waterproof": false,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          },
+          {
+            "piece_id": "a16af32c4f",
+            "name": "Rain shell",
+            "category": "outerwear",
+            "color": "navy",
+            "warmth": "medium",
+            "occasions": [
+              "everyday"
+            ],
+            "waterproof": true,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          }
+        ]
+      },
+      {
+        "outfit_id": "5590905d2e",
+        "name": "Weekend flannel",
+        "piece_ids": [
+          "ad5f4cd32f",
+          "b4008e6a6a",
+          "b47919165d",
+          "a16af32c4f"
+        ],
+        "score": 4.0,
+        "why": [
+          "you rated it 5 stars",
+          "right for work",
+          "the red stands out against neutrals",
+          "add the Rain shell for the rain"
+        ],
+        "saved": true,
+        "pieces": [
+          {
+            "piece_id": "ad5f4cd32f",
+            "name": "Red flannel",
+            "category": "top",
+            "color": "red",
+            "warmth": "warm",
+            "occasions": [
+              "everyday",
+              "work"
+            ],
+            "waterproof": false,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          },
+          {
+            "piece_id": "b4008e6a6a",
+            "name": "Jeans",
+            "category": "bottom",
+            "color": "denim",
+            "warmth": "medium",
+            "occasions": [
+              "everyday",
+              "work"
+            ],
+            "waterproof": false,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "2026-11-15",
+            "times_worn": 1,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          },
+          {
+            "piece_id": "b47919165d",
+            "name": "Work boots",
+            "category": "shoes",
+            "color": "brown",
+            "warmth": "medium",
+            "occasions": [
+              "everyday",
+              "work",
+              "outdoors"
+            ],
+            "waterproof": false,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          },
+          {
+            "piece_id": "a16af32c4f",
+            "name": "Rain shell",
+            "category": "outerwear",
+            "color": "navy",
+            "warmth": "medium",
+            "occasions": [
+              "everyday"
+            ],
+            "waterproof": true,
+            "condition": "good",
+            "in_wash": false,
+            "photo": "",
+            "notes": "",
+            "last_worn": "",
+            "times_worn": 0,
+            "created_at": "2026-11-15T08:41:54",
+            "photo_url": ""
+          }
+        ]
+      }
+    ],
+    "missing": []
+  },
+  "groups": [
+    {
+      "category": "top",
+      "label": "Tops",
+      "pieces": [
+        {
+          "piece_id": "f09cfeb44d",
+          "name": "Navy hoodie",
+          "category": "top",
+          "color": "navy",
+          "warmth": "medium",
+          "occasions": [
+            "everyday"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "2026-11-15",
+          "times_worn": 1,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "ad5f4cd32f",
+          "name": "Red flannel",
+          "category": "top",
+          "color": "red",
+          "warmth": "warm",
+          "occasions": [
+            "everyday",
+            "work"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "7f4fe98c5b",
+          "name": "White tee",
+          "category": "top",
+          "color": "white",
+          "warmth": "light",
+          "occasions": [
+            "everyday"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    },
+    {
+      "category": "bottom",
+      "label": "Bottoms",
+      "pieces": [
+        {
+          "piece_id": "b4008e6a6a",
+          "name": "Jeans",
+          "category": "bottom",
+          "color": "denim",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "work"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "2026-11-15",
+          "times_worn": 1,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "d3f45738dd",
+          "name": "Khaki chinos",
+          "category": "bottom",
+          "color": "khaki",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "date"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    },
+    {
+      "category": "layer",
+      "label": "Layers",
+      "pieces": [
+        {
+          "piece_id": "166e4c3c57",
+          "name": "Grey sweater",
+          "category": "layer",
+          "color": "grey",
+          "warmth": "warm",
+          "occasions": [
+            "everyday"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "5f8b3751c5",
+          "name": "Old blazer",
+          "category": "layer",
+          "color": "black",
+          "warmth": "medium",
+          "occasions": [
+            "dressy"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "2026-01-20",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    },
+    {
+      "category": "outerwear",
+      "label": "Outerwear",
+      "pieces": [
+        {
+          "piece_id": "a16af32c4f",
+          "name": "Rain shell",
+          "category": "outerwear",
+          "color": "navy",
+          "warmth": "medium",
+          "occasions": [
+            "everyday"
+          ],
+          "waterproof": true,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    },
+    {
+      "category": "shoes",
+      "label": "Shoes",
+      "pieces": [
+        {
+          "piece_id": "5de5ad7dde",
+          "name": "White sneakers",
+          "category": "shoes",
+          "color": "white",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "gym"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "2026-11-15",
+          "times_worn": 1,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "b47919165d",
+          "name": "Work boots",
+          "category": "shoes",
+          "color": "brown",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "work",
+            "outdoors"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    }
+  ],
+  "count": 10,
+  "outfits": [
+    {
+      "outfit_id": "5590905d2e",
+      "name": "Weekend flannel",
+      "stars": 5.0,
+      "ratings": 1,
+      "last_worn": "",
+      "times_worn": 0,
+      "pieces": [
+        {
+          "piece_id": "ad5f4cd32f",
+          "name": "Red flannel",
+          "category": "top",
+          "color": "red",
+          "warmth": "warm",
+          "occasions": [
+            "everyday",
+            "work"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "b4008e6a6a",
+          "name": "Jeans",
+          "category": "bottom",
+          "color": "denim",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "work"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "2026-11-15",
+          "times_worn": 1,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "b47919165d",
+          "name": "Work boots",
+          "category": "shoes",
+          "color": "brown",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "work",
+            "outdoors"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    },
+    {
+      "outfit_id": "c6ca69d8a0",
+      "name": "White tee + Khaki chinos + White sneakers",
+      "stars": 4.0,
+      "ratings": 1,
+      "last_worn": "",
+      "times_worn": 0,
+      "pieces": [
+        {
+          "piece_id": "7f4fe98c5b",
+          "name": "White tee",
+          "category": "top",
+          "color": "white",
+          "warmth": "light",
+          "occasions": [
+            "everyday"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "d3f45738dd",
+          "name": "Khaki chinos",
+          "category": "bottom",
+          "color": "khaki",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "date"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "",
+          "times_worn": 0,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        },
+        {
+          "piece_id": "5de5ad7dde",
+          "name": "White sneakers",
+          "category": "shoes",
+          "color": "white",
+          "warmth": "medium",
+          "occasions": [
+            "everyday",
+            "gym"
+          ],
+          "waterproof": false,
+          "condition": "good",
+          "in_wash": false,
+          "photo": "",
+          "notes": "",
+          "last_worn": "2026-11-15",
+          "times_worn": 1,
+          "created_at": "2026-11-15T08:41:54",
+          "photo_url": ""
+        }
+      ]
+    }
+  ],
+  "insights": {
+    "unworn": [
+      {
+        "piece_id": "5f8b3751c5",
+        "name": "Old blazer",
+        "days": 300,
+        "never": false
+      }
+    ],
+    "most_worn": [
+      {
+        "piece_id": "f09cfeb44d",
+        "name": "Navy hoodie",
+        "times": 1
+      },
+      {
+        "piece_id": "b4008e6a6a",
+        "name": "Jeans",
+        "times": 1
+      },
+      {
+        "piece_id": "5de5ad7dde",
+        "name": "White sneakers",
+        "times": 1
+      }
+    ],
+    "top_rated": [
+      {
+        "outfit_id": "5590905d2e",
+        "name": "Weekend flannel",
+        "stars": 5.0
+      },
+      {
+        "outfit_id": "c6ca69d8a0",
+        "name": "White tee + Khaki chinos + White sneakers",
+        "stars": 4.0
+      }
+    ],
+    "in_wash": [],
+    "needs_repair": [],
+    "gaps": []
+  },
+  "form": {
+    "noun": "piece",
+    "id_param": "piece_id",
+    "fields": [
+      {
+        "name": "name",
+        "label": "Name (navy hoodie, black boots…)",
+        "type": "text",
+        "required": true,
+        "options": [],
+        "default": null
+      },
+      {
+        "name": "category",
+        "label": "Kind",
+        "type": "choice",
+        "required": false,
+        "options": [
+          "top",
+          "bottom",
+          "dress",
+          "layer",
+          "outerwear",
+          "shoes",
+          "accessory"
+        ],
+        "default": "top"
+      },
+      {
+        "name": "color",
+        "label": "Colour",
+        "type": "text",
+        "required": false,
+        "options": [],
+        "default": null
+      },
+      {
+        "name": "warmth",
+        "label": "Warmth",
+        "type": "choice",
+        "required": false,
+        "options": [
+          "light",
+          "medium",
+          "warm"
+        ],
+        "default": "medium"
+      },
+      {
+        "name": "occasions",
+        "label": "For (everyday, work, gym, date, dressy, outdoors, lounge)",
+        "type": "text",
+        "required": false,
+        "options": [],
+        "default": "everyday"
+      },
+      {
+        "name": "waterproof",
+        "label": "Waterproof",
+        "type": "choice",
+        "required": false,
+        "options": [
+          "no",
+          "yes"
+        ],
+        "default": "no"
+      },
+      {
+        "name": "condition",
+        "label": "Condition",
+        "type": "choice",
+        "required": false,
+        "options": [
+          "good",
+          "worn",
+          "needs repair"
+        ],
+        "default": "good"
+      },
+      {
+        "name": "notes",
+        "label": "Notes",
+        "type": "textarea",
+        "required": false,
+        "options": [],
+        "default": null
+      }
+    ]
+  }
+}

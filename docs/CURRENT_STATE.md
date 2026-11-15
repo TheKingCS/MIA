@@ -5,6 +5,16 @@
 session. Last updated: 2026-11-15 (MIA OS planning, Prompt 01 audit), by claude.*
 
 
+**2026-11-15, later (Claude: Zac's answers, Prompt 02, Smart Closet).**
+- **Smart Closet is built** (DEC-0162; Home › Personal Tools, by voice, and a glasses card):
+  - clothes and outfits, with ratings;
+  - today's picks worked out in code from the weather, the day and what has rested;
+  - pieces shown side by side;
+  - insights.
+- **The old Companion app (`android/`) is retired** (DEC-0160). The phone app's signing key comes from repository secrets once Zac adds them.
+- **The Life Enrichment Protocol** spec is in `docs/specs/` with personal details left out (DEC-0161). MIA tells who's talking (DEC-0163). "Send to MIA" on any selection is proposed (DEC-0164).
+- **MIA OS Prompt 02 is done** and waits for Zac's review.
+
 **2026-11-15, latest (Claude: MIA OS planning).**
 - Zac's MIA OS prompt library (the Master Directive, Prompts 01–17 and a supplement) is kept verbatim in `docs/mia_os/prompts/`.
 - **Prompt 01, the audit of what MIA is today, is done.** It waits for Zac's review before Prompt 02. Start at `docs/mia_os/MIA_OS_MASTER_PLAN.md`.
