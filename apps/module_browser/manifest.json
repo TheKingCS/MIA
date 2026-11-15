@@ -27,7 +27,12 @@
     "integrations": []
   },
   "capabilities": {
-    "tools": [],
+    "tools": [
+      "check_my_apps",
+      "describe_app",
+      "list_my_apps",
+      "which_app"
+    ],
     "actions": []
   },
   "uses": [],

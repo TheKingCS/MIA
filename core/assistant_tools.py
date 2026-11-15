@@ -43,6 +43,7 @@ from core.assistant_closet_actions import register_closet_actions
 from core.assistant_world_intel_actions import register_world_intel_actions
 from core.assistant_requirement_actions import register_requirement_actions
 from core.assistant_price_actions import register_price_actions
+from core.assistant_app_registry_actions import register_app_registry_actions
 from core.assistant_comm_actions import register_communication_actions
 from core.assistant_connection_actions import register_connection_actions
 from core.assistant_cooking_actions import register_cooking_actions
@@ -231,6 +232,7 @@ class AssistantTools:
         register_world_intel_actions(self.context.assistant_actions)  # World Intelligence: watches and finds (DEC-0170)
         register_requirement_actions(self.context.assistant_actions)  # what each project needs (DEC-0172)
         register_price_actions(self.context.assistant_actions)  # prices seen, comparisons, trip cost (DEC-0172)
+        register_app_registry_actions(self.context.assistant_actions)  # her own apps, from their manifests (DEC-0178)
         register_taught_skill_actions(self.context.assistant_actions)  # taught skills: watch me, run, answer (DEC-0123)
         register_ual_actions(self.context.assistant_actions)  # the Universal Action Layer: actions on what is given (DEC-0165)
         register_creation_actions(self.context.assistant_actions)  # screens MIA made for you, by voice (DEC-0091)

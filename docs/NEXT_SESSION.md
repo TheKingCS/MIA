@@ -45,7 +45,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   8. Procurement P2 (core/product_specs.py, core/price_book.py, price actions and tools);
   9. Prompt 03, the application framework (docs/mia_os/MIA_OS_APPLICATION_*.md, DEC-0175 to DEC-0177);
   10. prompt 22's plan (docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md, DEC-0178);
-  11. M1, the Application Registry (core/app_registry.py, tools/app_manifests.py, apps/*/manifest.json, the schema).
+  11. M1, the Application Registry (core/app_registry.py, tools/app_manifests.py, apps/*/manifest.json, the schema);
+  12. M2, her apps asked about (core/app_ecosystem.py, core/assistant_app_registry_actions.py, the Apps page section).
   Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
@@ -58,7 +59,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Built 2026-11-15 (Opus): M1, the Application Registry** (K-0242): one `apps/<id>/manifest.json` per app (56, plus
   `apps/mia/` for the platform), generated from code; `core/app_registry.py` reads them and checks every tool, action
   kind, store, job and daily check is claimed exactly once. Adding one now means claiming it in its app's manifest
-  (`python -m tools.app_manifests check`). Nothing changes behaviour yet. Next: M2 (queries as tools and a page, Opus).
+  (`python -m tools.app_manifests check`). Nothing changes behaviour yet.
+- **Built 2026-11-15 (Opus): M2** (K-0243): "what apps do I have?", "what can Greenhouse do?", "which app can
+  monitor energy?", "is anything wrong with my apps?" answered from the manifests and the scheduler; the same on the
+  Apps page (Manage apps: "Her apps, checked"). Overlapping tools are said as suggestions. Next: M3 (the app list and
+  /api/shell read the registry, Opus); M4 grants are Fable's.
 - **Prompt 03 done (2026-11-15, Opus):** `docs/mia_os/MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen supporting
   documents. Capability-first; DEC-0175 to 0177 proposed; waiting on Zac: Q-27 to Q-29, then Prompt 04. Added to
   Fable's review queue (item 9). Prompt 04 is Opus's.

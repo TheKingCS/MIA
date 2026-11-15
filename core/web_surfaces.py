@@ -217,7 +217,7 @@ APPS: tuple[App, ...] = (
     App("diagnostics", "Diagnostics", "🩺", "How MIA is doing.", None,
         "System health, logs, and hardware status.", KNOW, (), "How is my system health?"),
     App("module_browser", "Apps", "🧩", "Everything MIA can do.", "apps.html",
-        "View, enable/disable, install, and rescan modules.", KNOW, ()),
+        "View, enable/disable, install, and rescan modules.", KNOW, ("app_registry",)),
     App("settings", "Settings", "⚙", "Make MIA yours.", None,
         "Configure MIA — theme, user info, module options.", KNOW, ("accessibility", "apps", "starters", "humor", "backup", "answer_style"),
         "Make the text bigger."),
@@ -845,12 +845,24 @@ def tool_label(name: str) -> str:
     return " ".join([first] + [_WORDS.get(w, w) for w in words[1:]])
 
 
+def _registry_section(context) -> Optional[dict]:
+    """The Apps page's "Her apps, checked" section (core/app_ecosystem.page), or None when it can't be read."""
+    from core import app_ecosystem
+
+    try:
+        return app_ecosystem.page(context)
+    except Exception:  # noqa: BLE001  (the page still shows every app without it)
+        log.exception("The app registry section couldn't be built")
+        return None
+
+
 def apps_page(context) -> dict:
     """The Apps page (DEC-0017): every app MIA has, grouped by life area,
     with what it's for, whether it's on the web yet, whether it's shown in
     this person's sidebar, and what MIA can do in it (the Assistant tools
     of its domains, so even an app without a web screen yet is reachable
-    by talking to MIA). Child-safe: a child sees only their apps and tools."""
+    by talking to MIA), plus "Her apps, checked" (`registry`: core/app_ecosystem.page, DEC-0178). Child-safe: a child
+    sees only their apps and tools."""
     from core.child_accounts import app_allowed, tool_allowed
     from core.focus_presets import ALWAYS_VISIBLE, favorite_apps
 
@@ -891,6 +903,7 @@ def apps_page(context) -> dict:
     return {
         "groups": groups,
         "favorites": [f for f in favorites if f in allowed],
+        "registry": _registry_section(context),
         "counts": {"apps": total_apps, "on_web": sum(a["on_web"] for g in groups for a in g["apps"]),
                    "tools": len({t["name"] for g in groups for a in g["apps"] for t in a["tools"]})},
     }

@@ -4,9 +4,12 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, night, later (Claude: MIA knows her own apps).**
+- **Built:** ask MIA "what apps do I have?", "what can Greenhouse do?", "which app can watch for deals?" or "is anything wrong with my apps?" and she answers from each app's record, not a guess. The Apps page (Manage apps) shows the same check. Where two apps' tools look alike she says so as a suggestion, not a fault.
+- **Next:** M3, the app list itself read from the records. Prompt 04 waits on Zac's go.
+
 **2026-11-15, night (Claude: MIA's app registry, first step).**
 - **Built:** every one of MIA's 56 apps now has one record of its parts (`apps/<id>/manifest.json`), plus one for MIA herself. A registry reads them and a test checks that every tool, action, store and background job in the code belongs to exactly one app. Nothing works differently yet; it's the ground the next steps stand on.
-- **Next:** M2 (MIA can answer "which app does X?" and an Apps page shows the inventory). Prompt 04 waits on Zac's go.
 
 **2026-11-15, evening, later (Claude: Zac's review of Prompt 03, and his app-ecosystem handoff planned).**
 - **Approved:** MIA owns her own app ecosystem: every one of her apps gets one record of its parts (a manifest), and a registry in her runtime knows them all, what each can do, what it needs and whether it's healthy. Outside code runs only in a sandbox. MIA ships as part of the OS itself; her apps are hers, never Flatpaks; ordinary Linux apps (Firefox, Blender...) come as Flatpaks. No app store.

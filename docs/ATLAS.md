@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1435 files, 319,075 lines; 1435 files describe themselves; 17,514 of 17,609 classes and functions are documented.
+1438 files, 319,619 lines; 1438 files describe themselves; 17,550 of 17,645 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-554 files, 158,956 lines; 8,197 of 8,283 classes and functions documented
+556 files, 159,356 lines; 8,222 of 8,308 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -20,6 +20,7 @@
 - `core/answer_compare.py`: "Do you prefer this response, or this one?" (DEC-0138): the surface over core/response_style.py. Now and then, after a reply in Talk, MIA offers the same answer a second way that differs on one dimension of style (how long, how it's laid out, its tone, what comes first), the one she's least sure abo
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py).
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
+- `core/app_ecosystem.py`: MIA's understanding of her own app ecosystem (prompt 22 §7, migration phase M2; DEC-0175, DEC-0178): the Application Registry (`core/app_registry.py`) asked the questions a person asks, answered in code from the manifests, the code and the runtime, never from a model.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/app_registry.py`: The Application Registry (DEC-0175, DEC-0178; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`, migration phase M1): MIA's authoritative inventory of her own applications, read from one manifest per app (`apps/<id>/manifest.json`), and checked against the code so the manifests can't drift from what's re
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
@@ -28,6 +29,7 @@
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_answer_style_actions.py`: How MIA answers, by voice (DEC-0138, DEC-0125's both-ways rule; the screen is web/answers.html): "keep your answers short", "use bullet points", "be more direct", "lead with the answer", "how do I like answers?", "forget how I like answers", "stop asking which I prefer". The person's words are mappe
+- `core/assistant_app_registry_actions.py`: MIA about her own apps, by voice (migration phase M2, DEC-0178; answers from `core/app_ecosystem.py`, never the model's guess): "What apps do I have?" (`list_my_apps`). "What can Greenhouse do?", "what depends on Home?" (`describe_app`). "Which app can monitor energy?", "which app has add_watch?" (`
 - `core/assistant_art_actions.py`: MIA paints by voice (DEC-0140, core/art_studio.py): "paint me a fantasy castle village for my background", "use the castle one as my background", "take the background down", "delete the castle picture", "paint a misty forest for the Plants portal", "put the castle painting in the Garage portal" (cor
 - `core/assistant_asset_part_actions.py`: Parts per asset by voice (DEC-0125; the screen is the asset page's Parts tab, core/asset_parts.py): "the mower uses the 10W-30 oil", "what parts does the truck take?", "the truck doesn't use that filter anymore". Names are matched to real records in code; the add and remove are the same actions the 
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
@@ -844,7 +846,7 @@
 
 ## tests/: the test suite: what each part must do
 
-491 files, 82,573 lines; 7,000 of 7,009 classes and functions documented
+492 files, 82,688 lines; 7,011 of 7,020 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -865,6 +867,7 @@
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
+- `tests/test_app_ecosystem.py`: MIA's understanding of her own apps (migration phase M2, DEC-0178; core/app_ecosystem.py, core/assistant_app_registry_actions.py): the inventory, one app's parts, which app does something, and the check (health, overlaps, gaps) are answered from the manifests and the runtime; a failing job is pinned
 - `tests/test_app_registry.py`: The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action kind, store, job and daily check in the code exactly once, and name 
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin
@@ -1340,7 +1343,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,695 lines
+112 files, 20,724 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

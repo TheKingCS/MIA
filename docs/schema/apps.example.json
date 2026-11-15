@@ -933,5 +933,35 @@
     "apps": 40,
     "on_web": 21,
     "tools": 32
+  },
+  "registry": {
+    "apps": 54,
+    "devices": {
+      "pc": 54,
+      "phone": 46,
+      "glasses": 30
+    },
+    "voice": 50,
+    "manifests": 57,
+    "health": [],
+    "overlaps": [
+      {
+        "tools": [
+          "log_harvest",
+          "record_harvest"
+        ],
+        "apps": [
+          "Greenhouse",
+          "Kitchen"
+        ]
+      }
+    ],
+    "gaps": [
+      {
+        "what": "track the chickens' egg count",
+        "count": 2,
+        "need": "screen"
+      }
+    ]
   }
 }

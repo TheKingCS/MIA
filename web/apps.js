@@ -122,10 +122,12 @@
       ].filter(Boolean));
       $("nothing").hidden = shown > 0;
       $("no-favorites").hidden = true;
+      $("registry").hidden = true;
       return;
     }
     $("tabs").hidden = false;
     $("no-favorites").hidden = true;
+    drawRegistry();
     $("groups").replaceChildren(...data.groups.map((g) => {
       const apps = g.apps.filter((a) => matches(a, words));
       shown += apps.length;
@@ -135,6 +137,33 @@
         el("div", { class: "app-grid" }, apps.map(card)));
     }));
     $("nothing").hidden = shown > 0;
+  }
+
+  // Her apps, checked (DEC-0178, M2): every app's record against the code, failing jobs, tools that may overlap
+  // and what was asked that no app does, all from the engine (core/app_ecosystem.page). Overlaps are suggestions.
+  function drawRegistry() {
+    const r = data.registry;
+    $("registry").hidden = !r;
+    if (!r) return;
+    const ask = (q) => el("a", { class: "btn btn-ghost", href: "assistant.html?draft=" + encodeURIComponent(q) }, "Ask: " + q);
+    $("registry").replaceChildren(
+      el("div", { class: "sect" }, el("h2", {}, "Her apps, checked"), el("span", { class: "more" }, r.manifests + " records")),
+      el("div", { class: "glass apps-list" },
+        el("p", {}, r.apps + " apps · " + r.devices.pc + " on the PC · " + r.devices.phone + " on the phone · " +
+          r.devices.glasses + " on the glasses · " + r.voice + " by voice"),
+        r.health.length
+          ? el("div", {}, el("p", { class: "pw-label" }, "Needs fixing"), el("ul", {}, r.health.map((h) =>
+              el("li", {}, el("strong", {}, h.name + ": "), h.problems.join("; ")))))
+          : el("p", { class: "dim" }, "Every app's record agrees with the code, and no background job is failing."),
+        r.overlaps.length
+          ? el("div", {}, el("p", { class: "pw-label" }, "My suggestion: these may overlap"), el("ul", {}, r.overlaps.map((o) =>
+              el("li", {}, o.tools[0] + " (" + o.apps[0] + ") and " + o.tools[1] + " (" + o.apps[1] + ")"))))
+          : null,
+        r.gaps.length
+          ? el("div", {}, el("p", { class: "pw-label" }, "Asked for, no app does it yet"), el("ul", {}, r.gaps.map((g) =>
+              el("li", {}, g.what + " (asked " + g.count + "×)"))))
+          : null,
+        el("div", { class: "row-buttons" }, ask("What apps do I have?"), ask("Which app can watch for deals?"), ask("Is anything wrong with my apps?"))));
   }
 
   let areas = [], everywhere = [];

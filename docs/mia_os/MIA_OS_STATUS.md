@@ -10,7 +10,8 @@
 - Prompt 03 (the application framework) is done: `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen supporting documents.
 - Prompt 03 reviewed (DEC-0175 to 0177 approved). Prompt 22 (the runtime-owned app ecosystem) is planned in
   `MIA_OS_APPLICATION_REGISTRY.md`; DEC-0178 approved, and M1 is built: every app has a manifest in `apps/<id>/`,
-  and a test checks they claim everything in the code exactly once.
+  and a test checks they claim everything in the code exactly once. M2 is built: she answers questions about her
+  apps by voice and on the Apps page.
 - **Next:** Prompt 04, on Opus (DEC-0166 assigns it to Opus), once Zac says go.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
