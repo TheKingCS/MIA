@@ -31,7 +31,7 @@ folded in here.*
 | Q-18 | **Partly answered**: Claude checked the starting sources (proposal 5b) and a source loop keeps improving them; Zac: add or drop an area? the free keys are **skipped for now** (Zac, 2026-11-15); auctions, home stores, import marketplaces and grocery stores added | the first adapters | — |
 | Q-19 | **Answered (2026-11-15)**: no fixed limit on her own messages; pacing learned from what Zac engages with; about four finds a day to start | DEC-0171 | — |
 | Q-20 | **Answered (2026-11-15)**: within 360 miles of the home place (kept in his own data, never in the repo), nearer scoring higher, each trip's cost counted | DEC-0171 | — |
-| Q-21 | Procurement (prompt 19): approve it as World Intelligence's listings half, phases P1–P6? | DEC-0172; `MIA_OS_PROCUREMENT_PROPOSAL.md` | P1 |
+| Q-21 | **Answered yes (2026-11-15)**: procurement approved | DEC-0172 | — |
 | Q-22 | **Answered (2026-11-15)**: his own figures, learned from fill-ups and miles driven (phone now, his vehicle's OBD-II later) | DEC-0171 | — |
 | Q-23 | **Answered (2026-11-15)**: Kroger, Walmart, the dollar stores and three local stores (named in his own data) | DEC-0171 | — |
 | Q-15 | **Answered (2026-11-15)**: Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android. Was: the Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |

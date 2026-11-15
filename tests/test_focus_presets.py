@@ -135,7 +135,7 @@ def test_setup_questions_save_for_that_person(people, qapp):
     dialog._goal_buttons["school"].setChecked(True)
     dialog._goal_buttons["health"].setChecked(True)
     dialog.next_button.click()
-    dialog._speak_group.button(0).setChecked(True)  # rarely
+    dialog._speak_group.button(1).setChecked(True)  # rarely (0 is "as she learns", DEC-0171)
     dialog.next_button.click()
     dialog._notes_edit.setPlainText("I'm studying nursing")
     dialog.next_button.click()

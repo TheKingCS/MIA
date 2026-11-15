@@ -538,12 +538,12 @@ def test_settings_page_and_changing_a_setting(client, context):
     auth = _signed_in(client, context)
     page = client.get("/api/settings", headers=auth).json()
     budget = next(s for g in page["groups"] for s in g["settings"] if s["key"] == "communication.daily_budget")
-    assert budget["value"] == 5 and budget["kind"] == "number"
+    assert budget["value"] == 0 and budget["kind"] == "number"  # no fixed cap by default (DEC-0171)
     assert _do(client, auth, "setting.set", {"key": "communication.daily_budget", "value": "3"}).json()["status"] == "executed"
     page = client.get("/api/settings", headers=auth).json()
     assert next(s for g in page["groups"] for s in g["settings"] if s["key"] == "communication.daily_budget")["value"] == 3
     too_many = _do(client, auth, "setting.set", {"key": "communication.daily_budget", "value": "50"})
-    assert too_many.status_code == 409 and "1 to 20" in too_many.json()["detail"]
+    assert too_many.status_code == 409 and "0 to 20" in too_many.json()["detail"]
     assert _do(client, auth, "setting.set", {"key": "system.active_profile_id", "value": "x"}).status_code == 409
     assert _do(client, auth, "setting.set", {"key": "journal.weekly_reflection", "value": True}).json()["status"] == "executed"
 

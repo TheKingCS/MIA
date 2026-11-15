@@ -3,9 +3,10 @@ core.assistant_notification_actions
 =====================================
 
 Notifications by voice (DEC-0125), for what the Notifications page shows:
-"what are my notifications?" (the unread ones, newest first) and "mark my
+"what are my notifications?" (the unread ones, newest first), "mark my
 notifications read" (the same `notification.read_all` action as the page's
-button). Why one was sent, and muting a kind, were already voice tools
+button) and "that was useful" (`notification.useful` on the latest message
+MIA sent on her own, so her pace for that kind goes up, DEC-0171). Why one was sent, and muting a kind, were already voice tools
 (core/assistant_undo_actions.py).
 """
 
@@ -38,8 +39,26 @@ def _read(context, arguments: dict) -> str:
         return str(problem)
 
 
+def _useful(context, arguments: dict) -> str:
+    """Tool mark_message_useful: the latest message MIA sent on her own was worth hearing (notification.useful)."""
+    from core.actions import ACTION_TYPES, ActionError
+
+    gate = getattr(context, "communication", None)
+    last = gate.last_sent() if gate is not None else None
+    notification_id = (last or {}).get("notification_id", "")
+    if not notification_id:
+        if last and gate.note_engagement(topic=last.get("topic", ""), how="opened"):
+            return "Noted. I'll keep those coming."
+        return "I haven't sent you anything on my own lately."
+    try:
+        return ACTION_TYPES["notification.useful"].execute(context, {"notification_id": notification_id})
+    except ActionError:
+        gate.note_engagement(notification_id=notification_id, how="opened")
+        return "Noted. I'll keep those coming."
+
+
 def register_notification_actions(registry) -> None:
-    """Registers list_notifications and mark_notifications_read."""
+    """Registers list_notifications, mark_notifications_read and mark_message_useful."""
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
         name="list_notifications", domain="system",
@@ -55,4 +74,12 @@ def register_notification_actions(registry) -> None:
         trigger_phrases=("mark my notifications read", "mark notifications read", "clear my notifications",
                          "mark them all read"),
         subjects=("notification",),
+    ))
+    registry.register(AssistantAction(
+        name="mark_message_useful", domain="system",
+        description="The last message MIA sent on her own was useful: she'll send that kind more.",
+        parameters=none, handler=_useful,
+        trigger_phrases=("that was useful", "that was helpful", "good tip", "thanks for telling me",
+                         "keep telling me about that"),
+        subjects=("notification", "message"),
     ))

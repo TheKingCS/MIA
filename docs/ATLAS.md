@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1411 files, 314,137 lines; 1411 files describe themselves; 17,225 of 17,320 classes and functions are documented.
+1411 files, 314,394 lines; 1411 files describe themselves; 17,238 of 17,333 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-539 files, 155,454 lines; 7,990 of 8,076 classes and functions documented
+539 files, 155,648 lines; 7,998 of 8,084 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -59,7 +59,7 @@
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
 - `core/assistant_lookup.py`: How Assistant actions find the user's own records from the words they actually say. People say "the truck" and "did the oil", not "Pickup Truck" and "Oil change", and the model can only pass on their words.
 - `core/assistant_more_twins_actions.py`: More voice twins for what the screens change (DEC-0125, 2026-11-08), each through the screen's own action kind (core/assistant_correction_actions.py `_run`: the screen's checks and sentence, and "undo that"):
-- `core/assistant_notification_actions.py`: Notifications by voice (DEC-0125), for what the Notifications page shows: "what are my notifications?" (the unread ones, newest first) and "mark my notifications read" (the same `notification.read_all` action as the page's button). Why one was sent, and muting a kind, were already voice tools (core/
+- `core/assistant_notification_actions.py`: Notifications by voice (DEC-0125), for what the Notifications page shows: "what are my notifications?" (the unread ones, newest first), "mark my notifications read" (the same `notification.read_all` action as the page's button) and "that was useful" (`notification.useful` on the latest message MIA s
 - `core/assistant_ownership_actions.py`: "Whose truck is it?" and "the mower is mine" (core/ownership.py, 2026-10-01): owner marks on maintenance items (vehicles, tools, appliances).
 - `core/assistant_path_actions.py`: Learning paths by voice (DEC-0112; core/paths.py): any desire, the same loop. "I want to learn guitar" starts the guitar program; "I want to learn to weld", with no program for it, has MIA draft one (grounded in her specialists' notes) and describe it, and "start it" starts it. Then lessons, practic
 - `core/assistant_plan_actions.py`: The Library's plans by voice (core/plan_library.py): "do we have plans for a chicken coop?", "what do I need for a 10 by 12 shed?", "make me a cut list for a 4 by 8 raised bed", "what do I still need to buy for the fence?", "where can I get free barn plans?", "start the shed as a project". The numbe
@@ -685,7 +685,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,630 lines; 1,025 of 1,025 classes and functions documented
+93 files, 22,631 lines; 1,025 of 1,025 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -828,7 +828,7 @@
 
 ## tests/: the test suite: what each part must do
 
-484 files, 81,531 lines; 6,922 of 6,931 classes and functions documented
+484 files, 81,585 lines; 6,927 of 6,936 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -898,7 +898,7 @@
 - `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py.
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).
-- `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, and a scripted day.
+- `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, a scripted day, and the learned pace per kind of message that replaced the fixed daily cap (DEC-0171).
 - `tests/test_component_manager.py`: Unit tests for core.component_manager. Isolates _DATA_DIR/_COMPONENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_config_manager.py`: Unit tests for core.config_manager.ConfigManager.
 - `tests/test_connections.py`: The magic is in the connections (core/connections.py, Zac 2026-11-08): a remark that ties into something started weeks ago is noticed, held, raised once in a later conversation if it fits, then let go. These check the two ways a tie is found (the link graph, shared words), the guards (a week old at 
@@ -1317,7 +1317,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-111 files, 20,539 lines
+111 files, 20,547 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

@@ -15,7 +15,9 @@ Design:
   the shared EventBus. GUI components (the toast popup, the header
   bell count) subscribe to this rather than NotificationManager knowing
   anything about the GUI — same separation of concerns as every other
-  core service in this project.
+  core service in this project. Opening one on purpose (`mark_read`)
+  publishes "notification.opened" and dismissing one "notification.dismissed",
+  which the communication gate learns its pace from (DEC-0171).
 - Three severity levels only (info/warning/critical), matching the
   same vocabulary as Python's own logging levels conceptually, kept
   intentionally simple rather than building a whole priority system.
@@ -207,6 +209,18 @@ class NotificationManager:
             n.read = True
         self._save()
         self.context.events.publish("notification.updated")
+
+    def mark_read(self, notification_id: str) -> bool:
+        """Marks one notification read because the person opened it or found it useful, publishing
+        notification.opened so the communication gate learns its pace from it (DEC-0171). False when it isn't here."""
+        found = next((n for n in self._notifications if n.notification_id == notification_id), None)
+        if found is None:
+            return False
+        found.read = True
+        self._save()
+        self.context.events.publish("notification.opened", notification_id=notification_id)
+        self.context.events.publish("notification.updated")
+        return True
 
     def dismiss(self, notification_id: str) -> None:
         """Dismisses one notification on purpose, publishing notification.dismissed so the communication gate learns

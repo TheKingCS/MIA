@@ -197,7 +197,8 @@ other people in the house.
   *unprompted* message (daily checks, insights, suggestions, missions MIA
   assigns) goes through `context.communication.offer(Candidate(...))`,
   never straight to `notifications.notify()`: it merges, rate-limits
-  (owner's limit: 5/day), drops repeats and logs every decision. Replies
+  (no fixed daily cap: each kind of message is paced by what the person
+  opens, uses or dismisses, DEC-0171), drops repeats and logs every decision. Replies
   to something the user just did, alarms and low battery stay direct.
 - **Email** (`core/email_drafts.py`, `core/mail_send.py`) — the Assistant
   only drafts; an email is sent only when a person presses Send (desktop

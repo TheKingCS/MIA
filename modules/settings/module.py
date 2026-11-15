@@ -410,8 +410,9 @@ class SettingsModule(ModuleBase):
         speak_row = QHBoxLayout()
         speak_row.addWidget(QLabel("Messages per day, at most:"))
         self._daily_budget_spin = QSpinBox()
-        self._daily_budget_spin.setRange(1, 20)
-        self._daily_budget_spin.setValue(int(person_settings.get(self.context, "communication.daily_budget", 5)))
+        self._daily_budget_spin.setRange(0, 20)
+        self._daily_budget_spin.setSpecialValueText("No fixed limit (learned)")  # 0: paced per kind by what you open
+        self._daily_budget_spin.setValue(int(person_settings.get(self.context, "communication.daily_budget", 0) or 0))
         self._daily_budget_spin.valueChanged.connect(self._on_daily_budget_changed)
         speak_row.addWidget(self._daily_budget_spin)
         speak_row.addStretch(1)

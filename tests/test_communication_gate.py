@@ -1,7 +1,8 @@
 """
 Slice C, "Know when to speak" (core/communication_gate.py): every rule
 with a fake clock, the persisted gate with delivery and deferral, the
-daily checks routed through it, and a scripted day.
+daily checks routed through it, a scripted day, and the learned pace per
+kind of message that replaced the fixed daily cap (DEC-0171).
 """
 
 import json
@@ -173,9 +174,60 @@ def test_deferred_is_retried_when_due_and_expired_is_dropped(ctx):
 
 
 def test_settings_come_from_config_and_limit_is_clamped(ctx):
-    assert ctx.communication.settings() == SETTINGS
-    assert ctx.communication.set_daily_budget(50) == 20 and ctx.communication.set_daily_budget(0) == 1
-    assert ctx.config.get("communication.daily_budget") == 1
+    assert ctx.communication.settings() == {**SETTINGS, "daily_budget": 0}  # no fixed cap by default (DEC-0171)
+    assert ctx.communication.set_daily_budget(50) == 20 and ctx.communication.set_daily_budget(-3) == 0
+    assert ctx.config.get("communication.daily_budget") == 0
+
+
+# ------------------------------------------------------------------ the learned pace (DEC-0171)
+
+
+def _sent_entry(at, topic, **marks):
+    """A delivered message of one kind in the log, with what was done with it."""
+    return {"at": at.isoformat(timespec="seconds"), "key": f"{topic}{at}", "topic": topic, "urgency": AMBIENT,
+            "action": "act", **marks}
+
+
+def test_a_kind_starts_at_its_own_pace_and_world_finds_start_at_four():
+    from core.communication_gate import learned_allowance
+
+    assert learned_allowance([], "budget_nudge", MORNING) == (2, "I'm still learning how often you want these")
+    assert learned_allowance([], "world_find", MORNING)[0] == 4
+
+
+def test_the_pace_doubles_for_what_is_opened_and_halves_for_what_is_passed_over():
+    from core.communication_gate import learned_allowance
+
+    days = [MORNING - timedelta(days=d) for d in range(3, 8)]
+    opened = [_sent_entry(d, "world_find", opened_at=d.isoformat()) for d in days[:4]] + [_sent_entry(days[4], "world_find")]
+    assert learned_allowance(opened, "world_find", MORNING) == (8, "you've opened or used most of these lately")
+    ignored = [_sent_entry(d, "tip") for d in days]  # never opened, all older than two days
+    assert learned_allowance(ignored, "tip", MORNING) == (1, "you've passed on most of these lately")
+    fresh = [_sent_entry(MORNING - timedelta(hours=h), "tip") for h in (1, 2, 3)]  # too new to judge
+    assert learned_allowance(fresh, "tip", MORNING)[0] == 2
+
+
+def test_with_no_fixed_cap_each_kind_is_held_to_its_own_pace():
+    state = GateState(allowances={"tip": (1, "you've passed on most of these lately"), "world_find": (4, "")})
+    state.sent = [sent(MORNING - timedelta(hours=3), c("tip", message="earlier tip"))]
+    noon = MORNING + timedelta(hours=5)
+    finds = [c("world_find", message=f"find {i}") for i in range(5)]
+    decisions = decide_batch([c("tip")] + finds, noon, state, {**SETTINGS, "daily_budget": 0})
+    assert decisions[0].action == DROP and "already told you 1 of these today" in decisions[0].reason
+    assert [d.action for d in decisions[1:]] == [ACT, ACT, ACT, ACT, DROP]
+    many = [c(f"kind{i}") for i in range(9)]  # nine kinds at once: no overall cap, one digest
+    assert all(d.action == ACT for d in decide_batch(many, noon, GateState(), {**SETTINGS, "daily_budget": 0}))
+
+
+def test_opening_one_of_her_messages_or_saying_it_was_useful_counts_for_its_kind(ctx):
+    now = datetime.now().replace(microsecond=0)
+    ctx.communication.offer(c("world_find"), now)
+    entry = ctx.communication.last_sent()
+    assert ctx.communication.note_engagement(topic="world_find", how="acted", now=now)
+    assert ctx.communication.last_sent()["acted_at"] and not entry.get("opened_at")
+    assert not ctx.communication.note_engagement(topic="world_find", how="acted", now=now)  # already marked
+    ctx.events.publish("notification.opened", notification_id="")  # no id: nothing to mark
+    assert any(p["topic"] == "world_find" for p in ctx.communication.pace(now))
 
 
 def test_mid_vent_counts_as_busy(ctx):
@@ -276,8 +328,10 @@ def test_held_back_and_limit_tools(ctx):
     ctx.communication.offer(c("first"), now)
     ctx.communication.offer_batch([c("calendar", TIMELY), c("tip")], now + timedelta(seconds=1))
     reply = say("get_held_back_messages")
-    assert reply.startswith("Today I spoke up 1 time (your limit is 5).")
+    assert reply.startswith("Today I spoke up 1 time.")
     assert "Still waiting to tell you: Calendar: calendar message." in reply and "I let these go: Tip (" in reply
+    assert "no fixed limit" in say("set_message_limit")
     assert say("set_message_limit", count=3).startswith("Okay: at most 3 times a day")
     assert say("set_message_limit", direction="less").startswith("Okay: at most 2 times a day")
     assert "at most 2 times a day" in say("set_message_limit")
+    assert say("set_message_limit", count=0).startswith("Okay: no fixed limit")

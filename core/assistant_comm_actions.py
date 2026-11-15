@@ -15,8 +15,9 @@ from core.communication_gate import ACT, DEFER, DROP
 
 
 def _action_get_held_back_messages(context: AppContext, arguments: dict) -> str:
-    """Tool get_held_back_messages: how often she spoke up today against the daily limit, what's still
-    waiting to be said, what she let go and why, and the kinds of message she's taking a break from.
+    """Tool get_held_back_messages: how often she spoke up today (against the daily limit when one is set;
+    otherwise paced per kind, DEC-0171), what's still waiting to be said, what she let go and why, and the
+    kinds of message she's taking a break from.
     """
     gate = getattr(context, "communication", None)
     if gate is None:
@@ -24,11 +25,13 @@ def _action_get_held_back_messages(context: AppContext, arguments: dict) -> str:
     entries = gate.entries_for_day()
     sent = [e for e in entries if e["action"] == ACT]
     held = [e for e in entries if e["action"] in (DEFER, DROP)]
-    limit = gate.settings()["daily_budget"]
+    limit = int(gate.settings()["daily_budget"] or 0)
     breaks = _describe_breaks(gate)
+    rule = f"Your limit is {limit} a day." if limit else "There's no fixed limit: I pace each kind by what you do with it."
     if not entries:
-        return f"I haven't had anything to say on my own today. Your limit is {limit} a day." + breaks
-    parts = [f"Today I spoke up {len(sent)} time{'s' if len(sent) != 1 else ''} (your limit is {limit})."]
+        return f"I haven't had anything to say on my own today. {rule}" + breaks
+    parts = [f"Today I spoke up {len(sent)} time{'s' if len(sent) != 1 else ''}"
+             + (f" (your limit is {limit})." if limit else ".")]
     if not held:
         parts.append("I didn't hold anything back.")
     else:
@@ -75,27 +78,33 @@ def _action_resume_message_topic(context: AppContext, arguments: dict) -> str:
 
 
 def _action_set_message_limit(context: AppContext, arguments: dict) -> str:
-    """Tool set_message_limit: how many times a day she may speak up on her own, to a number or one
-    more or fewer; urgent things, alarms and answers never count.
+    """Tool set_message_limit: a fixed cap on how many times a day she may speak up on her own, to a number
+    (0 for none: she paces each kind by what you do with it, DEC-0171) or one more or fewer; urgent things,
+    alarms and answers never count.
     """
     gate = getattr(context, "communication", None)
     if gate is None:
         return "I can't change that on this device."
-    current = int(gate.settings()["daily_budget"])
+    current = int(gate.settings()["daily_budget"] or 0)
     count = arguments.get("count")
     direction = str(arguments.get("direction") or "").lower()
     if count not in (None, ""):
         try:
             new = int(float(count))
         except (TypeError, ValueError):
-            return f"How many times a day? Right now it's {current}."
+            return f"How many times a day? Right now it's {current or 'no fixed limit'}."
     elif direction in ("less", "fewer", "down"):
-        new = current - 1
+        new = (current or 5) - 1
     elif direction in ("more", "up"):
-        new = current + 1
+        new = current + 1 if current else 0
     else:
+        if not current:
+            return ("There's no fixed limit: I pace each kind of message by what you open, use or dismiss. "
+                    "Want a cap?")
         return f"Right now I speak up on my own at most {current} times a day. Want more or fewer?"
     new = gate.set_daily_budget(new)
+    if new == 0:
+        return "Okay: no fixed limit. I'll pace each kind of message by what you open, use or dismiss."
     return (
         f"Okay: at most {new} time{'s' if new != 1 else ''} a day on my own. "
         "Urgent things, alarms you set and answers to you don't count."

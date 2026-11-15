@@ -76,7 +76,7 @@
         "language": "eng"
     },
     "communication": {
-        "daily_budget": 5,
+        "daily_budget": 0,
         "min_spacing_minutes": 90,
         "repeat_days": 7
     },

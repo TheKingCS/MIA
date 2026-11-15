@@ -11,8 +11,10 @@ own (through the communication gate) also says why, in the gate's own words
 (core/message_reasons.explain), so "why did you tell me that?" has an answer
 on the screen too.
 
-Changes are actions: `notification.read_all` and `notification.dismiss`
-(dismissing one on purpose teaches the gate, as on the desktop). The same by
+Changes are actions: `notification.read_all`, `notification.dismiss`
+(dismissing one on purpose teaches the gate, as on the desktop) and
+`notification.useful` (one of her own messages was worth it: read, and her
+pace for that kind goes up, DEC-0171). The same by
 voice in core/assistant_notification_actions.py. The web only draws.
 
 Also **Waiting for the Internet** (core/online_watch.OnlineReminders,
@@ -109,6 +111,13 @@ def _dismiss(context, params) -> str:
     return f"Dismissed “{found.title}”."
 
 
+def _useful(context, params) -> str:
+    """Does `notification.useful`: marks it read and tells the gate it was worth hearing (DEC-0171)."""
+    found = _one(context, params)
+    _need(context, "notifications").mark_read(found.notification_id)
+    return f"Noted: “{found.title}” was useful. I'll keep these coming."
+
+
 def _remind(context, params) -> str:
     """Does `online.remind`: keeps a reminder for when the internet is back."""
     what = " ".join(str(params.get("what") or "").split())
@@ -137,6 +146,8 @@ NOTIFICATION_ACTIONS = {k.kind: k for k in (
     ActionType("notification.read_all", "Mark All Read", {}, _describe_read_all, _read_all),
     ActionType("notification.dismiss", "Dismiss", {"notification_id": "the notification"},
                lambda c, p: f"Dismiss “{_one(c, p).title}”", _dismiss),
+    ActionType("notification.useful", "Useful", {"notification_id": "the notification"},
+               lambda c, p: f"Mark “{_one(c, p).title}” useful", _useful),
     ActionType("online.remind", "Remind Me Online", {"what": "what to be reminded of"},
                lambda c, p: f"Remind you once the internet is back: {' '.join(str(p.get('what') or '').split())}", _remind),
     ActionType("online.forget", "Don't Remind Me", {"index": "which reminder"},

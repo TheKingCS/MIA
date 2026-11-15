@@ -320,11 +320,11 @@ def test_settings_are_each_persons_own(device):
     assert trusted_contact_from(faith_view) is None  # nobody inherits someone else's contact
     person_settings.put(faith_view, "communication.daily_budget", 2)
     assert person_settings.get(faith_view, "communication.daily_budget", 5) == 2
-    assert person_settings.get(zac_view, "communication.daily_budget", 5) == 5
-    assert person_settings.get(context, "communication.daily_budget", 5) == 5  # Zac is signed in
+    assert person_settings.get(zac_view, "communication.daily_budget", 5) == 0  # the default: no fixed cap
+    assert person_settings.get(context, "communication.daily_budget", 5) == 0  # Zac is signed in
     context.profiles.set_active_profile(faith.profile_id)
     assert person_settings.get(context, "communication.daily_budget", 5) == 2
-    assert context.config.get("communication.daily_budget") == 5  # the device-wide value is untouched
+    assert context.config.get("communication.daily_budget") == 0  # the device-wide value is untouched
 
 
 def test_notifications_are_each_persons_own(device):

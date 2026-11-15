@@ -23,12 +23,26 @@ together:
 3. **Is the user available?** Not while they're mid-conversation in a
    personal mode (venting, journaling, perspective): timely things wait
    30 minutes, ambient things are dropped.
-4. **Spoken recently / daily budget.** At most `daily_budget` unprompted
-   messages a day (owner's choice: 5) and `min_spacing_minutes` between
-   them. Timely things that can't go now wait for the next opening;
-   ambient things are dropped, never queued, so there's never a backlog.
+4. **A pace per kind, learned** (DEC-0171, Zac 2026-11-15: "There
+   shouldn't be a limit on messages she starts herself ... But should learn
+   what you do interact with to adapt to you"). There's no fixed daily cap
+   unless the person sets one (`daily_budget`, 0 = none, the default). Each
+   kind of message (its topic) has a pace a day (`TOPIC_DAILY`, else
+   `DEFAULT_TOPIC_DAILY`) that `learned_allowance()` moves from what was
+   done with its last few: opened, found useful or acted on raise it;
+   dismissed or left unread lower it. `min_spacing_minutes` between
+   messages stays. Timely things that can't go now wait for the next
+   opening; ambient things are dropped, never queued, so there's never a
+   backlog.
 5. **Consolidation.** Everything that passes in one batch goes out as
    **one** message and counts once against the budget.
+
+**What counts as engaging** (`note_engagement`): the person opening the
+notification or marking it useful (`notification.opened`, from the
+notifications screen or the "that was useful" tool), and any part of MIA
+that sees the person act on what a message was about (World Intelligence:
+saving or researching a find). Each is written on the message's log entry
+(`opened_at`, `acted_at`), the same way a dismissal is.
 
 **Learning from being ignored** (2026-09-28): each delivered message
 remembers its notification. Closing one with its X (not "clear all", not
@@ -81,7 +95,16 @@ _BUSY_DEFER = timedelta(minutes=30)
 _BUSY_WINDOW = timedelta(minutes=30)
 _KEEP_LOG_DAYS = 30
 
-DEFAULT_SETTINGS = {"daily_budget": 5, "min_spacing_minutes": 90, "repeat_days": 7}
+DEFAULT_SETTINGS = {"daily_budget": 0, "min_spacing_minutes": 90, "repeat_days": 7}  # 0: no fixed cap (DEC-0171)
+
+# Her pace a day for each kind of message before anything's learned (DEC-0171). World Intelligence's finds start at
+# about four a day (Zac, 2026-11-15); every other kind starts at two.
+DEFAULT_TOPIC_DAILY = 2
+TOPIC_DAILY = {"world_find": 4}
+_LEARN_LOOKBACK = 8  # the last this-many messages of a kind are what the pace is learned from...
+_LEARN_WITHIN = timedelta(days=30)  # ...if they're this recent
+_LEARN_MIN = 3  # fewer reactions than this and she's still learning: the starting pace
+_IGNORED_AFTER = timedelta(days=2)  # a message nobody opened, dismissed or acted on in this long was passed over
 
 PAUSE_DAYS = 14
 _PAUSE_LOOKBACK = 4  # the last this-many messages of a kind...
@@ -127,12 +150,14 @@ class Decision:
 @dataclass
 class GateState:
     """What decide_batch() needs to know: what's been sent, whether the person is mid-conversation in a personal
-    mode or in flow getting things done (core/momentum.py), and what's paused."""
+    mode or in flow getting things done (core/momentum.py), what's paused, and each offered kind's learned pace a
+    day with its reason (`allowances`, DEC-0171)."""
 
     sent: list[dict] = field(default_factory=list)  # {at, key, topic, urgency, digest_id}
     user_busy: bool = False
     in_flow: bool = False  # getting things done right now (core/momentum.py, DEC-0148): non-urgent waits
     paused: dict = field(default_factory=dict)  # topic -> until (datetime), from paused_topics()
+    allowances: dict = field(default_factory=dict)  # topic -> (a day, why), from learned_allowance()
 
 
 def _parse(iso: str) -> Optional[datetime]:
@@ -157,6 +182,44 @@ def _unprompted_sends_today(state: GateState, now: datetime) -> list[datetime]:
         seen_digests.add(digest)
         times.append(at)
     return times
+
+
+def _topic_sends_today(state: GateState, topic: str, now: datetime) -> int:
+    """How many messages of one kind went out today (not urgent ones)."""
+    count = 0
+    for entry in state.sent:
+        at = _parse(entry.get("at", ""))
+        if at is not None and at.date() == now.date() and entry.get("topic") == topic and entry.get("urgency") != URGENT:
+            count += 1
+    return count
+
+
+def learned_allowance(log: list[dict], topic: str, now: datetime, base: Optional[int] = None) -> tuple[int, str]:
+    """Pure logic. How many messages of this kind a day she'll offer now, and why, from what the person did with the
+    last few (DEC-0171). Each one sent in the last 30 days counts as engaged (opened, found useful, acted on), passed
+    over (dismissed, or nothing done with it for two days) or not yet known. With fewer than three known, it's the
+    starting pace. Mostly engaged doubles it; mostly passed over halves it (never below one: a kind that keeps being
+    dismissed is paused instead, by paused_topics)."""
+    base = int(base if base is not None else TOPIC_DAILY.get(topic, DEFAULT_TOPIC_DAILY))
+    entries = sorted((e for e in log if e.get("action") == ACT and e.get("topic") == topic
+                      and e.get("urgency") != URGENT), key=lambda e: e.get("at", ""))
+    engaged = passed = 0
+    for entry in entries[-_LEARN_LOOKBACK:]:
+        sent_at = _parse(entry.get("at", ""))
+        if sent_at is None or now - sent_at > _LEARN_WITHIN:
+            continue
+        if entry.get("opened_at") or entry.get("acted_at"):
+            engaged += 1
+        elif entry.get("dismissed_at") or now - sent_at >= _IGNORED_AFTER:
+            passed += 1
+    known = engaged + passed
+    if known < _LEARN_MIN:
+        return base, "I'm still learning how often you want these"
+    if engaged / known >= 0.6:
+        return base * 2, "you've opened or used most of these lately"
+    if passed / known >= 0.75:
+        return max(1, base // 2), "you've passed on most of these lately"
+    return base, "you open some of these and pass on others"
 
 
 def paused_topics(log: list[dict], now: datetime, resumed: Optional[dict] = None) -> dict:
@@ -187,8 +250,10 @@ def paused_topics(log: list[dict], now: datetime, resumed: Optional[dict] = None
 
 
 def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, settings: dict) -> list[Decision]:
-    """Pure logic. One Decision per candidate, in order. In flow (DEC-0148), everything but the urgent waits."""
-    budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]))
+    """Pure logic. One Decision per candidate, in order. In flow (DEC-0148), everything but the urgent waits. Each
+    kind's learned pace a day (`state.allowances`) holds back what's past it; a fixed cap applies only when the person
+    set one (`daily_budget` above 0)."""
+    budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]) or 0)
     spacing = timedelta(minutes=int(settings.get("min_spacing_minutes", DEFAULT_SETTINGS["min_spacing_minutes"])))
     repeat_window = timedelta(days=int(settings.get("repeat_days", DEFAULT_SETTINGS["repeat_days"])))
 
@@ -224,6 +289,18 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
             else:
                 decisions.append(Decision(candidate, DROP, "you were in the middle of a conversation"))
             continue
+        allowed, why = state.allowances.get(candidate.topic, (None, ""))
+        if allowed is not None:
+            already = _topic_sends_today(state, candidate.topic, now) + sum(1 for p in passing if p.topic == candidate.topic)
+            if already >= allowed:
+                reason = f"already told you {already} of these today ({why})"
+                if candidate.urgency == TIMELY:
+                    candidate.not_before = datetime.combine(now.date() + timedelta(days=1),
+                                                            datetime.min.time()).replace(hour=7).isoformat(timespec="seconds")
+                    decisions.append(Decision(candidate, DEFER, reason))
+                else:
+                    decisions.append(Decision(candidate, DROP, reason))
+                continue
         decisions.append(Decision(candidate, ACT, ""))  # provisional, settled below
         passing.append(candidate)
         passing_ids.add(id(candidate))
@@ -234,7 +311,7 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
     sends_today = _unprompted_sends_today(state, now)
     blocked_reason = ""
     next_opening = None
-    if len(sends_today) >= budget:
+    if budget > 0 and len(sends_today) >= budget:
         blocked_reason = f"already said {len(sends_today)} things today (your limit is {budget})"
         next_opening = datetime.combine(now.date() + timedelta(days=1), datetime.min.time()).replace(hour=7)
     elif sends_today and now - max(sends_today) < spacing:
@@ -277,7 +354,8 @@ class CommunicationGate:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
         """The person's gate: its decision log, what's waiting, breaks they've taken from a topic (and ended), from
-        communication_log.json in their folder; listens for notification.dismissed. `clock` can be replaced in tests.
+        communication_log.json in their folder; listens for notification.dismissed and notification.opened, which
+        shape each kind's learned pace (DEC-0171). `clock` can be replaced in tests.
         """
         self.data_dir = Path(data_dir) if data_dir is not None else _LOG_FILE.parent
         self._log_file = self.data_dir / _LOG_FILE.name if data_dir is not None else _LOG_FILE
@@ -291,6 +369,7 @@ class CommunicationGate:
         events = getattr(context, "events", None)
         if events is not None:
             events.subscribe("notification.dismissed", self._on_notification_dismissed)
+            events.subscribe("notification.opened", self._on_notification_opened)
 
     # ------------------------------------------------------------------
     # Persistence
@@ -330,10 +409,11 @@ class CommunicationGate:
                 for key, default in DEFAULT_SETTINGS.items()}
 
     def set_daily_budget(self, count: int) -> int:
-        """Sets how many unprompted messages a day the person allows (1 to 20; their own setting)."""
+        """Sets a fixed cap on her own messages a day (1 to 20), or 0 for none: she paces each kind by what the person
+        does with it (DEC-0171). Their own setting."""
         from core import person_settings
 
-        count = max(1, min(20, int(count)))
+        count = max(0, min(20, int(count)))
         person_settings.put(self.context, "communication.daily_budget", count)
         return count
 
@@ -361,11 +441,26 @@ class CommunicationGate:
         updated = _parse(conversation.updated_at)
         return updated is not None and now - updated <= _BUSY_WINDOW
 
-    def _state(self, now: datetime) -> GateState:
-        """What the decision needs now: what's been sent, whether the person is busy or in flow, and whether everything is paused."""
+    def _state(self, now: datetime, topics=()) -> GateState:
+        """What the decision needs now: what's been sent, whether the person is busy or in flow, what's paused, and the
+        learned pace of each kind among `topics`."""
         sent = [e for e in self._log if e.get("action") == ACT]
         return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now),
-                         in_flow=self._in_flow(now))
+                         in_flow=self._in_flow(now),
+                         allowances={t: learned_allowance(self._log, t, now) for t in set(topics) if t})
+
+    def pace(self, now: Optional[datetime] = None) -> list[dict]:
+        """Her learned pace for each kind of message she's sent lately: [{topic, label, a_day, why}], busiest first."""
+        now = now or self.clock()
+        labels = {}
+        for e in self._log:
+            if e.get("action") == ACT and e.get("topic") and e.get("urgency") != URGENT:
+                labels[e["topic"]] = e.get("title", "") or e["topic"].replace("_", " ")
+        rows = []
+        for topic, label in labels.items():
+            a_day, why = learned_allowance(self._log, topic, now)
+            rows.append({"topic": topic, "label": label, "a_day": a_day, "why": why})
+        return sorted(rows, key=lambda r: (-r["a_day"], r["label"]))
 
     def _all_paused(self, now: datetime) -> dict:
         """Breaks from dismissing a kind of message, and ones asked for."""
@@ -385,7 +480,8 @@ class CommunicationGate:
         return self.offer_batch([candidate], now)
 
     def offer_batch(self, candidates: list[Candidate], now: Optional[datetime] = None) -> list[Decision]:
-        """Decide, deliver, log. Also retries anything deferred that's now due."""
+        """Decide (with each offered kind's learned pace), deliver, log. Also retries anything deferred that's now
+        due."""
         now = now or datetime.now()
         pending_before = len(self._pending)
         candidates = self._take_due_pending(now) + list(candidates)
@@ -393,7 +489,7 @@ class CommunicationGate:
             if len(self._pending) != pending_before:
                 self._save(now)  # expired ones were dropped and logged
             return []
-        decisions = decide_batch(candidates, now, self._state(now), self.settings())
+        decisions = decide_batch(candidates, now, self._state(now, [c.topic for c in candidates]), self.settings())
 
         digest_members = [d.candidate for d in decisions if d.action == ACT and d.delivered_as == "digest"]
         digest_id = hashlib.sha1(f"{now.isoformat()}|digest".encode()).hexdigest()[:12] if digest_members else ""
@@ -462,10 +558,39 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def close(self) -> None:
-        """Stop listening (a replaced store, core/personal_data.py)."""
+        """Stop listening for dismissed and opened notifications (a replaced store, core/personal_data.py)."""
         events = getattr(self.context, "events", None)
         if events is not None:
             events.unsubscribe("notification.dismissed", self._on_notification_dismissed)
+            events.unsubscribe("notification.opened", self._on_notification_opened)
+
+    def _on_notification_opened(self, notification_id: str = "", **_kwargs) -> None:
+        """When the person opens one of her messages, or marks it useful: engagement for its kind's pace."""
+        self.note_engagement(notification_id=notification_id, how="opened")
+
+    def note_engagement(self, topic: str = "", notification_id: str = "", how: str = "acted",
+                        now: Optional[datetime] = None) -> bool:
+        """The person engaged with something she said on her own (DEC-0171): `how` is "opened" (they opened it or
+        found it useful) or "acted" (they did something with what it was about). Marks the message carrying
+        `notification_id`, else the latest of that `topic` not marked yet. True when one was marked."""
+        now = now or self.clock()
+        field_name = "opened_at" if how == "opened" else "acted_at"
+        target = None
+        for entry in reversed(self._log):
+            if entry.get("action") != ACT or entry.get(field_name):
+                continue
+            if (notification_id and entry.get("notification_id") == notification_id) or (
+                    not notification_id and topic and entry.get("topic") == topic):
+                target = entry
+                break
+        if target is None:
+            return False
+        target[field_name] = now.isoformat(timespec="seconds")
+        try:
+            self._save(now)
+        except OSError:
+            log.exception("Couldn't save communication_log.json.")
+        return True
 
     def _on_notification_dismissed(self, notification_id: str = "", **_kwargs) -> None:
         """When the person dismisses a message MIA sent, notes when on its log entry (what the dismissed-message

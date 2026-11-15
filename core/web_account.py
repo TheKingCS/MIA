@@ -69,9 +69,10 @@ SETTINGS: tuple[Setting, ...] = (
     Setting("display.theme", "Look", "Theme", "choice", DEFAULT_THEME,
             "Colours, type, materials and light, in either look. Or tell MIA: \"switch to the Y2K theme\".",
             options=tuple((t.id, t.name) for t in THEMES.values())),
-    Setting("communication.daily_budget", "When MIA speaks up", "Messages per day, at most", "number", 5,
-            "Her own messages (calendar, budget, check-ins, suggestions) are combined and limited per day. "
-            "Urgent things, alarms you set and answers to you don't count.", low=1, high=20),
+    Setting("communication.daily_budget", "When MIA speaks up", "Messages per day, at most", "number", 0,
+            "0 means no fixed limit: she learns how often you want each kind of message from what you open, use or "
+            "dismiss (DEC-0171). Set a number to cap her own messages a day. Urgent things, alarms you set and "
+            "answers to you don't count.", low=0, high=20),
     Setting("journal.weekly_reflection", "When MIA speaks up", "Weekly journal reflection", "toggle", False,
             "If you journaled that week, MIA lets you know a reflection is ready. The notice never shows what "
             "you wrote."),

@@ -36,11 +36,15 @@
   function messages(m) {
     if (!m.available) return null;
     const limit = async () => {
-      const v = await MIAShell.form("How often MIA speaks up", [{ name: "count", label: "At most this many times a day (urgent things and answers don't count)", type: "int", required: true }], { count: m.limit });
+      const v = await MIAShell.form("How often MIA speaks up", [{ name: "count", label: "At most this many times a day, or 0 for no fixed limit (she learns from what you open). Urgent things and answers don't count.", type: "int", required: true }], { count: m.limit });
       if (v) MIAShell.act({ kind: "comms.limit", params: { count: v.count } });
     };
     return card("MIA's Messages Today",
-      el("p", {}, "She spoke up " + m.said_today + " of " + m.limit + " time" + (m.limit === 1 ? "" : "s") + " allowed today."),
+      el("p", {}, m.limit ? "She spoke up " + m.said_today + " of " + m.limit + " time" + (m.limit === 1 ? "" : "s") + " allowed today."
+        : "She spoke up " + m.said_today + " time" + (m.said_today === 1 ? "" : "s") + " today. No fixed limit: she paces each kind by what you open, use or dismiss."),
+      (m.pace || []).length ? el("div", { class: "rows" }, el("p", { class: "pw-label" }, "Her Pace"), m.pace.map((p) => el("div", { class: "row money-row" },
+        el("div", {}, el("div", { class: "row-title" }, p.label), el("div", { class: "row-sub" }, p.why)),
+        el("span", { class: "row-meta" }, p.a_day + " a day")))) : null,
       m.held.length ? el("div", { class: "rows" }, m.held.map((h) => el("div", { class: "row money-row" },
         el("div", {}, el("div", { class: "row-title" }, h.title), el("div", { class: "row-sub" }, h.message)),
         el("span", { class: "row-meta comms-note" }, h.waiting ? "Waiting" : "Let go: " + h.reason)))) : el("p", { class: "dim" }, "Nothing held back today."),

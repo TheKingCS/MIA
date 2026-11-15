@@ -62,7 +62,8 @@ def _drafts(context) -> dict:
 
 
 def _messages(context) -> dict:
-    """What MIA said on her own today and what she held back, her daily limit, and the kinds of message on a break."""
+    """What MIA said on her own today and what she held back, her daily limit (0: none, paced as she learns), her
+    learned pace per kind of message, and the kinds of message on a break."""
     gate = getattr(context, "communication", None)
     if gate is None:
         return {"available": False}
@@ -72,8 +73,10 @@ def _messages(context) -> dict:
     held = [{"title": e.get("title", ""), "message": e.get("message", ""), "reason": e.get("reason", ""),
              "waiting": e["action"] == DEFER} for e in entries if e["action"] in (DEFER, DROP)]
     paused = [{"topic": p["topic"], "label": p["label"], "until": f"{p['until']:%b %d}"} for p in gate.paused()]
+    pace = [{"label": p["label"], "a_day": p["a_day"], "why": p["why"]} for p in gate.pace()] \
+        if hasattr(gate, "pace") else []
     return {"available": True, "said_today": sum(1 for e in entries if e["action"] == ACT),
-            "limit": int(gate.settings()["daily_budget"]), "held": held, "paused": paused}
+            "limit": int(gate.settings()["daily_budget"] or 0), "held": held, "paused": paused, "pace": pace}
 
 
 def comms_page(context, now: Optional[datetime] = None) -> dict:
@@ -103,12 +106,15 @@ def _gate(context):
 
 
 def _limit(context, params) -> str:
-    """Does comms.limit: how many times a day MIA may speak up on her own."""
+    """Does comms.limit: a fixed cap on how many times a day MIA may speak up on her own, or 0 for none (she paces
+    each kind by what you do with it, DEC-0171)."""
     try:
         wanted = int(float(params.get("count")))
     except (TypeError, ValueError):
-        raise ActionError("How many times a day?") from None
+        raise ActionError("How many times a day? (0 for no fixed limit)") from None
     new = _gate(context).set_daily_budget(wanted)
+    if new == 0:
+        return "No fixed limit: she paces each kind of message by what you open, use or dismiss."
     return f"At most {new} time{'s' if new != 1 else ''} a day on her own. Urgent things and answers don't count."
 
 

@@ -4,7 +4,9 @@
  * first, unread ones lit, amber for a warning and red only for a real error;
  * "Why?" opens why MIA sent one she sent on her own. Mark All Read and
  * Dismiss are actions (notification.read_all, notification.dismiss); a
- * dismissal teaches MIA what you'd rather not hear. Then Waiting for the
+ * dismissal teaches MIA what you'd rather not hear, and Useful
+ * (notification.useful, on her own messages) what you want more of
+ * (DEC-0171). Then Waiting for the
  * Internet: what you asked to hear once MIA is back online (online.remind,
  * online.forget). Formatting only.
  */
@@ -20,6 +22,8 @@
       el("div", { class: "nt-foot" }, el("span", { class: "pw-label" }, n.source),
         el("div", { class: "row-buttons" },
           n.why ? el("details", { class: "nt-why" }, el("summary", {}, "Why?"), el("p", {}, n.why)) : null,
+          n.why && !n.read ? el("button", { type: "button", class: "btn btn-ghost btn-small", "aria-label": "Useful: " + n.title,
+            onclick: () => act({ kind: "notification.useful", params: { notification_id: n.id } }, { quick: true }) }, "Useful") : null,
           el("button", { type: "button", class: "btn btn-quiet btn-small", onclick: () => act({ kind: "notification.dismiss", params: { notification_id: n.id } }, { quick: true }) }, "Dismiss"))));
   }
 

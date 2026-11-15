@@ -3024,12 +3024,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   13. **His grocery and everyday stores (Q-23):** Kroger, Walmart, the dollar stores, and three local and regional
       stores (a meat market, a grocery and a farm-and-home store) named in his own data, not here, so the public
       repository doesn't give away where he lives.
-- Consequences: the gate's change is W1's first step (with `CLAUDE.md`'s "owner's limit: 5/day" line updated when
-  it's built). DEC-0170 stays proposed until Zac approves its shape (Q-16).
+- Consequences: the gate's change is W1's first step. **Built 2026-11-15:** no fixed cap by default
+  (`communication.daily_budget` 0; a person can still set one), each kind paced by `learned_allowance()` from its last
+  eight messages (opened, useful or acted on double it; mostly passed over halves it; a kind dismissed three times in
+  four is still paused), World Intelligence's finds starting at four a day and every other kind at two; "Useful" on
+  her messages (`notification.useful`, the `mark_message_useful` tool) and `note_engagement()` for anything that sees
+  the person act. This PC's saved cap of 5 was set to 0 at Zac's word. `CLAUDE.md` updated.
 - Related: DEC-0053, DEC-0094, DEC-0117, DEC-0170; `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`
 
 ### DEC-0172: Procurement & Opportunity Intelligence, World Intelligence's listings half
-- Status: PROPOSED (Zac to approve: Q-21)
+- Status: APPROVED (Zac, 2026-11-15: "Yes I approve lets build")
 - Proposed by: claude, 2026-11-15, from Zac's handoff "Procurement & Opportunity Intelligence System" (prompt 19,
   kept verbatim), which asked for an integrated proposal before any scraper or app
 - Proposal (`docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md`): no new pipeline. World Intelligence's watches, sources,

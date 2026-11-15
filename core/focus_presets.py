@@ -94,7 +94,8 @@ _GOAL_INTERESTS = {
 # When several focuses fit equally, the more specific one wins.
 _TIE_ORDER = ("homestead", "business", "student", "home_family", "personal")
 
-SPEAK_UP = (("rarely", "Rarely (2 a day at most)", 2), ("normal", "Now and then (5 a day)", 5),
+SPEAK_UP = (("learned", "As she learns what you open (no fixed limit)", 0),
+            ("rarely", "Rarely (2 a day at most)", 2), ("normal", "Now and then (5 a day)", 5),
             ("often", "Often (8 a day)", 8))
 
 

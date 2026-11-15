@@ -30,6 +30,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `modules.rescanned` | `core/module_manager.py` | `gui/main_window.py` |
 | `notification.created` | `core/notification_manager.py` | `core/activity_log_manager.py`, `core/web_push.py`, `gui/character_panel.py`, `gui/main_window.py` |
 | `notification.dismissed` | `core/notification_manager.py` | `core/communication_gate.py` |
+| `notification.opened` | `core/notification_manager.py` | `core/communication_gate.py` |
 | `notification.updated` | `core/notification_manager.py` | `gui/main_window.py` |
 | `profile.created` | `core/profile_manager.py` | `core/household_manager.py`, `core/personal_data.py` |
 | `profile.deleted` | `core/profile_manager.py` | `core/personal_data.py` |
