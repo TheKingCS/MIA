@@ -2962,7 +2962,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0126, DEC-0155, DEC-0157, DEC-0168
 
 ### DEC-0170: World Intelligence, a thin subsystem over what MIA already has
-- Status: PROPOSED (Zac to approve: Q-16)
+- Status: APPROVED (Zac, 2026-11-15: "Dec 0170 yes"), with DEC-0171's changes
 - Proposed by: claude, 2026-11-15, from Zac's handoff "World Intelligence, Opportunity Discovery &
   Demonstration-Based Browser Automation" (prompt 18, kept verbatim), which asked for an investigation first
 - Proposal (`docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`): standing **watches** the person sets up (the
@@ -3010,6 +3010,27 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      a plan's material list priced per store; code-and-safety, shipping and seller checks on imported parts.
   8. **Every find always names its source** (Zac: "It should just always list the source"), in every view, card,
      message and spoken answer; enforced by a test.
+  9. **Amazon, Walmart, Target, Kroger and similar** (Zac: "This will be helpful for grocery shopping and deal
+     buying"): the grocery list and everyday wants priced per store, with deals checked against observed prices.
+  10. **Distance (Q-20):** listings and stores within **360 miles** of his home place (Zac: "you could do within 360
+      miles"), nearer ones scoring higher and every trip's cost counted; the home place is kept in his own data,
+      never in the repository.
+  11. **The free API keys are skipped for now** (Zac: "Skip the keys for now"): eBay, Kroger, Walmart, GSA and FRED
+      wait; their sites are read by browser skill meanwhile.
 - Consequences: the gate's change is W1's first step (with `CLAUDE.md`'s "owner's limit: 5/day" line updated when
   it's built). DEC-0170 stays proposed until Zac approves its shape (Q-16).
 - Related: DEC-0053, DEC-0094, DEC-0117, DEC-0170; `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`
+
+### DEC-0172: Procurement & Opportunity Intelligence, World Intelligence's listings half
+- Status: PROPOSED (Zac to approve: Q-21)
+- Proposed by: claude, 2026-11-15, from Zac's handoff "Procurement & Opportunity Intelligence System" (prompt 19,
+  kept verbatim), which asked for an integrated proposal before any scraper or app
+- Proposal (`docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md`): no new pipeline. World Intelligence's watches, sources,
+  discoveries, relevance and gate, plus four new pieces: **requirements** per project made in code from plans
+  (`build_calcs`), the development engine, the grocery list and his words, marked owned from inventory and equipment;
+  **product specifications** read in code, with identical / equivalent / similar / not suitable decided by numbers;
+  **price observations**, so a discount is checked against prices she has seen and no history is invented; and an
+  **acquisition plan** per project (best option per line, trips, budget, missions). Inventory gains specs, condition,
+  consumable and "last confirmed". Buying, bidding, offering and messaging are never done without his press.
+- Phases P1–P6, slotted after World Intelligence's W phases.
+- Related: DEC-0118, DEC-0144, DEC-0152, DEC-0156, DEC-0170, DEC-0171

@@ -200,7 +200,8 @@ that failed are listed too, so nobody adds them again without a fix.
 | Auctions (Zac, 2026-11-15: "It should watch auction sites too") | **GSA Auctions** (federal surplus: vehicles, tools, equipment) through GSA's official JSON API, with a free api.data.gov key; **by browser skill:** GovDeals and Public Surplus (city, county and school surplus), Purple Wave, BigIron and Machinery Pete (farm and heavy equipment), IronPlanet, Proxibid and BidCal (equipment and local auction houses), EstateSales.net (estate sales near home), Copart (vehicles); Bring a Trailer by its feed | API, browser, RSS |
 
 | Building materials and home stores (Zac, 2026-11-15) | **by browser skill:** Lowe's, Menards, 84 Lumber, Walmart; Home Depot, Ace Hardware, Harbor Freight and Tractor Supply refused or timed out on a plain request, so they're tried in her browser and fall back to "track this" if blocked there too; **Habitat for Humanity ReStores** near home (donated, discounted building materials, a strong fit for the homestead); local lumber yards and salvage yards Zac names | browser |
-| Import marketplaces (Zac, 2026-11-15) | **by browser skill:** Alibaba (bulk, from manufacturers), AliExpress, Temu, Wish; Amazon | browser |
+| Import marketplaces (Zac, 2026-11-15) | **by browser skill:** Alibaba (bulk, from manufacturers), AliExpress, Temu, Wish | browser |
+| Everyday stores and groceries (Zac, 2026-11-15: "grocery shopping and deal buying") | **by browser skill:** Amazon, Walmart, Target, Kroger, Aldi; Kroger's and Walmart's official APIs later (keys skipped for now) | browser |
 
 **Auction sites that refused a plain request** (HTTP 403, checked the same day): HiBid, K-BID, AuctionTime, Ritchie
 Bros, MaxSold, AuctionZip and Liquidation.com. They block automated readers, so they're browser-skill sources at
@@ -528,8 +529,8 @@ as standing watches come with W5 (their skills), after W4's grants and W8's revi
 
 ## 17. Questions for Zac
 
-- **Q-16, open.** Approve the shape: a thin World Intelligence over the systems MIA has (DEC-0170, with DEC-0171's
-  changes), built beside MIA OS in the phases above?
+- **Q-16, answered yes (Zac, 2026-11-15):** DEC-0170 approved. Procurement, its listings half, is proposed in
+  [`MIA_OS_PROCUREMENT_PROPOSAL.md`](MIA_OS_PROCUREMENT_PROPOSAL.md) (DEC-0172).
 - **Q-17, answered (Zac, 2026-11-15):** Marketplace, Craigslist, eBay and sites like them are fine to read with the
   skills he demonstrates; public information, his own steps (DEC-0171).
 - **Q-18, partly answered:** Claude researched and checked the starting sources (section 5b); the source loop keeps
@@ -537,11 +538,11 @@ as standing watches come with W5 (their skills), after W4's grants and W8's revi
   dropped, and whether to get the three free keys (eBay developer, FRED, api.data.gov for GSA Auctions).
 - **Q-19, answered (Zac, 2026-11-15):** no fixed limit on her own messages; pacing learned from what he engages with;
   World Intelligence starts at about four finds a day (DEC-0171).
-- **Q-20, recommendation, waiting on Zac's yes:**
+- **Q-20, answered (Zac, 2026-11-15): within 360 miles.** The rest of the recommendation stands as the how:
   - **A home place kept in MIA** (the Places store, his own folder, sealed at rest; never in the repository), set once
     by voice or on the page. Every watch measures from it unless the watch names another place.
-  - **A default distance by size of thing**, changeable per watch: small items 25 miles, materials and tools
-    50 miles, large equipment, trailers and greenhouse frames 150 miles (worth a drive with a trailer).
+  - **Up to 360 miles** for every watch (Zac's answer), nearer finds scoring higher and each trip's cost counted,
+    so a far find has to be worth the drive; a watch can set a smaller area.
   - **Distance from a listing's stated town or postal code** worked out offline, from GeoNames' free gazetteer of
     towns and postal codes (Creative Commons, credit given), labelled "about 40 miles (from the town named)". Never
     a guess when the listing gives none, and nothing is sent anywhere to work it out.

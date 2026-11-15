@@ -17,8 +17,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Zac's answers (DEC-0171, approved):** no fixed limit on her own messages, pacing learned from what he engages
   with; MIA makes watches herself from his life; Marketplace, Craigslist and eBay by his demonstrated skills; about
   four finds a day. Starting sources checked from the PC (proposal 5b), with a source loop to keep improving them.
-- **Waiting on Zac:** Q-16 (approve DEC-0170's shape), Q-20 (yes to the recommended home place and distances),
-  Q-18's three free keys (eBay developer, FRED, api.data.gov for GSA Auctions). Auction sites added (proposal 7b). On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
+- **DEC-0170 approved** (Zac, 2026-11-15). Q-20: within 360 miles. Keys skipped for now. Stores added: auctions,
+  home stores, import marketplaces, Amazon, Walmart, Target, Kroger.
+- **Procurement proposed** (prompt 19, `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md`, DEC-0172): requirements per
+  project from plans, specs compared by numbers, price observations, acquisition plans. Waiting on Q-21 to Q-23.
+- **Local research for Zac's area** is in his own data (`data/world_local_sources.md`, git-ignored, never committed):
+  stores, yards, auctions and surplus to seed his watches when W1 is built.
+- **Next to build: W1 (Opus)**, starting with the gate's learned pacing (DEC-0171), then watches, the discovery
+  store, feeds, the World page; P1 (requirements) follows once Q-21 is answered. On Q-16's yes, W1 starts with the gate's learned pacing **(Opus)**.
 - **Skipped for now (Zac, 2026-11-15):** the Pi. **Next Fable items:** the phone on the full MIA, the window as a
   client (both need a Fable session).
 

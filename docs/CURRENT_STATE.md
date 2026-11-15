@@ -8,7 +8,8 @@ session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on 
 - **Zac's new handoff** asks MIA to watch the outside world (news, releases, marketplaces, research) for what matters to his life, learn website tasks by being shown, and bring up only what's worth it. Kept verbatim as prompt 18.
 - **The proposal** (`docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, DEC-0170): most pieces exist already; what's new is a standing watch, one store of finds with where each fact came from, and a relevance score worked out in code from his projects, goals, equipment, budget and the homestead plan's next steps.
 - **Zac's answers (DEC-0171):** no fixed limit on the messages she starts herself (she learns his pace from what he does with them); she makes watches herself from his projects and plans; Marketplace, Craigslist and eBay are read by skills he shows her; about four finds a day. The starting sources were checked from the PC.
-- **Waiting on Zac:** approving the shape (Q-16), the home place and distances (Q-20). The Pi is skipped for now.
+- **Approved (DEC-0170).** Within 360 miles of home; the keys skipped for now; auctions, home stores, import marketplaces and grocery stores added; every find names its source.
+- **Procurement proposed (DEC-0172):** what each project needs worked out from its plan, what he owns marked off, products compared by their real specifications, prices remembered so a "sale" can be checked, and a buying plan per project. Waiting on Zac (Q-21 to Q-23). The Pi is skipped for now.
 
 **2026-11-15, on the PC (Claude: sealed files on Linux, the blocker for the dual boot).**
 - **Built: MIA's sealed files can open on Linux.** There the key to them is kept by the system for your account on that machine, using its TPM security chip where it has one (the PC does; the Pi doesn't). Nothing is typed at start, as on Windows.
