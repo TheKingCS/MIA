@@ -41,6 +41,7 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0170 | World Intelligence | APPROVED; W1 built 2026-11-15 |
 | DEC-0171 | Zac's answers on World Intelligence and MIA's own messages | APPROVED |
 | DEC-0172 | Procurement & Opportunity Intelligence | APPROVED |
-| DEC-0173 | The Living System doctrine, adopted as invariants on what MIA already is | PROPOSED (Q-24) |
+| DEC-0173 | The Living System doctrine, adopted as invariants on what MIA already is | APPROVED; L1 and L2 built 2026-11-15 |
+| DEC-0174 | Fable reviews all Opus work; four independent checkers where it fits | APPROVED |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.

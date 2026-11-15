@@ -4,11 +4,11 @@
 
 ## At a glance
 
-- **Architecture** — 802 Python files across 544 core, 93 modules, 123 gui, 2 server, 40 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 172 logged (docs/DECISIONS.md); the why behind every part.
+- **Architecture** — 803 Python files across 545 core, 93 modules, 123 gui, 2 server, 40 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Decisions** — 173 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 95 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 236 dev entries (work/knowledge/).
+- **Knowledge she's written** — 237 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 48 personal + 41 household stores, 53 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -16,12 +16,12 @@
 ## Decisions — why MIA is built the way she is
 
 **ACCEPTED** (5): DEC-0129, DEC-0130, DEC-0135, DEC-0136, DEC-0140
-**APPROVED** (142): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0123, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153, DEC-0155, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0170, DEC-0171, DEC-0172
+**APPROVED** (144): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0123, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153, DEC-0155, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0170, DEC-0171, DEC-0172, DEC-0173, DEC-0174
 **Approach** (1): DEC-0137
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (15): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0156, DEC-0157, DEC-0158, DEC-0164, DEC-0169, DEC-0173
+**PROPOSED** (14): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0156, DEC-0157, DEC-0158, DEC-0164, DEC-0169
 
 <details><summary>Every decision</summary>
 
@@ -196,7 +196,8 @@
 - **DEC-0170** [APPROVED] — World Intelligence, a thin subsystem over what MIA already has
 - **DEC-0171** [APPROVED] — Zac's answers on World Intelligence and MIA's own messages
 - **DEC-0172** [APPROVED] — Procurement & Opportunity Intelligence, World Intelligence's listings half
-- **DEC-0173** [PROPOSED] — The Living System doctrine, adopted as invariants on what MIA already is
+- **DEC-0173** [APPROVED] — The Living System doctrine, adopted as invariants on what MIA already is
+- **DEC-0174** [APPROVED] — Who checks the work: Fable reviews Opus's; four others as independent checkers where it fits
 
 </details>
 
@@ -204,7 +205,7 @@
 
 - **95 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 236 entries 35 lesson, 18 debugging, 15 decision, 9 method, 6 test-procedure, 3 failed-experiment, 148 implementation, 2 security-finding.
+- **Dev-knowledge** — 237 entries 35 lesson, 18 debugging, 15 decision, 9 method, 6 test-procedure, 3 failed-experiment, 149 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

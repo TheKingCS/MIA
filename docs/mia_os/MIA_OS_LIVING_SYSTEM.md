@@ -264,7 +264,10 @@ No new workstream. In order:
 - **Q-26.** Homeostasis: may MIA defer her own background work (World Intelligence, Night School, Good News) while
   the PC is busy, offline or on low battery, and slow down a job that keeps failing, by herself, logged?
 
-## 13. Not yet done
+## 13. Status (2026-11-15)
 
-- Fable's challenge review (the doctrine's section 19; DEC-0166 puts cross-cutting architecture with Fable).
-- Codex's verification (Q-25).
+- **Approved** (DEC-0173). **Built:** L1 (`tests/test_living_system.py`) and L2 (`core/homeostasis.py`; she says so each
+  time she eases off or a job backs off, Zac's condition).
+- **Checkers** (DEC-0174): Fable reviews all Opus work; Copilot, Claude, ChatGPT and Muse check independently where it
+  fits. No Codex.
+- **Still to come:** Fable's challenge review of this document (L5), L3 with World Intelligence W2, L4 grants (Fable).

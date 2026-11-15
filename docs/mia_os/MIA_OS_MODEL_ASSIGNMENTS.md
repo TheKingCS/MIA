@@ -52,6 +52,10 @@ matter more than the last bit of reasoning depth:
 
 ## How it works in practice
 
+- **Fable reviews all the work built with Opus** (DEC-0174, Zac 2026-11-15), development above all. `docs/NEXT_SESSION.md`
+  keeps the queue; a Fable session works it first. Copilot, Claude, ChatGPT and Muse may check independently where it
+  fits, not for everything.
+
 - **NEXT_SESSION.md marks each queued task** with *(Fable)* or *(Opus)*. When the next task needs the other model, Claude says so before starting, so Zac can switch with `/model`.
 - **One session doesn't switch models in the middle of a task.** It finishes or hands off through the hub files, which carry everything.
 - **When unsure, start with Opus.** Escalate to Fable if Opus's review or tests show the work needs more (two failed attempts at the same problem is the signal).

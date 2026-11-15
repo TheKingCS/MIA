@@ -9,7 +9,8 @@ DEC-0155; steps 1 and 3 of
 What it is: the periodic jobs (`JOBS`: alarms, the battery, the daily
 checks, the watched folders, the inbox and its mail, the connection,
 missions she assigns, and since 2026-11-15 World Intelligence's watches,
-DEC-0170) and the daily checks one of them runs
+DEC-0170) and the daily checks one of them runs; the `homeostasis` property
+(core/homeostasis.py, DEC-0173) decides which deferrable ones wait
 (`DAILY_CHECKS`: birthdays, the calendar, insights, the Loop, the nightly
 backup and the rest). Until 2026-11-15 these were methods of the desktop
 window's `MIAApplication` on ten `QTimer`s, so closing the window stopped
@@ -150,10 +151,22 @@ class BackgroundJobs:
 
     def schedule(self, scheduler, first_after: Optional[float] = None) -> None:
         """Puts every job in JOBS on the scheduler with its interval (the scheduler runs each under the store
-        lock). `first_after` is passed on for each job's first run (None: one interval from now, as the timers
-        did)."""
+        lock), and gives the scheduler homeostasis's say on which deferrable jobs wait and who hears of a backoff.
+        `first_after` is passed on for each job's first run (None: one interval from now, as the timers did)."""
         for name, seconds, method in JOBS:
             scheduler.add(name, seconds, getattr(self, method), first_after=first_after)
+        scheduler.defer = self.homeostasis.defer_reason  # MIA eases off deferrable work (DEC-0173)
+        scheduler.on_backoff = self.homeostasis.backing_off
+
+    @property
+    def homeostasis(self):
+        """This MIA's easing off (core/homeostasis.py), made the first time it's asked for."""
+        found = getattr(self, "_homeostasis", None)
+        if found is None:
+            from core.homeostasis import Homeostasis
+
+            found = self._homeostasis = Homeostasis(self.context)
+        return found
 
     def _check_alarms(self) -> None:
         """Every 20 seconds: rings any alarm that's due now."""
@@ -266,7 +279,8 @@ class BackgroundJobs:
 
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
-        DEC-0148, the greenhouse node, DEC-0150, and the nightly backup, core/auto_backup.py).
+        DEC-0148, the greenhouse node, DEC-0150, and the nightly backup, core/auto_backup.py). A deferrable check
+        waits for the next clear tick while MIA eases off (core/homeostasis.py, DEC-0173).
 
         Stabilization (2026-09-14) — this used to be one long function
         with 14 sequential `if should_run_once_daily(...):` blocks and
@@ -303,6 +317,8 @@ class BackgroundJobs:
         self._offers = []
         self._offer_day = today_iso
         for name, check in checks:
+            if self.homeostasis.defer_reason(name):
+                continue  # easing off: a deferrable check waits for the next tick that's clear (DEC-0173)
             try:
                 check(now, today_iso)
             except Exception:

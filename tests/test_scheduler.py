@@ -60,6 +60,7 @@ def test_a_job_that_fails_is_recorded_and_the_others_still_run():
     broken, fine = s.status()
     assert broken["failures"] == 1 and broken["last_error"].startswith("ZeroDivisionError") and broken["runs"] == 1
     assert fine == {"name": "fine", "every_seconds": 10.0, "runs": 1, "skips": 0, "failures": 0,
+                    "failures_in_a_row": 0, "deferrals": 0, "last_deferred": "",
                     "last_run": "2026-11-15T09:00:00", "last_seconds": 0.0, "last_error": "", "due_in_seconds": 10.0}
     clock.now += 10
     assert s.run_due() == ["broken", "fine"]  # it keeps its place in the schedule

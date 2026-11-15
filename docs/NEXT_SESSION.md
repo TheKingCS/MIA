@@ -30,11 +30,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   uses or dismisses; this PC's saved cap set to 0) and **World Intelligence W1** (K-0236): watches, finds with their
   sources, the checked feeds, the World page (Home › Learning › World, `web/intel.html`), voice tools, a glasses card,
   the 10-minute job. Off until Zac turns it on. DEC-0172 (procurement) approved.
-- **The Living System doctrine** (prompt 20, kept verbatim) is answered in `docs/mia_os/MIA_OS_LIVING_SYSTEM.md`
-  (DEC-0173, proposed): most of it is what MIA already is (evidence per characteristic); the additions are grants
-  (G1, **Fable**), homeostasis v1 (G2), one epistemic contract (G3), cross-domain objectives (G4, with W2) and three
-  invariant tests. Waiting on Zac: Q-24 (adopt), Q-25 (Codex), Q-26 (homeostasis acts by itself). **Fable** owes it a
-  challenge review (L5).
+- **The Living System doctrine** (prompt 20) is approved (DEC-0173). Built: L1, the three invariant tests
+  (`tests/test_living_system.py`), and L2, homeostasis (`core/homeostasis.py`: deferrable work waits while the PC is
+  busy, offline, on low battery or nearly out of disk; a job failing three times in a row backs off; she says so each
+  time). Next: L3 with W2; L4 grants **(Fable)**; L5 Fable's challenge review of `MIA_OS_LIVING_SYSTEM.md`.
+- **Fable's review queue (DEC-0174: Fable reviews all Opus work; work it first in a Fable session):**
+  1. a3c88483, the gate's learned pace (core/communication_gate.py);
+  2. 8e237dd7, World Intelligence W1 (core/world_intel.py, world_sources.py, the worker thread, the actions);
+  3. 11685d02, the Living System audit (docs/mia_os/MIA_OS_LIVING_SYSTEM.md): the doctrine's own L5;
+  4. the homeostasis and invariant-tests commit (core/homeostasis.py, core/scheduler.py, tests/test_living_system.py).
+  Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Next, in order (Opus):** W2, relevance from his records (projects and their material lists, intents, the
   development engine's needs, inventory, budget, places); W1b, watches MIA makes herself from those records; then
   P1 (requirements per project), W3 (eBay's and GSA's APIs wait for keys Zac skipped; capture and browser skills

@@ -3053,7 +3053,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0118, DEC-0144, DEC-0152, DEC-0156, DEC-0170, DEC-0171
 
 ### DEC-0173: The Living System doctrine, adopted as invariants on what MIA already is
-- Status: PROPOSED (Zac to approve: Q-24)
+- Status: APPROVED (Zac, 2026-11-15: "Yes, copilot, Claude, ChatGPT and muse should be fine to use as independent checkers but not for everything we are doing building MIA OS out, Fable will be used to review all the work we are doing with Opus especially through development. And yes Mia should slow herself down but make a notice about it.")
 - Proposed by: claude (Opus), 2026-11-15, from Zac's handoff "The Living System: Identity, Continuity, Awareness,
   Adaptation & Evolution" (prompt 20, kept verbatim), which asked for an audit with repository evidence first
 - Proposal (`docs/mia_os/MIA_OS_LIVING_SYSTEM.md`): the doctrine becomes MIA OS's foundation without a new "Living
@@ -3066,6 +3066,22 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   checked) for new stores; (G4) cross-domain ranking of objectives, with World Intelligence's relevance; and the ten
   invariants guarded by tests, three of them new. Later MIA OS prompts (04, 05, 07, 08, 13, 14, 16) carry the
   invariants as acceptance criteria.
-- Open: Codex as a verifier (Q-25); homeostasis acting by itself (Q-26); Fable's challenge review, which the doctrine
-  asks for.
+- Answered: homeostasis acts by itself and says so (Q-26); the checkers are DEC-0174 (Q-25). Still to come: Fable's
+  challenge review, which the doctrine asks for (L5).
+- **Built 2026-11-15:** L1, the three missing invariant tests (`tests/test_living_system.py`: no new file gives MIA an
+  identity of her own; switching the model changes neither the stores nor the assembled life state; every new store
+  declares the epistemic contract, World Intelligence's first). L2, homeostasis v1 (`core/homeostasis.py`, the
+  scheduler's `defer` and backoff): deferrable work waits while the computer is busy, on a low battery, offline or
+  nearly out of disk; a job failing three times in a row backs off up to six hours; each time she starts easing off
+  or a job starts backing off she says so once, with why, through the gate; `/api/runtime/health` shows it. K-0237.
 - Related: DEC-0137, DEC-0094, DEC-0101, DEC-0155, DEC-0156, DEC-0158, DEC-0166, DEC-0170
+
+### DEC-0174: Who checks the work: Fable reviews Opus's; four others as independent checkers where it fits
+- Status: APPROVED (Zac, 2026-11-15: "Yes, copilot, Claude, ChatGPT and muse should be fine to use as independent checkers but not for everything we are doing building MIA OS out, Fable will be used to review all the work we are doing with Opus especially through development. And yes Mia should slow herself down but make a notice about it.")
+- Decision: **Fable reviews all the work built with Opus**, development above all, as a standing step (DEC-0166's
+  "the reviewer is not the author", made the rule for every Opus build, not only foundational merges). **Copilot,
+  Claude, ChatGPT and Muse** may be used as independent checkers for some work, chosen per piece, not for everything
+  in the MIA OS build. Codex, named in the Living System doctrine, isn't added.
+- Consequences: `docs/NEXT_SESSION.md` keeps a queue of Opus work awaiting Fable's review; a Fable session works it
+  first. `docs/mia_os/MIA_OS_MODEL_ASSIGNMENTS.md` says so.
+- Related: DEC-0166, DEC-0173

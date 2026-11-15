@@ -406,8 +406,8 @@ class Runtime(BackgroundJobs, AssistantTools):
     def health(self) -> dict:
         """How this MIA is doing: whether the schedule is running, since when and for how long, each job's record
         (core.scheduler.Scheduler.status), how many jobs have failed or never run, whether the model answers, and
-        whether the phone server is up, and where her files are (core/data_root.describe). For /api/runtime/health and
-        Diagnostics."""
+        whether the phone server is up, where her files are (core/data_root.describe), and what she's easing off and why
+        (core/homeostasis.py). For /api/runtime/health and Diagnostics."""
         jobs = self.scheduler.status()
         running = self._thread is not None and self._thread.is_alive()
         llm = getattr(self.context, "llm", None)
@@ -423,6 +423,7 @@ class Runtime(BackgroundJobs, AssistantTools):
             "services": len(self.services()), "tools": len(self.context.assistant_actions._actions),
             "model_available": model, "phone_server": bool(server is not None and getattr(server, "running", False)),
             "window": False, "home": data_root.describe(),
+            "homeostasis": self.homeostasis.report(),  # what isn't clear and what's waiting (DEC-0173)
         }
 
     def run_until_stopped(self) -> None:

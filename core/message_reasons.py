@@ -31,6 +31,10 @@ REASONS: dict[str, tuple[str, str]] = {
     "inbox": ("the document inbox", "new documents arrived in your inbox"),
     "connectivity": ("internet changes", "the internet went down or came back"),
     "warranty": ("warranty reminders", "a warranty on something you own is ending soon"),
+    "homeostasis": ("notices that I'm easing off", "I'm slowing my own background work while the computer is busy, "
+                    "offline or low on battery, or because a job kept failing (DEC-0173)"),
+    "world_find": ("World Intelligence's finds", "one of your watches found something new, and it named its source "
+                   "(DEC-0170)"),
     "memory_callback": ("things MIA remembers", "something you told me was about to matter (a birthday, a plan, a note on your gear)"),
     "grow_alert": ("greenhouse readings", "a tank or bed reading was outside the range set for it"),
     "season": ("seasonal questlines", "a new season started and MIA had questlines for it"),

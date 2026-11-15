@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1418 files, 315,937 lines; 1418 files describe themselves; 17,339 of 17,434 classes and functions are documented.
+1421 files, 316,471 lines; 1421 files describe themselves; 17,371 of 17,466 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-544 files, 156,852 lines; 8,079 of 8,165 classes and functions documented
+545 files, 157,133 lines; 8,093 of 8,179 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -242,6 +242,7 @@
 - `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it:
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
+- `core/homeostasis.py`: MIA easing off her own background work (the Living System doctrine's homeostasis, DEC-0173, G2; Zac 2026-11-15: "Mia should slow herself down but make a notice about it").
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`homestead/` in this repository since DEC-0145; once a separate repo), which exports via its own `homestead/viewer
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
@@ -833,7 +834,7 @@
 
 ## tests/: the test suite: what each part must do
 
-485 files, 81,815 lines; 6,947 of 6,956 classes and functions documented
+487 files, 82,068 lines; 6,965 of 6,974 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1008,6 +1009,7 @@
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did).
+- `tests/test_homeostasis.py`: MIA easing off her own work (the Living System doctrine's homeostasis, DEC-0173; core/homeostasis.py, core/scheduler.py): deferrable jobs wait while the computer is busy, on a low battery, offline (the online ones) or nearly out of disk (the heavy ones), essential jobs never do; a waiting job is tri
 - `tests/test_homestead_costs.py`: Finance #2, homestead builds and tools: expense tags, build budgets, tool cost of ownership (core/homestead_costs.py), the Assistant tools (core/assistant_homestead_actions.py), the maintenance-cost hook, and the Budget tab's formatting.
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, the Builds tab's Sell First and Best Earner (DEC-0113), and cups against pounds for materials on the density table.
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring
@@ -1051,6 +1053,7 @@
 - `tests/test_links.py`: How things relate (core/links.py), Engine Phase 1 step 2, 2026-10-05: stated links between real records, links the stores already imply, and what waits on what, and the newer kinds (a grow-lab batch, a workplace, a class subject, an inbox letter, and the stores that keep dicts) named and found like 
 - `tests/test_lite_capture_manager.py`: Unit tests for core.lite_capture_manager. format_capture_journal_title() is tested directly (pure). LiteCaptureManager itself is tested against a real tmp_path watched folder (genuine file moves/reads, same reasoning test_finance_manager.py already gives for not mocking the filesystem) with a _FakeC
 - `tests/test_lite_captures_tool.py`: Unit tests for modules.toolbox.tools.lite_captures_tool's pure format_capture_card_text(), same style as tests/test_discovery_tool.py (no Qt event loop, no fixtures).
+- `tests/test_living_system.py`: The Living System doctrine's invariants that had no test yet (DEC-0173, `docs/mia_os/MIA_OS_LIVING_SYSTEM.md` section 8): Identity:** MIA's identity is written in one place (core/personality.py). The files that already frame a task prompt as "You are MIA" in their own words are listed here and may o
 - `tests/test_living_worlds.py`: Living Worlds Phase 1 (core/living_worlds.py, DEC-0134): universes, campaigns, characters and per-universe versions are created and persisted so a campaign survives sessions; a version's growth is its own and never touches another's; ids are validated; and a campaign can be paused and resumed. The s
 - `tests/test_llm_manager.py`: Unit tests for core.llm_manager. No real Ollama server involved — urllib.request.urlopen is monkeypatched to a fake so these exercise the manager/backend's success and graceful-degradation paths in isolation, same fake-dependency approach as test_reference_library_manager.py's _FakeConfig. And (T-00
 - `tests/test_local_model.py`: The phone's own model (core/local_model.py, 2026-10-07, DEC-0019): downloading (and carrying on after a break), starting llama.cpp's server and pointing Talk at it, running the test, and starting the same model again after MIA restarts. A small Python script stands in for llama-server, and a local H

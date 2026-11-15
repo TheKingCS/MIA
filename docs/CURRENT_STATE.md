@@ -4,6 +4,11 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, evening (Claude: the Living System adopted; MIA eases off by herself).**
+- **Approved:** the Living System doctrine (DEC-0173), and who checks the work: Fable reviews everything built with Opus; Copilot, Claude, ChatGPT and Muse check independently where it fits (DEC-0174).
+- **MIA eases off by herself, and says so:** her background extras (World Intelligence, Good News, Night School, the system map...) wait while the PC is busy, offline, on low battery or nearly out of disk, and a job that keeps failing is tried less often until it works. Each time, you get one notice saying why.
+- **Three new checks** guard the doctrine: no second identity, nothing she knows depends on which model runs, and every new store says where its facts come from.
+
 **2026-11-15, later still (Claude: the Living System doctrine, answered, nothing built).**
 - **Zac's foundational doctrine** (MIA as one Living System) is mostly what MIA already is; the audit shows it characteristic by characteristic, with the files and tests as evidence (`docs/mia_os/MIA_OS_LIVING_SYSTEM.md`).
 - **What it adds:** permissions enforced in code (grants), MIA easing off her own background work when the PC is busy or something keeps failing, every fact marked as said, seen, inferred or worked out, and goals ranked across her areas. No new "Living System" app.

@@ -244,7 +244,12 @@ def _parse(iso: str) -> Optional[datetime]:
 
 class WorldBook:
     """The person's watches and finds (world_intel.json in their folder, sealed, written atomically so undo can
-    restore it)."""
+    restore it), under the epistemic contract (EPISTEMIC)."""
+
+    # The epistemic contract (DEC-0173, G3): where each find came from, when it was read, how it's known, and when
+    # it was last seen. tests/test_living_system.py checks every new store declares this.
+    EPISTEMIC = {"record": Discovery, "source": "source_name", "at": "found_at", "how": "observed",
+                 "checked": "last_seen"}
 
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         """Points at the person's file (data/ by default) and loads it."""
