@@ -42,6 +42,8 @@ get retried and re-logged on every poll forever.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import json
 import shutil
 from dataclasses import dataclass, field
@@ -57,11 +59,11 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_IMPORT_DIR = _PROJECT_ROOT / "homestead_snapshots"
+_DEFAULT_IMPORT_DIR = home_dir("homestead_snapshots")
 _IMPORTED_SUBDIR = "imported"
 _FAILED_SUBDIR = "failed"
 
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DATA_DIR = DATA_DIR
 _SNAPSHOTS_FILE = _DATA_DIR / "homestead_snapshots.json"
 
 

@@ -11,7 +11,10 @@
 #
 # What it does:
 #   1. finds this checkout and its virtual environment (.venv);
-#   2. writes ~/.config/systemd/user/mia-runtime.service with those paths;
+#   2. writes ~/.config/systemd/user/mia-runtime.service with those paths, and
+#      with MIA_HOME: where her data lives (~/.local/share/mia unless you set
+#      MIA_HOME yourself). A checkout that already holds a MIA is never
+#      started empty elsewhere: the script says how to copy her first;
 #   3. turns on lingering, so MIA keeps running with nobody signed in at
 #      the screen (loginctl may ask for your password);
 #   4. enables and starts the service.
@@ -24,6 +27,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIA_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 VENV_PYTHON="${MIA_DIR}/.venv/bin/python"
+# Where her data lives: MIA_HOME if you set it, else ~/.local/share/mia (apart from the code).
+MIA_DATA_HOME="${MIA_HOME:-${HOME}/.local/share/mia}"
 UNIT_DIR="${HOME}/.config/systemd/user"
 UNIT="${UNIT_DIR}/mia-runtime.service"
 
@@ -47,8 +52,20 @@ if systemctl --user is-enabled mia.service >/dev/null 2>&1; then
     exit 1
 fi
 
+# A MIA that already has data inside the code's folder isn't silently started empty somewhere else.
+if [ -f "${MIA_DIR}/config/config.json" ] && [ ! -d "${MIA_DATA_HOME}/data" ] && [ "${MIA_DATA_HOME}" != "${MIA_DIR}" ]; then
+    echo "This checkout already holds a MIA (config/config.json), and ${MIA_DATA_HOME} is empty." >&2
+    echo "Either copy her there first (checked, nothing deleted):" >&2
+    echo "  ${VENV_PYTHON} -m tools.move_home ${MIA_DATA_HOME}" >&2
+    echo "or keep her data with the code:" >&2
+    echo "  MIA_HOME=${MIA_DIR} bash deploy/install_runtime.sh" >&2
+    exit 1
+fi
+mkdir -p "${MIA_DATA_HOME}"
+
 mkdir -p "${UNIT_DIR}"
 sed \
+    -e "s|__MIA_HOME__|${MIA_DATA_HOME}|g" \
     -e "s|__MIA_INSTALL_DIR__|${MIA_DIR}|g" \
     -e "s|__MIA_VENV_PYTHON__|${VENV_PYTHON}|g" \
     "${SCRIPT_DIR}/mia-runtime.service" > "${UNIT}"
@@ -63,7 +80,7 @@ systemctl --user enable mia-runtime.service
 systemctl --user restart mia-runtime.service
 
 echo
-echo "The MIA Runtime is installed."
+echo "The MIA Runtime is installed. Her data is in ${MIA_DATA_HOME}."
 echo "  systemctl --user status mia-runtime      # is she running"
 echo "  journalctl --user -u mia-runtime -f      # her log"
 echo "  systemctl --user restart mia-runtime     # after updating the code"

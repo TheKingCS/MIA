@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1406 files, 312,767 lines; 1406 files describe themselves; 17,164 of 17,259 classes and functions are documented.
+1409 files, 313,503 lines; 1409 files describe themselves; 17,185 of 17,280 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-537 files, 154,757 lines; 7,967 of 8,053 classes and functions documented
+538 files, 155,139 lines; 7,971 of 8,057 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -160,6 +160,7 @@
 - `core/dashboard_widgets.py`: The Home dashboard's widget registry — 2026-07-15, "framework first" per the widget/dashboard-customization conversation (`docs/VISION.md`'s companion-philosophy update names weather/trading-bot/music/current project widgets; this is the generic mechanism underneath all of them, built before any spe
 - `core/data_logger_manager.py`: The Data Logger + Charts shared service — docs/ROADMAP.md milestone 8.1, the "Data Logger + Charts" row of the shared core services table (used by Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics).
 - `core/data_recovery.py`: One shared helper for the visible half of data-corruption recovery. Every core/*_manager.py's own `_load()` already falls back to an empty state on a malformed JSON file (correct — the app must never fail to boot or fail to open a screen over one bad file) and logs the failure. But a log line nobody
+- `core/data_root.py`: Where MIA keeps a person's files, as one setting (the MIA Runtime's next step, DEC-0155; needed for MIA OS and the Pi, DEC-0168).
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic.
 - `core/dependency_audit.py`: The weekly check for known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). The check itself is tools/dependency_audit.py (it asks OSV over the internet, a few seconds' work); this is the part MIA's daily checks use: whether a check is `due` (none in the last CHECK_DAYS), `laun
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py.
@@ -781,7 +782,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-39 files, 4,031 lines; 130 of 130 classes and functions documented
+40 files, 4,226 lines; 138 of 138 classes and functions documented
 
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
@@ -808,6 +809,7 @@
 - `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol
 - `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre
 - `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
+- `tools/move_home.py`: Copies a person's MIA to a new home folder (core/data_root.py, `MIA_HOME`; DEC-0155, DEC-0168): the step from "her data lives inside the code's folder" to "her data lives in the person's own folder", which MIA OS and the Pi need.
 - `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py).
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
 - `tools/page_check.py`: Every page of the web front end opened once, to catch the page that fails to load before a person does (roadmap 2.8, 2026-11-10). Serves `web/` on a local port, opens each `*.html` in demo mode (`?demo`, the placeholder example, no MIA needed) in headless Edge through Playwright, waits for it to set
@@ -825,7 +827,7 @@
 
 ## tests/: the test suite: what each part must do
 
-482 files, 81,097 lines; 6,893 of 6,902 classes and functions documented
+483 files, 81,256 lines; 6,902 of 6,911 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -925,6 +927,7 @@
 - `tests/test_dashboard_widgets.py`: Unit tests for core.dashboard_widgets — same shape as tests/test_module_manager.py's enable/disable coverage, since DashboardWidgetRegistry deliberately mirrors ModuleManager's convention.
 - `tests/test_data_logger_manager.py`: Unit tests for core.data_logger_manager. Isolates _DATA_DIR/_READINGS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption.
+- `tests/test_data_root.py`: Where MIA keeps a person's files (core/data_root.py, MIA_HOME): the code's folder unless it's set; with it set, nothing at all is written into the code's folder; and tools/move_home copies a MIA to a new home, checked.
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
 - `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci

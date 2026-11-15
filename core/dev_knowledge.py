@@ -27,6 +27,8 @@ can use it, and so MIA can one day do the work without them.
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import json
 import re
 from datetime import datetime, timezone
@@ -36,7 +38,7 @@ from typing import Callable, Optional
 from core.atomic_write import atomic_write_text
 
 ROOT = Path(__file__).resolve().parent.parent
-KNOWLEDGE = ROOT / "work" / "knowledge"
+KNOWLEDGE = work_path("knowledge")
 KINDS = ("method", "decision", "implementation", "failed-experiment", "debugging", "test-procedure",
          "security-finding", "lesson")
 STATUSES = ("derived", "confirmed", "superseded", "withdrawn")  # withdrawn: wrong, kept so its id isn't reused

@@ -37,6 +37,8 @@ normal folder scan on the GUI thread takes it from there.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import imaplib
 import json
 import re
@@ -51,7 +53,7 @@ from core.secrets_manager import SecretsError, decrypt_bytes, encrypt_bytes
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _VAULT_FILE = _DATA_DIR / "inbox_mail.enc"
 
 
@@ -184,7 +186,7 @@ def fetch_new_messages(
 # other message is judged by its sender and subject alone and never downloaded. Which messages were already seen is
 # kept by IMAP's message number (UID) in data/inbox_mail_state.json, never by anything in the mail.
 
-_STATE_FILE = Path(__file__).resolve().parent.parent / "data" / "inbox_mail_state.json"
+_STATE_FILE = DATA_DIR / "inbox_mail_state.json"
 FIRST_LOOK_DAYS = 30  # the first check looks back this far
 
 _RECEIPT_SUBJECT = re.compile(

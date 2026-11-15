@@ -30,6 +30,8 @@ are (public-domain and extension plans), to fetch while online.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import json
 import re
 import uuid
@@ -241,7 +243,7 @@ class PlanLibrary:
     def __init__(self, context=None, data_dir: Optional[Path] = None, files_dir: Optional[Path] = None) -> None:
         """Loads the kept plans from the household's folder (or data/); files come from the library's plans folder."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self._files_dir = Path(files_dir) if files_dir is not None else None
         self.plans: dict[str, dict] = {}
@@ -269,7 +271,7 @@ class PlanLibrary:
         try:
             return Path(library.root_path) / "plans"
         except Exception:
-            return Path(__file__).resolve().parent.parent / "reference_library" / "plans"
+            return home_dir("reference_library") / "plans"
 
     def file_plans(self) -> list[dict]:
         """Plans dropped in as files: each one's title from its name, kind from its folder, and its path."""

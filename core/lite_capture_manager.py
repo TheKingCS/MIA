@@ -54,6 +54,8 @@ problem.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import json
 import shutil
 import uuid
@@ -70,9 +72,9 @@ from core.data_recovery import notify_data_corruption
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DATA_DIR = DATA_DIR
 _PROPOSALS_FILE = _DATA_DIR / "capture_proposals.json"
-_DEFAULT_CAPTURE_DIR = _PROJECT_ROOT / "lite_captures"
+_DEFAULT_CAPTURE_DIR = home_dir("lite_captures")
 _PROCESSED_SUBDIR = "processed"
 _FAILED_SUBDIR = "failed"
 

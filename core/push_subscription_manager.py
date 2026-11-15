@@ -23,6 +23,8 @@ core/mission_rewards.py-style helpers elsewhere in this codebase).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -35,7 +37,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _SUBSCRIPTIONS_FILE = _DATA_DIR / "push_subscriptions.json"
 
 

@@ -38,6 +38,8 @@ Children's accounts don't have the vault (not in CHILD_APPS).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import os
 import re
@@ -53,7 +55,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 FILE_NAME = "memory_vault.json"
 PHOTO_EXT = frozenset({".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".gif", ".dng"})
 VIDEO_EXT = frozenset({".mp4", ".mov", ".3gp", ".mkv", ".webm", ".m4v"})

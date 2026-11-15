@@ -60,6 +60,8 @@ graded. This file is on the lab's protected list: she can't grade herself.
 
 from __future__ import annotations
 
+from core.data_root import WORK_DIR, work_path
+
 import json
 import re
 import subprocess
@@ -72,8 +74,8 @@ from core.atomic_write import atomic_write_text
 from core.dev_store import DEV_DATA, DevStore
 
 ROOT = Path(__file__).resolve().parent.parent
-SETTINGS = ROOT / "work" / "night_school.json"
-STOP_FILE = ROOT / "work" / "STOP"
+SETTINGS = work_path("night_school.json")
+STOP_FILE = WORK_DIR / "STOP"
 PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,

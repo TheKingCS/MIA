@@ -21,12 +21,14 @@ exactly what the PC would. Tool calls are never executed here.
 
 from __future__ import annotations
 
+from core.data_root import SEED_DIR
+
 import json
 import time
 from pathlib import Path
 from typing import Callable, Optional
 
-CASES_FILE = Path(__file__).resolve().parent.parent / "data" / "model_bench_cases.json"
+CASES_FILE = SEED_DIR / "model_bench_cases.json"
 
 
 def arguments_match(arguments: dict, expected: dict) -> tuple[bool, str]:

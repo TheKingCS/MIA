@@ -40,6 +40,8 @@ Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import re
 from typing import Optional
 
@@ -506,7 +508,7 @@ def _parity_gaps() -> dict:
     from pathlib import Path
 
     try:
-        raw = json.loads((Path(__file__).resolve().parent.parent / "work" / "parity.json").read_text(encoding="utf-8"))
+        raw = json.loads(work_path("parity.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
     return {k: v for k, v in (raw.get("gaps") or {}).items() if isinstance(v, dict)}

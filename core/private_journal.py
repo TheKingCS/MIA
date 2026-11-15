@@ -36,6 +36,8 @@ re-persisted in plaintext, same discipline as core/plaid_manager.py.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import base64
 import json
 import re
@@ -57,7 +59,7 @@ from core.secrets_manager import SecretsError, decrypt_bytes, encrypt_bytes
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _KEYS_FILE = _DATA_DIR / "private_journal_keys.json"
 _ENTRIES_FILE = _DATA_DIR / "private_journal.json"
 

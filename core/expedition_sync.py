@@ -44,6 +44,8 @@ used for `restore_backup()`, not a new pattern to learn).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import io
 import json
 import shutil
@@ -62,8 +64,8 @@ from core.atomic_write import atomic_write_text
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DATA_DIR = _PROJECT_ROOT / "data"
-_TRIP_PHOTOS_DIR = _PROJECT_ROOT / "trip_photos"
+_DATA_DIR = DATA_DIR
+_TRIP_PHOTOS_DIR = home_dir("trip_photos")
 
 _MANIFEST_VERSION = 1
 _BUNDLE_KIND = "expedition_data"

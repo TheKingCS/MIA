@@ -35,6 +35,8 @@ Never an off-the-record, journal or private turn.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 import threading
@@ -51,7 +53,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "failures.jsonl"
 _STATE = "failure_state.json"
 _MAX_LINES = 5000

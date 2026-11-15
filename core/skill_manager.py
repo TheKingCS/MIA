@@ -35,6 +35,8 @@ likewise derived at read time, never stored as a separate flag.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, SEED_DIR
+
 import json
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -50,8 +52,8 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-_SKILL_DEFINITIONS_FILE = _DATA_DIR / "skill_definitions.json"
+_DATA_DIR = DATA_DIR
+_SKILL_DEFINITIONS_FILE = SEED_DIR / "skill_definitions.json"  # ships with MIA, never written by her
 _SKILL_PROGRESS_FILE = _DATA_DIR / "skill_progress.json"
 _SKILL_XP_LOG_FILE = _DATA_DIR / "skill_xp_log.json"
 # Pattern Insights slice 4 (2026-09-14) — "skill momentum" needs a real

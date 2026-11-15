@@ -2761,6 +2761,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   service (`core/runtime.build_services`) used by the desktop and by `core.runtime.Runtime`, the MIA with no window
   (`python -m core.runtime`); `/api/runtime/health`; a systemd user unit and installer (not yet run on a machine).
   Not yet: the window as the runtime's client, autostart on Windows, the model server's supervision.
+- **Her home is one setting** (claude, 2026-11-15; K-0234): `MIA_HOME` (`core/data_root.py`). Unset, MIA's files stay
+  in the code's folder as before; set, everything she writes goes under it and nothing into the code's folder (a
+  test checks). `tools/move_home.py` copies and verifies, deleting nothing.
 
 ### DEC-0156: Capabilities and grants for every tool and action
 - Status: PROPOSED

@@ -32,6 +32,8 @@ things people don't want kept.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -192,7 +194,7 @@ class LifeNotes:
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Load this person's notes from `life_notes.json` in their folder (`data_dir`), or `data/` when none is given."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self.notes: list[dict] = []
         self.offers: list[dict] = []

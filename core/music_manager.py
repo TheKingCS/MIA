@@ -66,6 +66,8 @@ busy to give one; the work still runs when it gets there).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import functools
 import threading
 import time
@@ -89,7 +91,7 @@ log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_ROOT = _PROJECT_ROOT / "music_library"
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DATA_DIR = DATA_DIR
 _TRACKS_FILE = _DATA_DIR / "music_tracks.json"
 _PLAYLISTS_FILE = _DATA_DIR / "music_playlists.json"
 

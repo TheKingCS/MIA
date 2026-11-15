@@ -42,6 +42,8 @@ and adds an `undone` entry instead. Status: REAL.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import functools
 import json
 import sys
@@ -61,7 +63,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 FILE_NAME = "life_events.jsonl"
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 SOURCES = ("manual", "assistant", "phone", "import", "inferred")
 
 # Every type MIA records, with the plain word used when counting them.

@@ -14,13 +14,15 @@ about the person.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-DEV_DATA = ROOT / "data" / "dev"
+DEV_DATA = DATA_DIR / "dev"
 CHECK_DAYS = 7
 
 

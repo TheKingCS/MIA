@@ -8,7 +8,9 @@ session. Last updated: 2026-11-15 (MIA OS: the runtime extraction begun), by cla
 - **MIA OS is the objective**: the PC (dual boot, Fedora) and a Raspberry Pi 5 with the AI HAT+ (Raspberry Pi OS), the start of the Zeta Astralis. New features go only into the engine and the web screens.
 - **The runtime extraction has begun.** MIA's background jobs (alarms, reminders, the daily checks, backups, the inbox) no longer live inside the desktop window's code: they're in `core/background_jobs.py` on a plain scheduler, with no Qt. On the PC nothing looks different yet.
 - **MIA now runs with no window at all**: `python -m core.runtime` starts the whole of her (every service, all 401 tools, her schedule, the phone's server). The desktop app builds her through the same code. A Linux service file and installer are written (`deploy/install_runtime.sh`); they haven't been run on a real machine yet.
-- **Next:** her data in a folder outside the code (an OS image is read-only), the phone on the full MIA, then the window attaching to a running MIA, then the PC and Pi images.
+- **Her data can now live outside the code**: one setting (`MIA_HOME`) that every store follows. On the PC nothing moved. `python -m tools.move_home` copies a MIA to a new folder, checks every file and leaves the old one alone.
+- **Found:** files sealed on Windows can't be opened on Linux yet (the key is tied to the Windows account). That has to be built before Fedora uses the PC's data.
+- **Next:** the key store for Linux, the phone on the full MIA, the window attaching to a running MIA, then the PC and Pi images.
 
 **2026-11-15, latest (Claude: the Universal Action Layer's first phase, and taught skills).**
 - **Taught skills, phase 1, is built** (DEC-0123; AI Tools › Taught Skills, by voice, and a glasses card):

@@ -36,6 +36,8 @@ never a recurring nag.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -49,7 +51,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _USAGE_FILE = _DATA_DIR / "module_usage.json"
 _PAGE_FILE = _DATA_DIR / "page_usage.json"  # the web screens (2026-10-30), counts only
 

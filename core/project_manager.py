@@ -19,6 +19,8 @@ any Project, but isn't deleted itself.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -35,7 +37,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _PROJECTS_FILE = _DATA_DIR / "projects.json"
 
 PROJECT_STATUSES = ("Planning", "Active", "On Hold", "Complete")

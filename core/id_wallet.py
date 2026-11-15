@@ -31,6 +31,8 @@ insurance cards, registrations"). In Security.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import base64
 import json
 import uuid
@@ -80,7 +82,7 @@ class IdWallet:
         """Loads id_wallet.json from the person's folder (or data/); a file that won't open starts empty (at_rest
         keeps a copy aside)."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self._load()
 

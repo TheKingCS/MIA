@@ -35,6 +35,8 @@ closes with **evidence**: what shows it's done.
 
 from __future__ import annotations
 
+from core.data_root import WORK_DIR
+
 import re
 from dataclasses import dataclass, field
 from datetime import date
@@ -43,7 +45,7 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-TASKS_DIR = ROOT / "work" / "tasks"
+TASKS_DIR = WORK_DIR / "tasks"
 
 STATUSES = ("open", "claimed", "review", "done", "blocked", "dropped")
 FINISHED = ("done", "dropped")

@@ -29,6 +29,8 @@ task to review:
 
 from __future__ import annotations
 
+from core.data_root import WORK_DIR
+
 import json
 import re
 from pathlib import Path
@@ -41,7 +43,7 @@ from core.work_agents import AgentError, Registry
 VERDICT = re.compile(r"VERDICT:\s*(approve|changes)", re.I)
 MAX_DIFF = 60_000  # what a reviewer is given at most; past it, it's told the rest was cut
 REVIEWS_NEEDED = 2  # approving providers, when that many can review
-LESSONS = tasks_mod.ROOT / "work" / "review_lessons.json"
+LESSONS = WORK_DIR / "review_lessons.json"
 MAX_LESSONS = 12  # per provider, the latest; older ones drop off
 
 REVIEW_PROMPT = (

@@ -46,6 +46,8 @@ How it works:
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import shutil
 from datetime import datetime
@@ -146,7 +148,7 @@ log = get_logger(__name__)
 # Where the formerly shared personal files used to live (moved once to
 # the owner's folder). tests/conftest.py points this at a temp folder so
 # a test run can never move anyone's real files.
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _CLAIM_MARKER = ".shared_data_claimed"
 
 

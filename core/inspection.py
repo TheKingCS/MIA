@@ -37,6 +37,8 @@ model?") builds on what was found instead of starting over.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import os
 import platform
@@ -54,7 +56,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
-_DIR = ROOT / "data" / "inspections"
+_DIR = DATA_DIR / "inspections"
 KEEP = 20  # past reports kept per subject
 
 CONFIRMED, HIGH, PROBABLE, POSSIBLE, UNKNOWN = "CONFIRMED", "HIGH", "PROBABLE", "POSSIBLE", "UNKNOWN"

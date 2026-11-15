@@ -11,6 +11,8 @@ Device-level, on the PC (`data/phone_link.json`): profile id -> the time.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import time
 from datetime import datetime, timezone
@@ -19,7 +21,7 @@ from typing import Optional
 
 from core.atomic_write import atomic_write_text
 
-FILE = Path(__file__).resolve().parent.parent / "data" / "phone_link.json"
+FILE = DATA_DIR / "phone_link.json"
 EVERY = 300  # seconds between writes for one person
 _written: dict[str, float] = {}
 

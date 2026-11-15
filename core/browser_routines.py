@@ -32,6 +32,8 @@ The store (`BrowserRoutines`, `browser_routines.json`) is each person's own.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 import uuid
@@ -59,7 +61,7 @@ class BrowserRoutines:
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads them from the person's folder (or data/)."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self.routines: dict[str, dict] = {}
         self._load()

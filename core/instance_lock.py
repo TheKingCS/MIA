@@ -16,6 +16,8 @@ in the same process is True (tests build the app many times).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import os
 from pathlib import Path
 from typing import Optional
@@ -24,7 +26,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-PATH = Path(__file__).resolve().parent.parent / "data" / ".mia.lock"
+PATH = DATA_DIR / ".mia.lock"
 _held: dict[str, object] = {}
 
 

@@ -43,6 +43,8 @@ all use. `_tile_url()` is the one place that reordering happens.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import time
 import urllib.error
 import urllib.request
@@ -55,7 +57,7 @@ from core.map_tile_math import tiles_covering_bbox
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _TILE_CACHE_DIR = _DATA_DIR / "map_tiles"
 
 #: source name -> (URL template, local file extension). URL templates

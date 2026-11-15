@@ -31,6 +31,8 @@ control command: the node and its safety MCU act (DEC-0150 answer 4).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 from urllib.parse import urlparse
@@ -46,8 +48,8 @@ log = get_logger(__name__)
 ROOT = Path(__file__).resolve().parent.parent
 NODE = ROOT / "homestead"
 FIRMWARE = NODE / "firmware" / "safety_mcu"
-BUNDLE = ROOT / "data" / "provisioning" / "greenhouse"
-KEY = ROOT / "data" / ".keys" / "greenhouse_node_ed25519"
+BUNDLE = DATA_DIR / "provisioning" / "greenhouse"
+KEY = DATA_DIR / ".keys" / "greenhouse_node_ed25519"
 HOSTNAME = "mia-greenhouse"
 REMOTE_DIR = "~/mia-homestead"
 FLASH_TIMEOUT = 900

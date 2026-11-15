@@ -34,6 +34,8 @@ with a plain message rather than added empty.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -57,7 +59,7 @@ log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_ROOT = _PROJECT_ROOT / "textbooks"
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DATA_DIR = DATA_DIR
 _LIBRARY_FILE = _DATA_DIR / "textbooks.json"
 _INDEX_DIR = _DATA_DIR / "textbook_index"
 

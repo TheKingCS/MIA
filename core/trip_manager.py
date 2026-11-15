@@ -30,6 +30,8 @@ manager methods don't exist yet.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 from core import life_events
 
 import json
@@ -48,7 +50,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _TRIPS_FILE = _DATA_DIR / "trips.json"
 
 # Photos are real binary files, not JSON — kept out of data/ entirely
@@ -57,7 +59,7 @@ _TRIPS_FILE = _DATA_DIR / "trips.json"
 # data/ rglob alongside small config/JSON documents). Config-resolvable,
 # same _resolve_*_root_path() pattern as ReferenceLibraryManager.
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_PHOTO_ROOT = _PROJECT_ROOT / "trip_photos"
+_DEFAULT_PHOTO_ROOT = home_dir("trip_photos")
 
 #: Suggested vocabulary for Trip.activity_type, surfaced as a QComboBox in
 #: gui/add_edit_trip_dialog.py — docs/ROADMAP.md's Expedition Mode

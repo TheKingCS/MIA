@@ -15,6 +15,8 @@ anyone can check.
 
 from __future__ import annotations
 
+from core.data_root import WORK_DIR
+
 import json
 import subprocess
 import sys
@@ -23,7 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-ACTIVITY = ROOT / "work" / "activity.jsonl"
+ACTIVITY = WORK_DIR / "activity.jsonl"
 MAX_DETAIL = 2000
 
 

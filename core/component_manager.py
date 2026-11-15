@@ -16,6 +16,8 @@ generic inventory item doesn't.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -32,7 +34,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _COMPONENTS_FILE = _DATA_DIR / "components.json"
 # Multi-user pass (2026-09-14) — the "shared object + user relationship"
 # pattern's third real application (see core.kitchen_manager.

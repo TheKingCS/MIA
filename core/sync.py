@@ -50,6 +50,8 @@ read it again (core/undo_log.reload_stores), so screens update.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import hashlib
 import json
 import os
@@ -594,7 +596,7 @@ class SyncState:
 def state_for(context) -> SyncState:
     """The sync memory for this device, in the shared data folder's .sync/."""
     personal = getattr(context, "personal_data", None)
-    shared = personal.shared_dir if personal is not None else Path(__file__).resolve().parent.parent / "data"
+    shared = personal.shared_dir if personal is not None else DATA_DIR
     return SyncState(Path(shared) / ".sync")
 
 

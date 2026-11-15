@@ -99,6 +99,8 @@ reward" model ever feels wrong in practice.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -115,7 +117,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _MISSIONS_FILE = _DATA_DIR / "missions.json"
 
 METRIC_TYPES: tuple[str, ...] = ("tally", "trip_duration_hours", "task_done")

@@ -41,6 +41,8 @@ through atomic_write_text so every change can be undone.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -59,7 +61,7 @@ from core.units import amount_text, convert
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "craft_recipes.json"
 
 UNITS = {"sheet", "sheets", "board", "boards", "ft", "foot", "feet", "in", "inch", "inches", "lb", "lbs", "oz",

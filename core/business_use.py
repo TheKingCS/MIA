@@ -41,6 +41,8 @@ worksheet says it's missing instead of guessing.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import html
@@ -60,7 +62,7 @@ from core.region import money
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _USE_FILE = _DATA_DIR / "business_use.json"
 
 BUSINESS = "business"

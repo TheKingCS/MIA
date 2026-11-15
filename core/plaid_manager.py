@@ -113,6 +113,8 @@ removed-remotely-but-still-saved-locally item behind.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import time
 import uuid
@@ -151,7 +153,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _VAULT_FILE = _DATA_DIR / "plaid_vault.enc"
 
 ENVIRONMENTS = ["sandbox", "production"]

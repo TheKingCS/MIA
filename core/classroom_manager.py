@@ -30,6 +30,8 @@ this codebase.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -48,7 +50,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _SUBJECTS_FILE = _DATA_DIR / "classroom_subjects.json"
 _COURSES_FILE = _DATA_DIR / "classroom_courses.json"
 _LESSONS_FILE = _DATA_DIR / "classroom_lessons.json"

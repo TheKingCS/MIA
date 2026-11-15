@@ -26,6 +26,8 @@ atomic_write_text so every change can be undone.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -42,7 +44,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "business.json"
 
 QUOTE_STATUSES = ("Draft", "Sent", "Accepted", "Declined")

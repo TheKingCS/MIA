@@ -22,9 +22,15 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   - **Done, step 6 (Linux half), not yet run on a real machine:** `deploy/mia-runtime.service` and
     `deploy/install_runtime.sh` (a systemd user service). First real test: the Pi.
   - **Next, in order:**
-    1. **A data folder outside the code** (new finding): every store hard-codes `<the code>/data`. An OS image is
-       read-only and the Pi needs her data under the person's home. One setting (an environment variable, then
-       `~/.local/share/mia`) that every store follows. **(Fable)**
+    1. **Done: a data folder outside the code.** One setting, the environment variable `MIA_HOME`
+       (`core/data_root.py`); all 131 files that named the data folder follow it. Not set (the PC today): nothing
+       moves. `python -m tools.move_home <folder>` copies a MIA to a new home, checks every file, and never touches
+       the old folder. The Linux service installer sets `MIA_HOME` to `~/.local/share/mia`.
+    1b. **Sealed files on Linux (new finding, blocks moving the PC's data to Fedora).** Files sealed on Windows
+       (DEC-0126) open with a key Windows protects for that Windows account; Linux has no key store yet, so MIA there
+       can't read them (she copies them aside and starts those stores empty; nothing is lost, but nothing shows).
+       Needed before the dual boot uses the PC's data: a Linux key store (a passphrase or the TPM), taking the
+       recovery key. **(Fable)** Zac: keep the recovery key now (`python -m tools.data_key recovery` on the PC).
     2. **The phone runs the full MIA too**: `android-phone/.../mia_phone.py` still uses the smaller
        `core/core_runtime.build_core_context`; fold the two builders into one. **(Fable)**
     3. **The window as a client** (step 5): the desktop window (and the MIA OS session, a browser on her web

@@ -16,13 +16,15 @@ granted here, whatever the file says.
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import json
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REGISTRY = ROOT / "work" / "agents.json"
+REGISTRY = work_path("agents.json")
 
 TIERS = ("read", "propose", "experiment", "review")
 NEVER_GRANTED = ("approve", "deploy")

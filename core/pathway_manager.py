@@ -38,6 +38,8 @@ skill_weights_credited guard).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, SEED_DIR
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -53,8 +55,8 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-_PATHWAYS_FILE = _DATA_DIR / "mission_pathways.json"
+_DATA_DIR = DATA_DIR
+_PATHWAYS_FILE = SEED_DIR / "mission_pathways.json"  # ships with MIA, never written by her
 _PROGRESS_FILE = _DATA_DIR / "pathway_progress.json"
 
 PATHWAY_PROGRESS_STATUSES = ("active", "completed")

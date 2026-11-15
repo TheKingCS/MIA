@@ -36,6 +36,8 @@ write through atomic_write_text, so removing one can be undone.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import ipaddress
@@ -58,7 +60,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "security_cameras.json"
 _LOGINS = "security_logins.json"
 TIMEOUT_S = 6

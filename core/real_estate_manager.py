@@ -41,6 +41,8 @@ functions already take.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import dataclass
@@ -60,7 +62,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _PROPERTIES_FILE = _DATA_DIR / "properties.json"
 
 PROPERTY_TYPES = ["Primary Residence", "Rental", "Investment", "Land", "Other"]

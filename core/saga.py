@@ -31,6 +31,8 @@ development.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, WORK_DIR
+
 import json
 import re
 from datetime import datetime, timezone
@@ -44,7 +46,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
-SAGA = ROOT / "work" / "saga"
+SAGA = WORK_DIR / "saga"
 CATEGORIES = ("milestone", "moment", "council", "setback", "idea", "character")
 PRIVACY = ("series", "private", "never")
 
@@ -266,7 +268,7 @@ class SagaMoments:
         device.
         """
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else ROOT / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / _FILE
         self.moments: list[dict] = []
         self._load()

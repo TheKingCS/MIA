@@ -40,6 +40,8 @@ specialist only counts it, and study hall takes the most-asked one first; `pytho
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import json
 import re
 import uuid
@@ -51,7 +53,7 @@ from typing import Callable, Optional
 from core.atomic_write import atomic_write_text
 
 ROOT = Path(__file__).resolve().parent.parent
-BOOKS = ROOT / "work" / "specialists"
+BOOKS = work_path("specialists")
 PAGES = ROOT / "docs" / "specialists"
 NOTES_PER_NIGHT = 3
 MAX_BODY = 1800

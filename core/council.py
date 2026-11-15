@@ -29,6 +29,8 @@ the same record the glasses' Council Mode will speak (DEC-0081).
 
 from __future__ import annotations
 
+from core.data_root import WORK_DIR
+
 import json
 import re
 import secrets
@@ -40,7 +42,7 @@ from core.dev_store import DEV_DATA, DevIndex, DevStore
 from core.failure_log import redact
 
 ROOT = Path(__file__).resolve().parent.parent
-REPO_LOG = ROOT / "work" / "council.jsonl"
+REPO_LOG = WORK_DIR / "council.jsonl"
 REPO_CHARS = 4000  # a message's length in the repo copy; the PC keeps it whole
 MAX_TEXT = 20_000
 THREAD_LOOKBACK = 600  # recent messages searched for a thread

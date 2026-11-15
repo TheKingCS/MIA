@@ -31,6 +31,8 @@ be read back aloud: "logged a night's sleep", never what or how much.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from datetime import date, datetime, timedelta
@@ -88,7 +90,7 @@ class HealthStore:
         """Loads health.json from the person's folder (or data/); a file that won't open starts empty (at_rest keeps a
         copy aside)."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self._load()
 

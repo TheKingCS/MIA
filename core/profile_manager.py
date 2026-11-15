@@ -31,6 +31,8 @@ personal-device profile lock requires.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import hashlib
 import hmac
 import os
@@ -50,7 +52,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_PROFILES_DIR = Path(__file__).resolve().parent.parent / "data" / "profiles"
+_DATA_PROFILES_DIR = DATA_DIR / "profiles"
 # OWASP's 2023 figure for PBKDF2-HMAC-SHA256 (docs/SECURITY.md). Each stored hash keeps its own count
 # ("password_iterations", "recovery_iterations"); one without a count was made with the old 200,000, and a password is
 # re-hashed at today's count the next time it's given right.

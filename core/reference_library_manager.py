@@ -34,6 +34,8 @@ resolved to entries in the same pack) and fetched one by one through
 
 from __future__ import annotations
 
+from core.data_root import home_dir
+
 import shutil
 import time
 from dataclasses import dataclass, field
@@ -53,7 +55,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_ROOT = _PROJECT_ROOT / "reference_library"
+_DEFAULT_ROOT = home_dir("reference_library")
 
 # A multi-gigabyte pack being copied into root_path keeps growing for
 # minutes; opening it mid-copy via libzim can hang rather than raise

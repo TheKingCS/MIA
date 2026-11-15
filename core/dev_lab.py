@@ -36,6 +36,8 @@ nothing they run ever flashes a window on the desktop.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 import shutil
@@ -53,7 +55,7 @@ log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
 LAB_ROOT = ROOT.parent / "MIA-lab"
-_STORE = ROOT / "data" / "lab" / "proposals.json"
+_STORE = DATA_DIR / "lab" / "proposals.json"
 SUITE_TIMEOUT = 1200
 CODER_TIMEOUT = 2400
 OWNER = ("TheKingCS", "149123826+TheKingCS@users.noreply.github.com")  # the repo's owner, for merges

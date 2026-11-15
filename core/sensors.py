@@ -23,6 +23,8 @@ sensor naming the person it belongs to. Written through atomic_write_text. Serve
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import hashlib
 import hmac
 import json
@@ -37,7 +39,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 FILE = "sensors.json"
 MIN_GAP = 30  # seconds between one sensor's readings
 MAX_SENSORS = 50

@@ -20,6 +20,8 @@ defaulting, validation, and save behavior stay in one place.
 
 from __future__ import annotations
 
+from core.data_root import CODE_ROOT, CONFIG_DIR
+
 import json
 import shutil
 from datetime import datetime
@@ -31,9 +33,9 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
+_CONFIG_DIR = CONFIG_DIR  # the person's config.json (core/data_root.py: MIA_HOME, else the code's folder)
 _CONFIG_FILE = _CONFIG_DIR / "config.json"
-_DEFAULT_CONFIG_FILE = _CONFIG_DIR / "default_config.json"
+_DEFAULT_CONFIG_FILE = CODE_ROOT / "config" / "default_config.json"  # the defaults ship with the code
 
 
 class ConfigManager:

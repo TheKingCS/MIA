@@ -32,6 +32,8 @@ Personal: in the person's own folder (`operating_journal.json`).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -104,7 +106,7 @@ class OperatingJournal:
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads the journal from the person's own folder (operating_journal.json, or data/ by default)."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self.lines: list[dict] = []
         self.ratings: list[dict] = []

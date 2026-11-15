@@ -31,6 +31,8 @@ sign of doing too much too soon), the person's to see. The Play screen
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 import uuid
@@ -136,7 +138,7 @@ class RecreationLog:
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads what was played from the person's folder (recreation.json, or data/)."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self.entries: list[dict] = []
         self._load()

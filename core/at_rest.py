@@ -36,6 +36,8 @@ Envelope: one text line, ``MIA-SEALED-1:<kid>:<base64(nonce + ciphertext)>``, so
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import base64
 import hashlib
 import json
@@ -52,7 +54,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
-KEY_DIR = ROOT / "data" / ".keys"
+KEY_DIR = DATA_DIR / ".keys"
 KEY_NAME = "data_key.json"
 PREFIX = "MIA-SEALED-1:"
 _ENTROPY = b"MIA data key (DEC-0126)"

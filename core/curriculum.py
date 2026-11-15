@@ -40,6 +40,8 @@ proves it and a fix, through the lab like any change: Zac approves it.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional
@@ -253,7 +255,7 @@ def lesson_brief(objective: Objective) -> str:
 # A check counts as passed once it's mastered (MASTERY lessons passed); every lesson before that is kept as an
 # attempt not yet passed, its value the passes so far.
 
-BOOK_DIR = Path(__file__).resolve().parent.parent / "data" / "dev" / "mia_paths"
+BOOK_DIR = DATA_DIR / "dev" / "mia_paths"
 
 
 def _tested(context, program, check, payload) -> dict:

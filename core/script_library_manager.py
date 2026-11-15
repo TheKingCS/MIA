@@ -20,6 +20,8 @@ installation (see CLAUDE.md's "known intentional simplifications").
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -36,7 +38,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _SCRIPTS_FILE = _DATA_DIR / "scripts.json"
 
 INTERPRETERS = ("shell", "python")

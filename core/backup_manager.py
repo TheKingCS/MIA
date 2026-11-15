@@ -72,6 +72,8 @@ now pass `self.context.config` for full coverage.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import io
 import json
 import os
@@ -90,7 +92,7 @@ log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _CONFIG_FILE = _PROJECT_ROOT / "config" / "config.json"
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DATA_DIR = DATA_DIR
 
 _MAGIC = b"MIAB1"
 _MANIFEST_VERSION = 1
@@ -104,12 +106,12 @@ _MANIFEST_VERSION = 1
 # light filesystem/zip utility otherwise. If any of those managers' own
 # default folder name or config key ever changes, this list needs the
 # matching update — there's no other coupling enforcing that today.
-_DEFAULT_TRIP_PHOTOS_DIR = _PROJECT_ROOT / "trip_photos"
-_DEFAULT_TRAIL_MAPS_DIR = _PROJECT_ROOT / "trail_maps"
-_DEFAULT_LITE_CAPTURES_DIR = _PROJECT_ROOT / "lite_captures"
-_DEFAULT_HOMESTEAD_SNAPSHOTS_DIR = _PROJECT_ROOT / "homestead_snapshots"
-_DEFAULT_FINANCIAL_SNAPSHOTS_DIR = _PROJECT_ROOT / "financial_snapshots"
-_DEFAULT_MAINTENANCE_DOCUMENTS_DIR = _PROJECT_ROOT / "maintenance_documents"
+_DEFAULT_TRIP_PHOTOS_DIR = home_dir("trip_photos")
+_DEFAULT_TRAIL_MAPS_DIR = home_dir("trail_maps")
+_DEFAULT_LITE_CAPTURES_DIR = home_dir("lite_captures")
+_DEFAULT_HOMESTEAD_SNAPSHOTS_DIR = home_dir("homestead_snapshots")
+_DEFAULT_FINANCIAL_SNAPSHOTS_DIR = home_dir("financial_snapshots")
+_DEFAULT_MAINTENANCE_DOCUMENTS_DIR = home_dir("maintenance_documents")
 # `config key` is None for a directory with no configurable override
 # at all (core.maintenance_manager._DOCUMENT_ROOT is always this exact
 # path) — always resolves to its default, see _resolve_external_content_dirs.

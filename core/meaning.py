@@ -19,6 +19,8 @@ the question is embedded on each turn (about 20 ms).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import hashlib
 import json
 import math
@@ -31,7 +33,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_CACHE_FILE = Path(__file__).resolve().parent.parent / "data" / "cache" / "meaning.json"
+_CACHE_FILE = DATA_DIR / "cache" / "meaning.json"
 _DEFAULT_MODEL = "nomic-embed-text"
 _TIMEOUT = 20
 _memory: dict[str, list[float]] = {}

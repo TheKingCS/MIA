@@ -55,6 +55,8 @@ app takes.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import json
 import shutil
 import uuid
@@ -74,9 +76,9 @@ from core.data_recovery import notify_data_corruption
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DATA_DIR = DATA_DIR
 _MAINTENANCE_FILE = _DATA_DIR / "maintenance.json"
-_DOCUMENT_ROOT = _PROJECT_ROOT / "maintenance_documents"
+_DOCUMENT_ROOT = home_dir("maintenance_documents")
 
 ASSET_CATEGORIES = ["Vehicle", "Power Equipment", "Appliance", "Property", "Garden/Plant", "Tool", "Other"]
 

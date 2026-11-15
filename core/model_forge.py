@@ -54,6 +54,8 @@ goes into use only when it wins there and Zac approves.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 from dataclasses import dataclass
@@ -64,7 +66,7 @@ from typing import Iterable, Optional
 from core.atomic_write import atomic_write_text
 
 ROOT = Path(__file__).resolve().parent.parent
-MODELS = ROOT / "data" / "models"
+MODELS = DATA_DIR / "models"
 _WORD = re.compile(r"[a-z0-9']+")
 _STOP = {"a", "an", "the", "to", "of", "and", "or", "is", "are", "my", "me", "i", "it", "for", "in", "on", "do",
          "does", "what", "how", "can", "you", "your", "this", "that", "with", "be", "s"}

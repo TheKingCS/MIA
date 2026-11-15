@@ -30,6 +30,8 @@ latest state, and which alerts have been raised. Facts in code; the model only p
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import json
 import re
 from datetime import datetime, timedelta
@@ -43,7 +45,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
-_DATA_DIR = ROOT / "data"
+_DATA_DIR = DATA_DIR
 FILE_NAME = "greenhouse_link.json"
 NODE_DOCS = ROOT / "homestead" / "docs"
 STATE_FILE = "dashboard_state.json"
@@ -204,7 +206,7 @@ def _dropped(context) -> Optional[dict]:
         folder = manager.import_folder_path() if manager is not None else None
     except Exception:
         folder = None
-    path = Path(folder) / STATE_FILE if folder else ROOT / "homestead_snapshots" / STATE_FILE
+    path = Path(folder) / STATE_FILE if folder else home_dir("homestead_snapshots") / STATE_FILE
     try:
         return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
     except (OSError, ValueError):

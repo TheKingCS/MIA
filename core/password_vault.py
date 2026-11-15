@@ -34,6 +34,8 @@ without the master password or the recovery code, nobody can open it.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import base64
 import csv
 import io
@@ -53,7 +55,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 FILE_NAME = "password_vault.json"
 LOCK_AFTER_SECONDS = 5 * 60
 MIN_MASTER_LENGTH = 10

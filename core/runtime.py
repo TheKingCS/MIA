@@ -119,6 +119,7 @@ from core.waypoint_manager import WaypointManager
 from core.workout_manager import WorkoutManager
 from core.workshop_machine import LaserEngraverMachine, WorkshopMachineRegistry
 from core.app_context import AppContext
+from core import data_root
 from core.assistant_tools import AssistantTools
 from core.background_jobs import JOBS, BackgroundJobs
 from core.config_manager import ConfigManager
@@ -405,7 +406,8 @@ class Runtime(BackgroundJobs, AssistantTools):
     def health(self) -> dict:
         """How this MIA is doing: whether the schedule is running, since when and for how long, each job's record
         (core.scheduler.Scheduler.status), how many jobs have failed or never run, whether the model answers, and
-        whether the phone server is up. For /api/health and Diagnostics."""
+        whether the phone server is up, and where her files are (core/data_root.describe). For /api/runtime/health and
+        Diagnostics."""
         jobs = self.scheduler.status()
         running = self._thread is not None and self._thread.is_alive()
         llm = getattr(self.context, "llm", None)
@@ -420,7 +422,7 @@ class Runtime(BackgroundJobs, AssistantTools):
             "jobs": jobs, "jobs_failing": [j["name"] for j in jobs if j["last_error"]],
             "services": len(self.services()), "tools": len(self.context.assistant_actions._actions),
             "model_available": model, "phone_server": bool(server is not None and getattr(server, "running", False)),
-            "window": False,
+            "window": False, "home": data_root.describe(),
         }
 
     def run_until_stopped(self) -> None:

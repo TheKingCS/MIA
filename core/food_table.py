@@ -19,6 +19,8 @@ Pure logic over a read-only file; loaded once, on first use.
 
 from __future__ import annotations
 
+from core.data_root import SEED_DIR
+
 import csv
 import re
 import unicodedata
@@ -26,7 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-TABLE = Path(__file__).resolve().parent.parent / "data" / "foods.tsv"
+TABLE = SEED_DIR / "foods.tsv"
 NUTRIENTS = ("kcal", "protein_g", "fat_g", "carbs_g", "fiber_g", "sugar_g", "sodium_mg")
 
 

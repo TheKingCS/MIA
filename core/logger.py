@@ -23,12 +23,14 @@ never reached logs/, so a thread could fail quietly for days.
 
 from __future__ import annotations
 
+from core.data_root import LOG_DIR
+
 import logging
 import logging.handlers
 import threading
 from pathlib import Path
 
-_LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+_LOG_DIR = LOG_DIR  # core/data_root.py: under MIA_HOME, else the code's folder
 _LOG_FILE = _LOG_DIR / "mia.log"
 _CONFIGURED = False
 

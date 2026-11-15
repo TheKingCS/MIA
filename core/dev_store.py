@@ -27,6 +27,8 @@ on its way into the repo (core/council.py).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import gzip
 import json
 import os
@@ -37,7 +39,7 @@ from pathlib import Path
 from typing import Iterable, Iterator, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-DEV_DATA = ROOT / "data" / "dev"
+DEV_DATA = DATA_DIR / "dev"
 SEGMENT_BYTES = 2_000_000  # plain size before a segment closes; gzipped it's ~200 KB
 
 

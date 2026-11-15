@@ -44,6 +44,8 @@ Pure logic where possible; the stores are only read.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import asdict, dataclass
@@ -56,7 +58,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 FILE_NAME = "links.json"
 
 # The relation names (the kickoff spec's list), with how each one reads.

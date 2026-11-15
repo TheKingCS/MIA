@@ -21,6 +21,8 @@ vision model (core/sight.py's model), from a small copy of the photo. Then
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import io
 import re
 import time
@@ -124,7 +126,7 @@ def shelves(root: Path = ROOT) -> list[Path]:
 
 # ------------------------------------------------------------------ at night
 
-DATA = ROOT / "data" / "vault_captions"
+DATA = DATA_DIR / "vault_captions"
 
 
 def due(now: Optional[datetime] = None) -> bool:

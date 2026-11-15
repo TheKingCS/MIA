@@ -35,6 +35,8 @@ every page and on the 3D room's far wall (core/themes.py `backdrop`).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import random
 import re
@@ -101,7 +103,7 @@ class ArtStore:
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads art.json from the person's folder (or data/); a file that won't open starts empty."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self.folder = self.data_dir / FOLDER
         self._load()
@@ -289,7 +291,7 @@ def _person(context) -> str:
 def _staging(context) -> Path:
     """Where a worker leaves a finished image for settle() to take in."""
     store = getattr(context, "art", None)
-    base = store.data_dir if store is not None else Path(__file__).resolve().parent.parent / "data"
+    base = store.data_dir if store is not None else DATA_DIR
     return base / FOLDER / "staging"
 
 

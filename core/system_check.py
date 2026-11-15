@@ -17,6 +17,8 @@ everything set up?").
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import importlib.util
 import os
 import shutil
@@ -27,7 +29,7 @@ from typing import Callable, Optional
 
 OK, MISSING, OPTIONAL = "ok", "missing", "optional"
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _LOW_DISK_BYTES = 1_000_000_000
 
 

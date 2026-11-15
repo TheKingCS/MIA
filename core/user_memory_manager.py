@@ -52,6 +52,8 @@ separate UI scope, not attempted here.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 from core import life_events
 
 import json
@@ -70,7 +72,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _USER_MEMORIES_FILE = _DATA_DIR / "user_memories.json"
 _CORRECTIONS_FILE = "memory_corrections.jsonl"  # beside the memories: category and age only
 CORRECTED_WITHIN = 14  # days: a memory changed this soon after she kept it was kept wrong

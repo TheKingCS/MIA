@@ -35,6 +35,8 @@ live in closet_photos/ beside it.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import shutil
 import uuid
@@ -50,7 +52,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "smart_closet.json"
 PHOTO_DIR = "closet_photos"
 PHOTO_TYPES = (".jpg", ".jpeg", ".png", ".webp")

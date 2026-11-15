@@ -32,6 +32,8 @@ plainly.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 import uuid
@@ -46,7 +48,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 MEALS = ("breakfast", "lunch", "dinner", "snack")
 NUTRIENTS = ("kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "sodium_mg")
 WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")

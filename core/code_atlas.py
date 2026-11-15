@@ -39,6 +39,8 @@ What it keeps:
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import ast
 import json
 import re
@@ -48,7 +50,7 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parent.parent
 PY_LAYERS = ("core", "server", "gui", "modules", "tools", "tests")
 OTHER = (("web", "*.js"), ("android-phone/app/src/main/java", "*.kt"))
-BASELINE = ROOT / "work" / "doc_baseline.json"
+BASELINE = work_path("doc_baseline.json")
 ATLAS = ROOT / "docs" / "ATLAS.md"
 SENTENCE_WORDS = 4  # a test name this many words long says what it proves
 

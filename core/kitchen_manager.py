@@ -38,6 +38,8 @@ tracking and Real Estate's own manually-updated current_value.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import shutil
 import uuid
@@ -55,7 +57,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _RECIPES_FILE = _DATA_DIR / "kitchen_recipes.json"
 _PANTRY_FILE = _DATA_DIR / "kitchen_pantry.json"
 _GROCERY_LIST_FILE = _DATA_DIR / "kitchen_grocery_list.json"

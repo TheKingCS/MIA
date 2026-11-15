@@ -19,6 +19,8 @@ Every source is read defensively: one that can't be read becomes a noted gap, ne
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import re
 import sys
 from pathlib import Path
@@ -54,7 +56,7 @@ def loops() -> dict:
 
     from collections import Counter
 
-    decided = _safe(lambda: json.loads((ROOT / "work" / "loop_coverage.json").read_text("utf-8")), {})
+    decided = _safe(lambda: json.loads(work_path("loop_coverage.json").read_text("utf-8")), {})
     registry = getattr(loops_mod, "LOOPS", ())
     return {"active": len(registry),
             "by_area": dict(Counter(getattr(l, "area", "?") for l in registry)),

@@ -38,6 +38,8 @@ core/map_tile_cache.py.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR, home_dir
+
 import json
 import shutil
 import urllib.error
@@ -56,8 +58,8 @@ from core.data_recovery import notify_data_corruption
 log = get_logger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
-_DEFAULT_ROOT = _PROJECT_ROOT / "trail_maps"
-_DATA_DIR = _PROJECT_ROOT / "data"
+_DEFAULT_ROOT = home_dir("trail_maps")
+_DATA_DIR = DATA_DIR
 _TRAIL_MAPS_FILE = _DATA_DIR / "trail_maps.json"
 _REMOVED = "removed"  # where a deleted map's PDF is set aside, so undo can bring it back
 

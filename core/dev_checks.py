@@ -26,6 +26,8 @@ protected list.
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import json
 import re
 import time
@@ -35,7 +37,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-KNOWN = ROOT / "work" / "known_failures.json"
+KNOWN = work_path("known_failures.json")
 OSV = "https://api.osv.dev/v1/querybatch"
 PYPI = "https://pypi.org/pypi/{name}/json"
 _SUITES: dict[str, dict] = {}  # commit -> its result, for this process

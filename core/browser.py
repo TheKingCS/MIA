@@ -47,6 +47,8 @@ the page as she goes and stopping at every commit.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import concurrent.futures
 import json
 import queue
@@ -746,7 +748,7 @@ class Browsers:
         """No sessions yet; where profiles go when a person has no folder of their own."""
         self.context = context
         self.factory = driver_factory
-        self.root = Path(root) if root is not None else Path(__file__).resolve().parent.parent / "data" / "browser"
+        self.root = Path(root) if root is not None else DATA_DIR / "browser"
         self.sessions: dict[str, Browser] = {}
 
     def folder(self, person: Optional[str]) -> Path:

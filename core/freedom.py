@@ -45,6 +45,8 @@ the next target.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import math
 from dataclasses import dataclass, field
@@ -402,7 +404,7 @@ class FreedomLog:
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         """A daily log of the freedom fund's balance (freedom_log.json, data/ by default), to show its pace."""
         self.context = context
-        self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parent.parent / "data"
+        self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / self.FILE
         self._load()
 

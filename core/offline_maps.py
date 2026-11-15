@@ -20,6 +20,8 @@ tiles (US only), it covers anywhere, and stays sharp at every zoom.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import math
 import re
@@ -30,7 +32,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-MAPS_DIR = ROOT / "data" / "maps"
+MAPS_DIR = DATA_DIR / "maps"
 TOOL = Path.home() / "DevTools" / "pmtiles" / "pmtiles.exe"
 BUILDS = "https://build-metadata.protomaps.dev/builds.json"
 BUILD_URL = "https://build.protomaps.com/{key}"

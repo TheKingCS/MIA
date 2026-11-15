@@ -22,6 +22,8 @@ and sealed at rest (DEC-0126). Every create records a `life_events` entry — th
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -37,7 +39,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "living_worlds.json"
 CAMPAIGN_STATUSES = ("active", "paused", "ended")
 TURNS_KEPT = 200  # the story so far is kept to this many turns per campaign, oldest let go first

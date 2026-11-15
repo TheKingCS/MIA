@@ -22,6 +22,8 @@ safety, not the daily message limit's kind of message), with what to do if it wa
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import threading
 from contextlib import contextmanager
@@ -33,7 +35,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 KEEP = 5000
 KINDS = ("sign_in", "sign_in_failed", "waiting", "session_ended", "signed_out", "signed_out_everywhere",
          "password_changed", "recovery_code", "phone_linked", "phone_unlinked", "two_step_on", "two_step_off", "data_key_unopened", "data_key_restored", "data_key_shown", "data_exported",

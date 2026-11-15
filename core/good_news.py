@@ -53,6 +53,8 @@ does can be said, and everything said has its control there (DEC-0125).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import hashlib
 import html
 import json
@@ -70,7 +72,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data" / "good_news"
+DATA = DATA_DIR / "good_news"
 SETTING = "good_news.on"
 STORIES = 6
 KEEP_DAYS = 3

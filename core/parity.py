@@ -23,12 +23,14 @@ writes `docs/PARITY.md`, the table (a test checks it's current).
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import json
 from pathlib import Path
 from typing import Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-DECISIONS = ROOT / "work" / "parity.json"
+DECISIONS = work_path("parity.json")
 REPORT = ROOT / "docs" / "PARITY.md"
 MODES = ("voice", "pc", "phone", "glasses")
 

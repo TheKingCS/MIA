@@ -42,6 +42,8 @@ It **never approves**: a merge is still Zac at the keyboard.
 
 from __future__ import annotations
 
+from core.data_root import WORK_DIR
+
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -53,8 +55,8 @@ from core import work_tasks as tasks_mod
 from core.atomic_write import atomic_write_text
 
 ROOT = Path(__file__).resolve().parent.parent
-MISSIONS = ROOT / "work" / "missions"
-STOP_FILE = ROOT / "work" / "STOP"
+MISSIONS = WORK_DIR / "missions"
+STOP_FILE = WORK_DIR / "STOP"
 WHO = "runner"
 
 

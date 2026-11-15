@@ -78,6 +78,8 @@ ordering would otherwise miss entirely).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -96,7 +98,7 @@ from core.region import money
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _BILLS_FILE = _DATA_DIR / "bills.json"
 _INCOME_FILE = _DATA_DIR / "income.json"
 _EXPENSES_FILE = _DATA_DIR / "budget_expenses.json"

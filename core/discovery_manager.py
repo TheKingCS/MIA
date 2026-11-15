@@ -63,6 +63,8 @@ discipline `PathwayManager.start_pathway()` already established.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -80,7 +82,7 @@ from core.data_recovery import notify_data_corruption
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _PROPOSALS_FILE = _DATA_DIR / "mission_proposals.json"
 
 PROPOSAL_STATUSES = ("pending", "accepted", "rejected")

@@ -49,6 +49,8 @@ needs no PySide6 import and stays usable from a headless context too.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import threading
 from pathlib import Path
@@ -74,7 +76,7 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _VAPID_KEYS_FILE = _DATA_DIR / "vapid_keys.json"
 
 # Contact info the push services (Google/Mozilla/Apple) require in the

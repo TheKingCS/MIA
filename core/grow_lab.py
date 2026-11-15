@@ -33,6 +33,8 @@ Planting, harvests and losses are life events (the Chronicle tells them).
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -46,7 +48,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "grow_lab.json"
 
 MEASURES = {  # measure: (label, unit)

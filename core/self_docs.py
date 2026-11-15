@@ -35,6 +35,8 @@ model. Built once per process, rebuilt when a file changes.
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import ast
 import re
 from dataclasses import dataclass
@@ -45,7 +47,7 @@ from core.device_help_manager import HelpChunk, _query_words, _tokenize, split_i
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
-KNOWLEDGE = ROOT / "work" / "knowledge"
+KNOWLEDGE = work_path("knowledge")
 CODE_LAYERS = ("core", "server", "tools", "modules", "gui")  # not tests: they say what's checked, not how she works
 HISTORY = {"ROADMAP.md"}
 SKIP = {"NEXT_SESSION.md"}  # the to-do list: what's pending, not how MIA works

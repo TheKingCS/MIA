@@ -22,6 +22,8 @@ atomic_write_text, so a check-in can be undone.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import math
 import struct
@@ -39,7 +41,7 @@ from core.map_tile_math import lat_lon_to_tile_xy
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "world_map.json"
 ZOOM = 14  # a tile is ~2.4 km across at the equator
 REGION_ZOOM = 8  # a "region" is ~150 km across

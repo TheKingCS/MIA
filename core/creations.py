@@ -24,6 +24,8 @@ overwritten silently, and nothing outside the creation is ever touched.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 from datetime import datetime
 from pathlib import Path
@@ -36,7 +38,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "creations.json"
 DRAFT, PUBLISHED, RETIRED = "draft", "published", "retired"
 

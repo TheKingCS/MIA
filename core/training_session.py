@@ -34,6 +34,8 @@ The transitions are pure functions over a `Session` and a `now`; the
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import math
 import re
@@ -49,7 +51,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+_DATA_DIR = DATA_DIR
 _FILE = "training_session.json"
 REST_SECONDS = 60
 CADENCE_SECONDS = 2.0

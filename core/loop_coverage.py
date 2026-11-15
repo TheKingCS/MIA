@@ -36,6 +36,8 @@ This file and `work/loop_coverage.json` are on the lab's protected list.
 
 from __future__ import annotations
 
+from core.data_root import work_path
+
 import json
 import re
 from pathlib import Path
@@ -44,7 +46,7 @@ from typing import Optional
 from core.atomic_write import atomic_write_text
 
 ROOT = Path(__file__).resolve().parent.parent
-DECISIONS = ROOT / "work" / "loop_coverage.json"
+DECISIONS = work_path("loop_coverage.json")
 STATUSES = ("todo", "proposed", "none")
 
 # What isn't a store, an action, a check or a module, but runs all the same.

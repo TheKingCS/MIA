@@ -36,6 +36,8 @@ own environment) into `data/chronicles/`, kept off the repo.
 
 from __future__ import annotations
 
+from core.data_root import DATA_DIR
+
 import json
 import re
 from datetime import date, datetime
@@ -49,7 +51,7 @@ log = get_logger(__name__)
 
 ROOT = Path(__file__).resolve().parent.parent
 BIBLE = ROOT / "docs" / "chronicles"
-PANELS = ROOT / "data" / "chronicles"
+PANELS = DATA_DIR / "chronicles"
 PER_ISSUE = 4  # events an issue tells
 MODEL = "qwen2.5:14b"
 # Real names that must never appear in the series (DEC-0087): the products, their makers, and the Creator's name.
