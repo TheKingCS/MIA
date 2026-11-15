@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1398 files, 311,792 lines; 1398 files describe themselves; 17,118 of 17,213 classes and functions are documented.
+1402 files, 312,167 lines; 1402 files describe themselves; 17,147 of 17,242 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-532 files, 154,080 lines; 7,942 of 8,028 classes and functions documented
+534 files, 154,265 lines; 7,955 of 8,041 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -88,6 +88,7 @@
 - `core/atomic_write.py`: One shared helper for crash-safe file writes. Every core/*_manager.py persists its state as JSON via a direct `path.write_text(...)` call — which is NOT atomic: a crash, power loss, or disk-full condition mid write can leave that file truncated or corrupted, permanently losing everything in it. A re
 - `core/auto_backup.py`: A backup every night without anyone pressing a button (2026-11-10). Until now `core/backup_manager.create_backup` ran only from the two Backup buttons, so a person who never pressed one had none.
 - `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid
+- `core/background_jobs.py`: Everything MIA does on a schedule, with no window needed (the MIA Runtime, DEC-0155; steps 1 and 3 of `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`).
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py.
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week, 
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show.
@@ -153,7 +154,7 @@
 - `core/creation_spec.py`: What a screen MIA makes may say, and what it shows (DEC-0088/0091; ACAF, `docs/ACAF_REVIEW.md` sections 3.2 to 4). A screen is a specification: a title, the record set it shows (core/record_sets.py) and a list of blocks** from a fixed catalogue. It holds no HTML, script or free formula: values are a
 - `core/creations.py`: What MIA has made for a person, and every version of it (DEC-0091; ACAF, `docs/ACAF_REVIEW.md` section 5). A personal store (PERSONAL_STORES): a person's creations are theirs, even when the records they show are the household's.
 - `core/curriculum.py`: What MIA studies to become good at everything a computer can be made to do (Zac, 2026-11-07: "I want her very well trained on how to do all things computer related, software engineering, design, apps, web pages, deploying, cyber security, pen testing, monitoring etc and creating documentation for us
-- `core/daily_occasions.py`: Pure decision logic for `core/application.py`'s daily-occasion-check timer — 2026-07-14 aesthetic pass part 5, at the user's explicit request: "know and celebrate the user's birthday, remind them of anniversaries, check in with them and see how they are doing." Split out as pure functions (no Qt, no
+- `core/daily_occasions.py`: Pure decision logic for `core/background_jobs.py`'s daily-occasion-check timer — 2026-07-14 aesthetic pass part 5, at the user's explicit request: "know and celebrate the user's birthday, remind them of anniversaries, check in with them and see how they are doing." Split out as pure functions (no Qt
 - `core/dashboard_telemetry.py`: Pure telemetry math for the redesigned Home dashboard's gauges (2026-07-18 design handoff, CCH.zip's Dashboard console) — no Qt, no psutil calls of its own, testable in isolation (see tests/test_dashboard_telemetry.py). `gui/home_dashboard.py` owns the actual `core.system_health.read_system_health()
 - `core/dashboard_widgets.py`: The Home dashboard's widget registry — 2026-07-15, "framework first" per the widget/dashboard-customization conversation (`docs/VISION.md`'s companion-philosophy update names weather/trading-bot/music/current project widgets; this is the generic mechanism underneath all of them, built before any spe
 - `core/data_logger_manager.py`: The Data Logger + Charts shared service — docs/ROADMAP.md milestone 8.1, the "Data Logger + Charts" row of the shared core services table (used by Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics).
@@ -283,7 +284,7 @@
 - `core/loops.py`: MIA's improvement loops (DEC-0094; the map is `docs/IMPROVEMENT_LOOPS.md`; Zac, 2026-11-06: "almost every process has the potential for some kind of self assessment and improvement loop and we should identify those and build it").
 - `core/mail_send.py`: Sending an email draft from your own address (2026-10-01, accounts stage 3, core/email_drafts.py). Optional: without it, Copy and "open in my mail app" always work.
 - `core/main_thread.py`: Publishing events safely from background threads (2026-09-28).
-- `core/maintenance_insights.py`: The Maintenance-domain scan for "connective infrastructure" phase 3 (Insight + Recommendation) — see core/insight_manager.py's own docstring for why these are real, new persisted entities. Pure decision logic, no Qt, no manager instance of its own, wired into core/application.py's existing daily-che
+- `core/maintenance_insights.py`: The Maintenance-domain scan for "connective infrastructure" phase 3 (Insight + Recommendation) — see core/insight_manager.py's own docstring for why these are real, new persisted entities. Pure decision logic, no Qt, no manager instance of its own, wired into core/background_jobs.py's existing daily
 - `core/maintenance_manager.py`: Backs the Maintenance module (modules/maintenance/module.py) — recurring upkeep tracking for anything the user owns that needs it: vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Same persisted-JSON pattern as core.journal_manager.JournalManager core.calendar_m
 - `core/map_share_actions.py`: Showing MIA's places on TAK apps on the local network (build plan step 14, DEC-0099; `docs/MAPS_AND_COMMS.md`), through the action contract (core/actions.py): `map.tak_share` sends each waypoint once as a Cursor on Target event over UDP multicast with a one-hop limit, so it never leaves the network 
 - `core/map_tile_cache.py`: Disk-backed cache for real basemap tiles — the actual "offline maps" imagery gui/widgets/tile_map_view.py renders, unlike gui/widgets/waypoint_map_canvas.py's schematic waypoint plot (which has no basemap imagery at all, by design — see that module's docstring).
@@ -392,6 +393,7 @@
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t
 - `core/saga.py`: The Chronicle Archive for *MIA: The Chronicles* (DEC-0084; Zac and ChatGPT, H-0081: "a dedicated structure that continuously gathers and organizes information that could become part of future comic issues"; `docs/COUNCIL_AND_CHRONICLES_REVIEW.md` section 7). Not `core/chronicle.py`: that's each pers
 - `core/saga_actions.py`: The moments kept for the Chronicles (core/saga.py, DEC-0084), seen and decided without voice (2026-11-09, DEC-0125). "Remember this for the Chronicles" keeps a moment private until the person marks it; this gives the Chronicle page the list (`kept_moments`) and one action, `saga.mark`, that marks on
+- `core/scheduler.py`: MIA's background schedule, without Qt (the MIA Runtime, DEC-0155; step 2 of `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`).
 - `core/schema_check.py`: A small JSON Schema checker (2026-10-05, Engine Phase 1), standard library only, for the parts of draft 2020-12 MIA's published schemas use (docs/schema/): type, enum, required, properties, additionalProperties, items, pattern and local $ref. Other surfaces can validate the same schema with any full
 - `core/script_library_manager.py`: Backs Field Kit's "Useful Scripts" tab (docs/ROADMAP.md milestone 11.4) — a categorized library of user-authored shell/Python scripts. Same persisted-JSON pattern as core.journal_manager.JournalManager: data/scripts.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save/CRUD/se
 - `core/script_runner.py`: Executes a Field Kit script (docs/ROADMAP.md milestone 11.4) — writes its content to a fresh temp file and starts it running as a real subprocess. No sandboxing: these are the user's own trusted scripts on their own offline device, same "single-user offline tool" stance this project already takes fo
@@ -820,7 +822,7 @@
 
 ## tests/: the test suite: what each part must do
 
-479 files, 80,774 lines; 6,870 of 6,879 classes and functions documented
+481 files, 80,964 lines; 6,886 of 6,895 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -858,6 +860,7 @@
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.
 - `tests/test_auto_backup.py`: The nightly backup (core/auto_backup.py): when it is due, which automatic backups the rotation keeps (and that a hand-made one is never touched), and a real round trip: stores written, backed up at night, changed, then restored to what the backup held.
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
+- `tests/test_background_jobs.py`: MIA's scheduled jobs without the window (core/background_jobs.py, DEC-0155): the ten jobs and 43 daily checks are pinned so none is lost on the way to MIA OS; they run with no Qt; and the desktop app runs the very same ones.
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. Also a restore that waits for the next start (schedule_restore, then apply_
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops.
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
@@ -1158,6 +1161,7 @@
 - `tests/test_safety_floor.py`: Safety floor corpus (core/safety_floor.py): what must trigger, what must not.
 - `tests/test_saga.py`: The Chronicle Archive (DEC-0084, core/saga.py): story material found in the real records by rule, joined only by Zac, personal moments never in the repo.
 - `tests/test_saga_actions.py`: The moments kept for the Chronicles on the Chronicle page (core/saga_actions.py, 2026-11-09): listed newest first with the marks they don't have yet, marked through saga.mark (only "series" approves one for the comic), refused for an unknown moment or privacy, and shown on the Chronicle page's data.
+- `tests/test_scheduler.py`: The plain-Python scheduler (core/scheduler.py, DEC-0155): jobs on intervals by a clock that's passed in, under the store lock or not now, one failure never stopping the rest, and no catching up after a sleep.
 - `tests/test_script_library_manager.py`: Unit tests for core.script_library_manager. Isolates _DATA_DIR/_SCRIPTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths) — same shape throughout, since ScriptLibraryManager is deliberately the same persisted-JSON CRUD pattern as JournalManager,
 - `tests/test_script_runner.py`: Unit tests for core.script_runner — genuine subprocess runs, not mocks. Unlike this project's flashing-engine/serial-monitor work (blocked on real hardware this dev sandbox doesn't have), a script's execution needs nothing special: real `bash`/the real Python interpreter are both right here, so thes
 - `tests/test_search_manager.py`: Unit tests for core.search_manager — no persisted file at all, so no isolation fixture is needed here (unlike most core/ managers).

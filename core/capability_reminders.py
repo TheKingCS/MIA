@@ -8,7 +8,7 @@ him where he is — the gentle reminder that the ability is already in his hands
 moving.
 
 Facts in code, the model only phrases — the same rule the rest of MIA follows. `on_hand(context)` gathers the
-real abilities on his table (for the daily check in `core/application.py` and the My Directions screen): a learning path he's a step from advancing (`core/paths.py`), a project he
+real abilities on his table (for the daily check in `core/background_jobs.py` and the My Directions screen): a learning path he's a step from advancing (`core/paths.py`), a project he
 started and parked (`core/project_manager.py`), a plan whose materials are all on the shelf, a recipe he has
 everything for, and the homestead's next doable step. This module wraps one in a warm, low-pressure frame. Empty in, empty
 out — a reminder never fires without a true thing behind it — and the communication gate paces it, so it stays a
@@ -59,7 +59,7 @@ def on_hand(context) -> list:
     all on the shelf (core/plan_library.py), a recipe with everything in the pantry (the kitchen), and the homestead's
     next doable step for someone already homesteading (core/development_engine.py). Each is a (verb phrase, honest
     reason) pair; every source is read defensively, so a missing one simply contributes nothing. Used by the daily
-    check (core/application.py) and the My Directions screen (core/web_directions.py)."""
+    check (core/background_jobs.py) and the My Directions screen (core/web_directions.py)."""
     out = []
     try:
         from core import paths

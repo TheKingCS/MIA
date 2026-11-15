@@ -11,11 +11,21 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Zac wants MIA OS as soon as possible**, on the PC (dual boot beside Windows) and on a Raspberry Pi 5 with the AI
   HAT+ and other devices, worked on from a Claude Code session on the Pi. The Pi starts the Zeta Astralis (a wrist
   computer and phone), a later project.
-- **Next build step: the runtime extraction (DEC-0155, approved), (Fable).** The plan is
-  `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`.
+- **The runtime extraction (DEC-0155, approved), (Fable).** The plan is
+  `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`. Where it stands:
+  - **Done, steps 1 to 3:** the ten timers and 43 daily checks are out of the desktop window's class, in
+    `core/background_jobs.py` (no Qt), on `core/scheduler.py`. The desktop runs them through one timer; nothing
+    else changed for you. `tests/test_background_jobs.py` pins both lists.
+  - **Found on the way, and the next step:** the *whole* MIA only exists inside the desktop window's class. The
+    headless builder (`core/core_runtime.build_core_context`, what the phone runs) has 63 of the desktop's 91
+    services and 41 of its 62 tool families: no communication gate, no daily checks, no insights. So step 4 starts
+    with **one builder of the full MIA with no Qt**, used by both the desktop and the runtime
+    (`python -m core.runtime`), then `/api/health`.
+  - Then: the window as a client of the runtime (step 5), autostart (a systemd user service on Linux and the Pi,
+    Task Scheduler on Windows), then the OS images.
 - **Stopped:** new features in the Qt desktop app and Windows-only parts (fixes only). The rest of UAL U3 (Convert, the
   consent step) waits until after the extraction.
-- **Waiting on Zac:** Q-15, the Pi's base system (`docs/mia_os/MIA_OS_OPEN_QUESTIONS.md`).
+- **Answered by Zac:** Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android (Q-15).
 
 **New 2026-11-15, very last (Claude).**
 - **UAL U2 is built: "MIA" on any selection on the phone** (`SelectionActivity.kt`, `web/selection.html`). To try,

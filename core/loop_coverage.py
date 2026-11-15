@@ -10,7 +10,7 @@ so throughout her development").
 **The inventory** (`processes()`) is read from the code itself, so it grows
 when MIA does: every personal and household store (core/personal_data.py),
 every family of actions (core/actions.py, by the part before the dot), every
-daily check (core/application.py), every module folder, and the fixed flows
+daily check (core/background_jobs.py), every module folder, and the fixed flows
 and development processes below.
 
 **Every process is accounted for**, one of three ways:
@@ -83,7 +83,7 @@ DEV = {
     "dev:loops": "the loops themselves and how far they reach",
     "dev:docs": "documentation for every file, class and function, enough for MIA to rebuild herself (DEC-0104)",
 }
-_CHECK = re.compile(r'\("([a-z_]+)", self\._check_[a-z_]+\)')
+_CHECK = re.compile(r'\("([a-z_]+)", "_check_[a-z_]+"\),\n')
 
 
 def _stores() -> dict[str, str]:
@@ -112,8 +112,8 @@ def _actions() -> dict[str, str]:
 
 
 def _checks(root: Path = ROOT) -> dict[str, str]:
-    """Each daily check registered in core/application.py as a process (check:name), found in its source."""
-    text = (root / "core" / "application.py").read_text(encoding="utf-8", errors="replace")
+    """Each daily check in core/background_jobs.py's DAILY_CHECKS as a process (check:name), found in its source."""
+    text = (root / "core" / "background_jobs.py").read_text(encoding="utf-8", errors="replace")
     return {f"check:{name}": "a daily check" for name in _CHECK.findall(text)}
 
 

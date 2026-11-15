@@ -21,7 +21,7 @@ hardware decision is made and given its own backend here, same
 core/voice_manager.py's STT/TTS engine choice.
 
 `PowerManager.check_low_battery()` is the periodic-alert half of this
-milestone — `core/application.py` calls it on a timer, same shape as
+milestone — `core/background_jobs.py` calls it on a timer, same shape as
 `AlarmManager.check_due()`. The actual "should this warn" decision is
 the pure `should_warn_low_battery()` function so it's unit-testable
 with a constructed `PowerStatus`, no real battery or waiting required
@@ -146,7 +146,7 @@ class PowerManager:
 
     def check_low_battery(self) -> None:
         """
-        Called periodically (see core/application.py's power-check
+        Called periodically (see core/background_jobs.py's power-check
         timer). Raises a real notification via context.notifications
         the first time the battery dips below threshold while
         unplugged, and resets so a future dip can warn again once the

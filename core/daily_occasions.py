@@ -2,7 +2,7 @@
 core.daily_occasions
 =======================
 
-Pure decision logic for `core/application.py`'s daily-occasion-check
+Pure decision logic for `core/background_jobs.py`'s daily-occasion-check
 timer — 2026-07-14 aesthetic pass part 5, at the user's explicit
 request: "know and celebrate the user's birthday, remind them of
 anniversaries, check in with them and see how they are doing." Split

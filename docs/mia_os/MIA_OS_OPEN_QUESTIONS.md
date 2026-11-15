@@ -26,7 +26,7 @@ folded in here.*
 | Q-12 | **Answered B + C (2026-11-15)**: web search on research/verify; outside AI only after showing what is sent and getting a yes | DEC-0165 | — |
 | Q-13 | **Answered yes (2026-11-15)**: taught skills plus lab-built skills with Zac's approval, one skills system | DEC-0123, DEC-0167 | — |
 | Q-14 | **Answered (2026-11-15)**: system-wide, every app, file and piece of code; layered capture (selection, accessibility, files, terminal, OCR on request) | DEC-0165 | — |
-| Q-15 | The Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |
+| Q-15 | **Answered (2026-11-15)**: Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android. Was: the Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |
 
 ## The original questions (for the record)
 

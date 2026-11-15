@@ -204,7 +204,7 @@ class LiteCaptureManager:
     # ------------------------------------------------------------------
 
     def scan_for_new_captures(self) -> list[CaptureProposal]:
-        """Called by a periodic timer (core/application.py) — scans the
+        """Called by a periodic timer (core/background_jobs.py) — scans the
         watched folder's top level (not the processed/failed
         subfolders) for `*.json` manifests, transcribes the paired
         `.wav` via `core.voice_manager.VoiceManager`, and creates a

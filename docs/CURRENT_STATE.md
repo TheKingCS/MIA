@@ -2,7 +2,12 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-15 (taught skills, phase 1), by claude.*
+session. Last updated: 2026-11-15 (MIA OS: the runtime extraction begun), by claude.*
+
+**2026-11-15, MIA OS now (Claude; Zac's decisions DEC-0155 and DEC-0168).**
+- **MIA OS is the objective**: the PC (dual boot, Fedora) and a Raspberry Pi 5 with the AI HAT+ (Raspberry Pi OS), the start of the Zeta Astralis. New features go only into the engine and the web screens.
+- **The runtime extraction has begun.** MIA's background jobs (alarms, reminders, the daily checks, backups, the inbox) no longer live inside the desktop window's code: they're in `core/background_jobs.py` on a plain scheduler, with no Qt. On the PC nothing looks different yet.
+- **Next:** one way to build the whole MIA without the window, so she keeps running with it closed, then as a service on Linux and the Pi.
 
 **2026-11-15, latest (Claude: the Universal Action Layer's first phase, and taught skills).**
 - **Taught skills, phase 1, is built** (DEC-0123; AI Tools › Taught Skills, by voice, and a glasses card):

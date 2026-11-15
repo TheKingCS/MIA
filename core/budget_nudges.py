@@ -11,7 +11,7 @@ and when next expected pay day and amount is."
 Same split as `core/daily_occasions.py` (its own three checks —
 birthday/calendar-digest/check-in — established this exact "pure
 functions, no Qt, no manager instances, wired into
-core/application.py's existing daily-check timer" shape first): the
+core/background_jobs.py's existing daily-check timer" shape first): the
 actual decision logic lives here, unit-testable without a real clock
 or a running app, so `core/application.py` stays a thin wiring layer.
 

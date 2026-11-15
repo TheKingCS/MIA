@@ -7,7 +7,7 @@ were set only on the PC or by voice). An alarm is set with `alarm.add` (a
 label, a clock time said any common way, and once / every day / weekdays /
 weekends), switched on or off with `alarm.switch`, and taken out with
 `alarm.delete`, all through core/alarm_manager.py. The PC still rings it
-(core/application.py checks alarms each minute).
+(core/background_jobs.py checks alarms each minute).
 
 clock_time() reads "7", "7:30", "7:30 pm", "730am" or "19:05" as 24-hour
 HH:MM, so the screen, the form and a typed time agree.

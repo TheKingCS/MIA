@@ -54,7 +54,7 @@ everything else here.
 
 `scan_for_new_unlocks()` is idempotent (checks `is_unlocked()` first)
 and safe to call as often as convenient — both from the daily-occasion
-timer (core/application.py, matching core/maintenance_insights.py's
+timer (core/background_jobs.py, matching core/maintenance_insights.py's
 own established cadence) and from the Skills module's own refresh (so
 opening the page after crossing a threshold unlocks it right away,
 not up to a day later). Because chain tiers are checked independently

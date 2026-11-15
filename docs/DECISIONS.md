@@ -2924,7 +2924,10 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   - The order of work: the runtime extraction (DEC-0155) first, then the OS images. New features go only into the
     engine (`core/`) and the web front end; the Qt desktop app and Windows-only parts get fixes only.
   - Supersedes DEC-0015's "the Pi is priority 4" for MIA OS: the Pi is now one of the two first OS targets.
-  - Open (Q-15): the Pi's base system. Fedora's Raspberry Pi 5 support is a working minimum in Fedora 44/45 without
+  - **Answered (Zac, 2026-11-15): "Raspberry Pi OS for the Pi, Fedora for the PC, whichever will run best for
+    android."** The Pi's base is Raspberry Pi OS (Debian 13, 64-bit); the PC's is Fedora Atomic (DEC-0157). On
+    Android, MIA stays an app on the phone's own Android (no custom ROM, as DEC-0157 said): that runs best and keeps
+    the phone's radios, camera and updates working. What was open (Q-15): the Pi's base system. Fedora's Raspberry Pi 5 support is a working minimum in Fedora 44/45 without
     sound yet, and the AI HAT+ 2's drivers are official only on Raspberry Pi OS (Debian 13 "Trixie"). DEC-0157 chose
     Fedora bootc for the PC; the Pi may need Raspberry Pi OS. DEC-0154 keeps MIA itself the same on either.
 - Related: DEC-0154, DEC-0155, DEC-0157, DEC-0015, DEC-0166

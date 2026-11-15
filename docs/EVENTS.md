@@ -21,7 +21,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `files.browse_path_requested` | `modules/field_kit/module.py` | `gui/main_window.py` |
 | `home.shown` | `gui/main_window.py` | `gui/character_panel.py` |
 | `household.changed` | `core/household_manager.py` | `core/personal_data.py` |
-| `inbox.updated` | `core/application.py` | `modules/inbox/module.py` |
+| `inbox.updated` | `core/background_jobs.py` | `modules/inbox/module.py` |
 | `menu.shown` | `gui/main_window.py` | `gui/character_panel.py` |
 | `mission.abandoned` | `core/mission_manager.py` | — |
 | `mission.completed` | `core/mission_manager.py` | `core/pathway_manager.py`, `core/recurring_mission_manager.py`, `core/rewards_manager.py`, `core/upkeep_missions.py` |
@@ -43,7 +43,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `profile.switched` | `core/profile_manager.py` | `core/activity_log_manager.py`, `core/personal_data.py`, `modules/web_home/module.py` |
 | `profile.xp_changed` | `core/profile_manager.py` | `gui/main_window.py`, `modules/skills/module.py` |
 | `records.changed` | `core/actions.py`, `core/child_accounts.py`, `core/imports.py`, `core/main_thread.py`, `core/starter_templates.py`, `core/undo_log.py` | `gui/main_window.py` |
-| `textbooks.updated` | `core/application.py` | — |
+| `textbooks.updated` | `core/background_jobs.py` | — |
 | `theme.changed` | `core/application.py`, `modules/settings/module.py` | `core/application.py` |
 | `user.setup_complete` | `core/event_bus.py`, `gui/setup_wizard.py` | `core/event_bus.py` |
 

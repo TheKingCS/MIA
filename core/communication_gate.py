@@ -6,7 +6,7 @@ core.communication_gate
 the one path every proactive (unprompted) message from MIA goes
 through, so a context-aware assistant never turns into a nag.
 
-What goes through here: the daily checks in core/application.py
+What goes through here: the daily checks in core/background_jobs.py
 (birthday, calendar digest, evening check-in, budget nudge, smart
 suggestions, the insight scans, feature tips) and missions MIA assigns
 herself. What doesn't: replies to something the user just did (an

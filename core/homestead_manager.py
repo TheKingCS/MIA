@@ -187,7 +187,7 @@ class HomesteadManager:
 
     def scan_for_new_snapshots(self) -> list[HomesteadSnapshot]:
         """
-        Called by a periodic timer (core/application.py) — scans the
+        Called by a periodic timer (core/background_jobs.py) — scans the
         watched folder's top level (not the imported/failed
         subfolders) for `*.json` files, parses each, and either stores
         it (moving the file into `imported/`) or discards it (moving

@@ -10,7 +10,7 @@ Unlike Calendar, Alarm needs to actually *do* something at the right
 moment even when the user is elsewhere in the app (not looking at the
 Alarm screen). Rather than build a bespoke alert UI, a due alarm is
 raised through the existing core.notification_manager.NotificationManager
-— MIAApplication owns a periodic QTimer (see core/application.py) that
+— the "alarms" job of MIA's schedule (see core/background_jobs.py) is what
 calls check_due() every ~20s and turns any fired Alarm into a regular
 notification, which the existing toast popup / Notification Center
 already know how to display, regardless of which module is on screen.

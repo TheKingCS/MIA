@@ -318,7 +318,7 @@ def _gate_dismissed(context) -> Optional[Reading]:
     return Reading(round(gone / len(sent), 2), len(sent), f"{gone} of {len(sent)} dismissed in 7 days")
 
 
-# The daily checks in core/application.py that speak through the gate, by the topic they offer under
+# The daily checks in core/background_jobs.py that speak through the gate, by the topic they offer under
 # (tests/test_loop_coverage.py keeps this in step with the code).
 CHECK_TOPICS = {
     "calendar_digest": "calendar_digest", "checkin": "checkin", "budget_nudge": "budget_nudge",
@@ -1277,7 +1277,7 @@ LOOPS: tuple[Loop, ...] = (
          "(DEC-0149)", "person", _trades_finished, better="higher", floor=0.5, min_n=3, acts="watch",
          files=("core/trade_session.py", "core/trade_actions.py"), covers=("store:trade_session", "action:trade")),
     Loop("checks.dismissed", "proactivity", "the daily check whose messages are dismissed most, in 30 days", "person",
-         _checks_dismissed, floor=0.6, min_n=10, files=("core/application.py",),
+         _checks_dismissed, floor=0.6, min_n=10, files=("core/background_jobs.py",),
          covers=tuple(sorted({f"check:{c}" for c in CHECK_TOPICS.values()})) + ("store:insights",)),
     # Theirs to change (DEC-0014: a miss is gentle): a target missed most days is offered for easing, never a task
     Loop("missions.recurring", "life", "daily recurring missions not done, in 30 days", "person", _recurring_missed,

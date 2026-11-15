@@ -19,7 +19,7 @@ buttons, so a person who never pressed one had none.
 
 Not encrypted: a passphrase can't be typed at night. MIA's most private
 files are sealed on disk already (DEC-0126), and go into the zip sealed.
-Run from the desktop's daily checks (`core/application.py`).
+Run from the desktop's daily checks (`core/background_jobs.py`).
 """
 
 from __future__ import annotations

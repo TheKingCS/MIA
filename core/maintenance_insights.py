@@ -6,7 +6,7 @@ The Maintenance-domain scan for "connective infrastructure" phase 3
 (Insight + Recommendation) — see core/insight_manager.py's own
 docstring for why these are real, new persisted entities. Pure
 decision logic, no Qt, no manager instance of its own, wired into
-core/application.py's existing daily-check timer — same "pure
+core/background_jobs.py's existing daily-check timer — same "pure
 functions, unit-testable without a real clock, wired into the
 daily-check loop" shape core/smart_suggestions.py already established.
 

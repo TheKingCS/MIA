@@ -343,7 +343,7 @@ class RecurringMissionManager:
         self, template: RecurringMissionTemplate, today: date
     ) -> tuple[Mission, Optional[Mission]]:
         """Idempotent — safe to call every 5 minutes from the daily-
-        occasion timer (core/application.py) or by hand. Dispatches on
+        occasion timer (core/background_jobs.py) or by hand. Dispatches on
         template.recurrence: "daily" (the original push-up shape)
         returns (today's daily Mission, this week's bonus Mission);
         "weekly" (laundry's own shape — see this module's docstring for
