@@ -18,6 +18,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
 SHOWN = 60  # at most this many finds on the page
 
 
@@ -84,8 +88,21 @@ def _prices_for(prices, line) -> list[dict]:
     return out
 
 
+def _opportunities(context, now: datetime) -> list[dict]:
+    """Finds that meet a project's need, scored with a recommendation (core/opportunity.py, Procurement P3); [] when
+    they can't be worked out, so the page still shows."""
+    from core import opportunity
+
+    try:
+        return opportunity.opportunities(context, now)
+    except Exception:  # noqa: BLE001
+        log.exception("The World page couldn't work out opportunities")
+        return []
+
+
 def world_page(context, now: Optional[datetime] = None) -> dict:
-    """The World page's data (see the module's opening), with each source's last 30 days and mute state."""
+    """The World page's data (see the module's opening), with each source's last 30 days and mute state, and the
+    finds that meet a project's need as opportunities (core/opportunity.py)."""
     from core import world_sources
     from core.world_intel import is_on
 
@@ -108,6 +125,7 @@ def world_page(context, now: Optional[datetime] = None) -> dict:
             "areas": [{"id": a, "name": world_sources.AREA_NAMES[a],
                        "sources": [s.name for s in world_sources.for_areas([a])]} for a in world_sources.AREAS],
             "needs": needs(context),
+            "opportunities": _opportunities(context, now),
             "sources": [{"id": s.source_id, "name": s.name, "muted": s.source_id in book.muted,
                          "suggest_mute": s.source_id in suggested, **{k: stats.get(s.source_id, {}).get(k, 0)
                                                                       for k in ("finds", "saved", "not_for_me")}}

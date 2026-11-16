@@ -54,6 +54,7 @@
       "set_trip_cost",
       "stop_watching",
       "watch_for",
+      "what_is_worth_buying",
       "world_finds",
       "world_intelligence_switch"
     ],
@@ -104,7 +105,8 @@
       "world_source.mute": "act_within_grant",
       "world_watch.add": "act_within_grant",
       "world_watch.pause": "act_within_grant",
-      "world_watch.remove": "act_within_grant"
+      "world_watch.remove": "act_within_grant",
+      "what_is_worth_buying": "observe"
     },
     "outside": [
       "world_finds"

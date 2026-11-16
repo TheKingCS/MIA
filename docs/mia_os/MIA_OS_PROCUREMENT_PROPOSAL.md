@@ -336,7 +336,7 @@ Procurement's phases slot into World Intelligence's (proposal section 16), after
 |---|---|---|---|
 | P1 | Requirements from plans, the grocery list and his words; inventory's new fields; owned-line marking | W1 | Opus |
 | P2 | Product specs (the first categories: pumps, lumber, PVC, film, fans, sensors, groceries), verdicts, total cost, price observations | W2, P1 | Opus |
-| P3 | Requirements drive watches; opportunity score and recommendations; the Procurement view | W1b, P2 | Opus |
+| P3 | Requirements drive watches; opportunity score and recommendations; the Procurement view | W1b, P2 | Opus **Built in part 2026-11-16** (`core/opportunity.py`): the nine dimensions with reasons, the recommendation, the World page's Opportunities tab, `what_is_worth_buying`. Not yet: quality, distance and strategic value from records (they say "not known" or the need's priority), the view's Compare, Saved, History and Reports |
 | P4 | Store skills (Lowe's, Walmart, Kroger, Target, Amazon first), groceries priced per store | W5 | Opus (Fable for unattended runs) |
 | P5 | Acquisition plans, trips, missions, "I bought it" | P3 | Opus |
 | P6 | International checks; briefings and the weekly report | P3, W1 | Opus |

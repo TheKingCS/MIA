@@ -62,11 +62,28 @@ def _drop(context, arguments: dict) -> str:
                                                 "item": arguments.get("item") or ""})
 
 
+def _opportunities(context, arguments: dict) -> str:
+    """Tool what_is_worth_buying: finds that meet a project's need, best first, each with its recommendation and why
+    (core/opportunity.py, Procurement P3). Read only."""
+    from core import opportunity
+
+    return opportunity.sentence(opportunity.opportunities(context))
+
+
 def register_requirement_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the project-needs tools: project_needs, add_need, got_need and drop_need."""
+    """Registers the project-needs tools: project_needs, add_need, got_need and drop_need; and what_is_worth_buying,
+    the finds that meet them with a recommendation each (Procurement P3)."""
     named = {"type": "object", "properties": {"project": {"type": "string", "description": "the project's name"},
                                               "item": {"type": "string", "description": "the item"}},
              "required": ["item"]}
+    registry.register(AssistantAction(
+        name="what_is_worth_buying", domain="requirements",
+        description="Finds that meet one of the person's project needs, best first, each with buy when ready, "
+                    "investigate, wait or skip and why. Read only: it never buys anything.",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_opportunities,
+        trigger_phrases=("worth buying", "any good deals for", "deals for my projects", "should i buy",
+                         "what have you found for my projects", "opportunities"),
+        subjects=("deal", "deals", "buy", "opportunities")))
     registry.register(AssistantAction(
         name="project_needs", domain="requirements", description="What a project (or every project) still needs.",
         parameters={"type": "object", "properties": {"project": {"type": "string", "description": "optional"}},

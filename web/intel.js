@@ -19,7 +19,7 @@
   "use strict";
   const { el, act, form } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["finds", "Finds"], ["needs", "Needs"], ["watches", "Watches"], ["sources", "Sources"]];
+  const TABS = [["finds", "Finds"], ["opportunities", "Opportunities"], ["needs", "Needs"], ["watches", "Watches"], ["sources", "Sources"]];
   let page = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "finds";
 
@@ -123,7 +123,28 @@
         : null))];
   }
 
-  const VIEWS = { finds, needs, watches, sources };
+  // Opportunities (Procurement P3, core/opportunity.py): finds that meet a project's need, each with its
+  // recommendation, why, and the nine dimensions with their reasons. Nothing here buys anything.
+  function opportunities() {
+    const tone = { buy_when_ready: "ok", investigate: "", wait: "soon", skip: "soon" };
+    const list = page.opportunities || [];
+    const head = section("Opportunities", el("p", { class: "dim" },
+      "Finds that meet one of your projects' needs, with what MIA would do and why. A price is called low only when " +
+      "she's seen enough prices for it to know; anything she has no record for says \"not known\"."));
+    if (!list.length) return [head, el("p", { class: "empty" }, "Nothing found meets a need yet. Needs come from your projects (the Needs tab), and MIA watches for them.")];
+    return [head, ...list.map((o) => el("article", { class: "glass closet-pick" },
+      el("div", { class: "row-title" }, o.link ? el("a", { href: o.link, target: "_blank", rel: "noopener noreferrer" }, o.title) : o.title,
+        chip(o.said, tone[o.recommendation])),
+      el("p", { class: "pw-label" }, "From " + o.source + " · for " + o.need + (o.project ? " (" + o.project + ")" : "")),
+      el("p", {}, "Why: " + o.why + "."),
+      el("details", {}, el("summary", {}, "How it was judged"),
+        el("div", { class: "rows" }, o.dimensions.map((d) => el("div", { class: "row" },
+          el("div", {}, el("div", { class: "row-title" }, d.name + ": " + d.value), el("div", { class: "row-sub" }, d.reason)))))),
+      buttons(btn("Save", "btn-green", () => act({ kind: "world_find.save", params: { discovery_id: o.discovery_id } }, { quick: true })),
+        btn("Not For Me", "btn-ghost", () => act({ kind: "world_find.not_for_me", params: { discovery_id: o.discovery_id } }, { quick: true })))))];
+  }
+
+  const VIEWS = { finds, opportunities, needs, watches, sources };
 
   function draw() {
     $("strip").replaceChildren(

@@ -49,6 +49,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Built (Opus): Procurement P3, first part** (K-0271): `core/opportunity.py`. A find that meets a project's need is
+  scored on the proposal's nine dimensions, each with its reason, and gets buy when ready, investigate, wait or
+  skip; a saving only when the price book verified it. The World page's Opportunities tab; "what's worth buying?".
+  Bug found on the way: a price was read from "12V"; prices now need a currency sign. **Not yet:** quality,
+  distance and strategic value from real records; the Procurement view's Compare, Saved, History and Reports.
+  **Fable reviews it.**
 - **Built (Opus): UI-4, the shelf** (K-0270): `core/shelf.py`. Only what you send goes on it (Q-43), each thing for a
   week. Keep On My Shelf in the Ctrl+K and phone selection menus; drop text, a link or a file on any MIA page;
   "keep this on my shelf: ...". The Shelf page (AI Tools) picks several and does one thing with them together
