@@ -49,6 +49,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Built: UI-7, plans across apps** (K-0273): `core/step_plans.py`. A plan is a list of changes in different apps,
+  each shown with its app and that it can be undone; nothing runs when it's made. He does (asks first), changes or
+  leaves out steps one at a time, on the Step By Step page (AI Tools) or by voice ("plan my week", "what's the
+  plan", "do step 1", "drop step 2"). Anything that buys, sends or can't be undone is listed as "can't" and is
+  never run from a plan. "Plan my week" builds one in code from today's list. A plan is a run (shows in what's
+  running, waiting on him). **This is the task engine the Specialized Agent Teams design (prompt 25, T3) builds
+  on.** Not yet: steps that depend on each other, a plan drafted by a model. **Fable reviews it (it runs other
+  apps' actions).**
 - **Built: M7's first half, MIA Forge's scaffold** (K-0272): `python -m tools.new_app <id> "<Name>" <area>` writes a
   new app as a registered, empty screen: its manifest, page, script and first test, and its line in the seven
   places that list apps (found by running the whole suite on a scaffolded app). It refuses a bad or taken id

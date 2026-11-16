@@ -124,10 +124,37 @@ def _whats_running(context, arguments: dict) -> str:
     return summary(context)
 
 
+def _plan_week(context, arguments: dict) -> str:
+    """Tool plan_my_week: lines up this week's steps from what's due (`steps.plan_week`), then reads the plan."""
+    from core.actions import run_as_tool
+    from core.step_plans import said
+
+    made = run_as_tool(context, "steps.plan_week", {})
+    return made if "waiting for you" not in made else said(context)
+
+
+def _the_plan(context, arguments: dict) -> str:
+    """Tool whats_the_plan: the open plan's steps, numbered, with what's waiting (core/step_plans.said)."""
+    from core.step_plans import said
+
+    return said(context)
+
+
+def _plan_step(kind: str):
+    """A handler that runs `kind` (steps.do or steps.drop) on the step number given, in the newest open plan."""
+    def handler(context, arguments: dict) -> str:
+        """Runs the plan action on the numbered step, as the screen's press would."""
+        from core.actions import run_as_tool
+
+        return run_as_tool(context, kind, {"step_id": str(arguments.get("step") or "").strip()})
+    return handler
+
+
 def register_taught_skill_actions(registry: AssistantActionRegistry) -> None:
     """Registers the taught-skill tools: watch_me_teach, keep_taught_skill, stop_watching_me, teach_skill_in_steps,
     change_taught_skill, forget_taught_skill, list_taught_skills, run_taught_skill, answer_taught_skill and
-    stop_taught_skill; and whats_running, every run of steps in one list (UI-1)."""
+    stop_taught_skill; whats_running, every run of steps in one list (UI-1); and the plans across apps (UI-7):
+    plan_my_week, whats_the_plan, do_plan_step and drop_plan_step."""
     none = {"type": "object", "properties": {}, "required": []}
     which = {"type": "string", "description": "The skill's name, as they said it."}
     lines = {"type": "string", "description": "The steps, one a line: tell: words / ask: question -> name / "
@@ -165,6 +192,21 @@ def register_taught_skill_actions(registry: AssistantActionRegistry) -> None:
     ):
         registry.register(AssistantAction(name=name, domain=DOMAIN, description=description, parameters=parameters,
                                           handler=handler, trigger_phrases=phrases, subjects=("skill", "skills")))
+    step = {"type": "object", "properties": {"step": {"type": "string", "description": "The step's number."}},
+            "required": ["step"]}
+    for name, description, parameters, handler, phrases in (
+        ("plan_my_week", "Line up this week's steps from what's due, for the person to do one at a time. Nothing in "
+                         "the plan runs until they say.", none, _plan_week,
+         ("plan my week", "get me ready for the week", "ready for the week", "line up my week")),
+        ("whats_the_plan", "Read the open plan's steps, numbered, with what's waiting.", none, _the_plan,
+         ("what's the plan", "whats the plan", "read the plan", "what's left in the plan", "steps in the plan")),
+        ("do_plan_step", "Do one numbered step of the open plan, because the person said to.", step,
+         _plan_step("steps.do"), ("do step", "go ahead with step", "run step")),
+        ("drop_plan_step", "Leave one numbered step out of the open plan.", step, _plan_step("steps.drop"),
+         ("drop step", "skip step", "leave out step")),
+    ):
+        registry.register(AssistantAction(name=name, domain=DOMAIN, description=description, parameters=parameters,
+                                          handler=handler, trigger_phrases=phrases, subjects=("plan", "step", "week")))
     registry.register(AssistantAction(
         name="whats_running", domain=DOMAIN,
         description="What MIA is running in steps right now (browser tasks, taught skills, workflows), where each is or "

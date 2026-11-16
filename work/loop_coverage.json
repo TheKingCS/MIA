@@ -73,6 +73,10 @@
    "status": "none",
    "why": "history.undo puts back changes he names by time and subject (UI-3, core/change_history.py); the changes it reverses are MIA's own work, already watched by the loops of the actions and tools that made them"
   },
+  "action:steps": {
+   "status": "none",
+   "why": "steps.plan_week, do, change, drop and drop_plan are him working through a plan (UI-7); the change each step makes is its own action kind's, already watched there"
+  },
   "action:shelf": {
    "status": "none",
    "why": "shelf.keep, remove and clear are him putting things on his own shelf and taking them off (UI-4); there is no work of MIA's in them to improve"
@@ -312,6 +316,10 @@
   "store:runs": {
    "status": "none",
    "why": "a record of other engines' runs (UI-1, DEC-0188): how well each engine's runs go is measured by that engine's own loop (browser.routines, the skills' practice, workflows' runs); this store judges nothing"
+  },
+  "store:step_plans": {
+   "status": "none",
+   "why": "a plan is a list of other apps' actions lined up for him (UI-7); how well each of those goes is measured by that action's own loop, and a plan is also a run (store:runs)"
   },
   "store:shelf": {
    "status": "none",

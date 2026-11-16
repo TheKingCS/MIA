@@ -18,7 +18,8 @@
   "components": {
     "interface": {
       "web": [
-        "taught-skills.html"
+        "taught-skills.html",
+        "steps.html"
       ],
       "qt": [],
       "glasses": [
@@ -28,6 +29,7 @@
     "services": [],
     "data": [
       "runs",
+      "step_plans",
       "taught_skills"
     ],
     "agents": [],
@@ -38,17 +40,26 @@
     "tools": [
       "answer_taught_skill",
       "change_taught_skill",
+      "do_plan_step",
+      "drop_plan_step",
       "forget_taught_skill",
       "keep_taught_skill",
       "list_taught_skills",
+      "plan_my_week",
       "run_taught_skill",
       "stop_taught_skill",
       "stop_watching_me",
       "teach_skill_in_steps",
       "watch_me_teach",
-      "whats_running"
+      "whats_running",
+      "whats_the_plan"
     ],
     "actions": [
+      "steps.change",
+      "steps.do",
+      "steps.drop",
+      "steps.drop_plan",
+      "steps.plan_week",
       "taught_skill.add",
       "taught_skill.cancel",
       "taught_skill.delete",
@@ -73,13 +84,23 @@
       "taught_skill.delete": "act_with_approval",
       "taught_skill.keep": "act_with_approval",
       "taught_skill.steps": "act_with_approval",
-      "taught_skill.watch": "act_with_approval"
+      "taught_skill.watch": "act_with_approval",
+      "steps.plan_week": "act_within_grant",
+      "steps.do": "act_with_approval",
+      "steps.change": "act_within_grant",
+      "steps.drop": "act_within_grant",
+      "steps.drop_plan": "act_within_grant",
+      "plan_my_week": "act_within_grant",
+      "whats_the_plan": "observe",
+      "do_plan_step": "act_with_approval",
+      "drop_plan_step": "act_within_grant"
     },
     "outside": []
   },
   "uses": [],
   "permissions": [
     "stores.write:runs",
+    "stores.write:step_plans",
     "stores.write:taught_skills"
   ],
   "dependencies": [],

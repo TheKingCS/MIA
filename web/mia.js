@@ -734,6 +734,8 @@
     ualOffer: (capture) => demo ? Promise.resolve({ capture: { kind: "text", characters: (capture.text || "").length, from: "this page", missing: [] }, actions: [["find_known", "Find What I Know About This", false], ["explain", "Explain This", false], ["summarise", "Summarise This", false], ["draft_email", "Draft An Email From This", false], ["build_skill", "Build A Skill For MIA", false], ["learn_path", "Learn This Myself", true], ["save_inbox", "Save To My Inbox", true], ["make_mission", "Make This A Mission", true], ["make_project", "Start A Project From This", true]].map(([id, label, needs_approval]) => ({ id, label, needs_approval })), later: ["Research This", "Verify These Claims", "Convert This", "Have The Council Review This"] })
       : call("POST", "/api/ual/offer", { capture }),
     // The shelf (core/shelf.py, UI-4): what's on it, and several entries used together as one selection.
+    // Plans across apps (core/step_plans.py, UI-7): the open plans and their steps.
+    stepPlans: () => demo ? Promise.resolve({ open: [], finished: [] }) : call("GET", "/api/steps"),
     shelf: () => demo ? Promise.resolve({ entries: [], keep_days: 7 }) : call("GET", "/api/shelf"),
     shelfUse: (which, action_id) => demo ? demoOnly() : call("POST", "/api/shelf/use", { which: which || [], action_id: action_id || "" }),
     ualRun: (action_id, capture) => demo ? demoOnly() : call("POST", "/api/ual/run", { action_id, capture }),

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1466 files, 327,443 lines; 1466 files describe themselves; 17,953 of 18,049 classes and functions are documented.
+1470 files, 328,363 lines; 1470 files describe themselves; 18,010 of 18,106 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-569 files, 163,985 lines; 8,449 of 8,535 classes and functions documented
+571 files, 164,629 lines; 8,496 of 8,582 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -450,6 +450,8 @@
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
 - `core/startup_sounds.py`: The startup sounds' names and which one is chosen (Zac, 2026-11-07: "sample some sounds and I will pick a good start up sound, and make it a togglable setting"). Kept apart from core/boot_sound.py, which makes the sounds with numpy, so Settings can list them anywhere MIA runs (the phone too).
+- `core/step_plan_actions.py`: Plans across apps (UI-7, core/step_plans.py) on the action contract in core/actions.py:
+- `core/step_plans.py`: Plans across apps (UI-7, prompt 23's review; REQ-FUN-220: "a plan spanning several apps shall show every step with its tier and let the person approve, change or drop steps one at a time"). A plan here is a list of changes MIA has lined up, each one an action kind of some app with its parameters, sh
 - `core/stop.py`: "Stop" and "stop everything" (REQ-AUT-010; DEC-0181, DEC-0185; Zac, Q-34 and Q-40: "we need to specify what stopping everything really means"; the definition is `docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md` section 4, and this module is that table in code). Prompt 23's review, UI-2, built 
 - `core/store_lock.py`: The lock the server holds while a request reads or changes MIA's stores, let go of while the model thinks (roadmap 2.3, 2026-11-10).
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
@@ -580,7 +582,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,503 lines; 57 of 57 classes and functions documented
+2 files, 4,513 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -862,7 +864,7 @@
 
 ## tests/: the test suite: what each part must do
 
-503 files, 85,036 lines; 7,173 of 7,183 classes and functions documented
+504 files, 85,236 lines; 7,183 of 7,193 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1251,6 +1253,7 @@
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
 - `tests/test_state_export.py`: The state export (Engine Phase 1 step 4, 2026-10-05): Life State v2 as JSON from `python -m tools.export_state` and `/api/state`, matching the published schema docs/schema/life_state.schema.json.
+- `tests/test_step_plans.py`: Plans across apps (UI-7, core/step_plans.py; REQ-FUN-220): a plan shows every step with its app, tier, reach and whether it can be undone; nothing runs when a plan is made; the person does, changes or drops steps one at a time; a kind that reaches outside, can't be undone or is tiered never is liste
 - `tests/test_stop.py`: "Stop" and "stop everything" (REQ-AUT-010; core/stop.py), one test per row of the definition's table (docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md section 4): the commands are recognised in code and nothing else is mistaken for them; "stop" ends her speech, the skill she's running with the 
 - `tests/test_stopwatch_format.py`: Unit tests for modules.toolbox.tools.stopwatch_tool.format_elapsed — pure formatting logic, no Qt/QApplication needed.
 - `tests/test_store_lock.py`: The server's store lock (core/store_lock.py, roadmap 2.3): released() lets go of the locks this thread holds and takes them back; a turn lets go of it while the model thinks, so another request (here /api/state) answers meanwhile; and one conversation's turns still run one after another.
@@ -1370,7 +1373,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-113 files, 21,122 lines
+114 files, 21,188 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1469,6 +1472,7 @@
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/spatial.js`: spatial.js — MIA's spatial components (DEC-0130, claude, 2026-11-08). MIASpatial.vapor(canvas, hues)  smoky RGB light drifting on black: a few big soft lights in the areas' hues, drawn small and blurred by CSS (cheap), paused when hidden, still under reduced motion. Returns a stop function. MIASpati
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;
+- `web/steps.js`: steps.js — Step By Step (claude, 2026-11-17, UI-7; core/step_plans.py). Renders MIA.stepPlans(): each open plan with every step in order. A waiting step shows its sentence, the app it changes, and Do It (steps.do, which asks first), Change (steps.change, its details in a form) and Leave Out (steps.d
 - `web/studio.js`: studio.js — the Theme Studio (DEC-0136, claude, 2026-11-08). Draws MIA.themes() (core/themes.studio): pick a theme to start from, tweak its colours, corners, font, material and the 3D room's light, and see it at once on this whole page (MIAShell.previewTheme, not kept) and in a little room (web/nexu
 - `web/sync.js`: sync.js — User Sync on the phone (claude, 2026-11-02). Renders MIA.userSync() (core/user_sync.py): the question, a box to type the answer, the chips to approve, and the phone's permissions, asked through window.MIAPhonePermissions (Permissions.kt) and reported back. The steps and words are all the e
 - `web/taught-skills.js`: taught-skills.js — Taught Skills (claude, 2026-11-15, DEC-0123).

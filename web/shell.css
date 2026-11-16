@@ -387,6 +387,18 @@ body.mia-dropping::after { content: "Drop to keep it on your shelf"; position: f
   place-items: center; border: 2px dashed var(--accent); border-radius: 16px; background: rgba(var(--rgb-accent), 0.08);
   color: var(--text); font-size: var(--text-lg); pointer-events: none; }
 
+/* Step By Step (core/step_plans.py, UI-7): a plan's steps in order. */
+.step-plan { margin-top: 18px; }
+.step-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.step-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; }
+.step-settled { opacity: 0.7; }
+.step-n { font-family: var(--font-mono); color: var(--text-faint); min-width: 1.5em; }
+.step-text { margin: 0; overflow-wrap: anywhere; }
+.step-meta { margin: 4px 0 0; font-size: var(--text-xs); }
+.step-buttons { flex-wrap: wrap; justify-content: flex-end; }
+.step-finished { margin: 8px 0 0; padding-left: 18px; }
+@media (max-width: 640px) { .step-row { grid-template-columns: auto minmax(0, 1fr); } .step-buttons { grid-column: 1 / -1; justify-content: flex-start; } }
+
 /* Stop (core/stop.py, REQ-AUT-010): the control in the frame, and the banner while everything of hers is stopped. */
 .side-stop { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 8px; min-height: 36px; padding: 0 10px;
   border-radius: var(--radius-sm); border: 1px solid var(--line); background: transparent; color: var(--text-dim);

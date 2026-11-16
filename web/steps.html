@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Step By Step — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="steps" data-icon="assistant" class="mod-steps" data-say="Plan my week.">
+  <!--
+    Step By Step (UI-7, core/step_plans.py): plans across apps. Each step is one change in one app, shown with
+    what it reaches and whether it can be undone; nothing runs until you press Do It, one step at a time.
+    MIA.stepPlans(). Built by claude on the shared frame, 2026-11-17.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Step By Step</h1>
+        <p class="tagline" id="steps-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="steps.js"></script>
+</body>
+</html>

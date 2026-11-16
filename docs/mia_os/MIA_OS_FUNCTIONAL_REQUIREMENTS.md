@@ -147,7 +147,7 @@ Each scenario names who does what. *AI* proposes and phrases; *code* reads, deci
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-FUN-220 | A plan spanning several apps shall show every step with its tier and let the person approve, change or drop steps one at a time. | Must | R1 | All | New | D: W-2 | W-2, FR-X1 → 08 |
+| REQ-FUN-220 | A plan spanning several apps shall show every step with its tier and let the person approve, change or drop steps one at a time. | Must | R1 | All | Partial: `core/step_plans.py` and the Step By Step page; steps are kinds that reach his records and can be undone (others are listed as "can't", done from their own screens); the only planner yet is the week's, from today's list | T: `tests/test_step_plans.py`; D: W-2 | W-2, FR-X1 → 08 |
 | REQ-FUN-221 | An answer built from several stores shall name which parts it couldn't read, rather than leaving them out silently. | Must | MVP | All | Partial | T | P17 → 07 |
 | REQ-FUN-222 | Every recommendation shall be marked as MIA's, separately from the facts it rests on. | Must | MVP | All | Partial (Living System invariant; not every surface) | T | DEC-0173 → 07 |
 

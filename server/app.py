@@ -39,7 +39,8 @@ request to core/id_wallet.py, sealed at rest; lists mask it. MIA paints on this
 PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0140) and
 serves each person only their own pictures. The shelf (UI-4, core/shelf.py)
 is listed at /api/shelf and its entries are used together as one selection
-(`ShelfUseRequest`, POST /api/shelf/use). The frame's Stop control
+(`ShelfUseRequest`, POST /api/shelf/use). Plans across apps are read at
+/api/steps (core/step_plans.py). The frame's Stop control
 (`StopRequest`, POST /api/stop, core/stop.py) stops what MIA is doing, or
 everything of her own until Carry On. The Theme Studio
 asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
@@ -572,7 +573,7 @@ def create_app(context: AppContext) -> FastAPI:
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
     store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
     with that conversation's own lock. The shelf is read at /api/shelf and used at /api/shelf/use, under the lock
-    like any selection (core/shelf.py). The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
+    like any selection (core/shelf.py). The Step By Step page reads /api/steps (core/step_plans.py). The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
     before the lock is taken, the rest is done under it, at once and never as an approval card. Good News Radio's page says when it played an episode
     (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
     herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
@@ -4248,6 +4249,15 @@ def create_app(context: AppContext) -> FastAPI:
                                actions=_actions())
         except ual.UalError as problem:
             raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    @app.get("/api/steps")
+    def step_plans_page(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Step By Step page (UI-7, core/step_plans.py): the open plans with every step, and those finished
+        lately. Every change to a plan is a `steps.*` action on the action contract."""
+        from core import step_plans
+
+        with app.state.turn_lock:
+            return step_plans.page(view_for(context, profile_id))
 
     @app.get("/api/shelf")
     def shelf_list(profile_id: str = Depends(require_profile_id)) -> dict:
