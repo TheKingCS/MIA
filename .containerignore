@@ -1,0 +1,33 @@
+# .containerignore: what a container build (os/Containerfile) never copies, as a second guard. The first is building
+# only from `git archive` of tracked files. Everything here is personal or local, as in .gitignore.
+.git
+.venv
+venv
+env
+**/__pycache__
+*.py[cod]
+config/config.json
+config/config.json.before_cleanup
+data/*
+!data/.gitkeep
+!data/skill_definitions.json
+!data/mission_pathways.json
+!data/model_bench_cases.json
+!data/user_sync_cases.json
+!data/foods.tsv
+logs
+reference_library
+voice_models
+trip_photos
+financial_snapshots
+homestead_snapshots
+lite_captures
+trail_maps
+textbooks
+inbox
+music_library
+audit
+pc-check
+restore_pending.zip
+*.state.json
+.claude

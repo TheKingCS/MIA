@@ -1,0 +1,117 @@
+# MIA OS proofs of concept that GitHub's Linux machines can run while Zac is away from his PC (Q-49, 2026-11-16:
+# "do whatever you can"). The plan: docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md section 2.
+#   - landlock: PoC 6, can a MIA worker give up access to everything but the folders he granted? (os/poc/landlock_probe.py)
+#   - runtime-service: PoC 4's first half, the runtime installed and run as a systemd user service by its own
+#     installer, then stopped the way systemd stops it (deploy/install_runtime.sh)
+#   - suite-linux: the engine's whole test suite on Linux (risk R-07: there was no Linux CI)
+#   - image: PoC 2's build half, the MIA OS image built from os/Containerfile and checked by bootc
+# None of these touches Zac's PC. The graphics card test (PoC 1) needs him at it: os/poc/README.md.
+name: MIA OS proofs of concept
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "os/**"
+      - "deploy/install_runtime.sh"
+      - "deploy/mia-runtime.service"
+      - "core/runtime.py"
+      - "core/key_unlock.py"
+      - ".github/workflows/mia-os-poc.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mia-os-poc
+  cancel-in-progress: true
+
+jobs:
+  landlock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Landlock probe (PoC 6)
+        run: python3 os/poc/landlock_probe.py
+
+  runtime-service:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: System libraries the requirements need
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libportaudio2 libdbus-1-3
+      - name: The virtual environment the installer expects
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip setuptools wheel
+          .venv/bin/pip install -r requirements.txt
+      - name: A user manager for this account, as at a sign-in
+        run: |
+          sudo loginctl enable-linger "$(id -un)"
+          for i in $(seq 1 30); do [ -S "/run/user/$(id -u)/bus" ] && break; sleep 1; done
+          echo "XDG_RUNTIME_DIR=/run/user/$(id -u)" >> "$GITHUB_ENV"
+          echo "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus" >> "$GITHUB_ENV"
+      - name: Install and start the runtime with its own installer
+        run: MIA_HOME="$HOME/mia-home" bash deploy/install_runtime.sh
+      - name: It comes up and stays up
+        run: |
+          for i in $(seq 1 90); do
+            grep -q "The MIA Runtime is up" "$HOME/mia-home/logs/mia.log" 2>/dev/null && break; sleep 2
+          done
+          grep "The MIA Runtime is up" "$HOME/mia-home/logs/mia.log"
+          sleep 20
+          systemctl --user is-active mia-runtime
+          systemctl --user show mia-runtime -p NRestarts
+      - name: Stopped the way systemd stops it, cleanly
+        run: |
+          systemctl --user stop mia-runtime
+          systemctl --user show mia-runtime -p Result -p ExecMainStatus
+          test "$(systemctl --user show mia-runtime -p Result --value)" = "success"
+          grep "The MIA Runtime has stopped" "$HOME/mia-home/logs/mia.log"
+      - name: Her log and the journal, for the record
+        if: always()
+        run: |
+          tail -n 60 "$HOME/mia-home/logs/mia.log" || true
+          journalctl --user -u mia-runtime --no-pager | tail -n 60 || true
+
+  suite-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: System libraries the requirements need
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libportaudio2 libdbus-1-3 rsync
+      - name: Requirements
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+      - name: The engine's suite on Linux
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest -q -p no:cacheprovider
+
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Room for a desktop image (the runner's second disk)
+        run: |
+          sudo mkdir -p /mnt/podman
+          df -h / /mnt
+      - name: Build the MIA OS image (PoC 2, build half), from the tracked files only
+        run: |
+          mkdir -p /tmp/mia-ctx && git archive --format=tar HEAD | tar -x -C /tmp/mia-ctx
+          sudo podman --root /mnt/podman build -f /tmp/mia-ctx/os/Containerfile -t mia-os:poc /tmp/mia-ctx
+      - name: What's in it
+        run: |
+          sudo podman --root /mnt/podman images
+          sudo podman --root /mnt/podman run --rm mia-os:poc sh -c \
+            'rpm -q kernel ollama ollama-rocm cage python3.13; /usr/lib/mia/venv/bin/python --version; ls /usr/lib/systemd/user/mia-runtime.service; bootc --version'

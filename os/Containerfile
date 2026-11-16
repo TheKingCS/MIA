@@ -1,0 +1,43 @@
+# os/Containerfile
+#
+# MIA OS on the PC, as a bootc image (DEC-0189, DEC-0157; docs/mia_os/MIA_OS_LINUX_FOUNDATION.md): Fedora's KDE
+# Atomic desktop, unmodified, with MIA added on top as ordinary files: her code and a locked Python environment in
+# /usr/lib/mia, her runtime as a systemd *user* service, and the model server from Fedora's own packages.
+#
+# THIS IS PROOF OF CONCEPT 2's FIRST IMAGE (docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md section 2), not a
+# release. CI builds it (.github/workflows/mia-os-poc.yml) to show the build works and passes `bootc container lint`;
+# booting it, updating and rolling back is the VM half of PoC 2, still to do. Nothing here is installed anywhere.
+#
+# Choices, each from Prompt 05:
+# - the distribution's kernel and packages only; nothing out of tree;
+# - MIA's own Python (Fedora 45's system Python is 3.15, newer than MIA supports), so the OS can update its
+#   Python without touching MIA;
+# - her runtime runs as the person, never root; it isn't enabled for anyone by default (a person turns it on);
+# - no sealing credential baked in: a credential belongs to one person on one machine (made by
+#   deploy/install_runtime.sh's step, later by first sign-in), so this image's unit keeps files plain until then.
+#
+# Build from a clean export of the repository's TRACKED files, never from a working folder (which may hold his
+# data: git ignores it, a container build wouldn't). .containerignore guards it a second time.
+#   git archive --format=tar HEAD | tar -x -C /tmp/mia-ctx && podman build -f /tmp/mia-ctx/os/Containerfile /tmp/mia-ctx
+ARG BASE=quay.io/fedora-ostree-desktops/kinoite:45
+FROM ${BASE}
+
+# The model server from Fedora (ROCm backend for the RX 7900 XTX), a Python MIA supports, and cage for PoC 3's
+# second session. Kept in one layer, with the package cache removed.
+RUN dnf -y install python3.13 ollama ollama-rocm cage \
+ && dnf clean all && rm -rf /var/cache/dnf /var/lib/dnf
+
+# MIA's code (the repository, without its development folders) and a locked environment beside it.
+COPY . /usr/lib/mia/
+RUN rm -rf /usr/lib/mia/.github /usr/lib/mia/android-phone /usr/lib/mia/homestead /usr/lib/mia/relay \
+ && python3.13 -m venv /usr/lib/mia/venv \
+ && /usr/lib/mia/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel \
+ && /usr/lib/mia/venv/bin/pip install --no-cache-dir -r /usr/lib/mia/requirements.txt \
+ && /usr/lib/mia/venv/bin/python -c "import core.runtime" \
+ && find /usr/lib/mia -name __pycache__ -prune -exec rm -rf {} +
+
+# Her runtime as a user service (the same unit as deploy/mia-runtime.service, with the image's paths filled in).
+COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
+
+# The image passes bootc's own checks, or the build fails.
+RUN bootc container lint

@@ -67,9 +67,9 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC-0186 | Gold allowed as an accent; rewards are legendary orange | APPROVED (Q-41) |
 | DEC-0187 | Each app's own atmosphere colour, outside the meaning colours | APPROVED (Q-42) |
 | DEC-0188 | Prompt 23 built by growing what exists, no new service; the run record first | PROPOSED (Q-43 to Q-46) |
-| DEC-0189 | The Linux foundation: Fedora Atomic (KDE) as a bootc image from the repository; the distribution's kernel; Ubuntu 26.04 the fallback | PROPOSED (Q-47, Q-49; PoC 1, 2) |
-| DEC-0190 | MIA on the OS: a modular platform with one coordinator (the runtime the only writer) | PROPOSED |
-| DEC-0191 | Wayland; two sessions at login; KDE's compositor for both on the PC, cage on the Pi | PROPOSED, provisional (Q-48; PoC 3) |
+| DEC-0189 | The Linux foundation: Fedora Atomic (KDE) as a bootc image from the repository; the distribution's kernel; Ubuntu 26.04 the fallback | APPROVED (Q-47), conditional on PoC 1, 2 |
+| DEC-0190 | MIA on the OS: a modular platform with one coordinator (the runtime the only writer) | PROPOSED; Q-51 answered yes |
+| DEC-0191 | Wayland; two sessions at login; KDE's compositor for both on the PC, cage on the Pi | APPROVED as a direction (Q-48); PoC 3 decides |
 | DEC-0192 | HTTP and SSE for surfaces, D-Bus for the OS, events as re-read signals, no broker | PROPOSED |
 | DEC-0193 | Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var | PROPOSED |
 | DEC-0194 | A fixed-operation helper, each system change confirmed in the OS's own dialog; rules in the image | PROPOSED (Q-50; PoC 5, 6) |

@@ -2736,7 +2736,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0129, DEC-0130, DEC-0134 (Living Worlds), DEC-0152 (Projects and Missions)
 
 ### DEC-0154: MIA OS — the intelligence stays OS-independent; the OS is an environment for it
-- Status: PROPOSED (Zac's MIA OS Initiative directive, 2026-11-13; planning in `docs/mia_os/`)
+- Status: APPROVED (Zac, 2026-11-16, answering Q-47: "yes")
 - Proposed by: claude, 2026-11-13
 - Decision: MIA Core (`core/`) never gains OS-specific imports. Everything host-specific goes behind platform
   adapters (keys, service manager, notifications, power, audio), each an interface with one implementation per host,
@@ -2785,7 +2785,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   never), and each app's network and device permissions.
 
 ### DEC-0157: The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-16, answering Q-47: "yes"), with its MIA session's compositor amended by DEC-0191 (test both, lean to KDE's; Q-48)
 - Proposed by: claude, 2026-11-13
 - Decision: MIA OS on the PC is a Fedora bootc image built from `os/Containerfile` in the repo, signed, with atomic
   updates and rollback. Two sessions: MIA (cage + Chromium on the local MIA shell) and KDE Plasma. Ollama on ROCm,
@@ -2795,7 +2795,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: `docs/mia_os/preliminary/MIA_OS_TECHNOLOGY_EVALUATION.md`
 
 ### DEC-0158: System management only through a narrow privileged helper
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-16, answering Q-47: "yes"); refined by DEC-0194
 - Proposed by: claude, 2026-11-13
 - Decision: MIA Core never runs as root. On MIA OS, system actions (processes, apps, updates, network, drives) go
   through a separate System Manager process with a fixed list of D-Bus methods, each authorised by polkit and reached
@@ -3293,12 +3293,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   World Intelligence, the first maker). Its own instruction is to avoid new services where existing ones extend. Three
   engines already run steps; a fourth for plans, with a stop that must know the steps, is the moment to give them one
   record.
-- Waiting on Zac: Q-43 (what the shelf keeps), Q-44 (activity context), Q-45 (whose browsing Recall reads), Q-46
-  (when it runs).
+- Zac's answers (2026-11-16): Q-43, only what he sends; Q-46, "opus can start now". Q-44 and Q-45 open: he asked
+  why, and for more detail (answered in the chat; recorded in the review's section 13).
 - Related: DEC-0165, DEC-0123, DEC-0167, DEC-0117, DEC-0156, DEC-0175, DEC-0176, DEC-0181
 
 ### DEC-0189: The Linux foundation: Fedora Atomic (KDE) as a bootc image from the repository; the distribution's kernel
-- Status: PROPOSED (Claude on Fable, 2026-11-16, MIA OS Prompt 05). A new recommendation that confirms the base
+- Status: APPROVED (Zac, 2026-11-16, answering Q-47: "yes"), conditional on proofs of concept 1 and 2 as written; Ubuntu 26.04 LTS stays the fallback
   DEC-0157 proposed and Zac named (DEC-0168: "Fedora for the PC"). **Needs proofs of concept 1 and 2.**
 - Question: which Linux, kernel and delivery mechanism carry MIA OS on the PC?
 - Requirements: REQ-ARC-001, 002, 011; REQ-HW-002; REQ-OPS-001; REQ-REL-009; REQ-SEC-008.
@@ -3321,7 +3321,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0157, DEC-0168, DEC-0154, DEC-0177
 
 ### DEC-0190: MIA on the OS is a modular platform with one coordinator
-- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
+- Status: PROPOSED; its one question to Zac answered (Q-51, 2026-11-16: "yes": MIA keeps running on the PC when he's signed out)
 - Question: independent services, one central runtime, or a coordinator with separate parts?
 - Requirements: REQ-ARC-002, 004, 009; REQ-REL-003, 010; REQ-FUN-041.
 - Options: independent services; one process doing everything (today); a coordinator with separate processes.
@@ -3339,7 +3339,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0155, DEC-0176
 
 ### DEC-0191: Wayland; two sessions at login; on the PC one compositor technology for both
-- Status: PROPOSED, PROVISIONAL (Claude on Fable, 2026-11-16, Prompt 05). **Needs proof of concept 3; final in
+- Status: APPROVED as a direction (Zac, 2026-11-16, Q-48: "go with your recommendations"): test KDE's compositor and cage in proof of concept 3, lean to KDE's on the PC; cage on the Pi; final in Prompt 10
   Prompt 10.** Amends DEC-0157's "cage plus a browser" for the PC; cage stays the Pi's.
 - Question: what draws MIA's session, and how do it and the conventional desktop coexist?
 - Requirements: REQ-FUN-001, 063; REQ-UX-020, 022, 023; REQ-PER-002.
@@ -3403,6 +3403,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   helper on a Linux desktop, so the root code can stay tiny. `MIA_OS_SYSTEM_PRIVILEGE_BOUNDARIES.md`.
 - Advantages: a trusted path MIA can't fake; little privileged code. Disadvantages: two confirmations for a system
   change (Q-50); Landlock unproven for Python workers.
+- Zac's answer (2026-11-16, Q-50: "yes at first"): every system change asks his password in the operating
+  system's dialog; loosening any named action later is a reviewed change to the image.
 - Confidence: high for the model; medium for Landlock.
 - Related: DEC-0158, DEC-0156, DEC-0176, DEC-0181
 

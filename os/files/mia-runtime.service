@@ -1,0 +1,34 @@
+# os/files/mia-runtime.service
+#
+# The MIA Runtime as a systemd USER service inside the MIA OS image (os/Containerfile; DEC-0155, DEC-0189). The same
+# service as deploy/mia-runtime.service, with the image's fixed paths instead of placeholders: her code and
+# environment are in /usr/lib/mia (read-only, signed with the image); her data is under the person's own home.
+#
+# Not enabled by default: a person turns it on (`systemctl --user enable --now mia-runtime`), and it then keeps
+# running when they sign out if lingering is on (Zac's answer to Q-51: yes).
+#
+# No unlock credential is named yet: a credential belongs to one person on one machine and is made on that machine
+# (tools/data_key protect), so until then her files stay plain, as deploy/install_runtime.sh does where it can't make
+# one. Prompt 13 decides how the image's first sign-in makes it.
+
+[Unit]
+Description=MIA Runtime (MIA with no window)
+After=network.target
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/lib/mia
+Environment=MIA_HOME=%h/.local/share/mia
+ExecStart=/usr/lib/mia/venv/bin/python -m core.runtime
+KillSignal=SIGTERM
+TimeoutStopSec=45
+Restart=on-failure
+RestartSec=5
+RestartPreventExitStatus=1 3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=default.target
