@@ -4,6 +4,10 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, latest (Claude on Opus: the glass look, planned).**
+- **Planning only.** Zac's new handoff makes glass MIA OS's look: frosted panels over atmospheric backgrounds, six starting presets (Aquatic, Nebula, Evergreen, Aurelia, Glacial, Eclipse), with the environment, the colours and the layout each chosen separately. Most of the machinery exists already (themes as data, the Theme Studio, a glass material, contrast checks); the plan adds five kinds of glass surface, splits a theme into three choices, and drives MIA's orb from what she's really doing.
+- **Waiting on Zac:** which preset is the default (Q-37), Muse's part (Q-38), and the reference image, which didn't come through (Q-39).
+
 **2026-11-15, latest (Claude on Opus: MIA OS Prompt 04, the requirements).**
 - **Planning only.** What MIA OS is, written down once: a personal, AI-native environment on a standard Linux image, one node of a MIA that also lives on the phone and glasses. 194 requirements, each saying how important it is, when it's needed, whether it already exists in the code, how it will be checked and which later prompt owns it. About half already exist. The first MIA OS is defined (her session by default, an ordinary desktop beside it, local models only, nothing of his data lost in the move).
 - **Measured on his PC:** the small model answers in 0.3 s once loaded, the 14B in 0.9 s, the 32B in 3.4 s.

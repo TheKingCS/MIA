@@ -47,6 +47,9 @@ folded in here.*
 | Q-34 | Autonomy (DEC-0181): keep the five tiers built in M4; add whether each action can be undone and what it reaches; add one "MIA, stop" | finishes the autonomy model | Prompt 08 |
 | Q-35 | The first MIA OS (DEC-0182): the scope in `MIA_OS_MVP_DEFINITION.md` §2 | what Prompt 16 plans first | Prompt 16 |
 | Q-36 | Prompt 02's multi-user list (two speakers, a couples' profile, a household display) predates DEC-0119 ("for Zac alone"): mark those not planned, keeping only "each account's data stays its own"? | consistency with DEC-0119 | Prompt 13 |
+| Q-37 | Which glass preset is the default look (DEC-0183)? Recommended: Aquatic with the cyan scheme, so MIA keeps her colour | the first thing seen | appearance A4 |
+| Q-38 | Muse owns the look (DEC-0017, DEC-0023): Claude builds the appearance engine and first values for the six presets, Muse refines them. Is that the split? | who does what | appearance A4 |
+| Q-39 | The dashboard reference image prompt 24 names didn't arrive: attach it again so it's kept in `docs/design/` and the presets tuned to it | the presets' values | appearance A4 |
 
 ## The original questions (for the record)
 

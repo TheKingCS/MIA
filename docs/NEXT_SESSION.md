@@ -81,7 +81,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   a test that fails on an unmapped one).
   New Opus work joins a fresh list below this line.
   14. M5, each app's status (core/app_ecosystem.statuses, _breakages, _recovered; the Apps page's chips);
-  15. Prompt 04 (docs/mia_os/MIA_OS_SYSTEM_*.md and the twelve others, tools/requirements_matrix.py). Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  15. Prompt 04 (docs/mia_os/MIA_OS_SYSTEM_*.md and the twelve others, tools/requirements_matrix.py);
+  16. prompt 24's plan (docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md, DEC-0183, DEC-0184). Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
@@ -97,6 +98,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Built 2026-11-15 (Opus): M2** (K-0243): "what apps do I have?", "what can Greenhouse do?", "which app can
   monitor energy?", "is anything wrong with my apps?" answered from the manifests and the scheduler; the same on the
   Apps page (Manage apps: "Her apps, checked"). Overlapping tools are said as suggestions.
+- **Prompt 24 (Zac, 2026-11-15): visual identity and the appearance engine**, kept verbatim in
+  `docs/mia_os/prompts/24_VISUAL_IDENTITY_GLASSMORPHISM_APPEARANCE_ENGINE.md`. Phase 1 done (Opus):
+  `docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md`. Most of it extends what exists (`core/themes.py`, the Theme Studio,
+  `web/tokens.css`, `web/themes.css`); three gaps to build: five glass surface tiers, theme / colour scheme /
+  layout as three settings, the orb's state from real activity. DEC-0183 (glass identity, direction approved by
+  his handoff), DEC-0184 proposed. **Waiting on Zac: Q-37 (the default preset), Q-38 (Muse's part), Q-39 (the
+  reference image never arrived).** Next: phase A2 (Opus) on his go. Fable reviews it (queue item 16).
 - **Prompt 04 done (2026-11-15, Opus):** the requirements and system philosophy, sixteen documents in
   `docs/mia_os/` (start at `MIA_OS_SYSTEM_PHILOSOPHY.md` and `MIA_OS_SYSTEM_REQUIREMENTS.md`). 194 requirements,
   each with priority, release tier, status against the code, verification and owner prompt; the matrix is generated

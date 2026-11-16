@@ -1,5 +1,7 @@
 # MIA's design system
 
+*Prompt 24 (2026-11-15): the glass identity (DEC-0183) and the appearance engine's plan (surface tiers, schemes, layouts, the literal-colour baseline) are in [docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md](../mia_os/MIA_OS_APPEARANCE_ENGINE.md).*
+
 *Claude, 2026-11-07, for H-0087. **Specification draft.** Each section says what's **built** today (with the token
 or class), and what's **proposed**. Proposals wait for Zac's approval and round one of the visual concepts
 (`docs/design/MIA_VISUAL_IDENTITY.md` §5); Muse owns the look and refines the values. `web/tokens.css` is the only

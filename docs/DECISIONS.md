@@ -3207,3 +3207,28 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: the smallest whole MIA-first computer, built mostly from what exists; everything else can follow without
   changing its identity.
 - Related: DEC-0157, DEC-0165, DEC-0179, DEC-0181
+
+### DEC-0183: Glass is MIA OS's visual identity
+- Status: APPROVED as direction (Zac's handoff, 2026-11-15: "Status: Approved Design Direction"; prompt 24). Which
+  preset is the default waits on Q-37.
+- Proposed by: claude (Opus), 2026-11-15, recording prompt 24 (`docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` H)
+- Decision: MIA OS's identity is premium glass: frosted translucent surfaces over atmospheric backgrounds, generous
+  curves, layered depth, restrained motion; no heavy neon or cluttered HUD. The default look moves from Stark
+  (DEC-0023) to a glass theme; Stark stays a theme. Kept from DEC-0023: one token file, no hard-coded colours, meaning
+  colours fixed. "One cyan accent" becomes "the colour scheme's accents".
+- Related: DEC-0023, DEC-0136, DEC-0135, DEC-0140, DEC-0184
+
+### DEC-0184: The appearance engine: theme, colour scheme and layout on the existing engine
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-15, prompt 24 phase 1 (`docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` C, D)
+- Decision: appearance is three independent person settings composed at render (`display.theme`: the environment and
+  surfaces; `display.scheme`: accents, gradients, the chart palette, the orb's colour; `display.layout`: navigation,
+  density, sidebar, the experience, Home's arrangement) on `core/themes.py` and `web/tokens.css`; no new framework.
+  Five surface tiers (primary, secondary, floating, deep, interactive) with clamped ranges; an effective-contrast check
+  (the panel mixed with the backdrop at the tier's transparency, 4.5:1); effects levels and reduced transparency as
+  fallbacks; the orb's state from real runtime events. Meaning colours stay out of schemes (DEC-0136); a scheme may
+  only tune them within their hue band through a checked function. Every theme, scheme and layout, built-in or made by
+  MIA from his words or a picture, goes through the same validated builders and approved, undoable actions.
+- Why: the engine already does themes as data, validation, preview, custom themes and mixing; splitting it in three
+  is what makes the handoff's combinations possible without a second system.
+- Related: DEC-0136, DEC-0014, DEC-0173, DEC-0183
