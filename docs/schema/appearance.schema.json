@@ -4,7 +4,7 @@
   "title": "MIA's look as /api/shell sends it (display.theme)",
   "description": "The person's theme with their colour scheme over it and their layout and effects on it (core/appearance.py, DEC-0184). Theme, scheme and layout are independent choices; tokens are only the ones core/themes.py allows, the glass tiers clamped.",
   "type": "object",
-  "required": ["id", "name", "tokens", "material", "scheme", "layout", "effects", "reduce_transparency"],
+  "required": ["id", "name", "tokens", "material", "scheme", "layout", "effects", "reduce_transparency", "ambient", "easing"],
   "properties": {
     "id": {"type": "string", "pattern": "^[a-z0-9_]{1,32}$"},
     "name": {"type": "string"},
@@ -21,6 +21,8 @@
       }
     },
     "effects": {"type": "string", "enum": ["auto", "full", "light", "none"]},
-    "reduce_transparency": {"type": "boolean"}
+    "reduce_transparency": {"type": "boolean"},
+    "ambient": {"type": "string", "enum": ["off", "drift"], "description": "Ambient motion behind the pages (A7)."},
+    "easing": {"type": "boolean", "description": "MIA is easing off for a busy computer or low battery: keep the backdrop still."}
   }
 }

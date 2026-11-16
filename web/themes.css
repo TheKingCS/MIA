@@ -95,7 +95,7 @@
 /* A theme's backdrop (body::before, concept.css) and wall (body::after) sit behind the page on z-index -1; the body's
    own solid background would paint over them, so a theme gives the body its own stacking layer. Stark is left exactly
    as it was. */
-:root[data-theme]:not([data-theme="stark"]) body { isolation: isolate; }
+:root[data-theme]:not([data-theme="stark"]) body, :root[data-ambient="drift"] body { isolation: isolate; }
 
 /* Y2K Cyber's graffiti wall (Zac, 2026-11-08: yes to "a loud graffiti texture", behind panels, never under text):
    abstract spray tags, drips and sparkles on their own fixed layer over the backdrop. Panels sit on top of it; under
@@ -120,3 +120,27 @@
 }
 :root[data-contrast="high"] .theme-art { display: none; }
 @media (prefers-reduced-data: reduce) { .theme-art { display: none; } }
+
+/* Ambient motion (A7, `display.ambient`; web/shell.js makes the layer): three soft glows in the colours' accents,
+   larger than the screen, drifting over minutes. Only transform and opacity move, so it costs the compositor almost
+   nothing. Held (page hidden, on battery, MIA easing off) it pauses where it is; reduced motion and light or no glass
+   effects keep it still; high contrast and reduced data hide it. */
+.theme-ambient {
+  position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: 0.55;
+  background:
+    radial-gradient(38% 34% at 28% 32%, rgba(var(--rgb-accent), 0.20), transparent 70%),
+    radial-gradient(34% 30% at 72% 64%, rgba(var(--rgb-accent-2), 0.18), transparent 70%),
+    radial-gradient(30% 28% at 58% 22%, rgba(var(--rgb-accent-3), 0.12), transparent 70%);
+  animation: mia-ambient-drift 90s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes mia-ambient-drift {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(4%, -3%, 0) rotate(6deg) scale(1.06); }
+  100% { transform: translate3d(-3%, 3%, 0) rotate(-4deg) scale(1.02); }
+}
+:root[data-ambient-held] .theme-ambient { animation-play-state: paused; }
+:root:is([data-effects="light"], [data-effects="none"]) .theme-ambient { animation: none; }
+@media (prefers-reduced-motion: reduce) { .theme-ambient { animation: none; } }
+:root[data-contrast="high"] .theme-ambient { display: none; }
+@media (prefers-reduced-data: reduce) { .theme-ambient { display: none; } }

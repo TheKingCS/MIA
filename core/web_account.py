@@ -84,6 +84,9 @@ SETTINGS: tuple[Setting, ...] = (
             options=(("auto", "Auto"), ("full", "Full glass"), ("light", "Light (no blur)"), ("none", "None (solid)"))),
     Setting("display.reduce_transparency", "Look", "Reduce transparency", "toggle", False,
             "Solid panels everywhere, whatever the theme."),
+    Setting("display.ambient", "Look", "Background motion", "choice", "off",
+            "A slow drift of your colours' glow behind the pages. It stays still on battery, with reduced motion or "
+            "light glass, and while MIA eases off.", options=(("off", "Still"), ("drift", "Slow drift"))),
     Setting("communication.daily_budget", "When MIA speaks up", "Messages per day, at most", "number", 0,
             "0 means no fixed limit: she learns how often you want each kind of message from what you open, use or "
             "dismiss (DEC-0171). Set a number to cap her own messages a day. Urgent things, alarms you set and "

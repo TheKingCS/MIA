@@ -61,11 +61,39 @@
     root.dataset.effects = theme.effects && theme.effects !== "auto" ? theme.effects
       : (window.matchMedia && matchMedia("(max-width: 860px)").matches ? "light" : "full");
     if (theme.reduce_transparency) root.dataset.transparency = "reduced"; else delete root.dataset.transparency;
+    root.dataset.ambient = theme.ambient === "drift" ? "drift" : "off";  // A7: a slow drift of the colours' glow
+    ambientHeld.easing = !!theme.easing;  // MIA easing off for a busy computer or low battery: keep it still
     themeNow = theme;
+    ambient();
     backdrop(theme.backdrop);
     if (window.MIASound && MIASound.useSet) MIASound.useSet(theme.sound || "classic");  // the theme's chimes (opt-in)
     if (previewOnly) return;  // the Theme Studio trying a look on: not kept for the next page
     try { localStorage.setItem(THEME_CACHE, JSON.stringify(theme)); } catch (e) { /* fine: it applies when the shell comes */ }
+  }
+  // Ambient motion (A7, core/appearance.py `display.ambient`): its own fixed layer behind the page, drifting only while
+  // nothing holds it still: the page hidden, the device on battery, or MIA easing off (themes.css also stills it for
+  // reduced motion, light or no glass effects, and high contrast). Held, it pauses where it is rather than vanishing.
+  const ambientHeld = { hidden: false, battery: false, easing: false };
+  function ambient() {
+    const root = document.documentElement;
+    let layer = document.querySelector(".theme-ambient");
+    if (root.dataset.ambient !== "drift") { if (layer) layer.remove(); delete root.dataset.ambientHeld; return; }
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.className = "theme-ambient";
+      layer.setAttribute("aria-hidden", "true");
+      (document.body || document.documentElement).prepend(layer);
+    }
+    const why = Object.keys(ambientHeld).filter((k) => ambientHeld[k]);
+    if (why.length) root.dataset.ambientHeld = why.join(" "); else delete root.dataset.ambientHeld;
+  }
+  document.addEventListener("visibilitychange", () => { ambientHeld.hidden = document.hidden; ambient(); });
+  if (navigator.getBattery) {
+    navigator.getBattery().then((b) => {
+      const watch = () => { ambientHeld.battery = !b.charging; ambient(); };
+      b.addEventListener("chargingchange", watch);
+      watch();
+    }).catch(() => { /* no battery to read: never held for it */ });
   }
   try { applyTheme(JSON.parse(localStorage.getItem(THEME_CACHE) || "null")); } catch (e) { /* no cached theme */ }
   // A picture MIA painted behind every page (DEC-0140): its own fixed layer, faded where you read (themes.css).

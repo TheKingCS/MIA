@@ -373,6 +373,8 @@
       segment("Effects", "display.effects", L.effects_choices, L.effects),
       el("label", { class: "st-check" }, el("input", { type: "checkbox", checked: L.reduce_transparency || null,
         onchange: (e) => choose("display.reduce_transparency", e.target.checked) }), "Reduce transparency (solid panels everywhere)"),
+      segment("Background", "display.ambient", L.ambient_choices || [], L.ambient || "off"),
+      el("p", { class: "dim" }, "A slow drift of your colours' glow. It stays still on battery, with reduced motion or light glass, and while MIA eases off."),
       el("p", { class: "dim lk-more" }, "Make your own theme below."));
   }
 

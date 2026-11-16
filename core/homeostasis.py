@@ -22,6 +22,9 @@ interval, then four times, up to six hours, until it works again. One success re
 backing off, she says so once, through the communication gate (topic `homeostasis`), in plain words with why and
 what's waiting. Nothing is said again until things have been clear and turn again. These are her own reversible
 choices about her own work, logged and shown in the runtime's health (`/api/runtime/health`).
+
+**The pages** (`easing_now`, appearance A7): while the last reading (within ten minutes) found the computer busy or the
+battery low, the look sent to pages says so, and an ambient backdrop stays still.
 """
 
 from __future__ import annotations
@@ -52,6 +55,16 @@ LOW_DISK = 5.0  # percent free
 READ_EVERY = 30.0  # seconds between readings
 BACKOFF_AFTER = 3  # failures in a row
 BACKOFF_MOST = 6 * 3600.0
+
+
+EASING_FRESH = 600.0  # seconds a "busy or on battery" reading counts for the pages
+_EASED_AT: Optional[float] = None  # when this process last read the machine as busy or on low battery
+
+
+def easing_now() -> bool:
+    """Whether MIA is easing off right now for a busy computer or a low battery, as last read in the last ten minutes
+    (the pages keep their ambient backdrop still while she does: core/appearance.for_shell)."""
+    return _EASED_AT is not None and time.monotonic() - _EASED_AT < EASING_FRESH
 
 
 def backoff_seconds(interval: float, failures_in_a_row: int) -> float:
@@ -150,8 +163,9 @@ class Homeostasis:
         return out
 
     def refresh(self) -> dict:
-        """Reads the machine when the last reading is older than 30 seconds; ends an episode (and its notice) once
-        everything is clear. Returns what isn't clear."""
+        """Reads the machine when the last reading is older than 30 seconds; notes for the pages whether she's easing
+        off for a busy computer or a low battery (`easing_now`); ends an episode (and its notice) once everything is
+        clear. Returns what isn't clear."""
         now = self._clock()
         if now - self._last_read >= READ_EVERY:
             self._last_read = now
@@ -160,6 +174,8 @@ class Homeostasis:
                 self._cpu.append(float(r["cpu"]))
             self.found = conditions(list(self._cpu), r.get("memory_free"), r.get("battery"), r.get("online"),
                                     r.get("disk_free"))
+            global _EASED_AT
+            _EASED_AT = time.monotonic() if ("busy" in self.found or "battery" in self.found) else None
             if not self.found:
                 self.waiting, self._noticed = {}, False
         return self.found

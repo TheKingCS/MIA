@@ -2027,6 +2027,17 @@
         "id": "none",
         "name": "None (solid panels)"
       }
+    ],
+    "ambient": "off",
+    "ambient_choices": [
+      {
+        "id": "off",
+        "name": "Still"
+      },
+      {
+        "id": "drift",
+        "name": "Slow drift"
+      }
     ]
   }
 }

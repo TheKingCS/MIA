@@ -7,7 +7,9 @@ core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens wi
 glass material draws every tier from its tokens; a theme can set a tier only within its range, so a dialog can't be made
 see-through; status chips keep their meaning colours under glass; the OS's reduced transparency makes glass solid; no
 style sheet gains hard-coded colours, and since A6 none but the glasses page has any, and every token a sheet reads
-is defined; and each app's own colour (DEC-0187) is readable on every theme and never a meaning colour.
+is defined; each app's own colour (DEC-0187) is readable on every theme and never a meaning colour; and (A7) the
+background's slow drift is a per-person setting, off unless chosen, held still whenever it should be (page hidden, on
+battery, MIA easing off, reduced motion, light glass, high contrast).
 """
 
 import re
@@ -336,3 +338,57 @@ def test_each_apps_own_colour_is_readable_on_every_theme_and_never_a_meaning_col
         assert themes.accent_problem(colour) is None, name
         assert min(themes.contrast(colour, bg) for bg in backgrounds) >= 4.5, name
         assert f"var(--rgb-atmo-{name})" in tokens, name  # some app uses it
+
+
+# ---------------------------------------------------------------- phase A7: ambient motion
+
+
+def test_background_motion_is_a_plain_setting_off_unless_chosen_and_set_by_voice(settings):
+    from core import person_settings
+    from core.assistant_accessibility_actions import _action_set_layout
+    from core.web_account import SETTINGS_BY_KEY
+
+    assert appearance.AMBIENT_KEY in person_settings.PERSONAL_SETTINGS
+    assert SETTINGS_BY_KEY[appearance.AMBIENT_KEY].group == "Look"
+    assert appearance.for_shell(None)["ambient"] == "off"
+    assert "drifts slowly" in _action_set_layout(None, {"motion": "drift"})
+    assert settings[appearance.AMBIENT_KEY] == "drift" and appearance.picker(None)["ambient"] == "drift"
+    assert "still now" in _action_set_layout(None, {"motion": "still"})
+    assert "slow drift, or still" in _action_set_layout(None, {"motion": "sparkly"})
+    settings[appearance.AMBIENT_KEY] = "wild"  # anything else reads as off
+    assert appearance.for_shell(None)["ambient"] == "off"
+
+
+def test_the_look_says_when_mia_is_easing_off_and_only_while_the_reading_is_fresh(settings, monkeypatch):
+    from core import homeostasis
+
+    monkeypatch.setattr(homeostasis, "_EASED_AT", None)
+    assert appearance.for_shell(None)["easing"] is False
+    monkeypatch.setattr(homeostasis.time, "monotonic", lambda: 1000.0)
+    monkeypatch.setattr(homeostasis, "_EASED_AT", 1000.0 - 60)
+    assert appearance.for_shell(None)["easing"] is True
+    monkeypatch.setattr(homeostasis, "_EASED_AT", 1000.0 - homeostasis.EASING_FRESH - 1)
+    assert homeostasis.easing_now() is False
+    reads = iter([{"cpu": 95.0}] * 3 + [{"cpu": 10.0}] * 3)
+    ease = homeostasis.Homeostasis(None, read=lambda: next(reads), clock=iter(range(0, 1000, 31)).__next__)
+    for _ in range(3):
+        ease.refresh()
+    assert homeostasis.easing_now() is True  # three busy readings: she eases off, and the pages hear it
+    for _ in range(3):
+        ease.refresh()
+    assert homeostasis.easing_now() is False
+
+
+def test_the_drifting_backdrop_holds_still_whenever_it_should():
+    shell = (WEB / "shell.js").read_text(encoding="utf-8")
+    assert "root.dataset.ambient" in shell and "ambientHeld.easing = !!theme.easing" in shell
+    assert "visibilitychange" in shell and "getBattery" in shell and "chargingchange" in shell
+    css = (WEB / "themes.css").read_text(encoding="utf-8")
+    assert ":root[data-ambient-held] .theme-ambient { animation-play-state: paused; }" in css
+    assert ':root:is([data-effects="light"], [data-effects="none"]) .theme-ambient { animation: none; }' in css
+    assert "@media (prefers-reduced-motion: reduce) { .theme-ambient { animation: none; } }" in css
+    assert ':root[data-contrast="high"] .theme-ambient { display: none; }' in css
+    block = css[css.index("@keyframes mia-ambient-drift"):]
+    block = block[:block.index("\n}\n")]
+    assert set(re.findall(r"([a-z-]+):", block)) == {"transform"}  # only the compositor's work moves
+    assert '"display.ambient"' in (WEB / "studio.js").read_text(encoding="utf-8")

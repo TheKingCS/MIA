@@ -21,6 +21,11 @@ with no blur and no moving backdrop, none with solid surfaces; "auto" lets the p
 **reduced transparency** (`display.reduce_transparency`, as the OS's own setting does). Both are attributes the
 style sheets read (`web/themes.css`).
 
+**Ambient motion** (`display.ambient`, A7; off unless chosen): a slow drift of the colours' glow behind every page.
+The page keeps it still whenever it should cost nothing or might bother: effects light or none, reduced motion (the
+OS's), high contrast, the page hidden, the device on battery, or MIA easing off her own work (`easing`, from
+`core/homeostasis.easing_now`, so a busy computer isn't asked to animate too).
+
 **Readable glass, checked** (`readability_problems`): for each of the five tiers, the panel as it really shows (the
 field, the panel colour at the tier's opacity, the light sheen over it) must keep body text at 4.5:1 (WCAG 2.2 AA).
 Every built-in theme and scheme passes (`tests/test_appearance.py`); a preset that doesn't is a bug.
@@ -39,6 +44,8 @@ DENSITY_KEY = "display.density"
 SIDEBAR_KEY = "display.sidebar"
 EFFECTS_KEY = "display.effects"
 TRANSPARENCY_KEY = "display.reduce_transparency"
+AMBIENT_KEY = "display.ambient"
+AMBIENT = ("off", "drift")
 DEFAULT_SCHEME = "theme"
 DENSITY = ("comfortable", "compact")
 SIDEBAR = ("full", "icons")  # "hidden" waits for another way to navigate on the PC (A5)
@@ -176,21 +183,28 @@ def layout_of(context) -> dict:
 
 
 def effects_of(context) -> dict:
-    """How much glass to draw: {effects: auto|full|light|none, reduce_transparency: bool}."""
+    """How much glass and motion to draw: {effects: auto|full|light|none, reduce_transparency: bool, ambient:
+    off|drift}."""
     from core import person_settings
 
     effects = person_settings.get(context, EFFECTS_KEY, "auto")
+    ambient = person_settings.get(context, AMBIENT_KEY, "off")
     return {"effects": effects if effects in EFFECTS else "auto",
-            "reduce_transparency": bool(person_settings.get(context, TRANSPARENCY_KEY, False))}
+            "reduce_transparency": bool(person_settings.get(context, TRANSPARENCY_KEY, False)),
+            "ambient": ambient if ambient in AMBIENT else "off"}
 
 
 def for_shell(context) -> dict:
-    """What /api/shell sends as the look: the theme with the person's scheme over it, plus their layout and effects
-    (`layout`, `effects`), each independent of the others."""
+    """What /api/shell sends as the look: the theme with the person's scheme over it, plus their layout, effects and
+    ambient motion (`layout`, `effects`, `ambient`), each independent of the others, and whether MIA is easing off
+    right now (`easing`: the page keeps its backdrop still)."""
+    from core.homeostasis import easing_now
+
     theme = themes.for_shell(context)
     out = compose(theme, scheme_of(context, theme))
     out["layout"] = layout_of(context)
     out.update(effects_of(context))
+    out["easing"] = easing_now()
     return out
 
 
@@ -225,15 +239,18 @@ def set_layout(context, **changes) -> str:
 SCHEME_OPTIONS = ((DEFAULT_SCHEME, "The theme's own"),) + tuple((k, v[0]) for k, v in SCHEMES.items())
 EFFECT_NAMES = {"auto": "Auto (lighter on a phone)", "full": "Full glass", "light": "Light (no blur)",
                 "none": "None (solid panels)"}
+AMBIENT_NAMES = {"off": "Still", "drift": "Slow drift"}
 
 
 def picker(context) -> dict:
     """The "Your look" picker's data (the Theme Studio, web/studio.js): what's chosen now, each colour scheme with its
-    three colours and whether it can be used with the theme in use (and why not), the layout and effect choices."""
+    three colours and whether it can be used with the theme in use (and why not), the layout, effect and motion
+    choices."""
     theme = themes.for_shell(context)
     look = for_shell(context)
     return {"theme": theme["id"], "scheme": look["scheme"], "layout": look["layout"], "effects": look["effects"],
-            "reduce_transparency": look["reduce_transparency"],
+            "reduce_transparency": look["reduce_transparency"], "ambient": look["ambient"],
+            "ambient_choices": [{"id": a, "name": AMBIENT_NAMES[a]} for a in AMBIENT],
             "schemes": [{"id": DEFAULT_SCHEME, "name": "The theme's own", "colours": [], "problem": ""}]
             + [{"id": k, "name": v[0], "colours": list(v[1:4]), "problem": scheme_problem(k, theme)}
                for k, v in SCHEMES.items()],

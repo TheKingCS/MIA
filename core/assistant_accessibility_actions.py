@@ -309,7 +309,8 @@ def _action_set_scheme(context, arguments: dict) -> str:
 
 
 def _action_set_layout(context, arguments: dict) -> str:
-    """Tool set_layout: the person's density and sidebar, and how much glass to draw (core/appearance.py)."""
+    """Tool set_layout: the person's density and sidebar, how much glass to draw, and whether the background drifts
+    (core/appearance.py: `display.ambient`, A7)."""
     from core import appearance, person_settings
 
     effects = str(arguments.get("effects") or "").strip().lower()
@@ -323,14 +324,24 @@ def _action_set_layout(context, arguments: dict) -> str:
                 return "Glass effects are one of: " + ", ".join(appearance.EFFECTS) + "."
             person_settings.put(context, appearance.EFFECTS_KEY, effects)
             said.append(f"Glass effects: {effects}.")
+        motion = str(arguments.get("motion") or "").strip().lower()
+        if motion:
+            ambient = {"drift": "drift", "on": "drift", "moving": "drift", "animated": "drift", "off": "off",
+                       "still": "off", "none": "off"}.get(motion)
+            if ambient is None:
+                return "Background motion is a slow drift, or still."
+            person_settings.put(context, appearance.AMBIENT_KEY, ambient)
+            said.append("The background drifts slowly now; it stays still on battery and while I ease off."
+                        if ambient == "drift" else "The background is still now.")
     except ValueError as problem:
         return str(problem)
-    return " ".join(said) or "Say compact or comfortable, a full sidebar or icons only, or how much glass."
+    return " ".join(said) or "Say compact or comfortable, a full sidebar or icons only, how much glass, or a moving background."
 
 
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme,
-    set_color_scheme and set_layout (the look's other two choices, core/appearance.py), tweak_theme, mix_themes,
+    set_color_scheme and set_layout (the look's other two choices, core/appearance.py; set_layout also takes the
+    background's motion, A7), tweak_theme, mix_themes,
     design_theme, theme_from_picture and adjust_theme (A7), delete_theme and read_screen, and the painting tools
     (core/assistant_art_actions.py)."""
     from core.assistant_art_actions import register_art_actions
@@ -393,15 +404,19 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     registry.register(AssistantAction(
         name="set_layout", domain="accessibility",
         description=("Change MIA's layout without touching her colours: spacing (comfortable or compact) and the "
-                     "sidebar (full, or icons only); and how much glass to draw (full, light, none, or auto)."),
+                     "sidebar (full, or icons only); how much glass to draw (full, light, none, or auto); and whether "
+                     "the background slowly drifts or stays still."),
         parameters={"type": "object", "properties": {
             "density": {"type": "string", "description": "comfortable or compact."},
             "sidebar": {"type": "string", "description": "full or icons."},
             "effects": {"type": "string", "description": "auto, full, light (no blur) or none (solid panels)."},
+            "motion": {"type": "string", "description": "the background's motion: drift (slow) or still."},
         }, "required": []},
         handler=_action_set_layout,
         trigger_phrases=("compact layout", "compact view", "more compact", "less spacing", "more spacing", "icons only", "smaller sidebar",
-                         "full sidebar", "less transparent", "no blur", "solid panels", "turn off the glass"),
+                         "full sidebar", "less transparent", "no blur", "solid panels", "turn off the glass",
+                         "moving background", "animated background", "background motion", "still background",
+                         "stop the background moving"),
     ))
     registry.register(AssistantAction(
         name="tweak_theme", domain="accessibility",
