@@ -67,8 +67,13 @@ class ActionType:
     rejected: Optional[Callable] = None  # (context, params) -> None, after a no; never raises into the reject
 
     def as_dict(self) -> dict:
-        """What /api/actions lists for this kind: kind, label, params and child_ok (never the functions)."""
-        return {"kind": self.kind, "label": self.label, "params": dict(self.params), "child_ok": self.child_ok}
+        """What /api/actions lists for this kind: kind, label, params, child_ok, and what it reaches and whether it can
+        be undone (core/action_effects.py); never the functions."""
+        from core.action_effects import effect_of
+
+        reach, reversible = effect_of(self.kind)
+        return {"kind": self.kind, "label": self.label, "params": dict(self.params), "child_ok": self.child_ok,
+                "reach": reach, "reversibility": reversible}
 
 
 @dataclass
@@ -487,7 +492,8 @@ class ActionCenter:
                 proposal.status = EXPIRED
 
     def propose(self, context, kind: str, params: Optional[dict] = None, proposed_by: str = "person") -> Proposal:
-        """Step 1. Checks it and says what would happen; changes nothing."""
+        """Step 1. Checks it and says what would happen (that it can't be undone, for an irreversible kind:
+        core/action_effects.py); changes nothing."""
         from core.child_accounts import is_child
 
         action = ACTION_TYPES.get(kind)
@@ -499,6 +505,10 @@ class ActionCenter:
             raise ActionError(ASK_A_PARENT)
         params = dict(params or {})
         summary = action.describe(context, params)
+        from core.action_effects import effect_of, says_irreversible
+
+        if effect_of(kind)[1] == "irreversible":  # said before it's approved (REQ-AUT-006)
+            summary = says_irreversible(summary)
         proposal = Proposal(uuid.uuid4().hex[:12], kind, params, summary, _who(context),
                             "mia" if proposed_by == "mia" else "person",
                             created_at=datetime.now().isoformat(timespec="seconds"))

@@ -49,6 +49,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Built (Opus): UI-3's second part** (K-0267): `core/action_effects.py` says what every action kind reaches
+  (records, device, system, outside) and whether it can be undone; 22 of 468 differ from "records, undoable". An
+  irreversible one's approval card says "This can't be undone."; system and outside ones always ask (merging a
+  lab change into MIA's code was only within a grant: now it asks every time). REQ-AUT-006, 007 met.
 - **For the next session:** nothing of Fable's is queued until Zac answers. Opus can take prompt 23's independent
   review, Procurement P3, or Forge (M7).
 
@@ -157,7 +161,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   26. UI-3's first part (core/change_history.py, UndoLog.add/forget, undo_last's mark, history.undo and the
       undo_by_time tool, Recent Changes' Undo By Time);
   27. DEC-0196's one browser (core/browser.py EVERYDAY_DROPS, _page and take_over, withheld/asked_now,
-      sensitive_sites; the three tools; the two settings); and the VM workflow (.github/workflows/mia-os-vm.yml).
+      sensitive_sites; the three tools; the two settings); and the VM workflow (.github/workflows/mia-os-vm.yml);
+  28. UI-3's second part (core/action_effects.py, ActionCenter.propose's sentence, as_dict, lab.approve's tier,
+      tests/test_action_effects.py).
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

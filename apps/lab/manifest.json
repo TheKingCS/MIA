@@ -52,7 +52,7 @@
       "list_lab_readings": "observe",
       "list_lab_series": "observe",
       "log_lab_reading": "act_within_grant",
-      "lab.approve": "act_within_grant",
+      "lab.approve": "act_with_approval",
       "lab.propose": "act_within_grant",
       "lab.reject": "act_within_grant",
       "lab_reading.add": "act_within_grant",

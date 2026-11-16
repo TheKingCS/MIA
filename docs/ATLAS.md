@@ -2,17 +2,18 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1453 files, 324,734 lines; 1453 files describe themselves; 17,811 of 17,907 classes and functions are documented.
+1455 files, 324,913 lines; 1455 files describe themselves; 17,818 of 17,914 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-563 files, 162,389 lines; 8,364 of 8,450 classes and functions documented
+564 files, 162,478 lines; 8,366 of 8,452 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
 - `core/account_actions.py`: What the web's Profile and Settings screens change (2026-10-07, core/web_account.py): your name, email, country and interests (`profile.edit`), one of your own settings (`setting.set`), and ending a break MIA took from a kind of message (`communication.resume`). All are the person's own and undoable
 - `core/account_data.py`: Your data is yours to take or remove (2026-10-01, accounts stage 5).
 - `core/achievements.py`: The deterministic "you unlocked something" narration layer — the "Achievements/Milestones" piece flagged as a real gap across both the "My Hero's Path" plan and the "connective infrastructure" architecture review that followed the whole-codebase audit (see docs/ROADMAP.md's dated entry).
+- `core/action_effects.py`: What each kind of action reaches, and whether it can be undone (REQ-AUT-006, REQ-AUT-007; DEC-0181; prompt 23's review, UI-3). Every action kind is one of four reaches and three reversibilities:
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
 - `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history).
 - `core/agent_activity.py`: The Dashboard's Agent Activity (DEC-0153, Zac 2026-11-11: "All of these"): what MIA did on her own and what the agents that build her are doing, in one card, each line opening where it came from.
@@ -855,7 +856,7 @@
 
 ## tests/: the test suite: what each part must do
 
-498 files, 84,234 lines; 7,119 of 7,129 classes and functions documented
+499 files, 84,324 lines; 7,124 of 7,134 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -870,6 +871,7 @@
 - `tests/test_accessibility.py`: Accessibility (core/accessibility.py, gui/theme_manager.py, gui/read_aloud.py), 2026-10-01: text size, high contrast, and reading a screen aloud; each person's own.
 - `tests/test_accounts_households.py`: Accounts and households (2026-10-01): sign in with an email, recover a forgotten password with a recovery code, and share household things only after joining a household with a current member's approval (core/profile_manager.py, core/household_manager.py, core/personal_data.py).
 - `tests/test_achievements.py`: Unit tests for core.achievements' pure functions — no Qt, no persistence, same style as tests/test_leveling.py tests/test_skill_leveling.py.
+- `tests/test_action_effects.py`: What each action kind reaches and whether it can be undone (REQ-AUT-006, REQ-AUT-007; core/action_effects.py): every declared effect is a real kind with a known reach and reversibility; a kind whose code deletes or moves files, uses the network, talks to a device, runs a program or merges code is de
 - `tests/test_actions.py`: The action contract and live updates (Phase 2 foundation, DEC-0013, 2026-10-05): Propose → Approve → Execute → Record → Undo, the endpoints the web front end uses, and the state version that tells it to refresh.
 - `tests/test_activity_log_manager.py`: Unit tests for core.activity_log_manager. Isolates _DATA_DIR _ACTIVITY_LOG_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_alarm_manager.py`: Unit tests for core.alarm_manager. Isolates _DATA_DIR/_ALARMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths). check_due() takes `now` as a plain datetime rather than reading the real clock, so firing behavior is tested with fixed timestamps 
