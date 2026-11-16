@@ -54,7 +54,9 @@ class ActionError(ValueError):
 class ActionType:
     """One kind of change MIA can make ("bill.pay"): the button's label, the parameters it takes (name -> what it is),
     `describe` (context, params -> the sentence the person approves; raises ActionError when it can't be done),
-    `execute` (context, params -> one line saying what happened), and whether a child account may use it.
+    `execute` (context, params -> one line saying what happened), whether a child account may use it, and, for a kind
+    that holds something open while it waits (a browser step), `rejected` (context, params -> None): what letting it
+    go does when the person says no.
     """
     kind: str
     label: str  # the button: "Mark paid"
@@ -62,6 +64,7 @@ class ActionType:
     describe: Callable  # (context, params) -> the sentence to approve; raises ActionError
     execute: Callable  # (context, params) -> what happened, one line
     child_ok: bool = False
+    rejected: Optional[Callable] = None  # (context, params) -> None, after a no; never raises into the reject
 
     def as_dict(self) -> dict:
         """What /api/actions lists for this kind: kind, label, params and child_ok (never the functions)."""
@@ -588,7 +591,8 @@ class ActionCenter:
 
     def reject(self, context, proposal_id: str) -> Proposal:
         """Declines a proposal still waiting (nothing runs); when MIA proposed it, the decline is noted for her
-        actions.* loops.
+        actions.* loops; and a kind that held something open while it waited (`ActionType.rejected`, a browser step)
+        lets it go, so the run it belonged to ends at once.
         """
         proposal = self.get(proposal_id, _who(context))
         if proposal.status == PROPOSED:
@@ -596,6 +600,12 @@ class ActionCenter:
             proposal.decided_at = datetime.now().isoformat(timespec="seconds")
             if proposal.proposed_by == "mia":
                 _note(context, "declined", proposal)
+            kind = ACTION_TYPES.get(proposal.kind)
+            if kind is not None and kind.rejected is not None:
+                try:  # what it held open is let go (a routine's run ends, stopped at that step)
+                    kind.rejected(context, proposal.params)
+                except Exception:  # noqa: BLE001 - the no stands whatever the clean-up does
+                    log.exception("Letting go of a declined %s failed.", proposal.kind)
         return proposal
 
     def undo(self, context, proposal_id: str) -> Proposal:

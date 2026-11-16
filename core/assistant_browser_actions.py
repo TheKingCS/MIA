@@ -176,8 +176,18 @@ def _do_commit(context, params) -> str:
         raise ActionError(str(problem)) from problem
 
 
+def _let_go_commit(context, params) -> None:
+    """The person said no: the held step is let go, and a routine run waiting on it ends there, saying so (UI-1)."""
+    hub = getattr(context, "browsers", None)
+    pending_id = str(params.get("pending_id") or "")
+    browser = hub.find_pending(pending_id) if hub is not None else None
+    if browser is not None:
+        browser.drop_pending(pending_id, "you said no to this step")
+
+
 ACTION_TYPES["browser.commit"] = ActionType(
-    "browser.commit", "Go ahead", {"pending_id": "the browser step waiting for approval"}, _describe_commit, _do_commit)
+    "browser.commit", "Go ahead", {"pending_id": "the browser step waiting for approval"}, _describe_commit, _do_commit,
+    rejected=_let_go_commit)
 
 
 # ------------------------------------------------------------------ the Browser screen's own changes (core/web_browser.py)

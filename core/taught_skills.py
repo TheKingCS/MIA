@@ -147,8 +147,8 @@ class Skill:
 @dataclass
 class Run:
     """A skill being run: which skill, the step it's at, the answers so far, what she's said, what she's waiting
-    for (None, or {"kind": ask / you / confirm, "text": ...}), whether the person is watching, and whether it has
-    gone cleanly so far."""
+    for (None, or {"kind": ask / you / confirm, "text": ...}), whether the person is watching, whether it has gone
+    cleanly so far, and its line in the person's run book (`record_id`, core/runs.py)."""
     run_id: str
     skill_id: str
     at: int = 0
@@ -158,6 +158,7 @@ class Run:
     watched: bool = True
     clean: bool = True
     started: str = ""
+    record_id: str = ""  # its line in the person's run book (core/runs.py, UI-1)
 
 
 def always_asks(kind: str) -> bool:
@@ -569,14 +570,39 @@ def observe_action(context, kind: str, params: dict) -> None:
 
 def _result(book: SkillBook, run: Run, status: str) -> dict:
     """What a front door gets back from a run: its status (waiting, done or stopped), what she said since the last
-    answer, and what she's waiting for."""
+    answer, and what she's waiting for. Every wait and end passes here, so it's also where the run is kept in the
+    person's run book (`_record`)."""
     said, run.said = run.said, []
     if status == "waiting":
         book.active = run
     else:
         book.active = None
+    _record(book, run, status, said)
     book._save_run()
     return {"status": status, "run_id": run.run_id, "skill_id": run.skill_id, "said": said, "waiting": run.waiting}
+
+
+def _record(book: SkillBook, run: Run, status: str, said: list) -> None:
+    """Mirrors the run into the person's run book (core/runs.py, UI-1) without changing how it runs: started the
+    first time it waits or ends, what she said since as a step, then the wait or the end. Nothing where there's no
+    run book."""
+    from core.runs import book as run_book
+
+    runs = run_book(getattr(book, "context", None))
+    if runs is None:
+        return
+    skill = book.get(run.skill_id)
+    if not run.record_id:
+        run.record_id = runs.start("taught_skills", f"skill:{run.skill_id}", skill.name if skill else "A skill").run_id
+    if said:
+        runs.step(run.record_id, str(run.at + (0 if status == "waiting" else 1)), " ".join(map(str, said)),
+                  next_at=str(run.at + 1))
+    if status == "waiting" and run.waiting:
+        runs.wait(run.record_id, str(run.at + 1), run.waiting.get("kind", "confirm"), run.waiting.get("text", ""))
+    elif status == "done":
+        runs.finish(run.record_id, "done")
+    elif status == "stopped":
+        runs.finish(run.record_id, "stopped", (skill.last_result if skill else "") or "stopped")
 
 
 def _finish(book: SkillBook, skill: Skill, run: Run, failed: str = "", declined: bool = False) -> dict:
@@ -781,13 +807,19 @@ def answer(context, text: str) -> dict:
 
 
 def stop(context) -> bool:
-    """Stops the run in progress (it doesn't count for or against the skill); whether one was running."""
+    """Stops the run in progress (it doesn't count for or against the skill), ending its line in the run book as
+    stopped by the person; whether one was running."""
     book = getattr(context, "taught_skills", None)
     if book is None or book.active is None:
         return False
     skill = book.get(book.active.skill_id)
     if skill is not None:
         skill.last_run, skill.last_result = _now(), "stopped by you"
+    from core.runs import book as run_book
+
+    runs = run_book(getattr(book, "context", None))
+    if runs is not None and book.active.record_id:
+        runs.finish(book.active.record_id, "stopped", "stopped by you")
     book.active = None
     book._save_run()
     return True

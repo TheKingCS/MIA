@@ -27,6 +27,11 @@ taught but not yet run clean twice is "practising"; after two clean runs in
 a row it's "learned", the same mark the learning paths use (DEC-0112).
 Runs that stop are counted by the browser.routines loop.
 
+**The run record** (UI-1, core/runs.py): each run is also kept in the person's run book (`_Record`): started, each
+step, a wait for a commit or a sign-in, the end. The run's id travels with the held step (`where["run"]`), so
+`carry_on` continues the same run, and `let_go` ends it at once when the person says no or nobody approves in time.
+After a restart the run book says the routine stopped at its step, to be run again from there.
+
 The store (`BrowserRoutines`, `browser_routines.json`) is each person's own.
 """
 
@@ -234,14 +239,47 @@ def finish_teaching(browser, store: BrowserRoutines) -> str:
 
 # ------------------------------------------------------------------ replaying
 
-def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0) -> str:
+class _Record:
+    """A routine run's line in the person's run book (core/runs.py, UI-1): started, each step, a wait, the end. Does
+    nothing where there's no run book (the phone's small MIA, old tests)."""
+
+    def __init__(self, context, routine: dict, start: int, run_id: str = "") -> None:
+        """Continues the run `run_id`, or starts one for this routine from step `start` + 1."""
+        from core.runs import book
+
+        self.runs = book(context)
+        self.run_id = run_id
+        if self.runs is not None and not run_id:
+            self.run_id = self.runs.start("browser_routines", f"browser_routine:{routine['id']}", routine["name"],
+                                          at=str(start + 1)).run_id
+
+    def step(self, index: int, said: str) -> None:
+        """Step index + 1 is done; the run moves to the next."""
+        if self.runs is not None:
+            self.runs.step(self.run_id, str(index + 1), said, next_at=str(index + 2))
+
+    def wait(self, index: int, kind: str, said: str) -> None:
+        """The run waits on the person at step index + 1 (a commit to approve, or a sign-in)."""
+        if self.runs is not None:
+            self.runs.wait(self.run_id, str(index + 1), kind, said)
+
+    def finish(self, status: str, why: str = "") -> None:
+        """The run ended."""
+        if self.runs is not None:
+            self.runs.finish(self.run_id, status, why)
+
+
+def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0, run_id: str = "") -> str:
     """Runs a routine from a step: ordinary steps done, a commit or a sign-in waits for the person (the run carries
-    on after they approve), a step not found or a page that doesn't match stops it. Returns what happened."""
+    on after they approve), a step not found or a page that doesn't match stops it. Every step, wait and end is kept
+    in the person's run book (core/runs.py), so "what's running?" and a restart both know where it is; `run_id`
+    continues a run that was waiting. Returns what happened."""
     lines = []
     steps = routine["steps"]
+    record = _Record(context, routine, start, run_id)
     for index in range(start, len(steps)):
         step = steps[index]
-        where = {"id": routine["id"], "next": index + 1}
+        where = {"id": routine["id"], "next": index + 1, "run": record.run_id}
         try:
             if step["kind"] == "open":
                 browser.open(step["url"])
@@ -249,43 +287,67 @@ def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0)
             elif step["kind"] == "signin":
                 pending = browser.ask_signin(routine=where)
                 lines.append(f"Step {index + 1}: {pending.summary()}.")
+                record.wait(index, "signin", pending.summary())
                 return "\n".join(lines)
             else:
                 page = browser.refresh()
                 control = page.find(step.get("name", ""), step.get("role", ""))
                 if control is None:
                     return _stopped(store, routine, index, lines, f"I couldn't find \"{step.get('name')}\" on "
-                                                                 f"{page.title or 'the page'}")
+                                                                 f"{page.title or 'the page'}", record)
                 result = browser.do(step["kind"], control.ref, step.get("text", ""), routine=where)
                 if result["pending"] is not None:
                     lines.append(f"Step {index + 1}: {result['said']}")
+                    record.wait(index, "commit", result["said"])
                     return "\n".join(lines)
                 if not result["done"]:
-                    return _stopped(store, routine, index, lines, result["said"])
+                    return _stopped(store, routine, index, lines, result["said"], record)
                 lines.append(f"Step {index + 1}: {step_words(step)}.")
             expect = step.get("expect")
             if expect and expect.lower() not in (browser.page.title or "").lower():
                 return _stopped(store, routine, index, lines, f"the page should say \"{expect}\" but says "
-                                                             f"\"{browser.page.title}\"")
+                                                             f"\"{browser.page.title}\"", record)
+            record.step(index, lines[-1] if lines else step_words(step))
         except Exception as problem:
-            return _stopped(store, routine, index, lines, str(problem))
+            return _stopped(store, routine, index, lines, str(problem), record)
     store.record_run(routine["id"], clean=True)
+    record.finish("done")
     lines.append(f"Finished \"{routine['name']}\" ({describe(store.routines[routine['id']])}).")
     return "\n".join(lines)
 
 
-def _stopped(store: BrowserRoutines, routine: dict, index: int, lines: list, why: str) -> str:
-    """Stops a run at a step, keeps it as a run that stopped, and says where and why."""
+def _stopped(store: BrowserRoutines, routine: dict, index: int, lines: list, why: str,
+             record: Optional[_Record] = None) -> str:
+    """Stops a run at a step, keeps it as a run that stopped (in the routine and in the run book), and says where and
+    why."""
     store.record_run(routine["id"], clean=False, stopped_at=index + 1, note=why)
+    if record is not None:
+        record.finish("stopped", f"at step {index + 1}: {why}")
     lines.append(f"Stopped at step {index + 1} ({step_words(routine['steps'][index])}): {why}. "
                  "Show me again if the site has changed.")
     return "\n".join(lines)
 
 
 def carry_on(context, browser, where: dict) -> str:
-    """After the person approves a routine's waiting step: the run carries on from the next step."""
+    """After the person approves a routine's waiting step: that step is noted done in its run, and the run carries on
+    from the next step."""
     store = getattr(context, "browser_routines", None)
     routine = store.routines.get(where["id"]) if store is not None else None
     if routine is None:
         return ""
-    return run(context, browser, store, routine, start=where["next"])
+    run_id = str(where.get("run") or "")
+    if run_id:
+        _Record(context, routine, where["next"], run_id).step(where["next"] - 1, "approved by the person and done")
+    return run(context, browser, store, routine, start=where["next"], run_id=run_id)
+
+
+def let_go(context, where: Optional[dict], why: str) -> None:
+    """A routine's waiting step won't happen (the person said no, or nobody approved it in time): its run ends,
+    stopped at that step, saying why."""
+    if not where or not where.get("run"):
+        return
+    from core.runs import book
+
+    runs = book(context)
+    if runs is not None:
+        runs.finish(str(where["run"]), "stopped", f"at step {where.get('next', '?')}: {why}")

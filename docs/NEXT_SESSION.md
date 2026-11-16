@@ -31,8 +31,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   the runtime runs as a user service; the suite passes on Linux. Bug found and fixed: no sound server stopped
   the runtime. **Zac at the PC: the graphics card test, `os/poc/README.md`.** Still to do: a VM for booting the
   image, the session test (PoC 3) and the helper (PoC 5).
-- **Opus's independent review of prompt 23** is done (the review's section 14). **Next on Opus: UI-1, the run
-  record**, browser routines first (their waiting step is lost on a restart).
+- **Opus's independent review of prompt 23** is done (the review's section 14).
+- **Built (Opus): UI-1, the run record** (K-0264): `core/runs.py`, one record for anything MIA runs in steps.
+  Browser routines, taught skills and workflows write it; a restart marks cut-off runs stopped (shown with a
+  killed process); saying no to a held browser step, or letting it expire, ends its run at once (a new optional
+  `rejected` hook on action types). "What's running?" by voice (`whats_running`) and a Running column on the
+  Dashboard's Agent Activity. **Next on Opus:** UI-3, the durable history (reversibility and reach per action
+  kind; before-states on disk, grouped by action; undo by time), or DEC-0196's one browser (import, tab ownership,
+  sensitive sites, private windows left alone). UI-2 (the stop) is Fable's, on this record.
 - **For the next session:** nothing of Fable's is queued until Zac answers. Opus can take prompt 23's independent
   review, Procurement P3, or Forge (M7).
 
@@ -134,6 +140,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   - Left as it is, for Zac if he cares: a pure vivid yellow accent (hue near 60) passes the meaning-colour check,
     though "yellow" by name is refused; DEC-0184 (the appearance engine) is built but still marked proposed.
   New Opus work joins a fresh list below this line.
+  24. the MIA OS proofs of concept kit (os/, .github/workflows/mia-os-poc.yml, .containerignore) and the
+      sound-server fix in core/voice_manager.py;
+  25. Opus's review of prompt 23 (the review's section 14) and UI-1 (core/runs.py, the browser routine and skill
+      hooks, actions.ActionType.rejected, Agent Activity's Running column, whats_running).
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

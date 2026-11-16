@@ -43,6 +43,10 @@ the page as she goes and stopping at every commit.
   separate Edge window back.
 - `Browsers` (`context.browsers`): one session per person, each with its
   own profile folder in their own data (so their site sign-ins are theirs).
+
+A held step the person declines is let go at once (`drop_pending`, through browser.commit's `rejected`), and
+one that waits past PENDING_MINUTES expires; either way a routine run waiting on it ends, saying why (UI-1,
+core/runs.py).
 """
 
 from __future__ import annotations
@@ -124,7 +128,7 @@ class Pending:
     screenshot: str = ""
     at: float = field(default_factory=time.time)
     proposal_id: str = ""
-    routine: Optional[dict] = None  # {"id": routine id, "next": step index to carry on from}
+    routine: Optional[dict] = None  # {"id": routine id, "next": step index to carry on from, "run": its run's id}
 
     def summary(self) -> str:
         """The sentence the person approves, made in code: what she'll do (the exact words she'd type or choose, the
@@ -663,10 +667,23 @@ class Browser:
         return self._hold("signin", None, "", Verdict(COMMIT, "you sign in yourself"), routine)
 
     def _expire(self) -> None:
-        """Lets go of steps nobody approved in time."""
+        """Lets go of steps nobody approved in time; a routine run waiting on one ends, saying so (core/runs.py)."""
         cutoff = time.time() - PENDING_MINUTES * 60
         for key in [k for k, p in self.pending.items() if p.at < cutoff]:
-            self.pending.pop(key, None)
+            gone = self.pending.pop(key, None)
+            if gone is not None and gone.routine:
+                from core.browser_routines import let_go
+
+                let_go(self.context, gone.routine, f"nobody approved it within {PENDING_MINUTES} minutes")
+
+    def drop_pending(self, pending_id: str, why: str) -> None:
+        """The person said no to a waiting step: it's let go, and a routine run waiting on it ends, saying why."""
+        with self.lock:
+            gone = self.pending.pop(pending_id, None)
+        if gone is not None and gone.routine:
+            from core.browser_routines import let_go
+
+            let_go(self.context, gone.routine, why)
 
     def perform_pending(self, pending_id: str) -> str:
         """The person approved a waiting step: it's done now (a sign-in just carries on), the routine it belongs to

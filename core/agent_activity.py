@@ -7,6 +7,8 @@ what MIA did on her own and what the agents that build her are doing, in
 one card, each line opening where it came from.
 
 What it gathers (each source read on its own; one that fails is left out):
+- `running`: what she's running in steps now (a browser task, a taught skill, a workflow) and any that stopped or
+  failed in the last day, each saying where it is or why it ended (core/runs.py, UI-1);
 - `mine`: her latest changes you can undo (core/web_changes), the ones she
   made, not yours;
 - `held`: what she held back today rather than interrupt you
@@ -69,6 +71,32 @@ def _made(context) -> list[dict]:
     return [{"what": c["title"], "page": f"made.html?id={c['id']}"} for c in reversed(store.published())][:LINES]
 
 
+# Where each kind of run opens (UI-1, core/runs.py).
+RUN_PAGES = {"browser_routines": "browser.html", "taught_skills": "taught-skills.html", "workflows": "made.html",
+             "plans": "changes.html"}
+
+
+def _running(context, now: datetime) -> list[dict]:
+    """What she's running in steps now, and runs that stopped or failed in the last day (UI-1, core/runs.py):
+    [{what, status, page}], open ones first."""
+    from datetime import timedelta
+
+    from core.runs import book, describe
+
+    runs = book(context)
+    if runs is None:
+        return []
+    since = (now - timedelta(days=1)).isoformat(timespec="seconds")
+    ended = [r for r in runs.recent(LINES * 2) if r.status in ("stopped", "failed") and r.updated >= since]
+    out = []
+    for r in runs.open_runs() + ended:
+        page = RUN_PAGES.get(r.source, "changes.html")
+        if r.source == "workflows" and r.ref.startswith("creation:"):
+            page = f"made.html?id={r.ref.split(':', 1)[1]}"
+        out.append({"what": describe(r), "status": r.status, "page": page})
+    return out[:LINES]
+
+
 def _team(context, profile_id: str, now: datetime) -> list[dict]:
     """The build team's latest, for the owner only: the Council's messages and the work's steps, merged newest first,
     as [{who, what, when, page}]."""
@@ -101,11 +129,12 @@ def _team(context, profile_id: str, now: datetime) -> list[dict]:
 
 
 def activity(context, profile_id: Optional[str], now: Optional[datetime] = None) -> dict:
-    """The card: {mine, held, made, team, any: whether there's anything to show}."""
+    """The card: {running, mine, held, made, team, any: whether there's anything to show}."""
     now = now or datetime.now()
-    out = {"mine": _safe("her changes", lambda: _mine(context, now)),
+    out = {"running": _safe("running", lambda: _running(context, now)),
+           "mine": _safe("her changes", lambda: _mine(context, now)),
            "held": _safe("held back", lambda: _held(context)),
            "made": _safe("made", lambda: _made(context)),
            "team": _safe("the team", lambda: _team(context, profile_id or "", now))}
-    out["any"] = any(out[k] for k in ("mine", "held", "made", "team"))
+    out["any"] = any(out[k] for k in ("running", "mine", "held", "made", "team"))
     return out

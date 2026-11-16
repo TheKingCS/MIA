@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TheKingCS/MIA/docs/schema/run.schema.json",
+  "title": "One run of steps MIA keeps (core/runs.py, UI-1)",
+  "description": "A browser routine, a taught skill, a workflow or (later) a plan across apps, as the person's run book keeps it: which engine runs it, what it runs, where it is, what it waits for, each finished step, and why it ended. Engines write it; screens, tools, the stop and recovery read it (DEC-0188; docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md sections 6 and 14).",
+  "type": "object",
+  "required": ["run_id", "source", "ref", "title", "started", "updated", "status", "at", "waiting", "steps", "why", "state", "how"],
+  "properties": {
+    "run_id": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+    "source": {"type": "string", "enum": ["browser_routines", "taught_skills", "workflows", "plans"]},
+    "ref": {"type": "string", "description": "What it runs, by kind:id (browser_routine:ab12, skill:s1, creation:C-0002)."},
+    "title": {"type": "string"},
+    "started": {"type": "string"},
+    "updated": {"type": "string"},
+    "status": {"type": "string", "enum": ["running", "waiting", "done", "stopped", "failed"]},
+    "at": {"type": "string", "description": "The step it's at, as a path: \"3\", or \"2.then.0\" for a nested step."},
+    "waiting": {
+      "type": ["object", "null"],
+      "required": ["kind", "text"],
+      "properties": {
+        "kind": {"type": "string", "enum": ["commit", "signin", "ask", "you", "confirm"]},
+        "text": {"type": "string"}
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "said", "actions", "when"],
+        "properties": {
+          "at": {"type": "string"},
+          "said": {"type": "string"},
+          "actions": {"type": "array", "items": {"type": "string"}},
+          "when": {"type": "string"}
+        }
+      }
+    },
+    "why": {"type": "string"},
+    "state": {"type": "object", "description": "The engine's own private state; nothing outside the engine reads it."},
+    "how": {"type": "string", "enum": ["observed"]}
+  }
+}

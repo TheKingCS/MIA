@@ -1,6 +1,7 @@
 """Workflows MIA makes (ACAF step 3, DEC-0092, core/workflows.py): a trigger
 and steps from a fixed vocabulary, approved once for exactly what they list,
-messages only through the gate, adds through actions, every run logged."""
+messages only through the gate, adds through actions, every run logged, and a real run (never a dry one) kept in
+the run book (UI-1)."""
 
 from datetime import datetime
 
@@ -108,3 +109,21 @@ def test_made_from_a_sentence_and_held_to_what_was_meant(world):
 
     assert RECURRING.search("every Sunday tell me what I spent") and RECURRING.search("remind me to water")
     assert not RECURRING.search("keep track of the seeds I save")
+
+
+def test_a_real_run_is_kept_in_the_run_book_and_a_dry_run_isnt(world, tmp_path):
+    """UI-1 (core/runs.py): a workflow runs start to finish in one go, so its record is a start, what it did, and
+    done; a dry run leaves no record."""
+    from core.runs import RunBook
+
+    w = world
+    w.runs = RunBook(w, data_dir=tmp_path)
+    seed_bank(w)
+    w.creations.draft(WEEKLY, [], why="a weekly seed check", blueprint="")
+    w.actions.approve(w, w.actions.propose(w, "creation.publish", {"creation_id": "C-0002"}).proposal_id)
+    wf.run(w, "C-0002", dry=True, now=datetime(2026, 11, 8, 9))
+    assert w.runs.recent() == []
+    wf.run(w, "C-0002", now=datetime(2026, 11, 8, 9))
+    [run] = w.runs.recent()
+    assert run.source == "workflows" and run.ref == "creation:C-0002" and run.status == "done"
+    assert "3 kinds saved" in run.steps[0]["said"]

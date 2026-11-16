@@ -116,10 +116,18 @@ def _stop(context, arguments: dict) -> str:
     return "Stopped." if taught_skills.stop(context) else "No skill is running."
 
 
+def _whats_running(context, arguments: dict) -> str:
+    """Tool whats_running: what MIA is running in steps now (a browser task, a taught skill, a workflow), where each
+    is or what it waits for, and what ended lately, from the person's run book (core/runs.py, UI-1)."""
+    from core.runs import summary
+
+    return summary(context)
+
+
 def register_taught_skill_actions(registry: AssistantActionRegistry) -> None:
     """Registers the taught-skill tools: watch_me_teach, keep_taught_skill, stop_watching_me, teach_skill_in_steps,
     change_taught_skill, forget_taught_skill, list_taught_skills, run_taught_skill, answer_taught_skill and
-    stop_taught_skill."""
+    stop_taught_skill; and whats_running, every run of steps in one list (UI-1)."""
     none = {"type": "object", "properties": {}, "required": []}
     which = {"type": "string", "description": "The skill's name, as they said it."}
     lines = {"type": "string", "description": "The steps, one a line: tell: words / ask: question -> name / "
@@ -157,3 +165,11 @@ def register_taught_skill_actions(registry: AssistantActionRegistry) -> None:
     ):
         registry.register(AssistantAction(name=name, domain=DOMAIN, description=description, parameters=parameters,
                                           handler=handler, trigger_phrases=phrases, subjects=("skill", "skills")))
+    registry.register(AssistantAction(
+        name="whats_running", domain=DOMAIN,
+        description="What MIA is running in steps right now (browser tasks, taught skills, workflows), where each is or "
+                    "what it waits for, and what stopped lately.",
+        parameters=none, handler=_whats_running,
+        trigger_phrases=("what's running", "whats running", "what are you running", "what are you doing right now",
+                         "anything running", "what are you in the middle of"),
+        subjects=("running", "doing", "middle")))

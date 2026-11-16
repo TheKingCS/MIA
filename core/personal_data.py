@@ -115,6 +115,7 @@ from core.operating_journal import OperatingJournal
 from core.recreation import RecreationLog
 from core.paths import PathBook
 from core.browser_routines import BrowserRoutines
+from core.runs import RunBook
 from core.plan_library import PlanLibrary
 from core.life_notes import LifeNotes
 from core.gps_tracks import GpsTracks
@@ -195,6 +196,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("recreation", RecreationLog),  # games and sports played (DEC-0098)
     ("paths", PathBook),  # learning paths: guitar and anything else they learn, practice and checks (DEC-0112)
     ("browser_routines", BrowserRoutines),  # browser tasks they showed MIA, and how practised (DEC-0117)
+    ("runs", RunBook),  # what MIA is running in steps for them, where each is, why each ended (DEC-0188, UI-1)
     ("life_notes", LifeNotes),  # what they promised, decided, want to try, set aside (DEC-0054)
     ("gps_tracks", GpsTracks),  # walks, rides and drives from GPX: where they went is theirs (DEC-0099)
     ("health", HealthStore),  # sleep, visits, medications and records, sealed at rest (DEC-0129)

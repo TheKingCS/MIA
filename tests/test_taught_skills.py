@@ -1,5 +1,6 @@
 """Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run
-that stops for the person, practising until two clean runs, and the steps that ask every time whatever was learned."""
+that stops for the person, practising until two clean runs, the steps that ask every time whatever was learned, and
+each run kept in the run book through its waits to its end (UI-1)."""
 
 import pytest
 
@@ -288,3 +289,28 @@ def test_the_screen_shows_each_step_in_words_and_marks_the_ones_that_will_ask(wo
     ts.take_turn(world, "", "watch me: later")
     assert skills_page(world)["watching"] == {"name": "later", "steps": []}
     assert skills_page(type("Bare", (), {})())["available"] is False
+
+
+def test_each_skill_run_is_kept_in_the_run_book_through_its_waits_to_its_end(world):
+    """UI-1 (core/runs.py): a skill run appears as waiting at each question, confirm and task of the person's, and
+    ends done; one stopped by the person ends stopped, saying so. How the skill runs doesn't change."""
+    from core.runs import RunBook
+
+    world.runs = RunBook(world, data_dir=world.my_dir)
+    do(world, "taught_skill.add", name="Friday reset", steps=RESET)
+    skill = world.taught_skills.find("friday reset")
+    got = ts.start(world, skill.skill_id)
+    [run] = world.runs.open_runs()
+    assert run.source == "taught_skills" and run.ref == f"skill:{skill.skill_id}" and run.title == "Friday reset"
+    assert run.status == "waiting" and run.waiting["kind"] == "ask" and "one thing" in run.waiting["text"]
+    got = ts.answer(world, "Order the seed trays")
+    assert run.waiting["kind"] == "confirm"
+    ts.answer(world, "yes")
+    assert run.waiting["kind"] == "you"
+    assert ts.answer(world, "done")["status"] == "done" and run.status == "done" and run.steps
+    ts.start(world, skill.skill_id)
+    [second] = world.runs.open_runs()
+    assert ts.stop(world)
+    assert second.status == "stopped" and "by you" in second.why
+    later = RunBook(world, data_dir=world.my_dir)  # a restart: nothing left looking alive
+    assert not later.open_runs()

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1449 files, 323,155 lines; 1449 files describe themselves; 17,716 of 17,811 classes and functions are documented.
+1451 files, 323,831 lines; 1451 files describe themselves; 17,761 of 17,856 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-561 files, 161,260 lines; 8,297 of 8,383 classes and functions documented
+562 files, 161,708 lines; 8,328 of 8,414 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -409,6 +409,7 @@
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo
 - `core/routine_actions.py`: The Household's routines changed from the screen (DEC-0113 canvas Household, DEC-0125: routines could only be added by voice). `routine.add` sets one up (core/household_routines.add_routine, the same as the add_household_routine voice tool); `routine.pause` stops it making new missions while keeping
+- `core/runs.py`: One record for anything MIA runs in steps (prompt 23's review, UI-1; DEC-0188; `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` sections 3, 6 and 14): a browser routine, a taught skill, a workflow, later a plan across apps. Three engines already ran steps, each keeping its own state its own way
 - `core/runtime.py`: The MIA Runtime (DEC-0155; step 4 of `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`): the whole MIA, running with no window.
 - `core/safety_escalation.py`: When a child's message triggers the safety floor (Q-0002, approved by the owner 2026-10-05, H-0011): the child gets the immediate safety reply (core/safety_floor.py) and is told plainly that a parent who looks after their account will be told; each guardian (core/child_accounts.py) gets a notificati
 - `core/safety_floor.py`: The safety floor from docs/COGNITIVE_EXTENSION_PROPOSAL.md (slice A): a deterministic check on every message, before any mode and before the model sees it. On clear signs that the user may be in danger (thoughts of suicide, self-harm, someone threatening them) MIA answers with fixed, human-written t
@@ -853,7 +854,7 @@
 
 ## tests/: the test suite: what each part must do
 
-496 files, 83,802 lines; 7,091 of 7,100 classes and functions documented
+497 files, 84,029 lines; 7,105 of 7,114 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1200,6 +1201,7 @@
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths.
+- `tests/test_runs.py`: The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record for anything MIA runs in steps. A run moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off run looking alive or calls it done (shown with a real process killed m
 - `tests/test_runtime.py`: The MIA Runtime (core/runtime.py, DEC-0155): the whole MIA built with no window, the same services and tools the desktop has, her schedule on a thread, and how she says she's doing.
 - `tests/test_safety_escalation.py`: Q-0002 (approved 2026-10-05, H-0011): when a child triggers the safety floor, the child gets the safety reply and is told plainly that a parent will be told; each guardian gets a minimal, direct alert (who and when, never what was written); it's recorded for audit in the child's and the guardians' o
 - `tests/test_safety_floor.py`: Safety floor corpus (core/safety_floor.py): what must trigger, what must not.
@@ -1246,7 +1248,7 @@
 - `tests/test_system_map.py`: The one map of everything that makes MIA (core/system_map.py, DEC-0139): it assembles every category from the real sources (decisions, loops, knowledge, learnings, stores, preferences, architecture, capabilities), renders a navigable page, and a broken source becomes a noted gap rather than a crash.
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).
-- `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, and the steps that ask every time whatever was learned.
+- `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, the steps that ask every time whatever was learned, and each run kept in the run book through its waits to its end (UI-1).
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared.
 - `tests/test_theme_manager.py`: Unit tests for gui.theme_manager. Pure string-lookup logic — no Qt event loop needed.
@@ -1341,7 +1343,7 @@
 - `tests/test_work_review.py`: Independent review and Zac's approval (DEC-0069, core/work_review.py): never reviewed by its author, approved only by a person at the keyboard, and only after a review that approves it.
 - `tests/test_work_runner.py`: Missions and the runner (DEC-0076, DEC-0079; core/work_runner.py): the council works a mission by itself, within its scope and budget, handing work to whoever has time, and never approving anything.
 - `tests/test_work_tasks.py`: Development tasks as records (DEC-0068, core/work_tasks.py): files that round-trip, ready only after their dependencies, claims that can't overlap, and done only with evidence.
-- `tests/test_workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092, core/workflows.py): a trigger and steps from a fixed vocabulary, approved once for exactly what they list, messages only through the gate, adds through actions, every run logged.
+- `tests/test_workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092, core/workflows.py): a trigger and steps from a fixed vocabulary, approved once for exactly what they list, messages only through the gate, adds through actions, every run logged, and a real run (never a dry one) kept in the run book (UI-1).
 - `tests/test_workout_manager.py`: Unit tests for core.workout_manager. Isolates _DATA_DIR/the three per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_kitchen_manager.py's isolated_paths.
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why).
 - `tests/test_workshop_machine.py`: Unit tests for core.workshop_machine — same shape as tests/test_calculator_engine.py, since WorkshopMachineRegistry is deliberately modeled on CalculatorEngine's registry pattern (see that module's docstring for why). LaserEngraverMachine's own tests confirm it behaves as a real, honest stub — repor
@@ -1354,7 +1356,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,921 lines
+112 files, 20,922 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

@@ -15,7 +15,8 @@ session. Last updated: 2026-11-16 (the Fable run: reviews, and MIA OS Prompt 05)
 - **Decided:** the PC's base is Fedora's KDE desktop as an image built from this repository; system changes always ask your password; MIA keeps running when you're signed out; the shelf keeps only what you send; one browser for you and MIA, with your four safety rules (DEC-0196).
 - **Tested on GitHub's Linux machines:** the Fedora image builds with everything MIA needs from Fedora's own packages, including both of your graphics card's AI paths; MIA runs as a Linux service; the kernel can lock a MIA worker to the folders you allowed; and the whole test suite passes on Linux. A real bug turned up and is fixed: on a Linux machine with no sound server, MIA wouldn't start at all.
 - **Waiting on you at the PC:** the graphics card test from a Fedora USB stick (`os/poc/README.md`, about an hour, nothing installed).
-- **Next on Opus:** the run record (one record for anything with several steps), browser routines first.
+- **Built (Opus): the run record.** MIA now keeps one record of anything she does in several steps: a browser task, a skill you taught her, a workflow. Ask "what's running?", or look at the Running column on the Dashboard. If MIA restarts in the middle, the task shows as stopped at its step instead of looking alive; if you say no to a browser step, the task ends right away instead of waiting half an hour.
+- **Next on Opus:** the lasting history of what MIA did, with undo by time; or the one shared browser.
 
 
 **2026-11-16 (Claude on Opus: the glass look's foundation).**

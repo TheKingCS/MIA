@@ -197,7 +197,7 @@ Mapped onto the handoff's horizons, with what's already done marked.
 | Step | What | Horizon | Depends on | Owner |
 |---|---|---|---|---|
 | done | Action registry, catalogue, offer, permission tiers, contextual sessions (UAL U1 to U3), teach by watching, browser routines, opportunity recognition, the first maker | 1 and 2 | | |
-| UI-1 | **The run record** under skills, workflows and routines; "what's running" in one list (REQ-AUT-012); failures and finished runs in the attention list | 1 | none | Opus, Fable reviews (it touches grants) |
+| UI-1 | **The run record** under skills, workflows and routines; "what's running" in one list (REQ-AUT-012); failures and finished runs in the attention list | 1 | none | Opus, Fable reviews (it touches grants) **Built 2026-11-16 (Opus)**: `core/runs.py` and `docs/schema/run.schema.json`; browser routines (a held step that's declined or expires ends the run at once; a restart says "run it again from step N"), taught skills (mirrored, unchanged) and workflows (a start and an end) write it; Agent Activity's Running column and `whats_running` read it |
 | UI-2 | **The stop** on it (REQ-AUT-010) | 1 | UI-1 | Fable |
 | UI-3 | **The durable history**: reversibility and reach per action kind (REQ-AUT-006, 007), before-states on disk, "what did you do today", undo by time and subject | 1 | none (parallel with UI-1) | Opus, Fable reviews |
 | UI-4 | **The shelf** and drag and drop onto MIA's web surfaces | 2 | Q-43 | Opus |

@@ -301,6 +301,10 @@
    "status": "none",
    "why": "This store IS a self-improvement loop by construction (DEC-0138): it runs A/B style experiments, records which the person preferred, and adapts phrasing. Nothing outside it needs to watch it."
   },
+  "store:runs": {
+   "status": "none",
+   "why": "a record of other engines' runs (UI-1, DEC-0188): how well each engine's runs go is measured by that engine's own loop (browser.routines, the skills' practice, workflows' runs); this store judges nothing"
+  },
   "store:scripts": {
    "status": "none",
    "why": "their own notes and scripts, kept as they wrote them: MIA writes none of it"

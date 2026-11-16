@@ -123,8 +123,8 @@
   $("tab-week").onclick = () => showTab("week");
   try { if (sessionStorage.getItem("mia.home.tab") === "week" || location.hash === "#week") showTab("week"); } catch (e) { /* Today */ }
 
-  // Agent Activity (DEC-0153): what she did on her own, what she held back, what she made, and (for the owner) the
-  // team building her. Every line opens where it came from.
+  // Agent Activity (DEC-0153): what she's running in steps (UI-1), what she did on her own, what she held back, what
+  // she made, and (for the owner) the team building her. Every line opens where it came from.
   function activity(a) {
     const box = $("activity");
     box.hidden = !a || !a.any;
@@ -132,6 +132,7 @@
     const col = (title, rows, line) => rows.length ? el("div", { class: "activity-col" }, el("h3", { class: "pw-label" }, title),
       el("ul", { class: "activity-list" }, rows.map((r) => el("li", {}, el("a", { href: r.page }, line(r)))))) : null;
     $("activity-cols").replaceChildren(...[
+      col("Running", a.running || [], (r) => [el("span", {}, r.what)]),
       col("MIA Did", a.mine, (r) => [el("span", {}, r.what), el("small", { class: "dim" }, r.when)]),
       col("Held Back Today", a.held, (r) => [el("span", {}, r.what), el("small", { class: "dim" }, r.why)]),
       col("Made For You", a.made, (r) => [el("span", {}, r.what)]),

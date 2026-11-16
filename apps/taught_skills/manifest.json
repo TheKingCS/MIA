@@ -27,6 +27,7 @@
     },
     "services": [],
     "data": [
+      "runs",
       "taught_skills"
     ],
     "agents": [],
@@ -44,7 +45,8 @@
       "stop_taught_skill",
       "stop_watching_me",
       "teach_skill_in_steps",
-      "watch_me_teach"
+      "watch_me_teach",
+      "whats_running"
     ],
     "actions": [
       "taught_skill.add",
@@ -65,6 +67,7 @@
       "stop_watching_me": "act_within_grant",
       "teach_skill_in_steps": "act_within_grant",
       "watch_me_teach": "act_within_grant",
+      "whats_running": "observe",
       "taught_skill.add": "act_with_approval",
       "taught_skill.cancel": "act_with_approval",
       "taught_skill.delete": "act_with_approval",
@@ -76,6 +79,7 @@
   },
   "uses": [],
   "permissions": [
+    "stores.write:runs",
     "stores.write:taught_skills"
   ],
   "dependencies": [],

@@ -248,7 +248,8 @@ def _records(context, source: str, within: Optional[int], now: datetime) -> tupl
 
 
 def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = None) -> dict:
-    """Run a published workflow (or, `dry`, show what it would do). Returns {"lines", "offers", "added"}.
+    """Run a published workflow (or, `dry`, show what it would do). Returns {"lines", "offers", "added"}. A real
+    run is kept in the person's run book (core/runs.py): started, what it did, and done, or failed with the error.
     Offers are Candidates for the communication gate; the caller offers them. Each add goes through the grant check
     first (core/grants.py: the published workflow is its grant) and is held back, and said so in the lines, when the
     check says no."""
@@ -332,9 +333,21 @@ def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = 
                     lines.append(f"add: {result.result}")
                     if result.status == "executed":
                         added += 1
-    do(spec["steps"])
+    from core.runs import book as run_book
+
+    runs = None if dry else run_book(context)  # the person's run book (core/runs.py, UI-1): a start and an end
+    record = runs.start("workflows", f"creation:{creation_id}", found["title"]).run_id if runs is not None else ""
+    try:
+        do(spec["steps"])
+    except Exception as problem:
+        if runs is not None:
+            runs.finish(record, "failed", str(problem))
+        raise
     if not dry:
         store.log_run(creation_id, {"at": now.isoformat(timespec="seconds"), "lines": lines[:40]})
+    if runs is not None:
+        runs.step(record, "all", "; ".join(lines)[:300])
+        runs.finish(record, "done")
     return {"lines": lines, "offers": offers, "added": added}
 
 

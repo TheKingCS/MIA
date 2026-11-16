@@ -535,6 +535,13 @@
     }
   ],
   "activity": {
+    "running": [
+      {
+        "what": "Order widgets: waiting for you at step 2 (Press Place order on shop.example).",
+        "status": "waiting",
+        "page": "browser.html"
+      }
+    ],
     "mine": [
       {
         "what": "Logged 6 eggs from your note",

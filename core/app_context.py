@@ -119,6 +119,7 @@ if TYPE_CHECKING:
     from core.requirements import RequirementBook
     from core.price_book import PriceBook
     from core.taught_skills import SkillBook
+    from core.runs import RunBook
     from core.the_loop import LoopBook
     from core.failure_log import FailureLog
     from core.answer_ratings import AnswerRatings
@@ -145,8 +146,9 @@ if TYPE_CHECKING:
 class AppContext:
     """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
     sensors that send readings), the one store lock the server and the background schedule share, each person's
-    stores, the skills they taught her among them (core/taught_skills.py), and, when MIA runs with no window, the
-    runtime she belongs to and its schedule (core/runtime.py)."""
+    stores, the skills they taught her among them (core/taught_skills.py) and the record of everything she runs in
+    steps (core/runs.py), and, when MIA runs with no window, the runtime she belongs to and its schedule
+    (core/runtime.py)."""
 
     config: ConfigManager
     events: EventBus
@@ -286,6 +288,7 @@ class AppContext:
     requirements: Optional["RequirementBook"] = field(default=None, repr=False)  # DEC-0172 what each project needs
     prices: Optional["PriceBook"] = field(default=None, repr=False)  # DEC-0172 prices seen, per product
     taught_skills: Optional["SkillBook"] = field(default=None, repr=False)  # DEC-0123 what the person taught her
+    runs: Optional["RunBook"] = field(default=None, repr=False)  # DEC-0188 what runs in steps, where, why it ended
     loop: Optional["LoopBook"] = field(default=None, repr=False)  # DEC-0047 the loop: what recurs, and when
     traces: Optional["TurnTraces"] = field(default=None, repr=False)  # DEC-0067 how each turn was answered
     saga_moments: Optional["SagaMoments"] = field(default=None, repr=False)  # DEC-0084 moments for the Chronicles
