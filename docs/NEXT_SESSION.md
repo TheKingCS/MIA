@@ -5,7 +5,24 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-15 (sealed files on Linux built; World Intelligence proposed)*
+*Last updated: 2026-11-16 (the Fable run: review queue 14 to 23, prompt 23's review, MIA OS Prompt 05)*
+
+**New 2026-11-16, on the PC (Claude on Fable): the Fable run Zac asked for.**
+- **Review queue items 14 to 23**: done (K-0261; what changed is listed under the queue below).
+- **Prompt 23 (Universal Intelligence)**: Fable's architectural review is `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md`.
+  Two thirds exists; six real gaps; no new service; one run record under skills, workflows and browser routines
+  comes first. DEC-0188 proposed. **Waiting on Zac: Q-43 to Q-46.** Next for it: Opus's independent engineering
+  review (the handoff's own order; the brief is the review's section 8), then steps UI-1 to UI-3 on Opus.
+- **MIA OS Prompt 05 (the core operating system architecture)**: done, planning only (K-0262). Start at
+  `docs/mia_os/MIA_OS_CORE_ARCHITECTURE.md`; fourteen more beside it. Linux underneath untouched (Fedora's KDE
+  desktop as an image built from this repository); MIA as user services and one session on top; one coordinator
+  (the runtime); a small root helper whose every operation the operating system itself asks Zac to confirm. DEC-0189
+  to DEC-0195 proposed. **Waiting on Zac: Q-47 to Q-51**, above all Q-49: six proofs of concept described and not
+  run, one of which needs him at the PC with a Fedora USB stick (it decides the foundation). Prompt 06 waits for
+  his review and go; it is not started.
+- **For the next session:** nothing of Fable's is queued until Zac answers. Opus can take prompt 23's independent
+  review, Procurement P3, or Forge (M7).
+
 
 **New 2026-11-15, on the PC (Claude): World Intelligence, proposed (prompt 18, DEC-0170).**
 - Zac's handoff "World Intelligence, Opportunity Discovery & Demonstration-Based Browser Automation" is kept verbatim

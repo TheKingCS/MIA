@@ -3296,3 +3296,126 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Waiting on Zac: Q-43 (what the shelf keeps), Q-44 (activity context), Q-45 (whose browsing Recall reads), Q-46
   (when it runs).
 - Related: DEC-0165, DEC-0123, DEC-0167, DEC-0117, DEC-0156, DEC-0175, DEC-0176, DEC-0181
+
+### DEC-0189: The Linux foundation: Fedora Atomic (KDE) as a bootc image from the repository; the distribution's kernel
+- Status: PROPOSED (Claude on Fable, 2026-11-16, MIA OS Prompt 05). A new recommendation that confirms the base
+  DEC-0157 proposed and Zac named (DEC-0168: "Fedora for the PC"). **Needs proofs of concept 1 and 2.**
+- Question: which Linux, kernel and delivery mechanism carry MIA OS on the PC?
+- Requirements: REQ-ARC-001, 002, 011; REQ-HW-002; REQ-OPS-001; REQ-REL-009; REQ-SEC-008.
+- Options: Fedora Atomic as a bootc image; Universal Blue's Aurora as the base; Ubuntu 26.04 LTS; Debian 13;
+  openSUSE's transactional desktops; NixOS; Arch; a distribution or kernel of our own.
+- Recommended: Fedora's KDE Atomic desktop consumed as a bootc image built from a `Containerfile` in this repository;
+  the distribution's kernel unmodified, no out-of-tree modules on the PC; MIA's own pinned Python and locked
+  environment inside the image (Fedora 45's system Python is 3.15, newer than MIA supports); Raspberry Pi OS on the
+  Pi as decided; Ubuntu 26.04 LTS the fallback; Aurora's build template the pattern for the pipeline.
+- Reasoning and evidence: it alone has both image-based updates with rollback and, in its own repositories, the GPU
+  compute stack for the RX 7900 XTX with the model runner MIA uses (`ollama-rocm` for Fedora 45). Sources and the
+  full comparison: `docs/mia_os/MIA_OS_CORE_TECHNOLOGY_EVALUATION.md` §1, §9; `MIA_OS_LINUX_FOUNDATION.md`.
+- Advantages: rebuilt from files, atomic, recoverable; current kernel and Mesa; no distribution of ours to maintain.
+- Disadvantages: Fedora's bootc desktops are arriving, not finished; a rebase twice a year; AMD's own matrix names
+  Ubuntu, not Fedora; no installing system packages by hand.
+- Dependencies: PoC 1 (GPU compute on Fedora 45 from a live USB), PoC 2 (build, switch, update, roll back in a VM).
+- Security: a read-only signed system; Secure Boot's stock chain kept. Operations: a build job, an offered update.
+  Migration: MIA's data moves by copy and re-sealing; Windows stays on its own drive.
+- Confidence: high for the direction; medium until the GPU is measured.
+- Related: DEC-0157, DEC-0168, DEC-0154, DEC-0177
+
+### DEC-0190: MIA on the OS is a modular platform with one coordinator
+- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
+- Question: independent services, one central runtime, or a coordinator with separate parts?
+- Requirements: REQ-ARC-002, 004, 009; REQ-REL-003, 010; REQ-FUN-041.
+- Options: independent services; one process doing everything (today); a coordinator with separate processes.
+- Recommended: the MIA Runtime stays the single owner and only writer of his records and the one place a change is
+  approved and recorded. Everything that can fail, hang or be attacked separately is its own process around it: the
+  shell, the model server, the system helper, the capture agent, her browser, each extension, heavy jobs. No system
+  unit requires a MIA unit.
+- Reasoning: two writers of the stores is the fault the instance lock exists to prevent; one process for everything
+  lets a hung model call or a crashing extension take reminders with it. `MIA_OS_CORE_ARCHITECTURE.md` §3, §8.
+- Advantages: each part fails alone; the OS never depends on MIA. Disadvantages: the runtime is a single point of
+  failure for MIA's functions (accepted: its restart takes seconds and loses nothing).
+- Dependencies: DEC-0155's remaining steps (the window as a client; autostart). Security: the process that holds
+  his records never parses untrusted input once workers exist. Migration: incremental; nothing is rewritten.
+- Confidence: high.
+- Related: DEC-0155, DEC-0176
+
+### DEC-0191: Wayland; two sessions at login; on the PC one compositor technology for both
+- Status: PROPOSED, PROVISIONAL (Claude on Fable, 2026-11-16, Prompt 05). **Needs proof of concept 3; final in
+  Prompt 10.** Amends DEC-0157's "cage plus a browser" for the PC; cage stays the Pi's.
+- Question: what draws MIA's session, and how do it and the conventional desktop coexist?
+- Requirements: REQ-FUN-001, 063; REQ-UX-020, 022, 023; REQ-PER-002.
+- Options: cage with a browser; KWin with MIA's shell as its client; a full Plasma session with MIA on top; a
+  compositor of our own.
+- Recommended: Wayland only. Two entries at login for the same person, MIA's the default, sharing every user-level
+  service (the runtime above all) and never running at once. On the PC, KDE's compositor for both, with MIA's shell
+  as a client in hers; cage on the Pi. The shell's host provisionally the Qt WebEngine host MIA has.
+- Reasoning: cage shows one application, so workspaces that restore apps, and Zac's later handoffs (prompts 23, 24),
+  can't be met in MIA's session; one compositor technology means one portal backend, lock screen and accessibility
+  path. KWin as a single-client session is reported working and isn't a supported login path, hence the test.
+  `MIA_OS_GRAPHICAL_AND_SESSION_ARCHITECTURE.md` §3.
+- Advantages: ordinary windows inside MIA's session; less to maintain. Disadvantages: unproven; more memory than
+  cage. Fallbacks: cage for the MVP; an existing small compositor before writing any.
+- Confidence: medium.
+- Related: DEC-0157, DEC-0182, DEC-0183
+
+### DEC-0192: Communication: HTTP and SSE for surfaces, D-Bus for the OS, events as "re-read" signals, no broker
+- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation; answers T-02 and T-06.
+- Question: how do MIA's parts, the OS and other programs talk?
+- Requirements: REQ-ARC-004, 005; REQ-SEC-004; REQ-FUN-041.
+- Options: HTTP and SSE; a Unix socket; D-Bus; Varlink; gRPC; a message broker; shared memory.
+- Recommended: surfaces reach the runtime by the existing HTTP API and live stream, on loopback, every request
+  authenticated; local tools use the same API over a Unix socket checked by the caller's user; the runtime reaches OS
+  services and the helper by D-Bus; conventional apps may only hand MIA a capture through one D-Bus name. An event
+  between processes never carries the truth, it says where the truth changed; what needs a guarantee is a record.
+  No broker, no gRPC.
+- Reasoning: 265 routes and every surface exist on HTTP; the OS's services speak D-Bus and polkit authorises D-Bus
+  callers; loopback is reachable by every local program, so nothing is trusted for being local.
+  `MIA_OS_IPC_AND_COMMUNICATION_ARCHITECTURE.md`.
+- Confidence: high.
+- Related: DEC-0013, DEC-0158, DEC-0165
+
+### DEC-0193: Storage: Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var
+- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
+- Question: which filesystem, and where does everything live?
+- Requirements: REQ-SEC-001, 002; REQ-REL-005, 007; REQ-FUN-006, 041; REQ-ARC-011.
+- Options: Btrfs, ext4, XFS, ZFS; a storage service of MIA's own, or the filesystem and the stores.
+- Recommended: on the PC one LUKS2 volume (TPM2 and a PIN) holding Btrfs subvolumes; MIA's code and locked Python
+  environment in the read-only image (`/usr/lib/mia`); every store under `MIA_HOME` = `~/.local/share/mia`, sealed;
+  caches in `~/.cache/mia` and never backed up; sockets in `$XDG_RUNTIME_DIR/mia`; models in `/var/lib/ollama` on
+  their own subvolume, never backed up or snapshotted. ext4 on the Pi. No storage service: the filesystem is the
+  file service and the stores are the record service.
+- Reasoning: separate lifetimes on separate subvolumes without fixed sizes; standards (FHS, XDG) so any Linux tool
+  understands it. ZFS is out of tree. `MIA_OS_STORAGE_AND_FILESYSTEM_ARCHITECTURE.md`.
+- Confidence: high.
+- Related: DEC-0126, DEC-0155, DEC-0169
+
+### DEC-0194: Privilege: a helper only for what Linux would ask an administrator for, confirmed in the OS's own dialog
+- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). Refines DEC-0158. **Needs proofs of concept 5 and 6.**
+- Question: how does MIA change the system without holding administrative power?
+- Requirements: REQ-ARC-005, 010; REQ-SEC-003, 006; REQ-AUT-006, 007; REQ-FUN-006.
+- Options: a root-running MIA; sudo rules; a setuid tool; a general helper; a fixed-operation helper behind polkit.
+- Recommended: the runtime is his unprivileged user and uses what his signed-in session may already do (network,
+  Bluetooth, power, his own Flatpak installs) through the services' own policies. A separate root helper exposes a
+  short fixed list of typed operations (updates and rollback first), started on demand; each is a polkit action
+  whose confirmation is drawn by the operating system, outside MIA's process, after his approval in MIA. Its rules
+  are files in the image: changed only by a commit, never at run time, never by MIA. No "run a command" operation.
+  MIA's own file reach is narrowed to granted folders by the kernel (Landlock) in worker processes.
+- Reasoning: the second confirmation holds even if MIA is wrong or compromised; most "system" actions need no
+  helper on a Linux desktop, so the root code can stay tiny. `MIA_OS_SYSTEM_PRIVILEGE_BOUNDARIES.md`.
+- Advantages: a trusted path MIA can't fake; little privileged code. Disadvantages: two confirmations for a system
+  change (Q-50); Landlock unproven for Python workers.
+- Confidence: high for the model; medium for Landlock.
+- Related: DEC-0158, DEC-0156, DEC-0176, DEC-0181
+
+### DEC-0195: Resources and observability from Linux's own mechanisms
+- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
+- Question: how are resources shared and the system observed without building our own managers?
+- Requirements: REQ-PER-008, 009; REQ-REL-003, 004, 011; REQ-OPS-003; REQ-TRU-005, 006.
+- Options: our own supervisor, limits and monitoring; systemd's control groups, the kernel's accounting, the journal.
+- Recommended: systemd slices (the runtime protected and small; heavy jobs and her browser low and killed first;
+  extensions with hard ceilings; the model server its own ceiling); the kernel's pressure readings as the "busy"
+  signal for homeostasis on Linux; the journal as the one log; readiness and watchdog signals from the runtime;
+  every system action's result read back from the system; a diagnostic snapshot on request. No metrics stack.
+- Reasoning: Linux already accounts for and limits every service; MIA's value is her own pacing (built), not a
+  second resource manager. `MIA_OS_SYSTEM_RESOURCE_MANAGEMENT.md`, `MIA_OS_SYSTEM_OBSERVABILITY_ARCHITECTURE.md`.
+- Confidence: high; the ceilings' figures are to be measured.
+- Related: DEC-0173, DEC-0155

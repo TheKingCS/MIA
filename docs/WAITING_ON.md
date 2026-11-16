@@ -4,9 +4,14 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-10*
+*Last updated: 2026-11-16*
 
 ## Zac
+
+### From the Fable run (2026-11-16)
+0n. [ ] **MIA OS architecture: five questions** (Q-47 to Q-51, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 1). In short: is the PC's base Fedora's KDE desktop as an image built from the repository (Ubuntu the fallback)? Should MIA's own screen run on KDE's window manager so ordinary programs can open beside her? May the tests be run? Should system changes always ask your password? Should MIA keep running when you're signed out?
+0m. [ ] **The graphics card test** (part of Q-49): start the PC from a Fedora 45 KDE USB stick, install nothing, and run MIA's three models to measure their speed. About an hour; a Claude session can talk you through it. It decides Fedora or Ubuntu.
+0l. [ ] **Prompt 23, Universal Intelligence: four questions** (Q-43 to Q-46, `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` section 13): what the shelf may keep; whether MIA may note which program is in front of you (recommended: not yet); whose browsing Recall may search; when the work runs.
 
 ### Start here (2026-11-08 evening: the short list, in order; everything else is below)
 0h. [x] ~~Navigation: review the eight-destination architecture~~ (answered 2026-11-11; built: the eight, the glasses' three screens, the Nexus as Living Worlds).

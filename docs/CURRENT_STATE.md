@@ -2,7 +2,15 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
+session. Last updated: 2026-11-16 (the Fable run: reviews, and MIA OS Prompt 05), by claude.*
+
+**2026-11-16, latest (Claude on Fable: the reviews, and the MIA OS architecture).**
+- **Reviewed:** all of Opus's recent work (app status, the requirements, the whole glass look). Three things fixed: a picture used for a theme is now read only as PNG, JPEG or WebP; a glass theme whose text can't be read is refused when saved (before, only the built-in themes were checked); and "make it warmer" on its own no longer changes the theme, since it may be about the heat.
+- **Planned (prompt 23, Universal Intelligence):** most of it already exists in MIA. Six things are really missing: a shelf for things you've captured, search by meaning, a lasting history of what MIA did with undo by time, one record for anything with several steps, ways in from the PC's desktop, and (last, off unless you turn it on) noticing what you're working on. No new service is needed.
+- **Planned (MIA OS Prompt 05):** how MIA OS is put together. Ordinary Linux underneath, unchanged (Fedora with the KDE desktop, built as one image from this repository, updated whole and rolled back whole). MIA is a set of services and her own screen on top; if every part of MIA broke, the computer would still start and give you a normal desktop. When MIA changes the system itself, the operating system asks you to confirm in its own window, which MIA can't press.
+- **Waiting on Zac:** nine questions (Q-43 to Q-51). The one that unblocks the most: letting the tests run, one of which needs you to start the PC from a Fedora USB stick for an hour (nothing is installed) to measure your graphics card on MIA's models.
+- **Next:** your answers; then Prompt 06 (hardware) on Fable, and prompt 23's first steps on Opus.
+
 
 **2026-11-16 (Claude on Opus: the glass look's foundation).**
 - **Built:** the five kinds of glass surface (main panels, cards, dialogs and menus, hero panels, buttons and chips) now each have their own settings for see-through, blur, edge, light and shadow, so the coming Aquatic look and the other presets are just numbers. A dialog can never be made too see-through to read. Status chips keep their meaning colours. The current look is unchanged.

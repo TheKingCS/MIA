@@ -57,6 +57,11 @@ folded in here.*
 | Q-44 | May MIA note which app and document is in front of you, to tie work to a project? Recommended: not yet; build it last, off by default, names and titles only, PC only, with an indicator and an erase button | DEC-0188 | Zac |
 | Q-45 | Whose browsing may Recall search? Recommended: only the browser MIA drives; never your own browser's history unless you ask for an import | DEC-0188 | Zac |
 | Q-46 | When does prompt 23's work run? Recommended: the run record, the stop and the durable history on Opus now, between the MIA OS prompts; skip the Windows hotkey if the PC moves to Linux within weeks | DEC-0188 | Zac |
+| Q-47 | Is the PC's foundation settled as Fedora's KDE desktop, delivered as an image built from this repository, with Ubuntu 26.04 as the fallback if the graphics card's AI support disappoints? It also needs your yes on three earlier proposals it rests on: MIA's engine stays independent of any one operating system (DEC-0154), the PC image (DEC-0157), system changes only through a small helper (DEC-0158). Recommended: yes, conditional on Q-49's tests | DEC-0189 | Zac |
+| Q-48 | On the PC, should MIA's session run on KDE's own window manager (an ordinary program's window can open beside her) instead of the single-app kiosk (her session shows only MIA)? Recommended: test both, lean to KDE's | DEC-0191 | Zac |
+| Q-49 | May the six proofs of concept be run? Five need only a virtual machine or a test script; one needs you: start the PC from a Fedora USB stick, installing nothing, to measure the graphics card on MIA's models. Recommended: yes; the USB test first | DEC-0189, 0191, 0194 | Zac |
+| Q-50 | For a system change (an update, a firewall port), the operating system asks you to confirm in its own dialog after you've approved MIA's proposal. Always your password, or one click for some named changes? Recommended: always the password at first | DEC-0194 | Zac |
+| Q-51 | Should MIA's services keep running on the PC when you're signed out, so reminders and the phone keep working? Recommended: yes | DEC-0190 | Zac |
 
 ## The original questions (for the record)
 
@@ -85,16 +90,16 @@ folded in here.*
 | ID | Question | Prompt |
 |---|---|---|
 | T-01 | Semantic memory retrieval (embeddings) or stay with keywords? | 07 |
-| T-02 | Runtime IPC: the API and SSE are enough, or D-Bus or a local socket too? | 05 |
+| T-02 | Runtime IPC: the API and SSE are enough, or D-Bus or a local socket too? **Answered (Prompt 05):** enough for his records; D-Bus for the OS and the helper; the same API over a Unix socket for local tools (DEC-0192) | 05 |
 | T-03 | A schema and versioning per store | 05/15 |
 | T-04 | Device identity (certificates, revocation) | 12/13 |
 | Q-31 | **Answered yes (2026-11-15)**: the grant check is on. MIA's own initiative: reads and drafts just happen; a change to his records only within a grant (a learned skill, a published workflow; one list, each can be taken back); paying, buying, sending, publishing, deleting or sharing needs his yes every time | DEC-0156 | — |
 | T-05 | Why do `test_response_style` and `test_server_app`'s recovery-key test fail only in the full run? | 15 |
-| T-06 | Typed events across processes: delivery guarantees, idempotency | 05 |
+| T-06 | Typed events across processes: delivery guarantees, idempotency **Answered (Prompt 05):** none needed: an event says where the truth changed; what needs a guarantee is a record (DEC-0192) | 05 |
 | T-07 | The capability contract's fields as code, and its test | 08 |
 | T-08 | The extension sandbox's profile and threat model | 13 |
-| T-09 | A MIA portal (D-Bus) for Flatpak apps to offer capabilities | 05/10 |
-| T-10 | The PC's Linux base: Ubuntu LTS (`docs/HARDWARE.md`, ROCm's matrix) or Fedora Atomic (DEC-0157); a 14B model on the RX 7900 XTX on each decides | 06 |
+| T-09 | A MIA portal (D-Bus) for Flatpak apps to offer capabilities **Narrowed (Prompt 05):** start with one D-Bus name that only accepts a capture; apps offering capabilities waits for a case (Prompt 10) | 05/10 |
+| T-10 | The PC's Linux base: Ubuntu LTS (`docs/HARDWARE.md`, ROCm's matrix) or Fedora Atomic (DEC-0157); a 14B model on the RX 7900 XTX on each decides **Recommended (Prompt 05):** Fedora, conditionally: it now packages ROCm and Ollama's ROCm backend itself; decided by PoC 1 (DEC-0189) | 06 |
 | T-11 | The 32B model writes at 14 tokens a second on Windows, below this GPU's expectation; measure on Linux | 06/07 |
 | T-12 | Boot targets (REQ-PER-001, 002) need the image to be measured | 14 |
 | T-13 | Orca and keyboard access inside MIA's cage session | 10 |

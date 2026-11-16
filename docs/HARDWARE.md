@@ -186,6 +186,14 @@ support does exist if this machine needs to double as a general
 desktop; that's a real trade-off to weigh, not a wrong choice, just not
 the smoothest AI-specific path.
 
+*Update 2026-11-16 (MIA OS Prompt 05, DEC-0189 proposed):* the situation
+has changed since this was written. Fedora now packages ROCm and Ollama's
+ROCm backend in its own repositories, and Ubuntu 26.04 LTS ships ROCm in
+its archive. The MIA OS architecture recommends Fedora's image-based KDE
+desktop for this PC, with Ubuntu 26.04 LTS as the fallback, decided by one
+measurement on this GPU (`docs/mia_os/MIA_OS_LINUX_FOUNDATION.md`,
+`MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` proof of concept 1).
+
 **Rest of the build** (not yet finalized — update this section once
 parts are confirmed):
 - Motherboard: AM5 socket (required for 9800X3D), PCIe 4.0/5.0 x16 slot

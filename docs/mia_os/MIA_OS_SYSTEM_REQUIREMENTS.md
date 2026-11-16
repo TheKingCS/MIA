@@ -165,3 +165,5 @@ intelligence stays OS-independent), DEC-0157 (the PC image) and DEC-0158 (the pr
     recovery (UX-020 to 023) are Prompt 05's to design against these rows.
 
 Prompt 04 stops here. Zac answered its questions (2026-11-15, 16) and gave Prompt 05 to Fable (DEC-0166).
+
+**Prompt 05 is done (2026-11-16):** the architecture these constraints bind is [MIA_OS_CORE_ARCHITECTURE.md](MIA_OS_CORE_ARCHITECTURE.md); every requirement is mapped to its component in [MIA_OS_CORE_ARCHITECTURE_ACCEPTANCE_CRITERIA.md](MIA_OS_CORE_ARCHITECTURE_ACCEPTANCE_CRITERIA.md) §3.

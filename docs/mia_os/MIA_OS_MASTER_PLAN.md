@@ -33,7 +33,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
 | **03** | **Application framework** | **done; reviewed by Zac 2026-11-15 (DEC-0175 to 0177; prompt 22 follows)** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
 | **04** | **Requirements and system philosophy** | **done 2026-11-15 (Opus); reviewed by Zac (Q-32 to Q-36 answered, DEC-0179 to 0182 approved) and by Fable (2026-11-16)** | `MIA_OS_SYSTEM_PHILOSOPHY.md`, `MIA_OS_SYSTEM_REQUIREMENTS.md` and fourteen more (listed in it) |
-| 05–17 | (see `prompts/`) | not started | |
+| **05** | **Core operating system architecture** | **done 2026-11-16 (Fable); waiting for Zac's review (Q-47 to Q-51; DEC-0189 to 0195 proposed; six proofs of concept described, none run)** | `MIA_OS_CORE_ARCHITECTURE.md` and fourteen more (listed below) |
+| 06–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -74,6 +75,27 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3e. Prompt 05 in brief
+
+The architecture is [MIA_OS_CORE_ARCHITECTURE.md](MIA_OS_CORE_ARCHITECTURE.md), with fourteen supporting documents.
+
+- **Linux underneath, untouched; MIA as services and one session on top.** Nothing of the operating system depends
+  on MIA: with every MIA part broken the machine still reaches a working KDE desktop.
+- **The foundation** (DEC-0189, proposed): Fedora's KDE desktop delivered as an image built from this repository,
+  updated whole and rolled back whole; the distribution's own kernel; Ubuntu 26.04 the fallback. Fedora 45 (3
+  November 2026) packages the graphics card's AI stack and the model runner MIA uses. One measurement decides it.
+- **One coordinator** (DEC-0190): the runtime is the only writer of his records; the shell, the model server, the
+  helper, the capture agent, her browser, extensions and heavy jobs are separate processes that fail alone.
+- **System changes** (DEC-0194): a small root helper with a fixed list of operations; after his approval in MIA,
+  the operating system itself asks him to confirm, in a dialog MIA can't draw or press.
+- **A conflict named:** the earlier proposal's kiosk compositor shows one application, which doesn't fit ordinary
+  apps inside MIA's session; a test decides between it and KDE's own (DEC-0191, provisional).
+- **Almost everything is reused.** MIA writes the image definition, about ten small adapters, the shell's host, the
+  capture agent and the helper.
+- **Every requirement of Prompt 04 is mapped**: 31 addressed, 10 partly, 8 waiting on a test, 146 belonging to later
+  prompts with their component named, none unaddressed.
+- **Questions for Zac:** Q-47 to Q-51.
 
 ## 3d. Prompt 04 in brief
 
@@ -138,7 +160,7 @@ The full report is [MIA_OS_FEATURE_ECOSYSTEM.md](MIA_OS_FEATURE_ECOSYSTEM.md).
 - [Open questions](MIA_OS_OPEN_QUESTIONS.md);
 - [Risk register](MIA_OS_RISK_REGISTER.md).
 
-The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central documents. Each is created by its own prompt; none exists yet.
+The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central documents. Each is created by its own prompt: the requirements are Prompt 04's, the architecture Prompt 05's.
 
 **Prompt 01:**
 - [Existing system audit](MIA_OS_EXISTING_SYSTEM_AUDIT.md)
@@ -165,6 +187,23 @@ The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central doc
 - [Acceptance requirements](MIA_OS_FUNCTIONAL_ACCEPTANCE_REQUIREMENTS.md)
 - [Application framework requirements](MIA_OS_APPLICATION_FRAMEWORK_REQUIREMENTS.md)
 - The feature inventory, updated
+
+**Prompt 05:**
+- [Core architecture](MIA_OS_CORE_ARCHITECTURE.md)
+- [Linux foundation](MIA_OS_LINUX_FOUNDATION.md)
+- [System services](MIA_OS_SYSTEM_SERVICE_ARCHITECTURE.md)
+- [Graphical and session](MIA_OS_GRAPHICAL_AND_SESSION_ARCHITECTURE.md)
+- [Storage and filesystem](MIA_OS_STORAGE_AND_FILESYSTEM_ARCHITECTURE.md)
+- [IPC and communication](MIA_OS_IPC_AND_COMMUNICATION_ARCHITECTURE.md)
+- [Hardware abstraction and connectivity](MIA_OS_HARDWARE_ABSTRACTION_ARCHITECTURE.md)
+- [Resource management](MIA_OS_SYSTEM_RESOURCE_MANAGEMENT.md)
+- [Observability](MIA_OS_SYSTEM_OBSERVABILITY_ARCHITECTURE.md)
+- [Privilege boundaries](MIA_OS_SYSTEM_PRIVILEGE_BOUNDARIES.md)
+- [Build versus reuse](MIA_OS_SYSTEM_BUILD_VS_REUSE.md)
+- [Technology evaluation](MIA_OS_CORE_TECHNOLOGY_EVALUATION.md)
+- [Diagrams](MIA_OS_CORE_ARCHITECTURE_DIAGRAMS.md)
+- [Acceptance criteria and the requirement mapping](MIA_OS_CORE_ARCHITECTURE_ACCEPTANCE_CRITERIA.md)
+- [Open questions and proofs of concept](MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md)
 
 **Added by Zac, 2026-11-15:**
 - [World Intelligence proposal](MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md) (prompt 18, 2026-11-15; DEC-0170 proposed): standing watches, one discovery store, relevance worked out in code from MIA's records, built from the pieces she has (news feeds, search, research and verify, her browser, taught skills, the gate, links). Phases W0–W8, beside the MIA OS work.

@@ -1,6 +1,6 @@
 # MIA OS status
 
-*Updated 2026-11-15 (evening) by Claude.*
+*Updated 2026-11-16 by Claude (Fable).*
 
 **Phase:** planning.
 
@@ -15,8 +15,14 @@
   grant check is on, and her grants are listed and taken back in one place.
 - **Prompt 04 (requirements and system philosophy) is done** (Opus, 2026-11-15): `MIA_OS_SYSTEM_REQUIREMENTS.md`
   and fifteen supporting documents; 194 requirements, traced and tested; DEC-0179 to DEC-0182 proposed.
-- **Next:** Zac's review of Prompt 04 (Q-32 to Q-36); then Prompt 05 on his go. Prompt 23's review is the next
-  Fable session's.
+- Prompt 04 reviewed by Zac (DEC-0179 to DEC-0182 approved) and by Fable.
+- **Prompt 23's architectural review is done** (Fable, 2026-11-16): `MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md`,
+  DEC-0188 proposed; Opus's independent review is next.
+- **Prompt 05 (the core operating system architecture) is done** (Fable, 2026-11-16):
+  `MIA_OS_CORE_ARCHITECTURE.md` and fourteen supporting documents; DEC-0189 to DEC-0195 proposed; six proofs of
+  concept described, none run. Nothing was installed, built or migrated.
+- **Next:** Zac's review of Prompt 05 (Q-47 to Q-51) and of prompt 23's review (Q-43 to Q-46); then Prompt 06 on
+  his go.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
 **Changes outside the planning documents, on Zac's say-so:**
@@ -27,6 +33,8 @@
 **Last verified test result:** the Linux run on 2026-11-15 (see `MIA_OS_TESTING_AND_QUALITY_AUDIT.md`).
 
 **Waiting on Zac:**
-- Q-32 to Q-36 (Prompt 04's review), then the go for Prompt 05;
+- Q-47 to Q-51 (Prompt 05's review), above all Q-49: the proofs of concept, one of which needs him at the PC
+  with a USB stick; then the go for Prompt 06;
+- Q-43 to Q-46 (prompt 23's review);
 - add the two signing secrets (steps in the hub);
 - Q-08 and Q-09 in `MIA_OS_OPEN_QUESTIONS.md`.

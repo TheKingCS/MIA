@@ -28,4 +28,10 @@ report that found it. Rated H, M or L.*
 | R-31 | The small everyday model's mistakes reach actions | H | M | Prompt 04 | any new autonomy | Prompt 07/08 |
 | R-32 | Requirements and code drift apart | M | H | Prompt 04 | each prompt | Prompt 17 |
 | R-33 | Accessibility left to the end | M | M | Prompt 04 | R1 | Prompt 10 |
+| R-34 | GPU compute on Fedora underperforms or breaks for the RX 7900 XTX | H | M | Prompt 05 | choosing the base | Prompt 06 (PoC 1); fallback Ubuntu 26.04 |
+| R-35 | Fedora's bootc desktop path isn't finished; deriving from today's image changes under us | M | M | Prompt 05 | the image | PoC 2; Aurora's base as a stopgap |
+| R-36 | KDE's compositor as a single-client session is unsupported and may break between releases | M | M | Prompt 05 | MIA's session on the PC | PoC 3; cage or an existing small compositor as fallbacks; Prompt 10 |
+| R-37 | The root helper grows a general-purpose operation | H | L | Prompt 05 | every helper change | Prompt 13: a fixed list, reviewed; tests with hostile arguments |
+| R-38 | A program he runs as himself can reach what MIA can (the limit of running as the person) | M | M | Prompt 05 | storing anything more sensitive | Prompt 13: sealing, credential binding, Flatpak, workers |
+| R-39 | A Fedora rebase twice a year becomes a chore that gets skipped | M | M | Prompt 05 | each Fedora release | Prompt 15: an automated build and the acceptance list in a VM |
 | R-21 | Scope: 17 prompts asking for ~300 documents could bury the engineering | M | M | review of the library | throughout | Claude: keep documents small, and merge where the directive allows ("avoid duplicating") |
