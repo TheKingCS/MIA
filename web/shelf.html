@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Your Shelf — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="shelf" data-icon="assistant" class="mod-shelf" data-say="What's on my shelf?">
+  <!--
+    Your Shelf (UI-4, core/shelf.py): what you sent to it, kept a week; pick several and do one thing with them
+    together, or take them off. Drop text, a link or a file on any MIA page to keep it here. MIA.shelf() and
+    MIA.shelfUse(). Built by claude on the shared frame, 2026-11-16.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Your Shelf</h1>
+        <p class="tagline" id="shelf-sub"></p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="shelf.js"></script>
+</body>
+</html>

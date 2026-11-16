@@ -582,6 +582,12 @@ def _note_params(capture: Capture) -> dict:
     return {"text": _excerpt(capture, cap=4000), "title": _first_line(capture)}
 
 
+def _shelf_params(capture: Capture) -> dict:
+    """`shelf.keep` parameters: the capture's own fields, unchanged (core/shelf.py)."""
+    return {"kind": capture.kind, "text": capture.text, "files": list(capture.files), "source_app": capture.source_app,
+            "url": capture.url, "title": capture.title, "device": capture.device, "missing": list(capture.missing)}
+
+
 def _memory_params(capture: Capture) -> dict:
     """`memory.add` parameters: the selection as something to remember."""
     return {"text": " ".join(capture.text.split())[:300]}
@@ -606,6 +612,8 @@ SPECS: tuple[ActionSpec, ...] = (
                READ, output="results", group="find", ready=True, run=_find_known),
     ActionSpec("save_inbox", "Save To My Inbox", "Keeps it in MIA's inbox with where it came from.", _WORDS,
                ACT, output="note", group="keep", ready=True, kind="inbox.note", params=_note_params),
+    ActionSpec("keep_shelf", "Keep On My Shelf", "Puts it on your shelf for a week, to use with other things.",
+               _ANY, ACT, output="shelf", group="keep", ready=True, kind="shelf.keep", params=_shelf_params),
     ActionSpec("make_mission", "Make This A Mission", "Starts a mission from it.", ("text", "url"),
                ACT, output="mission", group="make", ready=True, kind="mission.add", params=_mission_params),
     ActionSpec("make_project", "Start A Project From This", "Starts a project from it.", ("text", "url"),

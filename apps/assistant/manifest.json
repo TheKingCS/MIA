@@ -43,6 +43,7 @@
       "ratings",
       "record_sets",
       "response_style",
+      "shelf",
       "traces",
       "user_memories"
     ],
@@ -97,9 +98,12 @@
       "set_birthday",
       "set_message_limit",
       "set_theme",
+      "take_off_my_shelf",
       "undo_by_time",
       "undo_last_change",
-      "what_can_you_do"
+      "use_my_shelf",
+      "what_can_you_do",
+      "whats_on_my_shelf"
     ],
     "actions": [
       "answer.rate",
@@ -127,6 +131,9 @@
       "online.remind",
       "records.add",
       "records.remove",
+      "shelf.clear",
+      "shelf.keep",
+      "shelf.remove",
       "undo.last",
       "wallet.delete"
     ],
@@ -205,7 +212,13 @@
       "records.remove": "act_within_grant",
       "history.undo": "act_with_approval",
       "undo.last": "act_within_grant",
-      "wallet.delete": "act_with_approval"
+      "wallet.delete": "act_with_approval",
+      "shelf.keep": "act_within_grant",
+      "shelf.remove": "act_within_grant",
+      "shelf.clear": "act_within_grant",
+      "whats_on_my_shelf": "observe",
+      "use_my_shelf": "act_within_grant",
+      "take_off_my_shelf": "act_within_grant"
     },
     "outside": [
       "look_up_online"
@@ -224,6 +237,7 @@
     "stores.write:ratings",
     "stores.write:record_sets",
     "stores.write:response_style",
+    "stores.write:shelf",
     "stores.write:traces",
     "stores.write:user_memories"
   ],

@@ -37,7 +37,9 @@ are kept), never logged. The ID wallet's cards (`/api/wallet`, `WalletCard`,
 2026-11-08) are the same: a card's number goes only through its own
 request to core/id_wallet.py, sealed at rest; lists mask it. MIA paints on this
 PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0140) and
-serves each person only their own pictures. The frame's Stop control
+serves each person only their own pictures. The shelf (UI-4, core/shelf.py)
+is listed at /api/shelf and its entries are used together as one selection
+(`ShelfUseRequest`, POST /api/shelf/use). The frame's Stop control
 (`StopRequest`, POST /api/stop, core/stop.py) stops what MIA is doing, or
 everything of her own until Carry On. The Theme Studio
 asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
@@ -242,6 +244,13 @@ class OrbStateRequest(BaseModel):
 class UalRequest(BaseModel):
     """What the person selected (core/ual.Capture as JSON), and for a run, the action they picked."""
     capture: dict = {}
+    action_id: str = ""
+
+
+class ShelfUseRequest(BaseModel):
+    """Things on the shelf to use together (their entry ids; empty for all of them), and the catalogue action to run
+    on them as one selection (core/shelf.py, core/ual.py); no action asks what can be done with them."""
+    which: list[str] = Field(default_factory=list, max_length=50)
     action_id: str = ""
 
 
@@ -562,7 +571,8 @@ def create_app(context: AppContext) -> FastAPI:
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
     store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
-    with that conversation's own lock. The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
+    with that conversation's own lock. The shelf is read at /api/shelf and used at /api/shelf/use, under the lock
+    like any selection (core/shelf.py). The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
     before the lock is taken, the rest is done under it, at once and never as an approval card. Good News Radio's page says when it played an episode
     (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
     herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
@@ -4237,6 +4247,35 @@ def create_app(context: AppContext) -> FastAPI:
                 return ual.run(view_for(context, profile_id), body.action_id, ual.Capture.from_dict(body.capture),
                                actions=_actions())
         except ual.UalError as problem:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
+
+    @app.get("/api/shelf")
+    def shelf_list(profile_id: str = Depends(require_profile_id)) -> dict:
+        """What's on the person's shelf (UI-4, core/shelf.py), newest first. Keeping something is the catalogue's
+        Keep On My Shelf (/api/ual/run); taking it off is `shelf.remove` or `shelf.clear` on the action contract."""
+        from core import shelf
+
+        with app.state.turn_lock:
+            view = view_for(context, profile_id)
+            return {"entries": [shelf.as_dict(e) for e in shelf.shelf_of(view).entries()],
+                    "keep_days": shelf.KEEP_DAYS}
+
+    @app.post("/api/shelf/use")
+    def shelf_use(body: ShelfUseRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Things on the shelf as one selection: with no action, what MIA can do with them (the same offer as any
+        selection); with one, it runs by its tier exactly as /api/ual/run does."""
+        from core import shelf, ual
+
+        try:
+            with app.state.turn_lock:
+                view = view_for(context, profile_id)
+                capture = shelf.combined(shelf.shelf_of(view).find(body.which or "all"))
+                if not body.action_id:
+                    return ual.offer(view, capture)
+                if body.action_id == "keep_shelf":
+                    raise ual.UalError("Those are on your shelf already.")
+                return ual.run(view, body.action_id, capture, actions=_actions())
+        except (shelf.ShelfError, ual.UalError) as problem:
             raise HTTPException(status.HTTP_409_CONFLICT, str(problem)) from None
 
     @app.get("/api/actions/kinds")

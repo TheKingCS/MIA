@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1457 files, 325,649 lines; 1457 files describe themselves; 17,855 of 17,951 classes and functions are documented.
+1461 files, 326,423 lines; 1461 files describe themselves; 17,898 of 17,994 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-565 files, 162,887 lines; 8,385 of 8,471 classes and functions documented
+567 files, 163,351 lines; 8,417 of 8,503 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -433,6 +433,8 @@
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta
 - `core/sensors.py`: Sensors that send their own readings (claude, 2026-11-09; DEC-0019: the computer adds sensors; DEC-0125: the Greenhouse, Power and the Lab had readings by hand only). A sensor is anything on the home network that can make an HTTP request (an ESP32, a Raspberry Pi, a smart plug's script): it sends on
 - `core/service_map.py`: What MIA runs on, and what depends on what (T-0007; the personality and ecosystem plan's phase 3, docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md section C; beside core/self_knowledge.py, which says what she is, this says what she runs on), so she can answer "if Ollama stops, what breaks?", "what does the b
+- `core/shelf.py`: The shelf (UI-4; prompt 23's review, G1; Zac's answer to Q-43, 2026-11-16: "only what is sent"): a short-lived place for things the person captured and chose to keep, to look at together, combine and send on. The "universal clipboard", without watching the clipboard: something goes on the shelf only
+- `core/shelf_actions.py`: The shelf's changes (UI-4, core/shelf.py) on the action contract in core/actions.py:
 - `core/show_off.py`: Show-off mode (DEC-0031): "MIA, show off for my friends" starts a short narrated tour of what MIA can do, on the person's **real** profile, in front of other people. So the tour is built here, in code, from a filtered copy of the person's data, and the screens it shows are its own cards, never the r
 - `core/sight.py`: Sight (build plan step 15): a photo the person takes, with the glasses' camera, the phone or the PC, and a question about it, answered by a local vision model on this PC (Ollama, `sight.model`, Qwen2.5-VL 7B by default). Nothing leaves the PC.
 - `core/sign_in_guard.py`: Sign-in protection for MIA's server (2026-11-08, Zac: "fortify our security measures to industry standards and beyond"; docs/SECURITY.md). Two rules, both from OWASP's authentication and session guidance:
@@ -576,7 +578,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,464 lines; 56 of 56 classes and functions documented
+2 files, 4,503 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -857,7 +859,7 @@
 
 ## tests/: the test suite: what each part must do
 
-500 files, 84,572 lines; 7,141 of 7,151 classes and functions documented
+501 files, 84,730 lines; 7,151 of 7,161 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1226,6 +1228,7 @@
 - `tests/test_sensors.py`: tests/test_sensors.py — sensors that send their own readings (core/sensors.py): a sensor added by a person gets a key shown once and kept as a hash; its readings go through its app's own reading action (the Lab, Power, the Greenhouse) as that person; a key does nothing else, a reading must be a numb
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
 - `tests/test_service_map.py`: What MIA runs on (core/service_map.py, T-0007): each service's dependencies as derived DEPENDS_ON links, what stops when one does (through a chain: the vision model with Ollama), what each needs, the words that name each, checks that only look, and her answers in a turn.
+- `tests/test_shelf.py`: The shelf (UI-4, core/shelf.py; the review's acceptance row): the same thing captured from the phone, the palette and a drop lands on the shelf the same way; a planted instruction in something shelved changes nothing; an entry is gone after its time; nothing shelved becomes a memory by itself. Also:
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
 - `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept.
 - `tests/test_sign_in_guard.py`: Sign-in protection (core/sign_in_guard.py, docs/SECURITY.md): the wait after wrong passwords doubles and is capped, old failures are forgotten, a success clears the account; sessions end when idle or old; and account passwords are hashed at OWASP's count, older hashes upgraded on the next right pass
@@ -1362,7 +1365,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,988 lines
+113 files, 21,101 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1452,6 +1455,7 @@
 - `web/selection.js`: selection.js — Do With This (claude, 2026-11-15, the Universal Action Layer's U2, DEC-0165).
 - `web/sensors.js`: sensors.js — Sensors (claude, 2026-11-09). Renders MIA.sensors() (core/sensors.py): each sensor that sends its own readings, where they go (the Lab, Power or the Greenhouse), its last reading and when, and Remove (sensor.remove). Add a Sensor asks which app, then its name and target there; MIA.senso
 - `web/settings.js`: settings.js — the Settings screen (claude, 2026-10-07; Zac: the gear's Settings). Renders MIA.settings() (core/web_account.py): the person's own settings, grouped as on the PC, the kinds of message MIA is taking a break from, and a way to choose which apps show. Each change is an action (setting.set
+- `web/shelf.js`: shelf.js — Your Shelf (claude, 2026-11-16, UI-4; core/shelf.py). Renders MIA.shelf(): what the person sent to their shelf, newest first, each with where it came from and the days left. Tick several and Do With These asks the engine what can be done with them together (MIA.shelfUse with no action: th
 - `web/shell.js`: shell.js — the frame every MIA web screen shares (claude, 2026-10-06, DEC-0017).
 - `web/shop.js`: shop.js — the Reward Shop (claude, 2026-10-17, DEC-0028). Renders MIA.shop() (core/game_layer.py): credits earned / spent / left, the rewards you set (ready to buy first, then how far off the rest are), ideas to start with, and what you've bought. Buy proposes shop.buy; undo gives the credits back. 
 - `web/showoff.js`: showoff.js — show-off mode (claude, 2026-10-17, DEC-0031). Renders MIA.showoff() (core/show_off.py) as a narrated tour, one card at a time: Back / Next / Stop, arrow keys, and MIA reading each card aloud when Voice is on (the browser's own speech; nothing leaves the device). The data was filtered in

@@ -1013,6 +1013,29 @@
   const captureOf = (text) => ({ text, source_app: "mia:" + (document.body.dataset.app || "web"),
     url: location.pathname.split("/").pop() || "", title: document.title,
     device: /Android|Mobi/.test(navigator.userAgent) ? "phone" : "pc" });
+  // Drop on any page (UI-4, core/shelf.py): text, a link or files' names dragged onto MIA from anywhere are offered
+  // to the shelf as a capture (only their names for files: nothing is uploaded). A page with its own drop zone
+  // handles its drop first (it calls preventDefault), and that drop never reaches here.
+  let dragDepth = 0;
+  const outsideDrag = (ev) => ev.dataTransfer && [...ev.dataTransfer.types].some((t) => t === "Files" || t === "text/plain" || t === "text/uri-list");
+  document.addEventListener("dragenter", (ev) => { if (outsideDrag(ev)) { dragDepth += 1; document.body.classList.add("mia-dropping"); } });
+  document.addEventListener("dragleave", () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove("mia-dropping"); });
+  document.addEventListener("dragover", (ev) => { if (outsideDrag(ev)) ev.preventDefault(); });
+  document.addEventListener("drop", async (ev) => {
+    dragDepth = 0; document.body.classList.remove("mia-dropping");
+    if (ev.defaultPrevented || !outsideDrag(ev)) return;
+    ev.preventDefault();
+    const dt = ev.dataTransfer;
+    const files = [...(dt.files || [])].map((f) => f.name).slice(0, 20);
+    const link = (dt.getData("text/uri-list") || "").split("\n").find((l) => l && !l.startsWith("#")) || "";
+    const text = (dt.getData("text/plain") || link).trim();
+    if (!text && !files.length) return;
+    const capture = { ...captureOf(text), files, source_app: "drop", url: link };
+    try {
+      const got = await MIA.ualRun("keep_shelf", capture);
+      await finishProposal(got.proposal);
+    } catch (e) { say(e.message); }
+  });
   async function finishProposal(proposal) {
     if (!(await confirmBox(proposal.summary))) { MIA.reject(proposal.proposal_id).catch(() => {}); return; }
     const done = await MIA.approve(proposal.proposal_id);

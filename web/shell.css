@@ -372,6 +372,21 @@ html { background: var(--bg); }
   body.has-now-playing #mia-status { bottom: calc(160px + env(safe-area-inset-bottom)); }
 }
 
+/* Your Shelf (core/shelf.py, UI-4) and the drop target every page shows while something is dragged over it. */
+.shelf-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.shelf-entry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 14px; }
+.shelf-pick { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.shelf-n { font-family: var(--font-mono); color: var(--text-faint); font-size: var(--text-xs); }
+.shelf-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shelf-meta { margin: 4px 0 0; font-size: var(--text-xs); }
+.shelf-tools, .shelf-actions { flex-wrap: wrap; }
+.shelf-offer:not(:empty) { margin-top: 10px; }
+.shelf-result { white-space: pre-wrap; }
+.shelf-say { margin-top: 16px; font-size: var(--text-sm); }
+body.mia-dropping::after { content: "Drop to keep it on your shelf"; position: fixed; inset: 12px; z-index: 80; display: grid;
+  place-items: center; border: 2px dashed var(--accent); border-radius: 16px; background: rgba(var(--rgb-accent), 0.08);
+  color: var(--text); font-size: var(--text-lg); pointer-events: none; }
+
 /* Stop (core/stop.py, REQ-AUT-010): the control in the frame, and the banner while everything of hers is stopped. */
 .side-stop { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 8px; min-height: 36px; padding: 0 10px;
   border-radius: var(--radius-sm); border: 1px solid var(--line); background: transparent; color: var(--text-dim);

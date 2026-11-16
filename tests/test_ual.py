@@ -135,11 +135,13 @@ def test_nothing_that_leaves_the_device_is_offered_for_a_sensitive_screen_or_wit
     assert "Research This" not in ual.offer(shop, Capture.from_dict(money))["later"]
 
 
-def test_an_offer_is_said_in_a_sentence_for_voice(shop):  # noqa: F811
+def test_an_offer_is_said_in_a_sentence_for_voice_and_a_file_alone_can_be_kept(shop):  # noqa: F811
     said = ual.offer_sentence(ual.offer(shop, Capture.from_dict({"text": "Plan the greenhouse expansion"})))
     assert said.startswith("Right away I can find what i know about this, explain this") and "With your yes I can" in said
-    nothing = ual.offer_sentence(ual.offer(shop, Capture.from_dict({"files": ["scan.pdf"]})))
-    assert nothing.startswith("There's nothing I can do with that yet.")
+    a_file = ual.offer_sentence(ual.offer(shop, Capture.from_dict({"files": ["scan.pdf"]})))
+    assert a_file == "With your yes I can keep on my shelf."  # a file alone can only be kept, for now (UI-4)
+    nothing = ual.offer_sentence({"actions": [], "later": ["Read The Text In This"]})
+    assert nothing.startswith("There's nothing I can do with that yet. Coming: read the text in this")
 
 
 def test_the_voice_tools_use_the_same_catalogue_and_gate(shop):  # noqa: F811

@@ -73,6 +73,10 @@
    "status": "none",
    "why": "history.undo puts back changes he names by time and subject (UI-3, core/change_history.py); the changes it reverses are MIA's own work, already watched by the loops of the actions and tools that made them"
   },
+  "action:shelf": {
+   "status": "none",
+   "why": "shelf.keep, remove and clear are him putting things on his own shelf and taking them off (UI-4); there is no work of MIA's in them to improve"
+  },
   "action:lab_reading": {
    "status": "none",
    "why": "readings entered by hand in the Lab (DEC-0125): measurements, not her choices; nothing of MIA's to improve"
@@ -308,6 +312,10 @@
   "store:runs": {
    "status": "none",
    "why": "a record of other engines' runs (UI-1, DEC-0188): how well each engine's runs go is measured by that engine's own loop (browser.routines, the skills' practice, workflows' runs); this store judges nothing"
+  },
+  "store:shelf": {
+   "status": "none",
+   "why": "a short-lived holding place for what he sent (UI-4, Q-43); it judges nothing, and what he does with an entry is an action already watched by that action's own loop"
   },
   "store:scripts": {
    "status": "none",

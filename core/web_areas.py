@@ -89,6 +89,7 @@ ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out ho
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
 TRADES = Page("trades", "Trade Master", "workshop", "Any job or diagnosis, walked through step by step.", "trades.html")
 LOOKUP = Page("lookup", "Look It Up Online", "search", "Search the web through your own search engine.", "lookup.html")
+SHELF = Page("shelf", "Your Shelf", "assistant", "What you sent to keep for a week: use it together.", "shelf.html")
 PORTALS = Page("portals", "Portal Pictures", "apps", "Put your own paintings in the Nexus's portals.", "portals.html")
 PROFILE = Page("profile", "Profile", "character", "You, and how MIA knows you.", "profile.html")
 YOURDATA = Page("yourdata", "Your Data", "files", "What MIA keeps, and taking it out.", "yourdata.html")
@@ -124,7 +125,7 @@ AREAS: tuple[Area, ...] = (
     Area("health", "Health and Fitness", "workout", "Training, food and how you feel.", (HEALTH, "workout", PLAN),
          hue="#ff8a3d", shortcuts=("kitchen",)),
     Area("ai_tools", "AI Tools", "assistant", "What MIA does with you: look, browse, read and write.",
-         ("sight", "browser", "taught_skills", LOOKUP, "inbox", COMMS, "assistant", MADE), hue="#6fc6ff"),
+         ("sight", "browser", "taught_skills", LOOKUP, SHELF, "inbox", COMMS, "assistant", MADE), hue="#6fc6ff"),
     Area("missions", "Missions", "missions", "Goals, projects, levels and rewards.",
          ("missions", PROJECTS, "dungeon", "skills", "character", "reward_shop", PARTY, CHRONICLE, WHY, DIRECTIONS),
          hue="#c86bff"),

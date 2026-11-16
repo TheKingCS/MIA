@@ -429,6 +429,7 @@ import core.map_share_actions  # noqa: E402,F401  (places on TAK apps on this ne
 import core.connectors  # noqa: E402,F401  (importing from other apps: files, rental calendar links)
 import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a note)
+import core.shelf_actions  # noqa: E402,F401  (the shelf: keep, take off, clear; UI-4)
 import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0028)
 import core.craft_actions  # noqa: E402,F401  (crafting recipes and builds, DEC-0030)
 import core.goods_actions  # noqa: E402,F401  (homestead goods and market days, DEC-0036)
