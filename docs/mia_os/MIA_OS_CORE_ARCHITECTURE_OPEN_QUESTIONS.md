@@ -40,7 +40,8 @@ Order: 1 first (it can change the base). Then 2, since 3, 4 and 5 build on its V
 | PoC 4, the runtime as a service (first half) | **Passed** after one fix: `deploy/install_runtime.sh` installed and started it as a systemd user service; it came up (95 services, 429 tools, 11 jobs), ran with no restarts and stopped cleanly on systemd's signal. The fix: on Linux with no sound server, the audio library's own error at import stopped the whole runtime (`core/voice_manager.py` now treats any audio failure as "no voice") |
 | The engine's suite on Linux | **Passes** (rerun 2026-11-16 after fixing a test that assumed an American time zone; the code was right). All four jobs green in the same run |
 | PoC 1, the graphics card | Ready; needs Zac at the PC with a Fedora USB stick |
-| PoC 3, PoC 5, PoC 2's boot half | Not yet (need a virtual machine) |
+| PoC 2, the image (boot half), and PoC 4 from the image | **Passed** (2026-11-16, `.github/workflows/mia-os-vm.yml`, run 43872077107, in a KVM virtual machine on GitHub's Linux machines): the image installed itself onto a disk (`bootc install to-disk`, btrfs), booted, and bootc reported the deployment; MIA's runtime ran as a person's service from the image; an update to a second version was fetched from a registry and booted; a rollback to the first version booted with the person's data untouched. Not shown: that an unsigned image is refused (signature checking wasn't switched on in this test), and `bootc-image-builder` could not run on those machines, so the installer image path is untested. |
+| PoC 3, PoC 5 | Not yet (the VM they need now exists) |
 
 ## 3. Earlier technical questions, answered or moved
 
