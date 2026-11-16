@@ -49,6 +49,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Prompt 25, Specialized Agent Teams** (Zac, 2026-11-16; verbatim in
+  `docs/mia_os/prompts/25_SPECIALIZED_AGENT_TEAMS.md`): the audit and architecture it asks for are done (Fable),
+  `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`. Nothing is built. It extends the 16 specialists into the agent
+  registry, reuses the council's floor, the run record, the stop, projects and grants, and adds a team record and
+  a workspace of structured entries. **Waiting on Zac: Q-53 to Q-58** (cloud models for specialists, teams start
+  only on his yes, the pilot project, start with the 16, the safety caveat, where it sits in the queue). Then T1
+  (registry) and T2 (workspace) on Opus; T3 shares its task engine with UI-7. Opus should review the document
+  before building, as with prompt 23.
 - **Built (Opus): Procurement P3, first part** (K-0271): `core/opportunity.py`. A find that meets a project's need is
   scored on the proposal's nine dimensions, each with its reason, and gets buy when ready, investigate, wait or
   skip; a saving only when the price book verified it. The World page's Opportunities tab; "what's worth buying?".
