@@ -104,18 +104,16 @@ class Proposal:
 def run_as_tool(context, kind: str, params: dict) -> str:
     """Runs an action kind for a voice tool as its screen would: describe's checks first, then execute, returning
     what happened, or the refusal in its own words (an ActionError, or a store's ValueError). Inside a taught skill, a
-    kind that pays, sends or deletes is refused until the person has said yes to that step (taught_skills.guard); the
-    grant check watches the same moment and refuses nothing yet (core/grants.observe). One body for every
+    kind that pays, sends or deletes is refused until the person has said yes to that step, and so is any change
+    before the skill is learned (taught_skills.guard, the grant check of core/grants.py). One body for every
     assistant_*_actions module (2026-11-09: nine copies, three of which skipped describe's checks)."""
     action = ACTION_TYPES[kind]
     try:
-        from core import grants
-        from core.taught_skills import guard, in_unapproved_step
+        from core.taught_skills import guard
 
-        # Watching only (DEC-0156, proposed): what a grant check would decide. A step of a skill the person taught
-        # is hers to take, with the skill as its grant; anything else here was asked for by the person.
-        grants.observe(kind, grants.MIA if in_unapproved_step() else grants.PERSON, granted=True)
-        guard(kind)  # inside a taught skill, a tool can't pay, send or delete without the person's yes (DEC-0123)
+        # Inside a taught skill the initiative is MIA's: the grant check (DEC-0156) holds back paying, sending or
+        # deleting without the person's yes, and any change before the skill is learned (DEC-0123).
+        guard(kind)
         action.describe(context, params)
         return action.execute(context, params)
     except ValueError as problem:  # ActionError is one
@@ -432,6 +430,7 @@ import core.closet_actions  # noqa: E402,F401  (Smart Closet: pieces, outfits, r
 import core.world_intel_actions  # noqa: E402,F401  (World Intelligence: watches and finds, DEC-0170)
 import core.requirement_actions  # noqa: E402,F401  (what each project needs, DEC-0172)
 import core.price_actions  # noqa: E402,F401  (prices seen and trip cost, DEC-0172)
+import core.grant_actions  # noqa: E402,F401  (taking back what MIA may do on her own, DEC-0156)
 import core.taught_skill_actions  # noqa: E402,F401  (taught skills: teach, change, forget, watch, DEC-0123)
 import core.path_actions  # noqa: E402,F401  (learning paths: draft one for an interest, DEC-0112)
 import core.loop_actions  # noqa: E402,F401  (the loop: days, times, reminders, DEC-0047)

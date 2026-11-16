@@ -2766,7 +2766,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   test checks). `tools/move_home.py` copies and verifies, deleting nothing.
 
 ### DEC-0156: Capabilities and grants for every tool and action
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-15, answering Q-31: "Yes")
 - Proposed by: claude, 2026-11-13
 - Decision: every tool and action declares a capability and a tier (observe, suggest, act-with-approval,
   act-within-grant, never), checked by code in the action contract. Grants are per person, revocable, listed on one
@@ -2777,7 +2777,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: `docs/mia_os/preliminary/MIA_OS_SECURITY_MODEL.md`
 - Built so far, changing nothing MIA does (2026-11-15, Fable, M4's first part; K-0246): the tiers themselves in
   every app's manifest, the test that fails on an untagged tool or action, and the check in watching-only mode
-  (`core/grants.py`). Enforcing it, the grants and their one screen wait on Zac's approval (Q-31).
+  (`core/grants.py`).
+- Built on his yes (2026-11-15, Fable, M4's second part; K-0247): the check enforced where MIA's own initiative
+  reaches a change (a taught skill's step, a workflow's add); a grant is a learned skill or a published workflow,
+  listed in one place (the Apps page, `list_grants`) and taken back there (`grant.take_back`); nothing gives a
+  grant but earning or approving it. Still to do: system capabilities (they arrive with the OS work, at observe or
+  never), and each app's network and device permissions.
 
 ### DEC-0157: The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first
 - Status: PROPOSED

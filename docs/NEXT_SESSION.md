@@ -69,8 +69,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   watching-only `observe` called from `actions.run_as_tool`), every tool's and action kind's tier in its manifest
   (`capabilities.tiers`; 86 action kinds and 44 tools need the person's yes each time), the outside-text tag
   (`capabilities.outside`, checked against `tool_loop.OUTSIDE_TOOLS` and `grants.FRAMED_TOOLS`), store permissions
-  (`stores.write:<name>`). Refuses nothing yet. **Waits on Zac: Q-31 (DEC-0156).** On his yes: the grants store (per
-  person), the one screen, `observe` becomes the check, `taught_skills.guard` folds into it. Not declared yet:
+  (`stores.write:<name>`). **Second part, on Zac's yes to Q-31 (DEC-0156 approved; K-0247):** the check is
+  enforced (`grants.require`, through `taught_skills.guard` and in `core/workflows.py`): a skill's step that changes
+  records asks until the skill is learned, a learned one still asks to pay, send or delete, and a `never` tier is
+  never a skill's step. Grants are a view, not a new store: learned skills and published workflows
+  (`grants.standing`), listed on the Apps page (Manage apps) and by `list_grants`, taken back with
+  `grant.take_back` (the skill practises again; the workflow is put away). No action or tool gives a grant.
+  **Rule for new work:** anything MIA starts herself that changes a record calls `grants.require(kind, grants.MIA,
+  granted=...)` first. Not declared yet:
   network and device permissions per app (40 engine files reach the network or a device; map each to its app with
   a test that fails on an unmapped one).
   New Opus work joins a fresh list below this line. Copilot, Claude, ChatGPT or Muse may check pieces independently.
@@ -91,7 +97,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Apps page (Manage apps: "Her apps, checked"). Overlapping tools are said as suggestions.
 - **Built 2026-11-15 (Opus): M3** (K-0244): the app list is read from the manifests; a new app is a new
   `apps/<id>/manifest.json`. **The phone app needs rebuilding** to carry the manifests (its bundle now includes them;
-  the installed one still has the old list in its code, so it keeps working until then). M4's first part is built (below); next: M4's second part on Q-31's yes (Fable);
+  the installed one still has the old list in its code, so it keeps working until then). M4 is built (below); next:
   M5, lifecycle status (Opus) can go first if Zac prefers.
 - **Prompt 03 done (2026-11-15, Opus):** `docs/mia_os/MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen supporting
   documents. Capability-first; DEC-0175 to 0177 proposed; waiting on Zac: Q-27 to Q-29, then Prompt 04. Added to

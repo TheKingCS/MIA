@@ -275,12 +275,17 @@ def check_sentence(reg: app_registry.Registry, context) -> str:
 
 
 def page(context) -> dict:
-    """The Apps page's registry section: the inventory's counts, each app's problems, overlaps and gaps."""
+    """The Apps page's registry section: the inventory's counts, each app's problems, overlaps and gaps, and what
+    MIA may do on her own (her grants, core/grants.py) with how many capabilities always need the person's yes."""
     reg = registry()
     c = check(reg, context)
     inv = inventory(reg)
+    from core import grants
+
     return {"apps": inv["apps"], "devices": inv["devices"], "voice": inv["voice"],
             "manifests": len(reg.manifests),
+            "grants": [g.as_dict() for g in grants.standing(context)],
+            "asks_each_time": sum(1 for t in grants.tiers().values() if t == grants.WITH_APPROVAL),
             "health": [{"id": i, "name": (reg.get(i) or {}).get("name", "MIA"), "problems": p}
                        for i, p in sorted(c["health"].items())],
             "overlaps": [{"tools": o["tools"], "apps": [(reg.get(a) or {}).get("name", a) for a in o["apps"]]}

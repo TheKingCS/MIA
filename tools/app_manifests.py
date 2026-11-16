@@ -57,7 +57,7 @@ FAMILY_OWNER = {
     "event": "calendar", "exercise": "workout", "expedition": "expeditions", "expense": "budget",
     "experiment": "greenhouse", "failures": "issues", "firstboot": "web_home", "fitness": "workout",
     "flock": "flock", "freedom": "freedom", "gap": "assistant", "gear": "expeditions", "goods": "workshop",
-    "gps_track": "maps", "grocery": "kitchen", "grow": "greenhouse", "inbox": "inbox", "income": "budget",
+    "gps_track": "maps", "grant": "module_browser", "grocery": "kitchen", "grow": "greenhouse", "inbox": "inbox", "income": "budget",
     "income_source": "budget", "insurance": "insurance", "insurance_policy": "insurance",
     "insurance_quote": "insurance", "inventory": "real_estate", "job": "workshop", "journal": "notes",
     "lab": "lab", "lab_reading": "lab", "lesson": "classroom", "life_note": "life_notes", "listing": "workshop",
@@ -214,7 +214,8 @@ def build() -> dict[str, dict]:
 
 # Tools whose name reads like a change but that only read (the generator's rule goes by the name).
 TOOL_TIER = {"world_finds": "observe", "look_up_online": "observe", "browser_read": "observe",
-             "draft_email": "suggest"}  # it only drafts: an email is sent by a person pressing Send
+             "draft_email": "suggest",  # it only drafts: an email is sent by a person pressing Send
+             "take_back_grant": "act_with_approval"}  # ending a grant is the person's call
 
 HAND_FIELDS = ("version", "dependencies")  # kept as written: the code doesn't know them
 HAND_COMPONENTS = ("services", "agents", "workflows", "integrations")

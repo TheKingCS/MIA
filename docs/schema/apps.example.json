@@ -962,6 +962,16 @@
         "count": 2,
         "need": "screen"
       }
-    ]
+    ],
+    "grants": [
+      {
+        "id": "skill:ab12cd34",
+        "kind": "skill",
+        "name": "Friday reset",
+        "covers": "its 4 steps that do things, without asking (never paying, sending or deleting)",
+        "how": "you taught it, and it ran cleanly 2 times with you watching"
+      }
+    ],
+    "asks_each_time": 132
   }
 }

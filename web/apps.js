@@ -163,7 +163,14 @@
           ? el("div", {}, el("p", { class: "pw-label" }, "Asked for, no app does it yet"), el("ul", {}, r.gaps.map((g) =>
               el("li", {}, g.what + " (asked " + g.count + "×)"))))
           : null,
-        el("div", { class: "row-buttons" }, ask("What apps do I have?"), ask("Which app can watch for deals?"), ask("Is anything wrong with my apps?"))));
+        el("div", {}, el("p", { class: "pw-label" }, "What MIA may do on her own"),
+          r.grants.length
+            ? el("ul", {}, r.grants.map((g) => el("li", {}, el("strong", {}, g.name), " · " + (g.kind === "skill" ? "a skill" : "a workflow") +
+                ": " + g.covers + ". Given because " + g.how + ". ",
+                el("button", { type: "button", class: "btn btn-ghost", onclick: () => act({ kind: "grant.take_back", params: { grant_id: g.id } }) }, "Take back"))))
+            : el("p", { class: "dim" }, "Nothing yet: she asks before every change, until a skill you teach her runs cleanly with you or you publish a workflow."),
+          el("p", { class: "dim" }, r.asks_each_time + " things she can do always need your yes, whatever she's learned: paying, buying, sending, publishing, deleting, sharing.")),
+        el("div", { class: "row-buttons" }, ask("What can you do on your own?"), ask("What apps do I have?"), ask("Which app can watch for deals?"), ask("Is anything wrong with my apps?"))));
   }
 
   let areas = [], everywhere = [];

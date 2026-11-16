@@ -200,6 +200,14 @@ other people in the house.
   (no fixed daily cap: each kind of message is paced by what the person
   opens, uses or dismisses, DEC-0171), drops repeats and logs every decision. Replies
   to something the user just did, alarms and low battery stay direct.
+- **Grants** (DEC-0156, `core/grants.py`) — every tool and action kind has a
+  tier in its app's manifest (`apps/<id>/manifest.json`, `capabilities.tiers`:
+  observe, suggest, act_within_grant, act_with_approval, never); a test fails
+  on one without. Anything MIA starts herself that changes a record goes
+  through `grants.require()` first. A grant is a learned skill or a published
+  workflow (`grants.standing`), taken back with `grant.take_back`. Never add
+  an action or tool that gives a grant: one is earned or approved where it's
+  made, so nothing MIA reads can grant her anything.
 - **Email** (`core/email_drafts.py`, `core/mail_send.py`) — the Assistant
   only drafts; an email is sent only when a person presses Send (desktop
   dialog or phone). Never add a tool that sends.

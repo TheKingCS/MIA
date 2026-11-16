@@ -16,7 +16,9 @@ trigger (every day, week or month) and steps from a fixed vocabulary:
 - `add`: a record into one of the person's own published screens, through
   the `records.add` action, so it's in the history and undoable.
 
-**Standing approval by kind**: publishing a workflow approves exactly what it
+**Standing approval by kind** (a grant, core/grants.py: listed with the
+person's other grants and taken back there; each add goes through the grant
+check): publishing a workflow approves exactly what it
 lists it may do (tell, add to which screen, how many adds a run), within its
 limits; a new kind needs approving again (a new version). `dry_run()` shows
 what it would do without doing any of it. Every run is logged on the
@@ -247,7 +249,9 @@ def _records(context, source: str, within: Optional[int], now: datetime) -> tupl
 
 def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = None) -> dict:
     """Run a published workflow (or, `dry`, show what it would do). Returns {"lines", "offers", "added"}.
-    Offers are Candidates for the communication gate; the caller offers them."""
+    Offers are Candidates for the communication gate; the caller offers them. Each add goes through the grant check
+    first (core/grants.py: the published workflow is its grant) and is held back, and said so in the lines, when the
+    check says no."""
     from core.communication_gate import Candidate
     from core.region import money
 
@@ -315,6 +319,14 @@ def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = 
                 if dry:
                     lines.append(f"would add to {params['creation_id']}: {params['values']}")
                 else:
+                    from core import grants
+                    from core.actions import ActionError
+
+                    try:  # her own initiative: the grant check, with this published workflow as the grant (DEC-0156)
+                        grants.require("records.add", grants.MIA, granted=True)
+                    except ActionError as held:
+                        lines.append(f"add held back: {held}")
+                        continue
                     proposal = context.actions.propose(context, "records.add", params, proposed_by="mia")
                     result = context.actions.approve(context, proposal.proposal_id)  # its standing approval (DEC-0092)
                     lines.append(f"add: {result.result}")

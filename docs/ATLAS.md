@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1440 files, 320,090 lines; 1440 files describe themselves; 17,585 of 17,680 classes and functions are documented.
+1441 files, 320,432 lines; 1441 files describe themselves; 17,605 of 17,700 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-557 files, 159,481 lines; 8,235 of 8,321 classes and functions documented
+558 files, 159,728 lines; 8,249 of 8,335 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -235,7 +235,8 @@
 - `core/goods_actions.py`: Homestead goods' actions (DEC-0036), on the action contract in core/actions.py: proposed in plain words, approved, run, undoable.
 - `core/goods_starters.py`: Starter recipes for homestead goods (DEC-0037): a cutting board, a planter, spice and herb blends, mixes in a jar, eggs, microgreens and plant starts, to copy into Workshop → Recipes and change to your own. Generic on purpose: no prices (yours to set), quantities a common starting point, allergens f
 - `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e
-- `core/grants.py`: Every capability's tier, and what a grant check would decide (DEC-0156, proposed; migration phase M4 of `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`; the Living System's G1). **This phase watches and refuses nothing: enforcing waits on Zac's approval of DEC-0156.
+- `core/grant_actions.py`: Taking a grant back, on the action contract (DEC-0156; core/grants.py): proposed in plain words, approved by the person, run, undoable.
+- `core/grants.py`: Every capability's tier, the grants a person has given, and the one check MIA's own initiative goes through (DEC-0156, approved by Zac 2026-11-15; migration phase M4 of `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`; the Living System's G1).
 - `core/greenhouse_link.py`: "Take over the greenhouse" (DEC-0150; Zac, 2026-11-08: "build it and essentially pass her to it, so that she can integrate and monitor everything she has set up for monitoring"). MIA's half of the link to the MIA Homestead node (`homestead/`): she watches; the node, its control loop and its safety M
 - `core/greenhouse_provision.py`: Setting up the greenhouse's hardware from MIA (DEC-0150; Zac, 2026-11-08: "MIA needs to be able to flash/program the pi and other components and help me set them up when it comes time. Maybe have like preloaded configs set up and all internal info able to be pushed by MIA").
 - `core/greenhouse_setup.py`: The greenhouse's setup from start to hand-over, as one sequence MIA keeps track of (DEC-0150; Zac, 2026-11-08: "if we are setting up the greenhouse and I ask what is next is she able to tell me what device to flash, how to set it up, what i need to ask next"). The pieces already exist: the build job
@@ -801,7 +802,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-41 files, 4,549 lines; 144 of 144 classes and functions documented
+41 files, 4,550 lines; 144 of 144 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -847,7 +848,7 @@
 
 ## tests/: the test suite: what each part must do
 
-493 files, 82,979 lines; 7,032 of 7,041 classes and functions documented
+493 files, 83,066 lines; 7,038 of 7,047 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1012,7 +1013,7 @@
 - `tests/test_good_news.py`: Good News Radio (DEC-0096, core/good_news.py): good news judged in code, each story saying how it's known (confirmed by two outlets, from the source itself, or one outlet, each with its tag), its caveats kept, four personalities, on only when switched on, and stories called misleading counted by sou
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package.
-- `tests/test_grants.py`: Tiers and the grant check, watching only (DEC-0156, proposed; migration phase M4; core/grants.py): every tool and action kind has a tier in its app's manifest; the kinds that always ask are tiered at the person's yes, so there is one classification; a person's own press is always theirs; on MIA's ow
+- `tests/test_grants.py`: Tiers, grants and the grant check (DEC-0156, approved; migration phase M4; core/grants.py): every tool and action kind has a tier in its app's manifest; the kinds that always ask are tiered at the person's yes, so there is one classification; a person's own press is always theirs; on MIA's own initi
 - `tests/test_greenhouse.py`: Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/greenhouse_link.py watches every sensor the node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab, reads only from the person's own network, and knows the node fro
 - `tests/test_greenhouse_module.py`: Unit tests for modules.greenhouse.module's pure functions, same style as tests/test_garage_module.py/tests/test_property_module.py (no Qt event loop, no fixtures).
 - `tests/test_greenhouse_secret.py`: The greenhouse node's email password, from the vault to the node (core/greenhouse_provision.py, DEC-0150: "secrets from the vault and never typed by a model"): found in the person's own unlocked vault, never unlocked by MIA, sent only on "yes, send it", over standard input (never in the command or a
@@ -1345,7 +1346,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,728 lines
+112 files, 20,735 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

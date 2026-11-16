@@ -22,7 +22,7 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 |---|---|---|---|
 | DEC-0154 | Intelligence stays independent of the OS | PROPOSED | 04, 05 |
 | DEC-0155 | MIA Runtime: a long-running service, extracted first, on Windows | PROPOSED | 05, 14, 16 |
-| DEC-0156 | Capabilities and grants for every tool and action | PROPOSED | 08, 13 |
+| DEC-0156 | Capabilities and grants for every tool and action | APPROVED (Q-31, 2026-11-15); M4 built | 08, 13 |
 | DEC-0157 | PC image: Fedora Atomic (bootc), a cage session plus KDE, dual boot | PROPOSED | 05, 06, 14 |
 | DEC-0158 | System management only through a narrow privileged helper | PROPOSED | 05, 13 |
 

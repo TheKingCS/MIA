@@ -2,9 +2,9 @@
 core.grants
 =============
 
-Every capability's tier, and what a grant check would decide (DEC-0156, proposed; migration phase M4 of
-`docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`; the Living System's G1). **This phase watches and refuses nothing:**
-enforcing waits on Zac's approval of DEC-0156.
+Every capability's tier, the grants a person has given, and the one check MIA's own initiative goes through
+(DEC-0156, approved by Zac 2026-11-15; migration phase M4 of `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`; the Living
+System's G1).
 
 **A tier** says how far MIA may go with a capability (a tool or an action kind) when the initiative is hers, not the
 person's:
@@ -28,11 +28,22 @@ its manifest's `capabilities.outside`. Every one must be handled for the model: 
 (`FRAMED_TOOLS`) or listed in `core.tool_loop.OUTSIDE_TOOLS`; a test keeps the lists agreeing.
 
 **The check** (`decide`): pure. Who started it (`person`: they pressed or said it; `mia`: her own initiative, as in a
-taught skill's step or something she proposes), the tier, and what's been granted give allowed or not, with why.
-A person's own press is always theirs to make. `observe()` is the report-only hook the action contract calls: it
-logs and counts what enforcing would have stopped (`report()`), and never raises.
+taught skill's step or a workflow's run), the tier, and whether a grant covers it give allowed or not, with why.
+A person's own press is always theirs to make. `require()` is the check enforced: it raises `ActionError` when the
+answer is no, counts it (`report()`) and logs it. It's called where her initiative reaches a change: a taught
+skill's step (`taught_skills.guard`, from `actions.run_as_tool` and `ActionCenter.approve`) and a workflow's add
+(`core/workflows.py`).
 
-Grants themselves (per person, revocable, on one screen) are the next part and are not built here.
+**A grant** (`Grant`) is a standing yes a person gave by something they did, never by anything MIA or a page said:
+- a **learned skill**: taught, then run cleanly with them watching (`core/taught_skills.py`); it covers that skill's
+  steps that change their own records;
+- a **published workflow**: approved when it was published, for exactly what it lists (`core/workflows.may`).
+There is no action that gives a grant: one is earned or approved where it's made. `standing()` is the one list of
+them, assembled from those stores (so there's no second record to drift); `take_back()` ends one (the skill goes
+back to practising with the person; the workflow is put away, kept). The action `grant.take_back`
+(`core/grant_actions.py`), the Apps page's "What MIA may do on her own" and the tools `list_grants` and
+`take_back_grant` are how a person sees and ends them. No grant ever covers a tier of `act_with_approval` or
+`never`.
 """
 
 from __future__ import annotations
@@ -47,6 +58,7 @@ log = get_logger(__name__)
 OBSERVE, SUGGEST, WITHIN_GRANT, WITH_APPROVAL, NEVER = TIERS = (
     "observe", "suggest", "act_within_grant", "act_with_approval", "never")
 PERSON, MIA = "person", "mia"
+NEEDS_YES = "That step needs your yes first."
 
 # Tools whose answers are framed for the model by browser_safety.untrusted() where they're made (core/browser.py,
 # core/online_lookup.py).
@@ -56,6 +68,21 @@ _SUGGEST_PREFIXES = ("draft_", "propose_", "suggest_", "plan_", "preview_")
 
 _would_refuse: dict = {}  # capability -> how many times enforcing would have stopped it (this run)
 _tiers: dict = {}  # capability -> tier, read once from the manifests
+
+
+@dataclass(frozen=True)
+class Grant:
+    """One standing yes: its id (`skill:<id>` or `workflow:<id>`), what kind it is, its name, what it covers in
+    words, and how the person gave it."""
+    grant_id: str
+    kind: str
+    name: str
+    covers: str
+    how: str
+
+    def as_dict(self) -> dict:
+        """The grant as a screen gets it."""
+        return {"id": self.grant_id, "kind": self.kind, "name": self.name, "covers": self.covers, "how": self.how}
 
 
 @dataclass(frozen=True)
@@ -120,20 +147,81 @@ def decide(tier: Optional[str], initiator: str, granted: bool = False) -> Decisi
     return Decision(False, tier or WITH_APPROVAL, "it needs the person's yes each time")
 
 
-def observe(capability: str, initiator: str, granted: bool = False) -> Decision:
-    """The report-only hook (see the module's opening): decides, and when enforcing would have stopped it, logs it and
-    counts it. Never raises and never stops anything."""
-    try:
-        decision = decide(tier_of(capability), initiator, granted)
-        if not decision.allowed:
-            _would_refuse[capability] = _would_refuse.get(capability, 0) + 1
-            log.info("Grants (watching only): %s by %s would wait: %s.", capability, initiator, decision.why)
-        return decision
-    except Exception:  # noqa: BLE001 - watching never breaks the change it watches
-        log.exception("Grants: couldn't look at %s", capability)
-        return Decision(True, WITH_APPROVAL, "couldn't be checked")
+def require(capability: str, initiator: str, granted: bool = False) -> Decision:
+    """The check, enforced: the decision when it's allowed; ActionError (counted and logged) when it isn't. A
+    capability no manifest gives a tier is treated as needing the person's yes."""
+    decision = decide(tier_of(capability), initiator, granted)
+    if not decision.allowed:
+        from core.actions import ActionError
+
+        note_held(capability, initiator, decision.why)
+        raise ActionError(NEEDS_YES if decision.tier != NEVER else "That's only ever done by you, never by me.")
+    return decision
+
+
+def note_held(capability: str, initiator: str, why: str) -> None:
+    """Counts and logs one thing the check held back (also the skills' own floor for kinds that always ask)."""
+    _would_refuse[capability] = _would_refuse.get(capability, 0) + 1
+    log.info("Grants: %s by %s waits: %s.", capability, initiator, why)
 
 
 def report() -> dict:
-    """What enforcing would have stopped so far this run: {capability: times}."""
+    """What the check has held back so far this run: {capability: times}."""
     return dict(_would_refuse)
+
+
+def standing(context) -> list[Grant]:
+    """Every grant this person has given, from where each is kept (see the module's opening): learned skills, then
+    published workflows. A store that isn't here or can't be read gives none."""
+    out: list[Grant] = []
+    try:
+        from core.taught_skills import CLEAN_RUNS, LEARNED
+
+        book = getattr(context, "taught_skills", None)
+        for skill in (book.skills if book is not None else []):
+            if skill.state == LEARNED:
+                changing = sum(1 for s in skill.steps if s.get("kind") in ("tool", "action"))
+                out.append(Grant(f"skill:{skill.skill_id}", "skill", skill.name,
+                                 f"its {changing} step{'s' if changing != 1 else ''} that do things, without asking "
+                                 f"(never paying, sending or deleting)",
+                                 f"you taught it, and it ran cleanly {CLEAN_RUNS} times with you watching"))
+    except Exception:  # noqa: BLE001 - a list that can't be read is shown as empty, never an error page
+        log.exception("Grants: couldn't read the taught skills")
+    try:
+        from core.workflows import may
+
+        store = getattr(context, "creations", None)
+        for c in (store.published() if store is not None else []):
+            spec = store.shown(c["id"]).get("spec", {})
+            if spec.get("kind") == "workflow":
+                out.append(Grant(f"workflow:{c['id']}", "workflow", c.get("title", c["id"]), "; ".join(may(spec)),
+                                 "you approved it when it was published"))
+    except Exception:  # noqa: BLE001
+        log.exception("Grants: couldn't read the workflows")
+    return out
+
+
+def find(context, words: str) -> Optional[Grant]:
+    """The grant an id or a name means: its id exactly, else its name exactly, else the only one whose name holds the
+    words."""
+    wanted = " ".join(str(words or "").lower().split())
+    grants = standing(context)
+    for g in grants:
+        if wanted and wanted in (g.grant_id.lower(), g.name.lower()):
+            return g
+    some = [g for g in grants if wanted and wanted in g.name.lower()]
+    return some[0] if len(some) == 1 else None
+
+
+def take_back(context, grant_id: str) -> str:
+    """Ends a grant and says what changed: a learned skill goes back to practising with the person; a workflow is put
+    away (kept, with its records). ValueError when it isn't a grant any more."""
+    grant = next((g for g in standing(context) if g.grant_id == grant_id), None)
+    if grant is None:
+        raise ValueError("That isn't something I may do on my own any more.")
+    kind, _, ref = grant_id.partition(":")
+    if kind == "skill":
+        context.taught_skills.unlearn(ref)
+        return f"\u201c{grant.name}\u201d is back to practising: I'll ask before each step that changes something."
+    context.creations.retire(ref)
+    return f"\u201c{grant.name}\u201d is put away and won't run. It's kept, with its records."

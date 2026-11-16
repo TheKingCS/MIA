@@ -49,6 +49,13 @@ the moment it reaches for such an action (`guard`, called by
 `core.actions.run_as_tool` and `ActionCenter.approve`): the action is refused, the person is asked,
 and the step runs again on their yes.
 
+**A learned skill is a grant** (DEC-0156, `core/grants.py`): `guard` is the
+grant check for a skill's steps. Before a skill is learned, a tool step that
+reaches a change to the person's records is held for a yes too, whatever
+its name; an action or tool its app's manifest tiers at the person's yes
+always asks; one tiered `never` can't be a step (`never_hers`). The grant
+is taken back with `SkillBook.unlearn` (the skill practises again).
+
 **Demotion.** A run that stops on an error sends a learned skill back to
 practising; so does changing its steps.
 
@@ -165,15 +172,32 @@ def in_unapproved_step() -> bool:
 
 
 def guard(kind: str) -> None:
-    """Called by `core.actions.run_as_tool` and `ActionCenter.approve` before an action runs. While a skill is running a tool
-    step the person hasn't said yes to, an action kind that always asks is refused here (and the run then asks):
-    so a tool can't pay, send or delete inside a skill on the strength of its name alone."""
+    """Called by `core.actions.run_as_tool` and `ActionCenter.approve` before an action runs. While a skill is running
+    a tool step the person hasn't said yes to, the initiative is MIA's, so the action goes through the grant check
+    (`core.grants.require`, DEC-0156): a kind that always asks is refused whatever was learned, and a change to the
+    person's records is refused unless the skill is learned (its grant). The run then asks. So a tool can't pay, send
+    or delete inside a skill on the strength of its name alone, nor change records before the skill has earned it."""
     held = _UNAPPROVED.get()
-    if held is not None and always_asks(kind):
-        from core.actions import ActionError
+    if held is None:
+        return
+    from core import grants
+    from core.actions import ActionError
 
+    try:
+        if always_asks(kind):  # the floor, whatever a manifest's tier says
+            grants.note_held(kind, grants.MIA, "it always asks")
+            raise ActionError(grants.NEEDS_YES)
+        grants.require(kind, grants.MIA, granted=bool(held.get("standing")))
+    except ActionError:
         held["blocked"] = kind
-        raise ActionError("That step needs your yes first.")
+        raise
+
+
+def never_hers(step: dict) -> bool:
+    """Whether a step is something MIA never does on her own, even asked inside a skill (its tier is `never`)."""
+    from core import grants
+
+    return grants.tier_of(str(step.get("action") or step.get("tool") or "")) == grants.NEVER
 
 
 # ---------------------------------------------------------------- steps
@@ -443,6 +467,16 @@ class SkillBook:
         self._save()
         return skill
 
+    def unlearn(self, skill_id: str) -> Skill:
+        """Takes a learned skill back to practising (its grant taken back, core/grants.py): it asks before each step
+        that changes something until it has run cleanly with the person again. SkillError when it isn't here."""
+        skill = self.get(skill_id)
+        if skill is None:
+            raise SkillError("That skill isn't here anymore.")
+        skill.state, skill.clean_runs = PRACTISING, 0
+        self._save()
+        return skill
+
     def delete(self, skill_id: str) -> None:
         """Forgets a skill (and stops its run, if it's the one running)."""
         if self.get(skill_id) is None:
@@ -579,25 +613,33 @@ def _finish(book: SkillBook, skill: Skill, run: Run, failed: str = "", declined:
 def _needs_yes(context, skill: Skill, step: dict) -> bool:
     """Whether a step waits for the person's yes before it runs. While the skill is practising: every action
     step, and every tool that may change records. Always, learned or not: an action kind that always asks, a tool
-    the registry marks destructive, and a tool whose name says it pays, sends or deletes."""
+    the registry marks destructive, a tool whose name says it pays, sends or deletes, and anything its app's manifest
+    tiers at the person's yes (core/grants.py)."""
     from core.main_thread import changes_records
 
+    from core import grants
+
     if step["kind"] == "action":
-        return skill.state != LEARNED or always_asks(step.get("action"))
+        return (skill.state != LEARNED or always_asks(step.get("action"))
+                or grants.tier_of(str(step.get("action"))) == grants.WITH_APPROVAL)
     if step["kind"] == "tool":
         name = str(step.get("tool") or "")
         registry = getattr(context, "assistant_actions", None)
         if (registry is not None and registry.is_destructive(name)) or _TOOL_ALWAYS.search(name):
+            return True
+        if grants.tier_of(name) == grants.WITH_APPROVAL:
             return True
         return skill.state != LEARNED and changes_records(name)
     return False
 
 
 def _cannot(context, step: dict) -> str:
-    """Why an action step can't be done right now, in the action's own words ("" when it can, or for a tool):
-    its describe runs the same checks its screen would."""
+    """Why a step can't be done right now ("" when it can): it's something only the person ever does (a `never`
+    tier), or, for an action, the action's own words (its describe runs the same checks its screen would)."""
     from core.actions import ACTION_TYPES
 
+    if never_hers(step):
+        return "that's only ever done by you, never by me"
     if step["kind"] != "action":
         return ""
     try:
@@ -609,18 +651,19 @@ def _cannot(context, step: dict) -> str:
     return ""
 
 
-def _do(context, step: dict, approved: bool = False) -> tuple[str, str]:
+def _do(context, step: dict, approved: bool = False, standing: bool = False) -> tuple[str, str]:
     """Runs a tool or action step through its own gate: (what happened, "" or why it failed). A tool goes through
     the registry; an action through the action contract (propose, approve) when this MIA has one, so it's checked
-    and can be undone. A tool the person hasn't said yes to runs under `guard`: if it reached for an action that
-    always asks, nothing was done and the reason is `_NEEDS_YES`."""
+    and can be undone. A tool the person hasn't said yes to runs under `guard`: if it reached for an action the
+    grant check holds back (one that always asks, or a change before the skill is learned: `standing`), nothing was
+    done and the reason is `_NEEDS_YES`."""
     from core.actions import ActionError, run_as_tool
 
     if step["kind"] == "tool":
         registry = getattr(context, "assistant_actions", None)
         if registry is None:
             return "", "my tools aren't available here"
-        held = {"blocked": None}
+        held = {"blocked": None, "standing": standing}  # standing: the skill is learned, its grant (core/grants.py)
         token = _UNAPPROVED.set(None if approved else held)
         try:
             said = str(registry.execute(context, step["tool"], dict(step.get("arguments") or {})))
@@ -644,7 +687,8 @@ def _do(context, step: dict, approved: bool = False) -> tuple[str, str]:
 
 def _advance(context, book: SkillBook, skill: Skill, run: Run, approved: bool = False) -> dict:
     """Runs steps from where the run is until it needs the person or ends. `approved` means the person just said
-    yes to the step it was waiting on."""
+    yes to the step it was waiting on. A step that's never hers to do (its tier, core/grants.py) stops the run, yes or
+    no; a learned skill's steps run under its grant (`standing`)."""
     while run.at < len(skill.steps):
         step = _fill(skill.steps[run.at], run.answers)
         kind = step["kind"]
@@ -657,7 +701,7 @@ def _advance(context, book: SkillBook, skill: Skill, run: Run, approved: bool = 
             run.waiting = {"kind": "you", "text": f"Over to you: {step['what']}. Tell me when it's done."}
             return _result(book, run, "waiting")
         else:
-            if _needs_yes(context, skill, step) and not approved:
+            if never_hers(step) or (_needs_yes(context, skill, step) and not approved):
                 refused = _cannot(context, step)
                 if refused:  # never ask for a yes to something that can't be done
                     run.clean = False
@@ -665,7 +709,7 @@ def _advance(context, book: SkillBook, skill: Skill, run: Run, approved: bool = 
                     return _finish(book, skill, run, failed=refused)
                 run.waiting = {"kind": "confirm", "text": f"{say_step(context, step)}. OK?"}
                 return _result(book, run, "waiting")
-            said, failed = _do(context, step, approved)
+            said, failed = _do(context, step, approved, standing=skill.state == LEARNED)
             approved = False
             if failed == _NEEDS_YES:  # the tool reached for something that always asks (`guard`)
                 run.waiting = {"kind": "confirm", "text": f"{say_step(context, step)}. OK?"}

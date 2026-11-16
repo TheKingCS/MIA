@@ -2,12 +2,14 @@
 tests.test_grants
 ===================
 
-Tiers and the grant check, watching only (DEC-0156, proposed; migration phase M4; core/grants.py): every tool and
+Tiers, grants and the grant check (DEC-0156, approved; migration phase M4; core/grants.py): every tool and
 action kind has a tier in its app's manifest; the kinds that always ask are tiered at the person's yes, so there is
 one classification; a person's own press is always theirs; on MIA's own initiative reading and drafting are allowed,
 a change needs a grant, and paying, sending or deleting needs the person's yes whatever was granted; the tools that
-carry outside text are tagged and are exactly the ones the model's handling knows; the hook in the action contract
-watches, counts and never stops anything; and the registry refuses a capability without a tier.
+carry outside text are tagged and are exactly the ones the model's handling knows; the check is enforced where her
+initiative reaches a change (a skill's step asks until the skill is learned, a learned one still asks to pay and
+never does what's never hers); a learned skill and a published workflow are the grants, listed and taken back; nothing
+gives a grant but earning or approving it; and the registry refuses a capability without a tier.
 """
 
 import pytest
@@ -101,23 +103,108 @@ def test_no_tool_reads_outside_sources_without_being_tagged(registry):
     assert missed == []
 
 
-def test_the_hook_in_the_action_contract_watches_counts_and_never_stops_anything(monkeypatch):
+def _skill_context(tmp_path):
+    """A context with a skill book, a kind that changes a record (zz.note) and one that pays (zz.pay)."""
+    from types import SimpleNamespace
+
+    from core.taught_skills import SkillBook
+
+    context = SimpleNamespace(assistant_actions=None, actions=None, creations=None)
+    context.taught_skills = SkillBook(context, data_dir=tmp_path)
+    return context
+
+
+@pytest.fixture
+def kinds(monkeypatch):
+    """Two stand-in action kinds with tiers: zz.note (within a grant) and zz.pay (the person's yes); `ran` counts."""
+    from core import actions
+
+    ran = []
+    for kind, tier in (("zz.note", WITHIN_GRANT), ("zz.pay", WITH_APPROVAL), ("zz.sign", NEVER)):
+        monkeypatch.setitem(actions.ACTION_TYPES, kind, actions.ActionType(
+            kind, kind, {}, lambda c, p, k=kind: f"Do {k}", lambda c, p, k=kind: ran.append(k) or f"Did {k}."))
+        monkeypatch.setitem(grants.tiers(), kind, tier)
+    monkeypatch.setattr(grants, "_would_refuse", {})
+    return ran
+
+
+def test_the_check_holds_mias_initiative_and_never_the_persons(kinds):
     from core import actions, taught_skills
 
-    monkeypatch.setattr(grants, "_would_refuse", {})
-    ran = []
-    kind = actions.ActionType("zz.pay", "Pay", {}, lambda c, p: "Pay it", lambda c, p: ran.append(1) or "Paid.")
-    monkeypatch.setitem(actions.ACTION_TYPES, "zz.pay", kind)
-    monkeypatch.setitem(grants.tiers(), "zz.pay", WITH_APPROVAL)
-    assert actions.run_as_tool(None, "zz.pay", {}) == "Paid." and grants.report() == {}  # the person asked
-    token = taught_skills._UNAPPROVED.set({})
-    try:
-        said = actions.run_as_tool(None, "zz.pay", {})  # a skill's step, not said yes to: the skill's own guard stops it
-    finally:
-        taught_skills._UNAPPROVED.reset(token)
-    assert said == "That step needs your yes first." and grants.report() == {"zz.pay": 1} and len(ran) == 1
-    monkeypatch.setattr(grants, "decide", lambda *a, **k: 1 / 0)
-    assert grants.observe("zz.pay", MIA).allowed  # watching that fails never breaks the change
+    assert actions.run_as_tool(None, "zz.pay", {}) == "Did zz.pay."  # the person asked: theirs to do
+    for standing, kind, runs in ((False, "zz.note", False), (True, "zz.note", True), (True, "zz.pay", False),
+                                 (True, "zz.sign", False)):
+        held = {"blocked": None, "standing": standing}
+        token = taught_skills._UNAPPROVED.set(held)
+        try:
+            said = actions.run_as_tool(None, kind, {})
+        finally:
+            taught_skills._UNAPPROVED.reset(token)
+        assert (said == f"Did {kind}.") is runs and (held["blocked"] is None) is runs, (standing, kind)
+    assert grants.report() == {"zz.note": 1, "zz.pay": 1, "zz.sign": 1}
+
+
+def test_a_skill_asks_before_each_change_until_it_is_learned_and_its_grant_can_be_taken_back(tmp_path, kinds):
+    from core import grant_actions, taught_skills  # noqa: F401  (the take-back kind registers on import)
+    from core.actions import ACTION_TYPES
+
+    context = _skill_context(tmp_path)
+    skill = context.taught_skills.add("Friday reset", [{"kind": "action", "action": "zz.note", "params": {}}])
+    assert grants.standing(context) == []
+    for _ in range(taught_skills.CLEAN_RUNS):  # practising: it asks, the person says yes
+        assert taught_skills.start(context, skill.skill_id)["status"] == "waiting"
+        assert taught_skills.answer(context, "yes")["status"] == "done"
+    assert skill.state == taught_skills.LEARNED
+    [grant] = grants.standing(context)
+    assert grant.grant_id == f"skill:{skill.skill_id}" and grant.kind == "skill" and "1 step" in grant.covers
+    assert taught_skills.start(context, skill.skill_id, watched=False)["status"] == "done"  # learned: no asking
+    take = ACTION_TYPES["grant.take_back"]
+    assert "back to practising with you" in take.describe(context, {"grant": "friday reset"})
+    assert "back to practising" in take.execute(context, {"grant_id": grant.grant_id})
+    assert grants.standing(context) == [] and skill.state == taught_skills.PRACTISING and skill.clean_runs == 0
+    assert taught_skills.start(context, skill.skill_id)["status"] == "waiting"  # it asks again
+    with pytest.raises(ValueError):
+        take.execute(context, {"grant_id": grant.grant_id})
+
+
+def test_a_learned_skill_still_asks_for_what_needs_a_yes_and_never_does_what_is_never_hers(tmp_path, kinds):
+    from core import taught_skills
+
+    context = _skill_context(tmp_path)
+    pay = context.taught_skills.add("Pay it", [{"kind": "action", "action": "zz.pay", "params": {}}])
+    sign = context.taught_skills.add("Sign it", [{"kind": "action", "action": "zz.sign", "params": {}}])
+    pay.state = sign.state = taught_skills.LEARNED
+    assert taught_skills.start(context, pay.skill_id)["status"] == "waiting" and kinds == []
+    assert taught_skills.answer(context, "yes")["status"] == "done" and kinds == ["zz.pay"]
+    stopped = taught_skills.start(context, sign.skill_id)
+    assert stopped["status"] == "stopped" and "only ever done by you" in " ".join(stopped["said"]) and kinds == ["zz.pay"]
+
+
+def test_a_published_workflow_is_a_grant_listed_with_what_it_may_do_and_put_away_when_taken_back(tmp_path):
+    from types import SimpleNamespace
+
+    retired = []
+    spec = {"kind": "workflow", "limits": {"adds_per_run": 2},
+            "steps": [{"step": "tell", "text": "x"}, {"step": "add", "to": "creation:C-0001", "values": {}}]}
+    store = SimpleNamespace(published=lambda: [{"id": "C-0002", "title": "Weekly tally"}, {"id": "C-0001", "title": "A screen"}],
+                            shown=lambda i: {"spec": spec if i == "C-0002" else {"kind": "screen"}},
+                            retire=lambda i: retired.append(i))
+    context = SimpleNamespace(taught_skills=None, creations=store)
+    [grant] = grants.standing(context)
+    assert grant.grant_id == "workflow:C-0002" and "add up to 2 record(s) a run to C-0001" in grant.covers
+    assert grants.find(context, "weekly") == grant and grants.find(context, "nothing like it") is None
+    assert "put away" in grants.take_back(context, grant.grant_id) and retired == ["C-0002"]
+
+
+def test_nothing_gives_a_grant_but_earning_or_approving_it():
+    """No action kind and no tool gives a grant (DEC-0156: untrusted text can never grant)."""
+    from core import parity
+    from core.actions import ACTION_TYPES
+
+    assert [k for k in ACTION_TYPES if k.startswith("grant.")] == ["grant.take_back"]
+    names = [n for n in parity.desktop_registry()._actions if "grant" in n]
+    assert sorted(names) == ["list_grants", "take_back_grant"]
+    assert grants.tier_of("grant.take_back") == WITH_APPROVAL and grants.tier_of("take_back_grant") == WITH_APPROVAL
 
 
 def test_the_registry_refuses_a_capability_without_a_tier_or_below_what_it_must_be(registry):

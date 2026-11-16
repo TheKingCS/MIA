@@ -9,6 +9,8 @@ model's guess):
 - "Which app can monitor energy?", "which app has add_watch?" (`which_app`).
 - "Is anything wrong with my apps?" (`check_my_apps`): failing parts first, then overlaps and gaps, marked as
   suggestions.
+- "What can you do on your own?" (`list_grants`) and "take back the Friday reset" (`take_back_grant`): her grants
+  (DEC-0156, core/grants.py).
 The Apps page shows the same (its "Her apps, checked" section).
 """
 
@@ -51,8 +53,50 @@ def _check(context, arguments: dict) -> str:
     return app_ecosystem.check_sentence(app_ecosystem.registry(), context)
 
 
+def _grants(context, arguments: dict) -> str:
+    """Tool list_grants: what MIA may do on her own, each with how the person gave it."""
+    from core import grants
+
+    found = grants.standing(context)
+    if not found:
+        return ("Nothing yet. I ask before every change, until you teach me a skill and it runs cleanly with you, or "
+                "you publish a workflow. Paying, sending and deleting always need your yes.")
+    said = "; ".join(f"{g.name} ({'a skill' if g.kind == 'skill' else 'a workflow'}: {g.covers}; {g.how})" for g in found)
+    return f"On my own I may run: {said}. Paying, sending and deleting always need your yes. You can take any of these back."
+
+
+def _take_back(context, arguments: dict) -> str:
+    """Tool take_back_grant: proposes `grant.take_back` for the one named."""
+    from core.actions import run_as_tool
+
+    return run_as_tool(context, "grant.take_back", {"grant": arguments.get("grant") or ""})
+
+
 def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
-    """Registers list_my_apps, describe_app, which_app and check_my_apps (domain app_registry, the Apps app's)."""
+    """Registers list_my_apps, describe_app, which_app, check_my_apps, list_grants and take_back_grant (domain
+    app_registry, the Apps app's). There is no tool that gives a grant (core/grant_actions.py says why)."""
+    registry.register(AssistantAction(
+        name="list_grants", domain="app_registry",
+        description=("What MIA may do on her own without asking: the skills she has learned and the workflows the "
+                     "person published, each with what it covers and how it was given."),
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_grants,
+        trigger_phrases=("what can you do on your own", "what may you do on your own", "what do you do without asking",
+                         "what are you allowed to do", "your permissions", "what have i granted", "my grants",
+                         "list grants", "what did i let you do"),
+        subjects=("permissions", "grants"),
+    ))
+    registry.register(AssistantAction(
+        name="take_back_grant", domain="app_registry",
+        description=("Take back something MIA may do on her own, by its name: a learned skill goes back to practising "
+                     "with the person; a workflow is put away."),
+        parameters={"type": "object", "properties": {
+            "grant": {"type": "string", "description": "The skill's or workflow's name."}}, "required": ["grant"]},
+        handler=_take_back, prompt_arg="grant",
+        trigger_phrases=("take back", "stop doing that on your own", "don't do that on your own", "revoke",
+                         "ask me first for"),
+        subjects=("permission", "grant"),
+    ))
     registry.register(AssistantAction(
         name="list_my_apps", domain="app_registry",
         description="Every app MIA has, by life area, and how many work on the PC, the phone, the glasses and by voice.",

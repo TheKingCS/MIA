@@ -35,15 +35,22 @@
     "tools": [
       "check_my_apps",
       "describe_app",
+      "list_grants",
       "list_my_apps",
+      "take_back_grant",
       "which_app"
     ],
-    "actions": [],
+    "actions": [
+      "grant.take_back"
+    ],
     "tiers": {
       "check_my_apps": "observe",
       "describe_app": "observe",
+      "list_grants": "observe",
       "list_my_apps": "observe",
-      "which_app": "act_within_grant"
+      "take_back_grant": "act_with_approval",
+      "which_app": "observe",
+      "grant.take_back": "act_with_approval"
     },
     "outside": []
   },

@@ -344,6 +344,10 @@
   "action:price": {
    "status": "none",
    "why": "a price recorded or a trip cost set is the person's own record; the prices loop (todo) judges what's kept"
+  },
+  "action:grant": {
+   "status": "none",
+   "why": "taking a grant back is the person's own decision about what MIA may do alone; nothing to improve by measuring it"
   }
  }
 }
