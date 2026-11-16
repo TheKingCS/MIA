@@ -38,7 +38,7 @@ Order: 1 first (it can change the base). Then 2, since 3, 4 and 5 build on its V
 | PoC 6, Landlock | **Passed.** Kernel 7.0 (Landlock version 8): a worker restricted to its granted folder read and wrote there, was refused everything else (another folder, `/etc`, the home folder), still imported Python modules; a second worker with a different grant saw only its own; file opens 6% slower |
 | PoC 2, the image (build half) | **Passed.** `os/Containerfile` builds on Fedora 45's KDE Atomic image and passes `bootc container lint`: kernel 7.3.3, Ollama 0.24.0 with **both** GPU paths from Fedora's own repositories (ROCm 7.2.2 and Vulkan), cage 0.3.1, MIA in a Python 3.13.18 environment under `/usr/lib/mia`, her user unit in place. Booting it, updating and rolling back is still to do (a VM) |
 | PoC 4, the runtime as a service (first half) | **Passed** after one fix: `deploy/install_runtime.sh` installed and started it as a systemd user service; it came up (95 services, 429 tools, 11 jobs), ran with no restarts and stopped cleanly on systemd's signal. The fix: on Linux with no sound server, the audio library's own error at import stopped the whole runtime (`core/voice_manager.py` now treats any audio failure as "no voice") |
-| The engine's suite on Linux | 6,523 passed, 1 failed: a test that assumed the machine sits in an American time zone (fixed); the code was right |
+| The engine's suite on Linux | **Passes** (rerun 2026-11-16 after fixing a test that assumed an American time zone; the code was right). All four jobs green in the same run |
 | PoC 1, the graphics card | Ready; needs Zac at the PC with a Fedora USB stick |
 | PoC 3, PoC 5, PoC 2's boot half | Not yet (need a virtual machine) |
 
