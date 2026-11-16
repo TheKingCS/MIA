@@ -130,35 +130,38 @@ REL), the MVP's scope, and the measured performance baselines on Zac's PC (PER).
 policy and which models (07), agents (08), the desktop's design (10, 11), the sync protocol (12), the threat model and
 encryption design (13), boot and update mechanics (14). Each requirement names its owner.
 
-**Unresolved and needing Zac** are in [OPEN_QUESTIONS](MIA_OS_REQUIREMENTS_OPEN_QUESTIONS.md) (Q-32 to Q-36).
+**Unresolved and needing Zac** were Q-32 to Q-36 ([OPEN_QUESTIONS](MIA_OS_REQUIREMENTS_OPEN_QUESTIONS.md)), all
+answered 2026-11-15 and 16. Still his to approve before Prompt 05's architecture rests on them: DEC-0154 (the
+intelligence stays OS-independent), DEC-0157 (the PC image) and DEC-0158 (the privileged helper).
 
 ## 7. Handoff to Prompt 05 (§35)
 
 1. **Definition:** a personal, AI-native operating environment on a standard Linux image, one node of a distributed
-   personal intelligence (DEC-0179, proposed).
+   personal intelligence (DEC-0179, approved).
 2. **Philosophy:** eighteen principles as a decision framework, with a conflict order: authority and safety, security
-   and privacy, reliability and the no-AI path, local-first, attention, maintainability (DEC-0180, proposed).
+   and privacy, reliability and the no-AI path, local-first, attention, maintainability (DEC-0180, approved).
 3. **Experience:** MIA's session by default, Plasma one choice away; every capability by screen and by voice; three
    modes (Ambient, Workspace, Immersive) over one runtime; Home from records with no model needed.
 4. **Functional, most important:** two sessions each usable alone (FUN-001); every change through the action contract
    (ARC-005); apps from manifests, isolated failures (FUN-040, REL-003); search across every store (FUN-061); plans
-   across apps shown step by step (FUN-220, R1); the greenhouse watched, never commanded (FUN-100).
+   across apps shown step by step (FUN-220, R1); the greenhouse watched (FUN-100) and its controllers adjustable through capabilities, the node keeping its own
+   limits (FUN-103, DEC-0185; corrected in Fable's review, 2026-11-16: this said "never commanded").
 5. **Non-functional, most important:** sealed stores and encrypted disk (SEC-001, 002); outside text never steers a
    change (SEC-005); no recording by default (PRV-001); answers within 2 to 3 s on the PC (PER-005, measured 0.3 to
    0.9 s); no MVP function needs the cloud or the internet (AI-011, REL-002).
 6. **Autonomy and trust:** five tiers enforced (built); a grant only from what he does; reversibility and reach on every
-   action and one stop (DEC-0181, proposed); one history of what she did, with undo (TRU-001).
+   action and one stop (DEC-0181, approved; the stop defined in AUTONOMY AND TRUST §4, never touching the greenhouse); one history of what she did, with undo (TRU-001).
 7. **Hardware:** the reference PC (Ryzen 7 9800X3D, RX 7900 XTX 24 GB, 32 GB, 1 TB NVMe) runs the 3B and 14B models
    comfortably; GPU compute on the chosen base must be proven first (HW-002).
-8. **MVP:** `MIA_OS_MVP_DEFINITION.md` (DEC-0182, proposed).
+8. **MVP:** `MIA_OS_MVP_DEFINITION.md` (DEC-0182, approved).
 9. **Constraints Prompt 05 must hold to:** REQ-ARC-001 to 015, above all: the OS never depends on MIA (002); the
    platform runs unchanged on four OSes (003); one runtime per person owns the state (004); system changes only
    through the helper (010); the image built from the repository with rollback (011); one-way layering (012).
-10. **Unresolved:** Q-32 to Q-36 for Zac; T-10 (Ubuntu or Fedora: the GPU decides), T-11 (the 32B's speed), T-12
+10. **Unresolved:** T-10 (Ubuntu or Fedora: the GPU decides), T-11 (the 32B's speed), T-12
     (boot targets), T-13 and T-14 (accessibility and the shell in the cage session).
 11. **What must guide Prompt 05:** the OS layer is small and conventional; everything MIA-specific is a user service
     and a session on top; the runtime's process model, its IPC (T-02), its adapters for keys, power, audio and
     notifications (DEC-0154), the helper's operation list (DEC-0158), and how a session falls back to Plasma and
     recovery (UX-020 to 023) are Prompt 05's to design against these rows.
 
-Prompt 04 stops here; Prompt 05 waits for Zac's review and go.
+Prompt 04 stops here. Zac answered its questions (2026-11-15, 16) and gave Prompt 05 to Fable (DEC-0166).

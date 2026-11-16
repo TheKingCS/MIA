@@ -90,6 +90,20 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   21. appearance A6 (web/*.css onto tokens, --on-accent, the green and amber buttons, the apps' colours in tokens.css, the three new tests);
   22. appearance A7's first part (core/theme_picture.py, core/theme_design.adjust, /api/themes/picture, the two tools, From a Picture);
   23. A7's ambient motion (display.ambient, core/homeostasis.easing_now, shell.js's ambient(), themes.css's .theme-ambient). Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  **Items 14 to 23 reviewed by Fable, 2026-11-16 (K-0261). What changed:**
+  - 14 (app status), 16 to 21 (the appearance plan, A2 to A6), 23 (ambient motion): read against the code; no change
+    needed. Checked on the way: the desktop's browser engine (Chromium 140) has `color-mix()`, which A6 leans on.
+  - 15 (Prompt 04): its handoff to Prompt 05 still said the greenhouse is "never commanded" (DEC-0185 changed that)
+    and called DEC-0179 to DEC-0182 proposed (approved); corrected. Sampled "Exists" claims hold.
+  - 18 and 22 (glass readability): the check that text reads on every glass tier ran only in tests on the built-in
+    themes; `build_theme` now refuses a saved, imported, designed or picture-made glass theme that fails it.
+  - 22 (a theme from a picture): only PNG, JPEG and WebP are decoded (Pillow's other decoders include ones that run
+    outside programs); the pixel cap is checked from the file's header instead of changing Pillow's own limit for
+    every other user of it; "make it warmer" alone no longer reaches the theme (it may be about the heat): every
+    phrase of `adjust_theme` names the theme, the colours or the look.
+  - Left as it is, for Zac if he cares: a pure vivid yellow accent (hue near 60) passes the meaning-colour check,
+    though "yellow" by name is refused; DEC-0184 (the appearance engine) is built but still marked proposed.
+  New Opus work joins a fresh list below this line.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

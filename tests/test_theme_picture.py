@@ -7,7 +7,9 @@ and the theme in use nudged by plain words (core/theme_design.adjust). The refer
 to Aquatic; a sunset's orange never becomes the accent (it colours the room instead) and says so; a grey picture keeps
 Aquatic's accent; a file that isn't a picture, or is too big, is refused with a sentence; every result passes
 build_theme's checks. By voice, a painting becomes a theme that's saved and used, and "darker and warmer" changes the
-theme in use; the Appearance page offers From a Picture.
+theme in use; the Appearance page offers From a Picture. From Fable's review: only PNG, JPEG and WebP are decoded, a
+huge picture is refused from its header, a glass theme that can't be read is refused when saved, and a bare "make it
+warmer" never reaches the theme.
 """
 
 import colorsys
@@ -152,3 +154,43 @@ def test_the_appearance_page_offers_a_theme_from_a_picture():
     assert "From a Picture" in studio and "MIA.themeFromPicture" in studio and "readAsDataURL" in studio
     assert '"/api/themes/picture"' in (ROOT / "web" / "mia.js").read_text(encoding="utf-8")
     assert '"/api/themes/picture"' in (ROOT / "server" / "app.py").read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------- Fable's review (2026-11-16)
+
+
+def test_only_png_jpeg_and_webp_are_decoded_and_a_huge_picture_is_refused_from_its_header(monkeypatch):
+    from PIL import Image
+
+    for fmt in ("GIF", "BMP", "TIFF"):
+        out = io.BytesIO()
+        Image.new("RGB", (8, 8), (20, 120, 200)).save(out, fmt)
+        with pytest.raises(ValueError, match="can't read that"):
+            theme_picture.from_image(out.getvalue())
+    limit = Image.MAX_IMAGE_PIXELS
+    monkeypatch.setattr(theme_picture, "MAX_PIXELS", 100)
+    with pytest.raises(ValueError, match="too large"):
+        theme_picture.from_image(_stripes([((4, 20, 40), 40)]))
+    assert Image.MAX_IMAGE_PIXELS == limit  # reading a picture never changes Pillow's own limit for everyone else
+
+
+def test_a_glass_theme_whose_text_cant_be_read_on_its_glass_is_refused_when_saved():
+    base = themes.clean_theme(themes.as_data(themes.THEMES["aquatic"]))
+    picks = dict(themes.choices_of(base), text="#8a97a3", background="#05070a", panel="#0c1016")
+    assert themes.contrast(picks["text"], picks["panel"]) >= 4.5  # passes the plain check
+    lit = dict(base, tokens={**base["tokens"], "--surface-primary-alpha": "0.9", "--surface-primary-tint": "0.2",
+                             "--rgb-panel": "70, 80, 90"})
+    with pytest.raises(ValueError, match="hard to read on this theme's glass"):
+        themes.build_theme(dict(picks, panel="#46505a", text="#c0c8d0", background="#05070a"), lit)
+
+
+def test_a_bare_make_it_warmer_never_reaches_the_theme():
+    from core.assistant_accessibility_actions import register_accessibility_actions
+    from core.assistant_actions import AssistantActionRegistry
+
+    registry = AssistantActionRegistry()
+    register_accessibility_actions(registry)
+    phrases = registry._actions["adjust_theme"].trigger_phrases
+    for said in (" make it warmer in here ", " a bit cooler please ", " make it darker "):
+        assert not any(p in said for p in phrases), said
+    assert any(p in " make the theme warmer " for p in phrases)

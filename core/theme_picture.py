@@ -27,7 +27,8 @@ How the colours are chosen:
 - the text is a near-white tinted toward the field, the lines between the
   accent and the text, the room's palette the picture's vivid colours.
 
-Pictures are read through a small thumbnail and a pixel cap, so a huge or
+Pictures are read through a small thumbnail, as PNG, JPEG or WebP only, with
+a byte cap and a pixel cap checked from the file's header, so a huge, odd or
 broken file is refused with a sentence rather than read in full.
 """
 
@@ -41,7 +42,8 @@ from typing import Optional, Union
 from core.themes import THEMES, accent_problem, as_data, choices_of, contrast, mix
 
 MAX_BYTES = 12 * 1024 * 1024  # a phone photo fits; anything bigger is refused, not read
-MAX_PIXELS = 50_000_000
+MAX_PIXELS = 50_000_000  # refused from the header's size, so a small file can't unpack into a huge one
+FORMATS = ("PNG", "JPEG", "WEBP")
 BASE = "aquatic"  # the glass the picture's colours go onto (DEC-0183)
 TINTED = 0.08  # below this saturation a colour is grey, and its hue is noise
 
@@ -63,14 +65,14 @@ def _hls(rgb: tuple) -> tuple[float, float, float]:
 
 
 def _open(source: Union[bytes, Path]):
-    """The picture as a small RGB thumbnail; ValueError with a sentence when it can't be read (or this device has no
-    image library: the phone's build may not)."""
+    """The picture as a small RGB thumbnail, decoded only as PNG, JPEG or WebP and only when its header says it's
+    within MAX_PIXELS; ValueError with a sentence when it can't be read (or this device has no image library: the
+    phone's build may not)."""
     try:
         from PIL import Image
     except ImportError:
         raise ValueError("Reading a picture's colours needs the PC. Try it there.") from None
 
-    Image.MAX_IMAGE_PIXELS = MAX_PIXELS
     try:
         data = Path(source).read_bytes() if isinstance(source, (str, Path)) else bytes(source)
     except OSError:
@@ -80,7 +82,15 @@ def _open(source: Union[bytes, Path]):
     if len(data) > MAX_BYTES:
         raise ValueError(f"That picture is too big to read (over {MAX_BYTES // (1024 * 1024)} MB). Try a smaller copy.")
     try:
-        image = Image.open(io.BytesIO(data))
+        # Only these three decoders: Pillow's others include ones that run outside programs (EPS) or are rarely
+        # exercised, and a picture can come from the page (Fable's review, 2026-11-16).
+        image = Image.open(io.BytesIO(data), formats=FORMATS)
+    except Exception:  # Pillow raises many kinds for a file that isn't a picture
+        raise ValueError("MIA can't read that as a picture. Try a JPEG or PNG.") from None
+    width, height = image.size
+    if width * height > MAX_PIXELS:  # read from the header, before anything is decoded
+        raise ValueError("That picture is too large to read. Try a smaller copy.")
+    try:
         image.draft("RGB", (320, 320))  # JPEGs decode small
         image = image.convert("RGB")
         image.thumbnail((160, 160))

@@ -1,6 +1,6 @@
 # MIA OS: the minimum viable MIA OS (Prompt 04, deliverable 12, with §25 to §27)
 
-*Claude (Opus), 2026-11-15. Planning only. Recommended as DEC-0182 (proposed). The requirements tagged `MVP` in the
+*Claude (Opus), 2026-11-15. Planning only. DEC-0182, approved 2026-11-15. The requirements tagged `MVP` in the
 specification are this release; `R1` is the first Zac could use as his only PC system every day.*
 
 ## 1. What belongs where (§25)

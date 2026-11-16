@@ -6,7 +6,7 @@ requirements and adds what the OS needs. Prompt 08 designs agents on it; Prompt 
 
 ## 1. The levels (§11), onto the tiers that exist
 
-The prompt's seven levels map onto DEC-0156's five tiers without a new one. **Recommendation (DEC-0181, proposed):
+The prompt's seven levels map onto DEC-0156's five tiers without a new one. **DEC-0181 (approved 2026-11-15):
 keep the five tiers; add two properties instead of more levels**, because the seven mix two different things: how far
 she may go (the tier), and who started it (the person or her).
 

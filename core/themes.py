@@ -683,8 +683,8 @@ def choices_of(theme: dict) -> dict:
 def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", name: str = "") -> dict:
     """Pure logic. A whole theme (cleaned) from the Studio's choices, on top of a base theme's other tokens (its
     backdrop gradient, label spacing, motion), with the backdrop picture the choices name (DEC-0140). Raises ValueError
-    when a colour isn't #rrggbb, the accent would read as a meaning colour, or the text and background are under
-    4.5:1."""
+    when a colour isn't #rrggbb, the accent would read as a meaning colour, the text and background are under
+    4.5:1, or (a glass theme) the text on any glass tier as it really shows is (core/appearance.readability_problems)."""
     c = {**STARK_CHOICES, **{k: v for k, v in (choices or {}).items() if v is not None}}
     for key in ("accent", "background", "panel", "text", "line"):
         if not _HEX.match(str(c[key])):
@@ -731,6 +731,12 @@ def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", 
     data["choices"]["palette"] = palette
     data["choices"]["backdrop"] = art if _ART_ID.match(art) else ""
     data["choices"]["sound"] = data["sound"]
+    from core.appearance import readability_problems  # late: appearance is built on this module
+
+    faint = readability_problems(data)  # the glass tiers as they really show (DEC-0184; Fable's review, 2026-11-16)
+    if faint:
+        raise ValueError(f"The text would be hard to read on this theme's glass ({faint[0]}). Make the text lighter "
+                         "or the panels darker.")
     return data
 
 

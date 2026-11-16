@@ -42,7 +42,7 @@ The intelligence (the model) sits beside layer 2, not in it: it proposes and phr
 | A distributed personal AI ecosystem | **yes** | One MIA on the PC, phone, glasses and later the Pi and truck, each device showing her as it can (DEC-0125). |
 | An intelligent personal computing platform | **yes** | Apps are capabilities on one platform (DEC-0175); she can build more (Forge, prompt 22). |
 
-**Recommended identity (DEC-0179, proposed):** *a personal, AI-native operating environment on a standard Linux image,
+**The identity (DEC-0179, approved 2026-11-15):** *a personal, AI-native operating environment on a standard Linux image,
 which is one node of a distributed personal intelligence.* All three parts matter: personal (one owner, his data, his
 rules), AI-native environment (not a new kernel or distribution), one node (the PC is the strongest home of a MIA that
 also lives on other devices).

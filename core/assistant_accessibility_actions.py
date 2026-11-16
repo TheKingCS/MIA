@@ -342,7 +342,8 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme,
     set_color_scheme and set_layout (the look's other two choices, core/appearance.py; set_layout also takes the
     background's motion, A7), tweak_theme, mix_themes,
-    design_theme, theme_from_picture and adjust_theme (A7), delete_theme and read_screen, and the painting tools
+    design_theme, theme_from_picture and adjust_theme (A7; its phrases each name the theme, colours or look),
+    delete_theme and read_screen, and the painting tools
     (core/assistant_art_actions.py)."""
     from core.assistant_art_actions import register_art_actions
 
@@ -484,10 +485,14 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
             "how": {"type": "string", "description": "the change in the user's words: 'darker and warmer'."},
         }, "required": ["how"]},
         handler=_action_adjust_theme, prompt_arg="how",
+        # Every phrase names the theme, the colours or the look: a bare "make it warmer" may be about the heat
+        # (Fable's review, 2026-11-16).
         trigger_phrases=("theme darker", "theme lighter", "theme warmer", "theme cooler", "theme brighter",
-                         "theme calmer", "make it darker", "make it warmer", "make it cooler", "a bit darker",
-                         "a bit warmer", "a bit cooler", "colours warmer", "colors warmer", "colours cooler",
-                         "colors cooler", "more muted", "calmer colours", "calmer colors"),
+                         "theme calmer", "theme softer", "theme more contrast", "colours warmer", "colors warmer",
+                         "colours cooler", "colors cooler", "colours darker", "colors darker", "colours brighter",
+                         "colors brighter", "calmer colours", "calmer colors", "muted colours", "muted colors",
+                         "look darker", "look warmer", "look cooler", "look calmer", "darker theme", "warmer theme",
+                         "cooler theme", "calmer theme", "brighter theme"),
     ))
     registry.register(AssistantAction(
         name="delete_theme", domain="accessibility",
