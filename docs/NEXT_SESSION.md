@@ -20,6 +20,17 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   to DEC-0195 proposed. **Waiting on Zac: Q-47 to Q-51**, above all Q-49: six proofs of concept described and not
   run, one of which needs him at the PC with a Fedora USB stick (it decides the foundation). Prompt 06 waits for
   his review and go; it is not started.
+- **Zac's answers the same day** (Q-43 to Q-51): the PC's base approved (DEC-0189, with DEC-0154, 0157, 0158),
+  test both compositors leaning to KDE's, always the password, MIA runs when he's signed out, the shelf keeps
+  only what's sent, Opus starts prompt 23's work. Q-44 open (he asked why; answered in chat). Q-45 answered: one
+  browser, MIA's becomes his everyday one (DEC-0196 proposed); **its four safety rules wait on Q-52.**
+- **Proofs of concept, first results** (GitHub's Linux machines; `os/`, `.github/workflows/mia-os-poc.yml`):
+  Landlock passed; the Fedora 45 image builds and passes bootc's lint with Ollama ROCm and Vulkan from Fedora;
+  the runtime runs as a user service; the suite passes on Linux. Bug found and fixed: no sound server stopped
+  the runtime. **Zac at the PC: the graphics card test, `os/poc/README.md`.** Still to do: a VM for booting the
+  image, the session test (PoC 3) and the helper (PoC 5).
+- **Opus's independent review of prompt 23** is done (the review's section 14). **Next on Opus: UI-1, the run
+  record**, browser routines first (their waiting step is lost on a restart).
 - **For the next session:** nothing of Fable's is queued until Zac answers. Opus can take prompt 23's independent
   review, Procurement P3, or Forge (M7).
 

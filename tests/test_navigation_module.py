@@ -58,9 +58,17 @@ def test_sun_moon_summary_for_real_coordinates_has_sensible_shape():
 
     sunrise_hour = int(lines[0].split(": ")[1].split(":")[0])
     sunset_hour = int(lines[1].split(": ")[1].split(":")[0])
-    # Mid-July in New York: sunrise well before noon, sunset well after.
-    assert 4 <= sunrise_hour <= 7
-    assert 18 <= sunset_hour <= 22
+    # Times are in the device's own clock (it's where the person is), so the expectation is too: mid-July in New
+    # York the sun rises about 09:30 and sets about 00:30 UTC, whatever zone this machine is in (Linux CI runs on
+    # UTC; 2026-11-16).
+    from datetime import datetime, timedelta, timezone
+
+    def local_hours(utc: datetime) -> set:
+        """The local hours within half an hour either side of a UTC moment."""
+        return {(utc + timedelta(minutes=m)).astimezone().hour for m in (-30, 0, 30)}
+
+    assert sunrise_hour in local_hours(datetime(2026, 7, 12, 9, 30, tzinfo=timezone.utc))
+    assert sunset_hour in local_hours(datetime(2026, 7, 13, 0, 30, tzinfo=timezone.utc))
 
 
 def test_sun_moon_summary_moon_phase_is_a_known_name():

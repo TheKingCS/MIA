@@ -8,7 +8,7 @@ report that found it. Rated H, M or L.*
 | R-01 | Runtime lives in the Qt process | H | H | Prompt 01 | any OS work | Claude (engine) |
 | R-02 | No Linux or Android key backend for at-rest sealing | H | H | Prompt 01 | data on Linux | Claude |
 | R-05 | No capability or grant model for system actions | H | H | Prompt 01 | any system action | Prompt 08/13 |
-| R-07 | No Linux CI | H | H | Prompt 01 | OS work | Prompt 15 |
+| R-07 | No Linux CI | H | H | Prompt 01 | OS work | Prompt 15 **Partly met 2026-11-16:** the suite runs on Linux in `.github/workflows/mia-os-poc.yml` (on changes to the OS files) |
 | R-06 | Test isolation: the at-rest key reset leaks between tests | M | H | Prompt 01 | Linux CI | Claude |
 | R-04 | Unsandboxed modules and scripts | H | M | Prompt 01 | third-party apps | Prompt 03 proposes out-of-process extensions (DEC-0176); Prompt 13 designs the sandbox |
 | R-08 | Builds aren't reproducible | M | H | Prompt 01 | image builds | Prompt 15 |

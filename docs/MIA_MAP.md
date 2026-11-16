@@ -5,10 +5,10 @@
 ## At a glance
 
 - **Architecture** — 822 Python files across 561 core, 93 modules, 123 gui, 2 server, 43 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 194 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 195 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 262 dev entries (work/knowledge/).
+- **Knowledge she's written** — 263 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 49 personal + 42 household stores, 54 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (16): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195
+**PROPOSED** (17): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196
 **PROPOSED;** (1): DEC-0190
 
 <details><summary>Every decision</summary>
@@ -220,6 +220,7 @@
 - **DEC-0193** [PROPOSED] — Storage: Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var
 - **DEC-0194** [PROPOSED] — Privilege: a helper only for what Linux would ask an administrator for, confirmed in the OS's own dialog
 - **DEC-0195** [PROPOSED] — Resources and observability from Linux's own mechanisms
+- **DEC-0196** [PROPOSED] — One browser: MIA's browser becomes Zac's everyday browser
 
 </details>
 
@@ -227,7 +228,7 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 262 entries 37 lesson, 18 debugging, 20 decision, 9 method, 6 test-procedure, 3 failed-experiment, 167 implementation, 2 security-finding.
+- **Dev-knowledge** — 263 entries 37 lesson, 18 debugging, 20 decision, 9 method, 7 test-procedure, 3 failed-experiment, 167 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

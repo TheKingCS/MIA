@@ -11,6 +11,12 @@ session. Last updated: 2026-11-16 (the Fable run: reviews, and MIA OS Prompt 05)
 - **Waiting on Zac:** nine questions (Q-43 to Q-51). The one that unblocks the most: letting the tests run, one of which needs you to start the PC from a Fedora USB stick for an hour (nothing is installed) to measure your graphics card on MIA's models.
 - **Next:** your answers; then Prompt 06 (hardware) on Fable, and prompt 23's first steps on Opus.
 
+**2026-11-16, later (Claude on Opus: Zac's answers, and the first MIA OS tests).**
+- **Decided:** the PC's base is Fedora's KDE desktop as an image built from this repository; system changes always ask your password; MIA keeps running when you're signed out; the shelf keeps only what you send; one browser for you and MIA (its four safety rules wait on your yes, Q-52).
+- **Tested on GitHub's Linux machines:** the Fedora image builds with everything MIA needs from Fedora's own packages, including both of your graphics card's AI paths; MIA runs as a Linux service; the kernel can lock a MIA worker to the folders you allowed; and the whole test suite passes on Linux. A real bug turned up and is fixed: on a Linux machine with no sound server, MIA wouldn't start at all.
+- **Waiting on you at the PC:** the graphics card test from a Fedora USB stick (`os/poc/README.md`, about an hour, nothing installed).
+- **Next on Opus:** the run record (one record for anything with several steps), browser routines first.
+
 
 **2026-11-16 (Claude on Opus: the glass look's foundation).**
 - **Built:** the five kinds of glass surface (main panels, cards, dialogs and menus, hero panels, buttons and chips) now each have their own settings for see-through, blur, edge, light and shadow, so the coming Aquatic look and the other presets are just numbers. A dialog can never be made too see-through to read. Status chips keep their meaning colours. The current look is unchanged.
