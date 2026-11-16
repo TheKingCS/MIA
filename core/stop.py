@@ -1,0 +1,317 @@
+"""
+core.stop
+===========
+
+"Stop" and "stop everything" (REQ-AUT-010; DEC-0181, DEC-0185; Zac, Q-34 and Q-40: "we need to specify what stopping
+everything really means"; the definition is `docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md` section 4, and
+this module is that table in code). Prompt 23's review, UI-2, built on the run record (core/runs.py).
+
+**Recognised in code, never by a model** (`recognise`): the whole message is "stop" (or "stop it", "halt"...), "stop
+everything" (optionally "until tonight", "for two hours"), or, only while a stop-everything is on, "carry on".
+"Stop the timer" or "stop the skill" are other things and aren't taken here. The turn pipeline asks first, before
+anything else (core/assistant_turn.py), so it works when the model is slow, wrong or down, on every device.
+
+**"Stop"** (`stop_now`) ends what MIA is doing right now for the person: her speech, the taught skill she's running
+with them, and her browser tasks (a held step is let go, never pressed; the run ends at its step). Nothing is undone:
+what finished stays finished, each change with its Undo. Runs she started on her own, background jobs and her
+messages keep going.
+
+**"Stop everything"** (`stop_everything`) does that, and holds all of her own initiative until "carry on" or the
+time he named (`holding`): background jobs that change records or reach outside wait (`defer_reason`, asked by the
+scheduler and the daily checks; `JOBS_THAT_WAIT`, `CHECKS_THAT_WAIT`), her unprompted messages are held by the gate
+and offered when he resumes (urgent ones still come), and anything she'd start herself that changes a record is
+refused (`core/grants.require` asks `held_now`). It survives a restart: the hold is his own setting.
+
+**Never stopped, by either:** alarms and reminders he set, the safety floor, nightly backups, sync of what he
+changes, homeostasis's watching, and everything he asks or presses himself. **The greenhouse is never touched**
+(DEC-0185): its node's own control loop keeps running and settings already applied stay; this module has no call
+that reaches it. A device's state is left as it is.
+
+**Afterwards she says, from records** (`report`): what was running and where each thing stopped, and how to resume.
+"""
+
+from __future__ import annotations
+
+import re
+from datetime import datetime, timedelta
+from typing import Optional
+
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
+KEY = "mia.stop_everything"  # the person's setting: {"since", "until"} while a stop-everything is on, else None
+
+# Background jobs (core/background_jobs.JOBS) that wait while everything is stopped: they change records on her own
+# initiative or reach outside. The others never wait: alarms, the battery warning, the once-a-day tick itself, and
+# watching the connection (which is how "remind me when I'm back online" works).
+JOBS_THAT_WAIT = frozenset({"world_intel", "mission_auto_assignment", "inbox", "inbox_mail", "finance_snapshots",
+                            "homestead_snapshots", "lite_captures"})
+JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online"})
+# Daily checks (DAILY_CHECKS) that wait: her own work, things she makes or changes, and anything that goes online.
+# The rest only notice something and offer a message, which the gate holds until he resumes.
+CHECKS_THAT_WAIT = frozenset({"workflows", "night_school", "good_news", "chronicle", "chronicle_issue",
+                              "vault_captions", "dependency_audit", "system_map", "self_report", "capability_gaps",
+                              "seasons_of_memory", "loops", "fix_report", "findings", "rewards", "momentum"})
+# Never waiting, by name, because the definition says so: backups, the greenhouse's watch, reminders he set.
+CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "greenhouse", "grow_alert", "obligation_reminders", "loop",
+                                    "recurring_mission", "calendar_digest", "birthday", "warranty",
+                                    "insurance_renewal", "promises"})
+
+_STOP = re.compile(r"^\s*(?:hey\s+)?(?:mia[,:]?\s+)?(?:please\s+)?(?:stop|stop it|stop that|stop now|stop talking|halt|"
+                   r"that'?s enough,? stop|cancel that)\s*[.!]*\s*$", re.I)
+_EVERYTHING = re.compile(r"^\s*(?:hey\s+)?(?:mia[,:]?\s+)?(?:please\s+)?(?:stop|halt|pause|freeze)\s+"
+                         r"(?:everything|it all|all of it|all)\b\s*(.*?)\s*[.!]*\s*$", re.I)
+_CARRY_ON = re.compile(r"^\s*(?:hey\s+)?(?:mia[,:]?\s+)?(?:ok(?:ay)?[,]?\s+)?(?:please\s+)?(?:carry on|you can carry on|"
+                       r"go ahead again|resume everything|start again|you can start again|unpause)\s*[.!]*\s*$", re.I)
+_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "eight": 8, "twelve": 12}
+
+_held_until: Optional[datetime] = None  # this process's copy of the hold, for checks that have no context
+_held_known = False
+
+
+def until_from(words: str, now: Optional[datetime] = None) -> Optional[datetime]:
+    """Pure logic. When a stop-everything ends, from the words after it: "until tonight" (8 pm), "until tomorrow"
+    (8 am), "until noon", "until 5pm", "for two hours", "for 30 minutes"; None for no end (until he says)."""
+    now = now or datetime.now()
+    low = (words or "").lower()
+    m = re.search(r"for\s+(\d+|[a-z]+)\s*(minute|min|hour|hr|day)s?", low)
+    if m:
+        n = int(m.group(1)) if m.group(1).isdigit() else _NUMBERS.get(m.group(1))
+        if n:
+            unit = {"minute": "minutes", "min": "minutes", "hour": "hours", "hr": "hours", "day": "days"}[m.group(2)]
+            return now + timedelta(**{unit: n})
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if "tomorrow" in low or "morning" in low:
+        return day + timedelta(days=1, hours=8)
+    if "tonight" in low or "this evening" in low:
+        return max(day.replace(hour=20), now + timedelta(minutes=1))
+    if "noon" in low:
+        noon = day.replace(hour=12)
+        return noon if noon > now else noon + timedelta(days=1)
+    m = re.search(r"until\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", low)
+    if m:
+        hour = int(m.group(1)) % 12 + (12 if m.group(3) == "pm" else 0) if m.group(3) else int(m.group(1))
+        if hour < 24:
+            at = day.replace(hour=hour, minute=int(m.group(2) or 0))
+            return at if at > now else at + timedelta(days=1)
+    return None
+
+
+def recognise(prompt: str, holding_now: bool = False) -> Optional[tuple[str, str]]:
+    """Pure logic. ("stop", ""), ("everything", the words after it) or ("carry_on", "") when the whole message is one
+    of the commands, else None. "Carry on" counts only while a stop-everything is on (elsewhere it means other
+    things)."""
+    text = str(prompt or "")
+    m = _EVERYTHING.match(text)
+    if m:
+        return "everything", m.group(1) or ""
+    if _STOP.match(text):
+        return "stop", ""
+    if holding_now and _CARRY_ON.match(text):
+        return "carry_on", ""
+    return None
+
+
+# ------------------------------------------------------------------ the hold
+
+
+def _read(context) -> Optional[dict]:
+    """The person's hold as kept, or None."""
+    from core import person_settings
+
+    try:
+        value = person_settings.get(context, KEY, None)
+    except Exception:  # noqa: BLE001 - no settings here: no hold
+        return None
+    return value if isinstance(value, dict) and value.get("since") else None
+
+
+def state(context, now: Optional[datetime] = None) -> Optional[dict]:
+    """The stop-everything in force for this person ({"since", "until"}), or None; one whose time has passed is
+    lifted here. Keeps this process's copy current for `held_now`."""
+    global _held_until, _held_known
+    now = now or datetime.now()
+    value = _read(context)
+    if value and value.get("until"):
+        try:
+            if datetime.fromisoformat(value["until"]) <= now:
+                _write(context, None)
+                value = None
+        except ValueError:
+            pass
+    _held_known = True
+    _held_until = None if not value else (datetime.fromisoformat(value["until"]) if value.get("until") else datetime.max)
+    return value
+
+
+def holding(context, now: Optional[datetime] = None) -> bool:
+    """Whether a stop-everything is on for this person now."""
+    return state(context, now) is not None
+
+
+def held_now(now: Optional[datetime] = None) -> bool:
+    """Whether this process last saw a stop-everything in force (for checks with no context: core/grants.require).
+    False until something has asked `state`; the runtime asks at start and at every scheduler turn."""
+    return _held_known and _held_until is not None and (now or datetime.now()) < _held_until
+
+
+def _write(context, value: Optional[dict]) -> None:
+    """Keeps (or clears) the hold in the person's settings, outside "undo that": a stop isn't something an undo of
+    another change may lift."""
+    from core import person_settings
+    from core.undo_log import outside_undo
+
+    with outside_undo():
+        person_settings.put(context, KEY, value)
+
+
+# ------------------------------------------------------------------ the commands
+
+
+def quiet(context) -> None:
+    """Cuts off her speech at once. Safe from any thread and never raises, so the frame's Stop can call it before
+    waiting for a turn in progress to finish."""
+    voice = getattr(context, "voice", None)
+    if voice is None:
+        return
+    try:
+        voice.stop_playback()
+    except Exception:  # noqa: BLE001
+        log.exception("Stop: her speech didn't stop cleanly.")
+
+
+def stop_now(context) -> dict:
+    """"Stop": ends her speech, the skill she's running with the person and her browser tasks, after the step in
+    progress. Returns {"stopped": [what, in words], "left": [what keeps going]}. Never raises: a part that fails to
+    stop is logged and the rest still stop."""
+    stopped: list[str] = []
+    quiet(context)
+    try:
+        from core import taught_skills
+
+        book = getattr(context, "taught_skills", None)
+        if book is not None and book.active is not None:
+            skill = book.get(book.active.skill_id)
+            at = book.active.at + 1
+            if taught_skills.stop(context):
+                stopped.append(f"\"{skill.name if skill else 'the skill'}\" at step {at}")
+    except Exception:  # noqa: BLE001
+        log.exception("Stop: the skill didn't stop cleanly.")
+    try:
+        hub = getattr(context, "browsers", None)
+        browser = hub.for_person(context) if hub is not None else None
+        if browser is not None:
+            for pending_id, pending in list(browser.pending.items()):
+                browser.drop_pending(pending_id, "you said stop")
+                actions = getattr(context, "actions", None)
+                if actions is not None and pending.proposal_id:
+                    try:
+                        actions.reject(context, pending.proposal_id)
+                    except Exception:  # noqa: BLE001 - the held step is already gone
+                        pass
+                stopped.append(f"a browser step that was waiting ({pending.summary()}): not pressed")
+            if getattr(browser, "teaching", None) is not None:
+                name = browser.teaching.get("name", "a task")
+                browser.teaching = None
+                stopped.append(f"watching you for \"{name}\"")
+    except Exception:  # noqa: BLE001
+        log.exception("Stop: the browser didn't stop cleanly.")
+    try:
+        from core.runs import book as run_book
+
+        runs = run_book(context)
+        for run in (runs.open_runs() if runs is not None else []):
+            if run.source == "browser_routines":
+                runs.finish(run.run_id, "stopped", f"at step {run.at}: you said stop")
+                if not any(run.title in s for s in stopped):
+                    stopped.append(f"\"{run.title}\" at step {run.at}")
+    except Exception:  # noqa: BLE001
+        log.exception("Stop: the run book couldn't be updated.")
+    return {"stopped": stopped}
+
+
+def stop_everything(context, until: Optional[datetime] = None, now: Optional[datetime] = None) -> dict:
+    """"Stop everything": `stop_now`, and her own initiative held until he says "carry on" or `until`. Returns the
+    report's parts: {"stopped", "until"}."""
+    now = now or datetime.now()
+    done = stop_now(context)
+    _write(context, {"since": now.isoformat(timespec="seconds"),
+                     "until": until.isoformat(timespec="seconds") if until else ""})
+    state(context, now)
+    done["until"] = until
+    log.info("Stop everything is on%s.", f" until {until:%Y-%m-%d %H:%M}" if until else "")
+    return done
+
+
+def carry_on(context) -> bool:
+    """Lifts a stop-everything; whether one was on. Her held messages are offered at the gate's next turn."""
+    was = _read(context) is not None
+    _write(context, None)
+    state(context)
+    if was:
+        log.info("Stop everything is lifted.")
+    return was
+
+
+def defer_reason(context, name: str) -> str:
+    """Why a background job or daily check waits now ("" to run it): only while a stop-everything is on, and only the
+    ones that change records on her own or reach outside."""
+    if name in JOBS_THAT_WAIT or name in CHECKS_THAT_WAIT:
+        return "you asked me to stop everything" if holding(context) else ""
+    return ""
+
+
+# ------------------------------------------------------------------ what she says
+
+
+def _when(until: Optional[datetime], now: Optional[datetime] = None) -> str:
+    """Pure logic. "until 8:00 PM", "until tomorrow at 8:00 AM", or "until you say carry on"."""
+    if until is None:
+        return "until you say \"carry on\""
+    now = now or datetime.now()
+    clock = f"{until.hour % 12 or 12}:{until:%M} {'PM' if until.hour >= 12 else 'AM'}"
+    return f"until {clock}" if until.date() == now.date() else f"until {until:%A} at {clock}"
+
+
+def report(done: dict, everything: bool, now: Optional[datetime] = None) -> str:
+    """Pure logic. What she says after a stop, from what was stopped: each thing and where it stopped, that nothing
+    was undone, what's held (for stop everything), and how to resume."""
+    said = []
+    if done["stopped"]:
+        said.append("Stopped: " + "; ".join(done["stopped"]) + ".")
+        said.append("Nothing was undone: what finished stays, and you can undo any of it from Recent Changes.")
+    else:
+        said.append("Nothing of mine was running." if not everything else "Nothing was running.")
+    if everything:
+        said.append(f"I've stopped everything of my own {_when(done.get('until'), now)}: my background work waits and "
+                    "I'll hold what I'd have told you. Alarms, reminders you set, backups and the greenhouse carry on "
+                    "as they are, and I'll still do whatever you ask.")
+    elif done["stopped"]:
+        said.append("Start any of them again when you like.")
+    return " ".join(said)
+
+
+def handle(context, prompt: str) -> Optional[str]:
+    """The turn pipeline's first question: when the message is a stop command, does it and returns what she says;
+    else None."""
+    command = recognise(prompt, holding_now=_read(context) is not None)
+    if command is None:
+        return None
+    kind, rest = command
+    if kind == "carry_on":
+        carry_on(context)
+        return "Carrying on: my background work and messages are back. Anything I held comes through at its own pace."
+    if kind == "everything":
+        return report(stop_everything(context, until_from(rest)), everything=True)
+    return report(stop_now(context), everything=False)
+
+
+def for_shell(context) -> Optional[dict]:
+    """What the frame shows while a stop-everything is on: {"since", "until", "line"}, else None."""
+    value = state(context)
+    if not value:
+        return None
+    until = datetime.fromisoformat(value["until"]) if value.get("until") else None
+    return {"since": value["since"], "until": value.get("until", ""),
+            "line": f"Everything of MIA's own is stopped {_when(until)}."}

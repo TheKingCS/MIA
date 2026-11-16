@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1455 files, 325,032 lines; 1455 files describe themselves; 17,823 of 17,919 classes and functions are documented.
+1457 files, 325,649 lines; 1457 files describe themselves; 17,855 of 17,951 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-564 files, 162,518 lines; 8,366 of 8,452 classes and functions documented
+565 files, 162,887 lines; 8,385 of 8,471 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -446,6 +446,7 @@
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
 - `core/startup_sounds.py`: The startup sounds' names and which one is chosen (Zac, 2026-11-07: "sample some sounds and I will pick a good start up sound, and make it a togglable setting"). Kept apart from core/boot_sound.py, which makes the sounds with numpy, so Settings can list them anywhere MIA runs (the phone too).
+- `core/stop.py`: "Stop" and "stop everything" (REQ-AUT-010; DEC-0181, DEC-0185; Zac, Q-34 and Q-40: "we need to specify what stopping everything really means"; the definition is `docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md` section 4, and this module is that table in code). Prompt 23's review, UI-2, built 
 - `core/store_lock.py`: The lock the server holds while a request reads or changes MIA's stores, let go of while the model thinks (roadmap 2.3, 2026-11-10).
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
 - `core/subscriptions.py`: DEC-0054's "still using it?" mark on subscriptions (2026-11-07; the unused-subscription finding core/findings.py listed as not built "for want of data": nothing recorded use). Now the person records it: "I still use Netflix", or Still Using on the bill in Money, stamps the bill's `still_using_on` wi
@@ -575,7 +576,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,434 lines; 55 of 55 classes and functions documented
+2 files, 4,464 lines; 56 of 56 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -856,7 +857,7 @@
 
 ## tests/: the test suite: what each part must do
 
-499 files, 84,403 lines; 7,129 of 7,139 classes and functions documented
+500 files, 84,572 lines; 7,141 of 7,151 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1242,6 +1243,7 @@
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
 - `tests/test_state_export.py`: The state export (Engine Phase 1 step 4, 2026-10-05): Life State v2 as JSON from `python -m tools.export_state` and `/api/state`, matching the published schema docs/schema/life_state.schema.json.
+- `tests/test_stop.py`: "Stop" and "stop everything" (REQ-AUT-010; core/stop.py), one test per row of the definition's table (docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md section 4): the commands are recognised in code and nothing else is mistaken for them; "stop" ends her speech, the skill she's running with the 
 - `tests/test_stopwatch_format.py`: Unit tests for modules.toolbox.tools.stopwatch_tool.format_elapsed — pure formatting logic, no Qt/QApplication needed.
 - `tests/test_store_lock.py`: The server's store lock (core/store_lock.py, roadmap 2.3): released() lets go of the locks this thread holds and takes them back; a turn lets go of it while the model thinks, so another request (here /api/state) answers meanwhile; and one conversation's turns still run one after another.
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
@@ -1360,7 +1362,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,939 lines
+112 files, 20,988 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

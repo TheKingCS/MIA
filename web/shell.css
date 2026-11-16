@@ -371,3 +371,19 @@ html { background: var(--bg); }
   body.has-now-playing .layout-main { padding-bottom: calc(164px + env(safe-area-inset-bottom)); }
   body.has-now-playing #mia-status { bottom: calc(160px + env(safe-area-inset-bottom)); }
 }
+
+/* Stop (core/stop.py, REQ-AUT-010): the control in the frame, and the banner while everything of hers is stopped. */
+.side-stop { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 8px; min-height: 36px; padding: 0 10px;
+  border-radius: var(--radius-sm); border: 1px solid var(--line); background: transparent; color: var(--text-dim);
+  font: inherit; font-size: var(--text-sm); cursor: pointer; }
+.side-stop:hover, .side-stop:focus-visible { color: var(--text); border-color: var(--line-strong); }
+.side-stop .ico, .bottom-stop .ico { font-size: 11px; }
+:root[data-sidebar="icons"] .side-stop { justify-content: center; font-size: 0; }
+:root[data-sidebar="icons"] .side-stop .ico { font-size: 12px; }
+.stopped-banner { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; justify-content: center; gap: 12px;
+  flex-wrap: wrap; padding: 8px 16px; background: rgba(var(--rgb-panel-2), 0.96); border-bottom: 1px solid var(--attention);
+  color: var(--text); font-size: var(--text-sm); }
+.stop-actions { flex-wrap: wrap; }
+.stopped-banner { min-height: 45px; box-sizing: border-box; }
+body.mia-is-stopped .side { top: var(--stopped-h, 51px); height: calc(100vh - var(--stopped-h, 51px)); }
+body.mia-is-stopped .home-mia { top: var(--stopped-h, 51px); height: calc(100vh - var(--stopped-h, 51px)); }

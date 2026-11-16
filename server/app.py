@@ -37,7 +37,9 @@ are kept), never logged. The ID wallet's cards (`/api/wallet`, `WalletCard`,
 2026-11-08) are the same: a card's number goes only through its own
 request to core/id_wallet.py, sealed at rest; lists mask it. MIA paints on this
 PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0140) and
-serves each person only their own pictures. The Theme Studio
+serves each person only their own pictures. The frame's Stop control
+(`StopRequest`, POST /api/stop, core/stop.py) stops what MIA is doing, or
+everything of her own until Carry On. The Theme Studio
 asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
 /api/themes/design, core/theme_design.py), to make one from a picture
 (`ThemePictureRequest`, POST /api/themes/picture, core/theme_picture.py: a
@@ -415,6 +417,13 @@ class ThemeMixRequest(BaseModel):
     parts: list[str] = Field(default_factory=list, max_length=8)
 
 
+class StopRequest(BaseModel):
+    """The frame's Stop control (core/stop.py): "stop" (what she's doing now), "everything" (and her own initiative,
+    optionally `until`: "until tonight", "for two hours"), or "carry_on"."""
+    what: str = Field("stop", pattern="^(stop|everything|carry_on)$")
+    until: Optional[str] = Field(None, max_length=60)
+
+
 class ThemeDesignRequest(BaseModel):
     """A description for MIA to design a theme from (core/theme_design.design): nothing is kept, the Studio previews it."""
     description: str = Field(..., max_length=300)
@@ -553,7 +562,8 @@ def create_app(context: AppContext) -> FastAPI:
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
     store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
-    with that conversation's own lock. Good News Radio's page says when it played an episode
+    with that conversation's own lock. The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
+    before the lock is taken, the rest is done under it, at once and never as an approval card. Good News Radio's page says when it played an episode
     (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
     herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
     lock, because the song is handed to the window's thread. Taught skills (DEC-0123) are read at
@@ -1833,6 +1843,26 @@ def create_app(context: AppContext) -> FastAPI:
             view = view_for(context, profile_id)
             settle(view)
             return shell(view)
+
+    @app.post("/api/stop")
+    def web_stop(body: StopRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The frame's Stop control and its banner's Carry On (core/stop.py, REQ-AUT-010): done at once, in code, as
+        saying it does; never an approval card (a stop that waits for a yes isn't a stop). Returns what she says and
+        the state now."""
+        from core import stop
+
+        if body.what != "carry_on":
+            stop.quiet(context)  # her speech stops now, even while a turn holds the lock below
+        with app.state.turn_lock:
+            view = view_for(context, profile_id)
+            if body.what == "carry_on":
+                stop.carry_on(view)
+                said = "Carrying on: my background work and messages are back."
+            elif body.what == "everything":
+                said = stop.report(stop.stop_everything(view, stop.until_from(body.until or "")), everything=True)
+            else:
+                said = stop.report(stop.stop_now(view), everything=False)
+            return {"said": said, "stopped": stop.for_shell(view)}
 
     @app.get("/api/apps")
     def web_apps(profile_id: str = Depends(require_profile_id)) -> dict:

@@ -436,8 +436,9 @@
         el("button", { type: "button", class: "side-search", onclick: () => openSearch(), "aria-keyshortcuts": "Control+K" },
           el("span", {}, "Search"), el("kbd", {}, "Ctrl K")),
         ...sideLinks(shell),
-        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell)));
+        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell), stopButton("side-stop")));
     }
+    stoppedBanner(shell.stopped);
     // Phone: the concept's bottom bar.
     let bar = $("#mia-bottom-bar");
     if (!bar) {
@@ -454,7 +455,54 @@
       el("button", { type: "button", class: "bottom-search bottom-mia", "aria-label": "Talk to MIA", onclick: () => toggleTalk(true) },
         el("span", { class: "ico", "aria-hidden": "true" }, icon("mia", "◎")), "MIA"),
       el("button", { type: "button", class: "bottom-search", onclick: () => openSearch() },
-        el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"));
+        el("span", { class: "ico", "aria-hidden": "true" }, icon("search", "⌕")), "Search"),
+      stopButton("bottom-search bottom-stop"));
+  }
+
+  // ---------------------------------------------------------------- stop (core/stop.py, REQ-AUT-010)
+  // Always in the frame: Stop ends what she's doing for you now; Stop Everything also holds everything she'd do on her
+  // own until you say Carry On. Done at once by the engine's own code (POST /api/stop), never an approval card and
+  // never through the model. While everything is stopped a banner says so on every page.
+  async function stopNow(what, until) {
+    try {
+      const done = await MIA.stop(what, until);
+      say(done.said);
+      stoppedBanner(done.stopped);
+      if (shellData) shellData.stopped = done.stopped;
+    } catch (e) { say(e.message); }
+  }
+  function stopButton(cls) {
+    return el("button", { type: "button", class: cls, "aria-label": "Stop MIA", title: "Stop what MIA is doing, or everything",
+      onclick: () => stopChoices() }, el("span", { class: "ico", "aria-hidden": "true" }, "■"), "Stop");
+  }
+  function stopChoices() {
+    const dialog = el("dialog", { class: "confirm stop-dialog", "aria-label": "Stop MIA" });
+    const close = () => { dialog.close(); dialog.remove(); };
+    const pick = (what, until) => { close(); stopNow(what, until); };
+    const on = shellData && shellData.stopped;
+    dialog.append(el("h3", {}, "Stop MIA"),
+      el("p", { class: "dim" }, "Stopping never undoes anything, and never touches alarms, reminders you set, backups or the greenhouse."),
+      el("div", { class: "confirm-actions stop-actions" },
+        el("button", { type: "button", class: "btn", onclick: () => pick("stop") }, "Stop What She's Doing"),
+        on ? el("button", { type: "button", class: "btn btn-green", onclick: () => pick("carry_on") }, "Carry On")
+          : el("button", { type: "button", class: "btn btn-amber", onclick: () => pick("everything") }, "Stop Everything"),
+        on ? null : el("button", { type: "button", class: "btn btn-ghost", onclick: () => pick("everything", "until tonight") }, "Everything Until Tonight"),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: close }, "Close")));
+    dialog.oncancel = (ev) => { ev.preventDefault(); close(); };
+    document.body.append(dialog);
+    dialog.showModal();
+  }
+  function stoppedBanner(stopped) {
+    let bar = $("#mia-stopped");
+    document.body.classList.toggle("mia-is-stopped", Boolean(stopped));
+    if (!stopped) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = el("div", { id: "mia-stopped", class: "stopped-banner", role: "status" });
+      document.body.prepend(bar);
+    }
+    bar.replaceChildren(el("span", {}, stopped.line),
+      el("button", { type: "button", class: "btn btn-small", onclick: () => stopNow("carry_on") }, "Carry On"));
+    document.documentElement.style.setProperty("--stopped-h", bar.offsetHeight + "px");  // the side panels sit below it
   }
 
   // ---------------------------------------------------------------- MIA, everywhere

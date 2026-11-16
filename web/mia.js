@@ -245,6 +245,7 @@
     health: () => read("/api/health", "health"),
     nexus: () => read("/api/nexus", "nexus"),
     themes: () => read("/api/themes", "themes"),  // the Theme Studio (DEC-0136)
+    stop: (what, until) => demo ? demoOnly() : call("POST", "/api/stop", { what: what || "stop", until: until || null }),  // core/stop.py
     designTheme: (description) => demo ? demoOnly() : call("POST", "/api/themes/design", { description }),
     themeFromPicture: (source) => demo ? demoOnly() : call("POST", "/api/themes/picture", source),  // {image: data URL} or {art: id} (A7)
     mixThemes: (first, second, parts) => demo ? demoOnly() : call("POST", "/api/themes/mix", { first, second, parts }),  // Mix Two

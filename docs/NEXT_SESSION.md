@@ -49,6 +49,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Built (Fable): UI-2, the stop** (K-0269): `core/stop.py`. "Stop" ends her speech, the skill she's running with him and
+  her browser task (a held step is let go, never pressed); "stop everything" (optionally "until tonight", "for two
+  hours") also makes her own background work wait, holds her unprompted messages (urgent ones still come) and
+  refuses anything she'd start herself, until "carry on". Recognised in code before the model; a Stop control in
+  the frame on every page and a banner while it's on; survives a restart. Alarms, reminders, backups and the
+  greenhouse are never touched. Every job and daily check is sorted in `core/stop.py` and a test fails on a new
+  one nobody sorted. **Left:** a turn already in progress finishes its reply before the stop is handled (her speech is cut at once), a fetch in progress finishes rather than being dropped;
+  and the glasses have no button yet. **Zac:** try it by voice and from the phone.
 - **Built (Opus): UI-3's second part** (K-0267): `core/action_effects.py` says what every action kind reaches
   (records, device, system, outside) and whether it can be undone; 22 of 468 differ from "records, undoable". An
   irreversible one's approval card says "This can't be undone."; system and outside ones always ask (merging a

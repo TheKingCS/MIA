@@ -220,10 +220,17 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # before the message is stored, so it's stored with the privacy its
     # own words asked for, and before the model, which the safety floor
     # never waits on.
-    """One turn, in order: mode switches and the safety floor (before anything is stored or the model asked), then
+    """One turn, in order: "stop", "stop everything" and "carry on" (core/stop.py, in code, first), then mode switches and the safety floor (before anything is stored or the model asked), then
     show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a taught skill being shown, started or answered (core/taught_skills.take_turn), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     """
+    from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
+
+    stopped = stop.handle(context, prompt)
+    if stopped is not None:
+        add_message(conversation, "user", prompt)
+        add_message(conversation, "assistant", stopped)
+        return AssistantTurn(replies=[stopped], route="fixed")
     prepared = pre_turn(context, conversation, prompt)
     add_message(conversation, "user", prompt)
     if prepared.fixed_reply is not None:

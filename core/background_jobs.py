@@ -151,12 +151,20 @@ class BackgroundJobs:
 
     def schedule(self, scheduler, first_after: Optional[float] = None) -> None:
         """Puts every job in JOBS on the scheduler with its interval (the scheduler runs each under the store
-        lock), and gives the scheduler homeostasis's say on which deferrable jobs wait and who hears of a backoff.
+        lock), and gives the scheduler the say on which jobs wait (a "stop everything" first, core/stop.py, then
+        homeostasis's easing off) and who hears of a backoff.
         `first_after` is passed on for each job's first run (None: one interval from now, as the timers did)."""
         for name, seconds, method in JOBS:
             scheduler.add(name, seconds, getattr(self, method), first_after=first_after)
-        scheduler.defer = self.homeostasis.defer_reason  # MIA eases off deferrable work (DEC-0173)
+        scheduler.defer = self._defer_reason  # a stop-everything first, then easing off (DEC-0181, DEC-0173)
         scheduler.on_backoff = self.homeostasis.backing_off
+
+    def _defer_reason(self, name: str) -> str:
+        """Why a job or daily check waits now ("" to run it): he said "stop everything" and it's one that changes
+        records on her own or reaches outside (core/stop.py), else MIA's own easing off (core/homeostasis.py)."""
+        from core import stop
+
+        return stop.defer_reason(self.context, name) or self.homeostasis.defer_reason(name)
 
     @property
     def homeostasis(self):
@@ -280,7 +288,8 @@ class BackgroundJobs:
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
         DEC-0148, the greenhouse node, DEC-0150, and the nightly backup, core/auto_backup.py). A deferrable check
-        waits for the next clear tick while MIA eases off (core/homeostasis.py, DEC-0173).
+        waits for the next clear tick while MIA eases off (core/homeostasis.py, DEC-0173), and a check that is her own
+        work waits while the person has said "stop everything" (core/stop.py, DEC-0181).
 
         Stabilization (2026-09-14) — this used to be one long function
         with 14 sequential `if should_run_once_daily(...):` blocks and
@@ -317,8 +326,8 @@ class BackgroundJobs:
         self._offers = []
         self._offer_day = today_iso
         for name, check in checks:
-            if self.homeostasis.defer_reason(name):
-                continue  # easing off: a deferrable check waits for the next tick that's clear (DEC-0173)
+            if self._defer_reason(name):
+                continue  # stopped by him, or easing off: it waits for the next tick that's clear (DEC-0181, DEC-0173)
             try:
                 check(now, today_iso)
             except Exception:

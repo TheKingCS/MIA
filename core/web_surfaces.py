@@ -181,12 +181,23 @@ def greeting(hour: int, name: Optional[str]) -> str:
     return f"{part}, {name}" if name else part
 
 
+def _stopped(context) -> Optional[dict]:
+    """The stop-everything in force for this person (core/stop.for_shell), or None; never breaks the frame."""
+    try:
+        from core import stop
+
+        return stop.for_shell(context)
+    except Exception:  # noqa: BLE001
+        log.exception("The frame couldn't read the stop state")
+        return None
+
+
 def shell(context, today: Optional[date] = None) -> dict:
     """The shared frame's data (/api/shell): the person and their level, the date, the apps they can open on the web
     (each with its life area and its ask, shown as "Say: …" on its screen), the sidebar's eight destinations with
     their subdashboards (DEC-0153, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA
-    made, the owner's pages, the weather (core/weather.py), sound, places, and the person's display style (DEC-0135:
-    spatial or cards).
+    made, the owner's pages, the weather (core/weather.py), sound, places, the person's display style (DEC-0135:
+    spatial or cards), and `stopped` while a stop-everything is in force (core/stop.py), for the frame's banner.
     """
     from core.child_accounts import is_child
 
@@ -214,6 +225,7 @@ def shell(context, today: Optional[date] = None) -> dict:
         "places": _places(context),
         # DEC-0135: the person's look; the page decides "auto" itself (only it knows it's on a phone)
         "display": _display(context),
+        "stopped": _stopped(context),  # a stop-everything in force: the frame's banner and its Carry On (core/stop.py)
     }
 
 
