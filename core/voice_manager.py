@@ -54,8 +54,10 @@ Recording (mic capture) and playback both go through `sounddevice`,
 which wraps the system PortAudio library. Unlike the STT/TTS models,
 PortAudio is a *system* package (`libportaudio2` on Debian/Raspberry Pi
 OS, installed via apt, not pip) — `import sounddevice` raises `OSError`
-outright if it's missing, not just at call time, which is why the
-import itself is guarded at module load here rather than inside a
+outright if it's missing, not just at call time, and its own
+`PortAudioError` when the library is there but no sound server is
+running (a headless Linux machine), which is why the import itself is
+guarded at module load here, for any error, rather than inside a
 function. This dev environment has no system PortAudio and no audio
 hardware at all, so recording/playback can only be verified for their
 graceful-degradation path here; the STT/TTS round trip itself (Piper
@@ -157,7 +159,10 @@ try:
         raise ImportError("numpy isn't installed")
     import sounddevice as _sd
     _SOUNDDEVICE_IMPORT_ERROR: Optional[Exception] = None
-except (ImportError, OSError) as exc:
+except Exception as exc:  # noqa: BLE001 - any failure to start audio means no audio, never no MIA
+    # Not only ImportError and OSError: on a Linux machine with no sound server running (a headless Pi, a runtime
+    # started before PipeWire) PortAudio initialises at import and raises its own PortAudioError, which stopped the
+    # whole runtime from starting (found by MIA OS's Linux CI, 2026-11-16).
     _sd = None
     _SOUNDDEVICE_IMPORT_ERROR = exc
 

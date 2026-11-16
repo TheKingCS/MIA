@@ -31,7 +31,7 @@ Specification for everything per person. Nothing of MIA's invents a new top-leve
 | **MIA's data: every store, sealed** | `$XDG_DATA_HOME/mia` (`~/.local/share/mia`), which is `MIA_HOME` | `home` | him | **the runtime only** | untouched | **yes, all of it** |
 | MIA's device and person settings | inside `MIA_HOME` (as today) | `home` | him | the runtime | untouched | yes |
 | MIA's logs and health history | the journal; `$XDG_STATE_HOME/mia` for what must outlive the journal's rotation | `home` | him | the runtime | untouched | no |
-| MIA's caches (indexes, thumbnails, embeddings, the browser's cache) | `$XDG_CACHE_HOME/mia` | `home`, excluded from snapshots | him | the runtime and its children | untouched | **no**: every cache is rebuilt from the stores |
+| MIA's caches (thumbnails, the browser's cache; **not** the meaning index: Opus's review of prompt 23 found an embedding index carries his records' content, so it lives sealed in `MIA_HOME`) | `$XDG_CACHE_HOME/mia` | `home`, excluded from snapshots | him | the runtime and its children | untouched | **no**: every cache is rebuilt from the stores |
 | Sockets, the session token, locks | `$XDG_RUNTIME_DIR/mia` (memory, gone at logout) | | him | the runtime | | no |
 | Her browser's profile | `MIA_HOME/browser/<person>` | `home` | him | her browser | untouched | sign-ins yes, cache no |
 | An extension's data | `MIA_HOME/extensions/<id>` | `home` | him, lent to that extension's sandbox | that extension only | untouched | yes |
@@ -74,7 +74,7 @@ second abstraction over both would be a new thing to secure and nothing would be
 | MIA reading his documents | only inside folders he granted (REQ-FUN-006), through the files adapter. Enforced twice: by MIA's own grant list, and by the kernel narrowing the worker that touches files to those folders (privilege document §5) |
 | MIA moving or deleting a file of his | always a proposal he approves; deletions go to the desktop's trash, never straight to gone |
 | A conventional app's files | that app's business. A Flatpak app sees only what its permissions and the file-chooser portal give it; MIA shows those permissions before install (REQ-FUN-042) |
-| Search and document indexing | one index, a cache rebuilt from the stores and granted folders, in `$XDG_CACHE_HOME/mia` (prompt 23's review, G2). Not a system-wide indexer: KDE's Baloo stays Plasma's own |
+| Search and document indexing | one index, rebuilt from the stores and granted folders, **sealed in `MIA_HOME`** like the records it was made from (embeddings carry their content; prompt 23's review, section 14). Not a system-wide indexer: KDE's Baloo stays Plasma's own |
 | Metadata | a file's meaning to MIA (which asset or project it belongs to) is a link in `core/links.py`, never extended attributes that other tools would lose |
 | Databases | JSON files with atomic writes stay the stores (REQ-REL-005). SQLite where a store already uses it. No database server |
 | External and removable drives | mounted by the desktop (UDisks2) as on any Linux; MIA sees one only when he grants a folder on it; backups to one are an existing setting |

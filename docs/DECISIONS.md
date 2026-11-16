@@ -3293,6 +3293,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   World Intelligence, the first maker). Its own instruction is to avoid new services where existing ones extend. Three
   engines already run steps; a fourth for plans, with a stop that must know the steps, is the moment to give them one
   record.
+- Opus's independent review (2026-11-16, the review's section 14): agrees, with three changes: the meaning index
+  is sealed in `MIA_HOME`, not a plain cache; browser routines move onto the run record first (their waiting step is
+  lost on a restart today); undo by time restores each action's files together or not at all.
 - Zac's answers (2026-11-16): Q-43, only what he sends; Q-46, "opus can start now". Q-44 and Q-45 open: he asked
   why, and for more detail (answered in the chat; recorded in the review's section 13).
 - Related: DEC-0165, DEC-0123, DEC-0167, DEC-0117, DEC-0156, DEC-0175, DEC-0176, DEC-0181

@@ -252,3 +252,56 @@ move the MIA OS prompts: UI-1 to UI-5 need no Linux and can run on Opus between 
 | **Q-45** | Whose browsing may Recall search? | Only the browser MIA drives (pages she opened for you or you opened in it). Never your own browser's history unless you ask for an import |
 | **Q-46** | When does this run? | UI-1 to UI-3 on Opus now, between the MIA OS prompts (they also deliver the stop you defined). Skip the Windows hotkey if the PC moves to Linux within a few weeks, and build the Linux one instead |
 | **DEC-0188** | Build prompt 23 by growing what exists, no new services, the run record first | Yes |
+
+## 14. Opus's independent engineering review (2026-11-16)
+
+*Claude on Opus, after Zac's go (Q-46: "opus can start now"), as the handoff's section 11 asks: check Fable's plan
+against the code and real measurements, and write down disagreements rather than accept them. Measured on Zac's PC
+the same day; no content of his was printed or kept, only counts and timings.*
+
+**Measured.**
+
+| Question (section 8's brief) | Measurement | What it means |
+|---|---|---|
+| What would indexing his records by meaning cost? | 9,316 record-like items (893,000 characters) in the stores that read as plain JSON; the local embedding model (nomic-embed-text, 768 numbers per item) embeds 512 of them in 2.6 s, **5.1 ms each**; the whole set in an estimated **47 s**; one question **11 ms**; the index about **29 MB**. Sealed stores weren't readable this way, so the real count is somewhat higher | Recall is cheap. A full rebuild fits in a minute, so the index can be rebuilt from the stores whenever its format changes, and kept current by re-embedding only the records a write touched |
+| Before-states for the durable history: whole files or diffs? | 144 store files, 5 MB in all, median 3.5 KB; **121 changed in the past week, 2.6 MB in total**; 36 are append-only logs (`.jsonl`) | **Whole files**, deduplicated by content hash and compressed, excluding append-only logs (they are history, and undo already never takes them back). At this rate 30 days of before-states is tens of megabytes. Diffs would save little and add a way to get a restore wrong |
+| Does one run record fit the three engines? | Read their code. **Taught skills** keep a `Run` (step, answers, what she said, what she waits for) that survives a restart. **Browser routines** pause on a commit or sign-in, but the paused step lives only in the browser's memory (`core/browser.py`, `pending`): a restart loses the routine's place, and only a finished or stopped run is recorded. **Workflows** run start to finish in one turn of the schedule and never wait; nested `when` steps make their "step number" a path, not an index | One shape fits all three: an id, the kind, what it runs, status (running, waiting, done, stopped, failed), the step as a path (`"3"`, `"2.then.0"`), what it waits for, each finished step with the actions it caused, why it stopped. Each engine keeps its own private state (a skill's answers, a workflow's numbers) beside it |
+
+**Where Opus agrees.** No new service; the five domains as groupings with trust and control under them; the run
+record before plans across apps and the stop; whole-file before-states; skipping the Windows hotkey. The hotkey
+needs the runtime running with the window closed, which waits on DEC-0155's last steps, and Zac approved Linux
+(Q-47). Q-43's answer (only what he sends) removes the clipboard-watching risk entirely.
+
+**Where Opus disagrees, with the evidence.**
+
+1. **The meaning index must not sit unsealed in the cache folder.** Fable's plan (G2) and Prompt 05's storage
+   layout (§2) put the index in `~/.cache/mia` as "a cache, rebuilt". But an embedding index is derived from the
+   content of his records, sealed ones included, and embeddings can be partly turned back into text. Kept as a
+   plain cache, it would undo sealing for everything it covers. **It belongs in `MIA_HOME`, sealed like the stores
+   it was made from** (29 MB is no burden), or held only in memory and rebuilt at start (47 s, acceptable on the PC,
+   not on the phone). The storage document is corrected to say so. Private journal entries and off-the-record turns
+   stay out of it entirely, as Fable wrote.
+2. **Workflows don't need the run record first; browser routines do.** Fable's UI-1 moves all three engines onto
+   the record together. The evidence says the urgent one is browser routines: they're the only engine that can be
+   left waiting mid-run and lose its place to a restart. Skills already survive one. Workflows never wait, so for
+   them the record is just a start and an end. Proposed order inside UI-1: the record and its schema; browser
+   routines onto it (fixing the lost place); skills onto it (moving their existing `Run` without changing what it
+   does); workflows writing a start and an end. Then the "what's running" list reads one place.
+3. **UI-3 needs one more rule than written:** an action that changed several files must be undone together or not
+   at all. Today's in-memory undo restores per file. A durable history that can be asked "undo this afternoon"
+   must group before-states by the action that caused them, and restore a group atomically. Otherwise half an
+   action can come back.
+
+**Maintainability.** The run record is one new store, so it needs what every store needs: a place in
+`PERSONAL_STORES`, provenance (a Living System test fails without it), an improvement loop or a recorded reason,
+atomic writes, and an entry in the published schemas. That is about the right weight for the value. Two schemas
+would be the warning sign, and there is one.
+
+**Test strategy.** Each claim gets a test that can fail. A run is killed mid-step in a subprocess and must come back
+"stopped at step N", never "done". A browser routine waiting on a commit survives a restart of the runtime and
+carries on after approval. "Undo this afternoon" restores a multi-file action exactly and reports what it couldn't.
+A planted instruction in a shelved page changes nothing. A private journal entry is never in the index. The index
+file on disk is unreadable without the key.
+
+**Verdict:** sound, with the three changes above. **Next, on Opus (Q-46):** UI-1 in the order of disagreement 2,
+then UI-3 with disagreement 3's rule. The decision record (DEC-0188) is amended to point here.

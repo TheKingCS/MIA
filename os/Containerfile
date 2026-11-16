@@ -33,7 +33,7 @@ RUN rm -rf /usr/lib/mia/.github /usr/lib/mia/android-phone /usr/lib/mia/homestea
  && python3.13 -m venv /usr/lib/mia/venv \
  && /usr/lib/mia/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel \
  && /usr/lib/mia/venv/bin/pip install --no-cache-dir -r /usr/lib/mia/requirements.txt \
- && /usr/lib/mia/venv/bin/python -c "import core.runtime" \
+ && cd /usr/lib/mia && /usr/lib/mia/venv/bin/python -c "import core.runtime" \
  && find /usr/lib/mia -name __pycache__ -prune -exec rm -rf {} +
 
 # Her runtime as a user service (the same unit as deploy/mia-runtime.service, with the image's paths filled in).

@@ -294,3 +294,30 @@ def test_prepare_text_for_speech_leaves_other_text_unchanged():
 def test_prepare_text_for_speech_does_not_touch_substrings_like_miami():
     assert prepare_text_for_speech("I'm flying to Miami, MIAMI Beach specifically.") == \
         "I'm flying to Miami, MIAMI Beach specifically."
+
+
+def test_mia_starts_when_audio_fails_at_import_with_any_error(monkeypatch):
+    """A machine with PortAudio but no sound server (a headless Linux box) raises PortAudioError, not OSError, at
+    `import sounddevice`; MIA's voice must then be unavailable, never her whole runtime (MIA OS Linux CI, 2026-11-16)."""
+    import importlib
+    import sys
+
+    import core.voice_manager as vm
+
+    class _NoSoundServer:
+        """Stands in for the sounddevice module whose import fails the way PortAudio's does with no server."""
+
+        def find_spec(self, name, path=None, target=None):
+            """Claims sounddevice and fails it like PortAudio does."""
+            if name == "sounddevice":
+                raise type("PortAudioError", (Exception,), {})("PulseAudio_Initialize: Can't connect to server")
+            return None
+
+    monkeypatch.delitem(sys.modules, "sounddevice", raising=False)
+    monkeypatch.setattr(sys, "meta_path", [_NoSoundServer()] + sys.meta_path)
+    try:
+        reloaded = importlib.reload(vm)
+        assert reloaded._sd is None and "connect to server" in str(reloaded._SOUNDDEVICE_IMPORT_ERROR)
+    finally:
+        monkeypatch.undo()
+        importlib.reload(vm)

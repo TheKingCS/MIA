@@ -58,9 +58,11 @@ it, and the internet.
    paste it into a chat), or photograph the screen.
 9. Restart and take the stick out. Windows starts as before.
 
-**If it says "CPU" or BELOW THE BAR:** the ROCm path didn't work well. Try once more with Ollama's other GPU
-path, Vulkan (the exact switch is to be confirmed: `sudo dnf install ollama-vulkan` if Fedora offers it, then
-restart `ollama serve`), and run the test again. If both fall short, the plan says test Ubuntu 26.04 the same way.
+**If it says "CPU" or BELOW THE BAR:** the ROCm path didn't work well. Fedora 45 installs Ollama's other GPU path,
+Vulkan, alongside it (`ollama-vulkan` came in with `ollama-rocm` when the image was built on 2026-11-16: Ollama
+0.24.0, ROCm 7.2). Which one Ollama picks, and the switch to force the other, is to be confirmed on the day: start
+`ollama serve` and read its first lines, which name the GPU library it chose. Run the test with each. If both fall
+short, the plan says test Ubuntu 26.04 the same way.
 
 ## Tests 2 to 6 on GitHub
 
