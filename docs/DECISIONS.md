@@ -3426,15 +3426,15 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0173, DEC-0155
 
 ### DEC-0196: One browser: MIA's browser becomes Zac's everyday browser
-- Status: PROPOSED (Claude on Opus, 2026-11-16, from Zac's answer to Q-45: "My browser and MIAs browser should be the
-  same i think"); the safety rules wait on Q-52. Amends DEC-0117's "her own profile, none of your sign-ins".
+- Status: APPROVED (Zac, 2026-11-16: Q-45, "My browser and MIAs browser should be the same i think"; Q-52, the four
+  rules below, "Yes to all"). Amends DEC-0117's "her own profile, none of your sign-ins".
 - Decision: one browser profile per person, used by both. He browses in it as his everyday browser (a normal Edge
   window on the PC; the same browser on MIA OS), with his bookmarks and passwords imported into it once; MIA works in
   the same profile, in her own tabs. Its history is his browsing, so Recall (prompt 23, G2) reads it. The other way
   round (MIA driving his existing everyday profile) is rejected: Chromium-based browsers refuse automation of the
   default profile because any local program could then take over a signed-in browser, and asking them to allow it
   would open that door.
-- Rules that come with it (Q-52), because the profile would now be signed in to everything:
+- Rules that come with it (Q-52, approved), because the profile is now signed in to everything:
   1. MIA acts only in her own tabs; the tab he's using is his, unless he hands it to her ("take over this tab").
   2. Sites he marks sensitive (his bank, health, email) she reads only when he asks in that moment, never on her own,
      and they're never indexed for Recall.

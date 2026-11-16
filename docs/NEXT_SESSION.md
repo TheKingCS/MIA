@@ -23,7 +23,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Zac's answers the same day** (Q-43 to Q-51): the PC's base approved (DEC-0189, with DEC-0154, 0157, 0158),
   test both compositors leaning to KDE's, always the password, MIA runs when he's signed out, the shelf keeps
   only what's sent, Opus starts prompt 23's work. Q-44 open (he asked why; answered in chat). Q-45 answered: one
-  browser, MIA's becomes his everyday one (DEC-0196 proposed); **its four safety rules wait on Q-52.**
+  browser, MIA's becomes his everyday one; Q-52, its four safety rules: "Yes to all" (DEC-0196 approved).
+  **To build (Opus):** the import of his bookmarks and passwords, tab ownership, a sensitive-sites list, private
+  windows left alone; then her browser as his everyday window.
 - **Proofs of concept, first results** (GitHub's Linux machines; `os/`, `.github/workflows/mia-os-poc.yml`):
   Landlock passed; the Fedora 45 image builds and passes bootc's lint with Ollama ROCm and Vulkan from Fedora;
   the runtime runs as a user service; the suite passes on Linux. Bug found and fixed: no sound server stopped
