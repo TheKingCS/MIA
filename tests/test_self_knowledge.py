@@ -133,14 +133,14 @@ def test_what_she_can_find_on_her_own_never_claims_a_search_of_the_network():
     assert "plugged into this computer" in said and "Nothing of mine searches the network for devices" in said
 
 
-def test_her_limits_name_what_is_not_set_up_and_leave_the_glasses_to_their_own_topic(monkeypatch):
+def test_her_limits_name_what_is_not_set_up_and_leave_what_the_glasses_lack_to_their_own_topic(monkeypatch):
     from core import service_map
 
     monkeypatch.setattr(service_map, "status", lambda context, service: service_map.MISSING)
     lines = self_knowledge._limit_facts(SimpleNamespace())
     missing = [x for x in lines if x.startswith("[what I run on, checked now]")]
     assert missing and service_map.SERVICES[0].name in missing[0]
-    assert not any("on the glasses" in x for x in lines)
+    assert not any("Not available on the glasses" in x for x in lines)  # a planned glasses card may still be named
 
 
 def test_a_sentence_saying_a_thing_is_retired_is_said_first():

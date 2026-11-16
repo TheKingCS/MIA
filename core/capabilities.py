@@ -535,13 +535,19 @@ def _missing_yet(limit: str) -> bool:
     return bool(re.search(r"\byet\b", limit or "", re.I))
 
 
+def _way(mode: str) -> str:
+    """Pure logic. A way of using an app in words: "by voice", "on the glasses", "on the phone"."""
+    return "by voice" if mode == "voice" else f"on the {mode}"
+
+
 def capability_status(context=None, here: str = "pc") -> list[dict]:
     """A status for every capability (DEC-0057), never claiming a planned one: each app as implemented, partial (its
     limits, or a device it isn't on yet), unavailable here (a PC app on the phone, or one decided against on this
     device), or malfunctioning (it broke this week); and each decided-but-unbuilt piece (a parity gap to do) as
     planned. A limit that's a boundary by design ("she never files your taxes") isn't partial: it's kept as `limit`.
     Every row is {id, name, status, evidence, why, limit}: evidence is "verified" (from the code and the decided
-    records) or "inferred" (from what broke). `here` is "pc", "phone", "glasses" or "voice"."""
+    records) or "inferred" (from what broke). `here` is "pc", "phone", "glasses" or "voice"; a way an app isn't
+    usable yet is said in words (`_way`: "by voice", "on the glasses")."""
     from core.web_surfaces import APPS
 
     pages = {a.module_id: a.page or "" for a in APPS}
@@ -564,7 +570,7 @@ def capability_status(context=None, here: str = "pc") -> list[dict]:
             why = gaps.get(f"{app_id}:{here}", {}).get("why") or "it runs on the PC: open it there"
         elif todo or _missing_yet(row["limits"]):
             status, evidence = "partial", "verified"
-            why = row["limits"] if _missing_yet(row["limits"]) else f"not on the {', '.join(todo)} yet"
+            why = row["limits"] if _missing_yet(row["limits"]) else f"not {', '.join(_way(t) for t in todo)} yet"
         else:
             status, evidence, why = "implemented", "verified", "built and working"
         out.append({"id": app_id, "name": row["name"], "status": status, "evidence": evidence, "why": why,
@@ -572,7 +578,7 @@ def capability_status(context=None, here: str = "pc") -> list[dict]:
     for key, gap in sorted(gaps.items()):
         app_id, device = key.split(":", 1)
         if gap.get("status") == "todo" and app_id in names:
-            out.append({"id": key, "name": f"{names[app_id]} on the {device}", "status": "planned", "evidence": "verified",
+            out.append({"id": key, "name": f"{names[app_id]} {_way(device)}", "status": "planned", "evidence": "verified",
                         "why": str(gap.get("why") or "decided, not built yet")})
     return out
 

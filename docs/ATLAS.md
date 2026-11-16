@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1463 files, 326,865 lines; 1463 files describe themselves; 17,920 of 18,016 classes and functions are documented.
+1466 files, 327,443 lines; 1466 files describe themselves; 17,953 of 18,049 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-568 files, 163,619 lines; 8,427 of 8,513 classes and functions documented
+569 files, 163,985 lines; 8,449 of 8,535 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -24,6 +24,7 @@
 - `core/app_ecosystem.py`: MIA's understanding of her own app ecosystem (prompt 22 §7, migration phase M2; DEC-0175, DEC-0178): the Application Registry (`core/app_registry.py`) asked the questions a person asks, answered in code from the manifests, the code and the runtime, never from a model.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/app_registry.py`: The Application Registry (DEC-0175, DEC-0178; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`, migration phase M1): MIA's authoritative inventory of her own applications, read from one manifest per app (`apps/<id>/manifest.json`), and checked against the code so the manifests can't drift from what's re
+- `core/app_scaffold.py`: MIA Forge's scaffold (migration phase M7, DEC-0175; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md` section E, steps 4 to 8): everything a new app needs to exist, written from one short description, so a new app starts as a working, registered, empty screen instead of a list of files to remember.
 - `core/appearance.py`: The appearance engine (prompt 24 phase A3, DEC-0183, DEC-0184; `docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` C): a person's look is three independent choices, composed into the one cleaned theme every page applies (`web/shell.js`):
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
@@ -812,7 +813,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-43 files, 4,772 lines; 153 of 153 classes and functions documented
+44 files, 4,831 lines; 154 of 154 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -842,6 +843,7 @@
 - `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre
 - `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
 - `tools/move_home.py`: Copies a person's MIA to a new home folder (core/data_root.py, `MIA_HOME`; DEC-0155, DEC-0168): the step from "her data lives inside the code's folder" to "her data lives in the person's own folder", which MIA OS and the Pi need.
+- `tools/new_app.py`: MIA Forge's scaffold from the command line (core/app_scaffold.py, phase M7): a new app as a registered, empty screen.
 - `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py).
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
 - `tools/page_check.py`: Every page of the web front end opened once, to catch the page that fails to load before a person does (roadmap 2.8, 2026-11-10). Serves `web/` on a local port, opens each `*.html` in demo mode (`?demo`, the placeholder example, no MIA needed) in headless Edge through Playwright, waits for it to set
@@ -860,7 +862,7 @@
 
 ## tests/: the test suite: what each part must do
 
-502 files, 84,883 lines; 7,163 of 7,173 classes and functions documented
+503 files, 85,036 lines; 7,173 of 7,183 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -884,6 +886,7 @@
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
 - `tests/test_app_ecosystem.py`: MIA's understanding of her own apps (migration phase M2, DEC-0178; core/app_ecosystem.py, core/assistant_app_registry_actions.py): the inventory, one app's parts, which app does something, and the check (health, overlaps, gaps) are answered from the manifests and the runtime; a failing job is pinned
 - `tests/test_app_registry.py`: The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action kind, store, job and daily check in the code exactly once, and name 
+- `tests/test_app_scaffold.py`: MIA Forge's scaffold (phase M7, core/app_scaffold.py, tools/new_app.py): from one short description it writes a manifest the Application Registry accepts, a screen on the shared frame, a first test, and the two code edits that list the app; it refuses a bad id, a taken id, an unknown area and a file
 - `tests/test_appearance.py`: The glass design system's foundation (prompt 24 phase A2, DEC-0183, DEC-0184; web/tokens.css, web/themes.css, core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens with defaults inside their ranges; the glass material draws every tier from its tokens; a theme can set a tier o
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin

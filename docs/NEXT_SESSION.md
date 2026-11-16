@@ -49,6 +49,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Built: M7's first half, MIA Forge's scaffold** (K-0272): `python -m tools.new_app <id> "<Name>" <area>` writes a
+  new app as a registered, empty screen: its manifest, page, script and first test, and its line in the seven
+  places that list apps (found by running the whole suite on a scaffolded app). It refuses a bad or taken id
+  and writes nothing; `--dry-run` shows the plan; `--root` points at a lab worktree. The app gets no tools,
+  actions, stores or permissions, and MIA says it's "planned, not built yet". **Not built:** generation in the
+  lab (a model filling the app in), and asking for a new app by voice. **Fable reviews it.**
 - **Prompt 25, Specialized Agent Teams** (Zac, 2026-11-16; verbatim in
   `docs/mia_os/prompts/25_SPECIALIZED_AGENT_TEAMS.md`): the audit and architecture it asks for are done (Fable),
   `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`. Nothing is built. It extends the 16 specialists into the agent

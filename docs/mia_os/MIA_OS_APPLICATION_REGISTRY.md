@@ -117,7 +117,7 @@ Built from what exists, in the lab, never in production:
 | Step (handoff §8) | How |
 |---|---|
 | 1–3 spec, existing apps, new or extend | the registry's queries and capability gaps; "Build A Skill" already decides taught skill vs lab build (DEC-0167) |
-| 4–8 design, manifest, components, schemas, permissions | the scaffold (`tools/new_app.py`, proposed) generates the manifest and files in a lab worktree (`core/dev_lab.py`) |
+| 4–8 design, manifest, components, schemas, permissions | the scaffold (`tools/new_app.py`, built 2026-11-17) generates the manifest and files in a lab worktree (`core/dev_lab.py`) |
 | 9–10 tests, validation, security | the suite, the registry's manifest validation, review by another model (DEC-0174) |
 | 11 review | Zac sees the manifest (what it can do, what it may touch) and the diff |
 | 12 register and install | merged on Zac's approval; the registry finds it at next start; rollback is the commit or the image |
@@ -134,7 +134,7 @@ Built from what exists, in the lab, never in production:
 | M4 | Declared permissions enforced (DEC-0156 grants) | yes, gated | **Fable**; **built 2026-11-15** (DEC-0156 approved): every tool and action kind has a tier in its manifest, outside-text tools are tagged, each app's store permissions are declared; `core/grants.py` is the one check, enforced where MIA's own initiative reaches a change; grants (learned skills, published workflows) are listed and taken back on the Apps page and by voice. Left: network and device permissions per app |
 | M5 | Lifecycle: per-app status, dependency checks at start, activation | adds | Opus; **built 2026-11-15**: `core/app_ecosystem.statuses` (working, needs attention, failing, missing something it needs, hidden, retired, each with why), on each app's card and row and by voice; activation stays `app.visibility` |
 | M6 | Per-app packages, Greenhouse first, registry-driven registration; others as they're touched | no (same behaviour) | **Fable** |
-| M7 | MIA Forge: the scaffold, then generation in the lab | adds | Opus, Fable review |
+| M7 | MIA Forge: the scaffold, then generation in the lab | adds | Opus, Fable review. **The scaffold is built (2026-11-17)**: `core/app_scaffold.py`, `python -m tools.new_app`. Generation in the lab is not |
 | M8 | The extension host for out-of-process code (DEC-0176) | adds | Fable |
 
 Compatibility: every phase keeps today's ids, routes, store files and tests; the Qt classic view keeps working
