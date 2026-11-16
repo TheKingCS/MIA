@@ -66,3 +66,30 @@
 .st-mix .st-actions { margin: 0; }
 .st-sound { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
 .st-sound .st-select { flex: 1 1 200px; }
+
+/* Your Look (prompt 24 A5, DEC-0184): each theme a small rendered preview; colours as their three swatches. Colours come
+   from each theme's own tokens, set on the tile by web/studio.js. */
+.lk { padding: 18px; margin-bottom: var(--gap); }
+.lk-head { margin: 14px 0 8px; font-size: var(--text-md); }
+.lk-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.lk-tile { display: grid; gap: 6px; padding: 8px; text-align: left; border-radius: var(--radius); cursor: pointer;
+  background: rgba(var(--rgb-panel), 0.5); border: 1px solid var(--line); color: var(--text); }
+.lk-tile.on, .lk-scheme.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.lk-tile small { font-size: var(--label-size); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--text-faint); }
+.lk-mini { display: grid; place-items: center; height: 72px; border-radius: var(--radius-sm); overflow: hidden; }
+.lk-mini-panel { display: grid; gap: 5px; width: 74%; padding: 8px; }
+.lk-mini-bar { height: 6px; width: 46%; border-radius: 3px; }
+.lk-mini-line { height: 4px; border-radius: 2px; opacity: 0.8; }
+.lk-mini-line.short { width: 60%; }
+.lk-name { font-size: var(--text-sm); }
+.lk-schemes { display: flex; flex-wrap: wrap; gap: 8px; }
+.lk-scheme { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; cursor: pointer;
+  border-radius: var(--radius-pill); background: rgba(var(--rgb-panel), 0.5); border: 1px solid var(--line); color: var(--text); }
+.lk-scheme[disabled] { opacity: 0.45; cursor: not-allowed; }
+.lk-dots { display: inline-flex; }
+.lk-dots i { width: 14px; height: 14px; border-radius: 50%; margin-left: -4px; border: 2px solid rgb(var(--rgb-panel)); }
+.lk-dots i:first-child { margin-left: 0; }
+.lk-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 10px; margin: 6px 0; font-size: var(--text-sm); color: var(--text-dim); }
+.lk-more { margin: 12px 0 0; }
+.lk-row .ptabs { display: inline-flex; width: auto; justify-self: start; gap: 4px; }
+

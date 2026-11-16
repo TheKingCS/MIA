@@ -183,7 +183,11 @@ class Homeostasis:
                     f"{why[0].upper()}{why[1:]}, so {', '.join(names)} will wait until it's clear. Nothing is lost.")
 
     def backing_off(self, name: str, failures: int, wait_seconds: float, error: str) -> None:
-        """Says once that a job has failed several times in a row and will be tried less often (from the scheduler)."""
+        """Says once that a job has failed several times in a row and will be tried less often (from the scheduler), and
+        her orb shows a warning for a moment (core/orb_state.py)."""
+        from core import orb_state
+
+        orb_state.flash("warning")
         hours = wait_seconds / 3600
         when = f"every {hours:.0f} hours" if hours >= 1 else f"every {wait_seconds / 60:.0f} minutes"
         label = NAMES.get(name, name.replace("_", " "))

@@ -69,6 +69,21 @@ SETTINGS: tuple[Setting, ...] = (
     Setting("display.theme", "Look", "Theme", "choice", DEFAULT_THEME,
             "Colours, type, materials and light, in either look. Or tell MIA: \"switch to the Y2K theme\".",
             options=tuple((t.id, t.name) for t in THEMES.values())),
+    # DEC-0184 (prompt 24): the look's other choices, each independent of the theme; previews in the Theme Studio.
+    Setting("display.scheme", "Look", "Colours", "choice", "theme",
+            "The accent colours over your theme, without changing it. Or tell MIA: \"make the colours violet\".",
+            options=(("theme", "The theme's own"), ("cyan", "Cyan"), ("turquoise", "Turquoise"), ("violet", "Violet"),
+                     ("gold", "Gold"), ("champagne", "Champagne"), ("ice", "Ice"), ("rose", "Rose"))),
+    Setting("display.density", "Look", "Spacing", "choice", "comfortable",
+            "Compact fits more on the screen.", options=(("comfortable", "Comfortable"), ("compact", "Compact"))),
+    Setting("display.sidebar", "Look", "Sidebar", "choice", "full",
+            "Icons only gives the page more room; each icon still says its name.",
+            options=(("full", "Full"), ("icons", "Icons only"))),
+    Setting("display.effects", "Look", "Glass effects", "choice", "auto",
+            "How much glass to draw: light drops the blur, none makes every panel solid. Auto is lighter on a phone.",
+            options=(("auto", "Auto"), ("full", "Full glass"), ("light", "Light (no blur)"), ("none", "None (solid)"))),
+    Setting("display.reduce_transparency", "Look", "Reduce transparency", "toggle", False,
+            "Solid panels everywhere, whatever the theme."),
     Setting("communication.daily_budget", "When MIA speaks up", "Messages per day, at most", "number", 0,
             "0 means no fixed limit: she learns how often you want each kind of message from what you open, use or "
             "dismiss (DEC-0171). Set a number to cap her own messages a day. Urgent things, alarms you set and "

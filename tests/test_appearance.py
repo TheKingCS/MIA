@@ -195,3 +195,111 @@ def test_a_soft_gold_accent_is_allowed_and_rewards_are_legendary_orange():
     assert "--win: #ff8a1f;" in tokens and "--rgb-win: 255, 138, 31;" in tokens
     studio = (WEB / "studio.js").read_text(encoding="utf-8")
     assert "m.vivid" in studio  # the Studio's live check agrees with core's
+
+
+# ---------------------------------------------------------------- phase A5: Settings › Appearance, the orb's states
+
+
+def test_the_look_is_four_plain_settings_each_kept_per_person_and_checked():
+    from core import person_settings
+    from core.web_account import SETTINGS_BY_KEY
+
+    keys = ("display.scheme", "display.density", "display.sidebar", "display.effects", "display.reduce_transparency")
+    for key in keys:
+        assert key in SETTINGS_BY_KEY and SETTINGS_BY_KEY[key].group == "Look", key
+        assert key in person_settings.PERSONAL_SETTINGS, key  # his, not the device's
+    assert [v for v, _ in SETTINGS_BY_KEY["display.scheme"].options] == ["theme", *appearance.SCHEMES]
+
+
+def test_a_colour_scheme_that_cant_be_read_on_the_theme_is_refused_in_settings(settings, monkeypatch):
+    from core.account_actions import _setting
+    from core.actions import ActionError
+
+    monkeypatch.setattr(appearance, "scheme_problem", lambda s, t: "Too faint on these panels." if s == "ice" else "")
+    monkeypatch.setattr("core.account_actions._me", lambda context: None)
+    assert _setting(None, {"key": "display.scheme", "value": "violet"})[1] == "violet"
+    with pytest.raises(ActionError, match="Too faint"):
+        _setting(None, {"key": "display.scheme", "value": "ice"})
+
+
+def test_the_appearance_picker_offers_every_choice_and_its_demo_data_matches(settings):
+    import json
+
+    look = appearance.picker(None)
+    assert look["theme"] == "aquatic" and look["scheme"] == "theme" and look["effects"] == "auto"
+    assert [s["id"] for s in look["schemes"]] == ["theme", *appearance.SCHEMES]
+    assert all(len(s["colours"]) == 3 for s in look["schemes"][1:])
+    assert {d["id"] for d in look["density"]} == set(appearance.DENSITY)
+    assert {e["id"] for e in look["effects_choices"]} == set(appearance.EFFECTS)
+    example = json.loads((WEB.parent / "docs" / "schema" / "themes.example.json").read_text(encoding="utf-8"))
+    assert set(example["look"]) == set(look) and len(example["themes"]) == len(themes.THEMES)
+    js = (WEB / "studio.js").read_text(encoding="utf-8")
+    assert "lookSection()" in js and '"display.scheme"' in js and "restoreLook" in js
+
+
+@pytest.fixture
+def clock(monkeypatch):
+    """core.orb_state with a clock the test moves, starting idle."""
+    from core import orb_state
+
+    now = [100.0]
+    monkeypatch.setattr(orb_state, "_clock", lambda: now[0])
+    orb_state.reset()
+    yield now
+    orb_state.reset()
+
+
+def test_the_orb_shows_only_what_is_really_happening(clock):
+    from core import orb_state
+
+    assert orb_state.current() == "idle"
+    before = orb_state.version()
+    with orb_state.active("thinking"):
+        assert orb_state.current() == "thinking" and orb_state.version() > before
+        with orb_state.active("working"):
+            assert orb_state.current() == "working"  # the stronger of the two
+        assert orb_state.current() == "thinking"
+    assert orb_state.current() == "idle"
+    orb_state.flash("success")
+    assert orb_state.current() == "success"
+    clock[0] += orb_state.FLASH_SECONDS + 0.1
+    assert orb_state.current() == "idle"  # a moment passes by itself
+    orb_state.flash("sparkles")
+    assert orb_state.current() == "idle"  # only real states
+    with pytest.raises(ValueError):
+        with orb_state.active("dancing"):
+            pass
+
+
+def test_an_approved_action_shows_working_then_success_or_a_warning(clock, monkeypatch):
+    from types import SimpleNamespace
+
+    from core import actions, orb_state
+
+    seen = []
+    monkeypatch.setitem(actions.ACTION_TYPES, "zz.ok", actions.ActionType(
+        "zz.ok", "Ok", {}, lambda c, p: "Do it", lambda c, p: seen.append(orb_state.current()) or "Done."))
+    monkeypatch.setitem(actions.ACTION_TYPES, "zz.fail", actions.ActionType(
+        "zz.fail", "Fail", {}, lambda c, p: "Do it", lambda c, p: (_ for _ in ()).throw(actions.ActionError("No."))))
+    center = actions.ActionCenter()
+    context = SimpleNamespace(config=None, undo=None, events=None, failures=None)
+    done = center.approve(context, center.propose(context, "zz.ok").proposal_id)
+    assert done.status == actions.EXECUTED and seen == ["working"] and orb_state.current() == "success"
+    failed = center.approve(context, center.propose(context, "zz.fail").proposal_id)
+    assert failed.status == actions.FAILED and orb_state.current() == "warning"
+
+
+def test_every_real_source_of_activity_marks_the_orb_and_the_page_follows_it():
+    root = WEB.parent
+    sources = {"core/llm_manager.py": 'orb_state.active("thinking")', "core/actions.py": 'orb_state.active("working")',
+               "core/council.py": 'orb_state.active("council")', "core/communication_gate.py": 'orb_state.flash("notification")',
+               "core/homeostasis.py": 'orb_state.flash("warning")', "server/app.py": "event: presence"}
+    for path, mark in sources.items():
+        assert mark in (root / path).read_text(encoding="utf-8"), path
+    assert '"mia-presence"' in (WEB / "mia.js").read_text(encoding="utf-8")
+    shell = (WEB / "shell.js").read_text(encoding="utf-8")
+    assert 'presenceHere("listening")' in shell and "data-presence-orb" in shell
+    assert "data-presence-orb" in (WEB / "index.html").read_text(encoding="utf-8")
+    css = (WEB / "ui.css").read_text(encoding="utf-8")
+    for state in ("working", "council", "notification", "warning", "success"):
+        assert f'.mia-orb[data-state="{state}"]' in css, state

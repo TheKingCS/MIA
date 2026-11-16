@@ -524,7 +524,9 @@ class ActionCenter:
         which records the history; the change is kept for undo. While she's
         being shown a skill ("watch me", core/taught_skills.py), the change
         is noted as one of its steps; and a tool running inside a taught
-        skill can't approve a kind that always asks (taught_skills.guard)."""
+        skill can't approve a kind that always asks (taught_skills.guard).
+        Her orb shows "working" while it runs, then success or a warning
+        (core/orb_state.py)."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
@@ -539,9 +541,12 @@ class ActionCenter:
         action = ACTION_TYPES[proposal.kind]
         source = "assistant" if proposal.proposed_by == "mia" else "manual"
         before = _moment(context, proposal)
+        from core import orb_state
+
         try:
             with recording(f"action_{proposal.kind}", proposal.profile_id) as change, \
-                    life_events.acting(source, proposal.profile_id), crediting(context, proposal.profile_id):
+                    life_events.acting(source, proposal.profile_id), crediting(context, proposal.profile_id), \
+                    orb_state.active("working"):  # her orb shows it (core/orb_state.py)
                 proposal.result = action.execute(context, proposal.params)
         except ActionError as problem:
             proposal.status, proposal.result = FAILED, str(problem)
@@ -576,6 +581,7 @@ class ActionCenter:
             except Exception:  # a celebration never breaks the change itself
                 log.exception("Couldn't work out the reward for %s.", proposal.kind)
         proposal.decided_at = datetime.now().isoformat(timespec="seconds")
+        orb_state.flash("success" if proposal.status == EXECUTED else "warning")
         if proposal.status == FAILED:
             _note(context, "action_failed", proposal)
         return proposal

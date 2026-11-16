@@ -85,7 +85,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   16. prompt 24's plan (docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md, DEC-0183, DEC-0184);
   17. appearance A2 (web/tokens.css tiers, web/themes.css glass, core/themes.clamp_tier, tools/css_colours.py);
   18. appearance A3 (core/appearance.py, web/shell.js attributes, the sheets' layout and effects rules, the tools);
-  19. appearance A4 and DEC-0186 (the presets in core/themes.py, the frame glow, accent_problem's saturation, --win). Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  19. appearance A4 and DEC-0186 (the presets in core/themes.py, the frame glow, accent_problem's saturation, --win);
+  20. appearance A5 (web/studio.js Your Look, core/appearance.picker, the Look settings, core/orb_state.py and its hooks). Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
@@ -122,8 +123,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Built 2026-11-16 (Opus): appearance phase A4** (K-0255): Aquatic (the default now, from his picture), Nebula,
   Evergreen, Aurelia, Glacial, Eclipse as glass themes; a frame glow around the window; the gold scheme. Q-41
   answered (DEC-0186): soft gold accents allowed, rewards legendary orange (his follow-up). **Muse refines the presets' values (Q-38).**
-  Next: A5, Settings › Appearance (previews of theme, colours and layout; transparency, blur, density, motion) and
-  the orb's states from real activity (Opus). Fable reviews it (queue item 16).
+
+- **Built 2026-11-16 (Opus): appearance phase A5** (K-0256): the Appearance page (`web/studio.html`, "Your look":
+  theme tiles, colour swatches, spacing, sidebar, glass effects, reduced transparency; point to preview, choose to
+  save), the five look settings per person in Settings too (A3 had saved them device-wide by mistake: fixed), and
+  the orb's states from real activity (`core/orb_state.py` via the live stream). Not done: "speaking" (answers
+  aren't streamed yet). Next: A6, apps onto the shared system app by app (literal colours out, atmosphere hues). Fable reviews it (queue item 16).
 - **Prompt 04 done (2026-11-15, Opus):** the requirements and system philosophy, sixteen documents in
   `docs/mia_os/` (start at `MIA_OS_SYSTEM_PHILOSOPHY.md` and `MIA_OS_SYSTEM_REQUIREMENTS.md`). 194 requirements,
   each with priority, release tier, status against the code, verification and owner prompt; the matrix is generated

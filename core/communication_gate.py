@@ -483,7 +483,7 @@ class CommunicationGate:
 
     def offer_batch(self, candidates: list[Candidate], now: Optional[datetime] = None) -> list[Decision]:
         """Decide (with each offered kind's learned pace), deliver, log. Also retries anything deferred that's now
-        due."""
+        due. When something is delivered, her orb shows a message arrived (core/orb_state.py)."""
         now = now or datetime.now()
         pending_before = len(self._pending)
         candidates = self._take_due_pending(now) + list(candidates)
@@ -502,6 +502,10 @@ class CommunicationGate:
                 c = decision.candidate
                 sent = notifications.notify(title=c.title, message=c.message, level=c.level, source=c.source)
                 notification_ids[id(c)] = getattr(sent, "notification_id", "") or ""
+        if notification_ids or digest_members:
+            from core import orb_state
+
+            orb_state.flash("notification")  # her orb shows a message arrived (core/orb_state.py)
         if digest_members and notifications is not None:
             title, message = compose_digest(digest_members)
             sent = notifications.notify(title=title, message=message, level="info", source="system")

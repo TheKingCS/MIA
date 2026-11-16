@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1446 files, 321,873 lines; 1446 files describe themselves; 17,660 of 17,755 classes and functions are documented.
+1447 files, 322,268 lines; 1447 files describe themselves; 17,676 of 17,771 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-559 files, 160,618 lines; 8,271 of 8,357 classes and functions documented
+560 files, 160,802 lines; 8,280 of 8,366 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -344,6 +344,7 @@
 - `core/online_watch.py`: Offline awareness follow-ups (2026-09-28), on top of core/connectivity.py:
 - `core/operating_actions.py`: The Operating Journal (core/operating_journal.py, DEC-0097) through the action contract (core/actions.py): `operating.add` (a line of how they mean to operate), `operating.remove`, and `operating.rate` (a self-rated line, 1 to 5, for this week). The journal writes through atomic_write_text, so "undo
 - `core/operating_journal.py`: The Operating Journal (DEC-0097, build plan step 11; Zac, 2026-11-06: "a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine").
+- `core/orb_state.py`: What MIA is really doing right now, for her orb (not to be confused with `core/presence.py`, the "what matters now" list, DEC-0044) (prompt 24 A5, DEC-0184 §8: "these states should communicate actual system activity rather than simulate activity that is not occurring"). One state for the whole runti
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
 - `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
 - `core/party.py`: Party and guild (DEC-0028, the game layer's tenth idea; Zac, 2026-10-17): the household plays together.
@@ -570,7 +571,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,387 lines; 54 of 54 classes and functions documented
+2 files, 4,393 lines; 54 of 54 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -851,7 +852,7 @@
 
 ## tests/: the test suite: what each part must do
 
-495 files, 83,374 lines; 7,062 of 7,071 classes and functions documented
+495 files, 83,482 lines; 7,069 of 7,078 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1351,7 +1352,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,756 lines
+112 files, 20,853 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

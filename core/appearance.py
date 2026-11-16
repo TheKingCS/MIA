@@ -11,7 +11,8 @@ look is three independent choices, composed into the one cleaned theme every pag
   palette and the orb's colour. "theme" means the theme's own accents (what every look did before). A scheme never
   sets a meaning colour (amber, red, green, gold: DEC-0014, DEC-0136); its accent is refused when it reads as one
   (`themes.accent_problem`) or can't be seen on the theme's panels (under 3:1, `scheme_problem`).
-- **Layout** (`display.layout`, `LAYOUT`): density (comfortable, compact) and the sidebar (full, icons only), set
+- **Layout** (`display.density`, `display.sidebar`; `LAYOUT`): density (comfortable, compact) and the sidebar (full,
+  icons only), each a plain setting of its own so Settings and `setting.set` handle them like any other, set
   on the page as attributes (`data-density`, `data-sidebar`); the experience stays `display.style` (DEC-0135).
   Changing a theme or a scheme never changes the layout, and the reverse.
 
@@ -34,7 +35,8 @@ from typing import Optional
 from core import themes
 
 SCHEME_KEY = "display.scheme"
-LAYOUT_KEY = "display.layout"
+DENSITY_KEY = "display.density"
+SIDEBAR_KEY = "display.sidebar"
 EFFECTS_KEY = "display.effects"
 TRANSPARENCY_KEY = "display.reduce_transparency"
 DEFAULT_SCHEME = "theme"
@@ -164,12 +166,13 @@ def scheme_of(context, theme: Optional[dict] = None) -> str:
 
 
 def layout_of(context) -> dict:
-    """The person's layout ({density, sidebar}), each value one of its choices (the default where unset or unknown)."""
+    """The person's layout ({density, sidebar}) from its two settings, each value one of its choices (the default where
+    unset or unknown)."""
     from core import person_settings
 
-    raw = person_settings.get(context, LAYOUT_KEY, {}) or {}
-    raw = raw if isinstance(raw, dict) else {}
-    return {k: raw.get(k) if raw.get(k) in LAYOUT[k] else DEFAULT_LAYOUT[k] for k in LAYOUT}
+    raw = {"density": person_settings.get(context, DENSITY_KEY, None),
+           "sidebar": person_settings.get(context, SIDEBAR_KEY, None)}
+    return {k: raw[k] if raw[k] in LAYOUT[k] else DEFAULT_LAYOUT[k] for k in LAYOUT}
 
 
 def effects_of(context) -> dict:
@@ -204,8 +207,8 @@ def set_scheme(context, scheme_id: str) -> str:
 
 
 def set_layout(context, **changes) -> str:
-    """Changes the person's layout (density, sidebar) and says what it is now; ValueError for a value it doesn't
-    have. Colours and the theme stay as they are."""
+    """Changes the person's layout (density, sidebar; each its own setting) and says what it is now; ValueError for a
+    value it doesn't have. Colours and the theme stay as they are."""
     from core import person_settings
 
     layout = layout_of(context)
@@ -215,8 +218,28 @@ def set_layout(context, **changes) -> str:
         if key not in LAYOUT or value not in LAYOUT[key]:
             raise ValueError(f"The {key} is one of: {', '.join(LAYOUT.get(key, ()))}.")
         layout[key] = value
-    person_settings.put(context, LAYOUT_KEY, layout)
+        person_settings.put(context, DENSITY_KEY if key == "density" else SIDEBAR_KEY, value)
     return f"Layout: {layout['density']}, sidebar {layout['sidebar']}. Your colours stay as they are."
+
+
+SCHEME_OPTIONS = ((DEFAULT_SCHEME, "The theme's own"),) + tuple((k, v[0]) for k, v in SCHEMES.items())
+EFFECT_NAMES = {"auto": "Auto (lighter on a phone)", "full": "Full glass", "light": "Light (no blur)",
+                "none": "None (solid panels)"}
+
+
+def picker(context) -> dict:
+    """The "Your look" picker's data (the Theme Studio, web/studio.js): what's chosen now, each colour scheme with its
+    three colours and whether it can be used with the theme in use (and why not), the layout and effect choices."""
+    theme = themes.for_shell(context)
+    look = for_shell(context)
+    return {"theme": theme["id"], "scheme": look["scheme"], "layout": look["layout"], "effects": look["effects"],
+            "reduce_transparency": look["reduce_transparency"],
+            "schemes": [{"id": DEFAULT_SCHEME, "name": "The theme's own", "colours": [], "problem": ""}]
+            + [{"id": k, "name": v[0], "colours": list(v[1:4]), "problem": scheme_problem(k, theme)}
+               for k, v in SCHEMES.items()],
+            "density": [{"id": d, "name": d.capitalize()} for d in DENSITY],
+            "sidebar": [{"id": "full", "name": "Full"}, {"id": "icons", "name": "Icons only"}],
+            "effects_choices": [{"id": e, "name": EFFECT_NAMES[e]} for e in EFFECTS]}
 
 
 def wants_scheme(words: str) -> Optional[str]:

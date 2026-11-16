@@ -475,10 +475,14 @@ class LLMManager:
         return self._backend.is_available(timeout=self._timeout)
 
     def generate(self, prompt: str, timeout: Optional[float] = None) -> Optional[str]:
-        """Return the model's reply, or None (logged) if the backend can't be reached."""
+        """Return the model's reply, or None (logged) if the backend can't be reached. While it answers, MIA's presence
+        is "thinking" (core/orb_state.py)."""
+        from core import orb_state
+
         wait = self._timeout if timeout is None else timeout
         try:
-            return self._ask(lambda backend: backend.generate(prompt, timeout=wait))
+            with orb_state.active("thinking"):  # her orb shows it (core/orb_state.py)
+                return self._ask(lambda backend: backend.generate(prompt, timeout=wait))
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
             return None
@@ -486,12 +490,16 @@ class LLMManager:
     def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> Optional[ChatReply]:
         """
         Return a ChatReply (content and/or tool_calls), or None (logged)
-        if the backend can't be reached. See this module's docstring
+        if the backend can't be reached; MIA's presence is "thinking" while
+        the model answers (core/orb_state.py). See this module's docstring
         for why a malformed tool-call-shaped `content` triggers one
         retry without tools.
         """
+        from core import orb_state
+
         try:
-            reply = self._ask(lambda backend: backend.chat(messages, tools, timeout=self._timeout))
+            with orb_state.active("thinking"):  # her orb shows it (core/orb_state.py)
+                reply = self._ask(lambda backend: backend.chat(messages, tools, timeout=self._timeout))
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
             return None

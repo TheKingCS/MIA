@@ -10,6 +10,9 @@
  * downloads what's on screen as a mia-theme/1 file; Import proposes `theme.import`, which core reads and checks.
  * Backdrop: MIA paints a picture on the PC's graphics card (MIA.paint, core/art_studio.py, DEC-0140); pick one of
  * your paintings (or none) and how strongly it shows; it's part of the theme you save.
+ * Your Look (prompt 24 A5, DEC-0184; core/appearance.picker): the theme, the colours, the layout and the glass as four
+ * separate picks, each a small rendered preview. Pointing at a theme or colours previews it on the whole page (moving
+ * away puts your look back); choosing one proposes `setting.set`, approved and undoable like any setting.
  */
 (function () {
   "use strict";
@@ -265,6 +268,78 @@
       } }, "Hear It"));
   }
 
+  // ------------------------------------------------------------ Your Look: theme, colours, layout, glass (DEC-0184)
+  let lookNow = null;  // the look as the page has it applied (theme with its colour scheme), put back after a preview
+  function schemeTokens(s) {  // the same tokens core/appearance.scheme_tokens sets, for the live preview only
+    if (!s || !s.colours.length) return {};
+    const [a, b, c] = s.colours;
+    const out = { "--accent": a, "--rgb-accent": triplet(a), "--accent-soft": mix(a, "#ffffff", 0.6),
+      "--accent-deep": mix(a, "#000000", 0.45), "--accent-2": b, "--rgb-accent-2": triplet(b), "--accent-3": c,
+      "--rgb-accent-3": triplet(c) };
+    [a, b, c].forEach((v, i) => { out["--chart-" + (i + 1)] = v; });
+    return out;
+  }
+  function previewLook(theme, scheme) {
+    const look = Object.assign({}, theme, { tokens: Object.assign({}, theme.tokens, schemeTokens(scheme)) });
+    MIAShell.previewTheme(look);
+  }
+  const restoreLook = () => { if (lookNow) MIAShell.previewTheme(lookNow); };
+  async function choose(key, value) {
+    const done = await MIAShell.act({ kind: "setting.set", params: { key, value } });
+    if (done) location.reload();  // the shell applies the new look from the engine, the one place it's decided
+  }
+  function themeTile(t) {
+    const tk = t.tokens || {}, c = t.choices;
+    const field = tk["--theme-backdrop"] ? tk["--theme-backdrop"] + ", " + (tk["--bg"] || c.background) : (tk["--bg"] || c.background);
+    const panel = "rgba(" + (tk["--rgb-panel"] || triplet(c.panel)) + ", 0.78)";
+    const inUse = t.id === data.look.theme;
+    return el("button", { type: "button", class: "lk-tile" + (inUse ? " on" : ""), "aria-pressed": String(inUse),
+      "aria-label": t.name + (inUse ? ", in use" : ""), title: t.line || t.name,
+      onpointerenter: () => previewLook(t, null), onpointerleave: restoreLook, onfocus: () => previewLook(t, null), onblur: restoreLook,
+      onclick: () => (inUse ? null : choose("display.theme", t.id)) },
+      el("span", { class: "lk-mini", style: "background:" + field + ";box-shadow: inset 0 0 0 1px rgba(" + (tk["--rgb-accent"] || triplet(c.accent)) + ", " + (tk["--frame-glow"] || 0) + ")" },
+        el("span", { class: "lk-mini-panel", style: "background:" + panel + ";border-radius:" + (tk["--radius-sm"] || "6px") },
+          el("span", { class: "lk-mini-bar", style: "background:" + c.accent }),
+          el("span", { class: "lk-mini-line", style: "background:" + (tk["--text-dim"] || c.text) }),
+          el("span", { class: "lk-mini-line short", style: "background:" + (tk["--text-faint"] || c.text) }))),
+      el("span", { class: "lk-name" }, t.name), inUse ? el("small", {}, "in use") : null);
+  }
+  function schemeTile(s) {
+    const current = data.themes.find((t) => t.id === data.look.theme) || base;
+    const inUse = s.id === data.look.scheme;
+    const dots = s.colours.length ? s.colours : [current.choices.accent];
+    return el("button", { type: "button", class: "lk-scheme" + (inUse ? " on" : ""), "aria-pressed": String(inUse),
+      disabled: s.problem ? true : null, title: s.problem || s.name,
+      onpointerenter: () => previewLook(current, s), onpointerleave: restoreLook, onfocus: () => previewLook(current, s), onblur: restoreLook,
+      onclick: () => (inUse || s.problem ? null : choose("display.scheme", s.id)) },
+      el("span", { class: "lk-dots" }, ...dots.map((d) => el("i", { style: "background:" + d }))),
+      el("span", {}, s.name));
+  }
+  function segment(label, key, options, value) {
+    return el("div", { class: "lk-row" }, el("span", { class: "lk-row-label" }, label),
+      el("div", { class: "ptabs", role: "radiogroup", "aria-label": label }, ...options.map((o) =>
+        el("button", { type: "button", role: "radio", "aria-checked": String(o.id === value),
+          onclick: () => (o.id === value ? null : choose(key, o.id)) }, o.name))));
+  }
+  function lookSection() {
+    const L = data.look;
+    return el("section", { class: "glass lk", "aria-label": "Your look" },
+      el("h2", { class: "pw-label" }, "Your Look"),
+      el("p", { class: "dim" }, "Four separate choices: changing one never changes the others. Point at a theme or colours to see it on this page."),
+      el("h3", { class: "lk-head" }, "Theme"),
+      el("div", { class: "lk-tiles" }, ...data.themes.map(themeTile)),
+      el("h3", { class: "lk-head" }, "Colours"),
+      el("div", { class: "lk-schemes" }, ...L.schemes.map(schemeTile)),
+      el("h3", { class: "lk-head" }, "Layout"),
+      segment("Spacing", "display.density", L.density, L.layout.density),
+      segment("Sidebar", "display.sidebar", L.sidebar, L.layout.sidebar),
+      el("h3", { class: "lk-head" }, "Glass"),
+      segment("Effects", "display.effects", L.effects_choices, L.effects),
+      el("label", { class: "st-check" }, el("input", { type: "checkbox", checked: L.reduce_transparency || null,
+        onchange: (e) => choose("display.reduce_transparency", e.target.checked) }), "Reduce transparency (solid panels everywhere)"),
+      el("p", { class: "dim lk-more" }, "Make your own theme below."));
+  }
+
   function paint() {
     const chips = data.themes.map((t) => el("button", { type: "button", class: "chip-button st-theme" + (t.id === base.id ? " on" : ""),
       "aria-pressed": String(t.id === base.id), onclick: () => start(t) },
@@ -280,6 +355,7 @@
         el("button", { type: "button", class: "btn", onclick: designIt }, "Design It")),
       designNote ? el("p", { class: "st-designed", role: "status" }, designNote) : null);
     $("panel").replaceChildren(
+      lookSection(),
       describe,
       el("section", { class: "st-start", "aria-label": "Start from" }, el("h2", { class: "pw-label" }, "Start From"), el("div", { class: "chip-row" }, ...chips)),
       mixSection(),
@@ -328,12 +404,13 @@
             el("div", { class: "row" }, el("div", {}, el("div", { class: "row-title" }, "Morning workout"), el("div", { class: "row-sub" }, "Workout")),
               el("span", { class: "chip chip-ok" }, "Done")),
             el("div", { class: "st-actions" }, el("span", { class: "btn" }, "A Button"), el("span", { class: "btn btn-ghost" }, "Another")),
-            el("p", { class: "st-note" }, "Amber, red, green and gold keep their meanings in every theme.")))));
+            el("p", { class: "st-note" }, "Amber, red, green and the reward orange keep their meanings in every theme.")))));
     preview();
   }
 
   MIAShell.start(async () => {
     [data, art] = await Promise.all([MIA.themes(), MIA.art().catch(() => null)]);
+    lookNow = MIAShell.theme();  // the look applied now (its colour scheme included), put back after each preview
     if (art && art.jobs.some((j) => j.status === "painting")) artTimer = setTimeout(refreshArt, 3000);
     const wanted = (savedName && data.themes.find((t) => t.name === savedName)) || data.themes.find((t) => t.id === data.current) || data.themes[0];
     savedName = "";

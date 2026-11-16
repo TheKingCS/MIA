@@ -22,6 +22,20 @@
 (function () {
   "use strict";
 
+  // ---------------------------------------------------------------- her presence (prompt 24 A5, core/orb_state.py)
+  // What MIA is really doing, from the engine's live stream (thinking, working, council, success, warning,
+  // notification) or this device (listening): set on <html data-presence> and on every orb that follows it
+  // (.mia-orb[data-presence-orb]); the floating orb button reads the attribute through its styles. Never a timer
+  // pretending: nothing changes unless something happened.
+  let presenceServer = "idle", presenceLocal = "";
+  function showPresence() {
+    const state = presenceLocal || presenceServer || "idle";
+    document.documentElement.dataset.presence = state;
+    document.querySelectorAll(".mia-orb[data-presence-orb]").forEach((o) => { o.dataset.state = state; });
+  }
+  function presenceHere(state) { presenceLocal = state || ""; showPresence(); }
+  window.addEventListener("mia-presence", (e) => { presenceServer = (e.detail && e.detail.state) || "idle"; showPresence(); });
+
   // ---------------------------------------------------------------- the theme (DEC-0136, core/themes.py)
   // A theme is data: tokens set on the page (every stylesheet follows), a material (themes.css) and the room's light
   // (web/nexus3d.js). It comes with the shell on every page; the last one is kept on this device so the next page
@@ -514,6 +528,7 @@
     const mic = el("button", { type: "button", class: "btn btn-ghost chat-mic talk-mic", "aria-label": "Speak to MIA",
       title: "Speak to MIA (tap again when you're done)", onclick: async () => {
         if (recorder.recording) {
+          presenceHere("");
           mic.classList.remove("listening");
           mic.setAttribute("aria-label", "Speak to MIA");
           let audio;
@@ -522,6 +537,7 @@
           return;
         }
         try { await recorder.start(); } catch (e) { say(e.message); return; }
+        presenceHere("listening");  // only this device knows its microphone is open
         mic.classList.add("listening");
         mic.setAttribute("aria-label", "Done speaking");
       } });

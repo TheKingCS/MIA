@@ -8,7 +8,9 @@
  * color); an app's own data may use --atmo, everything MIA, active or
  * primary stays --accent.
  *
- *   .mia-orb[data-state]   her presence, seven states, any size (--orb-d)
+ *   .mia-orb[data-state]   her presence, any size (--orb-d): idle, listening, thinking, speaking, needs-you,
+ *                          celebrate, offline; and from core/orb_state.py working, council, notification,
+ *                          warning, success
  *   .finding               "MIA Noticed": kind, headline, why, what she used, one next step
  *   .kind                  a small tag saying what something is (Deadline, Fact, Estimate, Missing...)
  *   .stat-strip / .stat    three tiles, white value, colored index bar
@@ -50,6 +52,29 @@
   animation-iteration-count: 1;
 }
 .mia-orb[data-state="offline"] { filter: grayscale(1); opacity: 0.4; animation: none; }
+/* What she's really doing (prompt 24 A5, core/orb_state.py): working, the council, a message, a warning, a success. */
+.mia-orb[data-state="working"] { animation: mia-orb-think 2s linear infinite;
+  box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent-2), 0.4); }
+.mia-orb[data-state="council"] { animation: mia-orb-council 3s linear infinite; }
+.mia-orb[data-state="notification"] { animation: mia-orb-speak 0.9s ease-in-out 2; }
+.mia-orb[data-state="warning"] {
+  background: radial-gradient(circle at 50% 45%, var(--text) 0%, var(--attention) 34%,
+    rgba(var(--rgb-amber), 0.45) 60%, rgba(var(--rgb-amber), 0) 72%);
+  box-shadow: 0 0 calc(var(--orb-d) * 0.36) var(--attention-glow);
+}
+.mia-orb[data-state="success"] {
+  box-shadow: 0 0 calc(var(--orb-d) * 0.4) rgba(var(--rgb-ok), 0.45); animation: mia-orb-speak 0.6s ease-in-out 1;
+}
+@keyframes mia-orb-council {
+  0%, 100% { box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent), 0.35); }
+  33% { box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent-2), 0.4); }
+  66% { box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent-3), 0.4); }
+}
+/* The floating orb button on every other page follows the same states. */
+:root[data-presence="thinking"] .mia-orb-core, :root[data-presence="working"] .mia-orb-core { animation: mia-orb-think 1.4s linear infinite; }
+:root[data-presence="listening"] .mia-orb-core { animation: mia-orb-listen 1.6s ease-in-out infinite; }
+:root[data-presence="warning"] .mia-orb-core { background: var(--attention); }
+:root[data-presence="success"] .mia-orb-core { box-shadow: 0 0 14px rgba(var(--rgb-ok), 0.6); }
 @keyframes mia-orb-breathe { 0%, 100% { transform: scale(1); opacity: 0.92; } 50% { transform: scale(1.05); opacity: 1; } }
 @keyframes mia-orb-listen {
   0%, 100% { box-shadow: 0 0 0 3px rgba(var(--rgb-accent), 0.18), 0 0 0 7px rgba(var(--rgb-accent), 0.06); }
@@ -167,7 +192,7 @@
 .focus-list li .why { display: block; color: var(--text-faint); font-size: var(--text-xs); }
 
 @media (prefers-reduced-motion: reduce) {
-  .mia-orb, .skeleton { animation: none !important; }
+  .mia-orb, .skeleton, .mia-orb-core { animation: none !important; }
 }
 
 /* ------------------------------------------------------------ Home (the canvas's Home, DEC-0113) */

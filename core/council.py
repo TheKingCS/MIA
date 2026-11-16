@@ -330,7 +330,17 @@ def answer(name: str, message: dict, ask: Optional[Callable[[str, str], str]] = 
            repo: Optional[Path] = None, store: Optional[DevStore] = None, context: Optional[str] = None,
            words: int = 150) -> dict:
     """One member's reply to a message that asked them, posted in its thread. `context` is what the
-    member reads of the thread (core/council_floor.py keeps it short); without it, the thread itself."""
+    member reads of the thread (core/council_floor.py keeps it short); without it, the thread itself. While they
+    answer, MIA's orb shows the council at work (core/orb_state.py)."""
+    from core import orb_state
+
+    with orb_state.active("council"):  # her orb shows the council at work (core/orb_state.py)
+        return _answer(name, message, ask, repo, store, context, words)
+
+
+def _answer(name: str, message: dict, ask: Optional[Callable[[str, str], str]], repo: Optional[Path],
+            store: Optional[DevStore], context: Optional[str], words: int) -> dict:
+    """`answer`'s body, run while the orb shows the council at work."""
     roster = members()
     if name not in roster:
         raise CouncilError(f"No council member called {name}.")

@@ -165,6 +165,10 @@
         version = next;
         if (!first) callback(next);
       });
+      // What MIA is really doing (core/orb_state.py): the page's orbs follow it (web/shell.js).
+      source.addEventListener("presence", (event) => {
+        try { window.dispatchEvent(new CustomEvent("mia-presence", { detail: JSON.parse(event.data) })); } catch (e) { /* ignore */ }
+      });
       source.onerror = () => {
         source.close();
         timer = setTimeout(connect, 3000); // MIA restarting, or the network blinked

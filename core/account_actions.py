@@ -117,7 +117,8 @@ def _edit_profile(context, params) -> str:
 
 def _setting(context, params):
     """The setting the params name and its cleaned new value; ActionError for a setting that isn't theirs, one a child
-    has to ask a parent about, or a value that won't do. The theme may also be one of the person's own (DEC-0136).
+    has to ask a parent about, or a value that won't do. The theme may also be one of the person's own (DEC-0136); a
+    colour scheme must be readable with the theme in use (core/appearance.scheme_problem, DEC-0184).
     """
     from core.child_accounts import ASK_A_PARENT, is_child
     from core.web_account import SETTINGS_BY_KEY, clean_setting
@@ -136,9 +137,17 @@ def _setting(context, params):
             raise ActionError("Theme: pick one from the list.")
         return setting, value
     try:
-        return setting, clean_setting(setting.key, params.get("value"))
+        value = clean_setting(setting.key, params.get("value"))
     except ValueError as problem:
         raise ActionError(str(problem)) from None
+    if setting.key == "display.scheme":  # colours that read as a warning, or can't be seen on this theme (DEC-0184)
+        from core.appearance import scheme_problem
+        from core.themes import for_shell
+
+        problem = scheme_problem(value, for_shell(context))
+        if problem:
+            raise ActionError(problem)
+    return setting, value
 
 
 def _describe_setting(context, params) -> str:

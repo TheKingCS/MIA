@@ -833,8 +833,8 @@ def for_shell(context) -> dict:
 def studio(context) -> dict:
     """The Theme Studio's screen: every theme with its Studio choices and its export file (built-in first, then
     theirs), the one in use, the fonts, materials, the room's level ranges, the sound sets, the parts Mix Two can take,
-    the file format, a few sample portals and the checks' values (each meaning hue with the saturation from which it
-    reads as that meaning, DEC-0186)."""
+    the file format, a few sample portals, the checks' values (each meaning hue with the saturation from which it
+    reads as that meaning, DEC-0186) and the "Your look" picker (`look`: colours, layout and glass, DEC-0184)."""
     themes = all_themes(context)
     from core.theme_actions import export
 
@@ -847,7 +847,16 @@ def studio(context) -> dict:
             "parts": [{"id": k, "label": label} for k, (label, _keys) in PARTS.items()],
             "max_own": MAX_CUSTOM, "sample": _sample_portals(), "file_format": "mia-theme/1",
             # the same checks build_theme makes, so the page can say so as you pick (core still decides on save)
-            "meaning_hues": [{"meaning": m, "hue": h, "vivid": v} for m, h, v in MEANING_HUES], "min_contrast": 4.5}
+            "meaning_hues": [{"meaning": m, "hue": h, "vivid": v} for m, h, v in MEANING_HUES], "min_contrast": 4.5,
+            # "Your look" (prompt 24 A5, DEC-0184): theme, colours, layout and glass as separate picks
+            "look": _look(context)}
+
+
+def _look(context) -> dict:
+    """The Studio's "Your look" picker (core/appearance.picker); imported here, as appearance imports this module."""
+    from core.appearance import picker
+
+    return picker(context)
 
 
 def _sample_portals() -> list[dict]:
