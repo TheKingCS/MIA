@@ -1,11 +1,11 @@
 # MIA OS in a virtual machine (PoC 2's second half and PoC 4's second; Zac said yes to the tests, Q-49, 2026-11-16):
-# the image from os/Containerfile, made into a disk with bootc-image-builder, booted under QEMU with KVM on GitHub's
+# the image from os/Containerfile, installed onto a disk file by bootc itself, booted under QEMU with KVM on GitHub's
 # machine, then:
 #   1. it boots, and bootc reports the deployment;
 #   2. MIA's runtime runs as the test user's systemd user service, from the image's /usr/lib/mia;
 #   3. a second version of the image is staged with `bootc switch` and booted (an update);
 #   4. `bootc rollback` boots the first version again (a rollback), with the user's data untouched.
-# The test-only additions (SSH, a passwordless sudo for the test user, a throwaway registry) are in
+# The test-only additions (SSH on, trust for a throwaway registry) are in
 # os/poc/vm/Containerfile.test and never in the real image. Run by hand: it takes most of an hour.
 name: MIA OS in a VM
 
@@ -42,63 +42,63 @@ jobs:
           sudo podman run -d --name reg -p 5000:5000 docker.io/library/registry:2
           sleep 3
           sudo podman push --tls-verify=false localhost/mia-os:test-v2 localhost:5000/mia-os:test-v2
-      - name: Make a disk of version 1 with bootc-image-builder
+      - name: Make a disk of version 1 (the image installs itself onto a disk file)
         run: |
           ssh-keygen -t ed25519 -N "" -f ~/.ssh/poc
-          cat > /tmp/config.toml <<EOF
-          [[customizations.user]]
-          name = "mia"
-          key = "$(cat ~/.ssh/poc.pub)"
-          groups = ["wheel"]
-          EOF
-          mkdir -p /tmp/out
-          # The runner is Ubuntu: AppArmor (not SELinux) is what stops the builder's mounts, so both are relaxed for
-          # this one privileged builder container.
-          sudo podman run --rm --privileged --security-opt label=type:unconfined_t --security-opt apparmor=unconfined \
-            -v /tmp/config.toml:/config.toml:ro -v /tmp/out:/output \
-            -v /var/lib/containers/storage:/var/lib/containers/storage \
-            quay.io/centos-bootc/bootc-image-builder:latest --type qcow2 --rootfs btrfs \
-            localhost/mia-os:test-v1
-          sudo chown -R "$(id -u)" /tmp/out && ls -lh /tmp/out/qcow2/
+          mkdir -p /tmp/out && cp ~/.ssh/poc.pub /tmp/out/poc.pub
+          truncate -s 40G /tmp/out/disk.raw
+          # bootc's own documented way to make a disk from an image; bootc-image-builder couldn't mount its storage
+          # on GitHub's Ubuntu machines (two runs, 2026-11-16).
+          sudo podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+            -v /dev:/dev -v /var/lib/containers:/var/lib/containers -v /tmp/out:/output \
+            localhost/mia-os:test-v1 \
+            bootc install to-disk --generic-image --via-loopback --filesystem btrfs \
+            --root-ssh-authorized-keys /output/poc.pub /output/disk.raw
+          sudo chown "$(id -u)" /tmp/out/disk.raw && ls -lh /tmp/out/
       - name: Boot it
         run: |
           qemu-system-x86_64 -enable-kvm -cpu host -m 8G -smp 4 \
-            -drive file=/tmp/out/qcow2/disk.qcow2,if=virtio \
+            -bios /usr/share/ovmf/OVMF.fd \
+            -drive file=/tmp/out/disk.raw,format=raw,if=virtio \
             -netdev user,id=n0,hostfwd=tcp::2222-:22 -device virtio-net-pci,netdev=n0 \
             -display none -serial file:/tmp/serial.log -daemonize
-          echo 'vm() { ssh -i ~/.ssh/poc -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 mia@localhost "$@"; }' > ~/vm.sh
+          echo 'vm() { ssh -i ~/.ssh/poc -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 root@localhost "$@"; }' > ~/vm.sh
+          echo 'as_mia() { vm "runuser -l mia -c '"'"'export XDG_RUNTIME_DIR=/run/user/\$(id -u); $1'"'"'"; }' >> ~/vm.sh
       - name: 1. It boots, and bootc reports the deployment
         run: |
           . ~/vm.sh
           for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done
-          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; sudo bootc status; systemctl is-system-running || true; rpm -q ollama ollama-rocm cage'
+          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; bootc status; systemctl is-system-running || true; rpm -q ollama ollama-rocm cage; findmnt -no FSTYPE /sysroot'
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v1
-      - name: 2. MIA's runtime runs as the user's service, from the image
+      - name: 2. MIA's runtime runs as a person's service, from the image
         run: |
           . ~/vm.sh
-          vm 'sudo loginctl enable-linger mia; sleep 3; export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user daemon-reload; systemctl --user enable --now mia-runtime'
-          for i in $(seq 1 60); do vm 'grep -q "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log' 2>/dev/null && break; sleep 5; done
-          vm 'grep "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; export XDG_RUNTIME_DIR=/run/user/$(id -u); systemctl --user is-active mia-runtime'
-          vm 'echo kept-by-him > ~/his-file.txt'
+          vm 'useradd -m mia && loginctl enable-linger mia && sleep 5'
+          as_mia 'systemctl --user daemon-reload; systemctl --user enable --now mia-runtime'
+          for i in $(seq 1 60); do as_mia 'grep -q "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log' 2>/dev/null && break; sleep 5; done
+          as_mia 'grep "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
+          as_mia 'echo kept-by-him > ~/his-file.txt'
+          vm 'ps -o user= -C python | sort -u; id -u mia'
       - name: 3. An update to version 2, booted
         run: |
           . ~/vm.sh
-          vm 'sudo bootc switch --transport registry 10.0.2.2:5000/mia-os:test-v2 && sudo systemctl reboot' || true
+          vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:test-v2 && systemctl reboot' || true
           sleep 20
           for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done
-          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; sudo bootc status'
+          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; bootc status'
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
-          test "$(vm cat ~/his-file.txt)" = kept-by-him
+          test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
       - name: 4. A rollback to version 1, booted, his data untouched
         run: |
           . ~/vm.sh
-          vm 'sudo bootc rollback && sudo systemctl reboot' || true
+          vm 'bootc rollback && systemctl reboot' || true
           sleep 20
           for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done
-          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; sudo bootc status'
+          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; bootc status'
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v1
-          test "$(vm cat ~/his-file.txt)" = kept-by-him
-          vm 'grep -c "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log'
+          test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
+          sleep 30
+          as_mia 'grep -c "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
       - name: The VM's console, for the record
         if: always()
         run: tail -n 80 /tmp/serial.log || true

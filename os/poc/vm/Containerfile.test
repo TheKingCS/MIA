@@ -2,14 +2,13 @@
 #
 # PoC 2's second half and PoC 4's second (docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md section 2): the MIA OS
 # image, booted in a virtual machine on GitHub's machine, updated to a second version and rolled back. This file adds
-# ONLY what a machine nobody sits at needs to be tested from outside: SSH on, a test user's sudo without a password,
-# and trust for the test's own throwaway registry on the VM's host. It is never the real image: the workflow
+# ONLY what a machine nobody sits at needs to be tested from outside: SSH on (the test signs in as root with a key
+# made for that run), and trust for the test's own throwaway registry on the VM's host. It is never the real image: the workflow
 # (.github/workflows/mia-os-vm.yml) builds it from the real one and throws both away.
 ARG BASE=localhost/mia-os:poc
 FROM ${BASE}
 ARG MARK=v1
 RUN systemctl enable sshd \
- && echo 'mia ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/90-poc-test && chmod 0440 /etc/sudoers.d/90-poc-test \
  && mkdir -p /etc/containers/registries.conf.d \
  && printf '[[registry]]\nlocation = "10.0.2.2:5000"\ninsecure = true\n' > /etc/containers/registries.conf.d/90-poc-test.conf \
  && echo "${MARK}" > /usr/lib/mia/POC_IMAGE_MARK
