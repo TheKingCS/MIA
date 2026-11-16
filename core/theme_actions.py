@@ -12,7 +12,7 @@ action system so each change is approved and undoable:
   in core (core/themes.build_theme), which refuses an accent that would read
   as a warning colour and text that would be hard to read.
 - `theme.delete`: one of your own themes; if it's the one in use, MIA goes
-  back to Stark.
+  back to the default theme (Aquatic since DEC-0183).
 - `theme.import`: a theme from a file (the Studio's export, or someone
   else's): read through the same checks as everything else (only allowed
   tokens, nothing that can break out of CSS, no warning-coloured accent,
@@ -31,7 +31,7 @@ from core.actions import ACTION_TYPES, ActionError, ActionType
 
 
 def _base(context, params) -> dict:
-    """The theme the params start from (a built-in or one of theirs; Stark when none is named)."""
+    """The theme the params start from (a built-in or one of theirs; the default theme when none is named)."""
     from core.themes import DEFAULT_THEME, all_themes
 
     themes = all_themes(context)
@@ -99,15 +99,20 @@ def _own(context, params) -> dict:
 
 
 def _describe_delete(context, params) -> str:
-    """The sentence the approval card shows for `theme.delete` (Propose); raises ActionError when it can't be done."""
+    """The sentence the approval card shows for `theme.delete` (Propose), naming the default theme MIA goes back to
+    when it's the one in use; raises ActionError when it can't be done."""
     from core.themes import theme_of
 
     found = _own(context, params)
-    return f"Delete your theme {found['name']}" + (" (MIA goes back to Stark)" if theme_of(context) == found["id"] else "")
+    from core.themes import DEFAULT_THEME, THEMES
+
+    back = THEMES[DEFAULT_THEME].name
+    return f"Delete your theme {found['name']}" + (f" (MIA goes back to {back})" if theme_of(context) == found["id"] else "")
 
 
 def _delete(context, params) -> str:
-    """Does `theme.delete` once approved: the theme removed from theirs, and Stark used if it was the one in use."""
+    """Does `theme.delete` once approved: the theme removed from theirs, and the default theme used if it was the one
+    in use."""
     from core import person_settings
     from core.themes import CUSTOM_KEY, DEFAULT_THEME, KEY, theme_of
 
@@ -118,7 +123,9 @@ def _delete(context, params) -> str:
     if in_use:
         person_settings.put(context, KEY, DEFAULT_THEME)
     context.events.publish("display.changed")
-    return f"Deleted {found['name']}." + (" Back to Stark." if in_use else "")
+    from core.themes import DEFAULT_THEME, THEMES
+
+    return f"Deleted {found['name']}." + (f" Back to {THEMES[DEFAULT_THEME].name}." if in_use else "")
 
 
 FORMAT = "mia-theme/1"

@@ -52,8 +52,8 @@ SCHEMES: dict[str, tuple] = {
     "cyan": ("Cyan", "#35d4ff", "#3f79e5", "#5955cb"),
     "turquoise": ("Turquoise", "#2fd6c3", "#1f9fb8", "#7fe0f0"),
     "violet": ("Violet", "#a48bff", "#6c5ce7", "#d2b8ff"),
-    # Warm gold reads as amber (needs you) or gold (a reward), which no scheme may take (DEC-0014); champagne is the
-    # warm accent that stays pale enough to read as neither (Aurelia, "Eclipse with gold accents").
+    # A soft gold is allowed since DEC-0186 (Zac, Q-41: "Allow gold"); vivid amber still reads as "needs you".
+    "gold": ("Gold", "#e8c27a", "#c08a4a", "#f3dcae"),
     "champagne": ("Champagne", "#efe2c4", "#b8ad98", "#f5ead6"),
     "ice": ("Ice", "#bfe6ff", "#8fb8dd", "#e6f4ff"),
     "rose": ("Rose", "#ff8fc4", "#d16aa8", "#ffc4e0"),

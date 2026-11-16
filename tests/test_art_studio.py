@@ -121,7 +121,10 @@ def test_a_painting_is_kept_and_goes_up_as_the_background(ctx, comfy):
     art_id = settled[0]["art_id"]
     assert ctx.art.path(art_id).read_bytes() == PNG and ctx.art.get(art_id)["description"] == "a fantasy castle village at dusk"
     mine = custom_themes(ctx)
-    assert [t["name"] for t in mine] == ["My Stark"] and theme_of(ctx) == mine[0]["id"]
+    from core.themes import DEFAULT_THEME, THEMES
+
+    # a copy of the theme in use (the default: Aquatic since DEC-0183) with the painting behind it
+    assert [t["name"] for t in mine] == [f"My {THEMES[DEFAULT_THEME].name}"] and theme_of(ctx) == mine[0]["id"]
     assert for_shell(ctx)["backdrop"] == {"art": art_id, "strength": 0.6}
     assert art_studio.settle(ctx) == []  # once only
     page = art_studio.status(ctx)

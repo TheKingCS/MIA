@@ -3214,7 +3214,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Status: APPROVED as direction (Zac's handoff, 2026-11-15: "Status: Approved Design Direction"; prompt 24). Which
   preset is the default: Aquatic, based on his reference picture (Q-37, 2026-11-15: "Yes but base it on the
   picture"; kept as `docs/design/reference/prompt24_glass_dashboard.jpg`). Muse refines the values Claude builds
-  (Q-38: yes).
+  (Q-38: yes). Built as the default (A4, 2026-11-16).
 - Proposed by: claude (Opus), 2026-11-15, recording prompt 24 (`docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` H)
 - Decision: MIA OS's identity is premium glass: frosted translucent surfaces over atmospheric backgrounds, generous
   curves, layered depth, restrained motion; no heavy neon or cluttered HUD. The default look moves from Stark
@@ -3249,3 +3249,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Not built yet: `core/greenhouse_link.py` only watches today (REQ-FUN-103, R1); the node's command interface and its
   limits come first, tested against the node's simulator (`homestead/`).
 - Related: DEC-0145, DEC-0150, DEC-0156, DEC-0181
+
+### DEC-0186: Gold is allowed as an accent; rewards are legendary orange
+- Status: APPROVED (Zac, 2026-11-16, answering Q-41: "Allow gold")
+- Amends: DEC-0014 and DEC-0136's meaning colours (gold meant "a reward").
+- Decision: a soft gold, champagne or bronze may be a theme's or colour scheme's accent (`core/themes.accent_problem`:
+  a meaning hue reads as that meaning only from its own saturation up; amber's is 0.8). Vivid amber and orange stay
+  refused: they are "something needs you". Rewards are a deep Borderlands legendary orange (`--win` `#ff8a1f`; Zac,
+  2026-11-16: "A reward can be like borderlands legendary orange"), redder than the amber (`#f2b33d`) that means "needs you"; a vivid orange accent is refused.
+  "Needs you" never relies on colour alone: every such item carries its word (Overdue, Soon, Needs you).
+- Why: Zac chose gold accents (the Aurelia preset, "Eclipse with gold accents"); a warm look without gold felt wrong.
+  The cost is that a gold accent sits near amber, and the reward orange sits near it too; the words carry the
+  meaning (rewards appear in their celebrations with their labels; "needs you" items always say so).
+- Related: DEC-0014, DEC-0136, DEC-0183, DEC-0184

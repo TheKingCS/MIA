@@ -38,8 +38,9 @@
     if (s < 0.35 || l > 0.85 || l < 0.12) return "";
     let hue = d === 0 ? 0 : max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
     hue = (hue * 60 + 360) % 360;
-    const hit = data.meaning_hues.find((m) => Math.min(Math.abs(hue - m.hue), 360 - Math.abs(hue - m.hue)) < 20);
-    return hit ? "That accent would look like " + hit.meaning + ". Try a blue, violet, pink, cyan or white." : "";
+    // Each meaning reads as itself only from its own saturation up (a soft gold is fine, a vivid amber isn't: DEC-0186).
+    const hit = data.meaning_hues.find((m) => Math.min(Math.abs(hue - m.hue), 360 - Math.abs(hue - m.hue)) < 20 && s >= (m.vivid || 0.35));
+    return hit ? "That accent would look like " + hit.meaning + ". Try a blue, violet, pink, cyan, a soft gold or white." : "";
   }
   function tokensFrom(c, b) {
     const r = Math.max(0, Math.min(28, Math.round(Number(c.radius) || 0)));

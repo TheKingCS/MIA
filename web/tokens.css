@@ -13,7 +13,7 @@
  * fonts, no CDNs. --scale follows the person's text size;
  * [data-contrast="high"] is the high-contrast look.
  *
- * Earned gold stays celebration-only; Borderlands rarity colors stay on
+ * Rewards are legendary orange (DEC-0186; gold before, now free as an accent); Borderlands rarity colors stay on
  * missions/achievements/unlockables ONLY. Additive: every existing
  * token keeps its meaning (the old names point at the new values).
  */
@@ -81,14 +81,17 @@
   --rgb-accent-2: 11, 134, 173; --accent-2: #0b86ad;
   --rgb-accent-3: 166, 236, 255; --accent-3: #a6ecff;
   --gradient-accent: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  --frame-glow: 0;  /* a glass preset's bright edge around the whole window (Zac's picture); 0 = none */
   /* Charts: series colours in order (a scheme's chart palette); meaning colours are never series colours. */
   --chart-1: var(--accent); --chart-2: var(--accent-2); --chart-3: var(--accent-3);
   --chart-4: #8ea3b8; --chart-5: #5f7184; --chart-6: #c9d6e2;
 
-  /* Earned gold: celebration only (DEC-0014: loud about progression) */
-  --rgb-win: 246, 196, 83;
-  --win: #f6c453;
-  --win-deep: #a87e1c;
+  /* Rewards: celebration only (DEC-0014: loud about progression). A deep Borderlands legendary orange since DEC-0186
+     (Zac: gold is free as an accent; "a reward can be like borderlands legendary orange"), redder than the amber that
+     means "needs you"; both always carry their words. The accent check refuses a vivid orange accent. */
+  --rgb-win: 255, 138, 31;
+  --win: #ff8a1f;
+  --win-deep: #a8520a;
   --win-glow: rgba(var(--rgb-win), 0.42);
 
   /* Amber: attention and warnings, sparingly */
@@ -229,7 +232,7 @@ body[data-app="workshop"], body[data-app="business"], body[data-app="made"] {
   --accent: #00e5ff;
   --accent-soft: #b8f7ff;
   --accent-glow: transparent;
-  --win: #ffd400;
+  --win: #ff9a2e;
   --win-glow: transparent;
   --attention: #ffd400;
   --attention-glow: transparent;

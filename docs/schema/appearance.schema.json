@@ -10,7 +10,7 @@
     "name": {"type": "string"},
     "tokens": {"type": "object", "additionalProperties": {"type": "string"}},
     "material": {"type": "string", "enum": ["solid", "glass", "chrome", "wire"]},
-    "scheme": {"type": "string", "enum": ["theme", "cyan", "turquoise", "violet", "champagne", "ice", "rose"]},
+    "scheme": {"type": "string", "enum": ["theme", "cyan", "turquoise", "violet", "gold", "champagne", "ice", "rose"]},
     "layout": {
       "type": "object",
       "additionalProperties": false,

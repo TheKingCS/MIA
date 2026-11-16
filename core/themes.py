@@ -10,8 +10,10 @@ room's light. The page applies it (web/shell.js), so every screen in both
 experiences (DEC-0135: Spatial and Cards) follows, with nothing duplicated.
 Plan: docs/design/EXPERIENCES_AND_THEMES.md.
 
-- `THEMES`: the built-in ones: Stark (DEC-0023, the default), Y2K Cyber,
-  Cyberpunk, Glass. First cuts for Muse to refine (DEC-0017).
+- `THEMES`: the built-in ones: Stark (DEC-0023), Y2K Cyber, Cyberpunk, Glass,
+  and the six glass presets of prompt 24 (Aquatic, the default since DEC-0183,
+  from Zac's picture; Nebula, Evergreen, Aurelia, Glacial, Eclipse). First cuts
+  for Muse to refine (DEC-0017, Q-38).
 - `TOKENS`, `MATERIALS`, `ROOM`: what a theme may change. Since prompt 24 (DEC-0184) that includes the five glass
   surface tiers' values (`TIER_RANGES`, clamped by `clamp_tier`), the second and third accents and the chart colours. Meaning colours
   (amber needs you, red errors, green ok, gold rewards, rarity, area hues)
@@ -20,7 +22,7 @@ Plan: docs/design/EXPERIENCES_AND_THEMES.md.
 - `clean_theme(data)` (pure): a theme's data checked against those lists,
   values that could break out of CSS refused, numbers clamped. Every theme
   goes through it, built-in or (later) made in the Theme Studio or imported.
-- `theme_of(context)`: the person's theme id ("stark" when unset).
+- `theme_of(context)`: the person's theme id (`DEFAULT_THEME`, Aquatic, when unset).
 - `for_shell(context)`: the person's theme, cleaned, for /api/shell.
 - `wants_theme(words)` (pure): a theme id from how someone says it
   ("the Y2K one", "make it cyberpunk", "back to Stark"), else None.
@@ -51,7 +53,7 @@ from typing import Optional
 KEY = "display.theme"
 CUSTOM_KEY = "display.custom_themes"
 MAX_CUSTOM = 12
-DEFAULT_THEME = "stark"
+DEFAULT_THEME = "aquatic"  # DEC-0183, Q-37 (Zac, 2026-11-15); Stark before
 
 # The tokens a theme may set (web/tokens.css). Meaning colours aren't here on purpose.
 TOKENS = frozenset({
@@ -59,7 +61,7 @@ TOKENS = frozenset({
     "--rgb-line", "--text", "--text-dim", "--text-faint",
     "--rgb-accent", "--accent", "--accent-soft", "--accent-deep",
     "--radius", "--radius-sm", "--font", "--font-mono", "--label-track", "--ease", "--dur-fast", "--dur",
-    "--theme-backdrop",
+    "--theme-backdrop", "--frame-glow",
     "--rgb-accent-2", "--accent-2", "--rgb-accent-3", "--accent-3",
     "--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5", "--chart-6",
 })
@@ -165,6 +167,405 @@ THEMES: dict[str, Theme] = {t.id: t for t in (
           material="glass",
           room={"accent": "#96d6ff", "palette": ["#96d6ff", "#c8b4ff", "#dfe9f2"], "back_top": "#0e141d",
                 "back_bottom": "#05070b", "fire": 0.45, "bloom": 0.8, "mist": 0.7}),
+
+    # Prompt 24 (DEC-0183, DEC-0184): the glass presets, Aquatic the default (Q-37: from Zac's picture). First
+    # values; Muse refines them (Q-38). Each passes core/appearance.readability_problems and the accent check.
+    Theme("aquatic", "Aquatic", "Glass over a calm, dim room: blue-graphite panels, a bright cyan frame, charts from cyan to violet.",
+          tokens={
+              "--rgb-bg": "11, 17, 22",
+              "--bg": "#0b1116",
+              "--bg-soft": "#0b1116",
+              "--rgb-panel": "40, 50, 62",
+              "--rgb-panel-2": "48, 58, 70",
+              "--rgb-panel-3": "58, 68, 80",
+              "--surface-solid": "#28323e",
+              "--rgb-line": "200, 225, 240",
+              "--text": "#f2f7fa",
+              "--text-dim": "#b9c6d2",
+              "--text-faint": "#93a3b2",
+              "--rgb-accent": "53, 212, 255",
+              "--accent": "#35d4ff",
+              "--accent-soft": "#aeeeff",
+              "--accent-deep": "#0b86ad",
+              "--rgb-accent-2": "63, 121, 229",
+              "--accent-2": "#3f79e5",
+              "--rgb-accent-3": "89, 85, 203",
+              "--accent-3": "#5955cb",
+              "--chart-1": "#35d4ff",
+              "--chart-2": "#3f79e5",
+              "--chart-3": "#5955cb",
+              "--radius": "16px",
+              "--radius-sm": "10px",
+              "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--dur": "300ms",
+              "--dur-fast": "170ms",
+              "--theme-backdrop": "radial-gradient(900px 620px at 82% 8%, rgba(53, 212, 255, 0.12), transparent 62%), radial-gradient(820px 600px at 8% 92%, rgba(63, 121, 229, 0.10), transparent 62%), linear-gradient(180deg, #121a22, #0a0f14)",
+              "--frame-glow": "0.55",
+              "--surface-primary-alpha": "0.62",
+              "--surface-primary-tint": "0.06",
+              "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14",
+              "--surface-primary-light": "0.12",
+              "--surface-primary-shadow": "0.35",
+              "--surface-secondary-alpha": "0.5",
+              "--surface-secondary-tint": "0.05",
+              "--surface-secondary-blur": "0px",
+              "--surface-secondary-border": "0.11",
+              "--surface-secondary-light": "0.08",
+              "--surface-secondary-shadow": "0.25",
+              "--surface-floating-alpha": "0.92",
+              "--surface-floating-tint": "0.06",
+              "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.18",
+              "--surface-floating-light": "0.14",
+              "--surface-floating-shadow": "0.45",
+              "--surface-deep-alpha": "0.7",
+              "--surface-deep-tint": "0.07",
+              "--surface-deep-blur": "22px",
+              "--surface-deep-border": "0.16",
+              "--surface-deep-light": "0.14",
+              "--surface-deep-shadow": "0.4",
+              "--surface-interactive-alpha": "0.3",
+              "--surface-interactive-tint": "0.06",
+              "--surface-interactive-blur": "0px",
+              "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.1",
+              "--surface-interactive-shadow": "0",
+          },
+          material="glass",
+          room={"accent": "#35d4ff", "palette": ["#35d4ff", "#3f79e5", "#5955cb"], "back_top": "#101820",
+                "back_bottom": "#06090c", "fire": 0.4, "bloom": 0.8, "mist": 0.8}),
+    Theme("nebula", "Nebula", "Deep space glass: indigo panels, violet and lavender light, cosmic gradients.",
+          tokens={
+              "--rgb-bg": "12, 10, 24",
+              "--bg": "#0c0a18",
+              "--bg-soft": "#0c0a18",
+              "--rgb-panel": "34, 30, 58",
+              "--rgb-panel-2": "42, 38, 66",
+              "--rgb-panel-3": "52, 48, 76",
+              "--surface-solid": "#221e3a",
+              "--rgb-line": "215, 205, 255",
+              "--text": "#f4f1ff",
+              "--text-dim": "#c2bbe0",
+              "--text-faint": "#9d95c0",
+              "--rgb-accent": "164, 139, 255",
+              "--accent": "#a48bff",
+              "--accent-soft": "#d8ccff",
+              "--accent-deep": "#5b44c7",
+              "--rgb-accent-2": "108, 92, 231",
+              "--accent-2": "#6c5ce7",
+              "--rgb-accent-3": "210, 184, 255",
+              "--accent-3": "#d2b8ff",
+              "--chart-1": "#a48bff",
+              "--chart-2": "#6c5ce7",
+              "--chart-3": "#d2b8ff",
+              "--radius": "16px",
+              "--radius-sm": "10px",
+              "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--dur": "300ms",
+              "--dur-fast": "170ms",
+              "--theme-backdrop": "radial-gradient(900px 640px at 78% 12%, rgba(164, 139, 255, 0.16), transparent 62%), radial-gradient(760px 560px at 12% 85%, rgba(226, 110, 220, 0.10), transparent 62%), linear-gradient(180deg, #120f24, #07060f)",
+              "--frame-glow": "0.45",
+              "--surface-primary-alpha": "0.62",
+              "--surface-primary-tint": "0.06",
+              "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14",
+              "--surface-primary-light": "0.12",
+              "--surface-primary-shadow": "0.35",
+              "--surface-secondary-alpha": "0.5",
+              "--surface-secondary-tint": "0.05",
+              "--surface-secondary-blur": "0px",
+              "--surface-secondary-border": "0.11",
+              "--surface-secondary-light": "0.08",
+              "--surface-secondary-shadow": "0.25",
+              "--surface-floating-alpha": "0.92",
+              "--surface-floating-tint": "0.06",
+              "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.18",
+              "--surface-floating-light": "0.14",
+              "--surface-floating-shadow": "0.45",
+              "--surface-deep-alpha": "0.7",
+              "--surface-deep-tint": "0.07",
+              "--surface-deep-blur": "22px",
+              "--surface-deep-border": "0.16",
+              "--surface-deep-light": "0.14",
+              "--surface-deep-shadow": "0.4",
+              "--surface-interactive-alpha": "0.3",
+              "--surface-interactive-tint": "0.06",
+              "--surface-interactive-blur": "0px",
+              "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.1",
+              "--surface-interactive-shadow": "0",
+          },
+          material="glass",
+          room={"accent": "#a48bff", "palette": ["#a48bff", "#6c5ce7", "#e26edc"], "back_top": "#140f28",
+                "back_bottom": "#05040a", "fire": 0.4, "bloom": 0.8, "mist": 0.8}),
+    Theme("evergreen", "Evergreen", "Forest glass: emerald and pine panels, muted gold light, a natural calm.",
+          tokens={
+              "--rgb-bg": "8, 17, 13",
+              "--bg": "#08110d",
+              "--bg-soft": "#08110d",
+              "--rgb-panel": "28, 44, 36",
+              "--rgb-panel-2": "36, 52, 44",
+              "--rgb-panel-3": "46, 62, 54",
+              "--surface-solid": "#1c2c24",
+              "--rgb-line": "205, 235, 215",
+              "--text": "#f1f7f2",
+              "--text-dim": "#b6c9bd",
+              "--text-faint": "#90a699",
+              "--rgb-accent": "217, 184, 103",
+              "--accent": "#d9b867",
+              "--accent-soft": "#efe0b8",
+              "--accent-deep": "#8a6d2a",
+              "--rgb-accent-2": "143, 184, 160",
+              "--accent-2": "#8fb8a0",
+              "--rgb-accent-3": "232, 217, 168",
+              "--accent-3": "#e8d9a8",
+              "--chart-1": "#d9b867",
+              "--chart-2": "#8fb8a0",
+              "--chart-3": "#e8d9a8",
+              "--radius": "16px",
+              "--radius-sm": "10px",
+              "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--dur": "300ms",
+              "--dur-fast": "170ms",
+              "--theme-backdrop": "radial-gradient(900px 640px at 80% 10%, rgba(217, 184, 103, 0.10), transparent 62%), radial-gradient(820px 600px at 10% 90%, rgba(46, 125, 90, 0.18), transparent 62%), linear-gradient(180deg, #0f1a14, #060c09)",
+              "--frame-glow": "0.35",
+              "--surface-primary-alpha": "0.62",
+              "--surface-primary-tint": "0.06",
+              "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14",
+              "--surface-primary-light": "0.12",
+              "--surface-primary-shadow": "0.35",
+              "--surface-secondary-alpha": "0.5",
+              "--surface-secondary-tint": "0.05",
+              "--surface-secondary-blur": "0px",
+              "--surface-secondary-border": "0.11",
+              "--surface-secondary-light": "0.08",
+              "--surface-secondary-shadow": "0.25",
+              "--surface-floating-alpha": "0.92",
+              "--surface-floating-tint": "0.06",
+              "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.18",
+              "--surface-floating-light": "0.14",
+              "--surface-floating-shadow": "0.45",
+              "--surface-deep-alpha": "0.7",
+              "--surface-deep-tint": "0.07",
+              "--surface-deep-blur": "22px",
+              "--surface-deep-border": "0.16",
+              "--surface-deep-light": "0.14",
+              "--surface-deep-shadow": "0.4",
+              "--surface-interactive-alpha": "0.3",
+              "--surface-interactive-tint": "0.06",
+              "--surface-interactive-blur": "0px",
+              "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.1",
+              "--surface-interactive-shadow": "0",
+          },
+          material="glass",
+          room={"accent": "#d9b867", "palette": ["#d9b867", "#2e7d5a", "#8fb8a0"], "back_top": "#0e1912",
+                "back_bottom": "#040806", "fire": 0.4, "bloom": 0.8, "mist": 0.8}),
+    Theme("aurelia", "Aurelia", "Warm, luxurious glass: champagne and bronze panels, soft gold light.",
+          tokens={
+              "--rgb-bg": "18, 14, 9",
+              "--bg": "#120e09",
+              "--bg-soft": "#120e09",
+              "--rgb-panel": "51, 41, 30",
+              "--rgb-panel-2": "59, 49, 38",
+              "--rgb-panel-3": "69, 59, 48",
+              "--surface-solid": "#33291e",
+              "--rgb-line": "245, 228, 200",
+              "--text": "#fbf6ee",
+              "--text-dim": "#d6c9b6",
+              "--text-faint": "#b09f88",
+              "--rgb-accent": "232, 194, 122",
+              "--accent": "#e8c27a",
+              "--accent-soft": "#f5e3c0",
+              "--accent-deep": "#9a7230",
+              "--rgb-accent-2": "192, 138, 74",
+              "--accent-2": "#c08a4a",
+              "--rgb-accent-3": "243, 220, 174",
+              "--accent-3": "#f3dcae",
+              "--chart-1": "#e8c27a",
+              "--chart-2": "#c08a4a",
+              "--chart-3": "#f3dcae",
+              "--radius": "16px",
+              "--radius-sm": "10px",
+              "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--dur": "300ms",
+              "--dur-fast": "170ms",
+              "--theme-backdrop": "radial-gradient(900px 640px at 78% 10%, rgba(232, 194, 122, 0.14), transparent 62%), radial-gradient(780px 580px at 12% 88%, rgba(192, 138, 74, 0.12), transparent 62%), linear-gradient(180deg, #1a140d, #0a0805)",
+              "--frame-glow": "0.45",
+              "--surface-primary-alpha": "0.62",
+              "--surface-primary-tint": "0.06",
+              "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14",
+              "--surface-primary-light": "0.12",
+              "--surface-primary-shadow": "0.35",
+              "--surface-secondary-alpha": "0.5",
+              "--surface-secondary-tint": "0.05",
+              "--surface-secondary-blur": "0px",
+              "--surface-secondary-border": "0.11",
+              "--surface-secondary-light": "0.08",
+              "--surface-secondary-shadow": "0.25",
+              "--surface-floating-alpha": "0.92",
+              "--surface-floating-tint": "0.06",
+              "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.18",
+              "--surface-floating-light": "0.14",
+              "--surface-floating-shadow": "0.45",
+              "--surface-deep-alpha": "0.7",
+              "--surface-deep-tint": "0.07",
+              "--surface-deep-blur": "22px",
+              "--surface-deep-border": "0.16",
+              "--surface-deep-light": "0.14",
+              "--surface-deep-shadow": "0.4",
+              "--surface-interactive-alpha": "0.3",
+              "--surface-interactive-tint": "0.06",
+              "--surface-interactive-blur": "0px",
+              "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.1",
+              "--surface-interactive-shadow": "0",
+          },
+          material="glass",
+          room={"accent": "#e8c27a", "palette": ["#e8c27a", "#c08a4a", "#f3dcae"], "back_top": "#1a130b",
+                "back_bottom": "#060403", "fire": 0.4, "bloom": 0.8, "mist": 0.8}),
+    Theme("glacial", "Glacial", "Crystalline glass: ice-blue and silver panels, cool white light, clean edges.",
+          tokens={
+              "--rgb-bg": "13, 18, 24",
+              "--bg": "#0d1218",
+              "--bg-soft": "#0d1218",
+              "--rgb-panel": "42, 52, 64",
+              "--rgb-panel-2": "50, 60, 72",
+              "--rgb-panel-3": "60, 70, 82",
+              "--surface-solid": "#2a3440",
+              "--rgb-line": "225, 240, 255",
+              "--text": "#f7fbff",
+              "--text-dim": "#c5d3e0",
+              "--text-faint": "#9eaebe",
+              "--rgb-accent": "191, 230, 255",
+              "--accent": "#bfe6ff",
+              "--accent-soft": "#e6f4ff",
+              "--accent-deep": "#5e8db4",
+              "--rgb-accent-2": "143, 184, 221",
+              "--accent-2": "#8fb8dd",
+              "--rgb-accent-3": "230, 244, 255",
+              "--accent-3": "#e6f4ff",
+              "--chart-1": "#bfe6ff",
+              "--chart-2": "#8fb8dd",
+              "--chart-3": "#e6f4ff",
+              "--radius": "18px",
+              "--radius-sm": "10px",
+              "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--dur": "300ms",
+              "--dur-fast": "170ms",
+              "--theme-backdrop": "radial-gradient(900px 640px at 80% 8%, rgba(191, 230, 255, 0.14), transparent 62%), radial-gradient(800px 600px at 10% 90%, rgba(143, 184, 221, 0.10), transparent 62%), linear-gradient(180deg, #141b23, #090d12)",
+              "--frame-glow": "0.4",
+              "--surface-primary-alpha": "0.62",
+              "--surface-primary-tint": "0.06",
+              "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14",
+              "--surface-primary-light": "0.12",
+              "--surface-primary-shadow": "0.35",
+              "--surface-secondary-alpha": "0.5",
+              "--surface-secondary-tint": "0.05",
+              "--surface-secondary-blur": "0px",
+              "--surface-secondary-border": "0.11",
+              "--surface-secondary-light": "0.08",
+              "--surface-secondary-shadow": "0.25",
+              "--surface-floating-alpha": "0.92",
+              "--surface-floating-tint": "0.06",
+              "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.18",
+              "--surface-floating-light": "0.14",
+              "--surface-floating-shadow": "0.45",
+              "--surface-deep-alpha": "0.7",
+              "--surface-deep-tint": "0.07",
+              "--surface-deep-blur": "22px",
+              "--surface-deep-border": "0.16",
+              "--surface-deep-light": "0.14",
+              "--surface-deep-shadow": "0.4",
+              "--surface-interactive-alpha": "0.3",
+              "--surface-interactive-tint": "0.06",
+              "--surface-interactive-blur": "0px",
+              "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.1",
+              "--surface-interactive-shadow": "0",
+          },
+          material="glass",
+          room={"accent": "#bfe6ff", "palette": ["#bfe6ff", "#8fb8dd", "#e6f4ff"], "back_top": "#131a22",
+                "back_bottom": "#06090c", "fire": 0.4, "bloom": 0.8, "mist": 0.8}),
+    Theme("eclipse", "Eclipse", "Cinematic glass: charcoal and black panels, restrained crimson light.",
+          tokens={
+              "--rgb-bg": "7, 7, 7",
+              "--bg": "#070707",
+              "--bg-soft": "#070707",
+              "--rgb-panel": "29, 27, 28",
+              "--rgb-panel-2": "37, 35, 36",
+              "--rgb-panel-3": "47, 45, 46",
+              "--surface-solid": "#1d1b1c",
+              "--rgb-line": "235, 220, 222",
+              "--text": "#f5f2f2",
+              "--text-dim": "#c4bcbd",
+              "--text-faint": "#9a9192",
+              "--rgb-accent": "224, 48, 106",
+              "--accent": "#e0306a",
+              "--accent-soft": "#f2a3bd",
+              "--accent-deep": "#8c1a40",
+              "--rgb-accent-2": "142, 42, 68",
+              "--accent-2": "#8e2a44",
+              "--rgb-accent-3": "242, 184, 198",
+              "--accent-3": "#f2b8c6",
+              "--chart-1": "#e0306a",
+              "--chart-2": "#8e2a44",
+              "--chart-3": "#f2b8c6",
+              "--radius": "16px",
+              "--radius-sm": "10px",
+              "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--dur": "300ms",
+              "--dur-fast": "170ms",
+              "--theme-backdrop": "radial-gradient(860px 620px at 82% 10%, rgba(224, 48, 106, 0.12), transparent 60%), radial-gradient(760px 560px at 10% 90%, rgba(120, 20, 40, 0.14), transparent 60%), linear-gradient(180deg, #0e0c0c, #040404)",
+              "--frame-glow": "0.35",
+              "--surface-primary-alpha": "0.62",
+              "--surface-primary-tint": "0.06",
+              "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14",
+              "--surface-primary-light": "0.12",
+              "--surface-primary-shadow": "0.35",
+              "--surface-secondary-alpha": "0.5",
+              "--surface-secondary-tint": "0.05",
+              "--surface-secondary-blur": "0px",
+              "--surface-secondary-border": "0.11",
+              "--surface-secondary-light": "0.08",
+              "--surface-secondary-shadow": "0.25",
+              "--surface-floating-alpha": "0.92",
+              "--surface-floating-tint": "0.06",
+              "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.18",
+              "--surface-floating-light": "0.14",
+              "--surface-floating-shadow": "0.45",
+              "--surface-deep-alpha": "0.7",
+              "--surface-deep-tint": "0.07",
+              "--surface-deep-blur": "22px",
+              "--surface-deep-border": "0.16",
+              "--surface-deep-light": "0.14",
+              "--surface-deep-shadow": "0.4",
+              "--surface-interactive-alpha": "0.3",
+              "--surface-interactive-tint": "0.06",
+              "--surface-interactive-blur": "0px",
+              "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.1",
+              "--surface-interactive-shadow": "0",
+          },
+          material="glass",
+          room={"accent": "#e0306a", "palette": ["#e0306a", "#8e2a44", "#f2b8c6"], "back_top": "#120a0c",
+                "back_bottom": "#030202", "fire": 0.4, "bloom": 0.8, "mist": 0.8}),
 )}
 
 
@@ -189,9 +590,13 @@ STARK_CHOICES = {"accent": "#35d4ff", "background": "#05070a", "panel": "#0c1016
                  "backdrop": "", "backdrop_strength": 0.6,
                  "sound": "classic"}  # the theme's chimes (SOUND_SETS), opt-in by picking one
 _ART_ID = re.compile(r"^[a-f0-9]{12}$")
-# Hues that mean something (DEC-0014): an accent near them would read as a warning, an error or "done".
-MEANING_HUES = (("amber, which means something needs you", 39), ("red, which means an error", 2),
-                ("green, which means done", 151), ("gold, which means a reward", 45))
+# Hues that mean something (DEC-0014, DEC-0186): an accent near them would read as a warning, an error, "done" or a
+# reward. Each with the saturation from which it reads as that meaning: since DEC-0186 (Zac, Q-41: "Allow gold") a soft
+# gold, champagne or bronze accent is allowed (under 0.8), while a vivid amber or orange still reads as "needs you".
+# Rewards are a deep legendary orange (Zac, 2026-11-16: "A reward can be like borderlands legendary orange"), which
+# sits inside amber's band, so a vivid orange accent is refused for both meanings.
+MEANING_HUES = (("amber or orange, which means something needs you or a reward", 34, 0.8),
+                ("red, which means an error", 2, 0.35), ("green, which means done", 151, 0.35))
 
 
 def _rgb(hex_colour: str) -> tuple[int, int, int]:
@@ -229,8 +634,8 @@ def contrast(a: str, b: str) -> float:
 
 
 def accent_problem(hex_colour: str) -> Optional[str]:
-    """Pure logic. Why this accent can't be a theme's (it would read as amber, red, green or gold), or None. Pale and
-    grey accents are fine whatever their hue."""
+    """Pure logic. Why this accent can't be a theme's (it would read as vivid amber or orange, red or green), or None.
+    Pale and grey accents are fine whatever their hue, and so is a soft gold (DEC-0186)."""
     import colorsys
 
     r, g, b = (v / 255 for v in _rgb(hex_colour))
@@ -238,9 +643,9 @@ def accent_problem(hex_colour: str) -> Optional[str]:
     if sat < 0.35 or light > 0.85 or light < 0.12:
         return None
     degrees = hue * 360
-    for meaning, centre in MEANING_HUES:
-        if min(abs(degrees - centre), 360 - abs(degrees - centre)) < 20:
-            return f"That accent would look like {meaning}. Try a blue, violet, pink, cyan or white."
+    for meaning, centre, vivid in MEANING_HUES:
+        if min(abs(degrees - centre), 360 - abs(degrees - centre)) < 20 and sat >= vivid:
+            return f"That accent would look like {meaning}. Try a blue, violet, pink, cyan, a soft gold or white."
     return None
 
 
@@ -413,7 +818,7 @@ def choices(context) -> list[tuple[str, str]]:
 
 
 def theme_of(context) -> str:
-    """The person's theme id ("stark" when they haven't picked, or it isn't one of theirs)."""
+    """The person's theme id (`DEFAULT_THEME` when they haven't picked, or it isn't one of theirs)."""
     from core import person_settings
 
     value = person_settings.get(context, KEY, DEFAULT_THEME) or DEFAULT_THEME
@@ -428,7 +833,8 @@ def for_shell(context) -> dict:
 def studio(context) -> dict:
     """The Theme Studio's screen: every theme with its Studio choices and its export file (built-in first, then
     theirs), the one in use, the fonts, materials, the room's level ranges, the sound sets, the parts Mix Two can take,
-    the file format, a few sample portals and the checks' values."""
+    the file format, a few sample portals and the checks' values (each meaning hue with the saturation from which it
+    reads as that meaning, DEC-0186)."""
     themes = all_themes(context)
     from core.theme_actions import export
 
@@ -441,7 +847,7 @@ def studio(context) -> dict:
             "parts": [{"id": k, "label": label} for k, (label, _keys) in PARTS.items()],
             "max_own": MAX_CUSTOM, "sample": _sample_portals(), "file_format": "mia-theme/1",
             # the same checks build_theme makes, so the page can say so as you pick (core still decides on save)
-            "meaning_hues": [{"meaning": m, "hue": h} for m, h in MEANING_HUES], "min_contrast": 4.5}
+            "meaning_hues": [{"meaning": m, "hue": h, "vivid": v} for m, h, v in MEANING_HUES], "min_contrast": 4.5}
 
 
 def _sample_portals() -> list[dict]:
@@ -524,7 +930,13 @@ _WORDS = (
     ("y2k", re.compile(r"\b(y2k|y 2 k|myspace|2000s|two thousands|rave|chrome|liquid)\b", re.I)),
     ("cyberpunk", re.compile(r"\b(cyber ?punk|neon city|blade runner)\b", re.I)),
     ("glass", re.compile(r"\b(glass|frosted|minimal|minimalist|calm|clean)\b", re.I)),
-    ("stark", re.compile(r"\b(stark|jarvis|holographic|iron ?man|default|original|cyan)\b", re.I)),
+    ("stark", re.compile(r"\b(stark|jarvis|holographic|iron ?man|original|cyan)\b", re.I)),
+    ("aquatic", re.compile(r"\b(aquatic|ocean|underwater|default)\b", re.I)),
+    ("nebula", re.compile(r"\b(nebula|cosmic|galaxy)\b", re.I)),
+    ("evergreen", re.compile(r"\b(evergreen|forest)\b", re.I)),
+    ("aurelia", re.compile(r"\b(aurelia|champagne|luxur\w*)\b", re.I)),
+    ("glacial", re.compile(r"\b(glacial|ice|icy|crystal\w*)\b", re.I)),
+    ("eclipse", re.compile(r"\b(eclipse|crimson|cinematic)\b", re.I)),
 )
 
 

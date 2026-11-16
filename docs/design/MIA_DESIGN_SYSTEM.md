@@ -1,6 +1,6 @@
 # MIA's design system
 
-*Prompt 24 (2026-11-15): the glass identity (DEC-0183) and the appearance engine's plan (surface tiers, schemes, layouts, the literal-colour baseline) are in [docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md](../mia_os/MIA_OS_APPEARANCE_ENGINE.md). Built (A2, 2026-11-16): the five glass tiers (`--surface-<tier>-alpha|tint|blur|border|light|shadow`), `--accent-2`, `--accent-3`, `--gradient-accent`, `--chart-1` to `-6`, `--rgb-light`, `--rgb-shadow`; hard-coded colours outside `tokens.css` counted by `tools/css_colours.py` and may only fall.*
+*Prompt 24 (2026-11-15): the glass identity (DEC-0183) and the appearance engine's plan (surface tiers, schemes, layouts, the literal-colour baseline) are in [docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md](../mia_os/MIA_OS_APPEARANCE_ENGINE.md). Built (A2, 2026-11-16): the five glass tiers (`--surface-<tier>-alpha|tint|blur|border|light|shadow`), `--accent-2`, `--accent-3`, `--gradient-accent`, `--chart-1` to `-6`, `--rgb-light`, `--rgb-shadow`; hard-coded colours outside `tokens.css` counted by `tools/css_colours.py` and may only fall. Since DEC-0186 rewards are legendary orange (`--win`), and a soft gold may be an accent.*
 
 *Claude, 2026-11-07, for H-0087. **Specification draft.** Each section says what's **built** today (with the token
 or class), and what's **proposed**. Proposals wait for Zac's approval and round one of the visual concepts

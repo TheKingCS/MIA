@@ -101,11 +101,12 @@ def test_every_theme_and_scheme_pairing_is_readable_and_no_scheme_takes_a_meanin
         for scheme in appearance.SCHEMES:
             assert appearance.scheme_problem(scheme, theme) == "", (tid, scheme)
     stark = _built_in()["stark"]
-    appearance.SCHEMES["gold_test"] = ("Gold", "#e8c27a", "#c99a52", "#f3dcae")
+    assert appearance.scheme_problem("gold", stark) == ""  # a soft gold is allowed since DEC-0186 (Zac, Q-41)
+    appearance.SCHEMES["amber_test"] = ("Amber", "#f2b33d", "#c99a52", "#f3dcae")
     try:
-        assert "amber" in appearance.scheme_problem("gold_test", stark)  # a warm gold reads as "needs you"
+        assert "amber" in appearance.scheme_problem("amber_test", stark)  # a vivid amber still reads as "needs you"
     finally:
-        del appearance.SCHEMES["gold_test"]
+        del appearance.SCHEMES["amber_test"]
     pale = dict(stark, material="glass", tokens={"--bg": "#e0e0e0", "--rgb-bg": "224, 224, 224", "--text": "#f2f6fa",
                                                   "--rgb-panel": "230, 230, 230", "--surface-primary-alpha": "0.5"})
     found = appearance.readability_problems(pale)  # white text on pale glass: every tier is unreadable
@@ -161,3 +162,36 @@ def test_the_page_sets_layout_and_effects_and_the_sheets_read_them():
     for attr in ('[data-density="compact"]', '[data-sidebar="icons"]', '[data-effects="light"]', '[data-transparency="reduced"]'):
         assert attr in css, attr
     assert ".layout:has(.home-mia)" in css.split('[data-sidebar="icons"]', 1)[1]  # Home keeps its Talk column
+
+
+# ---------------------------------------------------------------- phase A4: the presets; Q-41's gold
+
+
+PRESETS = ("aquatic", "nebula", "evergreen", "aurelia", "glacial", "eclipse")
+
+
+def test_the_six_glass_presets_are_readable_with_every_scheme_and_aquatic_is_the_default():
+    assert themes.DEFAULT_THEME == "aquatic"  # DEC-0183, Q-37: from Zac's picture
+    for pid in PRESETS:
+        data = themes.clean_theme(themes.as_data(themes.THEMES[pid]))
+        assert data["material"] == "glass" and appearance.readability_problems(data) == [], pid
+        assert themes.accent_problem(data["tokens"]["--accent"]) is None, pid
+        assert all(f"--surface-{tier}-alpha" in data["tokens"] for tier in TIERS), pid
+        assert all(appearance.scheme_problem(s, data) == "" for s in appearance.SCHEMES), pid
+        assert themes.wants_theme(f"switch to {pid}") == pid
+    aquatic = themes.clean_theme(themes.as_data(themes.THEMES["aquatic"]))["tokens"]
+    assert aquatic["--accent"] == "#35d4ff" and aquatic["--accent-2"] == "#3f79e5" and aquatic["--accent-3"] == "#5955cb"
+    assert float(aquatic["--frame-glow"]) > 0  # the picture's bright edge around the whole window
+
+
+def test_a_soft_gold_accent_is_allowed_and_rewards_are_legendary_orange():
+    """DEC-0186 (Zac, Q-41: "Allow gold"; then "a reward can be like borderlands legendary orange"): soft gold,
+    champagne and bronze pass; vivid amber and orange still read as "needs you" or a reward."""
+    for gold in ("#e8c27a", "#d9b867", "#c08a4a", "#efe2c4"):
+        assert themes.accent_problem(gold) is None, gold
+    assert "amber" in themes.accent_problem("#f2b33d") and "amber" in themes.accent_problem("#ff9a00")
+    assert "reward" in themes.accent_problem("#ff8a1f") and themes.accent_problem("#c3f53c") is None  # lime is free
+    tokens = (WEB / "tokens.css").read_text(encoding="utf-8")
+    assert "--win: #ff8a1f;" in tokens and "--rgb-win: 255, 138, 31;" in tokens
+    studio = (WEB / "studio.js").read_text(encoding="utf-8")
+    assert "m.vivid" in studio  # the Studio's live check agrees with core's

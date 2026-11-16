@@ -67,6 +67,12 @@
   .btn-ghost) {
   background: rgb(var(--rgb-panel)); backdrop-filter: none; -webkit-backdrop-filter: none;
 }
+/* The frame glow (Zac's picture): a thin bright edge in the accent around the whole window, never around each card. */
+:root[data-material="glass"]:not([data-contrast="high"]):not([data-effects="none"]) body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 2147483000; border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(var(--rgb-accent), var(--frame-glow)),
+    inset 0 0 22px rgba(var(--rgb-accent), calc(var(--frame-glow) * 0.35));
+}
 :root[data-material="glass"]:not([data-contrast="high"]) .side { background: rgba(var(--rgb-light), 0.035); border-color: rgba(var(--rgb-light), 0.08); }
 
 :root[data-material="chrome"]:not([data-contrast="high"]) :is(.glass, .row, .figure, .stat-tile, .asset-card, .holo, .n3-card, .strip .cell) {

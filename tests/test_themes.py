@@ -74,19 +74,19 @@ def test_the_theme_someone_asks_for_is_understood_from_everyday_words():
 def test_each_person_picks_their_own_theme_by_voice_and_in_settings(ctx):
     changed = []
     ctx.events.subscribe("display.changed", lambda **kw: changed.append(1))
-    assert theme_of(ctx) == "stark" and for_shell(ctx)["id"] == "stark"
+    assert theme_of(ctx) == "aquatic" and for_shell(ctx)["id"] == "aquatic"  # the default since DEC-0183
     assert _action_set_theme(ctx, {"theme": "the y2k one"}) == "Switched to the Y2K Cyber theme."
     assert theme_of(ctx) == "y2k" and for_shell(ctx)["material"] == "chrome"
     assert "already" in _action_set_theme(ctx, {"theme": "y2k"})
     assert "Which theme" in _action_set_theme(ctx, {"theme": "purple"})
     assert changed == [1]
     sam = SimpleNamespace(config=ctx.config, profiles=ctx.profiles, profile_id=ctx.other.profile_id)
-    assert theme_of(sam) == "stark"
+    assert theme_of(sam) == "aquatic"
     setting = SETTINGS_BY_KEY[KEY]
     assert setting.kind == "choice" and [v for v, _ in setting.options] == list(THEMES)
     assert clean_setting(KEY, "glass") == "glass" and KEY in person_settings.PERSONAL_SETTINGS
     person_settings.put(ctx, KEY, "vaporwave")
-    assert theme_of(ctx) == "stark"
+    assert theme_of(ctx) == "aquatic"
 
 
 def test_every_page_gets_the_persons_theme_with_the_shell(ctx):
@@ -155,8 +155,8 @@ def test_saving_using_and_deleting_a_theme_of_your_own(ctx):
         _describe_save(ctx, {**params, "id": "stark", "name": "Stark"})  # built-ins stay as they are
     with pytest.raises(ActionError):
         _describe_save(ctx, {**params, "name": "Orange", "choices": {**picks, "accent": "#ff8a00"}})
-    assert "goes back to Stark" in _describe_delete(ctx, {"id": "my_lavender"})
-    assert "Back to Stark" in _delete(ctx, {"id": "my_lavender"}) and theme_of(ctx) == "stark"
+    assert "goes back to Aquatic" in _describe_delete(ctx, {"id": "my_lavender"})
+    assert "Back to Aquatic" in _delete(ctx, {"id": "my_lavender"}) and theme_of(ctx) == "aquatic"
     assert "my_lavender" not in all_themes(ctx)
     with pytest.raises(ActionError):
         _describe_delete(ctx, {"id": "y2k"})
@@ -167,6 +167,7 @@ def test_your_own_themes_are_in_settings_and_answer_to_their_names(ctx):
     from core.assistant_accessibility_actions import _action_delete_theme, _action_tweak_theme
     from core.web_account import settings_page
 
+    person_settings.put(ctx, KEY, "stark")  # tweak from Stark, as this test always has
     assert "Purple" not in _action_tweak_theme(ctx, {"accent": "orange"}) and theme_of(ctx) == "stark"
     assert "saved and in use" in _action_tweak_theme(ctx, {"accent": "purple", "material": "glass"})
     assert theme_of(ctx) == "my_stark" and for_shell(ctx)["tokens"]["--accent"] == "#9b6bff"
@@ -186,7 +187,7 @@ def test_the_studio_screen_lists_every_theme_with_what_it_needs(ctx):
     from core.themes import studio
 
     page = studio(ctx)
-    assert page["current"] == "stark" and [t["id"] for t in page["themes"]] == list(THEMES)
+    assert page["current"] == "aquatic" and [t["id"] for t in page["themes"]] == list(THEMES)
     assert all(t["choices"]["accent"].startswith("#") and not t["own"] for t in page["themes"])
     assert {f["id"] for f in page["fonts"]} >= {"system", "y2k", "technical"} and page["materials"] == list(MATERIALS)
     assert len(page["sample"]) == 5 and page["min_contrast"] == 4.5

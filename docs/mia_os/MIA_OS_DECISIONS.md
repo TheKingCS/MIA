@@ -64,3 +64,4 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC-0183 | Glass is MIA OS's visual identity; Aquatic (from Zac's picture) the default | APPROVED as direction (prompt 24, Q-37) |
 | DEC-0184 | The appearance engine: theme, colour scheme, layout | PROPOSED |
 | DEC-0185 | MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse (amends DEC-0150) | APPROVED (Q-40) |
+| DEC-0186 | Gold allowed as an accent; rewards are legendary orange | APPROVED (Q-41) |

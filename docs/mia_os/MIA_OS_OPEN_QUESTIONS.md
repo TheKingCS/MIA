@@ -51,7 +51,7 @@ folded in here.*
 | Q-38 | **Answered yes (2026-11-15)**: Claude builds the engine and first values; Muse refines | DEC-0184 | — |
 | Q-39 | **Answered (2026-11-15)**: the picture arrived; cropped to the photo, its palette read in code (`MIA_OS_APPEARANCE_ENGINE.md` I) | DEC-0183 | — |
 | Q-40 | **Answered (2026-11-16)**: the stop as written, with one change: MIA may adjust the greenhouse's controllers, and a stop never affects the greenhouse | DEC-0181, DEC-0185 | — |
-| Q-41 | A gold or amber accent reads as "needs you" or "a reward", which no colour scheme may take (DEC-0014, DEC-0136). Keep the rule (warm looks use a pale champagne accent instead), or let gold be an accent and give rewards another colour? Recommended: keep the rule | the Aurelia preset and "Eclipse with gold accents" | appearance A4 |
+| Q-41 | **Answered (2026-11-16)**: "Allow gold": soft gold accents allowed, vivid amber still refused, rewards now legendary orange | DEC-0186 | — |
 
 ## The original questions (for the record)
 

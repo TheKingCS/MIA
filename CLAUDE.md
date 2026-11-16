@@ -302,7 +302,9 @@ other people in the house.
   fails when a style sheet gains one, `tools/css_colours.py`); the frame's
   icons come from `web/icons.js`. The concept's layouts stay.
   DEC-0183 (2026-11-15): glass is the identity, Aquatic (from Zac's
-  reference picture) the default to come; the glass material is drawn from
+  reference picture) the default theme (`core/themes.DEFAULT_THEME`);
+  a look is theme + colour scheme + layout (`core/appearance.py`);
+  DEC-0186: soft gold accents allowed, rewards are legendary orange; the glass material is drawn from
   five surface tiers in `web/tokens.css` (primary, secondary, floating,
   deep, interactive), each clamped by `core/themes.py`'s `TIER_RANGES`.
   DEC-0124 (2026-11-07): the desktop window opens on the web front end,
