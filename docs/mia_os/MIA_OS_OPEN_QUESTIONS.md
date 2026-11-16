@@ -52,7 +52,7 @@ folded in here.*
 | Q-39 | **Answered (2026-11-15)**: the picture arrived; cropped to the photo, its palette read in code (`MIA_OS_APPEARANCE_ENGINE.md` I) | DEC-0183 | — |
 | Q-40 | **Answered (2026-11-16)**: the stop as written, with one change: MIA may adjust the greenhouse's controllers, and a stop never affects the greenhouse | DEC-0181, DEC-0185 | — |
 | Q-41 | **Answered (2026-11-16)**: "Allow gold": soft gold accents allowed, vivid amber still refused, rewards now legendary orange | DEC-0186 | — |
-| Q-42 | Each app its own atmosphere colour, for its own data and header glow only (the accent still means MIA): Workout rose, Kitchen soft cream gold, Finance indigo, Estate and the homestead olive, Skills plum, Workshop steel? None is orange, amber, red or green, so none reads as a reward, "needs you", an error or done. Yes, other colours, or keep one colour everywhere | DEC-0187 | Zac, then Muse |
+| Q-42 | **Answered (2026-11-16)**: "I like your proposed colors": Workout rose, Kitchen soft cream gold, Finance indigo, Estate and the homestead olive, Skills plum, Workshop steel, for each app's own data and header glow | DEC-0187 | Muse may refine |
 
 ## The original questions (for the record)
 

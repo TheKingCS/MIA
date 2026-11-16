@@ -3264,7 +3264,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0014, DEC-0136, DEC-0183, DEC-0184
 
 ### DEC-0187: Each app gets its own atmosphere colour, outside the meaning colours
-- Status: PROPOSED (Claude on Opus, 2026-11-16; Q-42 to Zac, Muse refines the values)
+- Status: APPROVED (Zac, 2026-11-16, answering Q-42: "I like your proposed colors"); Muse may refine the values
 - Amends: `docs/design/MIA_DESIGN_SYSTEM.md`'s per-app atmosphere proposal (2026-11-07), whose orange, amber-cream and
   leaf green now collide with the meaning colours (orange is a reward, amber needs you, green is done: DEC-0186).
 - Decision: the `--mod-*` tokens in `web/tokens.css`, which all point at the accent today, take their own colour, used
@@ -3272,7 +3272,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   indigo `#8f92f2`, Estate (and the homestead) olive `#a9bf72`, Skills plum `#bb8fe3`, and a Workshop token in steel
   `#93a7bc`. Missions keep the accent (their rarity colours already carry them). The accent still means MIA, active
   and selected everywhere. Each passes `core/themes.accent_problem` and reads at 6:1 or better on the background; a
-  test will hold that for every theme. A theme or scheme may opt out (one colour throughout), and the high-contrast
+  test holds that for every theme (`tests/test_appearance.py`). Built the same day: `--rgb-atmo-*` in `web/tokens.css`,
+  set per page from `<body data-app>` (workout; kitchen; workshop, business, made; budget; real_estate, greenhouse,
+  flock; skills, taught_skills). A theme or scheme may opt out (one colour throughout), and the high-contrast
   mode keeps its white.
 - Why: Zac's handoff (prompt 24 §6) asks for each app to feel like its own place inside one system, and the plan's
   phase A6 carries it. Choosing colours is Zac's and Muse's call, so this is a proposal.

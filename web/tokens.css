@@ -159,11 +159,15 @@
      active, selected and the primary action everywhere. An app's OWN
      data (its numbers, chart bars, header motif) may carry its accent,
      through --atmo, which each page sets from <body data-app> below.
-     Never a button, a state, a meaning color or the orb. Homestead apps
-     stay cyan until a green that can't be mistaken for --ok is picked. */
-  --rgb-atmo-workout: 255, 138, 61;
-  --rgb-atmo-kitchen: 233, 212, 168;
-  --rgb-atmo-workshop: 143, 167, 191;
+     Never a button, a state, a meaning color or the orb. DEC-0187 (Zac,
+     2026-11-16): none is orange, amber, red or green, so none reads as a
+     reward, "needs you", an error or done; the olive is far from --ok. */
+  --rgb-atmo-workout: 224, 103, 159;   /* rose #e0679f (was orange, now the reward's colour) */
+  --rgb-atmo-kitchen: 216, 194, 142;   /* soft cream gold #d8c28e */
+  --rgb-atmo-workshop: 147, 167, 188;  /* steel #93a7bc */
+  --rgb-atmo-finance: 143, 146, 242;   /* indigo #8f92f2 */
+  --rgb-atmo-land: 169, 191, 114;      /* olive #a9bf72: the estate and the homestead */
+  --rgb-atmo-skills: 187, 143, 227;    /* plum #bb8fe3 */
   --atmo: var(--accent);
   --rgb-atmo: var(--rgb-accent);
 
@@ -200,13 +204,22 @@
 }
 
 /* An app's accent for its own data (DEC-0113). */
-body[data-app="workout"] { --rgb-atmo: var(--rgb-atmo-workout); --atmo: rgb(var(--rgb-atmo-workout)); }
-body[data-app="kitchen"] { --rgb-atmo: var(--rgb-atmo-kitchen); --atmo: rgb(var(--rgb-atmo-kitchen)); }
-body[data-app="workshop"], body[data-app="business"], body[data-app="made"] {
-  --rgb-atmo: var(--rgb-atmo-workshop); --atmo: rgb(var(--rgb-atmo-workshop));
+body[data-app="workout"] { --rgb-atmo: var(--rgb-atmo-workout); }
+body[data-app="kitchen"] { --rgb-atmo: var(--rgb-atmo-kitchen); }
+body[data-app="workshop"], body[data-app="business"], body[data-app="made"] { --rgb-atmo: var(--rgb-atmo-workshop); }
+body[data-app="budget"] { --rgb-atmo: var(--rgb-atmo-finance); }
+body[data-app="real_estate"], body[data-app="greenhouse"], body[data-app="flock"] { --rgb-atmo: var(--rgb-atmo-land); }
+body[data-app="skills"], body[data-app="taught_skills"] { --rgb-atmo: var(--rgb-atmo-skills); }
+/* The app's colour, and its header glow (DEC-0187); the line, buttons and states stay the accent. */
+body[data-app="workout"], body[data-app="kitchen"], body[data-app="workshop"], body[data-app="business"],
+body[data-app="made"], body[data-app="budget"], body[data-app="real_estate"], body[data-app="greenhouse"],
+body[data-app="flock"], body[data-app="skills"], body[data-app="taught_skills"] {
+  --atmo: rgb(var(--rgb-atmo));
+  --mod-glow: rgba(var(--rgb-atmo), 0.24);
+  --mod-dim: rgba(var(--rgb-atmo), 0.10);
 }
 
-[data-contrast="high"] body[data-app] { --atmo: #00e5ff; --rgb-atmo: 0, 229, 255; }
+[data-contrast="high"] body[data-app] { --atmo: #00e5ff; --rgb-atmo: 0, 229, 255; --mod-glow: transparent; --mod-dim: transparent; }
 
 [data-contrast="high"] {
   /* pure black, white text, full-strength cyan (and the triplets the panels are built from) */

@@ -7,7 +7,7 @@ core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens wi
 glass material draws every tier from its tokens; a theme can set a tier only within its range, so a dialog can't be made
 see-through; status chips keep their meaning colours under glass; the OS's reduced transparency makes glass solid; no
 style sheet gains hard-coded colours, and since A6 none but the glasses page has any, and every token a sheet reads
-is defined.
+is defined; and each app's own colour (DEC-0187) is readable on every theme and never a meaning colour.
 """
 
 import re
@@ -324,3 +324,15 @@ def test_every_token_a_sheet_reads_is_defined_in_the_tokens_or_that_sheet():
         own = set(re.findall(r"(--[\w-]+)\s*:", text))
         missing = set(re.findall(r"var\((--[\w-]+)\)", text)) - defined - own - SET_BY_SCRIPT
         assert not missing, (sheet.name, sorted(missing))
+
+
+def test_each_apps_own_colour_is_readable_on_every_theme_and_never_a_meaning_colour():
+    tokens = (WEB / "tokens.css").read_text(encoding="utf-8")
+    colours = {name: "#" + "".join(f"{int(v):02x}" for v in rgb.split(","))
+               for name, rgb in re.findall(r"--rgb-atmo-([a-z]+):\s*([0-9, ]+);", tokens)}
+    assert set(colours) >= {"workout", "kitchen", "workshop", "finance", "land", "skills"}  # DEC-0187
+    backgrounds = [t["tokens"]["--bg"] for t in _built_in().values() if t["tokens"].get("--bg")] + ["#05070a"]
+    for name, colour in colours.items():
+        assert themes.accent_problem(colour) is None, name
+        assert min(themes.contrast(colour, bg) for bg in backgrounds) >= 4.5, name
+        assert f"var(--rgb-atmo-{name})" in tokens, name  # some app uses it
