@@ -72,7 +72,9 @@ GROUPS = (LIFE, MONEY, HOME, OUTDOORS, KNOW)
 
 
 def _apps_from_manifests() -> tuple[tuple[App, ...], frozenset]:
-    """Every app and the retired ones' ids, from the Application Registry's manifests, in their `order`."""
+    """Every app and the retired ones' ids, from the Application Registry's manifests, in their `order`; a record
+    that couldn't be read, and an app whose dependency isn't here, are logged as errors (the start's dependency
+    check, M5)."""
     from core import app_registry
 
     reg = app_registry.load()
@@ -81,6 +83,10 @@ def _apps_from_manifests() -> tuple[tuple[App, ...], frozenset]:
     manifests = sorted((m for i, m in reg.manifests.items() if i != "mia"), key=lambda m: (m.get("order", 0), m["id"]))
     if not manifests:
         log.error("No app manifests in %s: MIA has no apps to show", app_registry.APPS_DIR)
+    for m in manifests:  # the dependency check at start (M5): an app whose needs aren't here is said, not hidden
+        for dep in m.get("dependencies", []):
+            if dep.get("application_id") not in reg.manifests:
+                log.error("The app %s needs %s, which isn't an app here", m["id"], dep.get("application_id"))
     apps = tuple(App(m["id"], m["name"], m.get("icon", ""), m.get("tagline", ""),
                      (m["components"]["interface"].get("web") or [None])[0], m.get("description", ""),
                      m.get("group", ""), tuple(m.get("domains", ())), m.get("ask", "")) for m in manifests)
@@ -711,6 +717,18 @@ def tool_label(name: str) -> str:
     return " ".join([first] + [_WORDS.get(w, w) for w in words[1:]])
 
 
+def _app_states(context) -> dict:
+    """Every app's status now (core/app_ecosystem.statuses, M5), or {} when it can't be worked out (the page still
+    lists every app, each as working)."""
+    from core import app_ecosystem
+
+    try:
+        return app_ecosystem.statuses(app_ecosystem.registry(), context)
+    except Exception:  # noqa: BLE001
+        log.exception("The apps' status couldn't be worked out")
+        return {}
+
+
 def _registry_section(context) -> Optional[dict]:
     """The Apps page's "Her apps, checked" section (core/app_ecosystem.page), or None when it can't be read."""
     from core import app_ecosystem
@@ -727,7 +745,8 @@ def apps_page(context) -> dict:
     with what it's for, whether it's on the web yet, whether it's shown in
     this person's sidebar, and what MIA can do in it (the Assistant tools
     of its domains, so even an app without a web screen yet is reachable
-    by talking to MIA), plus "Her apps, checked" (`registry`: core/app_ecosystem.page, DEC-0178). Child-safe: a child
+    by talking to MIA), its status now (`status`, `status_why`: core/app_ecosystem.statuses, M5), plus "Her apps,
+    checked" (`registry`: core/app_ecosystem.page, DEC-0178). Child-safe: a child
     sees only their apps and tools."""
     from core.child_accounts import app_allowed, tool_allowed
     from core.focus_presets import ALWAYS_VISIBLE, favorite_apps
@@ -749,6 +768,7 @@ def apps_page(context) -> dict:
                               "detail": _first_sentence(action.description)})
         return found
 
+    state = _app_states(context)
     groups = []
     for group in GROUPS:
         apps = []
@@ -761,6 +781,8 @@ def apps_page(context) -> dict:
                 "shown": _visible(context, app), "can_hide": app.module_id not in ALWAYS_VISIBLE,
                 "ask": app.ask, "tools": tools_of(app),
                 "favorite": app.module_id in favorites,
+                "status": state.get(app.module_id, {}).get("status", "working"),
+                "status_why": state.get(app.module_id, {}).get("why", [])[:3],
             })
         if apps:
             groups.append({"name": group, "apps": apps})

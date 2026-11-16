@@ -33,11 +33,20 @@
   }
 
   // A row in a life area's list (the design canvas's Apps, DEC-0113): icon, name, what it is, the star.
+  // Each app's status now (M5, core/app_ecosystem.statuses): working says nothing; anything else is a chip with why.
+  // Failing is the bad tone, the rest amber (DEC-0014: nothing red that only needs a look).
+  const STATUS = { failing: ["Failing", "chip-bad"], missing_dependency: ["Missing something it needs", "chip-soon"],
+    needs_attention: ["Needs attention", "chip-soon"] };
+  const statusChip = (app) => STATUS[app.status]
+    ? el("span", { class: "chip " + STATUS[app.status][1], title: (app.status_why || []).join("; ") }, STATUS[app.status][0])
+    : null;
+
   function row(app) {
     return el("a", { class: "apps-row" + (app.on_web ? "" : " pc"), href: app.on_web ? app.page : pcHref(app), "data-id": app.id },
       el("span", { class: "apps-row-icon", "aria-hidden": "true" }, (window.MIAIcons && MIAIcons.svg(app.id)) || app.icon),
       el("span", { class: "apps-row-name" }, app.name),
       el("span", { class: "apps-row-tag" }, app.on_web ? app.tagline : (MIA.desktop ? "Open on this PC" : "Ask MIA")),
+      statusChip(app),
       star(app));
   }
 
@@ -64,7 +73,10 @@
       el("div", { class: "app-chips" },
         el("span", { class: "chip " + (app.on_web ? "chip-ok" : "chip-soon") },
           app.on_web ? "On the web" : "In the PC app · ask MIA here"),
-        app.shown ? null : el("span", { class: "chip" }, "Hidden from your apps")),
+        app.shown ? null : el("span", { class: "chip" }, "Hidden from your apps"),
+        statusChip(app)),
+      STATUS[app.status] && (app.status_why || []).length
+        ? el("ul", { class: "app-why" }, app.status_why.map((w) => el("li", {}, w))) : null,
       app.ask ? el("p", { class: "app-ask" }, "Try: “" + app.ask + "”") : null,
       tools,
       el("div", { class: "app-actions" }, open, toggle));

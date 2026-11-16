@@ -27,13 +27,13 @@ def _list(context, arguments: dict) -> str:
 
 
 def _describe(context, arguments: dict) -> str:
-    """Tool describe_app: one app's parts, from its manifest."""
+    """Tool describe_app: one app's parts, from its manifest, and whether it's working now (its status)."""
     from core import app_ecosystem
 
     app = str(arguments.get("app") or "").strip()
     if not app:
         return "Which app?"
-    return app_ecosystem.details_sentence(app_ecosystem.registry(), app)
+    return app_ecosystem.details_sentence(app_ecosystem.registry(), app, context)
 
 
 def _which(context, arguments: dict) -> str:
@@ -73,8 +73,9 @@ def _take_back(context, arguments: dict) -> str:
 
 
 def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
-    """Registers list_my_apps, describe_app, which_app, check_my_apps, list_grants and take_back_grant (domain
-    app_registry, the Apps app's). There is no tool that gives a grant (core/grant_actions.py says why)."""
+    """Registers list_my_apps, describe_app (which also answers "is the X app working?"), which_app, check_my_apps,
+    list_grants and take_back_grant (domain app_registry, the Apps app's). There is no tool that gives a grant
+    (core/grant_actions.py says why)."""
     registry.register(AssistantAction(
         name="list_grants", domain="app_registry",
         description=("What MIA may do on her own without asking: the skills she has learned and the workflows the "
@@ -108,13 +109,15 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="describe_app", domain="app_registry",
-        description=("One of MIA's apps from its record: what it's for, what it can do (its tools and actions), what "
-                     "it keeps, its background jobs, where it runs, what it shares and what depends on it."),
+        description=("One of MIA's apps from its record: what it's for, whether it's working right now and why not, "
+                     "what it can do (its tools and actions), what it keeps, its background jobs, where it runs, what "
+                     "it shares and what depends on it."),
         parameters={"type": "object", "properties": {
             "app": {"type": "string", "description": "The app's name, e.g. Greenhouse."}}, "required": ["app"]},
         handler=_describe, prompt_arg="app",
         trigger_phrases=("what can the app", "what does the app", "what depends on", "tell me about the app",
-                         "what's in the app", "what is in the app", "parts of the app", "app's parts"),
+                         "what's in the app", "what is in the app", "parts of the app", "app's parts",
+                         "app working", "app broken", "is the app"),
         subjects=("app",),
     ))
     registry.register(AssistantAction(

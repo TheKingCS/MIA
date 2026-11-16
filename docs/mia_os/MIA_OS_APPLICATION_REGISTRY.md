@@ -5,7 +5,7 @@
 DEC-0175. DEC-0175 is approved as this handoff's direction; the format and folder choices below are DEC-0178
 (approved 2026-11-15). **M1 is built** (`core/app_registry.py`, `apps/*/manifest.json`, `docs/schema/app_manifest.schema.json`,
 `tests/test_app_registry.py`), and so are **M2** (`core/app_ecosystem.py`: her apps asked about by voice and on the Apps
-page) and **M3** (the app list read from the manifests); **M4** (tiers, the grant check and the grants, `core/grants.py`) is built; M5 onward are still plans. Fable reviews it (DEC-0174).*
+page) and **M3** (the app list read from the manifests); **M4** (tiers, the grant check and the grants, `core/grants.py`) is built; so is **M5** (each app's status); M6 onward are still plans. Fable reviews it (DEC-0174).*
 
 ## A. Architecture assessment (the handoff's §11 questions, answered from the repository)
 
@@ -132,7 +132,7 @@ Built from what exists, in the lab, never in production:
 | M2 | Registry queries as tools and a page section: "what apps do I have", "what can X do", "what depends on Y", "which are unhealthy", duplicates, gaps | adds | Opus; **built 2026-11-15** (`core/app_ecosystem.py`, four tools, the Apps page's "Her apps, checked") |
 | M3 | `APPS` and `/api/shell` read from the registry; `core/web_surfaces.APPS` becomes a thin view | no (same data) | Opus; **built 2026-11-15** (manifests gained `order`, `ask`, `domains`) |
 | M4 | Declared permissions enforced (DEC-0156 grants) | yes, gated | **Fable**; **built 2026-11-15** (DEC-0156 approved): every tool and action kind has a tier in its manifest, outside-text tools are tagged, each app's store permissions are declared; `core/grants.py` is the one check, enforced where MIA's own initiative reaches a change; grants (learned skills, published workflows) are listed and taken back on the Apps page and by voice. Left: network and device permissions per app |
-| M5 | Lifecycle: per-app status, dependency checks at start, activation | adds | Opus |
+| M5 | Lifecycle: per-app status, dependency checks at start, activation | adds | Opus; **built 2026-11-15**: `core/app_ecosystem.statuses` (working, needs attention, failing, missing something it needs, hidden, retired, each with why), on each app's card and row and by voice; activation stays `app.visibility` |
 | M6 | Per-app packages, Greenhouse first, registry-driven registration; others as they're touched | no (same behaviour) | **Fable** |
 | M7 | MIA Forge: the scaffold, then generation in the lab | adds | Opus, Fable review |
 | M8 | The extension host for out-of-process code (DEC-0176) | adds | Fable |

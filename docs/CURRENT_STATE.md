@@ -4,11 +4,15 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, latest (Claude on Opus: each app's health, and Zac's prompt 23 saved).**
+- **Built:** every app now shows whether it's working. On the Apps page (Manage apps), an app that isn't gets a chip (Failing, Needs attention, Missing something it needs) with the reason underneath: a background job that keeps failing, something of it that broke this week and isn't fixed, or a data file that had to start over. Ask "is the Greenhouse app working?" and she says the same.
+- **Saved:** Zac's prompt 23 (Universal Intelligence: clipboard, drag-and-drop, Ask MIA everywhere, recall, context, explain-my-screen, teach by demonstration, workspaces, the knowledge graph). Its own instructions put Fable's architectural review first; nothing is built from it yet.
+- **Waiting on Zac:** the go for Prompt 04 (Opus), and when to run prompt 23's review (Fable).
+
 **2026-11-15, late night (Claude on Fable: the review, and the start of permissions).**
 - **Reviewed:** everything Opus built since the gate's learned pace (13 items). Six things fixed, each with a test: "not for me" on a find now slows finds down instead of speeding them up; a pump and a fan that both say 120VAC are no longer "the same model"; links from feeds and searches can only ever be ordinary web links; MIA's own watches look for the meaningful words of a goal's name; the Apps page's check no longer rebuilds her whole tool list each time (it would have failed on the phone); zero and negative amounts are refused.
 - **Built, changing nothing she does yet:** every one of her 423 tools and 474 actions now carries a tier: reads, drafts, changes to your own records, and the ones that need your yes every time (paying, sending, deleting). A test fails on a new one without a tier. The check that uses them runs in watching-only mode.
 - **Zac said yes (DEC-0156), so the check is on.** When the initiative is MIA's own: reading and drafting just happen; a change to your records only where she's earned it (a skill you taught her that ran cleanly twice with you watching, or a workflow you published); paying, buying, sending, publishing, deleting and sharing need your yes every time. Apps › Manage apps lists what she may do on her own, each with a Take back button; "what can you do on your own?" says the same. Nothing she reads or says can give her a grant.
-- **Waiting on Zac:** the go-ahead for Prompt 04 (Opus).
 
 **2026-11-15, night, latest (Claude: the app list comes from the apps' own records).**
 - **Built:** the sidebar, the Apps page and everything else that lists MIA's apps now read each app's record instead of a list in the code. Nothing looks different; adding an app is now writing its record. The phone app picks this up the next time it's rebuilt.

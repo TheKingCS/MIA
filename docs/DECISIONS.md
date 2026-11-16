@@ -2781,7 +2781,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Built on his yes (2026-11-15, Fable, M4's second part; K-0247): the check enforced where MIA's own initiative
   reaches a change (a taught skill's step, a workflow's add); a grant is a learned skill or a published workflow,
   listed in one place (the Apps page, `list_grants`) and taken back there (`grant.take_back`); nothing gives a
-  grant but earning or approving it. Still to do: system capabilities (they arrive with the OS work, at observe or
+  grant but earning or approving it. M5 (2026-11-15, Opus; K-0248): each app's status from one place. Still to do: system capabilities (they arrive with the OS work, at observe or
   never), and each app's network and device permissions.
 
 ### DEC-0157: The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first

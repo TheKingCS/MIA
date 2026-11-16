@@ -30,7 +30,13 @@
 - **MIA's intelligence:** only invokes capabilities, explains status, proposes installs and updates for approval. It
   never runs a package manager by generated shell commands (prompt §11).
 
-## 3. Status, from one place (proposed)
+## 3. Status, from one place (built 2026-11-15, M5: `core/app_ecosystem.statuses`)
+
+*As built: `installed` and `available` are one ("working": every app MIA lists is loaded); `running` isn't tracked
+(an open page isn't something the engine knows); `failed` is a job backing off or a record that won't load;
+`degraded` ("needs attention") is a job that failed lately, an unfixed breakage of its tools, pages or actions
+this week (the Fix-It Log), or a store reset after it couldn't be read; `disabled` is "hidden"; a Qt module that
+won't import isn't pinned yet (the module manager logs it).*
 
 | Status | Meaning | From |
 |---|---|---|

@@ -10,8 +10,10 @@ the runtime, never from a model.
 - **One app** (`details`): what it's for, what it can do (its tools and actions, counted, with a few named), how many
   of those need the person's yes each time (their tier, core/grants.py), what it keeps, what runs in the background, where it runs, what it shares with other apps and what depends on it.
 - **Which app** (`which`): the app behind a tool or action name, or the apps whose words best match what was asked.
-- **Health** (`health`): per app, a record that couldn't be loaded and the background jobs that are failing (from
-  the scheduler's own records). Whether the records agree with the code is a test's job, not a running MIA's.
+- **Status** (`statuses`, migration phase M5): every app's state now (working, needs attention, failing, missing
+  something it needs, hidden, retired) with why, from its record, the scheduler's records of its jobs, the Fix-It
+  Log's breakages of its tools, pages and actions, and its stores that had to be reset. `health` is the apps that
+  aren't working. Whether the records agree with the code is a test's job, not a running MIA's.
 - **Overlaps** (`overlaps`): tools in two different apps whose descriptions say nearly the same thing. A suggestion to
   look at, never a fault: the answer says so (the Living System invariant: recommendations are marked).
 - **Gaps**: what people asked for that no app does (`core/capability_gaps.py`), counted.
@@ -138,25 +140,141 @@ def which(reg: app_registry.Registry, context, what: str, limit: int = 3) -> lis
 # ---------------------------------------------------------------- health, overlaps, gaps
 
 
-def health(reg: app_registry.Registry, context) -> dict:
-    """Per app: a record that couldn't be loaded, and its background jobs that are failing now. Only apps with
-    something wrong appear. The full comparison of every record with the code (`Registry.problems`) isn't run here:
-    it needs the PC's whole tool list built afresh, which a phone or a runtime without a window can't do, and
-    `tests/test_app_registry.py` already refuses a build where they disagree."""
+# An app's status (migration phase M5; docs/mia_os/MIA_OS_APPLICATION_LIFECYCLE.md section 3), worst first.
+FAILING, MISSING_DEPENDENCY, NEEDS_ATTENTION, HIDDEN, WORKING, RETIRED = STATUSES = (
+    "failing", "missing_dependency", "needs_attention", "hidden", "working", "retired")
+STATUS_WORDS = {FAILING: "failing", MISSING_DEPENDENCY: "missing something it needs",
+                NEEDS_ATTENTION: "needs attention", HIDDEN: "hidden from your sidebar", WORKING: "working",
+                RETIRED: "retired"}
+BROKE_DAYS = 7  # a breakage in the Fix-It Log this recent, not yet fixed, counts
+_BROKE = ("tool_error", "page_error", "action_failed")
+
+
+def _breakages(reg: app_registry.Registry, context) -> dict:
+    """Per app, what broke in the last BROKE_DAYS and isn't marked fixed or ignored in the Fix-It Log
+    (core/failure_log.py): a tool, a page or an approved action, each pinned on the app that owns it. Read from the
+    person's own log; none when it isn't here or can't be read."""
+    log = getattr(context, "failures", None)
     out: dict = {}
+    if log is None:
+        return out
+    page_owner = {p: i for i, m in reg.manifests.items() for p in m["components"]["interface"].get("web", [])}
+    try:
+        issues = log.issues(days=BROKE_DAYS)
+    except Exception:  # noqa: BLE001 - a log that won't read reports nothing broken
+        return out
+    for issue in issues:
+        if issue.get("status") != "open" or not set(issue.get("kinds", [])) & set(_BROKE):
+            continue
+        example = (issue.get("examples") or [{}])[0]
+        page = str(example.get("page") or "").split("/")[-1].split("#")[0].split("?")[0]
+        app_id = reg.owner_of(str(example.get("tool") or "")) or page_owner.get(page) or page_owner.get(page + ".html")
+        if app_id:
+            out.setdefault(app_id, []).append(f"{issue['title']} ({_count(issue['count'], 'time')} this week)")
+    return out
+
+
+def _recovered(reg: app_registry.Registry, now=None) -> dict:
+    """Per app, its stores that couldn't be read and were reset to empty in the last BROKE_DAYS (the data.recovered
+    record, core/data_recovery.py), pinned by the store's file name (any .json or .jsonl name its module defines) on
+    the app that owns the store."""
+    import sys
+    from datetime import datetime, timedelta
+
+    from core.personal_data import HOUSEHOLD_STORES, PERSONAL_STORES
+
+    files = {}
+    for name, cls in list(PERSONAL_STORES) + list(HOUSEHOLD_STORES):
+        found = {v for v in vars(sys.modules.get(cls.__module__) or cls).values()
+                 if isinstance(v, str) and v.endswith((".json", ".jsonl"))}
+        found |= {getattr(v, "name", "") for v in vars(sys.modules.get(cls.__module__) or cls).values()
+                  if hasattr(v, "suffix") and str(getattr(v, "suffix", "")) in (".json", ".jsonl")}
+        for file_name in found - {""}:
+            files.setdefault(file_name, name)  # a file two stores' modules name stays with the first
+    store_owner = {s: i for i, m in reg.manifests.items() for s in m["components"].get("data", [])}
+    since = ((now or datetime.now()) - timedelta(days=BROKE_DAYS)).isoformat()
+    out: dict = {}
+    try:
+        from core.dev_store import DEV_DATA, DevStore
+
+        for rec in DevStore(DEV_DATA / "recovered").tail(200):
+            store = files.get(str(rec.get("file", "")))
+            if store and str(rec.get("at", "")) >= since and store in store_owner:
+                out.setdefault(store_owner[store], set()).add(store)
+    except Exception:  # noqa: BLE001 - no record, nothing recovered
+        return {}
+    return {i: [f"its {s.replace('_', ' ')} couldn't be read and started empty" for s in sorted(stores)]
+            for i, stores in out.items()}
+
+
+def statuses(reg: app_registry.Registry, context) -> dict:
+    """Every app's status now, with why: {app_id: {"status", "why": [...]}} (see STATUSES). Failing: its record
+    couldn't be loaded, or one of its jobs failed three times in a row and is backing off. Missing something it
+    needs: a dependency that isn't an app or is retired. Needs attention: one of its jobs failed lately, something of
+    its broke this week and isn't fixed (the Fix-It Log), or one of its stores was reset after it couldn't be read.
+    Hidden: tucked out of the person's sidebar. Otherwise working (retired ones say so). Built from the registry, the
+    scheduler's records, the Fix-It Log and the recovered-file record; never from the model."""
+    from core.homeostasis import BACKOFF_AFTER
+
+    failing: dict = {}
+    attention: dict = {}
     ids = sorted(reg.manifests, key=len, reverse=True)  # "world_intel" before "world"
     for problem in reg.load_problems:
         app_id = next((i for i in ids if problem.startswith(i + ":")), problem.split(":")[0] or "mia")
-        out.setdefault(app_id, []).append(problem)
+        failing.setdefault(app_id, []).append(problem)
     job_owner = {j: i for i, m in reg.manifests.items() for j in m["runtime"]["background"]}
     scheduler = getattr(context, "scheduler", None)
-    for job in (scheduler.status() if scheduler is not None else []):
-        if job.get("failures_in_a_row"):
-            app_id = job_owner.get(job["name"], "mia")
-            out.setdefault(app_id, []).append(
-                f"its job {job['name']} failed {_count(job['failures_in_a_row'], 'time')} in a row"
-                + (f" ({job['last_error']})" if job.get("last_error") else ""))
+    try:
+        jobs = scheduler.status() if scheduler is not None else []
+    except Exception:  # noqa: BLE001
+        jobs = []
+    for job in jobs:
+        n = int(job.get("failures_in_a_row") or 0)
+        if n:
+            said = (f"its job {job['name']} failed {_count(n, 'time')} in a row"
+                    + (f" ({job['last_error']})" if job.get("last_error") else ""))
+            (failing if n >= BACKOFF_AFTER else attention).setdefault(job_owner.get(job["name"], "mia"), []).append(said)
+    for source in (_breakages(reg, context), _recovered(reg)):
+        for app_id, why in source.items():
+            attention.setdefault(app_id, []).extend(why)
+    hidden = _hidden(context)
+    out = {}
+    for app_id, m in reg.manifests.items():
+        missing = [d.get("application_id") for d in m.get("dependencies", [])
+                   if d.get("application_id") not in reg.manifests or (reg.get(d.get("application_id")) or {}).get("retired")]
+        if app_id in failing:
+            out[app_id] = {"status": FAILING, "why": failing[app_id] + attention.get(app_id, [])}
+        elif missing:
+            out[app_id] = {"status": MISSING_DEPENDENCY, "why": [f"it needs {', '.join(missing)}, which isn't here"]}
+        elif app_id in attention:
+            out[app_id] = {"status": NEEDS_ATTENTION, "why": attention[app_id]}
+        elif m.get("retired"):
+            out[app_id] = {"status": RETIRED, "why": []}
+        elif app_id in hidden:
+            out[app_id] = {"status": HIDDEN, "why": ["you tucked it away; it still works and its tools still answer"]}
+        else:
+            out[app_id] = {"status": WORKING, "why": []}
+    for app_id in set(failing) - set(out):  # a record that couldn't be loaded has no manifest to list it by
+        out[app_id] = {"status": FAILING, "why": failing[app_id]}
     return out
+
+
+def _hidden(context) -> set:
+    """The apps tucked out of this person's sidebar (core/web_surfaces._visible); none when it can't be told."""
+    try:
+        from core.web_surfaces import APPS, RETIRED, _visible
+
+        return {a.module_id for a in APPS if a.module_id not in RETIRED and not _visible(context, a)}
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+def health(reg: app_registry.Registry, context) -> dict:
+    """Per app, what's wrong now: the apps whose status (`statuses`) isn't working, hidden or retired, with why. The
+    full comparison of every record with the code (`Registry.problems`) isn't run here: it needs the PC's whole tool
+    list built afresh, which a phone or a runtime without a window can't do, and `tests/test_app_registry.py` already
+    refuses a build where they disagree."""
+    return {i: s["why"] for i, s in statuses(reg, context).items() if s["status"] not in (WORKING, HIDDEN, RETIRED)}
 
 
 def overlaps(reg: app_registry.Registry, context) -> list[dict]:
@@ -213,17 +331,22 @@ def inventory_sentence(reg: app_registry.Registry) -> str:
     return text
 
 
-def details_sentence(reg: app_registry.Registry, words: str) -> str:
-    """\"What can Greenhouse do?\" and \"what depends on Home?\", with how much of it needs a yes each time."""
+def details_sentence(reg: app_registry.Registry, words: str, context=None) -> str:
+    """\"What can Greenhouse do?\", \"what depends on Home?\" and \"is Greenhouse working?\": its parts, how much of it
+    needs a yes each time and, with a `context`, its status now (`statuses`)."""
     m = _find_app(reg, words)
     if m is None:
         return f"I don't have an app called {words}. Ask \"what apps do I have?\" for the list."
     d = details(reg, m)
+    state = statuses(reg, context).get(m["id"], {}) if context is not None else {}
     some = ", ".join(t.replace("_", " ") for t in d["tools"][:5])
     tagline = d["tagline"].rstrip(" .")
     parts = [f"{d['name']} ({d['area']})" + (f": {tagline}" if tagline else "")]
     if d["retired"]:
         parts.append("It's retired")
+    elif state.get("status"):
+        why = "; ".join(state.get("why", [])[:2])
+        parts.append(f"Right now it's {STATUS_WORDS[state['status']]}" + (f": {why}" if why and state["status"] != HIDDEN else ""))
     parts.append(f"It has {_count(len(d['tools']), 'tool')} and {_count(len(d['actions']), 'action')}"
                  + (f", like {some}" if some else ""))
     if d["asks_each_time"]:

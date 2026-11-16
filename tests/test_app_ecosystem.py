@@ -16,6 +16,14 @@ import pytest
 from core import app_ecosystem, app_registry, parity
 
 
+@pytest.fixture(autouse=True)
+def no_recovered_files(monkeypatch, tmp_path):
+    """Each test starts with no record of reset stores: another test in the run may have reset one on purpose."""
+    from core import dev_store
+
+    monkeypatch.setattr(dev_store, "DEV_DATA", tmp_path / "dev")
+
+
 @pytest.fixture(scope="module")
 def tools():
     """Her tools as the PC registers them."""
@@ -121,3 +129,63 @@ def test_the_apps_page_carries_the_checked_section(tools):
     example = json.loads((Path(__file__).resolve().parent.parent / "docs" / "schema" / "apps.example.json")
                          .read_text(encoding="utf-8"))
     assert set(example["registry"]) == set(section)
+
+
+def _job(name, n, error=""):
+    """A scheduler record for one job failing `n` times in a row."""
+    return {"name": name, "failures_in_a_row": n, "last_error": error}
+
+
+def test_each_app_has_a_status_from_its_jobs_its_breakages_and_its_stores(reg, tools, monkeypatch):
+    """M5: failing (a job backing off), needs attention (a job failed once, something broke this week, a store was
+    reset), hidden, working; each with why, and never from the model."""
+    greenhouse_job = reg.get("greenhouse")["runtime"]["background"][0]
+    world_job = reg.get("world_intel")["runtime"]["background"][0]
+    issues = [{"status": "open", "kinds": ["tool_error"], "title": "record_price broke", "count": 2,
+               "examples": [{"tool": "record_price"}]},
+              {"status": "open", "kinds": ["page_error"], "title": "the Kitchen page broke", "count": 1,
+               "examples": [{"page": "/web/kitchen.html#plan"}]},
+              {"status": "fixed", "kinds": ["tool_error"], "title": "old", "count": 9, "examples": [{"tool": "list_bills"}]}]
+    ctx = SimpleNamespace(assistant_actions=tools, scheduler=SimpleNamespace(
+        status=lambda: [_job(greenhouse_job, 3, "timed out"), _job(world_job, 1)]),
+        failures=SimpleNamespace(issues=lambda days: issues))
+    monkeypatch.setattr(app_ecosystem, "_recovered", lambda r, now=None: {"notes": ["its notes couldn't be read and started empty"]})
+    monkeypatch.setattr(app_ecosystem, "_hidden", lambda c: {"music"})
+    s = app_ecosystem.statuses(reg, ctx)
+    assert s["greenhouse"]["status"] == "failing" and "timed out" in s["greenhouse"]["why"][0]
+    assert s["world_intel"]["status"] == "needs_attention"  # its job once, and record_price broke this week
+    assert any("record_price broke (2 times this week)" == w for w in s["world_intel"]["why"])
+    assert s["kitchen"]["status"] == "needs_attention" and s["notes"]["status"] == "needs_attention"
+    assert s["budget"]["status"] == "working"  # its breakage is marked fixed
+    assert s["music"]["status"] == "hidden" and s["maintenance"]["status"] == "retired"
+    assert set(app_ecosystem.health(reg, ctx)) == {"greenhouse", "world_intel", "kitchen", "notes"}
+    said = app_ecosystem.details_sentence(reg, "Greenhouse", ctx)
+    assert "Right now it's failing: its job" in said
+
+
+def test_an_app_whose_dependency_is_gone_says_so(reg):
+    m = dict(reg.get("greenhouse"), dependencies=[{"application_id": "zeppelin"}])
+    broken = app_registry.Registry(manifests={**reg.manifests, "greenhouse": m})
+    s = app_ecosystem.statuses(broken, SimpleNamespace(scheduler=None, failures=None))
+    assert s["greenhouse"] == {"status": "missing_dependency", "why": ["it needs zeppelin, which isn't here"]}
+
+
+def test_a_stores_reset_is_pinned_on_the_app_that_owns_it(reg, monkeypatch, tmp_path):
+    from core import dev_store
+
+    monkeypatch.setattr(dev_store, "DEV_DATA", tmp_path)
+    dev_store.DevStore(tmp_path / "recovered").append({"file": "world_intel.json"})
+    dev_store.DevStore(tmp_path / "recovered").append({"file": "not_a_store.json"})
+    assert app_ecosystem._recovered(reg) == {"world_intel": ["its world intel couldn't be read and started empty"]}
+
+
+def test_the_apps_page_shows_each_apps_status():
+    import json
+    from pathlib import Path
+
+    example = json.loads((Path(__file__).resolve().parent.parent / "docs" / "schema" / "apps.example.json")
+                         .read_text(encoding="utf-8"))
+    apps = [a for g in example["groups"] for a in g["apps"]]
+    assert all(a["status"] in app_ecosystem.STATUSES for a in apps) and all("status_why" in a for a in apps)
+    js = (Path(__file__).resolve().parent.parent / "web" / "apps.js").read_text(encoding="utf-8")
+    assert "statusChip(app)" in js and "needs_attention" in js

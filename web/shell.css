@@ -160,6 +160,7 @@ html { background: var(--bg); }
 .app-tag { margin: 0; color: var(--text-faint); font-size: var(--text-sm); }
 .app-desc { margin: 0; color: var(--text-dim); font-size: var(--text-sm); }
 .app-ask { margin: 0; color: var(--text); font-size: var(--text-sm); font-style: italic; }
+.app-why { margin: 0; padding-left: 18px; color: var(--text-dim); font-size: var(--text-sm); }  /* why an app's status isn't working (M5) */
 .app-chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { font-size: var(--text-xs); border: 1px solid var(--glass-line-strong); border-radius: 999px; padding: 3px 10px; color: var(--text-dim); }
 .chip-ok { color: var(--ok); border-color: rgba(var(--rgb-ok), 0.45); }

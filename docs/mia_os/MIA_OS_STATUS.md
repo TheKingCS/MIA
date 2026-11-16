@@ -24,5 +24,6 @@
 **Last verified test result:** the Linux run on 2026-11-15 (see `MIA_OS_TESTING_AND_QUALITY_AUDIT.md`).
 
 **Waiting on Zac:**
+- the go for Prompt 04 (Opus), and when to run prompt 23's review (Fable first, by its own instructions);
 - add the two signing secrets (steps in the hub);
 - Q-08 and Q-09 in `MIA_OS_OPEN_QUESTIONS.md`.

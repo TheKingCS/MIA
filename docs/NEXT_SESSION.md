@@ -79,7 +79,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   granted=...)` first. Not declared yet:
   network and device permissions per app (40 engine files reach the network or a device; map each to its app with
   a test that fails on an unmapped one).
-  New Opus work joins a fresh list below this line. Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  New Opus work joins a fresh list below this line.
+  14. M5, each app's status (core/app_ecosystem.statuses, _breakages, _recovered; the Apps page's chips). Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
@@ -95,6 +96,18 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Built 2026-11-15 (Opus): M2** (K-0243): "what apps do I have?", "what can Greenhouse do?", "which app can
   monitor energy?", "is anything wrong with my apps?" answered from the manifests and the scheduler; the same on the
   Apps page (Manage apps: "Her apps, checked"). Overlapping tools are said as suggestions.
+- **Prompt 23 (Zac, 2026-11-15): Universal Intelligence and intent-driven computing**, kept verbatim in
+  `docs/mia_os/prompts/23_UNIVERSAL_INTELLIGENCE_INTENT_DRIVEN_COMPUTING.md`. Its own order: **Fable's
+  architectural review first** (feature inventory, existing-capability mapping, gaps, the five domains, each
+  feature classed Existing / Extend / Build / Integrate / Defer / Reject), then Opus's independent engineering
+  review; no implementation before its deliverables. Much of it already exists in part (the UAL, taught skills,
+  links, the life-event history, undo, the gate, the inbox, search, Forge in prompt 22); the review should start
+  from those. Run it in a Fable session; where it sits against Prompt 04 is Zac's call.
+- **Built 2026-11-15 (Opus): M5** (K-0248): every app has a status now (working, needs attention, failing,
+  missing something it needs, hidden, retired) with why, from its record, its jobs, the Fix-It Log's unfixed
+  breakages of its tools, pages and actions this week, and its stores that had to be reset. Shown as a chip on
+  its card and row on the Apps page; "is the Greenhouse app working?" answers it. Next in the plan: M6, per-app
+  packages (Fable), M7 Forge (Opus, Fable reviews).
 - **Built 2026-11-15 (Opus): M3** (K-0244): the app list is read from the manifests; a new app is a new
   `apps/<id>/manifest.json`. **The phone app needs rebuilding** to carry the manifests (its bundle now includes them;
   the installed one still has the old list in its code, so it keeps working until then). M4 is built (below); next:
