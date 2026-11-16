@@ -3424,3 +3424,27 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   second resource manager. `MIA_OS_SYSTEM_RESOURCE_MANAGEMENT.md`, `MIA_OS_SYSTEM_OBSERVABILITY_ARCHITECTURE.md`.
 - Confidence: high; the ceilings' figures are to be measured.
 - Related: DEC-0173, DEC-0155
+
+### DEC-0196: One browser: MIA's browser becomes Zac's everyday browser
+- Status: PROPOSED (Claude on Opus, 2026-11-16, from Zac's answer to Q-45: "My browser and MIAs browser should be the
+  same i think"); the safety rules wait on Q-52. Amends DEC-0117's "her own profile, none of your sign-ins".
+- Decision: one browser profile per person, used by both. He browses in it as his everyday browser (a normal Edge
+  window on the PC; the same browser on MIA OS), with his bookmarks and passwords imported into it once; MIA works in
+  the same profile, in her own tabs. Its history is his browsing, so Recall (prompt 23, G2) reads it. The other way
+  round (MIA driving his existing everyday profile) is rejected: Chromium-based browsers refuse automation of the
+  default profile because any local program could then take over a signed-in browser, and asking them to allow it
+  would open that door.
+- Rules that come with it (Q-52), because the profile would now be signed in to everything:
+  1. MIA acts only in her own tabs; the tab he's using is his, unless he hands it to her ("take over this tab").
+  2. Sites he marks sensitive (his bank, health, email) she reads only when he asks in that moment, never on her own,
+     and they're never indexed for Recall.
+  3. Private (InPrivate) windows are never recorded, read or indexed.
+  4. Saved passwords stay in the browser's own password manager; she never reads them, and still never types into a
+     secret field (DEC-0117).
+  Unchanged: every commit (pay, buy, send, post, sign up) waits for his press (`browser.commit`); page text reaches the
+  model as outside text, so a page can't steer a change.
+- Why: Zac's answer; one history makes Recall complete; one set of sign-ins means MIA's tasks work on the sites he
+  already uses without signing in twice.
+- Cost: her browser holds his live sessions, so a mistake or a manipulated page reaches more than before; the four
+  rules and the existing gate are what contain it.
+- Related: DEC-0117, DEC-0188, DEC-0194

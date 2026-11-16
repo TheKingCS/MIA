@@ -74,3 +74,4 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC-0193 | Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var | PROPOSED |
 | DEC-0194 | A fixed-operation helper, each system change confirmed in the OS's own dialog; rules in the image | PROPOSED (Q-50; PoC 5, 6) |
 | DEC-0195 | Resources and observability from systemd, the kernel and the journal | PROPOSED |
+| DEC-0196 | One browser: MIA's browser becomes his everyday browser | PROPOSED (Q-45 answered; rules wait on Q-52) |
