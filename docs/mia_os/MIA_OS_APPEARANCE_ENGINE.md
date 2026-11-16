@@ -128,7 +128,7 @@ Published in phase A3 as `docs/schema/appearance.schema.json` and checked by a t
 |---|---|---|---|
 | A1 | This document; DEC-0183, DEC-0184; Q-37 to Q-39 | — | Opus (done) |
 | A2 | Core visual system: the five surface tiers as tokens and classes; elevation, gradient, chart tokens; the literal-colour baseline test; components moved onto tiers (`components.css`) | the token contract test; screenshots of every page in the current themes unchanged in layout | Opus; **built 2026-11-16**: the tiers in `web/tokens.css`, the glass material drawn from them (`web/themes.css`), clamped in `core/themes.py` (`TIER_RANGES`), second and third accents, gradient and chart tokens, `tools/css_colours.py` with its baseline (203 hard-coded colours in 11 sheets, may only fall), `tests/test_appearance.py`. Stark unchanged (the tiers apply only under the glass material) |
-| A3 | The engine: `display.scheme` and `display.layout`; `appearance()` composing them; existing themes split into theme plus scheme; the effective-contrast check; reduced transparency and effects levels; the schema | a contrast matrix test over every theme × scheme × tier; switching each live without a reload; settings surviving a restart | Opus, Fable reviews |
+| A3 | The engine: `display.scheme` and `display.layout`; `appearance()` composing them; existing themes split into theme plus scheme; the effective-contrast check; reduced transparency and effects levels; the schema | a contrast matrix test over every theme × scheme × tier; switching each live without a reload; settings surviving a restart | Opus, Fable reviews; **built 2026-11-16**: `core/appearance.py` (six colour schemes; layout: density and sidebar; effects; reduced transparency; `readability_problems`; `for_shell`), the page's attributes (`web/shell.js`), the sheets' rules, the tools `set_color_scheme` and `set_layout`, `docs/schema/appearance.schema.json`. Left for A5: the sidebar hidden and navigation position (they need another way to navigate on the PC), and the Appearance page's controls |
 | A4 | The six presets as data (Aquatic, Nebula, Evergreen, Aurelia, Glacial, Eclipse) with matching schemes; Muse refines values | each passes the contrast matrix; screenshots of Home, an app page and the approval card in each | Opus, then Muse |
 | A5 | Settings › Appearance (the Studio grown: themes, schemes, layouts with previews; transparency, blur, density, motion; save, restore defaults); the orb's presence states from the runtime; the MIA session's default dashboard | the acceptance list below, items 2 to 4 and 9; S-01's Home in each preset | Opus |
 | A6 | Apps onto the shared system, one at a time: literal colours retired, atmosphere hues (Workshop steel, Finance, Greenhouse leaf…) | the literal-colour baseline falling; nothing functional changed (the suite) | Opus |
@@ -205,3 +205,14 @@ Aquatic, which Muse refines (Q-38):
 **What this changes in the plan:** the window-edge glow is a property of the *deep* tier on the shell's frame only
 (not every surface); the environment can be a calm photographic backdrop; the chart palette is the scheme's three
 accents. Everything else stands.
+
+## J. Found while building A3 (2026-11-16)
+
+- **Warm gold can't be an accent.** A gold or amber accent reads as amber (something needs you) or gold (a reward),
+  the meaning colours no scheme may take (DEC-0014, DEC-0136): the check refuses `#e8c27a`. The warm scheme is
+  **Champagne** (`#efe2c4`), pale enough to read as neither. That's what Aurelia and "Eclipse with gold accents" can
+  use; a true gold accent would need Zac to change the meaning-colour rule (Q-41).
+- **Every accent is checked, not only the first**, because charts use all three.
+- **The sidebar can be full or icons only.** Hidden would remove the PC's search box and every way between pages;
+  it waits until navigation has another home (A5), as does moving navigation to the top or bottom.
+

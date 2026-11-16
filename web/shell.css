@@ -175,6 +175,19 @@ html { background: var(--bg); }
   .layout .side { display: none; }
 }
 
+/* ---------------------------------------------------------------- layout choices (DEC-0184, core/appearance.py) */
+/* Compact: tighter spacing everywhere (every gap and padding is built on --gap). */
+:root[data-density="compact"] { --gap: 10px; }
+/* Icons only: a narrow rail of the apps' icons (each link's name stays its tooltip and its accessible name). */
+@media (min-width: 861px) {
+  :root[data-sidebar="icons"] .layout { grid-template-columns: 76px 1fr; }
+  :root[data-sidebar="icons"] .layout:has(.home-mia) { grid-template-columns: 76px minmax(0, 1fr) 320px; }  /* Home keeps Talk */
+  :root[data-sidebar="icons"] .side :is(.label, .pw-label, .side-head, .side-heading, .side-foot, .brand > span:not(.brand-mark), .side-search kbd,
+    .side-search span) { display: none; }
+  :root[data-sidebar="icons"] .side :is(a.nav, .brand) { justify-content: center; }
+  :root[data-sidebar="icons"] .side .side-search::before { content: "\2315"; }  /* the search box becomes its magnifier */
+}
+
 /* ---------------------------------------------------------------- forms */
 .form-dialog { width: min(460px, calc(100vw - 32px)); }
 .form-dialog h3 { margin: 0 0 var(--gap); }

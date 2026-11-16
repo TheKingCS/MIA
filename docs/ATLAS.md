@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1445 files, 321,026 lines; 1445 files describe themselves; 17,635 of 17,730 classes and functions are documented.
+1446 files, 321,415 lines; 1446 files describe themselves; 17,658 of 17,753 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-558 files, 159,910 lines; 8,255 of 8,341 classes and functions documented
+559 files, 160,199 lines; 8,271 of 8,357 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -23,6 +23,7 @@
 - `core/app_ecosystem.py`: MIA's understanding of her own app ecosystem (prompt 22 §7, migration phase M2; DEC-0175, DEC-0178): the Application Registry (`core/app_registry.py`) asked the questions a person asks, answered in code from the manifests, the code and the runtime, never from a model.
 - `core/app_intro.py`: What MIA says when she introduces an app (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md), in two halves:
 - `core/app_registry.py`: The Application Registry (DEC-0175, DEC-0178; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`, migration phase M1): MIA's authoritative inventory of her own applications, read from one manifest per app (`apps/<id>/manifest.json`), and checked against the code so the manifests can't drift from what's re
+- `core/appearance.py`: The appearance engine (prompt 24 phase A3, DEC-0183, DEC-0184; `docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` C): a person's look is three independent choices, composed into the one cleaned theme every page applies (`web/shell.js`):
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
 - `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
@@ -850,7 +851,7 @@
 
 ## tests/: the test suite: what each part must do
 
-495 files, 83,244 lines; 7,053 of 7,062 classes and functions documented
+495 files, 83,336 lines; 7,060 of 7,069 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1350,7 +1351,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,747 lines
+112 files, 20,755 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

@@ -1,6 +1,6 @@
 # One MIA, many looks: experiences and themes
 
-*Prompt 24 (Zac, 2026-11-15): glass becomes MIA OS's identity and the engine grows to three dimensions (theme, colour scheme, layout) with five surface tiers: [docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md](../mia_os/MIA_OS_APPEARANCE_ENGINE.md).*
+*Prompt 24 (Zac, 2026-11-15): glass becomes MIA OS's identity and the engine grows to three dimensions (theme, colour scheme, layout) with five surface tiers: [docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md](../mia_os/MIA_OS_APPEARANCE_ENGINE.md). Built 2026-11-16: the tiers (A2) and the three dimensions (A3, `core/appearance.py`).*
 
 *Claude, 2026-11-08, from Zac's handoff "MIA — Selectable Interface Experiences & Multi-Theme Architecture" (05:35).
 It follows the handoff's section 6: audit, decide what's shared, propose, then build in steps with tests in both

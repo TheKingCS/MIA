@@ -6,7 +6,9 @@ session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on 
 
 **2026-11-16 (Claude on Opus: the glass look's foundation).**
 - **Built:** the five kinds of glass surface (main panels, cards, dialogs and menus, hero panels, buttons and chips) now each have their own settings for see-through, blur, edge, light and shadow, so the coming Aquatic look and the other presets are just numbers. A dialog can never be made too see-through to read. Status chips keep their meaning colours. The current look is unchanged.
-- **Next:** splitting a look into three separate choices (environment, colours, layout), then the six presets.
+- **Built (A3):** the look is now three separate choices: the theme, the colours (six schemes, or the theme's own) and the layout (compact or comfortable, a full sidebar or icons only), plus how much glass to draw. Changing one never changes the others; say "make the colours violet" or "compact layout". Every pairing is checked for readable text.
+- **Waiting on Zac:** Q-41: a gold accent looks like the "needs you" and "reward" colours, so it's refused; warm looks use a pale champagne instead. Keep that rule?
+- **Next:** the six presets, Aquatic first, from his picture.
 
 **2026-11-15, latest (Zac's answers).**
 - **Approved:** what MIA OS is, how requirements are judged, the first MIA OS's scope, the autonomy levels; the two-person requirements set aside; Aquatic as the default look, built from his reference picture; Claude builds the look's machinery and Muse refines it.

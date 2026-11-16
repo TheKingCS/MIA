@@ -278,10 +278,11 @@ def _places(context) -> list:
 
 def _display(context) -> dict:
     """The person's look: {"style": "auto" | "spatial" | "cards" (core/display_style.py, DEC-0135), "theme": their
-    theme as cleaned data (core/themes.py, DEC-0136), "painting": how many of their paintings are still going
-    (core/art_studio.py, DEC-0140)}."""
+    theme as cleaned data with their colour scheme over it and their layout and effects on it (core/appearance.py,
+    DEC-0136, DEC-0184), "painting": how many of their paintings are still going (core/art_studio.py, DEC-0140)}."""
+    from core.appearance import for_shell
     from core.display_style import style_of
-    from core.themes import DEFAULT_THEME, THEMES, as_data, clean_theme, for_shell
+    from core.themes import DEFAULT_THEME, THEMES, as_data, clean_theme
 
     from core.art_studio import active
 

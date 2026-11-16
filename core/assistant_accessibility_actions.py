@@ -229,9 +229,45 @@ def _action_read_screen(context, arguments: dict) -> str:
     return "Reading the screen."
 
 
+def _action_set_scheme(context, arguments: dict) -> str:
+    """Tool set_color_scheme: the person's colour scheme (core/appearance.py), keeping their theme and layout."""
+    from core import appearance
+
+    words = str(arguments.get("scheme") or "")
+    scheme = words.strip().lower() if words.strip().lower() in appearance.SCHEMES or words.strip().lower() == "theme" \
+        else appearance.wants_scheme(words)
+    if not scheme:
+        return "Which colours? " + ", ".join(n for n, *_r in appearance.SCHEMES.values()) + ", or your theme's own."
+    try:
+        return appearance.set_scheme(context, scheme)
+    except ValueError as problem:
+        return str(problem)
+
+
+def _action_set_layout(context, arguments: dict) -> str:
+    """Tool set_layout: the person's density and sidebar, and how much glass to draw (core/appearance.py)."""
+    from core import appearance, person_settings
+
+    effects = str(arguments.get("effects") or "").strip().lower()
+    said = []
+    try:
+        if arguments.get("density") or arguments.get("sidebar"):
+            said.append(appearance.set_layout(context, density=str(arguments.get("density") or "").strip().lower(),
+                                              sidebar=str(arguments.get("sidebar") or "").strip().lower()))
+        if effects:
+            if effects not in appearance.EFFECTS:
+                return "Glass effects are one of: " + ", ".join(appearance.EFFECTS) + "."
+            person_settings.put(context, appearance.EFFECTS_KEY, effects)
+            said.append(f"Glass effects: {effects}.")
+    except ValueError as problem:
+        return str(problem)
+    return " ".join(said) or "Say compact or comfortable, a full sidebar or icons only, or how much glass."
+
+
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme,
-    tweak_theme, design_theme, delete_theme and read_screen, and the painting tools (core/assistant_art_actions.py)."""
+    set_color_scheme and set_layout (the look's other two choices, core/appearance.py), tweak_theme, mix_themes,
+    design_theme, delete_theme and read_screen, and the painting tools (core/assistant_art_actions.py)."""
     from core.assistant_art_actions import register_art_actions
 
     register_art_actions(registry)  # MIA paints (DEC-0140): the look's pictures live with the look's tools
@@ -277,6 +313,30 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_set_theme,
         trigger_phrases=("theme", "y2k", "myspace", "cyberpunk", "glass theme", "stark theme", "change the colors",
                          "change the colours", "new theme"),
+    ))
+    registry.register(AssistantAction(
+        name="set_color_scheme", domain="accessibility",
+        description=("Change only MIA's colours (the colour scheme), keeping the theme and layout: cyan, turquoise, "
+                     "violet, champagne, ice, rose, or the theme's own colours."),
+        parameters={"type": "object", "properties": {
+            "scheme": {"type": "string", "description": "cyan, turquoise, violet, champagne, ice, rose, or theme."},
+        }, "required": ["scheme"]},
+        handler=_action_set_scheme, prompt_arg="scheme",
+        trigger_phrases=("colour scheme", "color scheme", "accent colours", "accent colors", "make the colours",
+                         "make the colors", "change the colours to", "change the colors to", "theme's own colours"),
+    ))
+    registry.register(AssistantAction(
+        name="set_layout", domain="accessibility",
+        description=("Change MIA's layout without touching her colours: spacing (comfortable or compact) and the "
+                     "sidebar (full, or icons only); and how much glass to draw (full, light, none, or auto)."),
+        parameters={"type": "object", "properties": {
+            "density": {"type": "string", "description": "comfortable or compact."},
+            "sidebar": {"type": "string", "description": "full or icons."},
+            "effects": {"type": "string", "description": "auto, full, light (no blur) or none (solid panels)."},
+        }, "required": []},
+        handler=_action_set_layout,
+        trigger_phrases=("compact layout", "compact view", "more compact", "less spacing", "more spacing", "icons only", "smaller sidebar",
+                         "full sidebar", "less transparent", "no blur", "solid panels", "turn off the glass"),
     ))
     registry.register(AssistantAction(
         name="tweak_theme", domain="accessibility",

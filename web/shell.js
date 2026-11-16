@@ -39,6 +39,14 @@
     });
     root.dataset.theme = theme.id;
     root.dataset.material = theme.material || "solid";
+    // The layout and how much glass to draw (DEC-0184, core/appearance.py): each its own choice, independent of the
+    // colours. "auto" effects: light (no blur) on a phone-sized screen, full elsewhere.
+    const layout = theme.layout || {};
+    root.dataset.density = layout.density || "comfortable";
+    root.dataset.sidebar = layout.sidebar || "full";
+    root.dataset.effects = theme.effects && theme.effects !== "auto" ? theme.effects
+      : (window.matchMedia && matchMedia("(max-width: 860px)").matches ? "light" : "full");
+    if (theme.reduce_transparency) root.dataset.transparency = "reduced"; else delete root.dataset.transparency;
     themeNow = theme;
     backdrop(theme.backdrop);
     if (window.MIASound && MIASound.useSet) MIASound.useSet(theme.sound || "classic");  // the theme's chimes (opt-in)
@@ -304,7 +312,7 @@
    *  asks; the Nexus is reached from Living Worlds in Recreation, never from here. */
   function sideLinks(shell) {
     const here = document.body.dataset.app || "web_home";
-    const link = (a) => el("a", { class: "nav", href: a.page, "aria-current": a.id === here ? "page" : null },
+    const link = (a) => el("a", { class: "nav", href: a.page, title: a.name, "aria-current": a.id === here ? "page" : null },
       el("span", { class: "ico", "aria-hidden": "true" }, icon(a.id, icon(a.icon, a.icon))), el("span", { class: "label" }, a.name));
     const byId = Object.fromEntries(shell.apps.map((a) => [a.id, a]));
     const out = [];
