@@ -81,9 +81,30 @@ def _action_check_my_setup(context, arguments: dict) -> str:
     return summary(run_checks(context))
 
 
+def _action_undo_by_time(context, arguments: dict) -> str:
+    """Tool undo_by_time (UI-3, core/change_history.py): "undo what you did to the greenhouse this afternoon". Without
+    the person's yes it says exactly which changes would go back and asks; with it (`confirm`), the action
+    history.undo puts each back whole, newest first, where nothing changed it since, and says what it left."""
+    from core.actions import ActionError
+    from core.web_changes import _describe_history_undo
+
+    params = {"when": str(arguments.get("when") or "today"), "what": str(arguments.get("what") or "")}
+    try:
+        listed = _describe_history_undo(context, params)
+    except ActionError as problem:
+        return str(problem)
+    if str(arguments.get("confirm", "")).lower() not in ("true", "yes", "1"):
+        return listed + ". Shall I? Say yes and I'll put them back."
+    actions = getattr(context, "actions", None)
+    if actions is None:
+        return "I can't undo from here."
+    done = actions.approve(context, actions.propose(context, "history.undo", params).proposal_id)
+    return str(done.result)
+
+
 def register_undo_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the undo and messaging tools: check_my_setup, undo_last_change, get_recent_changes,
-    get_message_reason and mute_message_topic.
+    """Registers the undo and messaging tools: check_my_setup, undo_last_change, undo_by_time (UI-3),
+    get_recent_changes, get_message_reason and mute_message_topic.
     """
     registry.register(AssistantAction(
         name="check_my_setup", domain="system",
@@ -99,7 +120,22 @@ def register_undo_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_undo_last_change,
         trigger_phrases=("undo that", "undo it", "undo the last", "take that back", "take it back", "revert that",
-                         "that was wrong, undo", "put it back", "undo what you"),
+                         "that was wrong, undo", "put it back", "undo what you just did"),
+    ))
+    registry.register(AssistantAction(
+        name="undo_by_time", domain="undo",
+        description="Undo the changes MIA made in a stretch of time, optionally about one thing ('undo what you did to "
+                    "the greenhouse this afternoon'). First call without confirm to hear exactly which; call again with "
+                    "confirm true once the user says yes.",
+        parameters={"type": "object", "properties": {
+            "when": {"type": "string", "description": "this afternoon, this morning, today, the last hour, yesterday..."},
+            "what": {"type": "string", "description": "optional: what the changes were about"},
+            "confirm": {"type": "boolean", "description": "true only after the user said yes to the list"},
+        }, "required": ["when"]},
+        handler=_action_undo_by_time,
+        trigger_phrases=("undo what you did this", "undo what you did today", "undo what you did to",
+                         "undo everything you did", "undo the changes you made", "undo today's changes",
+                         "undo this afternoon", "undo this morning", "put back everything you"),
     ))
     registry.register(AssistantAction(
         name="get_recent_changes", domain="undo",

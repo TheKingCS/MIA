@@ -145,6 +145,12 @@ import core.security_log as security_log_module  # noqa: E402
 
 security_log_module._DATA_DIR = _TEST_RUNTIME_DIR
 
+# 2026-11-16: the lasting history of changes (core/change_history.py, UI-3) keeps a change with no profile under
+# DATA_DIR/history; in tests that's this session's temp dir.
+import core.change_history as change_history_module  # noqa: E402
+
+change_history_module.DATA_DIR = _TEST_RUNTIME_DIR
+
 # 2026-11-08: sealed files (core/at_rest.py, DEC-0126): every test seals with a fixed test key, never DPAPI or the
 # real data/.keys, so the whole suite writes and reads the most private stores sealed, as MIA does.
 import core.at_rest as at_rest_module  # noqa: E402

@@ -39,6 +39,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Dashboard's Agent Activity. **Next on Opus:** UI-3, the durable history (reversibility and reach per action
   kind; before-states on disk, grouped by action; undo by time), or DEC-0196's one browser (import, tab ownership,
   sensitive sites, private windows left alone). UI-2 (the stop) is Fable's, on this record.
+- **Built (Opus): UI-3, first part, the lasting history** (K-0265): `core/change_history.py` keeps every change
+  30 days on disk (sealed, compressed before-bytes, once per content), so "undo what you did to the greenhouse
+  this afternoon" works after a restart: newest first, each change whole or not at all, only where nothing
+  changed it since; the tool lists first and waits for a yes; Recent Changes has Undo By Time. **Next on Opus:**
+  UI-3's second part (reversibility and reach on every action kind, REQ-AUT-006, 007), then DEC-0196's browser.
 - **For the next session:** nothing of Fable's is queued until Zac answers. Opus can take prompt 23's independent
   review, Procurement P3, or Forge (M7).
 
@@ -143,7 +148,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   24. the MIA OS proofs of concept kit (os/, .github/workflows/mia-os-poc.yml, .containerignore) and the
       sound-server fix in core/voice_manager.py;
   25. Opus's review of prompt 23 (the review's section 14) and UI-1 (core/runs.py, the browser routine and skill
-      hooks, actions.ActionType.rejected, Agent Activity's Running column, whats_running).
+      hooks, actions.ActionType.rejected, Agent Activity's Running column, whats_running);
+  26. UI-3's first part (core/change_history.py, UndoLog.add/forget, undo_last's mark, history.undo and the
+      undo_by_time tool, Recent Changes' Undo By Time).
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

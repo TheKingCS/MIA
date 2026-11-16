@@ -16,7 +16,8 @@ session. Last updated: 2026-11-16 (the Fable run: reviews, and MIA OS Prompt 05)
 - **Tested on GitHub's Linux machines:** the Fedora image builds with everything MIA needs from Fedora's own packages, including both of your graphics card's AI paths; MIA runs as a Linux service; the kernel can lock a MIA worker to the folders you allowed; and the whole test suite passes on Linux. A real bug turned up and is fixed: on a Linux machine with no sound server, MIA wouldn't start at all.
 - **Waiting on you at the PC:** the graphics card test from a Fedora USB stick (`os/poc/README.md`, about an hour, nothing installed).
 - **Built (Opus): the run record.** MIA now keeps one record of anything she does in several steps: a browser task, a skill you taught her, a workflow. Ask "what's running?", or look at the Running column on the Dashboard. If MIA restarts in the middle, the task shows as stopped at its step instead of looking alive; if you say no to a browser step, the task ends right away instead of waiting half an hour.
-- **Next on Opus:** the lasting history of what MIA did, with undo by time; or the one shared browser.
+- **Built (Opus): the lasting history.** Every change MIA makes is now kept for 30 days, so you can say "undo what you did to the greenhouse this afternoon" even after a restart, or use Undo By Time on the Recent Changes page. She lists exactly what she'd put back and waits for your yes; each change goes back whole or not at all, and anything you changed again since is left alone, with the reason.
+- **Next on Opus:** marking each kind of action as undoable or not and what it reaches, then the one shared browser.
 
 
 **2026-11-16 (Claude on Opus: the glass look's foundation).**

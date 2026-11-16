@@ -69,6 +69,10 @@
    "status": "none",
    "why": "keeping a GPX file someone chose and deleting one; the numbers are worked out in code from the file (core/gps_tracks.stats), so there's nothing to learn"
   },
+  "action:history": {
+   "status": "none",
+   "why": "history.undo puts back changes he names by time and subject (UI-3, core/change_history.py); the changes it reverses are MIA's own work, already watched by the loops of the actions and tools that made them"
+  },
   "action:lab_reading": {
    "status": "none",
    "why": "readings entered by hand in the Lab (DEC-0125): measurements, not her choices; nothing of MIA's to improve"

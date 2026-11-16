@@ -147,6 +147,14 @@ class AssistantAction:
         }
 
 
+def _summary_of(name: str, arguments: dict) -> str:
+    """Pure logic. A tool's change in a few words for the lasting history (core/change_history.py): its name and the
+    short text values it was given ("log reading: greenhouse, 74"). Kept sealed like the stores."""
+    values = [str(v) for v in (arguments or {}).values() if isinstance(v, (str, int, float)) and str(v).strip()]
+    words = ", ".join(v[:40] for v in values[:4])
+    return (name.replace("_", " ") + (f": {words}" if words else ""))[:200]
+
+
 class AssistantActionRegistry:
     """Every tool the Assistant has, and how a request picks the few that travel with it: their trigger phrases, each
     domain's everyday words, and the names of the person's own records in each domain.
@@ -381,6 +389,8 @@ class AssistantActionRegistry:
         tool call from the LLM must never crash the app.
         While the person is showing her a skill ("watch me",
         core/taught_skills.py), a tool that ran is noted as one of its steps.
+        What a tool changes is kept for "undo that", described by its name and
+        short arguments for the lasting history (core/change_history.py).
         """
         action = self._actions.get(name)
         if action is None:
@@ -415,6 +425,7 @@ class AssistantActionRegistry:
                     with record_change(name, person_id(context)) as change:
                         result = action.handler(context, arguments)
                     change.by = "mia"
+                    change.summary = _summary_of(name, arguments)  # what the lasting history shows and matches on
                     undo.add(change)
                     if change.files:  # it changed something: watched for the person correcting it
                         from core import corrections

@@ -524,7 +524,9 @@ class ActionCenter:
 
     def approve(self, context, proposal_id: str) -> Proposal:
         """Steps 2 to 5: the person said yes. Executes through the store,
-        which records the history; the change is kept for undo. While she's
+        which records the history; the change is kept for undo, with the
+        approved sentence as its description in the lasting history
+        (core/change_history.py). While she's
         being shown a skill ("watch me", core/taught_skills.py), the change
         is noted as one of its steps; and a tool running inside a taught
         skill can't approve a kind that always asks (taught_skills.guard).
@@ -561,6 +563,7 @@ class ActionCenter:
             undo = getattr(context, "undo", None)
             if undo is not None and change.files:
                 change.by = "mia" if proposal.proposed_by == "mia" else "person"
+                change.summary = proposal.summary or ""
                 undo.add(change)
                 proposal._change = change
             from core import corrections  # her changes watched; the person's edits checked against them

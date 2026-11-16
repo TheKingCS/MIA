@@ -1570,6 +1570,10 @@ body.mod-maps .hero { display: none; }
 /* ---------------------------------------------------------------- Recent Changes (web/changes.js) */
 .ch-undo { display: grid; padding: 10px 14px; margin-bottom: var(--gap); }
 .ch-undo > .pw-label { margin: 4px 0 6px; }
+.ch-bytime-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.ch-bytime-row select, .ch-bytime-row input { min-height: 40px; min-width: 0; padding: 0 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel-2), 0.9); color: var(--text); font: inherit; }
+@media (max-width: 560px) { .ch-bytime-row { grid-template-columns: 1fr; } }
 .ch-change { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 52px; border-top: 1px solid var(--line); }
 .ch-change.newest .ch-what > span:first-child { font-weight: 600; }
 .ch-what { display: grid; min-width: 0; }

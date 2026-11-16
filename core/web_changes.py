@@ -13,6 +13,11 @@ Undo history", docs/design/CORE_SCREENS_REVIEW.md section 3; DEC-0125:
   as by voice: `undo.last` (an action, so the page and "undo that" agree).
 - **History**: what happened in the last fortnight, from the history
   (core/life_events.py), newest first, by day; undone ones are marked.
+- **Undo by time** (UI-3): a time ("this afternoon") and, if he likes, a
+  subject ("the greenhouse") propose `history.undo`, whose approval card
+  lists exactly which changes go back (core/change_history.py keeps every
+  change for 30 days, across restarts); each goes back whole or not at all,
+  and only where nothing changed it since.
 
 The web only draws.
 """
@@ -77,8 +82,8 @@ def _summaries(context, ids: set) -> dict:
 
 
 def changes_page(context, now: Optional[datetime] = None) -> dict:
-    """The Recent Changes screen: the undoable changes (newest first, the first one undoable) and the last fortnight's
-    history by day."""
+    """The Recent Changes screen: the undoable changes (newest first, the first one undoable), the times Undo By Time
+    offers (`when_choices`, UI-3), and the last fortnight's history by day."""
     from core.life_events import events_for, reversed_ids
     from core.person_settings import person_id
 
@@ -101,7 +106,7 @@ def changes_page(context, now: Optional[datetime] = None) -> dict:
         days.setdefault(e.at[:10], []).append({"what": e.summary, "when": clock(e.at),
                                                "undone": e.event_id in undone, "by_mia": e.source == "assistant"})
     today = now.date()
-    return {"undoable": undoable, "history": [
+    return {"undoable": undoable, "when_choices": [{"id": i, "name": n} for i, n in WHEN_CHOICES], "history": [
         {"day": "Today" if d == today.isoformat() else "Yesterday" if d == (today - timedelta(days=1)).isoformat()
          else f"{date.fromisoformat(d):%a %b} {date.fromisoformat(d).day}", "events": rows}
         for d, rows in sorted(days.items(), reverse=True)], "history_days": HISTORY_DAYS}
@@ -132,5 +137,56 @@ def _undo(context, params) -> str:
     return f"Undone: {label_words(change.label)}."
 
 
-UNDO_ACTIONS = {"undo.last": ActionType("undo.last", "Undo", {}, _describe_undo, _undo)}
+# Undo by time and subject (UI-3, core/change_history.py): "this afternoon", optionally "the greenhouse".
+WHEN_CHOICES = (("last hour", "The last hour"), ("this morning", "This morning"), ("this afternoon", "This afternoon"),
+                ("today", "Today"), ("yesterday", "Yesterday"), ("this week", "This week"))
+
+
+def _history_found(context, params):
+    """The changes `history.undo` would put back: (the person, the changes, the time in words)."""
+    from core import change_history
+    from core.person_settings import person_id
+
+    when = " ".join(str(params.get("when") or "today").split())[:40]
+    start, end = change_history.window(when)
+    who = person_id(context)
+    return who, change_history.find(who, start, end, str(params.get("what") or "")[:80]), when
+
+
+def _describe_history_undo(context, params) -> str:
+    """The sentence for `history.undo`: exactly which changes, when, will be put back; ActionError when none."""
+    from core import change_history
+
+    _who, found, when = _history_found(context, params)
+    if not found:
+        about = str(params.get("what") or "").strip()
+        raise ActionError(f"I didn't change anything{' to ' + about if about else ''} {when}.")
+    return (f"Undo {len(found)} change{'s' if len(found) != 1 else ''} from {when}, newest first: "
+            + change_history.say(found) + ". Anything changed again since is left as it is")
+
+
+def _history_undo(context, params) -> str:
+    """Does `history.undo`: each change put back whole, newest first, where nothing changed it since; says what was
+    put back and what was left and why. Its own writes aren't a new change."""
+    from core import change_history
+    from core.undo_log import recording
+
+    who, found, when = _history_found(context, params)
+    if not found:
+        raise ActionError(f"I didn't change anything {when}.")
+    with recording("undo", None):
+        done = change_history.undo(context, who, found)
+    said = []
+    if done["undone"]:
+        said.append(f"Put back {len(done['undone'])}: " + change_history.say(done["undone"]) + ".")
+    for entry, why in done["left"]:
+        said.append(f"Left \"{entry.what}\": {why}.")
+    return " ".join(said) or "Nothing could be put back."
+
+
+UNDO_ACTIONS = {"undo.last": ActionType("undo.last", "Undo", {}, _describe_undo, _undo),
+                "history.undo": ActionType("history.undo", "Undo These",
+                                           {"when": "a time: this afternoon, today, the last hour, yesterday...",
+                                            "what": "optional: what the changes were about"},
+                                           _describe_history_undo, _history_undo)}
 ACTION_TYPES.update(UNDO_ACTIONS)

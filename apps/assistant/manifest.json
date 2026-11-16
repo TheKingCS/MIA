@@ -97,6 +97,7 @@
       "set_birthday",
       "set_message_limit",
       "set_theme",
+      "undo_by_time",
       "undo_last_change",
       "what_can_you_do"
     ],
@@ -115,6 +116,7 @@
       "creation.rollback",
       "gap.build",
       "gap.dismiss",
+      "history.undo",
       "memory.add",
       "memory.fix",
       "memory.forget",
@@ -175,6 +177,7 @@
       "set_message_limit": "act_within_grant",
       "set_theme": "act_within_grant",
       "undo_last_change": "act_with_approval",
+      "undo_by_time": "act_with_approval",
       "what_can_you_do": "observe",
       "answer.rate": "act_within_grant",
       "art.delete": "act_with_approval",
@@ -200,6 +203,7 @@
       "online.remind": "act_within_grant",
       "records.add": "act_within_grant",
       "records.remove": "act_within_grant",
+      "history.undo": "act_with_approval",
       "undo.last": "act_within_grant",
       "wallet.delete": "act_with_approval"
     },

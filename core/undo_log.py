@@ -13,8 +13,10 @@ has its previous contents kept, once per file. Undo writes those back
 and reloads the stores that read them, then the screens refresh. It
 works for every tool without each one writing its own undo.
 
-Kept in memory only, the last `KEEP` changes per person: undo is for
-"oops, just now", not history. A change made on someone's phone is
+Kept in memory, the last `KEEP` changes per person: undo is for "oops,
+just now". Every change is also kept on disk for 30 days by the lasting
+history (core/change_history.py, UI-3), which `add` writes to, `forget`
+answers (changes it already put back leave memory) and `undo_last` marks. A change made on someone's phone is
 theirs to undo. Undo can't reach outside MIA's files: a sent email (only
 ever by pressing Send) stays sent. A log of what happened written during a
 change (the Fix-It Log's stumbles) is written inside `outside_undo()`, so
@@ -42,7 +44,8 @@ _local = threading.local()
 @dataclass
 class Change:
     """One undoable change: what MIA did, whose it was, when, each file's bytes before it (None for a file it made),
-    the life events it recorded, and who made it (the person, or MIA herself).
+    the life events it recorded, who made it (the person, or MIA herself), its description for the lasting history
+    (the approved sentence, or a tool's name and arguments) and its id there.
     """
     label: str  # what MIA did, e.g. "add_expense"
     profile_id: Optional[str]
@@ -50,6 +53,8 @@ class Change:
     files: dict = field(default_factory=dict)  # Path -> previous bytes, or None if it didn't exist
     events: list = field(default_factory=list)  # life events recorded during it (their ids)
     by: str = "person"  # "mia" when she made it: undoing it corrects her (core/corrections.py)
+    summary: str = ""  # the sentence that was approved, for an action (the lasting history shows it)
+    change_id: str = field(default_factory=lambda: __import__("uuid").uuid4().hex[:12])
 
 
 @contextmanager
@@ -105,11 +110,21 @@ class UndoLog:
         self._lock = threading.Lock()
 
     def add(self, change: Change) -> None:
-        """Keeps a change for its person (one that touched no file is dropped)."""
+        """Keeps a change for its person (one that touched no file is dropped), and in the person's lasting history
+        on disk (core/change_history.py, UI-3), where "undo what you did this afternoon" finds it after a restart."""
         if not change.files:
             return
         with self._lock:
             self._changes.setdefault(change.profile_id, deque(maxlen=KEEP)).append(change)
+        from core import change_history
+
+        change_history.keep(change)
+
+    def forget(self, change_ids: set) -> None:
+        """Drops changes the lasting history has already put back, so "undo that" can't restore them a second time."""
+        with self._lock:
+            for profile_id, changes in self._changes.items():
+                self._changes[profile_id] = deque((c for c in changes if c.change_id not in change_ids), maxlen=KEEP)
 
     def recent(self, profile_id: Optional[str]) -> list[Change]:
         """A person's changes, newest first."""
@@ -177,12 +192,16 @@ def reload_stores(context, paths: list[Path]) -> int:
 
 
 def undo_last(context, profile_id: Optional[str]) -> Optional[Change]:
-    """Put the person's most recent change back. None if there's nothing."""
+    """Put the person's most recent change back, and mark it undone in the lasting history so it's never put back
+    twice. None if there's nothing."""
     undo = getattr(context, "undo", None)
     change = undo.pop(profile_id) if undo is not None else None
     if change is None:
         return None
     reload_stores(context, _restore(change))
+    from core import change_history
+
+    change_history.mark_undone(profile_id, change.change_id)  # the lasting history never puts it back a second time
     from core import live
 
     live.bump()

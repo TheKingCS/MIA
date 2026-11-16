@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1451 files, 323,831 lines; 1451 files describe themselves; 17,761 of 17,856 classes and functions are documented.
+1453 files, 324,506 lines; 1453 files describe themselves; 17,798 of 17,894 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-562 files, 161,708 lines; 8,328 of 8,414 classes and functions documented
+563 files, 162,208 lines; 8,354 of 8,440 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -126,6 +126,7 @@
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
 - `core/capability_reminders.py`: Now and then, MIA reminds the person of what they're already capable of doing right now — "did you know you could go do X?" (Zac, 2026-11-08). It isn't a new task and it isn't a value to live up to: it's a subtle redirect that meets him where he is — the gentle reminder that the ability is already i
 - `core/carpentry.py`: Carpentry, the first of Trade Master's apprentice programs (DEC-0149; Zac, 2026-11-08: "She should become a Trade master and be able to teach an entry level Apprentice"). A learning path on core/paths.py's method, the same as guitar (core/guitar.py): stages of lessons, each with steps, why and what 
+- `core/change_history.py`: The lasting history of what MIA changed, with undo by time and subject (prompt 23's review, UI-3; DEC-0188; REQ-TRU-001, REQ-TRU-002; `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` sections 3 and 14). "Undo that" (core/undo_log.py) keeps the last 20 changes in memory, so it's for "oops, just 
 - `core/character_stats.py`: Real character stats (DEC-0028, the game layer's fourth piece): six RPG attributes, each 1 to 20, made from what the person has really done. Every point says where it came from.
 - `core/chat_worker.py`: Runs a single `AppContext.llm.chat_with_tools()` call off the GUI thread — docs/ROADMAP.md milestones 5.2/5.5. A blocking HTTP call to Ollama (core/llm_manager.py) on the GUI thread would freeze the whole app for the duration of every reply. This is the first module to need the scoped worker-thread 
 - `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian).
@@ -854,7 +855,7 @@
 
 ## tests/: the test suite: what each part must do
 
-497 files, 84,029 lines; 7,105 of 7,114 classes and functions documented
+498 files, 84,187 lines; 7,116 of 7,126 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -918,6 +919,7 @@
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
+- `tests/test_change_history.py`: The lasting history of MIA's changes (prompt 23's review, UI-3; core/change_history.py): every change is kept with its files' bytes before (sealed, compressed, once per content), so it outlives a restart; "undo what you did this afternoon" puts changes back newest first, each whole or not at all, an *(1 undocumented)*
 - `tests/test_character_module.py`: Unit tests for modules.character.module's pure functions, same style as tests/test_household_module.py (no Qt event loop, no fixtures).
 - `tests/test_character_panel.py`: Unit test for gui.character_panel.reaction_for_module — pure lookup logic, no Qt event loop needed. The reactive subscribe/unsubscribe widget behavior itself was verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior — see tests/test_assistant_module.py's
 - `tests/test_character_stats.py`: Real character stats (DEC-0028): six attributes, 1 to 20, from skills (training) and the last 30 days (recent), never falling below training.
@@ -1356,7 +1358,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,922 lines
+112 files, 20,939 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1370,7 +1372,7 @@
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 
 - `web/businesses.js`: businesses.js — Finances › Businesses (claude, 2026-11-11, DEC-0153). Renders MIA.businesses() (core/web_businesses.businesses_page): a card per business with this month's and this year's money, what it owes, its properties and open orders and quotes, each opening its own dashboard (biz.html); the o
 - `web/calendar.js`: calendar.js — the Calendar screen (claude, 2026-10-16). Renders MIA.calendar(month) (core/calendar_view.py) as the design canvas's one page (DEC-0113): Past Due and Due Today with their actions, Due Soon as short lines, and the month with its dots beside them. Each item says what it is and offers it
-- `web/changes.js`: changes.js — Recent Changes (claude, 2026-11-07, DEC-0125). Renders MIA.changes() (core/web_changes.py): what MIA can still put back, newest first, with Undo on the newest (the action undo.last, the same as saying "undo that"), then the last fortnight's history by day, undone ones struck through. Fo
+- `web/changes.js`: changes.js — Recent Changes (claude, 2026-11-07, DEC-0125). Renders MIA.changes() (core/web_changes.py): what MIA can still put back, newest first, with Undo on the newest (the action undo.last, the same as saying "undo that"), undo by time (history.undo, UI-3), then the last fortnight's history by 
 - `web/character.js`: character.js — the Character screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.character() (core/web_progress.py): the person's level and prestige, lifetime stats, everything they've unlocked (highest rarity first) and the tally by rarity, prestige emblems, top skills and latest missio
 - `web/checkin.js`: checkin.js — the Sunday check-in (claude, 2026-10-27, DEC-0047 rule 5). Renders MIA.checkin() (core/weekly_checkin.py): last week (the story, the loop's honest score, loot, what MIA noticed, quests finished) and the week ahead, day by day (runs with projected loot, rhythms, calendar events), quests 
 - `web/chronicle.js`: chronicle.js — The Chronicle (claude, 2026-10-17, DEC-0028). Renders MIA.chronicle() (core/chronicle.py): this week's chapter, the weeks before it, and the yearly editions. Laid out as the design canvas's Chronicle (DEC-0113): the newest chapter as prose, earlier ones to open. Read only; formatting 
