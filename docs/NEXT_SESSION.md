@@ -44,6 +44,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   this afternoon" works after a restart: newest first, each change whole or not at all, only where nothing
   changed it since; the tool lists first and waits for a yes; Recent Changes has Undo By Time. **Next on Opus:**
   UI-3's second part (reversibility and reach on every action kind, REQ-AUT-006, 007), then DEC-0196's browser.
+- **Built (Opus): DEC-0196, one browser** (K-0266): Settings › Browser has "Use MIA's browser as my everyday
+  browser" and "Private sites"; everyday mode opens a normal Edge window (Playwright's testing switches left
+  off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
+  PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
+  InPrivate windows stay invisible to her (`docs/BROWSER.md`).
 - **For the next session:** nothing of Fable's is queued until Zac answers. Opus can take prompt 23's independent
   review, Procurement P3, or Forge (M7).
 
@@ -150,7 +155,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   25. Opus's review of prompt 23 (the review's section 14) and UI-1 (core/runs.py, the browser routine and skill
       hooks, actions.ActionType.rejected, Agent Activity's Running column, whats_running);
   26. UI-3's first part (core/change_history.py, UndoLog.add/forget, undo_last's mark, history.undo and the
-      undo_by_time tool, Recent Changes' Undo By Time).
+      undo_by_time tool, Recent Changes' Undo By Time);
+  27. DEC-0196's one browser (core/browser.py EVERYDAY_DROPS, _page and take_over, withheld/asked_now,
+      sensitive_sites; the three tools; the two settings); and the VM workflow (.github/workflows/mia-os-vm.yml).
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

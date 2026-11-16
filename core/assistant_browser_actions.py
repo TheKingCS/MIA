@@ -314,8 +314,52 @@ for _kind, _label, _params, _describe, _execute in (
     ACTION_TYPES[_kind] = ActionType(_kind, _label, _params, _describe, _execute)
 
 
+def _action_take_over(context, arguments: dict) -> str:
+    """Tool take_over_tab (DEC-0196, rule 1): the tab the person is looking at in their everyday browser becomes hers
+    to work in, because they handed it over; what it shows."""
+    hub = getattr(context, "browsers", None)
+    if hub is None:
+        return "My browser isn't available here."
+    try:
+        return "It's mine now: " + hub.for_person(context).take_over()
+    except BrowserError as problem:
+        return str(problem)
+
+
+def _action_private_sites(context, arguments: dict) -> str:
+    """Tool private_sites (DEC-0196, rule 2): adds a site to the ones she reads only when asked right then (or takes
+    it off with remove), and says the list."""
+    from core import person_settings
+    from core.browser import SENSITIVE_KEY, sensitive_sites
+
+    site = str(arguments.get("site") or "").strip().lower().removeprefix("https://").removeprefix("http://")
+    site = site.removeprefix("www.").split("/")[0]
+    now = sensitive_sites(context)
+    if site:
+        remove = str(arguments.get("remove", "")).lower() in ("true", "yes", "1")
+        now = [s for s in now if s != site] if remove else sorted(set(now) | {site})
+        person_settings.put(context, SENSITIVE_KEY, ", ".join(now))
+    return ("Private sites, read only when you ask right then: " + ", ".join(now) + ".") if now else \
+        "No sites are marked private. Say \"keep mybank.com private\" to add one."
+
+
+def _action_everyday(context, arguments: dict) -> str:
+    """Tool use_everyday_browser (DEC-0196): makes MIA's browser the person's everyday one (a normal Edge window with
+    their sync, extensions and passwords) or not; it takes effect the next time the browser opens."""
+    from core import person_settings
+    from core.browser import EVERYDAY_KEY
+
+    on = str(arguments.get("on", "true")).lower() not in ("false", "no", "0", "off")
+    person_settings.put(context, EVERYDAY_KEY, on)
+    if on:
+        return ("Done: next time my browser opens it's your everyday Edge window. Bring your bookmarks and passwords "
+                "over once in its Settings, Import browser data. I work only in my own tabs unless you hand me one.")
+    return "Done: my browser goes back to being mine alone, inside MIA, next time it opens."
+
+
 def register_browser_actions(registry: AssistantActionRegistry) -> None:
-    """Registers MIA's browser tools (domain browser; never offered to a child)."""
+    """Registers MIA's browser tools (domain browser; never offered to a child), with DEC-0196's take_over_tab,
+    private_sites and use_everyday_browser."""
     control = {"control": {"type": "string", "description": "The control's number from browser_read (preferred)."},
                "name": {"type": "string", "description": "Or the control's name as shown on the page."}}
     registry.register_domain_keywords(DOMAIN, ("browser", "website", "web page", "webpage", "site", "online",
@@ -349,6 +393,18 @@ def register_browser_actions(registry: AssistantActionRegistry) -> None:
          ["name"], _action_do_task, ("do the task", "run the task", "do what i showed you", "do it again")),
         ("list_browser_tasks", "List the browser tasks MIA has been taught and how practised each is.", {}, [],
          _action_list_tasks, ("browser tasks", "what tasks have you learned", "what can you do online")),
+        ("take_over_tab", "Take over the browser tab the person is looking at, because they handed it over ('take over "
+                          "this tab'). MIA never works in the person's tabs otherwise.", {}, [], _action_take_over,
+         ("take over this tab", "take over the tab", "you take this tab", "take it from here")),
+        ("private_sites", "Mark a website private (MIA reads it only when asked right then, never keeps it for "
+                          "search), take one off with remove, or list them.",
+         {"site": {"type": "string", "description": "The site, like mybank.com (empty to list)."},
+          "remove": {"type": "boolean", "description": "True to take it off the list."}}, [], _action_private_sites,
+         ("keep it private", "private site", "private sites", "don't read my bank", "dont read my bank",
+          "mark the site private")),
+        ("use_everyday_browser", "Make MIA's browser the person's everyday browser (one browser for both), or stop.",
+         {"on": {"type": "boolean", "description": "True to use it every day, false to stop."}}, [], _action_everyday,
+         ("my everyday browser", "use your browser as mine", "one browser", "same browser")),
     )
     for name, description, props, required, handler, phrases in tools:
         registry.register(AssistantAction(

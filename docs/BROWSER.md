@@ -86,6 +86,34 @@ with the exact text shown: "type "..." into "Search"", or "Open
 https://...". A plain address with no query passes; one carrying data
 after a `?` follows the same rule.
 
+## One browser for you and MIA (DEC-0196, 2026-11-16)
+
+Zac: "My browser and MIAs browser should be the same." With **Settings › Browser › Use MIA's browser as my everyday
+browser** on (or "make your browser my everyday browser"), her Edge profile is also yours, in a normal window.
+
+**To start, at the PC:**
+1. Turn it on (Settings, or say it). The next time her browser opens, it's an ordinary Edge window.
+2. In that window, open Edge's Settings › Profiles › Import browser data, and bring over your bookmarks, history and
+   saved passwords from your usual Edge profile. You do this yourself; MIA has no way to read a password store.
+3. List your private sites: Settings › Browser › Private sites (or "keep mybank.com private").
+
+**What changes in the window:** Playwright normally starts Edge for testing, with sync, extensions, updates, phishing
+protection and the pop-up blocker turned off. In everyday mode those switches are left off (`EVERYDAY_DROPS` in
+`core/browser.py`), so it behaves like your own Edge. Edge may still show a bar saying it's controlled by software,
+because MIA is connected to it.
+
+**The four rules** (Q-52, "Yes to all"):
+1. **She works only in her own tabs.** When it opens she makes a tab of her own; every other tab is yours. Say
+   "take over this tab" to hand her the one in front of you.
+2. **Private sites** she reads only when you ask her right then ("read this page", or the site's name, within two
+   minutes). Otherwise she sees the title and address and says the site is private. They're never kept for search.
+3. **Private (InPrivate) windows** are a separate browser session that MIA isn't connected to, so she never sees them.
+   *(To confirm on the PC.)*
+4. **Saved passwords** stay in Edge's password manager, which nothing MIA uses can read; she still never types into a
+   password, card or ID field.
+
+Everything else in this guide still holds: every commit (pay, buy, send, post, sign in) waits for your OK.
+
 ## Known limits
 
 - The rule checks words, not meaning: "Feb 3" said and "02/03" typed is a

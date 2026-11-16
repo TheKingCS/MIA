@@ -43,7 +43,10 @@
       "browser_type",
       "do_browser_task",
       "learn_browser_task",
-      "list_browser_tasks"
+      "list_browser_tasks",
+      "private_sites",
+      "take_over_tab",
+      "use_everyday_browser"
     ],
     "actions": [
       "browser.back",
@@ -65,6 +68,9 @@
       "do_browser_task": "act_within_grant",
       "learn_browser_task": "act_within_grant",
       "list_browser_tasks": "observe",
+      "private_sites": "act_within_grant",
+      "take_over_tab": "act_within_grant",
+      "use_everyday_browser": "act_within_grant",
       "browser.back": "act_within_grant",
       "browser.close": "act_within_grant",
       "browser.commit": "act_with_approval",
@@ -80,7 +86,8 @@
       "browser_click",
       "browser_read",
       "browser_type",
-      "do_browser_task"
+      "do_browser_task",
+      "take_over_tab"
     ]
   },
   "uses": [],

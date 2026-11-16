@@ -78,7 +78,7 @@ def test_tools_that_carry_outside_text_are_tagged_and_handled_for_the_model(regi
 
 def test_no_tool_reads_outside_sources_without_being_tagged(registry):
     """A sweep by each tool's own code: one that calls the web search, the browser's page text or the mail must be
-    tagged as outside text, or be listed here with why it isn't."""
+    tagged as outside text, or be listed here with why it isn't (the browser tools that read no page among them)."""
     import inspect
 
     from core import parity
@@ -87,6 +87,8 @@ def test_no_tool_reads_outside_sources_without_being_tagged(registry):
         "learn_browser_task": "starts a recording; says nothing a page wrote",
         "list_browser_tasks": "the person's own taught tasks",
         "browser_close": "closes the window; says nothing a page wrote",
+        "private_sites": "the person's own list of private sites (DEC-0196); reads no page",
+        "use_everyday_browser": "a setting (DEC-0196); reads no page",
     }
     tagged = {n for m in registry.manifests.values() for n in m["capabilities"]["outside"]}
     missed = []

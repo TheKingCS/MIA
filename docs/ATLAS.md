@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1453 files, 324,506 lines; 1453 files describe themselves; 17,798 of 17,894 classes and functions are documented.
+1453 files, 324,734 lines; 1453 files describe themselves; 17,811 of 17,907 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-563 files, 162,208 lines; 8,354 of 8,440 classes and functions documented
+563 files, 162,389 lines; 8,364 of 8,450 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -103,7 +103,7 @@
 - `core/boot_sound.py`: Six to choose from** (2026-11-07, Zac: "an odd ping... sample some sounds and I will pick"): `startup_samples()` makes each of core/startup_sounds.py's choices (a warm chord, rising chimes, a reactor power-up, a soft swell, a ready tone, and the original below); Settings plays and picks one (`sound.
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long.
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
-- `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile that is MIA's alone, never the person's own browser, logins, cookies or saved passwords. The window is visible on the computer, so what she does can be watched.
+- `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile kept in the person's own folder. The window is visible on the computer, so what she does can be watched.
 - `core/browser_routines.py`: Browser tasks MIA has been taught (DEC-0117, Zac 2026-11-07: "show her, then she practises"). The person does a task once in her browser while she records it; she saves it as a routine and replays it later, the same steps in the same order, checking the page as she goes.
 - `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it. `untrusted()` fra
 - `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(65 undocumented)*
@@ -855,7 +855,7 @@
 
 ## tests/: the test suite: what each part must do
 
-498 files, 84,187 lines; 7,116 of 7,126 classes and functions documented
+498 files, 84,234 lines; 7,119 of 7,129 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

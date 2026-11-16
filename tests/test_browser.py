@@ -8,8 +8,10 @@ with a yes, refused when the page changed), secrets never typed, a task
 taught by showing and replayed, learned after two clean runs, the
 Browser screen (core/web_browser.py) with its run and forget actions and
 its own controls (open, back, close, teach, the live picture), the live
-view the person works her browser from, and only the person's own words
-typed or searched for on her own (DEC-0122).
+view the person works her browser from, only the person's own words
+typed or searched for on her own (DEC-0122), and one browser for him and
+her (DEC-0196): private sites read only when asked right then, the
+everyday mode's settings and switches, a tab taken only when handed over.
 """
 
 from __future__ import annotations
@@ -361,3 +363,46 @@ def test_working_her_browser_from_the_live_view(world):
         person_input(world, "key", key="F12")
     with pytest.raises(BrowserError):
         person_input(world, "drag", 1, 1)
+
+
+# ---------------------------------------------------------------- one browser (DEC-0196)
+
+
+def test_a_private_site_is_read_only_when_the_person_asks_right_then(world):
+    """Rule 2: a site he marked private shows its title and address, never its text, until he asks her to read it;
+    asking names the page ("read this page") or the site."""
+    assert "No sites are marked private" in tool(world, "private_sites")
+    assert "shop.example" in tool(world, "private_sites", site="https://www.shop.example/anything")
+    said = tool(world, "browse", target=SHOP)
+    assert "marked private" in said and "Place order" not in said
+    assert "marked private" in tool(world, "browser_read")
+    world.browsers.for_person(world).hear("can you read this page for me")
+    assert "marked private" not in tool(world, "browser_read") and "content from the internet" in tool(world, "browser_read")
+    assert "No sites" in tool(world, "private_sites", site="shop.example", remove=True)
+
+
+def test_the_everyday_browser_is_a_setting_and_drops_the_testing_switches(world):
+    """One browser: a per-person setting, and the switches Playwright adds for testing that would weaken a person's
+    own browser (phishing protection, the pop-up blocker, sync, extensions, updates, plain-text passwords) are left off;
+    MIA opens her own tab rather than using his."""
+    import inspect
+
+    from core import browser as b
+
+    assert b.everyday_on(world) is False
+    assert "next time my browser opens it's your everyday" in tool(world, "use_everyday_browser", on=True)
+    assert b.everyday_on(world) is True
+    for switch in ("--enable-automation", "--disable-client-side-phishing-detection", "--disable-popup-blocking",
+                   "--disable-sync", "--disable-extensions", "--password-store=basic"):
+        assert switch in b.EVERYDAY_DROPS
+    source = inspect.getsource(b._Worker.run)
+    assert "ignore_default_args" in source and "self.context.new_page() if self.everyday" in source
+    tool(world, "use_everyday_browser", on=False)
+    assert b.everyday_on(world) is False
+
+
+def test_she_takes_over_a_tab_only_when_handed_one(world):
+    """Rule 1: the hand-over is its own tool; where the browser can't tell tabs apart (the pretend one, or MIA's
+    browser inside MIA), it says so instead of guessing."""
+    tool(world, "browse", target=SHOP)
+    assert "everyday browser window" in tool(world, "take_over_tab")

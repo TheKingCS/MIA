@@ -3,9 +3,25 @@ core.browser
 ==============
 
 MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by
-Playwright, in a profile that is MIA's alone, never the person's own
-browser, logins, cookies or saved passwords. The window is visible on the
-computer, so what she does can be watched.
+Playwright, in a profile kept in the person's own folder. The window is
+visible on the computer, so what she does can be watched.
+
+**One browser** (DEC-0196, Zac 2026-11-16: "My browser and MIAs browser
+should be the same"): with `browser.everyday` on, this profile is his
+everyday browser too, in a normal window (`EVERYDAY_DROPS`: the switches
+Playwright adds for testing that would turn off sync, extensions, updates,
+phishing protection and the pop-up blocker, or keep passwords unencrypted,
+are left off). Four rules come with it (Q-52, "Yes to all"):
+1. MIA works only in a tab she opened (`_page`); every other tab is his,
+   unless he hands one over (`take_over`: the tab he's looking at becomes
+   hers until she's done).
+2. A site he marks sensitive (`browser.sensitive_sites`: his bank, health,
+   email) she reads only when he asks right then (`read` and `glance`
+   withhold its text otherwise), and it's never kept for search.
+3. Private (InPrivate) windows are another browser context that Playwright
+   never sees, so they're never recorded or read.
+4. Saved passwords stay in Edge's own password manager, which no Playwright
+   call can read; she still never types into a secret field.
 
 **How she sees a page** (`Page`): its address, title, its text, and the
 controls on it, each numbered (`[12] button "Place order"`), so the model
@@ -73,6 +89,13 @@ log = get_logger(__name__)
 SEARCH_URL = "https://duckduckgo.com/?q="  # a search when she's given words instead of an address
 MAX_CONTROLS = 150
 PENDING_MINUTES = 30  # a commit not approved by then is let go
+# Everyday mode (DEC-0196): Playwright's testing switches that a person's own browser must not have.
+EVERYDAY_DROPS = ("--enable-automation", "--disable-sync", "--disable-extensions",
+                  "--disable-component-extensions-with-background-pages", "--disable-component-update",
+                  "--disable-background-networking", "--disable-client-side-phishing-detection",
+                  "--disable-popup-blocking", "--disable-default-apps", "--password-store=basic", "--use-mock-keychain")
+ASKED_SECONDS = 120  # a sensitive site is read only when he asked this recently (rule 2)
+_READ_WORDS = re.compile(r"\b(read|look at|what does|what's on|whats on|check|see|show me|open)\b", re.I)
 VIEW_W, VIEW_H = 1280, 800  # the page's size when her browser lives inside MIA (no window of its own)
 PERSON_KEYS = ("Enter", "Tab", "Backspace", "Escape", "ArrowDown", "ArrowUp", "PageDown", "PageUp")
 HEARD_MINUTES = 30  # the person's words she may type or search for on her own, from this long back
@@ -279,10 +302,11 @@ _RECORD_JS = r"""(() => {
 class _Worker(threading.Thread):
     """The one thread that owns Playwright and the browser; every call is handed to it and waited for."""
 
-    def __init__(self, profile_dir: Path, headless: bool) -> None:
-        """Starts the browser thread for this profile (shown, unless headless)."""
+    def __init__(self, profile_dir: Path, headless: bool, everyday: bool = False) -> None:
+        """Starts the browser thread for this profile (shown, unless headless; as his everyday browser when
+        `everyday`, DEC-0196)."""
         super().__init__(daemon=True, name="mia-browser")
-        self.profile_dir, self.headless = profile_dir, headless
+        self.profile_dir, self.headless, self.everyday = profile_dir, headless and not everyday, everyday
         self.jobs: "queue.Queue" = queue.Queue()
         self.ready = concurrent.futures.Future()
         self.recorder: Optional[Callable[[dict], None]] = None
@@ -290,8 +314,9 @@ class _Worker(threading.Thread):
         self.ready.result(timeout=60)
 
     def run(self) -> None:
-        """Opens Edge in MIA's profile (hidden at a fixed page size inside MIA, or in a window of its own), then runs
-        each job handed to it until told to stop."""
+        """Opens Edge in MIA's profile (hidden at a fixed page size inside MIA, in a window of its own, or as his
+        everyday browser without Playwright's testing switches, in a tab of her own: DEC-0196), then runs each job
+        handed to it until told to stop."""
         try:
             from playwright.sync_api import sync_playwright
         except ImportError as problem:
@@ -302,11 +327,14 @@ class _Worker(threading.Thread):
             with sync_playwright() as p:
                 self.profile_dir.mkdir(parents=True, exist_ok=True)
                 size = {"no_viewport": True} if not self.headless else {"viewport": {"width": VIEW_W, "height": VIEW_H}}
+                extra = {"ignore_default_args": list(EVERYDAY_DROPS), "accept_downloads": True} if self.everyday \
+                    else {"accept_downloads": False}
                 self.context = p.chromium.launch_persistent_context(
-                    str(self.profile_dir), channel="msedge", headless=self.headless, accept_downloads=False, **size)
+                    str(self.profile_dir), channel="msedge", headless=self.headless, **extra, **size)
                 self.context.expose_binding("miaRecord", lambda _source, raw: self._recorded(raw))
                 self.context.add_init_script(_RECORD_JS)
-                self.page = self.context.pages[0] if self.context.pages else self.context.new_page()
+                # Her own tab (DEC-0196, rule 1): in everyday mode the first tab is his, so she opens one of hers.
+                self.page = self.context.new_page() if self.everyday or not self.context.pages else self.context.pages[0]
                 self.ready.set_result(True)
                 while True:
                     fn, done = self.jobs.get()
@@ -345,15 +373,31 @@ class EdgeDriver(Driver):
     """Microsoft Edge in MIA's own profile, through Playwright (no browser to download: it uses the Edge
     installed)."""
 
-    def __init__(self, profile_dir: Path, headless: bool = False) -> None:
-        """Opens Edge in the profile folder, its window shown unless headless."""
-        self.worker = _Worker(Path(profile_dir), headless)
+    def __init__(self, profile_dir: Path, headless: bool = False, everyday: bool = False) -> None:
+        """Opens Edge in the profile folder, its window shown unless headless (always shown as his everyday
+        browser)."""
+        self.worker = _Worker(Path(profile_dir), headless, everyday)
 
     def _page(self, w):
-        """The tab she uses, opened again if the person closed it."""
+        """The tab she uses: one she opened (or one he handed her), opened anew when it was closed; never one of his
+        (DEC-0196, rule 1)."""
         if w.page.is_closed():
-            w.page = w.context.pages[0] if w.context.pages else w.context.new_page()
+            w.page = w.context.new_page() if w.everyday or not w.context.pages else w.context.pages[0]
         return w.page
+
+    def take_over(self) -> str:
+        """The tab the person is looking at becomes hers (he handed it over): its address. BrowserError when no other
+        tab of his is in front."""
+        def go(w):
+            for page in reversed(w.context.pages):
+                try:
+                    if page is not w.page and not page.is_closed() and page.evaluate("document.hasFocus()"):
+                        w.page = page
+                        return page.url
+                except Exception:  # a tab that won't answer isn't the one he's looking at
+                    continue
+            raise BrowserError("I can't tell which tab you mean: click into it, then ask me again.")
+        return self.worker.call(go)
 
     def _settle(self, page) -> None:
         """Waits for a page to finish loading (or a few seconds, whichever comes first)."""
@@ -463,6 +507,40 @@ class EdgeDriver(Driver):
 
 # ------------------------------------------------------------------ one person's browser
 
+SENSITIVE_KEY = "browser.sensitive_sites"
+EVERYDAY_KEY = "browser.everyday"
+
+
+def everyday_on(context) -> bool:
+    """Whether this person's MIA browser is also their everyday browser (DEC-0196; off until they turn it on)."""
+    from core import person_settings
+
+    try:
+        return bool(person_settings.get(context, EVERYDAY_KEY, False))
+    except Exception:  # no settings here (a test, the phone's small MIA): not everyday
+        return False
+
+
+def sensitive_sites(context) -> list[str]:
+    """The sites this person marked sensitive (rule 2): domains, lower case, without "www."."""
+    from core import person_settings
+
+    try:
+        raw = person_settings.get(context, SENSITIVE_KEY, []) or []
+    except Exception:  # no settings here: none marked
+        raw = []
+    if isinstance(raw, str):
+        raw = re.split(r"[\s,;]+", raw)
+    return sorted({str(s).strip().lower().removeprefix("https://").removeprefix("http://").removeprefix("www.").split("/")[0]
+                   for s in raw if str(s).strip()})
+
+
+def is_sensitive(context, url: str) -> bool:
+    """Whether an address is on one of the person's sensitive sites (the site itself or any part of it)."""
+    host = urlparse(url or "").netloc.lower().removeprefix("www.").split(":")[0]
+    return bool(host) and any(host == s or host.endswith("." + s) for s in sensitive_sites(context))
+
+
 def looks_like_address(text: str) -> bool:
     """Pure logic. Whether what she was given is a web address rather than words to search for."""
     return bool(_URLISH.match((text or "").strip())) and " " not in (text or "").strip()
@@ -493,14 +571,15 @@ class Browser:
     Made lazily: no Edge opens until she's asked to browse."""
 
     def __init__(self, context, profile_dir: Path, driver_factory: Optional[Callable[[Path], Driver]] = None) -> None:
-        """Keeps where her profile lives and how to make the driver (inside MIA, unless browser.own_window); nothing
-        opens yet, and nothing has been heard."""
+        """Keeps where her profile lives and how to make the driver (inside MIA, unless browser.own_window; his
+        everyday Edge window when browser.everyday, DEC-0196); nothing opens yet, and nothing has been heard."""
         self.context = context
         self.profile_dir = Path(profile_dir)
         # Inside MIA (2026-11-07, Zac: "open the browser inside a window in her program"): no window of its own, shown
         # live on the Browser page; browser.own_window brings back the separate Edge window.
         own = bool(getattr(context, "config", None) and context.config.get("browser.own_window", False))
-        self._factory = driver_factory or (lambda folder: EdgeDriver(folder, headless=not own))
+        everyday = everyday_on(context)  # DEC-0196: his everyday browser, in a normal window
+        self._factory = driver_factory or (lambda folder: EdgeDriver(folder, headless=not own, everyday=everyday))
         self.driver: Optional[Driver] = None
         self.page = Page()
         self.pending: dict[str, Pending] = {}
@@ -566,22 +645,61 @@ class Browser:
                 self.teaching["start"] = url
             return self.refresh()
 
+    def asked_now(self, site: str) -> bool:
+        """Whether the person asked her to read this page just now (DEC-0196, rule 2): in the last ASKED_SECONDS they
+        said a reading word ("read", "look at", "what's on"...) together with the site's name or "this page"."""
+        cutoff = time.time() - ASKED_SECONDS
+        name = (site or "").lower().removeprefix("www.").split(".")[0]
+        for at, words in self.heard:
+            low = words.lower()
+            if at > cutoff and _READ_WORDS.search(low) and (name and name in low or "this page" in low
+                                                            or "this tab" in low or "this site" in low):
+                return True
+        return False
+
+    def withheld(self, page: Page) -> str:
+        """Why this page's text isn't for the model now ("" when it is): a site he marked sensitive that he didn't ask
+        her to read just now."""
+        site = page.site() if hasattr(page, "site") else urlparse(page.url).netloc
+        if is_sensitive(self.context, page.url) and not self.asked_now(site):
+            return (f"This is {site or 'a site'}, one you marked private, so I don't read it unless you ask me to "
+                    "right then. Say \"read this page\" if you want me to.")
+        return ""
+
     def read(self, controls: bool = True) -> str:
         """The page now for the model: its title and address, its text (framed as untrusted), and its numbered
-        controls."""
+        controls; a sensitive site's text only when the person asked just now (DEC-0196, rule 2)."""
         with self.lock:
             if self.driver is None:
                 return "MIA's browser isn't open. Ask her to open a page first."
             page = self.refresh()
+            held = self.withheld(page)
+            if held:
+                return f"Page: {page.title or '(untitled)'} ({page.url})\n{held}"
             lines = [f"Page: {page.title or '(untitled)'} ({page.url})", untrusted(page.text, page.url)]
             if controls and page.controls:
                 lines.append("Controls on the page:\n" + "\n".join(describe_control(c) for c in page.controls))
             return "\n".join(lines)
 
     def glance(self) -> str:
-        """The page in a few lines: its title, address and how it begins (framed as untrusted)."""
+        """The page in a few lines: its title, address and how it begins (framed as untrusted); a sensitive site's
+        text only when the person asked just now (DEC-0196, rule 2)."""
         page = self.page
+        held = self.withheld(page)
+        if held:
+            return f"{page.title or '(untitled)'} ({page.url})\n{held}"
         return f"{page.title or '(untitled)'} ({page.url})\n" + untrusted(page.text, page.url, limit=1200)
+
+    def take_over(self) -> str:
+        """The tab the person is looking at becomes hers to work in (DEC-0196, rule 1: only when he hands it over);
+        what it shows. BrowserError when it can't be told which tab."""
+        with self.lock:
+            taker = getattr(self._driver(), "take_over", None)
+            if taker is None:
+                raise BrowserError("Handing me a tab works in your everyday browser window.")
+            taker()
+            self.refresh()
+            return self.glance()
 
     # -------------------------------------------------------------- acting
 

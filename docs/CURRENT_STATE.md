@@ -17,7 +17,8 @@ session. Last updated: 2026-11-16 (the Fable run: reviews, and MIA OS Prompt 05)
 - **Waiting on you at the PC:** the graphics card test from a Fedora USB stick (`os/poc/README.md`, about an hour, nothing installed).
 - **Built (Opus): the run record.** MIA now keeps one record of anything she does in several steps: a browser task, a skill you taught her, a workflow. Ask "what's running?", or look at the Running column on the Dashboard. If MIA restarts in the middle, the task shows as stopped at its step instead of looking alive; if you say no to a browser step, the task ends right away instead of waiting half an hour.
 - **Built (Opus): the lasting history.** Every change MIA makes is now kept for 30 days, so you can say "undo what you did to the greenhouse this afternoon" even after a restart, or use Undo By Time on the Recent Changes page. She lists exactly what she'd put back and waits for your yes; each change goes back whole or not at all, and anything you changed again since is left alone, with the reason.
-- **Next on Opus:** marking each kind of action as undoable or not and what it reaches, then the one shared browser.
+- **Built (Opus): one browser, ready for you to switch on.** In Settings › Browser: "Use MIA's browser as my everyday browser" and "Private sites". Switched on, her Edge becomes a normal window with your sync, extensions and passwords (after you import them in Edge's own Settings); she works only in her own tabs, takes over one only when you say "take over this tab", and reads a private site only when you ask her right then.
+- **Next on Opus:** marking each kind of action as undoable or not and what it reaches.
 
 
 **2026-11-16 (Claude on Opus: the glass look's foundation).**

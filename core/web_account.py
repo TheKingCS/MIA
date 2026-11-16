@@ -84,6 +84,13 @@ SETTINGS: tuple[Setting, ...] = (
             options=(("auto", "Auto"), ("full", "Full glass"), ("light", "Light (no blur)"), ("none", "None (solid)"))),
     Setting("display.reduce_transparency", "Look", "Reduce transparency", "toggle", False,
             "Solid panels everywhere, whatever the theme."),
+    # One browser (DEC-0196): MIA's browser as his everyday one, and the sites she reads only when he asks.
+    Setting("browser.everyday", "Browser", "Use MIA's browser as my everyday browser", "toggle", False,
+            "One browser for you and MIA: a normal Edge window with your bookmarks, sync and extensions. She works only "
+            "in her own tabs unless you hand her one. Import your bookmarks and passwords in its Settings › Import."),
+    Setting("browser.sensitive_sites", "Browser", "Private sites", "text", "",
+            "Sites MIA reads only when you ask her right then, and never keeps for search: your bank, health, email. "
+            "Addresses separated by commas, like mybank.com, mail.example.com."),
     Setting("display.ambient", "Look", "Background motion", "choice", "off",
             "A slow drift of your colours' glow behind the pages. It stays still on battery, with reduced motion or "
             "light glass, and while MIA eases off.", options=(("off", "Still"), ("drift", "Slow drift"))),

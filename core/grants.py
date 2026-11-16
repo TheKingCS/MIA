@@ -63,7 +63,7 @@ NEEDS_YES = "That step needs your yes first."
 # Tools whose answers are framed for the model by browser_safety.untrusted() where they're made (core/browser.py,
 # core/online_lookup.py).
 FRAMED_TOOLS = frozenset({"browse", "browser_back", "browser_click", "browser_read", "browser_type", "do_browser_task",
-                          "look_up_online"})
+                          "look_up_online", "take_over_tab"})
 _SUGGEST_PREFIXES = ("draft_", "propose_", "suggest_", "plan_", "preview_")
 
 _would_refuse: dict = {}  # capability -> how many times enforcing would have stopped it (this run)

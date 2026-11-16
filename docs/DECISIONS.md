@@ -3443,6 +3443,11 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
      secret field (DEC-0117).
   Unchanged: every commit (pay, buy, send, post, sign up) waits for his press (`browser.commit`); page text reaches the
   model as outside text, so a page can't steer a change.
+- **Built 2026-11-16 (Opus), to try at the PC:** `browser.everyday` and `browser.sensitive_sites` (per person, in
+  Settings › Browser); everyday mode launches Edge without Playwright's testing switches (`EVERYDAY_DROPS`) and opens
+  her own tab; `take_over_tab`, `private_sites`, `use_everyday_browser`; a private site's text withheld unless he
+  asked within two minutes. Import is Edge's own (he does it). Rule 3 rests on Playwright's design and is to be
+  confirmed on the PC; recall indexing isn't built yet, so "never kept for search" is a rule for it.
 - Why: Zac's answer; one history makes Recall complete; one set of sign-ins means MIA's tasks work on the sites he
   already uses without signing in twice.
 - Cost: her browser holds his live sessions, so a mistake or a manipulated page reaches more than before; the four
