@@ -32,10 +32,13 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
 | **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
 | **03** | **Application framework** | **done; reviewed by Zac 2026-11-15 (DEC-0175 to 0177; prompt 22 follows)** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
-| **04** | **Requirements and system philosophy** | **done 2026-11-15 (Opus); waiting for Zac's review (Q-32 to Q-36)** | `MIA_OS_SYSTEM_PHILOSOPHY.md`, `MIA_OS_SYSTEM_REQUIREMENTS.md` and fourteen more (listed in it) |
+| **04** | **Requirements and system philosophy** | **done 2026-11-15 (Opus); reviewed by Zac (Q-32 to Q-36 answered, DEC-0179 to 0182 approved) and by Fable (2026-11-16)** | `MIA_OS_SYSTEM_PHILOSOPHY.md`, `MIA_OS_SYSTEM_REQUIREMENTS.md` and fourteen more (listed in it) |
 | 05–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
+| 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
+| 23 | Universal Intelligence and intent-driven computing (handoff) | **Fable's architectural review done 2026-11-16 (DEC-0188 proposed, Q-43 to Q-46); Opus's independent review next; its steps UI-1 to UI-10 run beside the prompts** | `MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` |
+| 24 | Visual identity, glass, the appearance engine (handoff) | built to phase A7 (DEC-0183, 0186, 0187 approved; DEC-0184 built, still marked proposed) | `MIA_OS_APPEARANCE_ENGINE.md` |
 
 ## 3. Prompt 01 in brief
 

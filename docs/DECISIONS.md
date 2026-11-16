@@ -3279,3 +3279,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: Zac's handoff (prompt 24 §6) asks for each app to feel like its own place inside one system, and the plan's
   phase A6 carries it. Choosing colours is Zac's and Muse's call, so this is a proposal.
 - Related: DEC-0023, DEC-0183, DEC-0184, DEC-0186
+
+### DEC-0188: Prompt 23 (Universal Intelligence) is built by growing what exists; the run record first
+- Status: PROPOSED (Claude on Fable, 2026-11-16; Zac's handoff of 2026-11-15, prompt 23)
+- Decision: the handoff's capabilities are extensions of systems MIA has, with no new service: the Universal Action
+  Layer (`core/ual.py`) takes the shelf, drag and drop and the PC's front doors; links, history and search take recall
+  by meaning and workspaces; taught skills, workflows and browser routines share one run record, on which plans
+  across apps and the stop are built; the makers and Forge are the creation system; the action contract, grants, the
+  gate and undo are the floor under all of it. The five domains are groupings, not processes. Rejected as proposed: a
+  separate knowledge graph, preferences engine, notification system or workflow engine. The review, with every
+  feature classed, is `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md`; Opus reviews it independently next.
+- Why: about two thirds of the handoff is built or planned (the UAL to phase U3, teaching by demonstration twice,
+  World Intelligence, the first maker). Its own instruction is to avoid new services where existing ones extend. Three
+  engines already run steps; a fourth for plans, with a stop that must know the steps, is the moment to give them one
+  record.
+- Waiting on Zac: Q-43 (what the shelf keeps), Q-44 (activity context), Q-45 (whose browsing Recall reads), Q-46
+  (when it runs).
+- Related: DEC-0165, DEC-0123, DEC-0167, DEC-0117, DEC-0156, DEC-0175, DEC-0176, DEC-0181

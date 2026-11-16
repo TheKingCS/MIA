@@ -53,6 +53,10 @@ folded in here.*
 | Q-40 | **Answered (2026-11-16)**: the stop as written, with one change: MIA may adjust the greenhouse's controllers, and a stop never affects the greenhouse | DEC-0181, DEC-0185 | — |
 | Q-41 | **Answered (2026-11-16)**: "Allow gold": soft gold accents allowed, vivid amber still refused, rewards now legendary orange | DEC-0186 | — |
 | Q-42 | **Answered (2026-11-16)**: "I like your proposed colors": Workout rose, Kitchen soft cream gold, Finance indigo, Estate and the homestead olive, Skills plum, Workshop steel, for each app's own data and header glow | DEC-0187 | Muse may refine |
+| Q-43 | The shelf (a short-lived place for things you captured, to combine and send on): keep only what you send to it, or also everything you copy? Recommended: only what you send; watching the clipboard stays an off switch, passwords never kept, one day's life | DEC-0188 | Zac |
+| Q-44 | May MIA note which app and document is in front of you, to tie work to a project? Recommended: not yet; build it last, off by default, names and titles only, PC only, with an indicator and an erase button | DEC-0188 | Zac |
+| Q-45 | Whose browsing may Recall search? Recommended: only the browser MIA drives; never your own browser's history unless you ask for an import | DEC-0188 | Zac |
+| Q-46 | When does prompt 23's work run? Recommended: the run record, the stop and the durable history on Opus now, between the MIA OS prompts; skip the Windows hotkey if the PC moves to Linux within weeks | DEC-0188 | Zac |
 
 ## The original questions (for the record)
 

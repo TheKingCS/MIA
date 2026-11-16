@@ -66,3 +66,4 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC-0185 | MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse (amends DEC-0150) | APPROVED (Q-40) |
 | DEC-0186 | Gold allowed as an accent; rewards are legendary orange | APPROVED (Q-41) |
 | DEC-0187 | Each app's own atmosphere colour, outside the meaning colours | APPROVED (Q-42) |
+| DEC-0188 | Prompt 23 built by growing what exists, no new service; the run record first | PROPOSED (Q-43 to Q-46) |
