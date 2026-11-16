@@ -43,7 +43,18 @@
       "routine.log",
       "routine.pause",
       "routine.resume"
-    ]
+    ],
+    "tiers": {
+      "add_household_routine": "act_within_grant",
+      "list_household_routines": "observe",
+      "log_household_routine": "act_within_grant",
+      "pause_household_routine": "act_within_grant",
+      "routine.add": "act_within_grant",
+      "routine.log": "act_within_grant",
+      "routine.pause": "act_within_grant",
+      "routine.resume": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

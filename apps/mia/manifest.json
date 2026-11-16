@@ -31,10 +31,16 @@
   },
   "capabilities": {
     "tools": [],
-    "actions": []
+    "actions": [],
+    "tiers": {},
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:life_events",
+    "stores.write:links",
+    "stores.write:personal_life_events"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

@@ -44,10 +44,22 @@
       "obligation.starters",
       "obligation.status",
       "obligation.verify"
-    ]
+    ],
+    "tiers": {
+      "get_deadlines": "observe",
+      "obligation.add": "act_within_grant",
+      "obligation.delete": "act_with_approval",
+      "obligation.edit": "act_within_grant",
+      "obligation.starters": "act_within_grant",
+      "obligation.status": "act_within_grant",
+      "obligation.verify": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:obligations"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

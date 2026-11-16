@@ -46,7 +46,19 @@
       "lab.reject",
       "lab_reading.add",
       "lab_reading.delete"
-    ]
+    ],
+    "tiers": {
+      "delete_lab_reading": "act_with_approval",
+      "list_lab_readings": "observe",
+      "list_lab_series": "observe",
+      "log_lab_reading": "act_within_grant",
+      "lab.approve": "act_within_grant",
+      "lab.propose": "act_within_grant",
+      "lab.reject": "act_within_grant",
+      "lab_reading.add": "act_within_grant",
+      "lab_reading.delete": "act_with_approval"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

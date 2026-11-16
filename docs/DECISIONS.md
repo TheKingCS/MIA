@@ -2775,6 +2775,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: an OS-level MIA needs permissions finer than child gating; the development platform's tiers (DEC-0069)
   already work.
 - Related: `docs/mia_os/preliminary/MIA_OS_SECURITY_MODEL.md`
+- Built so far, changing nothing MIA does (2026-11-15, Fable, M4's first part; K-0246): the tiers themselves in
+  every app's manifest, the test that fails on an untagged tool or action, and the check in watching-only mode
+  (`core/grants.py`). Enforcing it, the grants and their one screen wait on Zac's approval (Q-31).
 
 ### DEC-0157: The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first
 - Status: PROPOSED

@@ -38,7 +38,16 @@
       "news.turn_off",
       "news.turn_on",
       "news.unfollow"
-    ]
+    ],
+    "tiers": {
+      "news.follow": "act_within_grant",
+      "news.make": "act_within_grant",
+      "news.misleading": "act_within_grant",
+      "news.turn_off": "act_within_grant",
+      "news.turn_on": "act_within_grant",
+      "news.unfollow": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

@@ -16,7 +16,9 @@ The manifest is an index; it holds no code.
 **Checking** (`Registry.problems`): every tool, action kind, store, job and daily check in the code is claimed by
 exactly one manifest, and every one a manifest claims exists; every web page and Qt module named exists; ids are
 unique and match their folders; dependencies name apps that exist; no two apps share a sidebar place; the domains an
-app shares are in its own list of domains; the schema version is known. `tests/test_app_registry.py`
+app shares are in its own list of domains; the schema version is known; every capability has a tier, a kind that
+always asks is tiered at the person's yes, each owned store has its permission, and the tools tagged as carrying
+outside text are exactly the ones the model's handling knows (`_tier_problems`, core/grants.py). `tests/test_app_registry.py`
 fails on any problem, so adding a capability without claiming it, or removing one a manifest still names, is caught.
 
 **Asking** (the queries MIA's own understanding of her ecosystem is built from, phase M2): the inventory, an app's
@@ -87,7 +89,8 @@ class Registry:
     # ---------------------------------------------------------------- checking
 
     def problems(self) -> list[str]:
-        """What doesn't agree between the manifests and the code (see the module's opening); [] when all is well."""
+        """What doesn't agree between the manifests and the code, tiers and outside-text tags included (see the
+        module's opening); [] when all is well."""
         import core.actions  # noqa: F401  (the action contract first, as MIA loads it)
         from core.actions import ACTION_TYPES
         from core.background_jobs import DAILY_CHECKS, JOBS
@@ -115,10 +118,48 @@ class Registry:
             for dep in m.get("dependencies", []):
                 if dep.get("application_id") not in self.manifests:
                     out.append(f"{app_id}: depends on {dep.get('application_id')}, which isn't an app")
+        out += _tier_problems(self.manifests)
         orders = [m.get("order") for i, m in self.manifests.items() if i != "mia"]
         for o in sorted({o for o in orders if orders.count(o) > 1}, key=str):
             out.append(f"two apps share the sidebar place {o}")
         return out
+
+
+def _tier_problems(manifests: dict) -> list[str]:
+    """Problems with the tiers and outside-text tags (core/grants.py, DEC-0156): a capability without a tier or with
+    an unknown one, a tier for something the app doesn't claim, a kind that always asks tiered below the person's
+    yes, an outside tag on something that isn't one of its tools, and outside-text tools that the model's handling
+    doesn't know (or the other way round)."""
+    from core import grants
+    from core.taught_skills import always_asks
+    from core.tool_loop import OUTSIDE_TOOLS
+
+    out, tagged = [], set()
+    for app_id, m in sorted(manifests.items()):
+        caps = m["capabilities"]
+        tiers, tools = caps.get("tiers", {}), set(caps.get("tools", []))
+        claimed = tools | set(caps.get("actions", []))
+        for name in sorted(claimed - set(tiers)):
+            out.append(f"{app_id}: {name} has no tier")
+        for name in sorted(set(tiers) - claimed):
+            out.append(f"{app_id}: a tier for {name}, which it doesn't claim")
+        for name, tier in sorted(tiers.items()):
+            if tier not in grants.TIERS:
+                out.append(f"{app_id}: {name} has the unknown tier {tier}")
+            elif name in caps.get("actions", []) and always_asks(name) and tier not in (grants.WITH_APPROVAL, grants.NEVER):
+                out.append(f"{app_id}: {name} always asks, so its tier can't be {tier}")
+        for name in sorted(set(caps.get("outside", [])) - tools):
+            out.append(f"{app_id}: {name} is tagged as outside text but isn't one of its tools")
+        tagged |= set(caps.get("outside", []))
+        for store in m["components"].get("data", []):
+            if f"stores.write:{store}" not in m.get("permissions", []):
+                out.append(f"{app_id}: it owns the store {store} without the permission stores.write:{store}")
+    handled = OUTSIDE_TOOLS | grants.FRAMED_TOOLS
+    for name in sorted(tagged - handled):
+        out.append(f"the tool {name} carries outside text, and neither untrusted() nor OUTSIDE_TOOLS handles it")
+    for name in sorted(handled - tagged):
+        out.append(f"the tool {name} is handled as outside text but no manifest tags it")
+    return out
 
 
 def _tool_names() -> list[str]:

@@ -41,10 +41,21 @@
       "freedom.build_move",
       "freedom.fund_account",
       "freedom.plan"
-    ]
+    ],
+    "tiers": {
+      "get_freedom_progress": "observe",
+      "freedom.build": "act_within_grant",
+      "freedom.build_edit": "act_within_grant",
+      "freedom.build_move": "act_within_grant",
+      "freedom.fund_account": "act_with_approval",
+      "freedom.plan": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:freedom_log"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

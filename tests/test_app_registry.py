@@ -106,3 +106,19 @@ def test_regenerating_keeps_what_only_a_person_writes(tmp_path):
     assert kept["version"] == "2.1.0" and kept["permissions"] == ["network:feeds"] and kept["x-note"] == "kept"
     assert kept["components"] == {"services": ["core/world_intel.py"], "data": ["a"]}
     assert app_manifests._keep_hand_fields({"v": 1}, tmp_path / "none.json") == {"v": 1}
+
+
+def test_regenerating_keeps_a_decided_tier_and_gives_a_new_capability_the_rules(tmp_path):
+    from tools import app_manifests
+
+    target = tmp_path / "manifest.json"
+    target.write_text(json.dumps({"permissions": ["network:feeds", "stores.write:gone"], "capabilities": {
+        "tiers": {"old_tool": "never", "dropped_tool": "observe"}, "outside": ["old_tool", "dropped_tool"]}}),
+        encoding="utf-8")
+    fresh = {"permissions": ["stores.write:kept"], "components": {},
+             "capabilities": {"tools": ["old_tool", "new_tool"], "actions": [],
+                              "tiers": {"old_tool": "act_within_grant", "new_tool": "observe"}, "outside": []}}
+    kept = app_manifests._keep_hand_fields(fresh, target)
+    assert kept["capabilities"]["tiers"] == {"old_tool": "never", "new_tool": "observe"}
+    assert kept["capabilities"]["outside"] == ["old_tool"]
+    assert kept["permissions"] == ["network:feeds", "stores.write:kept"]  # a store's permission follows the code

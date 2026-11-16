@@ -52,10 +52,30 @@
       "closet_piece.add",
       "closet_piece.delete",
       "closet_piece.edit"
-    ]
+    ],
+    "tiers": {
+      "add_clothing": "act_within_grant",
+      "closet_laundry": "act_within_grant",
+      "closet_report": "act_within_grant",
+      "rate_outfit": "act_within_grant",
+      "save_outfit": "act_within_grant",
+      "what_to_wear": "observe",
+      "wore_outfit": "act_within_grant",
+      "closet.laundry": "act_within_grant",
+      "closet.outfit": "act_within_grant",
+      "closet.outfit_delete": "act_within_grant",
+      "closet.rate": "act_within_grant",
+      "closet.wore": "act_within_grant",
+      "closet_piece.add": "act_within_grant",
+      "closet_piece.delete": "act_with_approval",
+      "closet_piece.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:closet"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

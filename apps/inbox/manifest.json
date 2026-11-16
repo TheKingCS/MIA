@@ -49,10 +49,28 @@
       "inbox.file",
       "inbox.note",
       "inbox.unfile"
+    ],
+    "tiers": {
+      "dismiss_inbox_item": "act_within_grant",
+      "draft_email": "suggest",
+      "file_inbox_item": "act_within_grant",
+      "list_inbox": "observe",
+      "set_receipt_autofile": "act_within_grant",
+      "undo_receipt": "act_with_approval",
+      "inbox.dismiss": "act_within_grant",
+      "inbox.file": "act_within_grant",
+      "inbox.note": "act_within_grant",
+      "inbox.unfile": "act_within_grant"
+    },
+    "outside": [
+      "list_inbox"
     ]
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:email_drafts",
+    "stores.write:inbox"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

@@ -4,9 +4,14 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, late night (Claude on Fable: the review, and the start of permissions).**
+- **Reviewed:** everything Opus built since the gate's learned pace (13 items). Six things fixed, each with a test: "not for me" on a find now slows finds down instead of speeding them up; a pump and a fan that both say 120VAC are no longer "the same model"; links from feeds and searches can only ever be ordinary web links; MIA's own watches look for the meaningful words of a goal's name; the Apps page's check no longer rebuilds her whole tool list each time (it would have failed on the phone); zero and negative amounts are refused.
+- **Built, changing nothing she does yet:** every one of her 423 tools and 474 actions now carries a tier: reads, drafts, changes to your own records, and the ones that need your yes every time (paying, sending, deleting). A test fails on a new one without a tier. The check that uses them runs in watching-only mode.
+- **Waiting on Zac:** Q-31, whether to turn that check on (DEC-0156). Prompt 04 waits on his go.
+
 **2026-11-15, night, latest (Claude: the app list comes from the apps' own records).**
 - **Built:** the sidebar, the Apps page and everything else that lists MIA's apps now read each app's record instead of a list in the code. Nothing looks different; adding an app is now writing its record. The phone app picks this up the next time it's rebuilt.
-- **Next:** M4 (what each app is allowed to touch) is Fable's; M5 (each app's health on the Apps page) is Opus's. Prompt 04 waits on Zac's go.
+- **Next:** M5 (each app's health on the Apps page) is Opus's.
 
 **2026-11-15, night, later (Claude: MIA knows her own apps).**
 - **Built:** ask MIA "what apps do I have?", "what can Greenhouse do?", "which app can watch for deals?" or "is anything wrong with my apps?" and she answers from each app's record, not a guess. The Apps page (Manage apps) shows the same check. Where two apps' tools look alike she says so as a suggestion, not a fault.

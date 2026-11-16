@@ -159,6 +159,11 @@ def always_asks(kind: str) -> bool:
     return bool(_ALWAYS_ASK.search(str(kind or "")))
 
 
+def in_unapproved_step() -> bool:
+    """Whether a skill is running a tool step the person hasn't said yes to right now (the initiative is MIA's)."""
+    return _UNAPPROVED.get() is not None
+
+
 def guard(kind: str) -> None:
     """Called by `core.actions.run_as_tool` and `ActionCenter.approve` before an action runs. While a skill is running a tool
     step the person hasn't said yes to, an action kind that always asks is refused here (and the run then asks):

@@ -29,7 +29,9 @@
   },
   "capabilities": {
     "tools": [],
-    "actions": []
+    "actions": [],
+    "tiers": {},
+    "outside": []
   },
   "uses": [],
   "permissions": [],

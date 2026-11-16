@@ -73,6 +73,7 @@ folded in here.*
 | T-02 | Runtime IPC: the API and SSE are enough, or D-Bus or a local socket too? | 05 |
 | T-03 | A schema and versioning per store | 05/15 |
 | T-04 | Device identity (certificates, revocation) | 12/13 |
+| Q-31 | Approve DEC-0156 (grants)? Every tool and action already has a tier. Approving turns the check on: when the initiative is MIA's own (a taught skill's step, something she starts), a read or a draft just happens, a change to your own records happens only where you've granted that kind of thing (one screen lists the grants; each can be taken back), and paying, buying, sending, publishing, deleting or sharing needs your yes every time, whatever was granted. Anything you press or say yourself is untouched. | DEC-0156 | M4's second part |
 | T-05 | Why do `test_response_style` and `test_server_app`'s recovery-key test fail only in the full run? | 15 |
 | T-06 | Typed events across processes: delivery guarantees, idempotency | 05 |
 | T-07 | The capability contract's fields as code, and its test | 08 |

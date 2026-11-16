@@ -54,10 +54,32 @@
       "pet.add",
       "pet.delete",
       "pet.edit"
-    ]
+    ],
+    "tiers": {
+      "add_person": "act_within_grant",
+      "add_pet": "act_within_grant",
+      "get_person": "observe",
+      "get_pet": "observe",
+      "list_upcoming_birthdays": "observe",
+      "update_person": "act_within_grant",
+      "update_pet": "act_within_grant",
+      "connection.allow": "act_within_grant",
+      "connection.decline": "act_within_grant",
+      "person.add": "act_within_grant",
+      "person.caught_up": "act_within_grant",
+      "person.delete": "act_with_approval",
+      "person.edit": "act_within_grant",
+      "pet.add": "act_within_grant",
+      "pet.delete": "act_with_approval",
+      "pet.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:connections",
+    "stores.write:relationships"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

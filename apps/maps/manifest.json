@@ -52,10 +52,28 @@
       "map.checkin",
       "map.tak_share",
       "trail_map.delete"
-    ]
+    ],
+    "tiers": {
+      "add_trail_map_from_url": "act_within_grant",
+      "arrive_place": "act_within_grant",
+      "delete_trail_map": "act_with_approval",
+      "list_places": "observe",
+      "list_trail_maps": "observe",
+      "gps_track.add": "act_within_grant",
+      "gps_track.delete": "act_with_approval",
+      "map.area_keep": "act_within_grant",
+      "map.area_remove": "act_within_grant",
+      "map.checkin": "act_within_grant",
+      "map.tak_share": "act_with_approval",
+      "trail_map.delete": "act_with_approval"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:gps_tracks",
+    "stores.write:places"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

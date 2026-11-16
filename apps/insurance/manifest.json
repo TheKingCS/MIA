@@ -47,10 +47,25 @@
       "insurance_quote.add",
       "insurance_quote.delete",
       "insurance_quote.edit"
-    ]
+    ],
+    "tiers": {
+      "get_insurance": "observe",
+      "insurance.choose": "act_within_grant",
+      "insurance.request": "act_within_grant",
+      "insurance.switched": "act_within_grant",
+      "insurance_policy.add": "act_within_grant",
+      "insurance_policy.delete": "act_with_approval",
+      "insurance_policy.edit": "act_within_grant",
+      "insurance_quote.add": "act_within_grant",
+      "insurance_quote.delete": "act_with_approval",
+      "insurance_quote.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:insurance"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

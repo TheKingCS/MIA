@@ -42,10 +42,18 @@
     "actions": [
       "life_note.done",
       "life_note.forget"
-    ]
+    ],
+    "tiers": {
+      "list_kept": "observe",
+      "life_note.done": "act_within_grant",
+      "life_note.forget": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:life_notes"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

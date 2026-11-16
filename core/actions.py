@@ -104,12 +104,17 @@ class Proposal:
 def run_as_tool(context, kind: str, params: dict) -> str:
     """Runs an action kind for a voice tool as its screen would: describe's checks first, then execute, returning
     what happened, or the refusal in its own words (an ActionError, or a store's ValueError). Inside a taught skill, a
-    kind that pays, sends or deletes is refused until the person has said yes to that step (taught_skills.guard). One body for every
+    kind that pays, sends or deletes is refused until the person has said yes to that step (taught_skills.guard); the
+    grant check watches the same moment and refuses nothing yet (core/grants.observe). One body for every
     assistant_*_actions module (2026-11-09: nine copies, three of which skipped describe's checks)."""
     action = ACTION_TYPES[kind]
     try:
-        from core.taught_skills import guard
+        from core import grants
+        from core.taught_skills import guard, in_unapproved_step
 
+        # Watching only (DEC-0156, proposed): what a grant check would decide. A step of a skill the person taught
+        # is hers to take, with the skill as its grant; anything else here was asked for by the person.
+        grants.observe(kind, grants.MIA if in_unapproved_step() else grants.PERSON, granted=True)
         guard(kind)  # inside a taught skill, a tool can't pay, send or delete without the person's yes (DEC-0123)
         action.describe(context, params)
         return action.execute(context, params)

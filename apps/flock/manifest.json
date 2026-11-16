@@ -47,10 +47,25 @@
       "flock.entry_delete",
       "flock.feed",
       "flock.use"
-    ]
+    ],
+    "tiers": {
+      "get_eggs": "observe",
+      "log_eggs": "act_within_grant",
+      "flock.add": "act_within_grant",
+      "flock.birds": "act_within_grant",
+      "flock.delete": "act_with_approval",
+      "flock.edit": "act_within_grant",
+      "flock.eggs": "act_within_grant",
+      "flock.entry_delete": "act_within_grant",
+      "flock.feed": "act_within_grant",
+      "flock.use": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:flock"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

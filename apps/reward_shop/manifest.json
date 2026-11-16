@@ -44,10 +44,22 @@
       "shop_reward.add",
       "shop_reward.delete",
       "shop_reward.edit"
-    ]
+    ],
+    "tiers": {
+      "buy_reward": "act_with_approval",
+      "list_rewards": "observe",
+      "shop_expense.add": "act_within_grant",
+      "shop_expense.delete": "act_with_approval",
+      "shop_reward.add": "act_within_grant",
+      "shop_reward.delete": "act_with_approval",
+      "shop_reward.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:reward_shop"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

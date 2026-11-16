@@ -61,10 +61,38 @@
       "quote.edit",
       "quote.email",
       "quote.send"
-    ]
+    ],
+    "tiers": {
+      "get_business": "observe",
+      "get_businesses": "observe",
+      "get_ledger_summary": "observe",
+      "order_paid": "act_with_approval",
+      "record_sale": "act_within_grant",
+      "customer.add": "act_within_grant",
+      "customer.delete": "act_with_approval",
+      "customer.edit": "act_within_grant",
+      "order.add": "act_within_grant",
+      "order.build": "act_within_grant",
+      "order.delete": "act_with_approval",
+      "order.edit": "act_within_grant",
+      "order.pay": "act_with_approval",
+      "order.status": "act_within_grant",
+      "portfolio.feature": "act_within_grant",
+      "quote.accept": "act_within_grant",
+      "quote.add": "act_within_grant",
+      "quote.decline": "act_within_grant",
+      "quote.delete": "act_with_approval",
+      "quote.edit": "act_within_grant",
+      "quote.email": "act_with_approval",
+      "quote.send": "act_with_approval"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:business",
+    "stores.write:ledger"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

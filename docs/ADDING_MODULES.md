@@ -149,6 +149,16 @@ tables in `tools/app_manifests.py` and regenerate with
 `python -m tools.app_manifests write --force`). Check with
 `python -m tools.app_manifests check`.
 
+Each tool and action kind also needs a **tier** in the manifest's
+`capabilities.tiers` (`core/grants.py`: `observe` for a read, `suggest` for
+a draft, `act_within_grant` for a change to the person's own records that
+can be undone, `act_with_approval` for paying, sending, deleting or
+sharing, `never`). Regenerating gives a new one the rule's tier; read it
+and correct it. A tool whose answer carries words from outside MIA (a
+page, a search, mail, a feed) goes in `capabilities.outside`, and must be
+framed by `browser_safety.untrusted()` or listed in
+`core/tool_loop.OUTSIDE_TOOLS`; the tests fail until it is.
+
 ## 6. Enabling, disabling, and rescanning
 
 Every module can be turned off from the **Modules** screen without

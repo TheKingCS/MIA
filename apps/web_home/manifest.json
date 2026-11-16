@@ -36,7 +36,14 @@
       "firstboot.skip",
       "portal.picture",
       "weather.place"
-    ]
+    ],
+    "tiers": {
+      "firstboot.advance": "act_within_grant",
+      "firstboot.skip": "act_within_grant",
+      "portal.picture": "act_within_grant",
+      "weather.place": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

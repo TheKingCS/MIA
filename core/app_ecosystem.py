@@ -7,8 +7,8 @@ Registry (`core/app_registry.py`) asked the questions a person asks, answered in
 the runtime, never from a model.
 
 - **Inventory** (`inventory`): how many apps, by life area, how many on each device, the retired ones.
-- **One app** (`details`): what it's for, what it can do (its tools and actions, counted, with a few named), what it
-  keeps, what runs in the background, where it runs, what it shares with other apps and what depends on it.
+- **One app** (`details`): what it's for, what it can do (its tools and actions, counted, with a few named), how many
+  of those need the person's yes each time (their tier, core/grants.py), what it keeps, what runs in the background, where it runs, what it shares with other apps and what depends on it.
 - **Which app** (`which`): the app behind a tool or action name, or the apps whose words best match what was asked.
 - **Health** (`health`): per app, a record that couldn't be loaded and the background jobs that are failing (from
   the scheduler's own records). Whether the records agree with the code is a test's job, not a running MIA's.
@@ -91,7 +91,7 @@ def _find_app(reg: app_registry.Registry, words: str) -> Optional[dict]:
 
 
 def details(reg: app_registry.Registry, m: dict) -> dict:
-    """One app's parts, from its manifest."""
+    """One app's parts, from its manifest, with the capabilities that need the person's yes each time."""
     caps = m["capabilities"]
     devices = m["runtime"]["devices"]
     return {"id": m["id"], "name": m["name"], "tagline": m.get("tagline", ""), "area": _area_name(m),
@@ -99,7 +99,8 @@ def details(reg: app_registry.Registry, m: dict) -> dict:
             "stores": list(m["components"]["data"]), "background": list(m["runtime"]["background"]),
             "devices": [d for d in ("pc", "phone", "glasses") if devices.get(d, "none") != "none"],
             "voice": bool(devices.get("voice")), "uses": list(m.get("uses", [])),
-            "dependents": reg.dependents_of(m["id"]), "pages": list(m["components"]["interface"]["web"])}
+            "dependents": reg.dependents_of(m["id"]), "pages": list(m["components"]["interface"]["web"]),
+            "asks_each_time": sorted(n for n, t in caps.get("tiers", {}).items() if t == "act_with_approval")}
 
 
 # ---------------------------------------------------------------- which app
@@ -213,7 +214,7 @@ def inventory_sentence(reg: app_registry.Registry) -> str:
 
 
 def details_sentence(reg: app_registry.Registry, words: str) -> str:
-    """\"What can Greenhouse do?\" and \"what depends on Home?\""""
+    """\"What can Greenhouse do?\" and \"what depends on Home?\", with how much of it needs a yes each time."""
     m = _find_app(reg, words)
     if m is None:
         return f"I don't have an app called {words}. Ask \"what apps do I have?\" for the list."
@@ -225,6 +226,9 @@ def details_sentence(reg: app_registry.Registry, words: str) -> str:
         parts.append("It's retired")
     parts.append(f"It has {_count(len(d['tools']), 'tool')} and {_count(len(d['actions']), 'action')}"
                  + (f", like {some}" if some else ""))
+    if d["asks_each_time"]:
+        parts.append(f"{_count(len(d['asks_each_time']), 'thing')} it does need{'s' if len(d['asks_each_time']) == 1 else ''} "
+                     f"your yes each time (paying, sending, deleting)")
     if d["stores"]:
         parts.append(f"It keeps {', '.join(s.replace('_', ' ') for s in d['stores'])}")
     if d["background"]:

@@ -42,10 +42,20 @@
       "camera.remove",
       "security.picture_delete",
       "security.save_picture"
-    ]
+    ],
+    "tiers": {
+      "list_cameras": "observe",
+      "save_camera_picture": "act_within_grant",
+      "camera.remove": "act_within_grant",
+      "security.picture_delete": "act_within_grant",
+      "security.save_picture": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:security"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

@@ -38,7 +38,14 @@
       "list_my_apps",
       "which_app"
     ],
-    "actions": []
+    "actions": [],
+    "tiers": {
+      "check_my_apps": "observe",
+      "describe_app": "observe",
+      "list_my_apps": "observe",
+      "which_app": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

@@ -270,7 +270,9 @@ No new workstream. In order:
   time she eases off or a job backs off, Zac's condition).
 - **Checkers** (DEC-0174): Fable reviews all Opus work; Copilot, Claude, ChatGPT and Muse check independently where it
   fits. No Codex.
-- **Still to come:** L4 grants (Fable; M4 of the application registry starts it).
+- **L4 started** (Fable, M4 of the application registry): every tool and action has a tier and the check watches
+  (`core/grants.py`); enforcing waits on DEC-0156 (Q-31). The outside-text sweep section 14 asked for is written
+  (`tests/test_grants.py`).
 
 ## 14. Fable's challenge review (L5, 2026-11-15)
 

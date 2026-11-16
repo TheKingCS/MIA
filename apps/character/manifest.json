@@ -43,10 +43,21 @@
       "boss.remove",
       "character.prestige",
       "saga.mark"
-    ]
+    ],
+    "tiers": {
+      "get_character": "observe",
+      "boss.add": "act_within_grant",
+      "boss.remove": "act_within_grant",
+      "character.prestige": "act_within_grant",
+      "saga.mark": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:boss_book",
+    "stores.write:saga_moments"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

@@ -44,10 +44,22 @@
       "energy_source.add",
       "energy_source.delete",
       "energy_source.edit"
-    ]
+    ],
+    "tiers": {
+      "get_energy": "observe",
+      "get_power_status": "observe",
+      "log_energy_reading": "act_within_grant",
+      "energy.reading": "act_within_grant",
+      "energy_source.add": "act_within_grant",
+      "energy_source.delete": "act_with_approval",
+      "energy_source.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:energy"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

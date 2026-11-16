@@ -46,10 +46,24 @@
       "waypoint.add",
       "waypoint.delete",
       "waypoint.edit"
-    ]
+    ],
+    "tiers": {
+      "add_waypoint": "act_within_grant",
+      "change_waypoint": "act_within_grant",
+      "delete_waypoint": "act_with_approval",
+      "get_sun_moon_info": "observe",
+      "list_waypoints": "observe",
+      "waypoint_distance": "act_within_grant",
+      "waypoint.add": "act_within_grant",
+      "waypoint.delete": "act_with_approval",
+      "waypoint.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:waypoints"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

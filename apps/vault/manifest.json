@@ -38,10 +38,17 @@
       "find_photos",
       "get_vault_status"
     ],
-    "actions": []
+    "actions": [],
+    "tiers": {
+      "find_photos": "observe",
+      "get_vault_status": "observe"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:memory_vault"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

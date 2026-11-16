@@ -70,10 +70,46 @@
       "world.turn",
       "world.universe_add",
       "world.version_add"
-    ]
+    ],
+    "tiers": {
+      "add_world_quest": "act_within_grant",
+      "finish_world_quest": "act_within_grant",
+      "get_play": "observe",
+      "list_worlds": "observe",
+      "make_world": "act_within_grant",
+      "play_world_turn": "act_within_grant",
+      "set_campaign_status": "act_within_grant",
+      "start_campaign": "act_within_grant",
+      "party.leaderboard": "act_within_grant",
+      "place.add": "act_within_grant",
+      "place.arrive": "act_within_grant",
+      "place.delete": "act_with_approval",
+      "play.delete": "act_with_approval",
+      "play.log": "act_within_grant",
+      "quest.add": "act_within_grant",
+      "quest.remove": "act_within_grant",
+      "quest.start": "act_within_grant",
+      "raid.add": "act_within_grant",
+      "raid.start": "act_within_grant",
+      "shop.buy": "act_with_approval",
+      "world.campaign_add": "act_within_grant",
+      "world.campaign_status": "act_within_grant",
+      "world.character_add": "act_within_grant",
+      "world.quest_add": "act_within_grant",
+      "world.quest_done": "act_within_grant",
+      "world.turn": "act_within_grant",
+      "world.universe_add": "act_within_grant",
+      "world.version_add": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:living_worlds",
+    "stores.write:quest_book",
+    "stores.write:recreation",
+    "stores.write:world_map"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

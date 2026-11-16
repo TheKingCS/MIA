@@ -46,14 +46,21 @@
     "capabilities": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tools", "actions"],
+      "required": ["tools", "actions", "tiers", "outside"],
       "properties": {
         "tools": {"type": "array", "items": {"type": "string"}},
-        "actions": {"type": "array", "items": {"type": "string"}}
+        "actions": {"type": "array", "items": {"type": "string"}},
+        "tiers": {
+          "type": "object",
+          "description": "Each tool's and action kind's tier (core/grants.py, DEC-0156): how far MIA may go with it on her own initiative.",
+          "additionalProperties": {"type": "string", "enum": ["observe", "suggest", "act_within_grant", "act_with_approval", "never"]}
+        },
+        "outside": {"type": "array", "items": {"type": "string"}, "description": "Its tools whose answers carry text from outside MIA (a page, a search, mail, a feed)."}
       }
     },
     "uses": {"type": "array", "items": {"type": "string"}},
-    "permissions": {"type": "array", "items": {"type": "string"}},
+    "permissions": {"type": "array", "items": {"type": "string", "pattern": "^[a-z_]+(\\.[a-z_]+)?:[a-z0-9_.-]+$"},
+                    "description": "What its capabilities need, as kind:what (stores.write:world_intel, network:feeds)."},
     "dependencies": {
       "type": "array",
       "items": {

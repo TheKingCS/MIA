@@ -58,10 +58,35 @@
       "loop.delete",
       "loop.forget",
       "loop.set"
-    ]
+    ],
+    "tiers": {
+      "get_dungeon_loot": "observe",
+      "get_loop": "observe",
+      "get_weekly_checkin": "observe",
+      "log_shift": "act_within_grant",
+      "plan_shift": "suggest",
+      "set_schedule": "act_within_grant",
+      "start_quest": "act_within_grant",
+      "dungeon.add": "act_within_grant",
+      "dungeon.delete": "act_with_approval",
+      "dungeon.edit": "act_within_grant",
+      "dungeon.plan": "act_within_grant",
+      "dungeon.quest": "act_within_grant",
+      "dungeon.run": "act_within_grant",
+      "dungeon.run_delete": "act_within_grant",
+      "dungeon.tips": "act_within_grant",
+      "loop.checkin_done": "act_within_grant",
+      "loop.delete": "act_with_approval",
+      "loop.forget": "act_within_grant",
+      "loop.set": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:dungeon",
+    "stores.write:loop"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

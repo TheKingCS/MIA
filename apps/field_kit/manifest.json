@@ -47,10 +47,24 @@
     ],
     "actions": [
       "sensor.remove"
-    ]
+    ],
+    "tiers": {
+      "calculate_subnet": "act_within_grant",
+      "check_password_strength": "observe",
+      "identify_hash": "act_within_grant",
+      "list_connected_devices": "observe",
+      "list_scripts": "observe",
+      "scan_ports": "act_within_grant",
+      "sensor.remove": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:data_logger",
+    "stores.write:lite_captures",
+    "stores.write:scripts"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

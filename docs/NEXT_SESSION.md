@@ -65,6 +65,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
     claim corrected.
   - 11 to 13 (the registry): the running check no longer rebuilds the PC's tool list on every Apps page load
     (it failed on the phone and a windowless runtime); comparing records with the code stays the tests' job.
+  **Built 2026-11-15 (Fable): M4's first part** (K-0246): `core/grants.py` (the five tiers, `decide`, the
+  watching-only `observe` called from `actions.run_as_tool`), every tool's and action kind's tier in its manifest
+  (`capabilities.tiers`; 86 action kinds and 44 tools need the person's yes each time), the outside-text tag
+  (`capabilities.outside`, checked against `tool_loop.OUTSIDE_TOOLS` and `grants.FRAMED_TOOLS`), store permissions
+  (`stores.write:<name>`). Refuses nothing yet. **Waits on Zac: Q-31 (DEC-0156).** On his yes: the grants store (per
+  person), the one screen, `observe` becomes the check, `taught_skills.guard` folds into it. Not declared yet:
+  network and device permissions per app (40 engine files reach the network or a device; map each to its app with
+  a test that fails on an unmapped one).
   New Opus work joins a fresh list below this line. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
@@ -83,7 +91,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Apps page (Manage apps: "Her apps, checked"). Overlapping tools are said as suggestions.
 - **Built 2026-11-15 (Opus): M3** (K-0244): the app list is read from the manifests; a new app is a new
   `apps/<id>/manifest.json`. **The phone app needs rebuilding** to carry the manifests (its bundle now includes them;
-  the installed one still has the old list in its code, so it keeps working until then). Next: M4, grants (Fable);
+  the installed one still has the old list in its code, so it keeps working until then). M4's first part is built (below); next: M4's second part on Q-31's yes (Fable);
   M5, lifecycle status (Opus) can go first if Zac prefers.
 - **Prompt 03 done (2026-11-15, Opus):** `docs/mia_os/MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen supporting
   documents. Capability-first; DEC-0175 to 0177 proposed; waiting on Zac: Q-27 to Q-29, then Prompt 04. Added to

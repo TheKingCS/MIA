@@ -39,7 +39,14 @@
       "myfile.delete",
       "myfile.folder",
       "myfile.rename"
-    ]
+    ],
+    "tiers": {
+      "find_my_files": "observe",
+      "myfile.delete": "act_with_approval",
+      "myfile.folder": "act_within_grant",
+      "myfile.rename": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

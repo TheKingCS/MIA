@@ -66,10 +66,44 @@
       "trip.route_add",
       "trip.route_remove",
       "trip.status"
-    ]
+    ],
+    "tiers": {
+      "add_expedition": "act_within_grant",
+      "add_gear_item": "act_within_grant",
+      "add_route_stop": "act_within_grant",
+      "add_trip": "act_within_grant",
+      "add_trip_log_entry": "act_within_grant",
+      "delete_expedition": "act_with_approval",
+      "delete_trip": "act_with_approval",
+      "get_trip_route": "observe",
+      "get_trip_summary": "observe",
+      "list_expeditions": "observe",
+      "list_trips": "observe",
+      "log_arrival": "act_within_grant",
+      "recall_expedition": "act_within_grant",
+      "toggle_gear_packed": "act_within_grant",
+      "expedition.add": "act_within_grant",
+      "expedition.delete": "act_with_approval",
+      "expedition.edit": "act_within_grant",
+      "expedition.media_delete": "act_within_grant",
+      "gear.add": "act_within_grant",
+      "gear.remove": "act_within_grant",
+      "gear.toggle": "act_within_grant",
+      "trip.add": "act_within_grant",
+      "trip.arrived": "act_within_grant",
+      "trip.delete": "act_with_approval",
+      "trip.edit": "act_within_grant",
+      "trip.route_add": "act_within_grant",
+      "trip.route_remove": "act_within_grant",
+      "trip.status": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:expeditions",
+    "stores.write:trips"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

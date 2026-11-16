@@ -23,6 +23,9 @@ action kind, store or job is added to its app's manifest by hand (or by the scaf
 - stores: from `STORE_OWNER`, else a family or app of the same name, else MIA herself (platform stores);
 - jobs and daily checks: from `JOB_OWNER`, else MIA herself;
 - devices: from `core/parity.matrix` (what each app can actually do on each device);
+- tiers (M4, DEC-0156): each tool's and action kind's tier from `core/grants.py`'s rules the first time, kept as
+  decided after; `outside`: its tools whose answers carry outside text; `permissions`: `stores.write:<name>` for
+  each store it owns (other permissions are written by hand and kept);
 - surfaces: its web page, its Qt module (if `modules/<id>/module.py` exists), its glasses cards.
 
 `apps/mia/manifest.json` is MIA herself: the platform's own tools, actions, stores and jobs (the gate, the history,
@@ -128,7 +131,8 @@ def _safe_name(path: Path) -> str:
 
 def build() -> dict[str, dict]:
     """Every manifest, from the code and the app list (itself read from the manifests since M3): {app id: manifest}.
-    Pure apart from reading the code's registries; `write` then keeps what only a person writes."""
+    Pure apart from reading the code's registries, with each capability's tier by the rules, the outside-text tags
+    and the stores' permissions (core/grants.py); `write` then keeps what only a person writes or has decided."""
     import core.actions  # noqa: F401  (the action contract first, as MIA loads it)
     from core import parity
     from core.actions import ACTION_TYPES
@@ -192,19 +196,34 @@ def build() -> dict[str, dict]:
     for name in [n for n, _s, _m in JOBS] + [n for n, _m in DAILY_CHECKS]:
         owner = JOB_OWNER.get(name, "mia")
         out[owner if owner in out else "mia"]["runtime"]["background"].append(name)
+    from core import grants
+    from core.tool_loop import OUTSIDE_TOOLS
+
+    outside = OUTSIDE_TOOLS | grants.FRAMED_TOOLS
     for manifest in out.values():
         manifest["components"]["data"] = sorted(set(manifest["components"]["data"]))
         manifest["runtime"]["background"] = sorted(set(manifest["runtime"]["background"]))
+        caps = manifest["capabilities"]
+        caps["tiers"] = {name: TOOL_TIER.get(name) or grants.default_tool_tier(
+            name, getattr(registry._actions[name], "destructive", False)) for name in caps["tools"]}
+        caps["tiers"].update({kind: grants.default_action_tier(kind) for kind in caps["actions"]})
+        caps["outside"] = sorted(n for n in caps["tools"] if n in outside)
+        manifest["permissions"] = [f"stores.write:{s}" for s in manifest["components"]["data"]]
     return out
 
 
-HAND_FIELDS = ("version", "permissions", "dependencies")  # kept as written: the code doesn't know them
+# Tools whose name reads like a change but that only read (the generator's rule goes by the name).
+TOOL_TIER = {"world_finds": "observe", "look_up_online": "observe", "browser_read": "observe",
+             "draft_email": "suggest"}  # it only drafts: an email is sent by a person pressing Send
+
+HAND_FIELDS = ("version", "dependencies")  # kept as written: the code doesn't know them
 HAND_COMPONENTS = ("services", "agents", "workflows", "integrations")
 
 
 def _keep_hand_fields(manifest: dict, target: Path) -> dict:
-    """The generated manifest with the fields only a person writes (its version, permissions, dependencies, engine
-    files, agents, workflows, integrations, and any x- extensions) kept from the manifest already at `target`."""
+    """The generated manifest with the fields only a person writes (its version, dependencies, engine files, agents,
+    workflows, integrations, each capability's tier once decided, which tools carry outside text, the permissions that
+    aren't a store's, and any x- extensions) kept from the manifest already at `target`."""
     try:
         old = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -215,6 +234,13 @@ def _keep_hand_fields(manifest: dict, target: Path) -> dict:
     for key in HAND_COMPONENTS:
         if key in old.get("components", {}):
             manifest["components"][key] = old["components"][key]
+    caps, was = manifest.get("capabilities", {}), old.get("capabilities", {})
+    if "tiers" in caps:  # a tier someone decided stays; only a new capability gets the rule's
+        caps["tiers"].update({n: t for n, t in was.get("tiers", {}).items() if n in caps["tiers"]})
+        if "outside" in was:
+            caps["outside"] = sorted(n for n in was["outside"] if n in caps["tools"])
+    stores = set(manifest.get("permissions", []))  # the stores' permissions follow the code; the rest are hand-kept
+    manifest["permissions"] = sorted(stores | {p for p in old.get("permissions", []) if not p.startswith("stores.")})
     manifest.update({k: v for k, v in old.items() if k.startswith("x-")})
     return manifest
 

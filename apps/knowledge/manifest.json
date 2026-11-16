@@ -56,10 +56,29 @@
       "plan.import",
       "plan.keep",
       "plan.project"
-    ]
+    ],
+    "tiers": {
+      "ask_specialist": "act_within_grant",
+      "cut_list": "act_within_grant",
+      "find_plans": "observe",
+      "forget_plan": "act_with_approval",
+      "keep_plan": "act_within_grant",
+      "material_list": "act_within_grant",
+      "plan_shopping_list": "suggest",
+      "plan_sources": "suggest",
+      "show_plan": "observe",
+      "start_plan_project": "act_within_grant",
+      "plan.delete": "act_with_approval",
+      "plan.import": "act_within_grant",
+      "plan.keep": "act_within_grant",
+      "plan.project": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:plans"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

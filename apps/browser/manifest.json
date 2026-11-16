@@ -54,10 +54,39 @@
       "browser.learn_done",
       "browser.open",
       "browser.run_task"
+    ],
+    "tiers": {
+      "browse": "act_within_grant",
+      "browser_back": "act_within_grant",
+      "browser_click": "act_within_grant",
+      "browser_close": "act_within_grant",
+      "browser_read": "observe",
+      "browser_type": "act_within_grant",
+      "do_browser_task": "act_within_grant",
+      "learn_browser_task": "act_within_grant",
+      "list_browser_tasks": "observe",
+      "browser.back": "act_within_grant",
+      "browser.close": "act_within_grant",
+      "browser.commit": "act_with_approval",
+      "browser.forget_task": "act_within_grant",
+      "browser.learn": "act_within_grant",
+      "browser.learn_done": "act_within_grant",
+      "browser.open": "act_within_grant",
+      "browser.run_task": "act_within_grant"
+    },
+    "outside": [
+      "browse",
+      "browser_back",
+      "browser_click",
+      "browser_read",
+      "browser_type",
+      "do_browser_task"
     ]
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:browser_routines"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

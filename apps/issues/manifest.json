@@ -42,10 +42,20 @@
       "failures.report",
       "failures.status",
       "failures.thumbs"
-    ]
+    ],
+    "tiers": {
+      "get_issues": "observe",
+      "failures.forget": "act_within_grant",
+      "failures.report": "act_within_grant",
+      "failures.status": "act_within_grant",
+      "failures.thumbs": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:failures"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

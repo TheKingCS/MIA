@@ -53,10 +53,31 @@
       "taught_skill.keep",
       "taught_skill.steps",
       "taught_skill.watch"
-    ]
+    ],
+    "tiers": {
+      "answer_taught_skill": "act_within_grant",
+      "change_taught_skill": "act_within_grant",
+      "forget_taught_skill": "act_with_approval",
+      "keep_taught_skill": "act_within_grant",
+      "list_taught_skills": "observe",
+      "run_taught_skill": "act_within_grant",
+      "stop_taught_skill": "act_within_grant",
+      "stop_watching_me": "act_within_grant",
+      "teach_skill_in_steps": "act_within_grant",
+      "watch_me_teach": "act_within_grant",
+      "taught_skill.add": "act_with_approval",
+      "taught_skill.cancel": "act_with_approval",
+      "taught_skill.delete": "act_with_approval",
+      "taught_skill.keep": "act_with_approval",
+      "taught_skill.steps": "act_with_approval",
+      "taught_skill.watch": "act_with_approval"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:taught_skills"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

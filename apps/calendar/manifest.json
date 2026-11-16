@@ -40,10 +40,20 @@
     "actions": [
       "event.add",
       "event.delete"
-    ]
+    ],
+    "tiers": {
+      "add_calendar_event": "act_within_grant",
+      "delete_calendar_event": "act_with_approval",
+      "list_calendar_events": "observe",
+      "event.add": "act_within_grant",
+      "event.delete": "act_with_approval"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:calendar"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

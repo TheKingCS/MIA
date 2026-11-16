@@ -72,10 +72,50 @@
       "world_watch.add",
       "world_watch.pause",
       "world_watch.remove"
+    ],
+    "tiers": {
+      "add_need": "act_within_grant",
+      "check_price": "observe",
+      "compare_need": "act_within_grant",
+      "drop_need": "act_within_grant",
+      "got_need": "act_within_grant",
+      "list_watches": "observe",
+      "mute_source": "act_within_grant",
+      "not_for_me": "act_within_grant",
+      "pause_watch": "act_within_grant",
+      "project_needs": "act_within_grant",
+      "record_price": "act_within_grant",
+      "save_find": "act_within_grant",
+      "set_trip_cost": "act_within_grant",
+      "stop_watching": "act_within_grant",
+      "watch_for": "act_within_grant",
+      "world_finds": "observe",
+      "world_intelligence_switch": "act_within_grant",
+      "price.record": "act_within_grant",
+      "price.trip_cost": "act_within_grant",
+      "requirement.add": "act_within_grant",
+      "requirement.check": "act_within_grant",
+      "requirement.got": "act_within_grant",
+      "requirement.remove": "act_within_grant",
+      "requirement.update": "act_within_grant",
+      "world_find.not_for_me": "act_within_grant",
+      "world_find.save": "act_within_grant",
+      "world_intel.switch": "act_within_grant",
+      "world_source.mute": "act_within_grant",
+      "world_watch.add": "act_within_grant",
+      "world_watch.pause": "act_within_grant",
+      "world_watch.remove": "act_within_grant"
+    },
+    "outside": [
+      "world_finds"
     ]
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:prices",
+    "stores.write:requirements",
+    "stores.write:world_intel"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

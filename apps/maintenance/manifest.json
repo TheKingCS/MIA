@@ -33,10 +33,14 @@
   },
   "capabilities": {
     "tools": [],
-    "actions": []
+    "actions": [],
+    "tiers": {},
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:maintenance"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

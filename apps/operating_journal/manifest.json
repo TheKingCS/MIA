@@ -44,10 +44,20 @@
       "operating.add",
       "operating.rate",
       "operating.remove"
-    ]
+    ],
+    "tiers": {
+      "get_operating_journal": "observe",
+      "remove_operating_line": "act_with_approval",
+      "operating.add": "act_within_grant",
+      "operating.rate": "act_within_grant",
+      "operating.remove": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:operating_journal"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

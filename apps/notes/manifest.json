@@ -51,10 +51,27 @@
       "journal.add",
       "journal.delete",
       "journal.edit"
-    ]
+    ],
+    "tiers": {
+      "add_note": "act_within_grant",
+      "decide_field_recording": "act_within_grant",
+      "delete_note": "act_with_approval",
+      "get_journal_reflection": "observe",
+      "get_journal_themes": "observe",
+      "list_field_recordings": "observe",
+      "list_notes": "observe",
+      "read_private_journal": "observe",
+      "journal.add": "act_within_grant",
+      "journal.delete": "act_with_approval",
+      "journal.edit": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:journal",
+    "stores.write:private_journal"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

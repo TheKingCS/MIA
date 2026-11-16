@@ -56,12 +56,33 @@
       "grow.reading",
       "grow.system",
       "grow.system_remove"
-    ]
+    ],
+    "tiers": {
+      "get_homestead_next_step": "observe",
+      "batch.add": "act_within_grant",
+      "batch.delete": "act_with_approval",
+      "batch.edit": "act_within_grant",
+      "batch.harvest": "act_within_grant",
+      "batch.lost": "act_within_grant",
+      "experiment.add": "act_within_grant",
+      "experiment.conclude": "act_within_grant",
+      "experiment.delete": "act_with_approval",
+      "experiment.edit": "act_within_grant",
+      "experiment.include": "act_within_grant",
+      "grow.range": "act_within_grant",
+      "grow.reading": "act_within_grant",
+      "grow.system": "act_within_grant",
+      "grow.system_remove": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [
     "maintenance"
   ],
-  "permissions": [],
+  "permissions": [
+    "stores.write:grow_lab",
+    "stores.write:homestead"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

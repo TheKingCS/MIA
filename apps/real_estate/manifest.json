@@ -60,10 +60,37 @@
       "property.rent",
       "property.sell",
       "property.track_upkeep"
-    ]
+    ],
+    "tiers": {
+      "add_inventory_item": "act_within_grant",
+      "add_property": "act_within_grant",
+      "adjust_inventory_quantity": "act_with_approval",
+      "delete_inventory_item": "act_with_approval",
+      "get_property_summary": "observe",
+      "list_inventory": "observe",
+      "list_properties": "observe",
+      "record_property_sale": "act_within_grant",
+      "record_rental_income": "act_within_grant",
+      "inventory.add": "act_within_grant",
+      "inventory.adjust": "act_within_grant",
+      "inventory.delete": "act_with_approval",
+      "inventory.edit": "act_within_grant",
+      "property.add": "act_within_grant",
+      "property.delete": "act_with_approval",
+      "property.edit": "act_within_grant",
+      "property.expense": "act_within_grant",
+      "property.list_sale": "act_within_grant",
+      "property.rent": "act_within_grant",
+      "property.sell": "act_within_grant",
+      "property.track_upkeep": "act_within_grant"
+    },
+    "outside": []
   },
   "uses": [],
-  "permissions": [],
+  "permissions": [
+    "stores.write:inventory",
+    "stores.write:real_estate"
+  ],
   "dependencies": [],
   "runtime": {
     "devices": {

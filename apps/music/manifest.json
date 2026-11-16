@@ -57,7 +57,32 @@
       "playlist.remove_track",
       "playlist.rename",
       "track.delete"
-    ]
+    ],
+    "tiers": {
+      "add_to_playlist": "act_within_grant",
+      "delete_playlist": "act_with_approval",
+      "get_now_playing": "observe",
+      "list_playlists": "observe",
+      "make_playlist": "act_within_grant",
+      "next_track": "act_within_grant",
+      "pause_music": "act_within_grant",
+      "play_playlist": "act_within_grant",
+      "play_track": "act_within_grant",
+      "previous_track": "act_within_grant",
+      "remove_from_playlist": "act_with_approval",
+      "rename_playlist": "act_within_grant",
+      "resume_music": "act_within_grant",
+      "set_music_volume": "act_within_grant",
+      "stop_music": "act_within_grant",
+      "music.scan": "act_within_grant",
+      "playlist.add": "act_within_grant",
+      "playlist.add_track": "act_within_grant",
+      "playlist.delete": "act_with_approval",
+      "playlist.remove_track": "act_within_grant",
+      "playlist.rename": "act_within_grant",
+      "track.delete": "act_with_approval"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],

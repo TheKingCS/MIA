@@ -35,7 +35,11 @@
     "tools": [
       "get_skills"
     ],
-    "actions": []
+    "actions": [],
+    "tiers": {
+      "get_skills": "observe"
+    },
+    "outside": []
   },
   "uses": [],
   "permissions": [],
