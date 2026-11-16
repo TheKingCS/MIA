@@ -86,7 +86,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   17. appearance A2 (web/tokens.css tiers, web/themes.css glass, core/themes.clamp_tier, tools/css_colours.py);
   18. appearance A3 (core/appearance.py, web/shell.js attributes, the sheets' layout and effects rules, the tools);
   19. appearance A4 and DEC-0186 (the presets in core/themes.py, the frame glow, accent_problem's saturation, --win);
-  20. appearance A5 (web/studio.js Your Look, core/appearance.picker, the Look settings, core/orb_state.py and its hooks). Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  20. appearance A5 (web/studio.js Your Look, core/appearance.picker, the Look settings, core/orb_state.py and its hooks);
+  21. appearance A6's literal colours (web/*.css onto tokens, --on-accent, the green and amber buttons, the two new tests). Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
@@ -124,6 +125,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   Evergreen, Aurelia, Glacial, Eclipse as glass themes; a frame glow around the window; the gold scheme. Q-41
   answered (DEC-0186): soft gold accents allowed, rewards legendary orange (his follow-up). **Muse refines the presets' values (Q-38).**
 
+- **Built 2026-11-16 (Opus): appearance phase A6, the literal colours** (K-0257): every style sheet but the glasses
+  page draws every colour from a token (203 hard-coded down to 40, all the glasses page's own token block); pages
+  compared pixel by pixel before and after (identical but for the brand orb's centre, the reward orb's centre and the
+  Label page's Print button, now the theme's green). **Waiting on Zac: Q-42 / DEC-0187**, each app's atmosphere
+  colour (rose, cream gold, indigo, olive, plum, steel; none a meaning colour). Then A7 (advanced customization).
 - **Built 2026-11-16 (Opus): appearance phase A5** (K-0256): the Appearance page (`web/studio.html`, "Your look":
   theme tiles, colour swatches, spacing, sidebar, glass effects, reduced transparency; point to preview, choose to
   save), the five look settings per person in Settings too (A3 had saved them device-wide by mistake: fixed), and

@@ -5,10 +5,10 @@
 ## At a glance
 
 - **Architecture** — 821 Python files across 560 core, 93 modules, 123 gui, 2 server, 43 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 185 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 186 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 256 dev entries (work/knowledge/).
+- **Knowledge she's written** — 257 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 49 personal + 42 household stores, 54 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (14): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0157, DEC-0158, DEC-0164, DEC-0169, DEC-0184
+**PROPOSED** (15): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0157, DEC-0158, DEC-0164, DEC-0169, DEC-0184, DEC-0187
 
 <details><summary>Every decision</summary>
 
@@ -210,6 +210,7 @@
 - **DEC-0184** [PROPOSED] — The appearance engine: theme, colour scheme and layout on the existing engine
 - **DEC-0185** [APPROVED] — MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse
 - **DEC-0186** [APPROVED] — Gold is allowed as an accent; rewards are legendary orange
+- **DEC-0187** [PROPOSED] — Each app gets its own atmosphere colour, outside the meaning colours
 
 </details>
 
@@ -217,7 +218,7 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 256 entries 36 lesson, 18 debugging, 19 decision, 9 method, 6 test-procedure, 3 failed-experiment, 163 implementation, 2 security-finding.
+- **Dev-knowledge** — 257 entries 36 lesson, 18 debugging, 19 decision, 9 method, 6 test-procedure, 3 failed-experiment, 164 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

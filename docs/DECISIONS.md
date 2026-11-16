@@ -3262,3 +3262,18 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   The cost is that a gold accent sits near amber, and the reward orange sits near it too; the words carry the
   meaning (rewards appear in their celebrations with their labels; "needs you" items always say so).
 - Related: DEC-0014, DEC-0136, DEC-0183, DEC-0184
+
+### DEC-0187: Each app gets its own atmosphere colour, outside the meaning colours
+- Status: PROPOSED (Claude on Opus, 2026-11-16; Q-42 to Zac, Muse refines the values)
+- Amends: `docs/design/MIA_DESIGN_SYSTEM.md`'s per-app atmosphere proposal (2026-11-07), whose orange, amber-cream and
+  leaf green now collide with the meaning colours (orange is a reward, amber needs you, green is done: DEC-0186).
+- Decision: the `--mod-*` tokens in `web/tokens.css`, which all point at the accent today, take their own colour, used
+  only for the app's own data and header glow: Workout rose `#e0679f`, Kitchen soft cream gold `#d8c28e`, Finance
+  indigo `#8f92f2`, Estate (and the homestead) olive `#a9bf72`, Skills plum `#bb8fe3`, and a Workshop token in steel
+  `#93a7bc`. Missions keep the accent (their rarity colours already carry them). The accent still means MIA, active
+  and selected everywhere. Each passes `core/themes.accent_problem` and reads at 6:1 or better on the background; a
+  test will hold that for every theme. A theme or scheme may opt out (one colour throughout), and the high-contrast
+  mode keeps its white.
+- Why: Zac's handoff (prompt 24 §6) asks for each app to feel like its own place inside one system, and the plan's
+  phase A6 carries it. Choosing colours is Zac's and Muse's call, so this is a proposal.
+- Related: DEC-0023, DEC-0183, DEC-0184, DEC-0186

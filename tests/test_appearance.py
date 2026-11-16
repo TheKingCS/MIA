@@ -5,8 +5,9 @@ tests.test_appearance
 The glass design system's foundation (prompt 24 phase A2, DEC-0183, DEC-0184; web/tokens.css, web/themes.css,
 core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens with defaults inside their ranges; the
 glass material draws every tier from its tokens; a theme can set a tier only within its range, so a dialog can't be made
-see-through; status chips keep their meaning colours under glass; the OS's reduced transparency makes glass solid; and
-no style sheet gains hard-coded colours.
+see-through; status chips keep their meaning colours under glass; the OS's reduced transparency makes glass solid; no
+style sheet gains hard-coded colours, and since A6 none but the glasses page has any, and every token a sheet reads
+is defined.
 """
 
 import re
@@ -303,3 +304,23 @@ def test_every_real_source_of_activity_marks_the_orb_and_the_page_follows_it():
     css = (WEB / "ui.css").read_text(encoding="utf-8")
     for state in ("working", "council", "notification", "warning", "success"):
         assert f'.mia-orb[data-state="{state}"]' in css, state
+
+
+SET_BY_SCRIPT = {"--hue", "--tile-rgb"}  # set inline per element by hub.js, glasses.js and apps.js
+
+
+def test_every_sheet_but_the_glasses_page_draws_all_its_colours_from_tokens():
+    counts = css_colours.counts()
+    assert {name: n for name, n in counts.items() if n and name != "glasses.css"} == {}
+    glasses = (WEB / "glasses.css").read_text(encoding="utf-8")
+    assert "--rgb-light:" in glasses and "--rgb-shadow:" in glasses  # its page doesn't load tokens.css
+    assert "--on-accent:" in (WEB / "tokens.css").read_text(encoding="utf-8")
+
+
+def test_every_token_a_sheet_reads_is_defined_in_the_tokens_or_that_sheet():
+    defined = set(re.findall(r"(--[\w-]+)\s*:", (WEB / "tokens.css").read_text(encoding="utf-8")))
+    for sheet in sorted(WEB.glob("*.css")):
+        text = sheet.read_text(encoding="utf-8")
+        own = set(re.findall(r"(--[\w-]+)\s*:", text))
+        missing = set(re.findall(r"var\((--[\w-]+)\)", text)) - defined - own - SET_BY_SCRIPT
+        assert not missing, (sheet.name, sorted(missing))

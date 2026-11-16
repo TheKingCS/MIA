@@ -18,7 +18,7 @@
   background: var(--glass-strong);
   border: 1px solid var(--glass-line-strong);
   color: var(--text);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 30px rgba(var(--rgb-shadow), 0.45);
 }
 
 /* sidebar: level and XP at the bottom, like the concept */
@@ -49,7 +49,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #f2fdff 0%, var(--accent-soft) 18%, var(--accent) 42%, var(--accent-deep) 72%, rgb(var(--rgb-panel)) 100%);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 6%, rgb(var(--rgb-light))) 0%, var(--accent-soft) 18%, var(--accent) 42%, var(--accent-deep) 72%, rgb(var(--rgb-panel)) 100%);
   box-shadow: 0 0 18px var(--accent-glow);
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -251,13 +251,13 @@ html { background: var(--bg); }
 /* ---------- Money: sections wear finance blue ---------- */
 .money-section {
   border: 1px solid var(--mod-line);
-  box-shadow: 0 0 24px var(--mod-dim), 0 14px 44px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 24px var(--mod-dim), 0 14px 44px rgba(var(--rgb-shadow), 0.4), inset 0 1px 0 rgba(var(--rgb-light), 0.06);
   background: linear-gradient(180deg, var(--mod-dim), transparent 30%), var(--glass);
 }
 .money-section .sect h2 { text-shadow: 0 0 18px var(--mod-dim); }
 .figure {
   border: 1px solid var(--glass-line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 60%), var(--glass);
+  background: linear-gradient(180deg, rgba(var(--rgb-light), 0.03), transparent 60%), var(--glass);
 }
 .figure-n { text-shadow: 0 0 14px currentColor; }
 .money-big { text-shadow: 0 0 18px var(--mod-glow); }
@@ -282,7 +282,7 @@ html { background: var(--bg); }
 /* ---------- form dialog: the engine's questions, dressed ---------- */
 .form-dialog {
   border: 1px solid var(--mod-line);
-  box-shadow: 0 0 34px var(--mod-dim), 0 24px 70px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 34px var(--mod-dim), 0 24px 70px rgba(var(--rgb-shadow), 0.65), inset 0 1px 0 rgba(var(--rgb-light), 0.07);
   background: linear-gradient(180deg, var(--mod-dim), transparent 26%), var(--glass-strong);
 }
 .form-dialog h3 { text-shadow: 0 0 18px var(--mod-dim); letter-spacing: 0.02em; }
@@ -293,7 +293,7 @@ html { background: var(--bg); }
 }
 #mia-confirm {
   border: 1px solid var(--mod-line);
-  box-shadow: 0 0 30px var(--mod-dim), 0 24px 70px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 0 30px var(--mod-dim), 0 24px 70px rgba(var(--rgb-shadow), 0.65);
 }
 
 /* ---------- sidebar level block: XP glows like the concept ---------- */
@@ -303,13 +303,13 @@ html { background: var(--bg); }
 /* ---------- floating orb: a touch more presence ---------- */
 .mia-orb-button {
   border: 1px solid var(--accent-glow);
-  box-shadow: 0 0 34px var(--accent-glow), 0 8px 26px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 34px var(--accent-glow), 0 8px 26px rgba(var(--rgb-shadow), 0.5), inset 0 1px 0 rgba(var(--rgb-light), 0.12);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.mia-orb-button:hover { transform: scale(1.06); box-shadow: 0 0 44px var(--accent-glow), 0 8px 26px rgba(0, 0, 0, 0.5); }
+.mia-orb-button:hover { transform: scale(1.06); box-shadow: 0 0 44px var(--accent-glow), 0 8px 26px rgba(var(--rgb-shadow), 0.5); }
 .talk-panel {
   border: 1px solid var(--mod-line);
-  box-shadow: 0 0 30px var(--mod-dim), 0 20px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 30px var(--mod-dim), 0 20px 60px rgba(var(--rgb-shadow), 0.6);
 }
 
 /* ---------------------------------------------------------------- equipment */
@@ -353,7 +353,7 @@ html { background: var(--bg); }
   max-width: min(440px, calc(100vw - 140px)); padding: 6px 8px 6px 16px;
   border: 1px solid var(--glass-line-strong); border-radius: 999px;
   background: rgba(var(--rgb-panel), 0.96); color: var(--text);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 26px rgba(var(--rgb-shadow), 0.5);
 }
 .now-playing[hidden], body.wk-live .now-playing, body.cook-live .now-playing { display: none; }
 .np-song { display: grid; flex: 1; min-width: 0; color: inherit; text-decoration: none; line-height: 1.25; }

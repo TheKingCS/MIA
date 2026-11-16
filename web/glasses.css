@@ -5,6 +5,8 @@
    Cyan accent (active, selected, MIA's voice); amber = needs you; gold stays
    celebration-only. Type is large: it has to read on a glance. */
 :root {
+  --rgb-light: 255, 255, 255;  /* pure white and black (the lens shows black as see-through); this page doesn't load tokens.css */
+  --rgb-shadow: 0, 0, 0;
   --accent: #35d4ff;
   --rgb-accent: 53, 212, 255;  /* the theme's accent, lifted for the lens (MIA.glasses().accent, DEC-0136) */
   --accent-deep: #0b86ad;
@@ -23,7 +25,7 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; touch-action: none; overscroll-behavior: none; }
 body {
-  background: #000; color: var(--ink); overflow: hidden;
+  background: rgb(var(--rgb-shadow)); color: var(--ink); overflow: hidden;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-tap-highlight-color: transparent; user-select: none;
 }
@@ -48,7 +50,7 @@ body {
 #orb-wrap { position: relative; width: 300px; height: 300px; transition: transform 0.4s ease; }
 #orb {
   position: absolute; inset: 60px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #ffffff 0%, var(--accent-soft) 16%, var(--accent) 46%, var(--accent-deep) 80%, #010507 100%);
+  background: radial-gradient(circle at 38% 30%, rgb(var(--rgb-light)) 0%, var(--accent-soft) 16%, var(--accent) 46%, var(--accent-deep) 80%, #010507 100%);
   box-shadow: 0 0 60px rgba(var(--rgb-accent), 0.7), 0 0 150px rgba(var(--rgb-accent), 0.3),
               inset 0 0 26px rgba(220, 248, 255, 0.65), inset -8px -12px 30px rgba(4, 30, 44, 0.5);
   animation: breathe 5s ease-in-out infinite;
@@ -84,7 +86,7 @@ body {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
   background: conic-gradient(from 0deg, rgba(var(--rgb-accent), 0.18), #dff6ff 22%, rgba(var(--rgb-accent), 0.25) 45%,
               var(--accent) 72%, rgba(var(--rgb-accent), 0.18));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(rgb(var(--rgb-shadow)) 0 0) content-box, linear-gradient(rgb(var(--rgb-shadow)) 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
   animation: orbit 4s linear infinite; animation-play-state: paused;
 }
@@ -150,7 +152,7 @@ body {
 #home.unavailable #caption { opacity: 1; color: var(--ink-dim); }
 
 /* ---------------- meeting MIA: she awakens (core/first_boot.py) ---------------- */
-#boot { position: absolute; inset: 0; background: #000; overflow: hidden; }
+#boot { position: absolute; inset: 0; background: rgb(var(--rgb-shadow)); overflow: hidden; }
 .b-sky { position: absolute; left: 120px; top: 60px; width: 360px; height: 360px; }
 .b-swarm, .b-rays, .b-core { position: absolute; inset: 0; transition: opacity 1.6s ease, transform 1.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .b-swarm { animation: spin 60s linear infinite; }
@@ -160,20 +162,20 @@ body {
 .b-rays { inset: -90px; opacity: 0; border-radius: 50%;
   background: repeating-conic-gradient(rgba(150, 232, 255, 0.4) 0 1.2deg, transparent 1.2deg 8deg),
     radial-gradient(closest-side, var(--accent-dim), transparent);
-  -webkit-mask: radial-gradient(closest-side, #000 15%, transparent 100%); mask: radial-gradient(closest-side, #000 15%, transparent 100%); }
+  -webkit-mask: radial-gradient(closest-side, rgb(var(--rgb-shadow)) 15%, transparent 100%); mask: radial-gradient(closest-side, rgb(var(--rgb-shadow)) 15%, transparent 100%); }
 .b-core { opacity: 0; transform: scale(0.6); }
 .b-core i { position: absolute; border-radius: 50%; box-sizing: border-box; }
 .b-halo { inset: 0; background: radial-gradient(closest-side, var(--accent-dim), rgba(var(--rgb-accent), 0.1) 55%, transparent); }
 .b-ticks { inset: 30px; animation: spin 36s linear infinite;
   background: repeating-conic-gradient(rgba(127, 226, 255, 0.85) 0 0.8deg, transparent 0.8deg 4deg);
-  -webkit-mask: radial-gradient(closest-side, transparent 90%, #000 91%, #000 98%, transparent 99%);
-  mask: radial-gradient(closest-side, transparent 90%, #000 91%, #000 98%, transparent 99%); }
+  -webkit-mask: radial-gradient(closest-side, transparent 90%, rgb(var(--rgb-shadow)) 91%, rgb(var(--rgb-shadow)) 98%, transparent 99%);
+  mask: radial-gradient(closest-side, transparent 90%, rgb(var(--rgb-shadow)) 91%, rgb(var(--rgb-shadow)) 98%, transparent 99%); }
 .b-ring { border: 3px solid var(--accent-dim); border-left-color: transparent; border-bottom-color: transparent; }
 .b-ring.b1 { inset: 48px; animation: spin 20s linear infinite; }
 .b-ring.b2 { inset: 66px; border-width: 2px; animation: spin 26s linear infinite reverse; }
 .b-orb { inset: 88px; animation: breathe 6s ease-in-out infinite;
   background: radial-gradient(circle at 38% 30%, #f2fdff 0%, var(--accent-soft) 12%, #2cc4f2 40%, #0a6b98 72%, #05304d 100%);
-  box-shadow: 0 0 36px var(--accent-dim), 0 0 110px var(--accent-faint), inset 0 0 26px rgba(255, 255, 255, 0.28); }
+  box-shadow: 0 0 36px var(--accent-dim), 0 0 110px var(--accent-faint), inset 0 0 26px rgba(var(--rgb-light), 0.28); }
 .b-name { position: absolute; left: 0; right: 0; top: 366px; margin: 0; padding-left: 0.5em; text-align: center;
   font-size: 40px; font-weight: 200; letter-spacing: 0.5em; opacity: 0; transition: opacity 1.6s ease 0.8s; }
 .b-wave { position: absolute; left: 0; right: 0; top: 262px; height: 30px; display: flex; justify-content: center;

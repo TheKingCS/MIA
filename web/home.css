@@ -51,12 +51,12 @@ body {
   border-radius: 50%;
   position: relative;
   background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.14), transparent 42%),
+    radial-gradient(circle at 50% 42%, rgba(var(--rgb-light), 0.14), transparent 42%),
     radial-gradient(circle at 50% 50%, var(--accent) 0%, var(--accent-deep) 34%, rgba(var(--rgb-panel-2), 0.9) 72%, var(--surface-solid) 100%);
   box-shadow:
     0 0 70px var(--accent-glow),
     0 0 160px rgba(var(--rgb-accent), 0.12),
-    inset 0 0 46px rgba(0, 0, 0, 0.55);
+    inset 0 0 46px rgba(var(--rgb-shadow), 0.55);
   animation: breathe 6s ease-in-out infinite;
 }
 .orb::after { /* the gaze: a soft inner core */
@@ -64,7 +64,7 @@ body {
   position: absolute;
   inset: 31%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.06) 62%, transparent 75%);
+  background: radial-gradient(circle at 50% 40%, rgba(var(--rgb-light), 0.5), rgba(var(--rgb-light), 0.06) 62%, transparent 75%);
   filter: blur(1px);
 }
 .orb::before { /* faint orbit ring */
@@ -84,12 +84,12 @@ body {
 /* Celebrate: earned progression, loud and gold (DEC-0014) */
 [data-mood="celebrate"] .orb {
   background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.22), transparent 44%),
-    radial-gradient(circle at 50% 50%, #fff3cf 0%, var(--win) 32%, var(--win-deep) 62%, rgba(var(--rgb-panel-2), 0.92) 82%, var(--surface-solid) 100%);
+    radial-gradient(circle at 50% 42%, rgba(var(--rgb-light), 0.22), transparent 44%),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--win) 20%, rgb(var(--rgb-light))) 0%, var(--win) 32%, var(--win-deep) 62%, rgba(var(--rgb-panel-2), 0.92) 82%, var(--surface-solid) 100%);
   box-shadow:
     0 0 90px var(--win-glow),
     0 0 200px rgba(var(--rgb-win), 0.18),
-    inset 0 0 46px rgba(0, 0, 0, 0.5);
+    inset 0 0 46px rgba(var(--rgb-shadow), 0.5);
   animation: celebrate 1.8s ease-in-out infinite;
 }
 @keyframes celebrate {
@@ -100,12 +100,12 @@ body {
 /* Needs-you: one calm amber line, nothing more */
 [data-mood="needs-you"] .orb {
   background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.12), transparent 42%),
+    radial-gradient(circle at 50% 42%, rgba(var(--rgb-light), 0.12), transparent 42%),
     radial-gradient(circle at 50% 50%, var(--attention) 0%, var(--soon-deep) 38%, rgba(var(--rgb-panel-2), 0.92) 74%, var(--surface-solid) 100%);
   box-shadow:
     0 0 70px var(--attention-glow),
     0 0 150px rgba(var(--rgb-amber), 0.12),
-    inset 0 0 46px rgba(0, 0, 0, 0.55);
+    inset 0 0 46px rgba(var(--rgb-shadow), 0.55);
   animation-duration: 4s;
 }
 
@@ -146,7 +146,7 @@ body {
   display: grid;
   gap: 6px;
   border-left: 3px solid var(--attention);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 28px var(--attention-glow);
+  box-shadow: 0 12px 40px rgba(var(--rgb-shadow), 0.35), 0 0 28px var(--attention-glow);
 }
 .focus-kicker {
   margin: 0;
@@ -176,7 +176,7 @@ button:active { transform: scale(0.98); }
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #02121a;
+  color: var(--on-accent);
   font-weight: 650;
   box-shadow: 0 0 18px var(--accent-glow);
 }
@@ -220,7 +220,7 @@ button:focus-visible, input:focus-visible {
   border: 1px solid var(--glass-line-strong);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 -18px 60px rgba(var(--rgb-shadow), 0.55);
   z-index: 30;
   transition: transform 0.28s ease;
 }
@@ -343,7 +343,7 @@ dialog {
   border-radius: var(--radius);
   max-width: min(420px, calc(100vw - 48px));
   padding: calc(var(--gap) * 1.25);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 70px rgba(var(--rgb-shadow), 0.6);
 }
 dialog::backdrop { background: rgba(var(--rgb-bg), 0.7); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 dialog p { margin: 0 0 var(--gap); font-size: var(--text-lg); }
@@ -375,7 +375,7 @@ dialog menu { display: flex; gap: 10px; justify-content: flex-end; padding: 0; m
   .briefing-sheet { transition: none; }
 }
 
-[data-contrast="high"] .orb::before { border-color: #fff; }
+[data-contrast="high"] .orb::before { border-color: rgb(var(--rgb-light)); }
 [data-contrast="high"] .focus { border-left-color: var(--attention); }
 
 /* ---------- Phone composition ---------- */

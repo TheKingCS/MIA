@@ -70,6 +70,7 @@
      ------------------------------------------------------------------ */
   --rgb-light: 255, 255, 255;  /* the sheen and edge light on glass */
   --rgb-shadow: 0, 0, 0;  /* drop shadows */
+  --on-accent: #02121a;  /* dark text on a button filled with the accent (A6: was written into each sheet) */
   --surface-primary-alpha: 0; --surface-primary-tint: 0.075; --surface-primary-blur: 16px; --surface-primary-border: 0.14; --surface-primary-light: 0.12; --surface-primary-shadow: 0.32;
   --surface-secondary-alpha: 0; --surface-secondary-tint: 0.075; --surface-secondary-blur: 0px; --surface-secondary-border: 0.14; --surface-secondary-light: 0.12; --surface-secondary-shadow: 0.32;
   --surface-floating-alpha: 0.94; --surface-floating-tint: 0.06; --surface-floating-blur: 20px; --surface-floating-border: 0.18; --surface-floating-light: 0.14; --surface-floating-shadow: 0.45;
