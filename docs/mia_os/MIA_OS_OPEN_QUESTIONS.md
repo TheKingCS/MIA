@@ -42,14 +42,15 @@ folded in here.*
 | Q-29 | **Answered (2026-11-15)**: DEC-0175 approved as prompt 22's direction, DEC-0176 yes, DEC-0177 approved with Zac's clarification | — | — |
 | Q-30 | **Answered yes (2026-11-15)**: manifests as JSON in `apps/<id>/manifest.json`, a registry that reads them, code moved app by app later; M1 built | DEC-0178 | — |
 | Q-15 | **Answered (2026-11-15)**: Raspberry Pi OS on the Pi, Fedora on the PC, the app on stock Android. Was: the Pi 5's base system: Raspberry Pi OS (Debian 13, the AI HAT+ 2's official drivers, sound works) or Fedora (Pi 5 support is a working minimum in Fedora 44/45, no sound yet)? The PC stays Fedora bootc unless one base for both is wanted | DEC-0168, DEC-0157 | Zac |
-| Q-32 | What MIA OS is (DEC-0179): a personal, AI-native operating environment on a standard Linux image, one node of a distributed personal intelligence | settles the identity for Prompts 05 to 17 | Prompt 05 |
-| Q-33 | How requirements are judged (DEC-0180): MoSCoW plus a release tier; when principles conflict, authority and safety, then security and privacy, then reliability, then local-first, then attention, then maintainability | the decision rule every later prompt uses | Prompt 05 |
-| Q-34 | Autonomy (DEC-0181): keep the five tiers built in M4; add whether each action can be undone and what it reaches; add one "MIA, stop" | finishes the autonomy model | Prompt 08 |
-| Q-35 | The first MIA OS (DEC-0182): the scope in `MIA_OS_MVP_DEFINITION.md` §2 | what Prompt 16 plans first | Prompt 16 |
-| Q-36 | Prompt 02's multi-user list (two speakers, a couples' profile, a household display) predates DEC-0119 ("for Zac alone"): mark those not planned, keeping only "each account's data stays its own"? | consistency with DEC-0119 | Prompt 13 |
-| Q-37 | Which glass preset is the default look (DEC-0183)? Recommended: Aquatic with the cyan scheme, so MIA keeps her colour | the first thing seen | appearance A4 |
-| Q-38 | Muse owns the look (DEC-0017, DEC-0023): Claude builds the appearance engine and first values for the six presets, Muse refines them. Is that the split? | who does what | appearance A4 |
-| Q-39 | The dashboard reference image prompt 24 names didn't arrive: attach it again so it's kept in `docs/design/` and the presets tuned to it | the presets' values | appearance A4 |
+| Q-32 | **Answered yes (2026-11-15)**: what MIA OS is | DEC-0179 | — |
+| Q-33 | **Answered yes (2026-11-15)**: how requirements are judged; the principles' order | DEC-0180 | — |
+| Q-34 | **Answered (2026-11-15)**: the tiers, reversibility and reach yes; "we need to specify what stopping everything really means": specified, now Q-40 | DEC-0181 | — |
+| Q-35 | **Answered yes (2026-11-15)**: the first MIA OS's scope | DEC-0182 | — |
+| Q-36 | **Answered yes (2026-11-15)**: the two-person requirements (MU-2 to MU-8, MU-10) are not planned; each account's data stays its own | DEC-0119 | — |
+| Q-37 | **Answered (2026-11-15)**: Aquatic, "but base it on the picture" (his reference, kept in `docs/design/reference/`) | DEC-0183 | — |
+| Q-38 | **Answered yes (2026-11-15)**: Claude builds the engine and first values; Muse refines | DEC-0184 | — |
+| Q-39 | **Answered (2026-11-15)**: the picture arrived; cropped to the photo, its palette read in code (`MIA_OS_APPEARANCE_ENGINE.md` I) | DEC-0183 | — |
+| Q-40 | **Answered (2026-11-16)**: the stop as written, with one change: MIA may adjust the greenhouse's controllers, and a stop never affects the greenhouse | DEC-0181, DEC-0185 | — |
 
 ## The original questions (for the record)
 

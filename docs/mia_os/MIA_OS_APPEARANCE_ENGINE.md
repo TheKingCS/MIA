@@ -174,3 +174,34 @@ contrast and text size keep working through every phase; the suite passes at eve
   Muse refines them. Is that the split Zac wants?
 - **Q-39:** the dashboard reference image: please attach it again so it can be kept in `docs/design/` and the presets
   tuned against it.
+
+## I. The reference picture, read (Zac, 2026-11-15; Q-37: Aquatic, "but base it on the picture")
+
+Kept as [`docs/design/reference/prompt24_glass_dashboard.jpg`](../design/reference/prompt24_glass_dashboard.jpg)
+(cropped to the photo; the phone's status bar left out). An illustrative render: the names and faces in it are
+placeholders, not people MIA knows.
+
+**What it shows:** one large glass panel floating over a real, softly lit room (concrete walls, warm wood), so the
+environment is a photograph-like dim space, not a gradient field; the panel is dark blue-graphite glass with the room
+showing through, frosted; a thin, bright cyan glow runs around the whole window's edge, not around each card; inside,
+a narrow icon rail on the left, a top bar (title, notifications, the person), and a grid of quieter cards with rounded
+corners (larger on the window, smaller on cards), each with a small spaced-capitals label; charts run from cyan through
+blue to violet; increases in muted green; white text; generous spacing; nothing neon beyond the one edge.
+
+**Its palette, read in code** (median-cut quantisation of regions of the picture, `Pillow`), the starting values for
+Aquatic, which Muse refines (Q-38):
+
+| Role | From the picture | Note |
+|---|---|---|
+| Window edge glow (primary accent) | `#7fddec` to `#23c4e8` | MIA's cyan today is `#35d4ff`: kept, it sits inside this range |
+| Glass panel (primary) | `#2b323c` to `#33434d`, frosted over the room | about 0.6 to 0.7 opacity with a strong blur |
+| Cards (secondary) | `#2f3840`, slightly lighter than the panel | quieter borders, no glow |
+| Chart gradient | cyan `#23c4e8` → blue `#3f79e5` → violet `#5955cb` | the scheme's secondary and tertiary accents |
+| Progress fill | blue `#567fd8` on a deep track `#12223c` | |
+| Increase (meaning: ok) | muted green `#487b6c` on `#243e39` | stays the meaning colour (DEC-0136) |
+| Text | near white | as `--text` today |
+| Environment | the room's neutral greys (`#3e4041` to `#575f5f`) behind the glass | a backdrop picture, blurred; Aquatic's own scene can be an underwater one with the same values |
+
+**What this changes in the plan:** the window-edge glow is a property of the *deep* tier on the shell's frame only
+(not every surface); the environment can be a calm photographic backdrop; the chart palette is the scheme's three
+accents. Everything else stands.

@@ -131,7 +131,7 @@ MIA is one presence with several roles. The role doesn't change her authority; t
 | Automation system | jobs, daily checks, workflows | within grants; homeostasis paces them |
 | Personal knowledge system | memories, notes, the history, links | observe; memories only kept on his "keep it" |
 | Development assistant | the lab: proposes code in a worktree, tests it, asks for the merge (DEC-0058) | suggest; merge on his approval |
-| Device controller | reads sensors; commands only where a device's own safety holds (the greenhouse node acts, she watches: DEC-0150) | per device; commands are consequential by default |
+| Device controller | reads sensors; adjusts devices, the greenhouse's controllers included (DEC-0185), with each device's own safety limits holding | per device; commands are consequential unless he granted them |
 
 **When she acts, asks, refuses or defers** (the full model is
 [MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md](MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md)):

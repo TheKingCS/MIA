@@ -20,7 +20,7 @@ OS on Pis.
 | Wearables (watch) | not owned | — | — | later |
 | Smart display | not owned | a browser on MIA's web front end, household items only | the PC's runtime | shared-screen rules (MU-10) |
 | Raspberry Pi | homestead node current; MIA Runtime on a Pi planned (DEC-0015: later) | MIA Core headless; the homestead control loop | snapshots to the PC | GPIO, sensors, the AI HAT+ 2 |
-| Embedded controllers | current in the homestead (safety MCU) | their own firmware; never MIA | readings | they act; she watches (DEC-0150) |
+| Embedded controllers | current in the homestead (safety MCU) | their own firmware; never MIA | readings; settings MIA adjusts through the node | they enforce the hard limits on anything MIA asks (DEC-0185) |
 | His truck | wanted (Zac, 2026-11-15) | the phone, or a Pi with a screen and OBD-II | trips, fuel, engine codes | — |
 | Dedicated MIA hardware | speculative | — | — | kept out of requirements |
 

@@ -3163,7 +3163,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0155, DEC-0156, DEC-0166, DEC-0175, DEC-0176, DEC-0177
 
 ### DEC-0179: What MIA OS is
-- Status: PROPOSED (Zac to approve: Q-32)
+- Status: APPROVED (Zac, 2026-11-15, answering Q-32: "Yes")
 - Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_SYSTEM_PHILOSOPHY.md` §1)
 - Decision: MIA OS is a personal, AI-native operating environment on a standard Linux image, which is one node of a
   distributed personal intelligence. Three layers with one-way dependencies: the OS (boots, runs conventional apps,
@@ -3174,7 +3174,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0154, DEC-0155, DEC-0157, DEC-0159, DEC-0173, DEC-0175
 
 ### DEC-0180: How MIA OS requirements are judged
-- Status: PROPOSED (Zac to approve: Q-33)
+- Status: APPROVED (Zac, 2026-11-15, answering Q-33: "Yes")
 - Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md` §1 to §3,
   `MIA_OS_SYSTEM_PHILOSOPHY.md` §3)
 - Decision: every requirement is a `REQ-<CAT>-<nnn>` row with a MoSCoW priority, a release tier (MVP, R1, Mature,
@@ -3186,7 +3186,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0104, DEC-0159, DEC-0173
 
 ### DEC-0181: The autonomy model: five tiers, plus reversibility, reach and one stop
-- Status: PROPOSED (Zac to approve: Q-34)
+- Status: APPROVED (Zac, 2026-11-15, answering Q-34: "We need to specify what stopping everything really means";
+  the stop specified in `docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md` §4 and confirmed 2026-11-16,
+  answering Q-40, with one change: "MIA absolutely should be able to adjust greenhouse controllers but stop shouldnt effect this like you said." See DEC-0185.)
 - Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md`)
 - Decision: keep DEC-0156's five tiers (built in M4) for the prompt's seven levels (observe and inform are one tier,
   recommend and prepare another). Add to every action kind its reversibility (undoable, compensable, irreversible,
@@ -3197,7 +3199,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0156, DEC-0123, DEC-0092
 
 ### DEC-0182: The first MIA OS (the MVP)
-- Status: PROPOSED (Zac to approve: Q-35)
+- Status: APPROVED (Zac, 2026-11-15, answering Q-35: "Yes")
 - Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_MVP_DEFINITION.md`)
 - Decision: the MVP is the signed Linux image on the PC with MIA's session by default and KDE Plasma beside it;
   everything MIA does today (her web front end, every app, the registry, grants); local models on the GPU and no cloud;
@@ -3210,7 +3212,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 ### DEC-0183: Glass is MIA OS's visual identity
 - Status: APPROVED as direction (Zac's handoff, 2026-11-15: "Status: Approved Design Direction"; prompt 24). Which
-  preset is the default waits on Q-37.
+  preset is the default: Aquatic, based on his reference picture (Q-37, 2026-11-15: "Yes but base it on the
+  picture"; kept as `docs/design/reference/prompt24_glass_dashboard.jpg`). Muse refines the values Claude builds
+  (Q-38: yes).
 - Proposed by: claude (Opus), 2026-11-15, recording prompt 24 (`docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` H)
 - Decision: MIA OS's identity is premium glass: frosted translucent surfaces over atmospheric backgrounds, generous
   curves, layered depth, restrained motion; no heavy neon or cluttered HUD. The default look moves from Stark
@@ -3219,7 +3223,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0023, DEC-0136, DEC-0135, DEC-0140, DEC-0184
 
 ### DEC-0184: The appearance engine: theme, colour scheme and layout on the existing engine
-- Status: PROPOSED
+- Status: PROPOSED (the default preset and Muse's part answered: Q-37, Q-38)
 - Proposed by: claude (Opus), 2026-11-15, prompt 24 phase 1 (`docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` C, D)
 - Decision: appearance is three independent person settings composed at render (`display.theme`: the environment and
   surfaces; `display.scheme`: accents, gradients, the chart palette, the orb's colour; `display.layout`: navigation,
@@ -3232,3 +3236,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Why: the engine already does themes as data, validation, preview, custom themes and mixing; splitting it in three
   is what makes the handoff's combinations possible without a second system.
 - Related: DEC-0136, DEC-0014, DEC-0173, DEC-0183
+
+### DEC-0185: MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse
+- Status: APPROVED (Zac, 2026-11-16, answering Q-40: "MIA absolutely should be able to adjust greenhouse controllers but stop shouldnt effect this like you said.")
+- Amends: DEC-0150's answer 4 ("MIA monitors and proposes, the node and its safety MCU act").
+- Decision: MIA may adjust the greenhouse's controllers (targets, schedules, modes) as device commands through
+  capabilities: each one asked for unless Zac granted that kind for the greenhouse (DEC-0156), applied by the node
+  within its own hard limits enforced by the safety microcontroller (which may refuse), and reported only once the
+  node confirms it (REQ-AI-002); every adjustment is in the history with how to put it back. "Stop" and "stop
+  everything" never affect the greenhouse: its control loop keeps running and settings in place stay; only an
+  adjustment of hers not yet sent is cancelled.
+- Not built yet: `core/greenhouse_link.py` only watches today (REQ-FUN-103, R1); the node's command interface and its
+  limits come first, tested against the node's simulator (`homestead/`).
+- Related: DEC-0145, DEC-0150, DEC-0156, DEC-0181

@@ -4,6 +4,11 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, latest (Zac's answers).**
+- **Approved:** what MIA OS is, how requirements are judged, the first MIA OS's scope, the autonomy levels; the two-person requirements set aside; Aquatic as the default look, built from his reference picture; Claude builds the look's machinery and Muse refines it.
+- **Decided:** what "stop" and "stop everything" do (`docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md` §4), with Zac's change: MIA may adjust the greenhouse's controllers (asked first unless he grants it, the node's safety limits always holding), and a stop never touches the greenhouse (DEC-0185).
+- **Next:** a Fable session for prompt 23's review and Prompt 05; the glass look's phase A2 on Opus.
+
 **2026-11-15, latest (Claude on Opus: the glass look, planned).**
 - **Planning only.** Zac's new handoff makes glass MIA OS's look: frosted panels over atmospheric backgrounds, six starting presets (Aquatic, Nebula, Evergreen, Aurelia, Glacial, Eclipse), with the environment, the colours and the layout each chosen separately. Most of the machinery exists already (themes as data, the Theme Studio, a glass material, contrast checks); the plan adds five kinds of glass surface, splits a theme into three choices, and drives MIA's orb from what she's really doing.
 - **Waiting on Zac:** which preset is the default (Q-37), Muse's part (Q-38), and the reference image, which didn't come through (Q-39).

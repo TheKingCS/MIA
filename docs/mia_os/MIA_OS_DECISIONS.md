@@ -54,10 +54,13 @@ Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0179 | What MIA OS is | PROPOSED (Q-32) |
-| DEC-0180 | How requirements are judged; the principles' order | PROPOSED (Q-33) |
-| DEC-0181 | Autonomy: five tiers, plus reversibility, reach and one stop | PROPOSED (Q-34) |
-| DEC-0182 | The first MIA OS (the MVP) | PROPOSED (Q-35) |
+| DEC-0179 | What MIA OS is | APPROVED (Q-32) |
+| DEC-0180 | How requirements are judged; the principles' order | APPROVED (Q-33) |
+| DEC-0181 | Autonomy: five tiers, plus reversibility, reach and one stop | APPROVED (Q-34, Q-40) |
+| DEC-0182 | The first MIA OS (the MVP) | APPROVED (Q-35) |
 
 DEC-0154 (intelligence independent of the OS), listed for re-examination in Prompt 04: the requirements rest on it
 (REQ-ARC-003); recommended for approval with Prompt 05, which designs the adapters it calls for.
+| DEC-0183 | Glass is MIA OS's visual identity; Aquatic (from Zac's picture) the default | APPROVED as direction (prompt 24, Q-37) |
+| DEC-0184 | The appearance engine: theme, colour scheme, layout | PROPOSED |
+| DEC-0185 | MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse (amends DEC-0150) | APPROVED (Q-40) |

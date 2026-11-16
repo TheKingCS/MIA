@@ -22,15 +22,15 @@ stands.*
 | ID | Requirement | Priority |
 |---|---|---|
 | MU-1 | Each person has their own identity, memories, private journal, conversations and approvals; nothing personal is shared without that person's yes | Must (exists) |
-| MU-2 | MIA identifies the speaker from voice, on the device, from samples each person chose to give | Must (new) |
-| MU-3 | When two people speak in one session, each turn is attributed to its speaker and runs as them | Must (new) |
-| MU-4 | When MIA isn't sure who spoke, she asks; a guess never unlocks private data | Must |
-| MU-5 | Consequential approvals by voice need an identified speaker on that person's own device; never on an unidentified voice | Must |
-| MU-6 | A shared answer (the couple's weekend plan) uses only what both may see: shared calendar, the household budget line for fun, both people's stated interests; never one person's private notes | Must |
-| MU-7 | Couples' profile for LEP: each person's interests plus a shared one, each person editing their own | Should |
-| MU-8 | Guests (later, close friends): a guest identity with no access to personal stores, only what the owner shares for that visit | Could (later, DEC-0159) |
+| MU-2 | MIA identifies the speaker from voice, on the device, from samples each person chose to give | Not planned (Q-36, DEC-0119) |
+| MU-3 | When two people speak in one session, each turn is attributed to its speaker and runs as them | Not planned (Q-36, DEC-0119) |
+| MU-4 | When MIA isn't sure who spoke, she asks; a guess never unlocks private data | Not planned (Q-36, DEC-0119) |
+| MU-5 | Consequential approvals by voice need an identified speaker on that person's own device; never on an unidentified voice | Not planned (Q-36, DEC-0119) |
+| MU-6 | A shared answer (the couple's weekend plan) uses only what both may see: shared calendar, the household budget line for fun, both people's stated interests; never one person's private notes | Not planned (Q-36, DEC-0119) |
+| MU-7 | Couples' profile for LEP: each person's interests plus a shared one, each person editing their own | Not planned (Q-36, DEC-0119) |
+| MU-8 | Guests (later, close friends): a guest identity with no access to personal stores, only what the owner shares for that visit | Not planned (Q-36, DEC-0119) |
 | MU-9 | Voiceprints are personal data: sealed at rest, never synced to a cloud, deletable by their owner | Must |
-| MU-10 | A shared screen (a household display) shows household items; personal ones only after that person is identified | Should |
+| MU-10 | A shared screen (a household display) shows household items; personal ones only after that person is identified | Not planned (Q-36, DEC-0119) |
 
 ## Open
 

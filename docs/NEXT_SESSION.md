@@ -103,14 +103,17 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   `docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md`. Most of it extends what exists (`core/themes.py`, the Theme Studio,
   `web/tokens.css`, `web/themes.css`); three gaps to build: five glass surface tiers, theme / colour scheme /
   layout as three settings, the orb's state from real activity. DEC-0183 (glass identity, direction approved by
-  his handoff), DEC-0184 proposed. **Waiting on Zac: Q-37 (the default preset), Q-38 (Muse's part), Q-39 (the
-  reference image never arrived).** Next: phase A2 (Opus) on his go. Fable reviews it (queue item 16).
+  his handoff), DEC-0184 proposed. **Zac answered:** Aquatic is the default, based on his reference picture (kept in
+  `docs/design/reference/`, its palette read in code: APPEARANCE_ENGINE §I); Claude builds, Muse refines.
+  Next: phase A2 (Opus). Fable reviews it (queue item 16).
 - **Prompt 04 done (2026-11-15, Opus):** the requirements and system philosophy, sixteen documents in
   `docs/mia_os/` (start at `MIA_OS_SYSTEM_PHILOSOPHY.md` and `MIA_OS_SYSTEM_REQUIREMENTS.md`). 194 requirements,
   each with priority, release tier, status against the code, verification and owner prompt; the matrix is generated
   (`python -m tools.requirements_matrix`) and tested. Measured on the PC: models and engine timings (in
-  `MIA_OS_NON_FUNCTIONAL_REQUIREMENTS.md`). **Waiting on Zac: Q-32 to Q-36** (DEC-0179 to DEC-0182 and the
-  multi-user list). Prompt 05 waits on his go. Fable reviews Prompt 04 (queue item 15).
+  `MIA_OS_NON_FUNCTIONAL_REQUIREMENTS.md`). **Zac answered (2026-11-15):** DEC-0179, 0180, 0182 approved; DEC-0181 approved with the stop as specified
+  (AUTONOMY §4, Q-40); DEC-0185: MIA may adjust the greenhouse's controllers, and a stop never touches the
+  greenhouse (REQ-FUN-103, R1: the node's command interface and limits first, against its simulator); the multi-user list marked not planned (Q-36).
+  **Prompt 05 is Fable's** (DEC-0166); run it in the next Fable session with prompt 23's review. Fable reviews Prompt 04 (queue item 15).
 - **Prompt 23 (Zac, 2026-11-15): Universal Intelligence and intent-driven computing**, kept verbatim in
   `docs/mia_os/prompts/23_UNIVERSAL_INTELLIGENCE_INTENT_DRIVEN_COMPUTING.md`. Its own order: **Fable's
   architectural review first** (feature inventory, existing-capability mapping, gaps, the five domains, each

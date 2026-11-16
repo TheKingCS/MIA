@@ -43,8 +43,8 @@ several include a failure branch. Names of Zac's own places and things are left 
 ### S-05 A goal across apps
 - **Conditions:** frost forecast. **Intent:** "Get the greenhouse ready for frost."
 - **Behaviour:** MIA reads the forecast, the greenhouse's state, the plan, needs and stock; proposes a plan: check the
-  heater (a task), add frost cloth to needs (his record), compare prices (a lookup); each step shows its tier; nothing
-  is commanded on the node. **AI:** drafts the plan and phrases it. **Code:** readings, stock, prices, tiers.
+  heater (a task), add frost cloth to needs (his record), compare prices (a lookup); each step shows its tier; raising the
+  heater's target is a device command he approves, confirmed by the node. **AI:** drafts the plan and phrases it. **Code:** readings, stock, prices, tiers.
 - **Permissions:** observe for reading; each change approved or within a grant. **Interaction:** approves steps one by
   one, drops one.
 - **Success:** the approved steps exist, recorded and undoable. **Failure:** the forecast is unavailable.
@@ -73,10 +73,12 @@ several include a failure branch. Names of Zac's own places and things are left 
 
 ### S-09 Greenhouse and homestead
 - **Conditions:** the node sends snapshots. **Intent:** "How's the greenhouse?"
-- **Behaviour:** readings with their age, alarms, a recommendation marked as hers. The node acts, she watches.
+- **Behaviour:** readings with their age, alarms, a recommendation marked as hers. "Bring the water temperature up
+  two degrees": she proposes the adjustment; on his yes she sends it, the node applies it within its limits and
+  confirms, and she reports from the confirmation. If the node refuses (past a safety limit), she says why.
 - **Failure:** the snapshot is three hours old. **Recovery:** she says how old and that the node isn't reporting; the
   Greenhouse app's status shows it.
-- **Exercises:** REQ-FUN-081, REQ-FUN-083, REQ-FUN-100, REQ-UX-005.
+- **Exercises:** REQ-FUN-081, REQ-FUN-083, REQ-FUN-100, REQ-FUN-103, REQ-AI-002, REQ-UX-005.
 
 ### S-10 Household coordination
 - **Intent:** "Prepare the week." **Behaviour:** W-2 in [FUNCTIONAL](MIA_OS_FUNCTIONAL_REQUIREMENTS.md) §8: due items,

@@ -44,7 +44,7 @@ manifest's permissions); acting by the tier. A grant to act never implies a gran
 | REQ-AUT-007 | A kind whose reach is the system or outside shall be tiered act_with_approval or never. | Must | R1 | All | New | T | §11 → 08, 13 |
 | REQ-AUT-008 | Every approval card shall show the exact change in code-written words before it runs; nothing runs from a model's description of itself. | Must | MVP | All | Exists (`describe` in each action type) | T | DEC-0013 → 08 |
 | REQ-AUT-009 | An approval shall expire: a proposal unanswered for a day lapses; a standing grant lapses after 90 days of not being used, with a notice first. *(the 90 days provisional)* | Should | R1 | All | Partial: proposals lapse after a day; grant expiry New | T | §11 → 08 |
-| REQ-AUT-010 | One command ("MIA, stop", a button always on screen) shall halt every running skill, workflow and agent at its next step and pause her own initiative until resumed. | Must | R1 | All | New | T: a running skill stops at the next step | §11 emergency stop → 08 |
+| REQ-AUT-010 | "Stop" and "stop everything" shall do exactly what §4 says: recognised in code on every device (never through the model), finishing no new step after the one in progress, undoing nothing by themselves, never stopping what keeps him safe or the greenhouse's own control, and reporting what stopped where. | Must | R1 | All | New | T: one test per row of §4's table | §11 emergency stop, DEC-0181, DEC-0185 → 08 |
 | REQ-AUT-011 | A run in progress shall be cancellable by the person at any step, leaving completed steps recorded and undoable. | Must | MVP | All | Exists for skills (stop on "no"); New for plans | T | §11 → 08 |
 | REQ-AUT-012 | Background autonomy (jobs, workflows, watches) shall be listed with when each last ran, what it changed and how to turn it off. | Must | R1 | All | Partial (jobs in health; workflows logged; one list New) | D | §11 → 08, 14 |
 | REQ-AUT-013 | Settings that let MIA act alone (receipt auto-filing, World Intelligence on, a device granted) shall appear in the same list as grants. | Should | R1 | All | New (noted when M4 was built) | T | DEC-0156 → 08 |
@@ -64,3 +64,42 @@ confirm"). The kinds of knowledge are in [FUNCTIONAL](MIA_OS_FUNCTIONAL_REQUIREM
 | REQ-TRU-005 | When an operation fails, the person shall see what was attempted, what happened, what was left changed and what to do next, from records. | Must | MVP | All | Partial (failed proposals say why; Fix-It Log) | D: S-16 | P17 → 14 |
 | REQ-TRU-006 | MIA shall never state success, a capability or a system state without a record or a reading behind it; asked how she knows, she names it. | Must | MVP | All | Partial (code-assembled answers; self-description from the registry) | T: FR-C1, REQ-AI-002 | §10 → 07, 09 |
 | REQ-TRU-007 | Which apps, agents and devices MIA used for a request shall be visible on its answer. | Should | R1 | All | Partial (tools named in the tool loop) | D | §16 → 08 |
+
+## 4. What "stop" and "stop everything" mean (Zac, Q-34: "we need to specify what stopping everything really means")
+
+*Confirmed by Zac (Q-40, 2026-11-16) with one change: "MIA absolutely should be able to adjust greenhouse controllers but stop shouldnt effect this like you said." So MIA may adjust the greenhouse's controllers
+(DEC-0185), and neither command ever touches the greenhouse: its own control loop keeps running and the settings
+in place stay in place.*
+
+**Two commands, both said or pressed on any device** (voice on the PC, phone or glasses; a button always visible in
+her session and on the phone). Both are recognised in code, like the safety floor, so they work when the model is
+slow, wrong or down.
+
+- **"Stop"** ends what MIA is doing *right now* for him: her speech, the answer she's writing, the turn's lookups, and
+  any skill run, plan or browser task he started in this conversation.
+- **"Stop everything"** does that, and also stops all of her own initiative until he says "carry on" (or a time he
+  names: "stop everything until tonight").
+
+**What happens to work in progress:** a step that is already writing finishes (every write is all-or-nothing, so
+nothing is left half done); no further step starts. Nothing is undone automatically: what finished stays finished,
+each change listed with its Undo. A browser task's pending purchase or send is discarded, never committed. A download
+or feed fetch in progress is dropped.
+
+| | "Stop" | "Stop everything" |
+|---|---|---|
+| Her speech and the answer she's writing | stops now | stops now |
+| A skill run, plan or browser task from this conversation | stops after the current step | stops after the current step |
+| Skill runs, workflows and agents she started on her own | keep going | stop after the current step |
+| Background jobs that change records or reach outside (World Intelligence, workflows, the lab, imports) | keep going | paused |
+| Her unprompted messages (insights, finds, suggestions) | keep going | held until he resumes (then offered through the gate, nothing lost) |
+| The lab (proposing code) | keeps going | paused; nothing merges without him anyway |
+| **Never stopped:** alarms and reminders he set, the safety floor, nightly backups, sync of what he changes, homeostasis's monitoring, his own presses and requests | continue | continue |
+| **The greenhouse:** its node's control loop and safety microcontroller keep running; settings MIA already applied stay as they are (never reversed by a stop); an adjustment of hers not yet sent to the node is cancelled; one already sent completes as the node handles it | unaffected | unaffected |
+| **Not hers to stop:** a device's current state (left as it is, never reversed), the operating system and his conventional apps, an OS update already being applied (cancelled only before it starts writing) | unaffected | unaffected |
+
+**Afterwards she says, from records:** what was running, where each thing stopped, what finished (with Undo), what was
+dropped, and how to resume ("carry on" resumes her initiative; a stopped run can be started again from its step).
+
+**While "stop everything" is on:** her session shows it plainly (a banner with "Carry on"), she still answers him and
+does what he asks (his own requests run as always), and it survives a restart: it ends only when he resumes or his
+named time passes.
