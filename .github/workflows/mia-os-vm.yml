@@ -52,7 +52,9 @@ jobs:
           groups = ["wheel"]
           EOF
           mkdir -p /tmp/out
-          sudo podman run --rm --privileged --security-opt label=type:unconfined_t \
+          # The runner is Ubuntu: AppArmor (not SELinux) is what stops the builder's mounts, so both are relaxed for
+          # this one privileged builder container.
+          sudo podman run --rm --privileged --security-opt label=type:unconfined_t --security-opt apparmor=unconfined \
             -v /tmp/config.toml:/config.toml:ro -v /tmp/out:/output \
             -v /var/lib/containers/storage:/var/lib/containers/storage \
             quay.io/centos-bootc/bootc-image-builder:latest --type qcow2 --rootfs btrfs \
