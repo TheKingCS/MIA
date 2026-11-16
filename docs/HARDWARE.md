@@ -162,7 +162,7 @@ live, per that document's own reasoning for why Core (Pi5+HAT) can't
 do this itself. Software is entirely unbuilt; this section is the
 hardware plan only.
 
-**In progress**: CPU **AMD Ryzen 7 9800X3D** (Zen 5, strong single-
+**Built and in use** (confirmed 2026-11-15: 32 GB RAM, a 1 TB Crucial P3 NVMe, Windows 11; models measured in `docs/mia_os/MIA_OS_NON_FUNCTIONAL_REQUIREMENTS.md`): CPU **AMD Ryzen 7 9800X3D** (Zen 5, strong single-
 thread performance, runs cool for its class) + GPU **AMD Radeon RX
 7900 XTX (24GB VRAM)**, being built by a family member as of
 2026-07-15. 24GB is genuinely generous headroom for local LLM

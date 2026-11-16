@@ -6,7 +6,7 @@ in `README.md` in this folder.*
 
 ## What MIA is becoming
 
-*The foundational doctrine (prompt 20, proposed as DEC-0173,
+*The foundational doctrine (prompt 20, approved as DEC-0173,
 [`MIA_OS_LIVING_SYSTEM.md`](MIA_OS_LIVING_SYSTEM.md)): MIA is one Living
 System. Her apps, agents, models and operating system are its parts, not the
 system itself, and each part joins the shared identity, continuity,

@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1441 files, 320,660 lines; 1441 files describe themselves; 17,616 of 17,711 classes and functions are documented.
+1443 files, 320,856 lines; 1443 files describe themselves; 17,624 of 17,719 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -802,7 +802,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-41 files, 4,550 lines; 144 of 144 classes and functions documented
+42 files, 4,707 lines; 149 of 149 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -837,6 +837,7 @@
 - `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet:
 - `tools/pc_model_check.py`: Which model should MIA's home computer run? (DEC-0022.) Runs each model through MIA's golden set (core/model_bench.py) with Ollama on this computer, on its graphics card, exactly as Talk calls it, and writes what it found to `pc-check/models.md` (paste that file's contents to Claude, or just say "do
 - `tools/publish_glasses.py`: Copies MIA's glasses interface to the public page (DEC-0062).
+- `tools/requirements_matrix.py`: Writes MIA OS's requirements traceability matrix (Prompt 04, deliverable 11; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md` §1) from the requirement tables themselves, so it can't drift from them:
 - `tools/specialists.py`: MIA's specialists from the command line (DEC-0109; core/specialists.py).
 - `tools/tak_export.py`: MIA's waypoints as a TAK data package (core/tak.py, DEC-0099): open it in ATAK-CIV, iTAK or WinTAK (Import, then the file) and the places show on the TAK map with their names, notes and MGRS grid references. Nothing is sent: it's a file you carry to the TAK app.
 - `tools/tracks.py`: Tracks from GPX files (core/gps_tracks.py, DEC-0099), into the signed-in person's own folder.
@@ -848,7 +849,7 @@
 
 ## tests/: the test suite: what each part must do
 
-493 files, 83,134 lines; 7,044 of 7,053 classes and functions documented
+494 files, 83,173 lines; 7,047 of 7,056 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1189,6 +1190,7 @@
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
 - `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang
+- `tests/test_requirements_spec.py`: MIA OS's requirements specification (Prompt 04; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md`, `tools/requirements_matrix.py`): every requirement row is well formed, defined once, with a known priority, tier and status and an owner prompt; the scenarios name only requirements that exist; the generated
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half.
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.

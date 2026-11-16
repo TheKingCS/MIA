@@ -49,3 +49,15 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0178 | Manifests as JSON in apps/<id>/, a registry that reads them, code moved app by app later | APPROVED; M1 built |
 
 Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 (R-01) and DEC-0156 (R-05), but don't settle them.
+
+## Proposed by Prompt 04 (2026-11-15)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0179 | What MIA OS is | PROPOSED (Q-32) |
+| DEC-0180 | How requirements are judged; the principles' order | PROPOSED (Q-33) |
+| DEC-0181 | Autonomy: five tiers, plus reversibility, reach and one stop | PROPOSED (Q-34) |
+| DEC-0182 | The first MIA OS (the MVP) | PROPOSED (Q-35) |
+
+DEC-0154 (intelligence independent of the OS), listed for re-examination in Prompt 04: the requirements rest on it
+(REQ-ARC-003); recommended for approval with Prompt 05, which designs the adapters it calls for.

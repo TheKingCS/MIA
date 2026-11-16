@@ -80,7 +80,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   network and device permissions per app (40 engine files reach the network or a device; map each to its app with
   a test that fails on an unmapped one).
   New Opus work joins a fresh list below this line.
-  14. M5, each app's status (core/app_ecosystem.statuses, _breakages, _recovered; the Apps page's chips). Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  14. M5, each app's status (core/app_ecosystem.statuses, _breakages, _recovered; the Apps page's chips);
+  15. Prompt 04 (docs/mia_os/MIA_OS_SYSTEM_*.md and the twelve others, tools/requirements_matrix.py). Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
@@ -96,6 +97,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Built 2026-11-15 (Opus): M2** (K-0243): "what apps do I have?", "what can Greenhouse do?", "which app can
   monitor energy?", "is anything wrong with my apps?" answered from the manifests and the scheduler; the same on the
   Apps page (Manage apps: "Her apps, checked"). Overlapping tools are said as suggestions.
+- **Prompt 04 done (2026-11-15, Opus):** the requirements and system philosophy, sixteen documents in
+  `docs/mia_os/` (start at `MIA_OS_SYSTEM_PHILOSOPHY.md` and `MIA_OS_SYSTEM_REQUIREMENTS.md`). 194 requirements,
+  each with priority, release tier, status against the code, verification and owner prompt; the matrix is generated
+  (`python -m tools.requirements_matrix`) and tested. Measured on the PC: models and engine timings (in
+  `MIA_OS_NON_FUNCTIONAL_REQUIREMENTS.md`). **Waiting on Zac: Q-32 to Q-36** (DEC-0179 to DEC-0182 and the
+  multi-user list). Prompt 05 waits on his go. Fable reviews Prompt 04 (queue item 15).
 - **Prompt 23 (Zac, 2026-11-15): Universal Intelligence and intent-driven computing**, kept verbatim in
   `docs/mia_os/prompts/23_UNIVERSAL_INTELLIGENCE_INTENT_DRIVEN_COMPUTING.md`. Its own order: **Fable's
   architectural review first** (feature inventory, existing-capability mapping, gaps, the five domains, each

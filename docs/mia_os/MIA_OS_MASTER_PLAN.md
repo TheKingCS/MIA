@@ -32,7 +32,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
 | **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
 | **03** | **Application framework** | **done; reviewed by Zac 2026-11-15 (DEC-0175 to 0177; prompt 22 follows)** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
-| 04–17 | (see `prompts/`) | not started | |
+| **04** | **Requirements and system philosophy** | **done 2026-11-15 (Opus); waiting for Zac's review (Q-32 to Q-36)** | `MIA_OS_SYSTEM_PHILOSOPHY.md`, `MIA_OS_SYSTEM_REQUIREMENTS.md` and fourteen more (listed in it) |
+| 05–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 
@@ -70,6 +71,22 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3d. Prompt 04 in brief
+
+The specification is [MIA_OS_SYSTEM_REQUIREMENTS.md](MIA_OS_SYSTEM_REQUIREMENTS.md) (with fifteen supporting documents,
+listed in it); what MIA OS is, [MIA_OS_SYSTEM_PHILOSOPHY.md](MIA_OS_SYSTEM_PHILOSOPHY.md).
+
+- **What it is** (DEC-0179, proposed): a personal, AI-native operating environment on a standard Linux image, one node
+  of a distributed personal intelligence. Three layers, one-way: the OS, the MIA platform, her apps and surfaces.
+- **194 requirements**, each with a priority, a release tier, a status checked against the code, a verification and an
+  owner prompt; the traceability matrix is generated and tested. About half already exist in the code.
+- **Measured on Zac's PC:** the 3B model answers in 0.3 s once loaded, the 14B in 0.9 s, the 32B in 3.4 s; MIA's engine
+  starts in 0.5 to 1.7 s and assembles the day in 0.02 s. Performance targets are set from these.
+- **The MVP** (DEC-0182, proposed): the signed image, her session by default, Plasma beside it, everything she does
+  today, local models only, the phone and glasses as now, backups, rollback, recovery.
+- **Questions for Zac:** Q-32 to Q-36. **Conflicts found:** the multi-user list against DEC-0119; Ubuntu (the hardware
+  doc) against Fedora (DEC-0157), for Prompt 06 to settle by a GPU test.
 
 ## 3c. Prompt 03 in brief
 
@@ -150,7 +167,7 @@ The Master Directive also lists REQUIREMENTS, ARCHITECTURE and later central doc
 - [World Intelligence proposal](MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md) (prompt 18, 2026-11-15; DEC-0170 proposed): standing watches, one discovery store, relevance worked out in code from MIA's records, built from the pieces she has (news feeds, search, research and verify, her browser, taught skills, the gate, links). Phases W0–W8, beside the MIA OS work.
 - [The runtime-owned application ecosystem](MIA_OS_APPLICATION_REGISTRY.md) (prompt 22, 2026-11-15; DEC-0175 and DEC-0178 approved; M1 built): one manifest per MIA-native app, an Application Registry in the runtime, MIA Forge, the migration M1–M8, and how MIA-native apps sit on the conventional Linux underneath.
 - [Prompt 23, Universal Intelligence and intent-driven computing](prompts/23_UNIVERSAL_INTELLIGENCE_INTENT_DRIVEN_COMPUTING.md) (Zac, 2026-11-15): kept verbatim; Fable's architectural review first, then Opus's engineering review; nothing built from it yet.
-- [The Living System](MIA_OS_LIVING_SYSTEM.md) (prompt 20, the foundational doctrine, 2026-11-15; DEC-0173 proposed): the doctrine's ten characteristics and ten shared services mapped onto MIA with evidence, the gaps (grants, homeostasis, one epistemic contract, cross-domain objectives), and the invariants as tests. Once approved, every later prompt carries its invariants as acceptance criteria. No new "Living System" service.
+- [The Living System](MIA_OS_LIVING_SYSTEM.md) (prompt 20, the foundational doctrine, 2026-11-15; DEC-0173 approved): the doctrine's ten characteristics and ten shared services mapped onto MIA with evidence, the gaps (grants, homeostasis, one epistemic contract, cross-domain objectives), and the invariants as tests. Once approved, every later prompt carries its invariants as acceptance criteria. No new "Living System" service.
 - [Procurement proposal](MIA_OS_PROCUREMENT_PROPOSAL.md) (prompt 19, 2026-11-15; DEC-0172 proposed): World Intelligence's listings half: requirements per project, specifications compared by numbers, price observations, acquisition plans.
 - [Universal Action Layer plan](MIA_OS_UNIVERSAL_ACTION_LAYER_PLAN.md), with the spec in `docs/specs/UNIVERSAL_ACTION_LAYER.md`. Its first three phases (registry and offer, the phone's selection menu, the first action set) are useful before MIA OS.
 - [Model assignments](MIA_OS_MODEL_ASSIGNMENTS.md): Fable 5.2 for prompts 05, 08, 13, 14, 16 and 17 and the foundational refactors; Opus 5.5 for everyday building.

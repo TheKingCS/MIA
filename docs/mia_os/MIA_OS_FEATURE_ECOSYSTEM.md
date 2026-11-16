@@ -1,5 +1,7 @@
 # MIA OS: the feature ecosystem (Prompt 02)
 
+*Prompt 04 (2026-11-15): requirements now live in [MIA_OS_SYSTEM_REQUIREMENTS.md](MIA_OS_SYSTEM_REQUIREMENTS.md) and [MIA_OS_FUNCTIONAL_REQUIREMENTS.md](MIA_OS_FUNCTIONAL_REQUIREMENTS.md); its features become requirements.*
+
 *Claude, 2026-11-15. This builds on Prompt 01 (`MIA_OS_FEATURE_INVENTORY.md`),
 whose statuses come from evidence. It uses Zac's answers of 2026-11-15
 (DEC-0159 to DEC-0164).*

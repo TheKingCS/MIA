@@ -1,5 +1,7 @@
 # MIA OS: the application framework (Prompt 03)
 
+*Prompt 04 (2026-11-15): requirements now live in [MIA_OS_SYSTEM_REQUIREMENTS.md](MIA_OS_SYSTEM_REQUIREMENTS.md) and [MIA_OS_FUNCTIONAL_REQUIREMENTS.md](MIA_OS_FUNCTIONAL_REQUIREMENTS.md); what the OS and platform must provide the framework is section C there.*
+
 *Zac's review (2026-11-15): DEC-0175 approved as the direction of his handoff (prompt 22, planned in
 [MIA_OS_APPLICATION_REGISTRY.md](MIA_OS_APPLICATION_REGISTRY.md)); DEC-0176 approved; DEC-0177 approved with his
 clarification (MIA first-class in the image; MIA-native apps by the runtime, never Flatpak; conventional apps by

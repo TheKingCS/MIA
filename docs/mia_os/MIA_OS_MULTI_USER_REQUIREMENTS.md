@@ -1,5 +1,7 @@
 # MIA OS: more than one person (Prompt 02 §11)
 
+*Prompt 04 (2026-11-15): requirements now live in [MIA_OS_SYSTEM_REQUIREMENTS.md](MIA_OS_SYSTEM_REQUIREMENTS.md) and [MIA_OS_FUNCTIONAL_REQUIREMENTS.md](MIA_OS_FUNCTIONAL_REQUIREMENTS.md); MU-2 to MU-10 predate DEC-0119; Q-36 asks whether to mark them not planned.*
+
 *Claude, 2026-11-15. Scope from Zac:*
 - *MIA OS is for him, and may extend to close friends later (DEC-0159).*
 - *His wife may speak to MIA at the same time as him, and MIA must tell

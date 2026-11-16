@@ -20,4 +20,12 @@ report that found it. Rated H, M or L.*
 | R-23 | Speaker identification errors could expose one partner's data to the other | H | M | Prompt 02 | shared conversation | MU-4/MU-5: ask when unsure; no approvals on an unidentified voice |
 | R-24 | A process per sandboxed extension costs memory on the Pi | M | M | Prompt 03 | the extension host | the proof of concept measures it (Q-28) |
 | R-25 | Each new app touches about fifteen files that tests check; without a scaffold this slows every addition | L | H | Prompt 03 | the next new app | `tools/new_app.py` (proposed) |
+| R-26 | Scope grows faster than one person and his agents can build and maintain | H | H | Prompt 04 | each prompt's plan | Prompt 16 |
+| R-27 | GPU compute on the chosen Linux base is worse than on Windows, or breaks on update | H | M | Prompt 04 | the switch | Prompt 06 |
+| R-28 | Moving his data to Linux loses or corrupts something | H | M | Prompt 04 | the switch | Prompt 16 |
+| R-29 | The MIA session quietly becomes the only practical way in | M | M | Prompt 04 | each release | Prompt 10/14 |
+| R-30 | Performance targets set before the image prove wrong | M | H | Prompt 04 | R1 | Prompt 14 |
+| R-31 | The small everyday model's mistakes reach actions | H | M | Prompt 04 | any new autonomy | Prompt 07/08 |
+| R-32 | Requirements and code drift apart | M | H | Prompt 04 | each prompt | Prompt 17 |
+| R-33 | Accessibility left to the end | M | M | Prompt 04 | R1 | Prompt 10 |
 | R-21 | Scope: 17 prompts asking for ~300 documents could bury the engineering | M | M | review of the library | throughout | Claude: keep documents small, and merge where the directive allows ("avoid duplicating") |

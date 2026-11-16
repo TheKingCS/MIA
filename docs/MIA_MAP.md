@@ -4,11 +4,11 @@
 
 ## At a glance
 
-- **Architecture** — 817 Python files across 558 core, 93 modules, 123 gui, 2 server, 41 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 177 logged (docs/DECISIONS.md); the why behind every part.
+- **Architecture** — 818 Python files across 558 core, 93 modules, 123 gui, 2 server, 42 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Decisions** — 181 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 248 dev entries (work/knowledge/).
+- **Knowledge she's written** — 249 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 49 personal + 42 household stores, 54 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (13): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0157, DEC-0158, DEC-0164, DEC-0169
+**PROPOSED** (17): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0154, DEC-0157, DEC-0158, DEC-0164, DEC-0169, DEC-0179, DEC-0180, DEC-0181, DEC-0182
 
 <details><summary>Every decision</summary>
 
@@ -202,6 +202,10 @@
 - **DEC-0176** [APPROVED] — Code that isn't MIA's runs out of process, sandboxed, through the capability contract
 - **DEC-0177** [APPROVED] — MIA in the OS image, Flatpak for GUI apps, signed extensions, no marketplace
 - **DEC-0178** [APPROVED] — Application manifests as JSON in apps/<id>/, a registry that reads them, code moved app by app later
+- **DEC-0179** [PROPOSED] — What MIA OS is
+- **DEC-0180** [PROPOSED] — How MIA OS requirements are judged
+- **DEC-0181** [PROPOSED] — The autonomy model: five tiers, plus reversibility, reach and one stop
+- **DEC-0182** [PROPOSED] — The first MIA OS (the MVP)
 
 </details>
 
@@ -209,7 +213,7 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 248 entries 36 lesson, 18 debugging, 15 decision, 9 method, 6 test-procedure, 3 failed-experiment, 159 implementation, 2 security-finding.
+- **Dev-knowledge** — 249 entries 36 lesson, 18 debugging, 16 decision, 9 method, 6 test-procedure, 3 failed-experiment, 159 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

@@ -1,5 +1,7 @@
 # MIA OS: shared services catalogue (Prompt 02 §8)
 
+*Prompt 04 (2026-11-15): requirements now live in [MIA_OS_SYSTEM_REQUIREMENTS.md](MIA_OS_SYSTEM_REQUIREMENTS.md) and [MIA_OS_FUNCTIONAL_REQUIREMENTS.md](MIA_OS_FUNCTIONAL_REQUIREMENTS.md); each shared service's requirements are there.*
+
 *Prompt 03 gives each service its contract (inputs, outputs, boundary, failure) and the local API for out-of-process callers: [MIA_OS_APPLICATION_API_ARCHITECTURE.md](MIA_OS_APPLICATION_API_ARCHITECTURE.md).*
 
 *Claude, 2026-11-15. These are services every app should use instead of

@@ -4,10 +4,14 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-15, latest (Claude on Opus: MIA OS Prompt 04, the requirements).**
+- **Planning only.** What MIA OS is, written down once: a personal, AI-native environment on a standard Linux image, one node of a MIA that also lives on the phone and glasses. 194 requirements, each saying how important it is, when it's needed, whether it already exists in the code, how it will be checked and which later prompt owns it. About half already exist. The first MIA OS is defined (her session by default, an ordinary desktop beside it, local models only, nothing of his data lost in the move).
+- **Measured on his PC:** the small model answers in 0.3 s once loaded, the 14B in 0.9 s, the 32B in 3.4 s.
+- **Waiting on Zac:** Q-32 to Q-36, then the go for Prompt 05. Prompt 23's review is the next Fable session's.
+
 **2026-11-15, latest (Claude on Opus: each app's health, and Zac's prompt 23 saved).**
 - **Built:** every app now shows whether it's working. On the Apps page (Manage apps), an app that isn't gets a chip (Failing, Needs attention, Missing something it needs) with the reason underneath: a background job that keeps failing, something of it that broke this week and isn't fixed, or a data file that had to start over. Ask "is the Greenhouse app working?" and she says the same.
 - **Saved:** Zac's prompt 23 (Universal Intelligence: clipboard, drag-and-drop, Ask MIA everywhere, recall, context, explain-my-screen, teach by demonstration, workspaces, the knowledge graph). Its own instructions put Fable's architectural review first; nothing is built from it yet.
-- **Waiting on Zac:** the go for Prompt 04 (Opus), and when to run prompt 23's review (Fable).
 
 **2026-11-15, late night (Claude on Fable: the review, and the start of permissions).**
 - **Reviewed:** everything Opus built since the gate's learned pace (13 items). Six things fixed, each with a test: "not for me" on a find now slows finds down instead of speeding them up; a pump and a fan that both say 120VAC are no longer "the same model"; links from feeds and searches can only ever be ordinary web links; MIA's own watches look for the meaningful words of a goal's name; the Apps page's check no longer rebuilds her whole tool list each time (it would have failed on the phone); zero and negative amounts are refused.

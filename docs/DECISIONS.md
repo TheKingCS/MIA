@@ -3161,3 +3161,49 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Built: M3 (2026-11-15, Opus): `core/web_surfaces.APPS` and `RETIRED` read from the manifests (new fields `order`,
   `ask`, `domains`); the hand-kept list is gone; the phone app bundles `apps/*/manifest.json` (K-0244).
 - Related: DEC-0155, DEC-0156, DEC-0166, DEC-0175, DEC-0176, DEC-0177
+
+### DEC-0179: What MIA OS is
+- Status: PROPOSED (Zac to approve: Q-32)
+- Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_SYSTEM_PHILOSOPHY.md` §1)
+- Decision: MIA OS is a personal, AI-native operating environment on a standard Linux image, which is one node of a
+  distributed personal intelligence. Three layers with one-way dependencies: the OS (boots, runs conventional apps,
+  knows only how to start MIA), the MIA platform (the runtime: stores, capabilities, the action contract, grants), and
+  MIA's apps and surfaces; the model beside the platform, proposing and phrasing. Not a new kernel or a distribution
+  for others, not an assistant bolted onto a desktop, not an app store.
+- Why: it is what DEC-0154 to DEC-0178 already describe, stated once so later prompts stop reinterpreting the vision.
+- Related: DEC-0154, DEC-0155, DEC-0157, DEC-0159, DEC-0173, DEC-0175
+
+### DEC-0180: How MIA OS requirements are judged
+- Status: PROPOSED (Zac to approve: Q-33)
+- Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md` §1 to §3,
+  `MIA_OS_SYSTEM_PHILOSOPHY.md` §3)
+- Decision: every requirement is a `REQ-<CAT>-<nnn>` row with a MoSCoW priority, a release tier (MVP, R1, Mature,
+  Later), a status checked against the code (Exists, Partial, Planned, New), a verification and an owner prompt; the
+  traceability matrix is generated (`tools/requirements_matrix.py`) and tested. When principles conflict: human
+  authority and safety, then security and privacy, then reliability and the no-AI path, then local-first, then respect
+  for attention, then maintainability.
+- Why: a requirement that can't be checked or traced is a wish; the order turns the principles into a decision rule.
+- Related: DEC-0104, DEC-0159, DEC-0173
+
+### DEC-0181: The autonomy model: five tiers, plus reversibility, reach and one stop
+- Status: PROPOSED (Zac to approve: Q-34)
+- Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md`)
+- Decision: keep DEC-0156's five tiers (built in M4) for the prompt's seven levels (observe and inform are one tier,
+  recommend and prepare another). Add to every action kind its reversibility (undoable, compensable, irreversible,
+  shown before approval) and its reach (his records, a device, the system, outside: anything reaching the system or
+  outside is at least act_with_approval). Add one stop ("MIA, stop", always on screen) that halts every running skill,
+  workflow and agent at its next step.
+- Why: the seven levels mix how far she may go with who started it; the two properties catch what tiers alone miss.
+- Related: DEC-0156, DEC-0123, DEC-0092
+
+### DEC-0182: The first MIA OS (the MVP)
+- Status: PROPOSED (Zac to approve: Q-35)
+- Proposed by: claude (Opus), 2026-11-15, Prompt 04 (`docs/mia_os/MIA_OS_MVP_DEFINITION.md`)
+- Decision: the MVP is the signed Linux image on the PC with MIA's session by default and KDE Plasma beside it;
+  everything MIA does today (her web front end, every app, the registry, grants); local models on the GPU and no cloud;
+  her data moved from Windows with nothing lost; the phone and glasses working as now; nightly backups, atomic updates
+  with rollback, a USB recovery path. The Universal Action Layer on any selection, meaning search, workspaces and
+  cross-app plans come in R1, the first daily-use release.
+- Why: the smallest whole MIA-first computer, built mostly from what exists; everything else can follow without
+  changing its identity.
+- Related: DEC-0157, DEC-0165, DEC-0179, DEC-0181
