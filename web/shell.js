@@ -1015,10 +1015,15 @@
     device: /Android|Mobi/.test(navigator.userAgent) ? "phone" : "pc" });
   // Drop on any page (UI-4, core/shelf.py): text, a link or files' names dragged onto MIA from anywhere are offered
   // to the shelf as a capture (only their names for files: nothing is uploaded). A page with its own drop zone
-  // handles its drop first (it calls preventDefault), and that drop never reaches here.
+  // handles its drop first (it calls preventDefault), and that drop never reaches here. A drop into a text box is
+  // left to the browser, so dragging words into Talk or a form still puts them there.
   let dragDepth = 0;
-  const outsideDrag = (ev) => ev.dataTransfer && [...ev.dataTransfer.types].some((t) => t === "Files" || t === "text/plain" || t === "text/uri-list");
-  document.addEventListener("dragenter", (ev) => { if (outsideDrag(ev)) { dragDepth += 1; document.body.classList.add("mia-dropping"); } });
+  const intoBox = (ev) => ev.target && ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable]");
+  const outsideDrag = (ev) => !intoBox(ev) && ev.dataTransfer && [...ev.dataTransfer.types].some((t) => t === "Files" || t === "text/plain" || t === "text/uri-list");
+  document.addEventListener("dragenter", (ev) => {
+    if (intoBox(ev)) { dragDepth = 0; document.body.classList.remove("mia-dropping"); return; }
+    if (outsideDrag(ev)) { dragDepth += 1; document.body.classList.add("mia-dropping"); }
+  });
   document.addEventListener("dragleave", () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove("mia-dropping"); });
   document.addEventListener("dragover", (ev) => { if (outsideDrag(ev)) ev.preventDefault(); });
   document.addEventListener("drop", async (ev) => {

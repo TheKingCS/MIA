@@ -13,7 +13,8 @@ whose watch was made for one.
 
 **The dimensions** (`assess`):
 - *project relevance*: the need it meets, its project and its priority;
-- *price advantage*: the listing's price (read from its title and summary, only with a currency sign) judged against the prices MIA has seen
+- *price advantage*: the listing's price (read from its title and summary: only with a currency sign, and only
+  when it is the one amount there) judged against the prices MIA has seen
   for the same product (core/price_book.judge): a verified low, usual, high, or "not yet verified" with fewer than
   three seen;
 - *compatibility*: the need's specs found in the listing's words: met, partly (some not mentioned), or not stated;
@@ -57,10 +58,21 @@ _PRICE = re.compile(r"[$£€]\s?(\d[\d,]*(?:\.\d{1,2})?)")
 
 
 def price_in(text: str) -> Optional[float]:
-    """Pure logic. A listing's price: the first amount written with a currency sign ("$45", "£ 12.50"). A bare number
-    is never taken for one, since listings are full of them ("12V", "1200 rpm")."""
-    m = _PRICE.search(str(text or ""))
-    return float(m.group(1).replace(",", "")) if m else None
+    """Pure logic. A listing's price: the one amount written with a currency sign ("$45", "£ 12.50"). A bare number
+    is never taken for one, since listings are full of them ("12V", "1200 rpm"); and a listing with several different
+    amounts ("was $80, now $45", "$5 off") has no price MIA can trust, so it gives None."""
+    found = amounts_in(text)
+    return found[0] if len(found) == 1 else None
+
+
+def amounts_in(text: str) -> list[float]:
+    """Pure logic. Every different amount of money in a listing's words, in order."""
+    out = []
+    for m in _PRICE.finditer(str(text or "")):
+        value = float(m.group(1).replace(",", ""))
+        if value not in out:
+            out.append(value)
+    return out
 
 
 def _need_of(context, discovery, book) -> Optional[object]:
@@ -127,7 +139,8 @@ def recommend(need_met: bool, over_ceiling: bool, compat: str, verdict: str) -> 
 
 
 def assess(context, discovery, book=None, now: Optional[datetime] = None) -> Optional[dict]:
-    """One find as an opportunity (see the module's opening), or None when it meets no open need."""
+    """One find as an opportunity (see the module's opening), or None when it meets no open need. A listing with
+    several amounts has no price here, and its price dimension says so."""
     from core import price_book
     from core.region import money
 
@@ -167,7 +180,9 @@ def assess(context, discovery, book=None, now: Optional[datetime] = None) -> Opt
     total = (price_book.total_cost(price, quantity=still or 1.0, cost_per_mile=price_book.cost_per_mile(context))
              if price is not None else None)
     if price is None:
-        advantage = "no price in the listing"
+        several = len(amounts_in(text)) > 1
+        advantage = ("several amounts in the listing, so I haven't taken any as its price" if several
+                     else "no price in the listing")
     elif verdict["verdict"] == "too_few":
         advantage = money(price) + ": not yet verified (" + verdict["said"] + ")"
     else:

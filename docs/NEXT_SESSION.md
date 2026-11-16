@@ -49,6 +49,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off) with MIA in her own tab; "take over this tab"; private sites read only when he asks right then. **Zac at the
   PC:** turn it on, import bookmarks and passwords through Edge's own Import, list private sites, and check that
   InPrivate windows stay invisible to her (`docs/BROWSER.md`).
+- **Reviewed (Fable): the shelf (UI-4) and opportunity scoring (P3)**, both written on Opus (K-0274). Three fixes:
+  shelf entries used together stay sensitive when any of them came from a bank, health or password app (the
+  combined selection used to lose that, so an online action could be offered for it); a listing with several
+  amounts ("was $80, now $45", "$5 off") has no price she trusts, so a discount is never read as the price and
+  called the lowest seen; a drop into a text box is left to the browser. **Still to review, by Opus (they were
+  written on Fable, so Fable's review wouldn't be independent): the stop (UI-2), Forge's scaffold (M7) and plans
+  across apps (UI-7).**
 - **Built: UI-7, plans across apps** (K-0273): `core/step_plans.py`. A plan is a list of changes in different apps,
   each shown with its app and that it can be undone; nothing runs when it's made. He does (asks first), changes or
   leaves out steps one at a time, on the Step By Step page (AI Tools) or by voice ("plan my week", "what's the

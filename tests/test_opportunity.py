@@ -6,8 +6,8 @@ Opportunity scoring and recommendations (Procurement P3, core/opportunity.py; th
 covers): a find is linked to the right need; every opportunity names all nine dimensions with reasons; a price is
 called a saving only when it's verified against prices seen, and "bargain" is never said; the recommendation follows
 its rules (skip when owned, ordered, over the ceiling or against a spec; wait when high; buy when ready only with a
-verified low and every spec; investigate otherwise); the total cost names its unknown parts; and nothing here can
-buy, bid or message anyone.
+verified low and every spec; investigate otherwise); the total cost names its unknown parts; a listing with several
+amounts has no price, so a discount is never read as one; and nothing here can buy, bid or message anyone.
 """
 
 from __future__ import annotations
@@ -61,10 +61,13 @@ def _seen(ctx, *prices):
                           at=(NOW - timedelta(days=5 + i)).isoformat(timespec="seconds"))
 
 
-def test_a_price_is_read_only_with_a_currency_sign_never_from_a_spec():
+def test_a_price_is_read_only_with_a_currency_sign_and_only_when_it_is_the_one_amount():
     assert opportunity.price_in("Ventilation fan 12V, $45") == 45.0
     assert opportunity.price_in("1200 rpm fan, $1,299.50 shipped") == 1299.5
     assert opportunity.price_in("Ventilation fan 12V 1200 rpm") is None
+    assert opportunity.price_in("Fan 12V, was $80, now $45") is None  # which one is the price?
+    assert opportunity.price_in("Fan 12V: $5 off, $45") is None
+    assert opportunity.price_in("Fan $45 (only $45 this week)") == 45.0  # the same amount twice is one price
 
 
 def test_specs_are_found_in_the_listing_and_a_contradiction_fails():
@@ -107,6 +110,14 @@ def test_a_price_is_a_saving_only_when_verified_and_bargain_is_never_said(world)
     said = opportunity.sentence(opportunity.opportunities(world, NOW))
     assert said.startswith("Buy when ready: Ventilation fan") and "bargain" not in said.lower()
     assert "bargain" not in inspect.getsource(opportunity).lower().replace('"bargain" is never said', "")
+
+
+def test_a_discount_in_the_listing_is_never_read_as_the_price_and_called_the_lowest_seen(world):
+    _seen(world, 55, 58, 52)
+    _find(world, "Ventilation fan 12V: $5 off, now $50")
+    [o] = opportunity.opportunities(world, NOW)
+    assert o["price"] is None and o["recommendation"] == "investigate"
+    assert "several amounts" in o["dimensions"][1]["value"] and o["dimensions"][6]["value"] == "not known"
 
 
 def test_high_over_the_ceiling_owned_ordered_and_contradicted_finds_are_wait_or_skip(world):

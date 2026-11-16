@@ -5,8 +5,8 @@ tests.test_shelf
 The shelf (UI-4, core/shelf.py; the review's acceptance row): the same thing captured from the phone, the palette
 and a drop lands on the shelf the same way; a planted instruction in something shelved changes nothing; an entry is
 gone after its time; nothing shelved becomes a memory by itself. Also: keeping, taking off and clearing go through
-the action contract and "undo" takes each back; several entries are used together as one selection; numbers read as
-the shelf is listed; and voice does the same as the screen.
+the action contract and "undo" takes each back; several entries are used together as one selection, which stays
+sensitive when any of them is; numbers read as the shelf is listed; and voice does the same as the screen.
 """
 
 from __future__ import annotations
@@ -137,6 +137,20 @@ def test_several_things_on_the_shelf_are_used_together_as_one_selection(world, t
         world.shelf.find("9")
     with pytest.raises(ShelfError):
         combined([])
+
+
+def test_things_used_together_stay_sensitive_when_any_of_them_is(world, monkeypatch):
+    monkeypatch.setattr(ual, "online_allowed", lambda context: True)
+    _approve(world, "keep_shelf", Capture.from_dict({"text": "Balance 2,410.22 after the transfer",
+                                                    "source_app": "android:com.bank.app", "title": "My Bank"}))
+    _approve(world, "keep_shelf", Capture.from_dict({"text": "An article about savings accounts", "title": "Blog"}))
+    both = combined(world.shelf.find("all"))
+    assert both.sensitive and "Balance 2,410.22" in both.text
+    offered = {a["id"] for a in ual.offer(world, both)["actions"]}
+    online = {s.id for s in ual.SPECS if s.where != ual.LOCAL}
+    assert online and not offered & online
+    plain = combined([e for e in world.shelf.entries() if e.title == "Blog"] * 1 + [])
+    assert not plain.sensitive
 
 
 def test_voice_does_what_the_screen_does(world):

@@ -207,8 +207,10 @@ class Shelf:
 
 def combined(entries: list[ShelfEntry]):
     """Pure logic. Several entries as one capture for the catalogue's actions: each one's text under a line saying
-    where it came from, the files together, what wasn't captured kept, and the kind worked out again. ShelfError when
-    none is given."""
+    where it came from, the files together, what wasn't captured kept, and the kind worked out again. When any entry
+    came from a sensitive place (`Capture.sensitive`: a bank, health or password app, or one of MIA's own sensitive
+    screens), the combined capture says it came from there, so it is sensitive too and nothing online is offered for
+    it. ShelfError when none is given."""
     from core.ual import Capture, kind_of
 
     if not entries:
@@ -226,7 +228,9 @@ def combined(entries: list[ShelfEntry]):
     if len(text) > COMBINED_LIMIT:
         text = text[:COMBINED_LIMIT]
         missing.append(f"the combined text past {COMBINED_LIMIT:,} characters")
-    got = Capture(text=text, files=files[:20], source_app="mia:shelf", title=f"{len(entries)} things on your shelf",
+    private = next((e for e in entries if e.capture().sensitive), None)
+    got = Capture(text=text, files=files[:20], source_app=private.source_app if private else "mia:shelf",
+                  title=private.title if private else f"{len(entries)} things on your shelf",
                   device="", missing=missing[:8])
     got.kind = kind_of(got)
     return got
