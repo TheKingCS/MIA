@@ -11,7 +11,8 @@ its own controls (open, back, close, teach, the live picture), the live
 view the person works her browser from, only the person's own words
 typed or searched for on her own (DEC-0122), and one browser for him and
 her (DEC-0196): private sites read only when asked right then, the
-everyday mode's settings and switches, a tab taken only when handed over.
+everyday mode's settings and switches, a tab taken only when handed over,
+and teaching that never records his other tabs or a private site.
 """
 
 from __future__ import annotations
@@ -406,3 +407,27 @@ def test_she_takes_over_a_tab_only_when_handed_one(world):
     browser inside MIA), it says so instead of guessing."""
     tool(world, "browse", target=SHOP)
     assert "everyday browser window" in tool(world, "take_over_tab")
+
+
+def test_teaching_never_records_his_other_tabs_or_a_private_site(world):
+    """Fable's review of the one browser: while she's being taught, only the tab she's taught in is recorded (the
+    everyday browser has his tabs too), and what he does on a private site is kept only as "you do this part"."""
+    from core.browser import _Worker
+
+    worker = _Worker.__new__(_Worker)
+    worker.everyday, worker.page, got = True, object(), []
+    worker.recorder = got.append
+    worker._recorded('{"kind": "click", "name": "Pay"}', {"page": object()})  # another tab of his
+    assert got == []
+    worker._recorded('{"kind": "click", "name": "Next"}', {"page": worker.page})
+    assert got == [{"kind": "click", "name": "Next"}]
+
+    tool(world, "private_sites", site="bank.example")
+    tool(world, "browse", target=SHOP)
+    tool(world, "learn_browser_task", name="Pay the bill")
+    hear = edge(world).recorder
+    hear({"kind": "type", "role": "textbox", "name": "Memo", "text": "rent for June", "host": "bank.example", "title": "Bank"})
+    hear({"kind": "click", "role": "button", "name": "Send", "host": "www.bank.example", "title": "Bank"})
+    hear({"kind": "click", "role": "link", "name": "Orders", "host": "shop.example", "title": "Your cart"})
+    steps = world.browsers.for_person(world).teaching["steps"]
+    assert [s["kind"] for s in steps] == ["signin", "click"] and "rent for June" not in str(steps)

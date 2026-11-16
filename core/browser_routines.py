@@ -159,7 +159,8 @@ def step_words(step: dict) -> str:
 
 def start_teaching(browser, name: str) -> str:
     """Starts recording what the person does in her browser, under a name, from the page it's on (one must be
-    open). Returns what to tell them."""
+    open). What they do on a site they marked private is never kept: it becomes one "you do this part" step
+    (DEC-0196). Returns what to tell them."""
     if browser.teaching is not None:
         return f"I'm already learning \"{browser.teaching['name']}\". Say when you're done."
     if browser.driver is None or not browser.page.url or browser.page.url == "about:blank":
@@ -172,6 +173,12 @@ def start_teaching(browser, name: str) -> str:
         sent with the event: this runs on the browser's own thread, so it never asks the browser anything)."""
         teaching = browser.teaching
         if teaching is None or len(teaching["steps"]) >= MAX_STEPS:
+            return
+        from core.browser import is_sensitive
+
+        if event.get("host") and is_sensitive(browser.context, "https://" + str(event["host"])):
+            if not teaching["steps"] or teaching["steps"][-1].get("kind") != "signin":
+                teaching["steps"].append({"kind": "signin"})  # a private site: nothing kept, she waits for them there
             return
         if teaching["steps"] and event.get("title") and "expect" not in teaching["steps"][-1]:
             teaching["steps"][-1]["expect"] = event["title"]

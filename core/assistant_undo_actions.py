@@ -10,6 +10,7 @@ everything set up?" (core/system_check.py). 2026-10-01.
 
 from __future__ import annotations
 
+import time
 from datetime import datetime
 
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
@@ -81,10 +82,15 @@ def _action_check_my_setup(context, arguments: dict) -> str:
     return summary(run_checks(context))
 
 
+LIST_SECONDS = 300  # how long a list she said stays the thing a "yes" answers
+_LISTED: dict = {}  # person -> (the list she said, when)
+
+
 def _action_undo_by_time(context, arguments: dict) -> str:
     """Tool undo_by_time (UI-3, core/change_history.py): "undo what you did to the greenhouse this afternoon". Without
-    the person's yes it says exactly which changes would go back and asks; with it (`confirm`), the action
-    history.undo puts each back whole, newest first, where nothing changed it since, and says what it left."""
+    the person's yes it says exactly which changes would go back and asks; with it (`confirm`, counted only against
+    the exact list she said in the last LIST_SECONDS, so the yes can't skip the list), the action history.undo puts
+    each back whole, newest first, where nothing changed it since, and says what it left."""
     from core.actions import ActionError
     from core.web_changes import _describe_history_undo
 
@@ -93,8 +99,15 @@ def _action_undo_by_time(context, arguments: dict) -> str:
         listed = _describe_history_undo(context, params)
     except ActionError as problem:
         return str(problem)
-    if str(arguments.get("confirm", "")).lower() not in ("true", "yes", "1"):
+    # The yes counts only for the exact list she said in the last few minutes: a confirm that arrives without it (the
+    # model skipping ahead), or after the list changed, gets the list instead (Fable's review, 2026-11-16).
+    who, now = person_id(context), time.monotonic()
+    said = _LISTED.get(who)
+    confirmed = str(arguments.get("confirm", "")).lower() in ("true", "yes", "1")
+    if not (confirmed and said and said[0] == listed and now - said[1] <= LIST_SECONDS):
+        _LISTED[who] = (listed, now)
         return listed + ". Shall I? Say yes and I'll put them back."
+    _LISTED.pop(who, None)
     actions = getattr(context, "actions", None)
     if actions is None:
         return "I can't undo from here."

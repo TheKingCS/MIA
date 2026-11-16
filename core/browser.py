@@ -281,7 +281,7 @@ _RECORD_JS = r"""(() => {
     name: (el.getAttribute('aria-label') || (el.labels && el.labels[0] && el.labels[0].innerText) || (el.innerText || '').trim() ||
            el.placeholder || el.title || el.name || '').replace(/\s+/g, ' ').trim().slice(0, 120),
     input_type: (el.type || '').toLowerCase(), href: el.getAttribute('href') || ''});
-  const send = step => { try { window.miaRecord(JSON.stringify(Object.assign({title: document.title}, step))); } catch (e) {} };
+  const send = step => { try { window.miaRecord(JSON.stringify(Object.assign({title: document.title, host: location.hostname}, step))); } catch (e) {} };
   document.addEventListener('click', ev => { const el = ev.target.closest(SEL); if (!el) return;
     const tag = el.tagName.toLowerCase(), type = (el.type || '').toLowerCase();
     if ((tag === 'input' && !['submit','button','image','checkbox','radio'].includes(type)) || tag === 'textarea' || tag === 'select') return;
@@ -315,8 +315,9 @@ class _Worker(threading.Thread):
 
     def run(self) -> None:
         """Opens Edge in MIA's profile (hidden at a fixed page size inside MIA, in a window of its own, or as his
-        everyday browser without Playwright's testing switches, in a tab of her own: DEC-0196), then runs each job
-        handed to it until told to stop."""
+        everyday browser without Playwright's testing switches, in a tab of her own: DEC-0196), with the recorder
+        listening (`_recorded` keeps only her tab's events there), then runs each job handed to it until told to
+        stop."""
         try:
             from playwright.sync_api import sync_playwright
         except ImportError as problem:
@@ -331,7 +332,7 @@ class _Worker(threading.Thread):
                     else {"accept_downloads": False}
                 self.context = p.chromium.launch_persistent_context(
                     str(self.profile_dir), channel="msedge", headless=self.headless, **extra, **size)
-                self.context.expose_binding("miaRecord", lambda _source, raw: self._recorded(raw))
+                self.context.expose_binding("miaRecord", lambda source, raw: self._recorded(raw, source))
                 self.context.add_init_script(_RECORD_JS)
                 # Her own tab (DEC-0196, rule 1): in everyday mode the first tab is his, so she opens one of hers.
                 self.page = self.context.new_page() if self.everyday or not self.context.pages else self.context.pages[0]
@@ -350,8 +351,12 @@ class _Worker(threading.Thread):
                 self.ready.set_exception(BrowserError(f"Edge wouldn't open: {str(problem).splitlines()[0][:200]}"))
             log.exception("The browser thread stopped.")
 
-    def _recorded(self, raw: str) -> None:
-        """One thing the person did in the window, passed on while teaching."""
+    def _recorded(self, raw: str, source: Optional[dict] = None) -> None:
+        """One thing the person did in the window, passed on while teaching. In the everyday browser only what
+        happens in the tab she's being taught in counts: his other tabs are never recorded (DEC-0196, rule 1; Fable's
+        review, 2026-11-16)."""
+        if self.everyday and source is not None and source.get("page") is not self.page:
+            return
         if self.recorder is not None:
             try:
                 self.recorder(json.loads(raw))

@@ -6,7 +6,8 @@ The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record fo
 moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off
 run looking alive or calls it done (shown with a real process killed mid-step); a browser routine waiting for his OK
 says where it is, ends "stopped" when MIA restarts, carries on after he approves, and ends at once when he says no
-or nobody approves in time; "what's running?" answers from it.
+or nobody approves in time; "what's running?" answers from it; a run book rebuilt in the same process leaves live
+runs alone (`restarted` clears the once-per-process mark to stand in for a new process).
 """
 
 from __future__ import annotations
@@ -22,6 +23,14 @@ import pytest
 from core import browser as browser_module
 from core.runs import KEEP_DONE, RunBook, describe, summary
 from tests.test_browser import DONE, SHOP, edge, tool, world  # noqa: F401  (the browser test world)
+
+
+def restarted(data_dir, context=None):
+    """The run book as a new MIA process would load it (the once-per-process recovery mark cleared)."""
+    from core import runs
+
+    runs._RECOVERED.clear()
+    return RunBook(context, data_dir=data_dir)
 
 
 def test_a_run_moves_through_its_steps_to_an_end_and_says_where_it_is(tmp_path):
@@ -48,7 +57,7 @@ def test_a_restart_never_leaves_a_cut_off_run_looking_alive(tmp_path):
     book.wait(routine.run_id, "4", "commit", "Press Place order")
     skill = book.start("taught_skills", "skill:s1", "Friday reset")
     book.wait(skill.run_id, "2", "ask", "Which room first?")
-    later = RunBook(data_dir=tmp_path)  # MIA started again
+    later = restarted(tmp_path)  # MIA started again
     assert later.get(mid.run_id).status == "stopped" and "in progress" in later.get(mid.run_id).why
     assert later.get(routine.run_id).status == "stopped" and "run it again from step 4" in later.get(routine.run_id).why
     assert later.get(skill.run_id).status == "waiting"  # a skill keeps its own wait across a restart
@@ -67,7 +76,7 @@ def test_a_process_killed_mid_step_comes_back_stopped_never_done(tmp_path):
     out = subprocess.run([sys.executable, "-c", child], capture_output=True, text=True,
                          cwd=Path(__file__).resolve().parent.parent, timeout=60)
     run_id = out.stdout.strip().splitlines()[-1]
-    run = RunBook(data_dir=tmp_path).get(run_id)
+    run = restarted(tmp_path).get(run_id)
     assert run.status == "stopped" and run.at == "2" and len(run.steps) == 1
 
 
@@ -121,7 +130,7 @@ def test_a_routine_ends_when_nobody_approves_in_time(world, monkeypatch):  # noq
 
 def test_a_routine_waiting_when_mia_restarts_says_to_run_it_again_from_that_step(world):  # noqa: F811
     _said, run = _waiting_routine(world)
-    later = RunBook(world, data_dir=Path(world.browser_routines.data_dir))
+    later = restarted(Path(world.browser_routines.data_dir), world)
     again = later.get(run.run_id)
     assert again.status == "stopped" and "run it again from step 2" in again.why
 
@@ -180,3 +189,16 @@ def test_every_run_matches_its_published_schema(tmp_path):
     book.finish(run.run_id, "stopped", "stopped by you")
     assert schema_check.errors(asdict(run), schema) == []
     assert schema_check.errors({**asdict(run), "status": "paused"}, schema)  # not a status
+
+
+def test_a_run_book_rebuilt_in_the_same_process_leaves_live_runs_alone(tmp_path):
+    """Fable's review: a store reload (after an undo or a sync) builds a new RunBook; runs really going must not be
+    marked as cut off. Only the first load in a process recovers."""
+    from core import runs
+
+    runs._RECOVERED.clear()
+    book = RunBook(data_dir=tmp_path)
+    run = book.start("workflows", "creation:C-1", "Weekly totals")
+    reloaded = RunBook(data_dir=tmp_path)  # the same process, the store built again
+    assert reloaded.get(run.run_id).status == "running"
+    assert restarted(tmp_path).get(run.run_id).status == "stopped"

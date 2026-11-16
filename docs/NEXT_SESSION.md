@@ -164,6 +164,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
       sensitive_sites; the three tools; the two settings); and the VM workflow (.github/workflows/mia-os-vm.yml);
   28. UI-3's second part (core/action_effects.py, ActionCenter.propose's sentence, as_dict, lab.approve's tier,
       tests/test_action_effects.py).
+  **Items 24 to 28 reviewed by Fable, 2026-11-16 (K-0268). What changed:**
+  - 27 (one browser): while she's being taught, only the tab she's taught in is recorded (the everyday browser's
+    recorder runs in his other tabs too), and what he does on a private site is kept only as "you do this part".
+  - 26 (the lasting history): a tool's arguments are left out of the history when the tool's or the argument's name
+    looks secret (password, PIN, key, card, vault, wallet); "undo by time" checks the yes in code, against the
+    exact list she said in the last five minutes, so a confirm that skips the list gets the list.
+  - 25 (the run record): a run book rebuilt in the same process (a store reload) no longer marks live runs as cut
+    off; only the first load in a process recovers.
+  - 24 (the proofs of concept kit, the sound fix) and 28 (reach and reversibility): no change needed.
+  New Opus work joins a fresh list below this line.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

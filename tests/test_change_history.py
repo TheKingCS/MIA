@@ -6,7 +6,8 @@ The lasting history of MIA's changes (prompt 23's review, UI-3; core/change_hist
 its files' bytes before (sealed, compressed, once per content), so it outlives a restart; "undo what you did this
 afternoon" puts changes back newest first, each whole or not at all, and only where nothing changed the files since;
 a change already put back by "undo that" is never put back twice; old changes are forgotten after 30 days; the tool
-lists exactly what it would undo and waits for a yes; the Recent Changes page offers the same.
+lists exactly what it would undo and waits for a yes (checked in code against the list just said); the Recent Changes
+page offers the same; a tool's secret-looking arguments never reach the history.
 """
 
 from __future__ import annotations
@@ -150,3 +151,31 @@ def test_the_tool_lists_first_and_undoes_only_after_the_yes_and_the_page_offers_
     assert {c["id"] for c in page["when_choices"]} >= {"this afternoon", "today", "last hour"}
     js = (Path(__file__).resolve().parent.parent / "web" / "changes.js").read_text(encoding="utf-8")
     assert 'kind: "history.undo"' in js
+
+
+def test_a_confirm_without_the_list_just_said_gets_the_list_not_the_undo(home):
+    """Fable's review: the yes is checked in code. A confirm that arrives first (the model skipping ahead), or after
+    the list changed, never undoes anything: it gets the list."""
+    from core import assistant_undo_actions as tools
+    from core.actions import ActionCenter
+
+    tools._LISTED.clear()
+    home.context.actions = ActionCenter()
+    change(home, "log_reading", "v1", summary="log reading: greenhouse")
+    said = tools._action_undo_by_time(home.context, {"when": "today", "confirm": True})
+    assert "Shall I?" in said and home.store.read_text(encoding="utf-8") == "v1"
+    change(home, "log_reading", "v2", summary="log reading: greenhouse again")  # the list is different now
+    said = tools._action_undo_by_time(home.context, {"when": "today", "confirm": True})
+    assert "Undo 2 changes" in said and "Shall I?" in said and home.store.read_text(encoding="utf-8") == "v2"
+    said = tools._action_undo_by_time(home.context, {"when": "today", "confirm": True})
+    assert said.startswith("Put back 2") and home.store.read_text(encoding="utf-8") == "v0"
+
+
+def test_a_tools_secret_looking_arguments_never_reach_the_history():
+    from core.assistant_actions import _summary_of
+
+    assert _summary_of("log_reading", {"system": "greenhouse", "value": 74}) == "log reading: greenhouse, 74"
+    said = _summary_of("add_login", {"site": "example.com", "password": "hunter2", "api_key": "abc", "pin": "1234"})
+    assert said == "add login: example.com"
+    assert _summary_of("vault_add", {"note": "anything"}) == "vault add"
+    assert _summary_of("unlock_wallet", {"code": "9"}) == "unlock wallet"

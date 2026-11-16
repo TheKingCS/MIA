@@ -147,10 +147,20 @@ class AssistantAction:
         }
 
 
+# Tool and argument names whose values never go into the lasting history (Fable's review, 2026-11-16).
+_SECRET_NAME = re.compile(r"passw|passphrase|secret|token|\bpin\b|_pin|pin_|\bkey\b|_key|api_|master|recovery|card|"
+                          r"account_n|routing|ssn|social|vault|wallet|unlock|credential", re.I)
+
+
 def _summary_of(name: str, arguments: dict) -> str:
     """Pure logic. A tool's change in a few words for the lasting history (core/change_history.py): its name and the
-    short text values it was given ("log reading: greenhouse, 74"). Kept sealed like the stores."""
-    values = [str(v) for v in (arguments or {}).values() if isinstance(v, (str, int, float)) and str(v).strip()]
+    short text values it was given ("log reading: greenhouse, 74"), leaving out any value whose argument or tool
+    name looks secret (a password, PIN, key, card or account number, anything of the vault or wallet). Kept sealed
+    like the stores."""
+    if _SECRET_NAME.search(name):  # a vault, wallet, password or key tool: its name only
+        return name.replace("_", " ")
+    values = [str(v) for k, v in (arguments or {}).items()
+              if isinstance(v, (str, int, float)) and str(v).strip() and not _SECRET_NAME.search(str(k))]
     words = ", ".join(v[:40] for v in values[:4])
     return (name.replace("_", " ") + (f": {words}" if words else ""))[:200]
 

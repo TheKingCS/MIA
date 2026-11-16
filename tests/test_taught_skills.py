@@ -312,5 +312,8 @@ def test_each_skill_run_is_kept_in_the_run_book_through_its_waits_to_its_end(wor
     [second] = world.runs.open_runs()
     assert ts.stop(world)
     assert second.status == "stopped" and "by you" in second.why
+    from core import runs
+
+    runs._RECOVERED.clear()
     later = RunBook(world, data_dir=world.my_dir)  # a restart: nothing left looking alive
     assert not later.open_runs()

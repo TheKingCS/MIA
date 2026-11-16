@@ -18,7 +18,7 @@ actions it caused, why it ended, and the engine's own private state (a skill's a
 **Statuses:** `running` (a step in progress), `waiting` (on the person), `done`, `stopped` (ended early, with why),
 `failed` (an error). Only the first two are open.
 
-**After a restart** (`recover`, called when the store loads in a new process): a run that was `running` was cut off
+**After a restart** (`recover`, called the first time the store loads in a process, never on a later reload): a run that was `running` was cut off
 mid-step, so it becomes `stopped` with that said, never left looking alive and never called done. A `waiting` run
 stays waiting only if its engine keeps the wait across a restart (taught skills do); the others (a browser routine's
 held commit lives in the browser) become `stopped` with "run it again from step N".
@@ -52,6 +52,7 @@ SOURCES = ("browser_routines", "taught_skills", "workflows", "plans")
 # Engines whose waiting survives a restart of MIA (their own store keeps the wait); others' waits end with it.
 WAITS_SURVIVE = frozenset({"taught_skills"})
 WAITING_KINDS = ("commit", "signin", "ask", "you", "confirm")
+_RECOVERED: set = set()  # run files already recovered in this process
 
 
 def _now() -> str:
@@ -89,13 +90,17 @@ class RunBook:
     EPISTEMIC = {"record": RunRecord, "source": "source", "at": "started", "how": "how"}
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
-        """Loads the person's runs (or data/'s) and recovers any a restart cut off."""
+        """Loads the person's runs (or data/'s) and, the first time this file is loaded in a process, recovers any a
+        restart cut off (a later rebuild of the store holds runs that are really going)."""
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else DATA_DIR
         self._file = self.data_dir / FILE_NAME
         self._lock = threading.RLock()  # the browser's worker, the scheduler and requests write from their own threads
         self._load()
-        self.recover()
+        key = str(self._file.resolve())
+        if key not in _RECOVERED:  # once per file per process: a store rebuilt later (a reload after undo or sync)
+            _RECOVERED.add(key)    # holds runs that are really going, not ones a restart cut off
+            self.recover()
 
     def _load(self) -> None:
         """Reads the file; a missing or unreadable one is no runs (sealed at rest: open_text opens it)."""
