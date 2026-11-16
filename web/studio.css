@@ -49,6 +49,11 @@
 .st-describe-row input { min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line-strong);
   background: rgba(var(--rgb-panel-2), 0.9); color: var(--text); font: inherit; }
 .st-designed { margin: 0; font-size: var(--text-sm); color: var(--text-dim); }
+.st-picture-row { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+.st-picture-row .st-import { display: inline-flex; align-items: center; min-height: 44px; }
+.st-picture-row select { min-height: 44px; min-width: 0; padding: 0 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong); background: rgba(var(--rgb-panel-2), 0.9); color: var(--text); font: inherit; }
+.st-import:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .st-import { position: relative; overflow: hidden; cursor: pointer; }
 .st-import input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .st-arts { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }

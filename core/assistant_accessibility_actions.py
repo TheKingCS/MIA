@@ -95,12 +95,14 @@ def _action_set_theme(context, arguments: dict) -> str:
 ACCENT_NAMES = {"cyan": "#35d4ff", "blue": "#3f7bff", "ice": "#96d6ff", "sky": "#6fc6ff", "violet": "#8a5cff",
                 "purple": "#9b6bff", "lavender": "#b9a8ff", "pink": "#ff5ce6", "magenta": "#ff2ea6", "rose": "#ff8ad8",
                 "white": "#e8f0ff", "silver": "#c0c8d4", "teal": "#2ad1c9",
-                "orange": "#ff8a00", "red": "#ef5350", "green": "#4fc48c", "yellow": "#f2d23d", "gold": "#f6c453"}
+                "gold": "#d9b867", "champagne": "#e8c27a", "bronze": "#c99a52",  # soft golds (DEC-0186)
+                "orange": "#ff8a00", "red": "#ef5350", "green": "#4fc48c", "yellow": "#f2d23d"}
 
 
 def _action_tweak_theme(context, arguments: dict) -> str:
     """Tool tweak_theme: a theme of the person's own, from the one in use (or a named base) with the changes they
-    asked for (accent by name or #rrggbb, material, corners, fire, bloom, mist, scanlines), saved (core/theme_actions
+    asked for (accent by name, soft golds included since DEC-0186, or #rrggbb; material, corners, fire, bloom, mist,
+    scanlines), saved (core/theme_actions
     `theme.save`, so it's undoable) and used. Their own theme in use is updated rather than copied."""
     from core.actions import ActionError
     from core.theme_actions import _save
@@ -115,7 +117,7 @@ def _action_tweak_theme(context, arguments: dict) -> str:
     if accent:
         picks["accent"] = accent if re.fullmatch(r"#[0-9a-f]{6}", accent) else ACCENT_NAMES.get(accent.split()[-1], "")
         if not picks["accent"]:
-            return "Which colour? " + ", ".join(sorted(k for k in ACCENT_NAMES if k not in ("orange", "red", "green", "yellow", "gold"))) + "."
+            return "Which colour? " + ", ".join(sorted(k for k in ACCENT_NAMES if k not in ("orange", "red", "green", "yellow"))) + "."
     if arguments.get("material") in MATERIALS:
         picks["material"] = arguments["material"]
     sound = str(arguments.get("sound") or "").lower().strip()
@@ -167,6 +169,68 @@ def _action_design_theme(context, arguments: dict) -> str:
     except ActionError as problem:
         return str(problem)
     return summary({**result, "name": name}) + " It's on now; say \"undo\" or open the Theme Studio to tweak it."
+
+
+def _save_new(context, name: str, choices: dict, base: str) -> str:
+    """Saves choices as a new theme of the person's own under a free name ("Ocean 2" when "Ocean" is taken) through
+    theme.save, and puts it on; the name it got. ActionError when it can't be kept."""
+    from core.theme_actions import _save
+    from core.themes import all_themes
+
+    taken = {t["name"].lower() for t in all_themes(context).values()}
+    title, n = name, 2
+    while title.lower() in taken:
+        title, n = f"{name} {n}", n + 1
+    _save(context, {"name": title, "choices": choices, "base": base, "use": True})
+    return title
+
+
+def _action_theme_from_picture(context, arguments: dict) -> str:
+    """Tool theme_from_picture (A7): a theme from one of the person's paintings their words point at
+    (core/theme_picture.from_painting: its colours read in code), saved as theirs through theme.save and put on; undo
+    takes it back. A photo of their own goes through the Appearance page's From a Picture."""
+    from core.actions import ActionError
+    from core.theme_picture import from_painting, summary
+
+    words = str(arguments.get("picture") or "").strip()
+    try:
+        result = from_painting(context, words) if words else None
+    except ValueError as problem:
+        return str(problem)
+    if result is None:
+        return ("Which of your paintings? Say what it shows. For a photo of your own, open Appearance and press "
+                "From a Picture.")
+    try:
+        result["name"] = _save_new(context, result["name"], result["choices"], result["base"])
+    except ActionError as problem:
+        return "That theme can't be kept: " + str(problem)
+    return summary(result) + " It's on now; say \"undo\" to go back."
+
+
+def _action_adjust_theme(context, arguments: dict) -> str:
+    """Tool adjust_theme (A7): the theme in use nudged by plain words (core/theme_design.adjust: darker, lighter,
+    warmer, cooler, brighter, calmer, more contrast). Their own theme in use is updated; a built-in one is saved as
+    their own copy. Through theme.save, so it's checked and undoable."""
+    from core.actions import ActionError
+    from core.theme_actions import _save
+    from core.theme_design import ADJUSTMENTS, adjust
+    from core.themes import THEMES, all_themes, choices_of, theme_of
+
+    themes = all_themes(context)
+    current = theme_of(context)
+    picks, done = adjust(choices_of(themes[current]), str(arguments.get("how") or ""))
+    if not done:
+        return "How should it change? Darker, lighter, warmer, cooler, brighter, calmer or more contrast."
+    try:
+        if current in THEMES:
+            name = _save_new(context, "My " + themes[current]["name"], picks, current)
+        else:
+            _save(context, {"id": current, "name": themes[current]["name"], "choices": picks, "base": current,
+                            "use": True})
+            name = themes[current]["name"]
+    except ActionError as problem:
+        return "That can't be kept: " + str(problem)
+    return f"Done: {name} now has " + ", ".join(done) + ". Say \"undo\" to go back."
 
 
 def _action_mix_themes(context, arguments: dict) -> str:
@@ -267,7 +331,8 @@ def _action_set_layout(context, arguments: dict) -> str:
 def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
     """Registers the accessibility tools: set_text_size, set_high_contrast, set_display_style, set_theme,
     set_color_scheme and set_layout (the look's other two choices, core/appearance.py), tweak_theme, mix_themes,
-    design_theme, delete_theme and read_screen, and the painting tools (core/assistant_art_actions.py)."""
+    design_theme, theme_from_picture and adjust_theme (A7), delete_theme and read_screen, and the painting tools
+    (core/assistant_art_actions.py)."""
     from core.assistant_art_actions import register_art_actions
 
     register_art_actions(registry)  # MIA paints (DEC-0140): the look's pictures live with the look's tools
@@ -384,6 +449,30 @@ def register_accessibility_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_design_theme,
         trigger_phrases=("design a theme", "design me a theme", "make me a theme", "make a theme", "theme like",
                          "create a theme", "new theme like"),
+    ))
+    registry.register(AssistantAction(
+        name="theme_from_picture", domain="accessibility",
+        description="Make a theme for the user from one of their paintings (its colours read from the picture), save "
+                    "it as theirs and use it. 'A theme from my ocean painting'.",
+        parameters={"type": "object", "properties": {
+            "picture": {"type": "string", "description": "what the painting shows, in the user's words."},
+        }, "required": ["picture"]},
+        handler=_action_theme_from_picture, prompt_arg="picture",
+        trigger_phrases=("theme from my", "theme from the", "theme from this", "theme from a picture",
+                         "theme from a painting", "colours from my painting", "colors from my painting"),
+    ))
+    registry.register(AssistantAction(
+        name="adjust_theme", domain="accessibility",
+        description="Nudge the user's current theme: darker, lighter, warmer, cooler, brighter, calmer or more "
+                    "contrast (several at once is fine); saved as theirs and used.",
+        parameters={"type": "object", "properties": {
+            "how": {"type": "string", "description": "the change in the user's words: 'darker and warmer'."},
+        }, "required": ["how"]},
+        handler=_action_adjust_theme, prompt_arg="how",
+        trigger_phrases=("theme darker", "theme lighter", "theme warmer", "theme cooler", "theme brighter",
+                         "theme calmer", "make it darker", "make it warmer", "make it cooler", "a bit darker",
+                         "a bit warmer", "a bit cooler", "colours warmer", "colors warmer", "colours cooler",
+                         "colors cooler", "more muted", "calmer colours", "calmer colors"),
     ))
     registry.register(AssistantAction(
         name="delete_theme", domain="accessibility",

@@ -39,9 +39,11 @@ request to core/id_wallet.py, sealed at rest; lists mask it. MIA paints on this
 PC's graphics card (`ArtRequest`, /api/art, core/art_studio.py, DEC-0140) and
 serves each person only their own pictures. The Theme Studio
 asks MIA to design a theme from a description (`ThemeDesignRequest`, POST
-/api/themes/design, core/theme_design.py) or to mix two (`ThemeMixRequest`,
-POST /api/themes/mix, core/themes.combine): nothing is kept there; saving is
-an action.
+/api/themes/design, core/theme_design.py), to make one from a picture
+(`ThemePictureRequest`, POST /api/themes/picture, core/theme_picture.py: a
+photo as a data URL, size-capped, or one of the person's own paintings) or
+to mix two (`ThemeMixRequest`, POST /api/themes/mix, core/themes.combine):
+nothing is kept there; saving is an action.
 
 **My Directions and How MIA Answers** (2026-11-08): `/api/directions`
 (core/web_directions.py, DEC-0141) and `/api/answers` (core/answer_compare.py,
@@ -418,6 +420,14 @@ class ThemeDesignRequest(BaseModel):
     description: str = Field(..., max_length=300)
 
 
+class ThemePictureRequest(BaseModel):
+    """A picture for MIA to make a theme from (core/theme_picture.from_image, A7): a photo the page read as a data URL,
+    or one of the person's paintings by id; an optional name. Nothing is kept, the Studio previews it."""
+    image: Optional[str] = Field(None, max_length=17_000_000)  # 12 MB as base64
+    art: Optional[str] = Field(None, max_length=40)
+    name: Optional[str] = Field(None, max_length=60)
+
+
 class WalletCard(BaseModel):
     """A card in the ID wallet, added or changed from its own screen: never an action, so its number never sits in a
     proposal, the history or the undo log (core/id_wallet.py)."""
@@ -537,7 +547,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design (DEC-0136, DEC-0184); the live stream (/api/live) also says what MIA is doing for her orb (a presence event, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), sensors send their readings to
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). The Sign-ins page lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
@@ -2690,6 +2700,37 @@ def create_app(context: AppContext) -> FastAPI:
         from core.theme_design import design, summary
 
         result = design(body.description)
+        return {**result, "summary": summary(result)}
+
+    @app.post("/api/themes/picture")
+    def web_theme_picture(body: ThemePictureRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """MIA makes a theme from a picture (core/theme_picture.from_image, A7): a photo sent as a data URL, or one of
+        this person's paintings. Its colours are read in code; 400 with her sentence when it can't be read. Nothing is
+        kept; saving is theme.save."""
+        import base64
+        import binascii
+
+        from core.theme_picture import from_image, summary
+
+        if body.art:
+            store = getattr(view_for(context, profile_id), "art", None)
+            item = store.get(body.art) if store is not None else None
+            source = store.path(body.art) if item is not None else None
+            if source is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "No picture like that.")
+            name = body.name or " ".join(w.capitalize() for w in item["description"].split()[:3])
+        elif body.image:
+            try:
+                source = base64.b64decode(body.image.split(",", 1)[-1], validate=True)
+            except (binascii.Error, ValueError):
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "MIA can't read that as a picture.") from None
+            name = body.name or ""
+        else:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Which picture?")
+        try:
+            result = from_image(source, name=name)
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
         return {**result, "summary": summary(result)}
 
     @app.get("/api/trades")

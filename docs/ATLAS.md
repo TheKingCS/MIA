@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1447 files, 322,301 lines; 1447 files describe themselves; 17,679 of 17,774 classes and functions are documented.
+1449 files, 322,915 lines; 1449 files describe themselves; 17,708 of 17,803 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-560 files, 160,802 lines; 8,280 of 8,366 classes and functions documented
+561 files, 161,183 lines; 8,296 of 8,382 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -462,6 +462,7 @@
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
 - `core/theme_actions.py`: What the Theme Studio changes (DEC-0136, web/studio.html), through the action system so each change is approved and undoable:
 - `core/theme_design.py`: MIA designs a theme from a description (DEC-0136, Theme Studio step 4; Zac 2026-11-08: "allow MIA to help design new themes from descriptions"): "a rainy Tokyo night", "calm ocean glass", "loud 2000s rave". The words are read in code, not by the model (MIA's facts are assembled in code), so the same
+- `core/theme_picture.py`: A theme from a picture (prompt 24 §9, appearance phase A7, DEC-0184): "make a theme from this photo" or "from my ocean painting". The palette is read in code (Pillow's median cut), never chosen by the model, so the same picture always gives the same theme, and the result goes through the same checks
 - `core/themes.py`: MIA's themes (DEC-0136, Zac 2026-11-08: "One MIA. Multiple interface experiences. Unlimited visual possibilities."). A theme is data, not code: the design tokens it changes (colours, panels, type, shape, motion, an extra backdrop layer), the material its panels are made of, and the 3D room's light. 
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?"). `week_days` is the Dashboard's Your Week (DEC-0153): toda
@@ -571,7 +572,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,393 lines; 54 of 54 classes and functions documented
+2 files, 4,434 lines; 55 of 55 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -852,7 +853,7 @@
 
 ## tests/: the test suite: what each part must do
 
-495 files, 83,515 lines; 7,072 of 7,081 classes and functions documented
+496 files, 83,669 lines; 7,084 of 7,093 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1249,6 +1250,7 @@
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared.
 - `tests/test_theme_manager.py`: Unit tests for gui.theme_manager. Pure string-lookup logic — no Qt event loop needed.
+- `tests/test_theme_picture.py`: Appearance phase A7's first part (prompt 24 §9, DEC-0184): a theme from a picture, read in code (core/theme_picture.py), and the theme in use nudged by plain words (core/theme_design.adjust). The reference picture gives a blue glass close to Aquatic; a sunset's orange never becomes the accent (it co
 - `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell. The Theme Studio builds a theme from a few choices, refuses warni
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant.
 - `tests/test_tool_gate.py`: The Assistant's tool gate (2026-11-10): only a tool offered this turn runs, a tool whose name reads like a lookup but changes records counts as a change (undo, screens refresh), and a change the model asks for right after a lookup that brought in outside text (a web page, a search, the inbox) is hel
@@ -1352,7 +1354,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-112 files, 20,853 lines
+112 files, 20,891 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

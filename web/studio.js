@@ -6,7 +6,9 @@
  * (core/themes.build_theme, the arithmetic mirrored in tokensFrom below for the live preview) and makes the checks
  * that count: an accent that reads as a warning colour, or text too faint to read. The checks here only say so early.
  * Mix Two takes one theme with chosen parts of another (MIA.mixThemes, core/themes.combine); Sounds picks the
- * theme's chimes (web/sound.js sets, opt-in). Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak; Export
+ * theme's chimes (web/sound.js sets, opt-in). Describe One asks MIA to design a theme (MIA.designTheme, core/theme_design.py) and loads it here to tweak;
+ * From a Picture (A7) does the same from a photo or one of MIA's paintings (MIA.themeFromPicture, core/theme_picture.py,
+ * its colours read on the PC); Export
  * downloads what's on screen as a mia-theme/1 file; Import proposes `theme.import`, which core reads and checks.
  * Backdrop: MIA paints a picture on the PC's graphics card (MIA.paint, core/art_studio.py, DEC-0140); pick one of
  * your paintings (or none) and how strongly it shows; it's part of the theme you save.
@@ -143,6 +145,40 @@
       designNote = made.summary; designedName = made.name;
       paint();
     } catch (e) { MIAShell.say(e.message); }
+  }
+
+  // A theme from a picture (A7, core/theme_picture.py): a photo of yours or one of MIA's paintings; its colours are read
+  // on the PC, and it loads here to look at and tweak like a design; nothing is kept until you save.
+  async function fromPicture(source) {
+    try {
+      const made = await MIA.themeFromPicture(source);
+      base = data.themes.find((t) => t.id === made.base) || data.themes[0];
+      picks = Object.assign({}, made.choices, { palette: (made.choices.palette || []).slice() });
+      own = null;
+      designNote = made.summary; designedName = made.name;
+      paint();
+    } catch (e) { MIAShell.say(e.message); }
+  }
+
+  function pictureFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 12 * 1024 * 1024) { MIAShell.say("That picture is too big (over 12 MB). Try a smaller copy."); return; }
+    const reader = new FileReader();
+    reader.onload = () => fromPicture({ image: reader.result, name: file.name.replace(/\.[^.]+$/, "").slice(0, 40) });
+    reader.readAsDataURL(file);
+  }
+
+  function pictureRow() {
+    const paintings = ((art && art.items) || []);
+    return el("div", { class: "st-describe-row st-picture-row" },
+      el("label", { class: "btn st-import" }, "From a Picture",
+        el("input", { type: "file", accept: "image/png,image/jpeg,image/webp",
+          "aria-label": "Make a theme from a picture", onchange: pictureFile })),
+      paintings.length ? el("select", { "aria-label": "Make a theme from one of MIA's paintings",
+        onchange: (e) => { if (e.target.value) fromPicture({ art: e.target.value }); } },
+        el("option", { value: "" }, "or one of MIA's paintings…"),
+        ...paintings.map((i) => el("option", { value: i.id }, i.description.slice(0, 60)))) : null);
   }
 
   // ------------------------------------------------------------ paintings (DEC-0140, core/art_studio.py)
@@ -353,6 +389,7 @@
           placeholder: "A rainy Tokyo night. Calm ocean glass. Loud 2000s rave.", "aria-label": "Describe a theme",
           onkeydown: (e) => { if (e.key === "Enter") designIt(); } }),
         el("button", { type: "button", class: "btn", onclick: designIt }, "Design It")),
+      pictureRow(),
       designNote ? el("p", { class: "st-designed", role: "status" }, designNote) : null);
     $("panel").replaceChildren(
       lookSection(),
