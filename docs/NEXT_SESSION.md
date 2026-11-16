@@ -82,7 +82,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   New Opus work joins a fresh list below this line.
   14. M5, each app's status (core/app_ecosystem.statuses, _breakages, _recovered; the Apps page's chips);
   15. Prompt 04 (docs/mia_os/MIA_OS_SYSTEM_*.md and the twelve others, tools/requirements_matrix.py);
-  16. prompt 24's plan (docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md, DEC-0183, DEC-0184). Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  16. prompt 24's plan (docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md, DEC-0183, DEC-0184);
+  17. appearance A2 (web/tokens.css tiers, web/themes.css glass, core/themes.clamp_tier, tools/css_colours.py). Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).
@@ -105,7 +106,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   layout as three settings, the orb's state from real activity. DEC-0183 (glass identity, direction approved by
   his handoff), DEC-0184 proposed. **Zac answered:** Aquatic is the default, based on his reference picture (kept in
   `docs/design/reference/`, its palette read in code: APPEARANCE_ENGINE §I); Claude builds, Muse refines.
-  Next: phase A2 (Opus). Fable reviews it (queue item 16).
+
+- **Built 2026-11-16 (Opus): appearance phase A2** (K-0253): the five glass surface tiers as tokens
+  (`web/tokens.css`), the glass material drawn from them (`web/themes.css`), clamped per tier in `core/themes.py`
+  (`TIER_RANGES`: a dialog can't go below 0.8 opacity), chart and gradient tokens, a hard-coded-colour baseline
+  that may only fall (`tools/css_colours.py`, `work/css_colour_baseline.json`). Stark unchanged. Next: A3, the
+  engine as theme / colour scheme / layout (Opus, Fable reviews). Fable reviews it (queue item 16).
 - **Prompt 04 done (2026-11-15, Opus):** the requirements and system philosophy, sixteen documents in
   `docs/mia_os/` (start at `MIA_OS_SYSTEM_PHILOSOPHY.md` and `MIA_OS_SYSTEM_REQUIREMENTS.md`). 194 requirements,
   each with priority, release tier, status against the code, verification and owner prompt; the matrix is generated

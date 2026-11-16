@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1443 files, 320,856 lines; 1443 files describe themselves; 17,624 of 17,719 classes and functions are documented.
+1445 files, 321,026 lines; 1445 files describe themselves; 17,635 of 17,730 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-558 files, 159,876 lines; 8,254 of 8,340 classes and functions documented
+558 files, 159,910 lines; 8,255 of 8,341 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -802,7 +802,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-42 files, 4,707 lines; 149 of 149 classes and functions documented
+43 files, 4,772 lines; 153 of 153 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -812,6 +812,7 @@
 - `tools/ci_failures.py`: Says which tests failed in CI where anyone reading the run can see it (2026-11-10). The Actions job log needs a sign-in, but a check run's annotations don't, so this reads pytest's JUnit report and prints one GitHub `::error` annotation per failed test (name and the first lines of why), up to LIMIT 
 - `tools/cloud_tests.py`: Runs the test suite in a place without the PC's libraries (a cloud session: no PySide6, pyserial, mutagen, libzim...). Each library on STUBBED that can't be imported is replaced by an empty stand-in before pytest starts, so tests that only import a Qt module on the way (the parity checks, the voice 
 - `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p
+- `tools/css_colours.py`: Hard-coded colours in MIA's style sheets (prompt 24 phase A2, DEC-0184; `docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` D): every colour belongs in `web/tokens.css`, so a theme or colour scheme can change it and high contrast can override it. The ones written straight into the other sheets (a `#hex`, `rgb
 - `tools/data_key.py`: MIA's data key for sealed files (DEC-0126, core/at_rest.py), from the command line on the PC:
 - `tools/dependency_audit.py`: Known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). Lists every Python package installed where MIA runs (name and version) and asks OSV (https://osv.dev, the open vulnerability database Google runs; the same data pip-audit uses) which have published advisories, then says eac
 - `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s
@@ -849,7 +850,7 @@
 
 ## tests/: the test suite: what each part must do
 
-494 files, 83,173 lines; 7,047 of 7,056 classes and functions documented
+495 files, 83,244 lines; 7,053 of 7,062 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -872,6 +873,7 @@
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
 - `tests/test_app_ecosystem.py`: MIA's understanding of her own apps (migration phase M2, DEC-0178; core/app_ecosystem.py, core/assistant_app_registry_actions.py): the inventory, one app's parts, which app does something, and the check (health, overlaps, gaps) are answered from the manifests and the runtime; a failing job is pinned
 - `tests/test_app_registry.py`: The Application Registry (DEC-0175, DEC-0178, migration phase M1; core/app_registry.py, apps/*/manifest.json): every MIA-native app has one manifest that matches the published schema; together the manifests claim every tool, action kind, store, job and daily check in the code exactly once, and name 
+- `tests/test_appearance.py`: The glass design system's foundation (prompt 24 phase A2, DEC-0183, DEC-0184; web/tokens.css, web/themes.css, core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens with defaults inside their ranges; the glass material draws every tier from its tokens; a theme can set a tier o
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.

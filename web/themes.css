@@ -5,17 +5,57 @@
  * that aren't the default. Only surfaces change: meaning colours (amber, red, green, gold) come from tokens a theme
  * can't set, and high contrast (tokens.css) wins over every material.
  */
-:root[data-material="glass"]:not([data-contrast="high"]) :is(.glass, .row, .figure, .stat-tile, .asset-card, .holo, .n3-card, .strip .cell) {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025));
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 32px rgba(0, 0, 0, 0.32);
+/* Glass (DEC-0183): each surface takes its tier's tokens (web/tokens.css), so a theme or a preset changes the
+   look by numbers, never new rules. The panel colour sits under a light sheen; blur only on screens wider than
+   860 px (frosting is costly to scroll on a phone, concept.css); reduced transparency makes every tier solid. */
+:root[data-material="glass"]:not([data-contrast="high"]) :is(.glass) {
+  background: linear-gradient(160deg, rgba(var(--rgb-light), var(--surface-primary-tint)), rgba(var(--rgb-light), calc(var(--surface-primary-tint) / 3))), rgba(var(--rgb-panel), var(--surface-primary-alpha));
+  border: 1px solid rgba(var(--rgb-light), var(--surface-primary-border));
+  box-shadow: inset 0 1px 0 rgba(var(--rgb-light), var(--surface-primary-light)), 0 10px 32px rgba(var(--rgb-shadow), var(--surface-primary-shadow));
 }
-@media (min-width: 861px) {  /* frosting is costly to scroll on a phone (concept.css), so only on bigger screens */
-  :root[data-material="glass"]:not([data-contrast="high"]) :is(.glass, .holo, .n3-card, .stat-tile) {
-    backdrop-filter: blur(16px) saturate(1.25); -webkit-backdrop-filter: blur(16px) saturate(1.25);
+:root[data-material="glass"]:not([data-contrast="high"]) :is(.row, .figure, .asset-card, .stat-tile, .strip .cell) {
+  background: linear-gradient(160deg, rgba(var(--rgb-light), var(--surface-secondary-tint)), rgba(var(--rgb-light), calc(var(--surface-secondary-tint) / 3))), rgba(var(--rgb-panel), var(--surface-secondary-alpha));
+  border: 1px solid rgba(var(--rgb-light), var(--surface-secondary-border));
+  box-shadow: inset 0 1px 0 rgba(var(--rgb-light), var(--surface-secondary-light)), 0 10px 32px rgba(var(--rgb-shadow), var(--surface-secondary-shadow));
+}
+:root[data-material="glass"]:not([data-contrast="high"]) :is(.holo, .n3-card) {
+  background: linear-gradient(160deg, rgba(var(--rgb-light), var(--surface-deep-tint)), rgba(var(--rgb-light), calc(var(--surface-deep-tint) / 3))), rgba(var(--rgb-panel), var(--surface-deep-alpha));
+  border: 1px solid rgba(var(--rgb-light), var(--surface-deep-border));
+  box-shadow: inset 0 1px 0 rgba(var(--rgb-light), var(--surface-deep-light)), 0 10px 32px rgba(var(--rgb-shadow), var(--surface-deep-shadow));
+}
+:root[data-material="glass"]:not([data-contrast="high"]) :is(.confirm, .account-menu, #mia-status) {
+  background: linear-gradient(160deg, rgba(var(--rgb-light), var(--surface-floating-tint)), rgba(var(--rgb-light), calc(var(--surface-floating-tint) / 3))), rgba(var(--rgb-panel), var(--surface-floating-alpha));
+  border: 1px solid rgba(var(--rgb-light), var(--surface-floating-border));
+  box-shadow: inset 0 1px 0 rgba(var(--rgb-light), var(--surface-floating-light)), 0 10px 32px rgba(var(--rgb-shadow), var(--surface-floating-shadow));
+}
+:root[data-material="glass"]:not([data-contrast="high"]) :is(.chip:not(.chip-ok, .chip-soon, .chip-bad), .btn-ghost) {
+  background: linear-gradient(160deg, rgba(var(--rgb-light), var(--surface-interactive-tint)), rgba(var(--rgb-light), calc(var(--surface-interactive-tint) / 3))), rgba(var(--rgb-panel), var(--surface-interactive-alpha));
+  border: 1px solid rgba(var(--rgb-light), var(--surface-interactive-border));
+  box-shadow: inset 0 1px 0 rgba(var(--rgb-light), var(--surface-interactive-light)), 0 10px 32px rgba(var(--rgb-shadow), var(--surface-interactive-shadow));
+}
+@media (min-width: 861px) {
+  :root[data-material="glass"]:not([data-contrast="high"]) :is(.glass) {
+    backdrop-filter: blur(var(--surface-primary-blur)) saturate(1.25); -webkit-backdrop-filter: blur(var(--surface-primary-blur)) saturate(1.25);
+  }
+  :root[data-material="glass"]:not([data-contrast="high"]) :is(.row, .figure, .asset-card, .stat-tile, .strip .cell) {
+    backdrop-filter: blur(var(--surface-secondary-blur)) saturate(1.25); -webkit-backdrop-filter: blur(var(--surface-secondary-blur)) saturate(1.25);
+  }
+  :root[data-material="glass"]:not([data-contrast="high"]) :is(.holo, .n3-card) {
+    backdrop-filter: blur(var(--surface-deep-blur)) saturate(1.25); -webkit-backdrop-filter: blur(var(--surface-deep-blur)) saturate(1.25);
+  }
+  :root[data-material="glass"]:not([data-contrast="high"]) :is(.confirm, .account-menu, #mia-status) {
+    backdrop-filter: blur(var(--surface-floating-blur)) saturate(1.25); -webkit-backdrop-filter: blur(var(--surface-floating-blur)) saturate(1.25);
+  }
+  :root[data-material="glass"]:not([data-contrast="high"]) :is(.chip:not(.chip-ok, .chip-soon, .chip-bad), .btn-ghost) {
+    backdrop-filter: blur(var(--surface-interactive-blur)) saturate(1.25); -webkit-backdrop-filter: blur(var(--surface-interactive-blur)) saturate(1.25);
   }
 }
-:root[data-material="glass"]:not([data-contrast="high"]) .side { background: rgba(255, 255, 255, 0.035); border-color: rgba(255, 255, 255, 0.08); }
+@media (prefers-reduced-transparency: reduce) {  /* the OS asks for less see-through: every tier solid */
+  :root[data-material="glass"] :is(.glass, .row, .figure, .asset-card, .stat-tile, .strip .cell, .holo, .n3-card, .confirm, .account-menu, #mia-status, .chip:not(.chip-ok, .chip-soon, .chip-bad), .btn-ghost) {
+    background: rgb(var(--rgb-panel)); backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+}
+:root[data-material="glass"]:not([data-contrast="high"]) .side { background: rgba(var(--rgb-light), 0.035); border-color: rgba(var(--rgb-light), 0.08); }
 
 :root[data-material="chrome"]:not([data-contrast="high"]) :is(.glass, .row, .figure, .stat-tile, .asset-card, .holo, .n3-card, .strip .cell) {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(var(--rgb-panel-2), 0.88) 38%, rgba(var(--rgb-panel), 0.92));

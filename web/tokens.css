@@ -58,6 +58,33 @@
   --accent-deep: #0b86ad;
   --accent-glow: rgba(var(--rgb-accent), 0.28);
 
+  /* ------------------------------------------------------------------
+     Glass surfaces, five tiers (DEC-0183, DEC-0184; docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md C). Used
+     only when a theme's material is glass (web/themes.css); a theme sets them within the ranges in
+     core/themes.py (TIER_RANGES). Per tier: the panel colour's opacity under the glass (alpha), the
+     light tint over it (tint; the bottom of the sheen is a third of it), the blur in px, the edge line,
+     the inner top light, and the drop shadow's strength.
+     primary: an app's main panels; secondary: cards and rows inside them; floating: dialogs, menus, the
+     approval card (always the most opaque); deep: hero panels; interactive: quiet buttons and chips (never the
+     status chips: their green, amber and red borders carry meaning).
+     ------------------------------------------------------------------ */
+  --rgb-light: 255, 255, 255;  /* the sheen and edge light on glass */
+  --rgb-shadow: 0, 0, 0;  /* drop shadows */
+  --surface-primary-alpha: 0; --surface-primary-tint: 0.075; --surface-primary-blur: 16px; --surface-primary-border: 0.14; --surface-primary-light: 0.12; --surface-primary-shadow: 0.32;
+  --surface-secondary-alpha: 0; --surface-secondary-tint: 0.075; --surface-secondary-blur: 0px; --surface-secondary-border: 0.14; --surface-secondary-light: 0.12; --surface-secondary-shadow: 0.32;
+  --surface-floating-alpha: 0.94; --surface-floating-tint: 0.06; --surface-floating-blur: 20px; --surface-floating-border: 0.18; --surface-floating-light: 0.14; --surface-floating-shadow: 0.45;
+  --surface-deep-alpha: 0; --surface-deep-tint: 0.075; --surface-deep-blur: 16px; --surface-deep-border: 0.14; --surface-deep-light: 0.12; --surface-deep-shadow: 0.32;
+  --surface-interactive-alpha: 0; --surface-interactive-tint: 0.06; --surface-interactive-blur: 0px; --surface-interactive-border: 0.18; --surface-interactive-light: 0.10; --surface-interactive-shadow: 0;
+
+  /* The colour scheme's accents beyond the one accent (DEC-0184): a second and third for gradients and
+     charts. Stark keeps them on its cyan family; a scheme sets its own. */
+  --rgb-accent-2: 11, 134, 173; --accent-2: #0b86ad;
+  --rgb-accent-3: 166, 236, 255; --accent-3: #a6ecff;
+  --gradient-accent: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+  /* Charts: series colours in order (a scheme's chart palette); meaning colours are never series colours. */
+  --chart-1: var(--accent); --chart-2: var(--accent-2); --chart-3: var(--accent-3);
+  --chart-4: #8ea3b8; --chart-5: #5f7184; --chart-6: #c9d6e2;
+
   /* Earned gold: celebration only (DEC-0014: loud about progression) */
   --rgb-win: 246, 196, 83;
   --win: #f6c453;

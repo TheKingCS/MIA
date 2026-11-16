@@ -12,7 +12,8 @@ Plan: docs/design/EXPERIENCES_AND_THEMES.md.
 
 - `THEMES`: the built-in ones: Stark (DEC-0023, the default), Y2K Cyber,
   Cyberpunk, Glass. First cuts for Muse to refine (DEC-0017).
-- `TOKENS`, `MATERIALS`, `ROOM`: what a theme may change. Meaning colours
+- `TOKENS`, `MATERIALS`, `ROOM`: what a theme may change. Since prompt 24 (DEC-0184) that includes the five glass
+  surface tiers' values (`TIER_RANGES`, clamped by `clamp_tier`), the second and third accents and the chart colours. Meaning colours
   (amber needs you, red errors, green ok, gold rewards, rarity, area hues)
   are not in the list, so no theme can hide a warning (DEC-0014, DEC-0130);
   high contrast still overrides every theme (web/tokens.css).
@@ -59,7 +60,35 @@ TOKENS = frozenset({
     "--rgb-accent", "--accent", "--accent-soft", "--accent-deep",
     "--radius", "--radius-sm", "--font", "--font-mono", "--label-track", "--ease", "--dur-fast", "--dur",
     "--theme-backdrop",
+    "--rgb-accent-2", "--accent-2", "--rgb-accent-3", "--accent-3",
+    "--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5", "--chart-6",
 })
+TIER_TOKENS = frozenset(f"--surface-{tier}-{part}" for tier in ("primary", "secondary", "floating", "deep", "interactive")
+                        for part in ("alpha", "tint", "blur", "border", "light", "shadow"))
+TOKENS = TOKENS | TIER_TOKENS
+# The glass tiers' ranges (DEC-0184; docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md C): a theme's value is clamped into them,
+# so no tier can be made unreadable (floating, what he must read now, is always nearly opaque). Blur in px.
+TIER_RANGES = {
+    "alpha": {"primary": (0.0, 0.92), "secondary": (0.0, 0.85), "floating": (0.80, 0.97), "deep": (0.0, 0.95),
+              "interactive": (0.0, 0.80)},
+    "blur": {"primary": (0, 24), "secondary": (0, 16), "floating": (0, 28), "deep": (0, 32), "interactive": (0, 12)},
+    "tint": (0.0, 0.20), "border": (0.0, 0.40), "light": (0.0, 0.40), "shadow": (0.0, 0.70),
+}
+
+
+def clamp_tier(key: str, value: str) -> str:
+    """Pure logic. A tier token's value clamped into TIER_RANGES ("" when it isn't a number): `--surface-floating-alpha`
+    "0.3" becomes "0.8"; a blur keeps its px."""
+    _, _, rest = key.partition("--surface-")
+    tier, _, part = rest.partition("-")
+    try:
+        number = float(str(value).strip().removesuffix("px"))
+    except ValueError:
+        return ""
+    span = TIER_RANGES[part]
+    low, high = span[tier] if isinstance(span, dict) else span
+    number = max(low, min(high, number))
+    return f"{number:g}px" if part == "blur" else f"{number:g}"
 # What panels are made of (web/themes.css draws each): solid graphite, glass, chrome, wire.
 MATERIALS = ("solid", "glass", "chrome", "wire")
 # A theme's chimes for wins (web/sound.js, Theme Studio step 5): "classic" is MIA's own; the others are opt-in, picked
@@ -303,7 +332,8 @@ def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", 
 def clean_theme(data: dict) -> dict:
     """Pure logic. A theme's data as the page may use it: {id, name, line, tokens, material, room}, keeping only the
     tokens and room settings a theme may change, dropping any value that could break out of CSS (url(), braces,
-    semicolons, angle brackets, backslashes) or runs long, clamping the room's levels, and keeping only #rrggbb
+    semicolons, angle brackets, backslashes) or runs long, clamping the glass tiers' values (`clamp_tier`) and the
+    room's levels, and keeping only #rrggbb
     colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0140), and the sound
     set only as one of SOUND_SETS (else classic). Raises ValueError without an id or name."""
     theme_id = str(data.get("id") or "").strip()
@@ -314,6 +344,10 @@ def clean_theme(data: dict) -> dict:
     for key, value in (data.get("tokens") or {}).items():
         value = str(value).strip()
         if key in TOKENS and value and len(value) <= 600 and not _BAD.search(value):
+            if key in TIER_TOKENS:
+                value = clamp_tier(key, value)
+                if not value:
+                    continue
             tokens[key] = value
     room: dict = {}
     raw = data.get("room") or {}

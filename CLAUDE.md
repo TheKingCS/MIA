@@ -298,8 +298,13 @@ other people in the house.
   DEC-0023 (2026-10-15) supersedes that look: the Stark engineering
   interface (`docs/design/STARK_INTERFACE.md`). `web/tokens.css` is the
   theme: one cyan accent, graphite layers, never a hard-coded color
-  (use a token or `rgba(var(--rgb-accent), a)`); the frame's icons come
-  from `web/icons.js`. The concept's layouts stay.
+  (use a token or `rgba(var(--rgb-accent), a)`; `tests/test_appearance.py`
+  fails when a style sheet gains one, `tools/css_colours.py`); the frame's
+  icons come from `web/icons.js`. The concept's layouts stay.
+  DEC-0183 (2026-11-15): glass is the identity, Aquatic (from Zac's
+  reference picture) the default to come; the glass material is drawn from
+  five surface tiers in `web/tokens.css` (primary, secondary, floating,
+  deep, interactive), each clamped by `core/themes.py`'s `TIER_RANGES`.
   DEC-0124 (2026-11-07): the desktop window opens on the web front end,
   edge to edge (`gui/main_window.py` web mode, `gui.web_first`); the Qt
   screens are the classic view (Ctrl+Shift+C, "Main screen" back), and a

@@ -4,6 +4,10 @@
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-15 (World Intelligence proposed; sealed files on Linux), by claude.*
 
+**2026-11-16 (Claude on Opus: the glass look's foundation).**
+- **Built:** the five kinds of glass surface (main panels, cards, dialogs and menus, hero panels, buttons and chips) now each have their own settings for see-through, blur, edge, light and shadow, so the coming Aquatic look and the other presets are just numbers. A dialog can never be made too see-through to read. Status chips keep their meaning colours. The current look is unchanged.
+- **Next:** splitting a look into three separate choices (environment, colours, layout), then the six presets.
+
 **2026-11-15, latest (Zac's answers).**
 - **Approved:** what MIA OS is, how requirements are judged, the first MIA OS's scope, the autonomy levels; the two-person requirements set aside; Aquatic as the default look, built from his reference picture; Claude builds the look's machinery and Muse refines it.
 - **Decided:** what "stop" and "stop everything" do (`docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md` §4), with Zac's change: MIA may adjust the greenhouse's controllers (asked first unless he grants it, the node's safety limits always holding), and a stop never touches the greenhouse (DEC-0185).
