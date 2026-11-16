@@ -42,7 +42,9 @@ notification or marking it useful (`notification.opened`, from the
 notifications screen or the "that was useful" tool), and any part of MIA
 that sees the person act on what a message was about (World Intelligence:
 saving or researching a find). Each is written on the message's log entry
-(`opened_at`, `acted_at`), the same way a dismissal is.
+(`opened_at`, `acted_at`), the same way a dismissal is. Seeing one and
+saying it isn't for them (`passed_at`, World Intelligence's "not for me")
+counts as passing it over.
 
 **Learning from being ignored** (2026-09-28): each delivered message
 remembers its notification. Closing one with its X (not "clear all", not
@@ -197,7 +199,7 @@ def _topic_sends_today(state: GateState, topic: str, now: datetime) -> int:
 def learned_allowance(log: list[dict], topic: str, now: datetime, base: Optional[int] = None) -> tuple[int, str]:
     """Pure logic. How many messages of this kind a day she'll offer now, and why, from what the person did with the
     last few (DEC-0171). Each one sent in the last 30 days counts as engaged (opened, found useful, acted on), passed
-    over (dismissed, or nothing done with it for two days) or not yet known. With fewer than three known, it's the
+    over (dismissed, said to be not for them, or nothing done with it for two days) or not yet known. With fewer than three known, it's the
     starting pace. Mostly engaged doubles it; mostly passed over halves it (never below one: a kind that keeps being
     dismissed is paused instead, by paused_topics)."""
     base = int(base if base is not None else TOPIC_DAILY.get(topic, DEFAULT_TOPIC_DAILY))
@@ -208,9 +210,9 @@ def learned_allowance(log: list[dict], topic: str, now: datetime, base: Optional
         sent_at = _parse(entry.get("at", ""))
         if sent_at is None or now - sent_at > _LEARN_WITHIN:
             continue
-        if entry.get("opened_at") or entry.get("acted_at"):
+        if entry.get("acted_at") or (entry.get("opened_at") and not entry.get("passed_at")):
             engaged += 1
-        elif entry.get("dismissed_at") or now - sent_at >= _IGNORED_AFTER:
+        elif entry.get("passed_at") or entry.get("dismissed_at") or now - sent_at >= _IGNORED_AFTER:
             passed += 1
     known = engaged + passed
     if known < _LEARN_MIN:
@@ -570,22 +572,26 @@ class CommunicationGate:
 
     def note_engagement(self, topic: str = "", notification_id: str = "", how: str = "acted",
                         now: Optional[datetime] = None) -> bool:
-        """The person engaged with something she said on her own (DEC-0171): `how` is "opened" (they opened it or
-        found it useful) or "acted" (they did something with what it was about). Marks the message carrying
-        `notification_id`, else the latest of that `topic` not marked yet. True when one was marked."""
+        """What the person did with something she said on her own (DEC-0171): `how` is "opened" (they opened it or
+        found it useful), "acted" (they did something with what it was about) or "passed" (they saw it and said it
+        wasn't for them: it lowers that kind's pace like a dismissal, without counting toward a break). Marks every message carried by
+        `notification_id` (several kinds can go out as one notification, and opening it is engaging with each, just as
+        dismissing it counts against each), else the latest of that `topic` not marked yet. True when one was marked."""
         now = now or self.clock()
-        field_name = "opened_at" if how == "opened" else "acted_at"
-        target = None
+        field_name = {"opened": "opened_at", "passed": "passed_at"}.get(how, "acted_at")
+        targets = []
         for entry in reversed(self._log):
             if entry.get("action") != ACT or entry.get(field_name):
                 continue
-            if (notification_id and entry.get("notification_id") == notification_id) or (
-                    not notification_id and topic and entry.get("topic") == topic):
-                target = entry
+            if notification_id and entry.get("notification_id") == notification_id:
+                targets.append(entry)
+            elif not notification_id and topic and entry.get("topic") == topic:
+                targets.append(entry)
                 break
-        if target is None:
+        if not targets:
             return False
-        target[field_name] = now.isoformat(timespec="seconds")
+        for target in targets:
+            target[field_name] = now.isoformat(timespec="seconds")
         try:
             self._save(now)
         except OSError:

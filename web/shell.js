@@ -85,6 +85,10 @@
       if (v == null || v === false) continue;
       if (k === "class") node.className = v;
       else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+      // A link or source only ever goes to a page, a file or an ordinary address: never a script. Titles and links
+      // that came from outside MIA (feeds, search results, mail) reach pages as data, so this holds for all of them.
+      // (A picture or sound MIA made herself may still be a data: source; a link never is.)
+      else if ((k === "href" || k === "src") && (k === "href" ? /^[\s\u0000-\u001f]*(javascript|vbscript|data)\s*:/i : /^[\s\u0000-\u001f]*(javascript|vbscript)\s*:/i).test(String(v))) continue;
       else node.setAttribute(k, v === true ? "" : v);
     }
     for (const c of children.flat()) {

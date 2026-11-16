@@ -49,7 +49,23 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   12. M2, her apps asked about (core/app_ecosystem.py, core/assistant_app_registry_actions.py, the Apps page section);
   13. M3, the app list from the manifests (core/web_surfaces._apps_from_manifests, tools/app_manifests._keep_hand_fields,
       the phone bundle in android-phone/app/build.gradle.kts).
-  Mark each reviewed here with what changed. Copilot, Claude, ChatGPT or Muse may check pieces independently.
+  **All thirteen reviewed by Fable, 2026-11-15 (K-0245). What changed:**
+  - 1 (the gate): opening a combined message now credits every kind it carried; "not for me" lowers a kind's pace
+    instead of raising it (`passed_at`).
+  - 2, 5, 6 (World Intelligence): a find's link is kept only when it's a web address, and `web/shell.js` refuses a
+    script as a link on every page; the finds tool is listed as outside text (`tool_loop.OUTSIDE_TOOLS`: a guard, its answer isn't read back by the
+    model in the same turn today);
+    MIA's own watches look for a record's meaningful words, not "the ... by".
+  - 3 (the Living System audit): section 14, four claims corrected, one missing invariant row named.
+  - 4 (homeostasis, scheduler): no change needed.
+  - 7 (needs): a changed quantity, ceiling or amount on hand is checked like a new one.
+  - 8 (prices): measurements ("120VAC", "2X4X8") are never model numbers (unlike products were "identical");
+    trip figures can't be zero or negative; a price's link is only a web address.
+  - 9, 10 (Prompt 03, prompt 22's plan): decision headings marked approved; the security page's outside-text
+    claim corrected.
+  - 11 to 13 (the registry): the running check no longer rebuilds the PC's tool list on every Apps page load
+    (it failed on the phone and a windowless runtime); comparing records with the code stays the tests' job.
+  New Opus work joins a fresh list below this line. Copilot, Claude, ChatGPT or Muse may check pieces independently.
 - **Built 2026-11-15 (Opus): World Intelligence W2 and W1b** (K-0238): finds ranked by his own goals, projects,
   missions, the homestead plan's next step, learning paths and equipment, with the record named; MIA's own watches,
   one per open record, matched on the PC (nothing sent). Added to Fable's queue (item 5).

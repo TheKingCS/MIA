@@ -129,3 +129,13 @@ def test_a_run_fetches_each_feed_once_for_every_watch_that_reads_it():
     assert sorted(calls) == ["electrek", "hobby_farms"]
     assert [len(r["items"]) for r in results] == [2, 2]
     assert world_sources.source("hobby_farms").kind == "feed"
+
+
+def test_a_watch_mia_makes_looks_for_the_meaningful_words_of_a_records_name():
+    """Fable's review (DEC-0174): a find must hold every word of a watch's phrase, and none says "the ... by"."""
+    from core.world_intel import Watch, _own_words, matches
+
+    assert _own_words("Build the greenhouse by spring") == "greenhouse spring"
+    assert _own_words("The plan for my goals") == ""  # nothing to look for: no watch is made
+    watch = Watch("w", "x", _own_words("Build the greenhouse by spring"))
+    assert matches(watch, {"title": "Greenhouse kits for spring planting", "summary": ""})

@@ -48,5 +48,10 @@ downgrade needs Zac's approval. MIA's own updates come with the signed OS image 
 ## 5. Risks recorded
 
 - **R-04 stays open:** "Add Module" runs code with full privileges until the extension host exists.
-- Prompt injection through app data: outside text is always `untrusted()` to the model, and a change it asks for is
-  held (`browser_safety.carries_outside_text`); capabilities, not text, decide what happens.
+- Prompt injection through app data: outside text reaches the model framed by `untrusted()`, or from a tool listed
+  in `core/tool_loop.OUTSIDE_TOOLS` (mail, World Intelligence's finds), and a change asked for in the same turn is
+  held; capabilities, not text, decide what happens. *Fable's review (2026-11-15): the finds tool wasn't listed.
+  Today its answer is said to the person, not read back by the model in the same turn (its name makes it run as
+  a change), so listing it guards the day that changes. Nothing yet makes a new tool say whether it returns outside text: M4's capability tags add that.*
+- A link that came from outside (a feed, a search result) is kept only when it's a web address
+  (`core/good_news.web_link`), and the pages' element maker (`web/shell.js`) refuses a script as a link.

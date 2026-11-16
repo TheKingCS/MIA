@@ -158,7 +158,7 @@ def _find(context, params):
 
 
 def _engaged(context, how: str) -> None:
-    """Tells the gate the person did something with a find (DEC-0171): saving engages; "not for me" was seen."""
+    """Tells the gate what the person did with a find (DEC-0171): saving engages; "not for me" passes."""
     gate = getattr(context, "communication", None)
     if gate is not None:
         gate.note_engagement(topic=TOPIC, how=how)
@@ -173,10 +173,11 @@ def _save_execute(context, params) -> str:
 
 
 def _not_for_me_execute(context, params) -> str:
-    """Does `world_find.not_for_me`: sets it aside; it won't be offered again."""
+    """Does `world_find.not_for_me`: sets it aside (it won't be offered again) and tells the gate it was passed over,
+    which eases how often finds are sent."""
     f = _find(context, params)
     _book(context).set_status(f.discovery_id, "not_for_me")
-    _engaged(context, "opened")  # seen and judged: not engaging with the find, but not ignoring the message
+    _engaged(context, "passed")  # seen and judged not for them: that kind's pace eases (never a break by itself)
     return f"Set aside “{f.title}”."
 
 

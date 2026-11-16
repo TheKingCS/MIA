@@ -105,3 +105,17 @@ def test_the_page_and_the_voice_tools_say_the_same_needs(context):
     [greenhouse] = needs(context)  # the finished shed isn't shown
     assert greenhouse["name"] == "Greenhouse" and greenhouse["progress"]["open"] == 2
     assert {line["from"] for line in greenhouse["lines"]} == {"you"}
+
+
+def test_a_need_cant_be_changed_to_no_quantity_or_a_negative_amount(tmp_path):
+    """Fable's review (DEC-0174): adding checked the quantity; changing it didn't."""
+    from unittest.mock import MagicMock
+
+    from core.requirements import RequirementBook
+
+    book = RequirementBook(MagicMock(), data_dir=tmp_path)
+    line = book.add("p1", "2x4 studs", 12)
+    for bad in ({"quantity": 0}, {"quantity": -3}, {"max_price": -1}, {"have": "lots"}, {"quantity": float("nan")}):
+        with pytest.raises(ValueError):
+            book.update(line.requirement_id, **bad)
+    assert RequirementBook(MagicMock(), data_dir=tmp_path).get(line.requirement_id).quantity == 12

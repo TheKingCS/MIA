@@ -116,3 +116,28 @@ def test_comparing_a_need_says_each_stores_fit_and_total_and_what_isnt_known(con
     assert said.startswith("I haven't seen this exact one") and "Amazon $59.99 (exhaust fan)" in said
     said = registry.execute(context, "check_price", {"item": "exhaust fan", "price": "$80", "specs": "1200 cfm 120 V"})
     assert said.startswith("I've only seen it 1 time")
+
+
+def test_a_shared_measurement_is_never_a_shared_model():
+    """Fable's review (DEC-0174): a pump and a box fan that both said 120VAC were judged identical."""
+    from core.product_specs import models, verdict
+
+    assert models("submersible pump 500GPH 120VAC 2x4x8 SCH40 10-PACK 100CFM 12VDC 3-4IN AWG12 IP67") == set()
+    assert models("Acme DB-1200 pump, also sold as WX9000A") == {"DB-1200", "WX9000A"}
+    assert verdict("pump 500GPH 120VAC", "box fan 120VAC 20 inch")["verdict"] != "identical"
+    assert verdict("pump DB-1200 500 gph", "Acme DB-1200 pump")["verdict"] == "identical"
+
+
+def test_a_price_keeps_only_a_web_address_as_its_link_and_trip_figures_cant_be_negative_or_zero(context):
+    """Fable's review (DEC-0174)."""
+    from core import actions
+    from core.actions import ActionError
+
+    assert context.prices.record("2x4 stud", "A store", 3.98, link="javascript:alert(1)").link == ""
+    assert context.prices.record("2x4 stud", "A store", 3.98, link="https://example.org/p").link == "https://example.org/p"
+    trip = actions.ACTION_TYPES["price.trip_cost"]
+    for bad in ({"cost_per_mile": "-1"}, {"mpg": "0", "fuel_price": "2.89"}, {"mpg": "17", "fuel_price": "-2"}):
+        with pytest.raises(ActionError):
+            trip.describe(context, bad)
+        with pytest.raises(ActionError):
+            trip.execute(context, bad)

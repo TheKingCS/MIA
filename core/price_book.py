@@ -186,7 +186,11 @@ class PriceBook:
     def record(self, item: str, store: str, price: float, quantity: float = 1.0, unit: str = "", specs: str = "",
                in_stock: Optional[bool] = None, was: float = 0.0, link: str = "", origin: str = "said",
                how: str = "said", at: Optional[str] = None) -> PriceObservation:
-        """Keeps one price seen; ValueError without an item, a store or a positive price."""
+        """Keeps one price seen (its link only when it's a web address); ValueError without an item, a store or a
+        positive price."""
+        from core.good_news import web_link
+
+        link = web_link(link)
         item, store = " ".join(str(item or "").split()), " ".join(str(store or "").split())
         if not item or not store:
             raise ValueError("What was it, and where?")

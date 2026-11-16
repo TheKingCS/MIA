@@ -160,8 +160,16 @@ def plain(text: str, limit: int = 400) -> str:
     return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
 
 
+def web_link(link: str) -> str:
+    """Pure logic. A link as given when it's an ordinary web address (http or https), else "": what a feed or a
+    search result calls a link is outside text, and only a web address is ever opened or shown as one."""
+    link = str(link or "").strip()
+    return link if re.match(r"https?://[^\s]+$", link, re.IGNORECASE) else ""
+
+
 def parse_feed(xml_text: str, source_id: str) -> list[dict]:
-    """Pure logic. RSS or Atom -> [{source, title, link, summary, published}]."""
+    """Pure logic. RSS or Atom -> [{source, title, link, summary, published}]; an item whose link isn't a web address
+    (`web_link`) is left out."""
     try:
         root = ET.fromstring(xml_text)
     except ET.ParseError:
@@ -177,6 +185,7 @@ def parse_feed(xml_text: str, source_id: str) -> list[dict]:
         if not link:
             found = item.find(f"{atom}link")
             link = found.get("href", "") if found is not None else ""
+        link = web_link(link)
         summary = plain(_text(item.find("description")) or _text(item.find(f"{atom}summary"))
                         or _text(item.find(f"{atom}content")))
         when = _text(item.find("pubDate")) or _text(item.find(f"{atom}updated")) or _text(item.find(f"{atom}published"))

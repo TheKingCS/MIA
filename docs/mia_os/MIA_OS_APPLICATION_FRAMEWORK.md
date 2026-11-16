@@ -117,9 +117,9 @@ flowchart TB
 
 Nothing above is replaced for uniformity's sake (prompt §1).
 
-## 5. Proposed decisions
+## 5. The decisions (approved by Zac, 2026-11-15; see this page's opening for his clarifications)
 
-### DEC-0175 (proposed): Capability-first application model; first-party apps stay in the runtime
+### DEC-0175 (approved as prompt 22's direction): Capability-first application model; first-party apps stay in the runtime
 - **Question:** what is an application, and how do MIA's own apps run?
 - **Options:** (a) each app its own process and package; (b) apps as bundles of surfaces over shared capabilities in
   one runtime; (c) (b) for MIA's own, out-of-process for everything else.
@@ -131,7 +131,7 @@ Nothing above is replaced for uniformity's sake (prompt §1).
   per-store failure handling, the lab's review). **Confidence:** high. **Would change it:** a first-party app that
   needs a different language or real-time guarantees.
 
-### DEC-0176 (proposed): Code that isn't MIA's runs out of process, sandboxed, through the capability contract
+### DEC-0176 (approved): Code that isn't MIA's runs out of process, sandboxed, through the capability contract
 - **Question:** how do extensions and third-party code run safely?
 - **Options:** in-process plugins (today's "Add Module"); out-of-process with a sandbox; WebAssembly components.
 - **Recommended:** out-of-process with bubblewrap or a `systemd-run` sandbox profile, talking to MIA only through the
@@ -142,7 +142,7 @@ Nothing above is replaced for uniformity's sake (prompt §1).
   proof of concept in MIA_OS_APPLICATION_EXTENSION_ARCHITECTURE.md §5.
 - **Until it's built:** "Add Module" stays first-party-only (Zac's own and lab-built), as it is in practice.
 
-### DEC-0177 (proposed): Distribution: MIA in the image, Flatpak for GUI apps, signed extensions, no marketplace
+### DEC-0177 (approved with Zac's clarification): Distribution: MIA in the image, Flatpak for GUI apps, signed extensions, no marketplace
 - **Question:** how are apps packaged and updated?
 - **Recommended:** MIA and its first-party apps ship as one versioned unit inside the OS image (bootc, DEC-0157) on
   the PC and as the runtime service on the Pi; ordinary GUI apps come from Flathub as Flatpaks; MIA extensions are

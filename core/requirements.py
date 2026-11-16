@@ -161,7 +161,8 @@ class RequirementBook:
         return line
 
     def _apply(self, line: Requirement, changes: dict) -> None:
-        """Sets the given fields on a line, checked; ValueError for a value that isn't allowed."""
+        """Sets the given fields on a line, checked; ValueError for a value that isn't allowed (an unknown status,
+        priority or condition; a quantity that isn't a positive number; a ceiling or an amount on hand below zero)."""
         for key, value in changes.items():
             if key in ("requirement_id", "project_id", "created") or key not in Requirement.__dataclass_fields__:
                 continue
@@ -172,7 +173,12 @@ class RequirementBook:
             if key == "condition" and value not in CONDITIONS:
                 raise ValueError(f"A condition is one of: {', '.join(CONDITIONS)}.")
             if key in ("quantity", "max_price", "have"):
-                value = float(value or 0)
+                try:
+                    value = float(value or 0)
+                except (TypeError, ValueError):
+                    raise ValueError(f"The {key.replace('_', ' ')} is a number.") from None
+                if value != value or value in (float("inf"), float("-inf")) or value < 0 or (key == "quantity" and value == 0):
+                    raise ValueError("How many?" if key == "quantity" else f"The {key.replace('_', ' ')} can't be negative.")
             setattr(line, key, value)
 
     def update(self, requirement_id: str, **changes) -> Requirement:

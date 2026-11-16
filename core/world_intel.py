@@ -24,7 +24,7 @@ collects them (`WorldBook.ingest`).
 **Watches MIA makes herself** (`sync_own_watches`, W1b; Zac, 2026-11-15: "it should also automate watching for
 things not just ones I set"): once a day, every open goal, live project, active mission, the homestead plan's next
 step and goal, and each machine owned (its maker and model) gets a watch of its own, marked as hers, with the record
-it serves as its reason. They read whole public feeds and match on the PC, so no word of them leaves it (no search).
+it serves as its reason, looking for the meaningful words of the record's name (`_own_words`). They read whole public feeds and match on the PC, so no word of them leaves it (no search).
 One stops by itself when its record does (finished, removed); one the person stops is never made again for that
 record (`declined`). At most `OWN_MAX` at a time, strongest records first.
 
@@ -422,7 +422,7 @@ class WorldBook:
         with a name that has none yet and wasn't declined, strongest first, up to OWN_MAX; hers whose record is gone
         removed. Returns (made, removed); saves when anything changed, and notes the day."""
         now = now or datetime.now()
-        live = {a.ref: a for a in anchors if a.name and phrases(a.name) and a.ref not in self.declined}
+        live = {a.ref: a for a in anchors if a.name and _own_words(a.name) and a.ref not in self.declined}
         removed = [w for w in self.watches if w.made_by == "mia" and not set(w.refs) & set(live)]
         self.watches = [w for w in self.watches if w not in removed]
         covered = {r for w in self.watches for r in w.refs}
@@ -431,7 +431,7 @@ class WorldBook:
         for a in sorted(live.values(), key=lambda a: -a.weight):
             if a.ref in covered or mine >= OWN_MAX:
                 continue
-            words = " ".join(a.name.replace(",", " ").split())
+            words = _own_words(a.name)
             watch = Watch(uuid.uuid4().hex[:8], a.name[:80], words, [], [], False, OWN_HOURS, 0.0, "mia",
                           f"For {a.label}.", [a.ref], created=now.isoformat(timespec="seconds"))
             self.watches.append(watch)
@@ -475,9 +475,10 @@ class WorldBook:
 
     def ingest(self, results: list[dict], now: Optional[datetime] = None, anchors: Optional[list] = None) -> list[Discovery]:
         """Takes runs' results into the store: each matched item a find (one per dedupe key, the watch added to an
-        existing one), scored against the person's records when `anchors` are given (core/relevance.py), the watch's
+        existing one; its link kept only when it's a web address), scored against the person's records when `anchors` are given (core/relevance.py), the watch's
         last run, counts and refused sources recorded, old unsaved finds let go. Returns the finds that are new."""
         from core import world_sources
+        from core.good_news import web_link
 
         now = now or datetime.now()
         by_key = {d.key: d for d in self.discoveries}
@@ -490,6 +491,7 @@ class WorldBook:
             watch.runs += 1
             watch.refused = sorted(set(watch.refused) | set(result.get("refused", [])))
             for item, hits in result.get("items", []):
+                item = dict(item, link=web_link(item.get("link", "")))  # only ever a web address (outside text)
                 key = dedupe_key(item)
                 seen = by_key.get(key)
                 if seen is not None:
@@ -550,6 +552,16 @@ class WorldBook:
                 d.offered_at = at
         if wanted:
             self._save()
+
+
+def _own_words(name: str) -> str:
+    """Pure logic. What a watch MIA makes for a record looks for: the record's name without its common words ("Build
+    the greenhouse by spring" -> "greenhouse spring"), since a find must hold every word and none says "the ... by";
+    "" when nothing significant is left."""
+    from core import relevance
+
+    kept = [w for w in _WORD.findall(str(name or "").lower()) if relevance.words_of(w)]
+    return " ".join(dict.fromkeys(kept))
 
 
 def _relevant(points: float, why: list, item: dict, anchors: list) -> tuple[float, list, list, str]:

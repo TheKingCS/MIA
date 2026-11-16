@@ -270,4 +270,22 @@ No new workstream. In order:
   time she eases off or a job backs off, Zac's condition).
 - **Checkers** (DEC-0174): Fable reviews all Opus work; Copilot, Claude, ChatGPT and Muse check independently where it
   fits. No Codex.
-- **Still to come:** Fable's challenge review of this document (L5), L3 with World Intelligence W2, L4 grants (Fable).
+- **Still to come:** L4 grants (Fable; M4 of the application registry starts it).
+
+## 14. Fable's challenge review (L5, 2026-11-15)
+
+Read against the code. The mapping stands; four things it said were stronger than the code was, or unguarded:
+
+| Claim | What the code did | Now |
+|---|---|---|
+| 5.7: outside text reaches the model only as `untrusted()` | World Intelligence's finds tool (feed and search titles) wasn't listed as outside text; today its answer is said to the person and not read back by the model in the same turn, so nothing was steered, but nothing guarded it either | the finds tool is in `tool_loop.OUTSIDE_TOOLS`; a test guards it |
+| 5.7: every find keeps its source | true, but a find's link was kept as the source gave it | only a web address is kept as a link; the pages refuse a script as a link |
+| Learning: the pace follows what he does with her messages | "not for me" was recorded as opening, so it raised the pace; opening a combined message credited one kind of several | "not for me" lowers it (never a break by itself); opening credits every kind carried |
+| Knowledge: comparisons are read in code and honest | a shared measurement ("120VAC") counted as a shared model number, so unlike products were "identical" and their price histories merged | measurements, sizes and counts are never model numbers |
+
+**The invariant table (section 8) lacks one row:** *Information integrity: outside text is marked for the model.*
+It was held by convention; it needs a sweep in which every tool says whether it returns outside text, failing on
+one that doesn't say. That belongs with the grants' capability tags (L4, M4), where every tool is tagged anyway.
+
+**No disagreement with the doctrine's mapping or its order of work.** Recorded here, not as a decision: nothing
+in it needs Zac to choose.

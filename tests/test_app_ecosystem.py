@@ -70,13 +70,21 @@ def test_a_failing_job_is_pinned_on_the_app_whose_manifest_claims_it(reg, tools)
     assert "Wrong now: World" in app_ecosystem.check_sentence(reg, _context(tools, scheduler))
 
 
-def test_a_registry_problem_is_pinned_on_the_app_it_names():
-    m = dict(app_ecosystem.registry().get("greenhouse"))
-    m["capabilities"] = {"tools": list(m["capabilities"]["tools"]) + ["no_such_tool"],
-                         "actions": list(m["capabilities"]["actions"])}
-    broken = app_registry.Registry(manifests={**app_ecosystem.registry().manifests, "greenhouse": m})
+def test_a_record_that_couldnt_be_loaded_is_pinned_on_its_app_without_rebuilding_her_tools(monkeypatch):
+    """Fable's review (DEC-0174): the running check rebuilt the PC's whole tool list each time, which a phone or a
+    runtime without a window can't do; comparing records with the code is the tests' job."""
+    def never():
+        raise AssertionError("the running check must not rebuild the tool list")
+
+    monkeypatch.setattr(parity, "desktop_registry", never)
+    broken = app_registry.Registry(manifests=dict(app_ecosystem.registry().manifests),
+                                   load_problems=["greenhouse: its manifest can't be read (ValueError)",
+                                                  "zeppelin: its manifest lacks id"])
     found = app_ecosystem.health(broken, SimpleNamespace(scheduler=None))
-    assert any("no_such_tool" in p for p in found["greenhouse"])
+    assert found == {"greenhouse": ["greenhouse: its manifest can't be read (ValueError)"],
+                     "zeppelin": ["zeppelin: its manifest lacks id"]}
+    assert "Wrong now" in app_ecosystem.check_sentence(broken, SimpleNamespace(scheduler=None, assistant_actions=None,
+                                                                              data_dir=None))
 
 
 def test_overlaps_are_between_different_apps_and_said_as_suggestions(reg, tools):
@@ -84,7 +92,7 @@ def test_overlaps_are_between_different_apps_and_said_as_suggestions(reg, tools)
     for o in app_ecosystem.overlaps(reg, ctx):
         assert o["apps"][0] != o["apps"][1] and o["alike"] >= app_ecosystem.OVERLAP
     said = app_ecosystem.check_sentence(reg, ctx)
-    assert said.startswith("Every app's record agrees with the code")
+    assert said.startswith("Every app's record loaded")
     if app_ecosystem.overlaps(reg, ctx):
         assert "My suggestion, not a fault" in said
 

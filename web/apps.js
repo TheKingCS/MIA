@@ -154,7 +154,7 @@
         r.health.length
           ? el("div", {}, el("p", { class: "pw-label" }, "Needs fixing"), el("ul", {}, r.health.map((h) =>
               el("li", {}, el("strong", {}, h.name + ": "), h.problems.join("; ")))))
-          : el("p", { class: "dim" }, "Every app's record agrees with the code, and no background job is failing."),
+          : el("p", { class: "dim" }, "Every app's record loaded, and no background job is failing."),
         r.overlaps.length
           ? el("div", {}, el("p", { class: "pw-label" }, "My suggestion: these may overlap"), el("ul", {}, r.overlaps.map((o) =>
               el("li", {}, o.tools[0] + " (" + o.apps[0] + ") and " + o.tools[1] + " (" + o.apps[1] + ")"))))

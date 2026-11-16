@@ -21,15 +21,19 @@ def _book(context):
 
 
 def _number(value, what: str, required: bool = True):
-    """A number from a form or a tool ("$3.98", "12"); None when optional and blank; ActionError otherwise."""
+    """A number from a form or a tool ("$3.98", "12"), never below zero; None when optional and blank; ActionError
+    otherwise."""
     if value in (None, ""):
         if required:
             raise ActionError(f"What's the {what}?")
         return None
     try:
-        return float(str(value).replace("$", "").replace(",", "").strip())
+        number = float(str(value).replace("$", "").replace(",", "").strip())
     except ValueError:
         raise ActionError(f"What's the {what}?") from None
+    if number != number or number < 0 or number == float("inf"):
+        raise ActionError(f"The {what} can't be below zero.")
+    return number
 
 
 def _record_describe(context, params) -> str:
@@ -69,29 +73,34 @@ def _record_execute(context, params) -> str:
 
 def _trip_describe(context, params) -> str:
     """The approval sentence for `price.trip_cost`."""
+    from core.region import money
+
     direct = _number(params.get("cost_per_mile"), "cost per mile", required=False)
     if direct:
-        return f"Use {direct:.2f} a mile for trips"
+        return f"Use {money(direct)} a mile for trips"
     mpg = _number(params.get("mpg"), "miles per gallon", required=False)
     fuel = _number(params.get("fuel_price"), "fuel price", required=False)
     if not mpg or not fuel:
         raise ActionError("Give a cost per mile, or miles per gallon and what fuel costs.")
-    return f"Work out trips from {mpg:g} miles per gallon and fuel at {fuel:.2f} ({fuel / mpg:.2f} a mile)"
+    return f"Work out trips from {mpg:g} miles per gallon and fuel at {money(fuel)} ({money(fuel / mpg)} a mile)"
 
 
 def _trip_execute(context, params) -> str:
     """Does `price.trip_cost`: the person's own settings."""
     from core import person_settings
+    from core.region import money
 
     direct = _number(params.get("cost_per_mile"), "cost per mile", required=False)
     if direct:
         person_settings.put(context, "procurement.cost_per_mile", direct)
-        return f"Trips now count {direct:.2f} a mile."
+        return f"Trips now count {money(direct)} a mile."
     mpg, fuel = _number(params.get("mpg"), "miles per gallon"), _number(params.get("fuel_price"), "fuel price")
+    if not mpg or not fuel:
+        raise ActionError("Give a cost per mile, or miles per gallon and what fuel costs.")
     person_settings.put(context, "procurement.cost_per_mile", 0)
     person_settings.put(context, "procurement.mpg", mpg)
     person_settings.put(context, "procurement.fuel_price", fuel)
-    return f"Trips now count {fuel / mpg:.2f} a mile ({mpg:g} miles per gallon, fuel at {fuel:.2f})."
+    return f"Trips now count {money(fuel / mpg)} a mile ({mpg:g} miles per gallon, fuel at {money(fuel)})."
 
 
 def _register() -> None:

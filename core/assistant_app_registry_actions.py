@@ -87,7 +87,7 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="check_my_apps", domain="app_registry",
-        description=("Checks MIA's apps: what's wrong now (a record that disagrees with the code, a failing "
+        description=("Checks MIA's apps: what's wrong now (a record that couldn't be loaded, a failing "
                      "background job), then tools in different apps that may overlap and what people asked for that "
                      "no app does, marked as suggestions."),
         parameters={"type": "object", "properties": {}, "required": []},

@@ -74,6 +74,12 @@ _NOMINAL = re.compile(r"\b(\d)\s*[x×]\s*(\d{1,2})\b")
 _MEASURES = re.compile(r"\b(temperature|humidity|moisture|ph|ec|light|co2|water level|pressure)\b", re.I)
 _INTERFACE = re.compile(r"\b(i2c|1-wire|onewire|analog|spi|uart|rs485|modbus|zigbee|wi-?fi|bluetooth)\b", re.I)
 _MODEL = re.compile(r"\b(?=[A-Z0-9-]*\d)(?=[A-Z0-9-]*[A-Z])[A-Z0-9][A-Z0-9-]{4,}\b")
+# Letters-and-digits tokens that are measurements, sizes or counts, never a model: "120VAC", "500GPH", "2X4X8",
+# "SCH40", "10-PACK", "AWG12".
+_UNITS = ("V|VAC|VDC|W|KW|KWH|WH|A|AH|MAH|AMP|AMPS|HZ|HP|GPH|GPM|CFM|PSI|RPM|MM|CM|M|IN|INCH|FT|YD|MIL|MILS|GA|AWG|"
+          "LB|LBS|OZ|KG|G|GAL|QT|L|ML|PK|PC|PCS|PACK|CT|COUNT|PAIR|SET|K|LM|LUMENS?|DEG|F|C")
+_MEASURE = re.compile(rf"^(?:\d+(?:-\d+)?-?(?:{_UNITS})|(?:SCH|SCHEDULE|AWG|GA|GAUGE|SIZE|TYPE|GRADE|IP|R|T)-?\d+|"
+                      r"\d+(?:X\d+)+(?:-?(?:FT|IN|MM))?)$")
 
 
 def category_of(text: str) -> Optional[str]:
@@ -114,8 +120,10 @@ def read(text: str) -> dict:
 
 
 def models(text: str) -> set[str]:
-    """Pure logic. The model-number-like tokens in some text (letters and digits, five or more characters)."""
-    return {m.group(0).upper() for m in _MODEL.finditer(str(text or "").upper())}
+    """Pure logic. The model-number-like tokens in some text (letters and digits, five or more characters), leaving
+    out measurements, sizes and counts ("120VAC", "2X4X8", "SCH40"): two products that share a voltage aren't the
+    same model."""
+    return {m.group(0) for m in _MODEL.finditer(str(text or "").upper()) if not _MEASURE.match(m.group(0))}
 
 
 def verdict(needed_text: str, product_text: str, category: Optional[str] = None) -> dict:

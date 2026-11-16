@@ -230,6 +230,33 @@ def test_opening_one_of_her_messages_or_saying_it_was_useful_counts_for_its_kind
     assert any(p["topic"] == "world_find" for p in ctx.communication.pace(now))
 
 
+def test_opening_a_combined_message_counts_for_every_kind_it_carried(ctx):
+    """Fable's review (DEC-0174): dismissing a digest counted against each kind in it, opening it credited only one."""
+    from types import SimpleNamespace
+
+    now = datetime.now().replace(microsecond=0)
+    ctx.notifications = SimpleNamespace(notify=lambda **_k: SimpleNamespace(notification_id="n-1"))
+    ctx.communication.offer_batch([c("world_find"), c("tip")], now)
+    carried = [e for e in ctx.communication._log if e.get("action") == ACT]
+    assert len(carried) == 2 and {e["notification_id"] for e in carried} == {"n-1"}
+    ctx.events.publish("notification.opened", notification_id="n-1")
+    assert all(e.get("opened_at") for e in carried)
+
+
+def test_saying_not_for_me_lowers_a_kinds_pace_and_never_raises_it():
+    """Fable's review (DEC-0174): "not for me" was recorded as opening, which doubled the pace."""
+    from core.communication_gate import learned_allowance
+
+    now = datetime(2026, 11, 15, 12, 0)
+    sent = lambda **marks: {"action": ACT, "topic": "world_find", "urgency": "timely",  # noqa: E731
+                            "at": (now - timedelta(hours=3)).isoformat(), **marks}
+    passed = [sent(passed_at=now.isoformat()) for _ in range(4)]
+    assert learned_allowance(passed, "world_find", now)[0] == 2  # half of four
+    assert learned_allowance([sent(opened_at=now.isoformat()) for _ in range(4)], "world_find", now)[0] == 8
+    assert learned_allowance([sent(acted_at=now.isoformat(), passed_at=now.isoformat()) for _ in range(4)],
+                             "world_find", now)[0] == 8  # acting on it outweighs
+
+
 def test_mid_vent_counts_as_busy(ctx):
     conversation = ctx.conversations.get_or_create_active_conversation()
     conversation.mode = "listen"

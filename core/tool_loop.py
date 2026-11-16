@@ -72,8 +72,9 @@ def _lookups_only(context, calls: list[ToolCall]) -> bool:
     return bool(calls) and all(c.name in known and not changes_records(c.name) for c in calls)
 
 
-# Lookups whose results carry outside text without untrusted()'s framing: mail senders and subjects.
-OUTSIDE_TOOLS = frozenset({"list_inbox"})
+# Lookups whose results carry outside text without untrusted()'s framing: mail senders and subjects, and World
+# Intelligence's finds (titles as feeds and search results gave them).
+OUTSIDE_TOOLS = frozenset({"list_inbox", "world_finds"})
 
 
 def _brought_outside_text(results: list[tuple[str, str]]) -> bool:

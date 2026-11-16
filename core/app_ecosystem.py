@@ -10,8 +10,8 @@ the runtime, never from a model.
 - **One app** (`details`): what it's for, what it can do (its tools and actions, counted, with a few named), what it
   keeps, what runs in the background, where it runs, what it shares with other apps and what depends on it.
 - **Which app** (`which`): the app behind a tool or action name, or the apps whose words best match what was asked.
-- **Health** (`health`): per app, what the registry check found wrong and the background jobs that are failing (from
-  the scheduler's own records).
+- **Health** (`health`): per app, a record that couldn't be loaded and the background jobs that are failing (from
+  the scheduler's own records). Whether the records agree with the code is a test's job, not a running MIA's.
 - **Overlaps** (`overlaps`): tools in two different apps whose descriptions say nearly the same thing. A suggestion to
   look at, never a fault: the answer says so (the Living System invariant: recommendations are marked).
 - **Gaps**: what people asked for that no app does (`core/capability_gaps.py`), counted.
@@ -138,12 +138,14 @@ def which(reg: app_registry.Registry, context, what: str, limit: int = 3) -> lis
 
 
 def health(reg: app_registry.Registry, context) -> dict:
-    """Per app: what the registry check found wrong, and its background jobs that are failing now. Only apps with
-    something wrong appear."""
+    """Per app: a record that couldn't be loaded, and its background jobs that are failing now. Only apps with
+    something wrong appear. The full comparison of every record with the code (`Registry.problems`) isn't run here:
+    it needs the PC's whole tool list built afresh, which a phone or a runtime without a window can't do, and
+    `tests/test_app_registry.py` already refuses a build where they disagree."""
     out: dict = {}
     ids = sorted(reg.manifests, key=len, reverse=True)  # "world_intel" before "world"
-    for problem in reg.problems():
-        app_id = next((i for i in ids if problem.startswith((i + ":", i + " claims"))), "mia")
+    for problem in reg.load_problems:
+        app_id = next((i for i in ids if problem.startswith(i + ":")), problem.split(":")[0] or "mia")
         out.setdefault(app_id, []).append(problem)
     job_owner = {j: i for i, m in reg.manifests.items() for j in m["runtime"]["background"]}
     scheduler = getattr(context, "scheduler", None)
@@ -257,7 +259,7 @@ def check_sentence(reg: app_registry.Registry, context) -> str:
         parts.append("Wrong now: " + "; ".join(
             f"{_names(reg, [i]) if i != 'mia' else 'MIA herself'}: {', '.join(p[:2])}" for i, p in c["health"].items()))
     else:
-        parts.append("Every app's record agrees with the code and no background job is failing")
+        parts.append("Every app's record loaded and no background job is failing")
     if c["overlaps"]:
         o = c["overlaps"][0]
         parts.append(f"My suggestion, not a fault: {_count(len(c['overlaps']), 'pair')} of tools in different apps say "
