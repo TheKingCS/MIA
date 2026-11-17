@@ -182,3 +182,8 @@ feature reaches the running MIA only with its tier, tests, parity decision, loop
 
 Every feature is reached the same way: its area, the area's dashboard, the app; by search; or by asking her
 (DEC-0228). Activities are labelled real, simulated or game (REQ-DSK-021).
+
+## Its look (Prompt 11, 2026-11-17)
+
+Every feature's screen uses the one design system (DEC-0234) and its app's own atmosphere colour (DEC-0187);
+a feature never needs its own visual system.

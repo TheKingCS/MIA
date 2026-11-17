@@ -143,3 +143,17 @@ Full records: `MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0233 | Apps stay in the framework that suits them | PROPOSED |
 
 Full records: `MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 11 (2026-11-17)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0234 | One design system for every device | PROPOSED |
+| DEC-0235 | The identity holds without colour, transparency or motion | PROPOSED |
+| DEC-0236 | Themes and personalisation are validated data, never code | PROPOSED |
+| DEC-0237 | The orb: one component, fourteen states | PROPOSED |
+| DEC-0238 | Motion in three speeds, meaningful apart from decorative | PROPOSED |
+| DEC-0239 | Spatial interfaces are views of the same capabilities | PROPOSED |
+| DEC-0240 | A small local audio identity | PROPOSED |
+
+Full records: `MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md` §2.

@@ -3757,3 +3757,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
 
+### DEC-0234: One design system for every device
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: Visual values live only in tokens (web/tokens.css), set by validated theme data (core/themes.py); the desktop, phone and glasses render MIA's web screens with the full or a reduced token set; conventional apps are offered a matching KDE colour scheme.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+
+### DEC-0235: The identity holds without colour, transparency or motion
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: The orb's shapes and labels, the one accent that means MIA, mono technical labels and the layered layout carry the identity; a Light theme beside the existing high-contrast setting; contrast checked for every theme and tier.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+
+### DEC-0236: Themes and personalisation are validated data, never code
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: As the Theme Studio already does: a theme is checked data (known tokens, clamped values, a backdrop as one of his pictures, a chime set), saved, exported and imported as a mia-theme/1 file; no CSS, script or URLs; a theme failing contrast is refused with the reason; meaning colours, the approval card and the orb's state shapes can't be changed.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+
+### DEC-0237: The orb: one component, fourteen states
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: Idle, listening, processing, thinking, council, speaking, interrupted, waiting for approval, executing, background, success, warning, error, unavailable, muted; each from a real event, with its label and a distinct shape or colour, and a static glyph in reduced motion.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+
+### DEC-0238: Motion in three speeds, meaningful apart from decorative
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: 120, 240 and 480 ms; meaningful motion always shown (a fade in reduced motion); decorative motion off in reduced motion, light or no effects, when hidden and while her models generate; nothing blocks input.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+
+### DEC-0239: Spatial interfaces are views of the same capabilities
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: Portals open the same screens and actions as the sidebar, search and Talk; the Nexus stays Living Worlds'; every spatial feature is labelled by the hardware it needs.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+
+### DEC-0240: A small local audio identity
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 11
+- Decision: The win sounds kept; quiet listening, needs-you, error and done tones added the same way (made in the browser), each with a visual twin, all off with the existing sound setting; alarms always sound.
+- Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
+

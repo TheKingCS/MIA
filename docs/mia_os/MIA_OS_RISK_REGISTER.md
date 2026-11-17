@@ -56,3 +56,7 @@ report that found it. Rated H, M or L.*
 | R-58 | The shell's web window uses memory the models need | M | M | Prompt 10 | the shell | an idle limit, measured; models unloaded first |
 | R-59 | Wayland's isolation makes sharing context clumsy | M | H | Prompt 10 | context | chips; portal picks |
 | R-60 | Modes, workspaces and dashboards add up to clutter | M | M | Prompt 10 | the desktop | ranked Home; one navigation; his yes for workspaces |
+| R-61 | Visual effects use GPU time her models need | M | M | Prompt 11 | effects | step down while a model generates |
+| R-62 | Many themes and personal palettes break readability | M | M | Prompt 11 | themes | contrast checks refuse a failing theme |
+| R-63 | The glasses' SDK limits what can be shown and changes between releases | M | H | Prompt 11 | glasses | design within cards; verify each release |
+| R-64 | The look drifts between designs, code and documents | M | M | Prompt 11 | the design system | tokens the only source; a token export |

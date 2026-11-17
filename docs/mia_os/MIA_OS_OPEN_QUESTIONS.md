@@ -93,6 +93,10 @@ folded in here.*
 | Q-80 | **Answered yes (Zac, 2026-11-17), with: "MIA should be adaptable and understanding of available monitors so if I turn one off she flows with just 1."** DEC-0231 approved; REQ-DSK-033. Was: Your second monitor shows MIA's ambient view all the time: the clock, your day, what's due, music and what she's working on? Recommended: Yes | DEC-0231 | `MIA_OS_DESKTOP_OPEN_QUESTIONS.md` |
 | Q-81 | **Answered yes, as recommended (Zac, 2026-11-17)**. Was: On the PC, talking starts with a press (the orb or a key held) for now; a wake word is measured for false triggers before it's offered? Recommended: Yes | DEC-0211 | `MIA_OS_DESKTOP_OPEN_QUESTIONS.md` |
 | Q-82 | **Answered no (Zac, 2026-11-17): "the display is important and is for me and my wife to use."** The household display is planned for real; DEC-0228 approved as amended. Was: A household display (calendar, kitchen, music, photos, nothing personal) stays planned on paper only, since MIA is for you alone? Recommended: Yes, plan only | DEC-0228 | `MIA_OS_DESKTOP_OPEN_QUESTIONS.md` |
+| Q-83 | **Open (Prompt 11).** The Theme Studio already makes, saves and shares your own themes: add starting from one of your pictures (MIA suggests readable colours from it) and choosing the orb's style? Recommended: Yes | DEC-0236 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
+| Q-84 | **Open (Prompt 11).** Beside the win chimes MIA already plays: quiet interface sounds, listening on and off, "needs you" and errors on by default; done and message chimes off; alarms always; the sound switch turns them all off? Recommended: Yes | DEC-0240 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
+| Q-85 | **Open (Prompt 11).** Add a Light theme now (high contrast is already a setting), and Graffiti and a Neon theme later? Recommended: Yes | DEC-0235 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
+| Q-86 | **Open (Prompt 11).** Zeta Astralis: try the forearm interface first on a small Android phone in a forearm mount, before any custom display? Recommended: Yes | DEC-0239 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 

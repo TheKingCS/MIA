@@ -5,7 +5,14 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-17 (Opus on the PC: Prompt 09 built, Prompt 10)*
+*Last updated: 2026-11-17 (Opus on the PC: Prompt 09 built, Prompts 10 and 11)*
+
+**New 2026-11-17, Prompt 11 (Claude on Opus, overnight).**
+- **Prompt 11 (visual identity, themes and spatial interfaces) is done:** `docs/mia_os/MIA_OS_VISUAL_IDENTITY.md`
+  and twenty-four more; DEC-0234 to 0240 proposed; REQ-VIS-001 to 026. It keeps the built identity (Aquatic glass,
+  one cyan accent, ten themes as data) and completes it: the orb's fourteen states, a Light theme, the Theme Studio
+  from his pictures, interface sounds (the Theme Studio, high contrast and win sounds already exist). **Waiting on Zac:** Q-83 (the Theme Studio from his picture), Q-84 (default sounds), Q-85 (a Light
+  theme; Graffiti, Neon later), Q-86 (Zeta Astralis on a small phone first). Prompt 12 on his go.
 
 **New 2026-11-17, Prompt 10 (Claude on Opus).**
 - **Prompt 10 (the desktop and primary interface) is done:** `docs/mia_os/MIA_OS_DESKTOP_ARCHITECTURE.md` and

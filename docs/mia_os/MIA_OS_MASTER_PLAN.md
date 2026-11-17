@@ -39,7 +39,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **08** | **Autonomy, agents and execution** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Approve Once / From Now On; Q-74 yes; no quiet hours)** | `MIA_OS_AUTONOMY_ARCHITECTURE.md` and twenty-three more (listed in it) |
 | **09** | **Self-awareness, inspection and self-development** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-76 to Q-78 yes; DEC-0222 and 0225 approved)** | `MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more (listed in it) |
 | **10** | **The desktop and primary interface** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-79 to Q-81 yes; Q-82: the household display for him and his wife; DEC-0227, 0228, 0231 approved)** | `MIA_OS_DESKTOP_ARCHITECTURE.md` and twenty-four more (listed in it) |
-| 11–17 | (see `prompts/`) | not started | |
+| **11** | **Visual identity, themes and spatial interfaces** | **done 2026-11-17 (Opus); waiting for Zac's review (Q-83 to Q-86; DEC-0234 to 0240 proposed)** | `MIA_OS_VISUAL_IDENTITY.md` and twenty-four more (listed in it) |
+| 12–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -80,6 +81,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3k. Prompt 11 in brief
+
+The identity is [MIA_OS_VISUAL_IDENTITY.md](MIA_OS_VISUAL_IDENTITY.md), with twenty-four supporting documents. The
+audit found it built in its essentials: glass over depth with Aquatic the default, one cyan accent for MIA, fixed
+meaning colours, five clamped surface tiers, ten themes as data, schemes and layouts, the orb's presence from real
+events, the glasses' see-through composition. One design system for every device (DEC-0234); an identity that
+holds without colour, transparency or motion (DEC-0235); themes as validated data (DEC-0236); the orb's fourteen
+states (DEC-0237); motion in three speeds (DEC-0238); spatial as views of the same capabilities (DEC-0239); a
+small local audio identity (DEC-0240). REQ-VIS-001 to 026.
 
 ## 3j. Prompt 10 in brief
 

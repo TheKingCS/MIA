@@ -205,3 +205,8 @@ MIA_OS_APPLICATION_FRAMEWORK_OPEN_QUESTIONS.md
 MIA's apps open inside her shell on the shared web frame, and in their own window on request; conventional
 Linux apps stay native, listed from their desktop entries and never added to her registry (DEC-0233).
 `MIA_OS_APPLICATION_DESKTOP_INTEGRATION.md` lists each concern.
+
+## Its look (Prompt 11, 2026-11-17)
+
+An app's manifest names its atmosphere colour; its screens take every other value from tokens (DEC-0234).
+`MIA_OS_APPLICATION_VISUAL_INTEGRATION.md` covers conventional Linux apps.
