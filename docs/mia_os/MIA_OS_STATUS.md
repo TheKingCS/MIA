@@ -53,7 +53,9 @@
   the laptop (he has it) a full engine; a lost phone erases itself on reconnecting.
 - **Prompt 13 (security, privacy and permissions) is done** (Opus, 2026-11-18): `MIA_OS_SECURITY_ARCHITECTURE.md` and
   twenty-nine supporting documents; DEC-0248 to 0254 proposed; REQ-SEC-011 to 039 added; specifics in `audit/`.
-- **Next:** Zac's review of Prompt 13 (Q-91 to Q-94); Prompt 14 on his go; to build: the Theme Studio from a picture,
+- Prompt 13 reviewed by Zac (2026-11-18): sensitive data never to a cloud model; two-step offered, not required; a
+  lockdown phrase; add-ons only from MIA's repository, and everything local once she's built out.
+- **Next:** Prompt 14 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

@@ -12,4 +12,5 @@
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
+| REQ-SEC-040 | By the time MIA is built out, every add-on and capability shall run on his own machines, with no cloud service required (Zac, Q-94). | Must | Later | All | Partial | R: the capability registry | DEC-0253 (Q-94) → 13, 16 |
 | REQ-SEC-023 | No third-party MIA add-on shall be installed until add-ons run sandboxed with only their manifest's capabilities. | Must | MVP | All | Exists (none installed) | R | DEC-0253 (Q-94) → 13 |

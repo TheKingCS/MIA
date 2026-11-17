@@ -178,10 +178,10 @@ Full records: `MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md` §2.
 |---|---|---|
 | DEC-0248 | Authority comes only from the person | PROPOSED |
 | DEC-0249 | Everything read from outside is data | PROPOSED |
-| DEC-0250 | Identity in layers; approvals bound and used once | PROPOSED |
-| DEC-0251 | Four data classes | PROPOSED |
+| DEC-0250 | Identity in layers; approvals bound and used once | APPROVED as amended (Q-92: two-step offered) |
+| DEC-0251 | Four data classes | APPROVED (Q-91) |
 | DEC-0252 | Encryption in three layers | PROPOSED |
-| DEC-0253 | Least privilege | PROPOSED |
-| DEC-0254 | Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten | PROPOSED |
+| DEC-0253 | Least privilege | APPROVED as amended (Q-94: all local when built out) |
+| DEC-0254 | Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten | APPROVED (Q-93) |
 
 Full records: `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md` §2.

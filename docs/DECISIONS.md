@@ -3870,14 +3870,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0250: Identity in layers; approvals bound and used once
-- Status: PROPOSED
+- Status: APPROVED as amended (Zac, 2026-11-18, Q-92: "no but it should offer it"): two-step sign-in is offered, never required.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: The OS's own login on MIA OS; MIA's accounts with two-step away from the PC; a key per device; an approval bound to one proposal, the exact parameters its card showed and the person, used once and expiring.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0251: Four data classes
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-91 yes): sensitive data never to a cloud model, even on a yes.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: Public, personal, sensitive (health, money, journal, location history, relationships, conversations) and secret (passwords, keys, codes), each deciding sealing, sync, model use, display and voice; sensitive and secret never to a cloud model; personal only on his yes, minimised.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
@@ -3891,14 +3891,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0253: Least privilege
-- Status: PROPOSED
+- Status: APPROVED as amended (Zac, 2026-11-18, Q-94: "yes but should all be able to run locally by the time she is built out"): add-ons only from MIA's own repository until sandboxed, and every add-on and capability running on his own machines once MIA is complete.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: The runtime unprivileged with systemd's sandboxing; system changes only through the fixed-operation helper and the OS's own dialog; agents read-only, delegation never raising scope; apps limited to their manifest; third-party add-ons only once sandboxed; every dependency pinned and checked.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0254: Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-93 yes): the lockdown phrase included.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: When a session, grant or authorization can't be evaluated, a change waits and says why; physical safety lives in hardware and controllers; the security log is hash-chained with its head copied to another device; a lockdown in one phrase.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
