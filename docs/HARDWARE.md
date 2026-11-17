@@ -579,7 +579,7 @@ power supply.
 
 | Setting | Now | Do | Who, how |
 |---|---|---|---|
-| Simultaneous multithreading | the chip has 16 threads, **Windows uses 8** | turn it back on | Zac. First check Windows: `msconfig`, Boot, Advanced options; if "Number of processors" is ticked, untick it and restart. If it isn't, it's the BIOS: restart, press Delete, find **SMT Mode** (Advanced CPU Settings), set **Enabled** |
+| Simultaneous multithreading | **done 2026-11-17**: the cause was Gigabyte's **X3D Turbo Mode** (it switches SMT off for games); Zac disabled it and Windows now uses all 16 threads | — | Zac. First check Windows: `msconfig`, Boot, Advanced options; if "Number of processors" is ticked, untick it and restart. If it isn't, it's the BIOS: restart, press Delete, find **SMT Mode** (Advanced CPU Settings), set **Enabled** |
 | Memory speed (EXPO) | **on**: running at 6400 MT/s | nothing | — |
 | Virtualization (SVM) | **on** | nothing | — |
 | Resizable BAR (Smart Access Memory) | unknown | enable if it's off (helps the card read system memory) | Zac, in the BIOS: **Re-Size BAR Support**, with Above 4G Decoding |

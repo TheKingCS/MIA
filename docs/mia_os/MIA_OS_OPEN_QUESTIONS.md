@@ -77,7 +77,7 @@ folded in here.*
 | Q-64 | **Answered yes (Zac, 2026-11-17)**; DEC-0202 approved. Was: Approve "grow by nodes": the next AI hardware is a second machine for models, bought only when the bench or the Workroom shows the need? Recommended: yes | DEC-0202 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
 | Q-65 | **Answered yes (Zac, 2026-11-17)**, then corrected by Claude: the board has **one** M.2 slot (in use), so it's a replacement drive, not a second one (`docs/HARDWARE.md`). Was: Add a 2 to 4 TB NVMe drive for Fedora, Windows keeping its drive? Recommended: yes, before installing Fedora on the PC | DEC-0193 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
 | Q-66 | **Answered (Zac, 2026-11-17): "yes all of the above"**: a laptop, a tablet and a smart display are planned; DEC-0205 amended. Was: Is a laptop, tablet or smart display in your plans? Nothing assumes one | DEC-0205 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
-| Q-67 | **Answered (Zac, 2026-11-17): "Sure we can configure the hardware I have to be optimized for our operations"**; the plan is in `docs/HARDWARE.md`. Was: Turn simultaneous multithreading on in the BIOS (Windows sees 8 of 16 threads)? Recommended: yes, and measure the suite | — | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
+| Q-67 | **Answered (Zac, 2026-11-17): "Sure we can configure the hardware I have to be optimized for our operations"**; the plan is in `docs/HARDWARE.md`. Done the same day: X3D Turbo Mode off, 16 threads. Was: Turn simultaneous multithreading on in the BIOS (Windows sees 8 of 16 threads)? Recommended: yes, and measure the suite | — | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 
