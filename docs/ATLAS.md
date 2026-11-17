@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1484 files, 332,189 lines; 1484 files describe themselves; 18,229 of 18,327 classes and functions are documented.
+1486 files, 332,564 lines; 1486 files describe themselves; 18,246 of 18,344 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-579 files, 167,312 lines; 8,638 of 8,724 classes and functions documented
+580 files, 167,587 lines; 8,650 of 8,736 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -450,6 +450,7 @@
 - `core/smart_closet.py`: Smart Closet (DEC-0162; Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them, maybe let me see what they would look like together"). The design is `docs/specs/SMART_CLOSET.md`.
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/specialist_models.py`: Which local model does each specialist's thinking (T1's second part; the local specialists plan, S3; DEC-0197: "the model per specialist is chosen from this table, not from a guide"). The table is the engineering bench's results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.
+- `core/specialist_review.py`: A second local model checks a specialist's work (the local specialists plan, S5; DEC-0198, Q-57: "a safety review can block a design until he's seen it"; the teams design: review is independent only across models).
 - `core/specialist_work.py`: A specialist's worksheet (the local specialists plan, S1; DEC-0197): how one of MIA's specialists answers an engineering question on a local model without the model ever producing a number of its own.
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
@@ -873,7 +874,7 @@
 
 ## tests/: the test suite: what each part must do
 
-509 files, 86,224 lines; 7,257 of 7,269 classes and functions documented
+510 files, 86,324 lines; 7,262 of 7,274 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1259,6 +1260,7 @@
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialist_models.py`: Which local model does each specialist's thinking (core/specialist_models.py, DEC-0197): chosen from this PC's bench results in the worksheet's own mode, over the disciplines that specialist uses; a model that guesses a missing input doesn't pass however many it gets right; the best that didn't pass
+- `tests/test_specialist_review.py`: A second local model checks a specialist's work (core/specialist_review.py, S5): it reviews the plan (calculators and inputs), never the arithmetic; the reviewer is the best other model on the bench, independent only from another family, and said so; a doubt holds the answer in MIA's words; an unrea
 - `tests/test_specialist_work.py`: A specialist's worksheet (core/specialist_work.py, DEC-0197): the model chooses calculators, code works out the numbers, and code checks that the answer's numbers all come from somewhere. *(2 undocumented)*
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
