@@ -10,8 +10,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **New 2026-11-17, from Zac's phone (Claude, cloud session; the PC session needs Zac to sign in again).**
 - **Q-53 answered (DEC-0197):** the specialists run on local models that can do the engineering; build whatever makes
   that possible. **Q-44 answered yes:** MIA should know what he's working on. Q-54 to Q-58 still open.
-- Next: the plan for engineering-capable local specialists (Fable): measure local models on engineering tasks,
-  ground them in the specialists' notes, numbers from calculators in code, a checker.
+- **Q-54 to Q-58: "Yes to all" (DEC-0198)**, and the other specialists stay a priority: added in batches on a
+  schedule, not left for later.
+- **The plan is written, for Zac's review:** `docs/mia_os/MIA_OS_LOCAL_SPECIALISTS_PLAN.md`. The model decides,
+  code computes every number, a second local model checks. Order: S0a the units module and engineering bench
+  (Fable), S1 the worksheet engine (Fable), S2 calculators with electrical first (Opus), S4 the roster track from
+  week one (Opus), S0b the measurement run **on the PC**.
+- The teams document (`MIA_OS_SPECIALIZED_AGENT_TEAMS.md`) still says cloud models in its sections 1 and 12: read it
+  with DEC-0197.
 
 **New 2026-11-16, on the PC (Claude on Fable): the Fable run Zac asked for.**
 - **Review queue items 14 to 23**: done (K-0261; what changed is listed under the queue below).

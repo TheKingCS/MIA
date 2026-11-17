@@ -24,6 +24,10 @@ project), **a workspace** (the structured findings, conflicts, decisions and del
 coordinator** that breaks an objective into tasks with dependencies, and **an honest answer about which model does
 the thinking**.
 
+> **Changed by Zac, 2026-11-17 (DEC-0197, DEC-0198):** the specialists run on local models, not the council's cloud
+> models, and the work that makes that possible is `MIA_OS_LOCAL_SPECIALISTS_PLAN.md`. Q-53 to Q-58 are answered.
+> The paragraph below is the constraint as it stood when this was written.
+
 That last point is the real constraint, and it should be said plainly before anything is built:
 
 > MIA's own model is small (llama3.2:3b for conversation; qwen2.5:14b for the heavier local work). It can classify a

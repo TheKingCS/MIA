@@ -3474,3 +3474,20 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0188, DEC-0168, DEC-0118, `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`,
   `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md`
 
+### DEC-0198: Teams as recommended (Q-54 to Q-58); growing the specialist roster stays a priority
+- Status: APPROVED
+- Decided by: zac, 2026-11-17 ("Yes to all, start the specialist plan. I don't want the development of the other
+  specialists to end up put way on the back end so the still needs to be a priority.")
+- Decision:
+  - Q-54: a team never starts by itself; MIA may suggest one and starts it only on his yes.
+  - Q-55: the first team's pilot is the smart greenhouse; the hoodie second.
+  - Q-56: start with the 16 specialists that exist. **And** the others are not left for "when a project needs one":
+    they are added in batches on a standing schedule from the start, in the order his projects need them.
+  - Q-57: electrical, battery, structural and legal output is a draft that says a qualified person must check it; a
+    safety review can block a design until he's seen it.
+  - Q-58: the registry and workspace (T1, T2) now; coordination (T3) after plans across apps.
+- The plan for local, engineering-capable specialists: `docs/mia_os/MIA_OS_LOCAL_SPECIALISTS_PLAN.md` (for his
+  review). The teams document's proposed decisions (an agent is a role in the registry; a team is a run on a
+  project; review is independent only across models) stand, with "cloud model" replaced by DEC-0197's local ones.
+- Related: DEC-0197, DEC-0188, DEC-0109, `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`
+
