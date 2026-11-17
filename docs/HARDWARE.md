@@ -557,9 +557,14 @@ to 7), and holds several models at once, so a specialist's model and its reviewe
 loaded while the PC's card does the rest. It also fits the distributed MIA that Prompt 12 plans (the PC asks it, as
 the Pi will ask the PC). On the PC's 2.5 Gb Ethernet, the network is not the limit.
 
-**2. A bigger drive: 2 to 4 TB NVMe.** Each 32B model is about 20 GB, a 70B about 40 GB; the bench keeps several,
-and the offline packs (Kiwix and the Forge's) and the MIA OS test machines all want room. 1 TB is already tight.
-Check how many M.2 slots the A620I AX has free (its manual); if none, the new drive replaces the old one.
+**2. A bigger drive (Zac: yes, Q-65).** Each 32B model is about 20 GB, a 70B about 40 GB; the bench keeps several,
+and the offline packs and the MIA OS test machines all want room. **The A620I AX has one M.2 slot, already used**
+(Gigabyte's specification: one M.2 2280 PCIe 4.0 x4, two SATA ports). So:
+- **Recommended: a 4 TB PCIe 4.0 NVMe replacing the 1 TB.** Windows is cloned onto it (free tools do this through
+  a USB enclosure), leaving about 3 TB for Fedora, models and packs. The old 1 TB, in a USB enclosure, becomes the
+  backup drive.
+- **Or: a 2.5-inch SATA SSD** on a SATA port, if the case has a bay. Cheaper and no clone, but about a tenth the
+  speed: a 20 GB model loads in about 40 seconds instead of a few.
 
 **3. Swapping the graphics card for a bigger one: only a small step.** The one slot means a bigger card replaces the
 7900 XTX. A Radeon AI PRO R9700 (32 GB, $1,299 list, about $2,000 in shops) is 8 GB more and a newer chip; not worth
@@ -568,6 +573,19 @@ power supply.
 
 **4. System memory to 64 GB, not at today's prices.** Both slots are full, so 64 GB means replacing both sticks with
 2 x 32 GB, and a 64 GB DDR5 kit is $750 to $1,400 in November 2026 listings. Wait unless something specific needs it.
+
+**Tuning what's there (Zac, Q-67: "configure the hardware I have to be optimized for our operations").** Read on
+2026-11-17; each step says who does it.
+
+| Setting | Now | Do | Who, how |
+|---|---|---|---|
+| Simultaneous multithreading | the chip has 16 threads, **Windows uses 8** | turn it back on | Zac. First check Windows: `msconfig`, Boot, Advanced options; if "Number of processors" is ticked, untick it and restart. If it isn't, it's the BIOS: restart, press Delete, find **SMT Mode** (Advanced CPU Settings), set **Enabled** |
+| Memory speed (EXPO) | **on**: running at 6400 MT/s | nothing | — |
+| Virtualization (SVM) | **on** | nothing | — |
+| Resizable BAR (Smart Access Memory) | unknown | enable if it's off (helps the card read system memory) | Zac, in the BIOS: **Re-Size BAR Support**, with Above 4G Decoding |
+| Ollama for MIA's work | defaults | flash attention on and the attention cache at 8-bit (`OLLAMA_FLASH_ATTENTION=1`, `OLLAMA_KV_CACHE_TYPE=q8_0`): longer contexts in the same 24 GB, and room for the everyday model beside a 14B | Claude, after the bench run ends, then re-bench to check nothing got worse |
+| Windows update restarts | active hours 7 pm to noon | leave; MIA's long runs move to MIA OS later | — |
+| Power plan | Balanced | leave (Zen 5 boosts fully on it) | — |
 
 **5. A UPS** (about $150 to $250) so a long overnight bench or Night School run survives a power blip. A Windows
 update restarting the PC (2026-11-17) is a different problem: set active hours, or run long jobs on MIA OS later.

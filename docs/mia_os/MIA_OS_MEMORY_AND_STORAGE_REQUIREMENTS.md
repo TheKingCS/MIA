@@ -29,8 +29,9 @@ once; 64 GB (two new sticks) is the remedy, deferred for price (`docs/HARDWARE.m
 | Windows, while dual-booting | its current ~400 GB | its own partition |
 
 **Verdict:** on one 1 TB drive, dual boot with today's Windows use leaves under 500 GB for Fedora, models and packs.
-That works for the MVP and fills within months. A second NVMe drive (2 to 4 TB) given to Fedora removes the problem
-and keeps Windows untouched (Q-65).
+That works for the MVP and fills within months. **The board has one M.2 slot** (Gigabyte's specification), already
+used, so the fix is a 4 TB NVMe **replacing** the 1 TB, with Windows cloned onto it and the rest for Fedora; or a
+2.5-inch SATA SSD on one of the board's two SATA ports, slower for loading models (Q-65 approved; `docs/HARDWARE.md`).
 
 ## 3. Other devices
 

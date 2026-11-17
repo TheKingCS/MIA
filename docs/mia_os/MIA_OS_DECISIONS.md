@@ -81,9 +81,9 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC | Title | Status |
 |---|---|---|
 | DEC-0201 | The reference PC as built is MIA OS's first target; nothing to buy for the MVP | PROPOSED |
-| DEC-0202 | Grow by nodes, not cards: the next AI hardware is a model-serving machine, when measured | PROPOSED (Q-64), experimental |
+| DEC-0202 | Grow by nodes, not cards: the next AI hardware is a model-serving machine, when measured | APPROVED (Q-64) |
 | DEC-0203 | A capability registry read only from Linux's own sources | PROPOSED |
 | DEC-0204 | Linux schedules; MIA places models and orders the GPU queue, conversation first | PROPOSED |
-| DEC-0205 | The device family's tiers; nothing depends on a later device | PROPOSED |
+| DEC-0205 | The device family's tiers; nothing depends on a later device | PROPOSED; laptop, tablet and smart display planned (Q-66) |
 
 Full records: `MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md` §3.

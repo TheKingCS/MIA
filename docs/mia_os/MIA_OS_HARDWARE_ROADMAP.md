@@ -5,7 +5,7 @@
 | Stage | Hardware | Trigger | Cost (Nov 2026, approximate) | Unlocks |
 |---|---|---|---|---|
 | **H0, now** | the PC as built, the phone, the glasses | — | none | MIA OS MVP (DEC-0201) |
-| **H1, small** | a USB stick; a 2 to 4 TB NVMe; a USB UPS | PoC 1; disk past 80%; the first lost overnight run | $10; $150 to $350; $150 to $250 | Fedora on the PC; room for models and packs; safe long jobs |
+| **H1, small** | a USB stick; a 4 TB NVMe replacing the 1 TB (one M.2 slot); a USB UPS | PoC 1; disk past 80%; the first lost overnight run | $10; $150 to $350; $150 to $250 | Fedora on the PC; room for models and packs; safe long jobs |
 | **H2, homestead** | Pi 5 node, ESP32, sensors, relays, its UPS; Meshtastic radios | the greenhouse build starts (DEC-0150) | per `homestead/` and `docs/HARDWARE.md` | the greenhouse under the node's control |
 | **H3, model node** | a 128 GB unified-memory machine (Ryzen AI Max+ 395 class) | the bench shows a specialist needs a model that doesn't fit, or W1 shows the card can't serve the Workroom, or an independent reviewer must stay loaded | $3,300 to $4,350 | 70B and 120B models, two families loaded at once (DEC-0202) |
 | **H4, MIA Core on a Pi** | Pi 5 with the AI HAT+ 2 | MIA OS stable on the PC (DEC-0015's order) | about $250 with the HAT | MIA where the PC isn't |

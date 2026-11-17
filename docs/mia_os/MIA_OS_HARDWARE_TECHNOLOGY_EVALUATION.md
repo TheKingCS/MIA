@@ -14,7 +14,7 @@ PROPOSED).*
 | vLLM | high-throughput serving | Ollama | batching for many agents | heavy; ROCm support narrower on consumer cards | pip/containers | **Watch** for the Workroom |
 | A second model node (Strix Halo, 128 GB) | scale-out inference | a bigger card, a rebuild | adds capacity without touching the PC; holds several models | about $3,300 to $4,350 now; slow on dense 70B | x86-64, same image | **Recommend when the bench or Workroom shows the need** (Q-64) |
 | A bigger single card (R9700 32 GB) | more VRAM in the PC | a node | same box | only +8 GB; card length and supply unknown | supported | **Not recommended alone** |
-| A 2 to 4 TB NVMe | room for models, packs, snapshots | — | removes a real limit cheaply | — | mainline | **Recommend** (Q-65) |
+| A 4 TB NVMe replacing the 1 TB | room for models, packs, snapshots | a 2.5-inch SATA SSD in a free SATA port | removes a real limit; the board has **one** M.2 slot, so it replaces the old drive (Windows cloned across) | a clone, or a reinstall | mainline | **Recommend** (Q-65, approved) |
 | 64 GB DDR5 | headroom | — | VMs, browser agents | both sticks replaced; prices high | — | **Defer** |
 | KVM/QEMU | test machines | VirtualBox | mainline; used in CI | needs AMD-V on | mainline | **Use** |
 | NUT + a USB UPS | power events | none | clean shutdowns | cost | packaged | **Recommend** |

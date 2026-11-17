@@ -3532,7 +3532,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
 
 ### DEC-0202: Grow by nodes, not cards
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-17, Q-64: "yes")
 - Proposed by: claude (Opus), 2026-11-17, Prompt 06
 - Decision: The PC has one graphics slot and two full memory slots (read 2026-11-17), so MIA's compute grows by adding machines on the network. Every device is a node with a capability record. The next AI hardware is a model-serving machine (a 128 GB unified-memory mini PC class), bought only when the bench or the Workroom shows the need. Experimental until measured (Q-64).
 - Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
@@ -3553,7 +3553,8 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
 
 ### DEC-0205: The device family's tiers
-- Status: PROPOSED
+- Status: PROPOSED; amended by Zac's answer to Q-66 ("yes all of the above", 2026-11-17): a laptop, a tablet and a
+  smart display are **planned** devices, so Prompt 12 designs for them; still nothing depends on them
 - Proposed by: claude (Opus), 2026-11-17, Prompt 06
 - Decision: Current: the PC, the phone (Android with MIA's app), the glasses through the phone, the homestead's Pi node and safety controller. Next: a model node, the Pi running MIA Core. Later: a laptop, a smart display, the truck. Speculative: MIA's own hardware. Nothing depends on a later or speculative device.
 - Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
