@@ -86,6 +86,7 @@ JOBS: tuple[tuple[str, int, str], ...] = (
     ("world_intel", 600, "_check_world_intel"),  # World Intelligence: due watches run, new finds offered (DEC-0170)
     ("self_repair", 300, "_check_self_repair"),  # she restarts Ollama, reloads her model, re-runs a stuck job (DEC-0222)
     ("activity_watch", 30, "_check_activity_watch"),  # the app and title in front of him, when he allows it (DEC-0197)
+    ("recall_index", 600, "_check_recall_index"),  # his records embedded for recall by meaning (DEC-0210)
 )
 
 # The once-a-day checks, in the order they run: (name, the method). Each has its own "already ran today" gate.
@@ -384,6 +385,13 @@ class BackgroundJobs:
         from core import self_merges
 
         self._offers.extend(self_merges.offer(self.context, now))
+
+    def _check_recall_index(self) -> None:
+        """Every 10 minutes: what's new or changed in his memories, notes and projects is embedded for recall by
+        meaning, and what's gone is dropped (core/recall_index.py, DEC-0210); nothing without an embedding model."""
+        index = getattr(self.context, "recall", None)
+        if index is not None:
+            index.refresh(self.context)
 
     def _check_activity_watch(self) -> None:
         """Every 30 seconds: notes the app and window title in front of him, when noting is on (core/activity_watch.py,

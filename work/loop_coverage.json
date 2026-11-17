@@ -225,6 +225,10 @@
    "status": "none",
    "why": "The daily system-map regen is itself the loop that keeps MIA_MAP.md current; it reads state and rewrites the doc, nothing to watch over it."
   },
+  "store:recall": {
+   "status": "none",
+   "why": "derived from his stores and rebuilt from them (core/recall_index.py, DEC-0210): it holds refs and vectors only, never a record, so there is nothing in it to improve apart from the stores it follows"
+  },
   "store:activity": {
    "status": "none",
    "why": "names and window titles noted for him (core/activity_watch.py, DEC-0197); what MIA does with them, the offers she makes, is measured by the communication gate's own pacing and its loops"

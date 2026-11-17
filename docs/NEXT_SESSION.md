@@ -15,6 +15,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off (`gui/ambient_screens.py`). **Zac to try:** restart MIA with both monitors on, then turn the 1080p one off and
   on. `gui.ambient_screen: false` turns it off.
 - CLAUDE.md now names the everyday model correctly (qwen2.5:14b, 32k).
+- **Recall by meaning, first slice** (DEC-0210, Q-71): `core/recall_index.py`. What MIA remembers, notes, notes to
+  self and projects are embedded every 10 minutes (refs, hashes and vectors only, in your folder); "what do I have
+  about the coop?" finds them by meaning and re-reads each from its store; without the embedding model it matches
+  words and says so. Tried on the PC's real memories: 12 indexed in 1.4 s. Next slices: conversations not in a
+  private mode, sqlite-vec when it grows, a "related" group in Ctrl+K search.
 - **Q-68 measured: qwen2.5:14b stays the everyday model.** Same routes and flags on the 112 questions; qwen3:14b
   invented context more on open questions and was slower (`pc-check/intelligence-*.md` on the PC; not in git).
 - **MIA notes what you're working on** (Q-44, DEC-0197): the program and window title in front of you on the PC,

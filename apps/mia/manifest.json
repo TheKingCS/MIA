@@ -51,6 +51,7 @@
     },
     "background": [
       "activity_watch",
+      "recall_index",
       "auto_backup",
       "capability_gaps",
       "capability_reminder",

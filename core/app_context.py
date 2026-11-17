@@ -104,6 +104,7 @@ if TYPE_CHECKING:
     from core.ocr import OcrQueue
     from core.online_watch import OnlineReminders
     from core.activity_watch import ActivityLog
+    from core.recall_index import RecallIndex
     from core.reward_shop import RewardShop
     from core.craft_recipes import CraftRecipeBook
     from core.business_book import BusinessBook
@@ -148,7 +149,8 @@ class AppContext:
     """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
     sensors that send readings), the one store lock the server and the background schedule share, each person's
     stores, the skills they taught her among them (core/taught_skills.py) and the record of everything she runs in
-    steps (core/runs.py) and what he's working on (core/activity_watch.py), and, when MIA runs with no window, the
+    steps (core/runs.py), what he's working on (core/activity_watch.py) and his recall index (core/recall_index.py),
+    and, when MIA runs with no window, the
     runtime she belongs to and its schedule (core/runtime.py)."""
 
     config: ConfigManager
@@ -280,6 +282,7 @@ class AppContext:
     # "Remind me when I'm back online" (core/online_watch.py).
     online_reminders: Optional["OnlineReminders"] = field(default=None, repr=False)
     activity: Optional["ActivityLog"] = field(default=None, repr=False)  # what he works on (DEC-0197)
+    recall: Optional["RecallIndex"] = field(default=None, repr=False)  # recall by meaning (DEC-0210)
     # Sensors that send their own readings (core/sensors.py): the device's, each naming whose it is.
     sensors: Optional[object] = field(default=None, repr=False)
     reward_shop: Optional["RewardShop"] = field(default=None, repr=False)  # DEC-0028

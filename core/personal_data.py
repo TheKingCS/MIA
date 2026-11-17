@@ -86,6 +86,7 @@ from core.material_manager import MaterialManager
 from core.notification_manager import NotificationManager
 from core.online_watch import OnlineReminders
 from core.activity_watch import ActivityLog
+from core.recall_index import RecallIndex
 from core.reward_shop import RewardShop
 from core.craft_recipes import CraftRecipeBook
 from core.business_book import BusinessBook
@@ -176,6 +177,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("communication", CommunicationGate),
     ("online_reminders", OnlineReminders),
     ("activity", ActivityLog),  # the app and title in front of him (DEC-0197, Q-44)
+    ("recall", RecallIndex),  # recall by meaning: refs and vectors only (DEC-0210, Q-71)
     ("reward_shop", RewardShop),
     ("boss_book", BossBook),
     ("dungeon", DungeonBook),

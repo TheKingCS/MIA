@@ -48,7 +48,7 @@ KEY = "mia.stop_everything"  # the person's setting: {"since", "until"} while a 
 # Background jobs (core/background_jobs.JOBS) that wait while everything is stopped: they change records on her own
 # initiative or reach outside. The others never wait: alarms, the battery warning, the once-a-day tick itself, and
 # watching the connection (which is how "remind me when I'm back online" works).
-JOBS_THAT_WAIT = frozenset({"activity_watch", "world_intel", "mission_auto_assignment", "inbox", "inbox_mail", "finance_snapshots",
+JOBS_THAT_WAIT = frozenset({"recall_index", "activity_watch", "world_intel", "mission_auto_assignment", "inbox", "inbox_mail", "finance_snapshots",
                             "homestead_snapshots", "lite_captures"})
 JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online", "self_repair"})
 # Daily checks (DAILY_CHECKS) that wait: her own work, things she makes or changes, and anything that goes online.
