@@ -7,6 +7,19 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
 
+**New 2026-11-17, later, on the PC (Claude on Opus), after the PC restarted for an update.**
+- **The bench re-run was cut off by the restart** (2 of 4 models done, with the new structural and crafts tasks):
+  qwen2.5:14b and qwen3-coder:30b kept; qwen3:14b and qwen2.5:32b re-running. Commit all four with the
+  specialist models re-chosen when it finishes.
+- **Zac's request, kept verbatim** (`docs/mia_os/prompts/26_SPECIALIST_FORGE_AND_PARALLEL_AGENTS.md`): MIA should add,
+  refine and specialize her own specialists, use resources online and keep working offline, and explore many agents
+  working at once with visible cursors. **Design:** `docs/mia_os/MIA_OS_SPECIALIST_FORGE.md` (the Forge's pipeline,
+  learn online and keep it offline, the Workroom of parallel browser agents). **Waiting on Zac: Q-59 to Q-62.**
+  F1 (the "counts as added" check and the roster page) and W1 (measure how many agents the card serves) need no
+  decision.
+- **Q-44 (MIA knows what he's working on) is still not built**; the design is in DEC-0197 and the prompt 23 review's
+  section on activity context.
+
 **New 2026-11-17, on the PC (Claude on Opus), alongside the cloud session below.**
 - **Opus's independent review of Fable's three** (the stop UI-2, Forge's scaffold M7, plans across apps UI-7): all
   fixed, each with tests (K-0277). Plans: nothing that pays, buys, sends, publishes, deletes or touches a grant is a

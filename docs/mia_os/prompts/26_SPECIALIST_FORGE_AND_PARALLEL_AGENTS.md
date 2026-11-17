@@ -1,0 +1,3 @@
+*Zac, 2026-11-17, kept verbatim. The design it led to is `docs/mia_os/MIA_OS_SPECIALIST_FORGE.md`.*
+
+I feel like we really need to make MIA capable of refining and specializing and adding these kinds of agents to her toolbelt for any different specialized agent we may end up needing. She should be able to access resources online as well as maintain ability offline. Also I saw a video where they had a system running multiple executions at once and you could see the mouse moving to the different parts of the screen like 10 different agents where working on the same area at once. That seems like a cool capability of MIA to explore.
