@@ -164,7 +164,9 @@
   }
 
   // ---------------------------------------------------------------- confirm
-  function confirmBox(summary) {
+  // A card: Not Now, or Yes, Do It; where the kind may have a standing yes (`grantable`, core/kind_grants.py) also
+  // Approve From Now On (DEC-0215), which resolves to "always" so the caller approves with from_now_on.
+  function confirmBox(summary, grantable) {
     return new Promise((resolve) => {
       let dialog = $("#mia-confirm");
       if (!dialog) {
@@ -172,12 +174,16 @@
           el("p", { id: "mia-confirm-text" }),
           el("div", { class: "confirm-actions" },
             el("button", { type: "button", class: "btn btn-ghost", id: "mia-confirm-no" }, "Not now"),
-            el("button", { type: "button", class: "btn btn-green", id: "mia-confirm-yes" }, "Yes, do it")));
+            el("button", { type: "button", class: "btn btn-ghost", id: "mia-confirm-always" }, "Approve From Now On"),
+            el("button", { type: "button", class: "btn btn-green", id: "mia-confirm-yes" }, "Approve Once")));
         document.body.append(dialog);
       }
       $("#mia-confirm-text").textContent = summary;
+      $("#mia-confirm-always").hidden = !grantable;
+      $("#mia-confirm-yes").textContent = grantable ? "Approve Once" : "Yes, do it";
       const done = (answer) => { dialog.close(); resolve(answer); };
       $("#mia-confirm-yes").onclick = () => done(true);
+      $("#mia-confirm-always").onclick = () => done("always");
       $("#mia-confirm-no").onclick = () => done(false);
       dialog.oncancel = (e) => { e.preventDefault(); done(false); };
       dialog.showModal();
@@ -194,11 +200,12 @@
     if (!action) return null;
     try {
       const proposal = await MIA.propose(action.kind, action.params);
-      if (!(opts && opts.quick) && !(await confirmBox(proposal.summary))) {
+      const answer = opts && opts.quick ? true : await confirmBox(proposal.summary, proposal.grantable);
+      if (!answer) {
         MIA.reject(proposal.proposal_id).catch(() => {});
         return null;
       }
-      const done = await MIA.approve(proposal.proposal_id);
+      const done = await MIA.approve(proposal.proposal_id, answer === "always");
       if (window.MIASound && done.status === "executed") MIASound.celebrate(done.reward);  // DEC-0028 #11
       say((opts && opts.quick ? proposal.summary + "." : done.result) || "Done.", done.undoable ? async () => {
         try { await MIA.undo(done.proposal_id); say("Undone."); refresh(); } catch (e) { say(e.message); }

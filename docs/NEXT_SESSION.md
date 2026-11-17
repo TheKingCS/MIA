@@ -11,7 +11,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Prompt 08 (autonomy, agents and execution) is done:** `docs/mia_os/MIA_OS_AUTONOMY_ARCHITECTURE.md` and
   twenty-three more; DEC-0213 to 0219 proposed; REQ-AGT-001 to 034 (the matrix reads them: 290 requirements).
   **Zac's answers:** every approval card offers **Approve Once** or **Approve From Now On** (a standing grant; never
-  money, messages, publishing, deletion outside undo or system changes): DEC-0215 approved as amended, **to build**;
+  money, messages, publishing, deletion outside undo or system changes): DEC-0215 approved as amended, **built**
+  (`core/kind_grants.py`: the card's Approve From Now On keeps a standing yes; MIA's own later proposal of that
+  kind runs at once with an Undo, marked `auto`; listed and taken back with his grants; lapses after 90 days
+  unused; 373 of 482 kinds may have it). Not yet: by voice ("yes, and from now on");
   what he's working on may shape offers (DEC-0217 approved); no quiet hours. Prompt 09 on his go.
 - **Bench:** Mistral Small 24B done (strong on electrical, textiles, power; weak on crafts; guessed once on
   embedded). gpt-oss:20b's run had died printing a narrow no-break space to the Windows console; `tools/eng_bench.py`

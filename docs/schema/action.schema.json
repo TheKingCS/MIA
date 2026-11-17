@@ -77,6 +77,14 @@
     "undoable": {
       "type": "boolean"
     },
+    "grantable": {
+      "type": "boolean",
+      "description": "Whether its card may offer Approve From Now On (core/kind_grants.py, DEC-0215)."
+    },
+    "auto": {
+      "type": "boolean",
+      "description": "Done at once on his standing yes for the kind (Approve From Now On), not on this card."
+    },
     "reward": {
       "type": [
         "object",

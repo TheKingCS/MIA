@@ -742,7 +742,7 @@
     shelfUse: (which, action_id) => demo ? demoOnly() : call("POST", "/api/shelf/use", { which: which || [], action_id: action_id || "" }),
     ualRun: (action_id, capture) => demo ? demoOnly() : call("POST", "/api/ual/run", { action_id, capture }),
     propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }),
-    approve: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/approve"),
+    approve: (id, fromNowOn) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/approve" + (fromNowOn ? "?from_now_on=true" : "")),
     reject: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/reject"),
     undo: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/undo"),
     onChange,

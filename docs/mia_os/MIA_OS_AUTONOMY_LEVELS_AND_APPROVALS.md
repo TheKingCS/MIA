@@ -29,5 +29,5 @@ changes, anything tiered `never`.
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-AGT-015 | A standing grant shall come only from his yes (Approve From Now On on a card, or accepting an offer made with the evidence), never created by MIA. | Must | R1 | All | New (the offer); Exists (no self-grant) | T | DEC-0215 → 08 |
+| REQ-AGT-015 | A standing grant shall come only from his yes (Approve From Now On on a card, or accepting an offer made with the evidence), never created by MIA. | Must | R1 | All | Partial (Approve From Now On built 2026-11-17, `core/kind_grants.py`; the evidence offer New) | T | DEC-0215 → 08 |
 | REQ-AGT-016 | Paying, buying, sending, publishing, deleting outside undo and system changes shall never be grantable. | Must | MVP | All | Exists (tiers) | T: the grants sweep | DEC-0215, DEC-0181 → 08 |

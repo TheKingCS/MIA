@@ -81,7 +81,7 @@ class Proposal:
     """One proposed change waiting for, or past, its decision: the kind and params, the summary the person approves
     (made in code, never by the model), whose it is, who proposed it (the person or MIA), its status (proposed,
     executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
-    and the undo record (kept server-side, never sent).
+    whether it ran at once on his standing yes (`auto`, DEC-0215), and the undo record (kept server-side, never sent).
     """
     proposal_id: str
     kind: str
@@ -96,13 +96,18 @@ class Proposal:
     # What finishing it earned, for a surface to celebrate (the glasses'
     # "Objective Complete +30 XP", Zac 2026-10-16): see reward_for().
     reward: Optional[dict] = None
+    auto: bool = False  # done at once on his standing yes for the kind (Approve From Now On, DEC-0215)
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
-        """The proposal as sent to a screen: everything but the undo record, plus whether it can still be undone."""
+        """The proposal as sent to a screen: everything but the undo record, plus whether it can still be undone and
+        whether its card may offer Approve From Now On (`grantable`, core/kind_grants.py)."""
         data = asdict(self)
         data.pop("_change", None)
         data["undoable"] = self.status == EXECUTED and self._change is not None
+        from core.kind_grants import grantable
+
+        data["grantable"] = grantable(self.kind)  # the card may offer Approve From Now On (DEC-0215)
         return data
 
 
@@ -479,6 +484,17 @@ def _who(context) -> Optional[str]:
     return person_id(context)
 
 
+def _granted_ahead(context, kind: str) -> bool:
+    """Whether he approved this kind from now on (core/kind_grants.py); never true when it can't be read."""
+    try:
+        from core import kind_grants
+
+        return kind_grants.has(context, kind)
+    except Exception:  # noqa: BLE001 - when in doubt, ask
+        log.exception("Couldn't read the standing yes for %s", kind)
+        return False
+
+
 class ActionCenter:
     """The proposals waiting for a yes (context.actions)."""
 
@@ -496,7 +512,8 @@ class ActionCenter:
 
     def propose(self, context, kind: str, params: Optional[dict] = None, proposed_by: str = "person") -> Proposal:
         """Step 1. Checks it and says what would happen (that it can't be undone, for an irreversible kind:
-        core/action_effects.py); changes nothing."""
+        core/action_effects.py); changes nothing. Except: when MIA herself proposes a kind he approved from now on
+        (core/kind_grants.py, DEC-0215), it's approved at once and comes back executed, marked `auto`."""
         from core.child_accounts import is_child
 
         action = ACTION_TYPES.get(kind)
@@ -518,6 +535,14 @@ class ActionCenter:
         with self._lock:
             self._expire()
             self._proposals[proposal.proposal_id] = proposal
+        if proposal.proposed_by == "mia" and _granted_ahead(context, kind):
+            # He approved this kind from now on (DEC-0215): done at once, with an Undo, never waiting on a card.
+            self.approve(context, proposal.proposal_id)
+            proposal.auto = True
+            if proposal.status == EXECUTED:
+                from core import kind_grants
+
+                kind_grants.used(context, kind)
         return proposal
 
     def get(self, proposal_id: str, profile_id: Optional[str]) -> Proposal:
@@ -535,7 +560,7 @@ class ActionCenter:
             self._expire()
             return [p for p in self._proposals.values() if p.profile_id == profile_id and p.status == PROPOSED]
 
-    def approve(self, context, proposal_id: str) -> Proposal:
+    def approve(self, context, proposal_id: str, from_now_on: bool = False) -> Proposal:
         """Steps 2 to 5: the person said yes. Executes through the store,
         which records the history; the change is kept for undo, with the
         approved sentence as its description in the lasting history
@@ -543,6 +568,9 @@ class ActionCenter:
         being shown a skill ("watch me", core/taught_skills.py), the change
         is noted as one of its steps; and a tool running inside a taught
         skill can't approve a kind that always asks (taught_skills.guard).
+        With `from_now_on` (Approve From Now On, DEC-0215) his standing yes
+        for the kind is kept once it has run; a kind that always asks is
+        refused that, before anything runs.
         Her orb shows "working" while it runs, then success or a warning
         (core/orb_state.py)."""
         from core import life_events
@@ -551,8 +579,15 @@ class ActionCenter:
         from core.undo_log import recording
 
         proposal = self.get(proposal_id, _who(context))
+        if proposal.status == EXECUTED and getattr(proposal, "auto", False):
+            return proposal  # already done on his standing yes (a caller that proposes then approves gets it back)
         if proposal.status != PROPOSED:
             raise ActionError(f"That was already {proposal.status}.")
+        if from_now_on:
+            from core.kind_grants import grantable
+
+            if not grantable(proposal.kind):
+                raise ActionError("That kind of change always asks first, so it can't be approved from now on.")
         from core.taught_skills import guard
 
         guard(proposal.kind)  # a tool inside a taught skill can't approve a payment or a delete for the person
@@ -600,6 +635,10 @@ class ActionCenter:
             except Exception:  # a celebration never breaks the change itself
                 log.exception("Couldn't work out the reward for %s.", proposal.kind)
         proposal.decided_at = datetime.now().isoformat(timespec="seconds")
+        if from_now_on and proposal.status == EXECUTED:
+            from core import kind_grants
+
+            kind_grants.give(context, proposal.kind)  # Approve From Now On (DEC-0215)
         orb_state.flash("success" if proposal.status == EXECUTED else "warning")
         if proposal.status == FAILED:
             _note(context, "action_failed", proposal)

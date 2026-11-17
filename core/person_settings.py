@@ -22,6 +22,7 @@ from typing import Any, Optional
 
 PERSONAL_SETTINGS = (
     "communication.daily_budget",
+    "grants.kinds",  # Approve From Now On: his standing yeses by kind (core/kind_grants.py, DEC-0215)
     "world.on",  # World Intelligence switched on (DEC-0170)
     "procurement.cost_per_mile", "procurement.mpg", "procurement.fuel_price",  # their own trip cost (DEC-0172)
     "communication.min_spacing_minutes",

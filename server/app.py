@@ -574,7 +574,7 @@ def create_app(context: AppContext) -> FastAPI:
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
     store_lock, a core/store_lock.StoreLock, made here when the context has none); a turn lets it go while the model thinks and keeps its conversation's turns in order
     with that conversation's own lock. The shelf is read at /api/shelf and used at /api/shelf/use, under the lock
-    like any selection (core/shelf.py). The Step By Step page reads /api/steps (core/step_plans.py), the Specialists page /api/specialists/roster. The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
+    like any selection (core/shelf.py). The Step By Step page reads /api/steps (core/step_plans.py), the Specialists page /api/specialists/roster. A card is approved once, or from now on (`?from_now_on=true`, core/kind_grants.py). The frame's Stop control posts /api/stop (core/stop.py): her speech is cut
     before the lock is taken, the rest is done under it, at once and never as an approval card. Good News Radio's page says when it played an episode
     (/api/news/heard, core/good_news.note_listened). The player every page shares asks this MIA to play a song
     herself where she can (/api/music/now, /play and /control, core/web_more.music_play): those run outside the
@@ -4324,8 +4324,10 @@ def create_app(context: AppContext) -> FastAPI:
         return {"proposals": [p.as_dict() for p in _actions().pending(profile_id)]}
 
     @app.post("/api/actions/{proposal_id}/approve")
-    def approve_action(proposal_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
-        return _decide(_actions().approve, profile_id, proposal_id)
+    def approve_action(proposal_id: str, from_now_on: bool = False, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Approves a card; with `?from_now_on=true` (Approve From Now On, DEC-0215) his standing yes for the kind is
+        kept too, for kinds that may have one (core/kind_grants.py)."""
+        return _decide(lambda view, pid: _actions().approve(view, pid, from_now_on=from_now_on), profile_id, proposal_id)
 
     @app.post("/api/actions/{proposal_id}/reject")
     def reject_action(proposal_id: str, profile_id: str = Depends(require_profile_id)) -> dict:

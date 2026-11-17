@@ -37,7 +37,9 @@ skill's step (`taught_skills.guard`, from `actions.run_as_tool` and `ActionCente
 **A grant** (`Grant`) is a standing yes a person gave by something they did, never by anything MIA or a page said:
 - a **learned skill**: taught, then run cleanly with them watching (`core/taught_skills.py`); it covers that skill's
   steps that change their own records;
-- a **published workflow**: approved when it was published, for exactly what it lists (`core/workflows.may`).
+- a **published workflow**: approved when it was published, for exactly what it lists (`core/workflows.may`);
+- **Approve From Now On** on a card (DEC-0215): a standing yes for one kind of change that stays in his records and
+  can be undone (`core/kind_grants.py`), lapsing after 90 days unused.
 There is no action that gives a grant: one is earned or approved where it's made. `standing()` is the one list of
 them, assembled from those stores (so there's no second record to drift); `take_back()` ends one (the skill goes
 back to practising with the person; the workflow is put away, kept). The action `grant.take_back`
@@ -180,8 +182,8 @@ def report() -> dict:
 
 
 def standing(context) -> list[Grant]:
-    """Every grant this person has given, from where each is kept (see the module's opening): learned skills, then
-    published workflows. A store that isn't here or can't be read gives none."""
+    """Every grant this person has given, from where each is kept (see the module's opening): learned skills,
+    published workflows, then standing yeses by kind. A store that isn't here or can't be read gives none."""
     out: list[Grant] = []
     try:
         from core.taught_skills import CLEAN_RUNS, LEARNED
@@ -207,6 +209,17 @@ def standing(context) -> list[Grant]:
                                  "you approved it when it was published"))
     except Exception:  # noqa: BLE001
         log.exception("Grants: couldn't read the workflows")
+    try:
+        from core import kind_grants
+        from core.actions import ACTION_TYPES
+
+        for kind, when in sorted(kind_grants.live(context).items()):
+            action = ACTION_TYPES.get(kind)
+            out.append(Grant(f"kind:{kind}", "kind", action.label if action else kind,
+                             "each time I'd propose it, done at once with an Undo",
+                             f"you pressed Approve From Now On ({when.get('given', '')[:10]})"))
+    except Exception:  # noqa: BLE001
+        log.exception("Grants: couldn't read the standing yeses")
     return out
 
 
@@ -224,11 +237,17 @@ def find(context, words: str) -> Optional[Grant]:
 
 def take_back(context, grant_id: str) -> str:
     """Ends a grant and says what changed: a learned skill goes back to practising with the person; a workflow is put
-    away (kept, with its records). ValueError when it isn't a grant any more."""
+    away (kept, with its records); a standing yes for a kind ends, so MIA asks again. ValueError when it isn't a grant
+    any more."""
     grant = next((g for g in standing(context) if g.grant_id == grant_id), None)
     if grant is None:
         raise ValueError("That isn't something I may do on my own any more.")
     kind, _, ref = grant_id.partition(":")
+    if kind == "kind":
+        from core import kind_grants
+
+        kind_grants.take_back(context, ref)
+        return f"I'll ask again before each \u201c{grant.name}\u201d."
     if kind == "skill":
         context.taught_skills.unlearn(ref)
         return f"\u201c{grant.name}\u201d is back to practising: I'll ask before each step that changes something."
