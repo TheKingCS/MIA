@@ -210,8 +210,9 @@ def _done(spec, status: str, answer: str, results: list = (), notes: list = (), 
 
 
 def work(context, question: str, specialist: str = "", folder=None) -> dict:
-    """Runs the worksheet for a question: {"status", "specialist", "answer", "calculations", "sources", "need",
-    "checked", "caveat"}. `folder` is where the specialists' workbooks are (theirs, unless a test passes one). status is "answered", "need" (a value must be asked for: `need` says which), "no_calculator"
+    """Runs the worksheet for a question, on the specialist's own model (core/specialist_models.py): {"status",
+    "specialist", "answer", "calculations", "sources", "need", "checked", "caveat", "model", "model_note" (said when
+    that model didn't pass the bench for this work)}. `folder` is where the specialists' workbooks are (theirs, unless a test passes one). status is "answered", "need" (a value must be asked for: `need` says which), "no_calculator"
     (the specialist has none that fits: it says so plainly, with what its notes hold), "no_specialist" or
     "no_model". `checked` says how the answer's numbers were verified."""
     question = " ".join(str(question or "").split())[:1500]

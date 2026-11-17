@@ -1,0 +1,552 @@
+{
+ "model": "qwen3-coder:30b",
+ "at": "2026-11-17T02:16:22",
+ "summary": {
+  "alone": {
+   "electrical": {
+    "tasks": 7,
+    "right": 4,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 2,
+    "seconds": 8.66,
+    "good": 0.714
+   },
+   "embedded": {
+    "tasks": 8,
+    "right": 4,
+    "asked": 2,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 2,
+    "seconds": 1.23,
+    "good": 0.75
+   },
+   "crafts": {
+    "tasks": 3,
+    "right": 0,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 2,
+    "seconds": 0.69,
+    "good": 0.333
+   },
+   "greenhouse": {
+    "tasks": 5,
+    "right": 1,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 3,
+    "seconds": 1.03,
+    "good": 0.4
+   }
+  },
+  "tools": {
+   "electrical": {
+    "tasks": 7,
+    "right": 6,
+    "asked": 0,
+    "wrong": 0,
+    "guessed": 1,
+    "unreadable": 0,
+    "seconds": 0.35,
+    "good": 0.857
+   },
+   "embedded": {
+    "tasks": 8,
+    "right": 6,
+    "asked": 0,
+    "wrong": 0,
+    "guessed": 1,
+    "unreadable": 1,
+    "seconds": 0.37,
+    "good": 0.75
+   },
+   "crafts": {
+    "tasks": 3,
+    "right": 2,
+    "asked": 0,
+    "wrong": 0,
+    "guessed": 1,
+    "unreadable": 0,
+    "seconds": 0.32,
+    "good": 0.667
+   },
+   "greenhouse": {
+    "tasks": 5,
+    "right": 4,
+    "asked": 0,
+    "wrong": 0,
+    "guessed": 1,
+    "unreadable": 0,
+    "seconds": 0.38,
+    "good": 0.8
+   }
+  }
+ },
+ "rows": [
+  {
+   "task": "e1",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "1,500 W",
+   "detail": "",
+   "expected": "1,500 W",
+   "seconds": 27.7
+  },
+  {
+   "task": "e2",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "4.764 V",
+   "detail": "",
+   "expected": "4.764 V",
+   "seconds": 1.59
+  },
+  {
+   "task": "e3",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "1/0 AWG",
+   "detail": "I don't know the unit \"/0\".",
+   "expected": "10",
+   "seconds": 7.77
+  },
+  {
+   "task": "e4",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "1,920 W",
+   "detail": "",
+   "expected": "1,920 W",
+   "seconds": 1.36
+  },
+  {
+   "task": "e5",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "14.4 h",
+   "detail": "",
+   "expected": "14.4 h",
+   "seconds": 1.44
+  },
+  {
+   "task": "e6",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "",
+   "detail": "no ANSWER line",
+   "expected": "4",
+   "seconds": 19.83
+  },
+  {
+   "task": "e7",
+   "discipline": "electrical",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: Wire run length (distance from source to load)",
+   "detail": "",
+   "expected": "ask for length",
+   "seconds": 0.92
+  },
+  {
+   "task": "m1",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "150 ohm",
+   "detail": "",
+   "expected": "150 ohm",
+   "seconds": 1.06
+  },
+  {
+   "task": "m2",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "3.33 V",
+   "detail": "",
+   "expected": "3.333 V",
+   "seconds": 1.34
+  },
+  {
+   "task": "m3",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "0.277 milliamps",
+   "detail": "I don't know the unit \"milliamps\".",
+   "expected": "0.2766 mA",
+   "seconds": 1.47
+  },
+  {
+   "task": "m4",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "3.5 W",
+   "detail": "",
+   "expected": "3.5 W",
+   "seconds": 1.02
+  },
+  {
+   "task": "m5",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "0.806 millivolt",
+   "detail": "I don't know the unit \"millivolt\".",
+   "expected": "0.8057 mV",
+   "seconds": 1.34
+  },
+  {
+   "task": "m6",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "131 degC",
+   "detail": "",
+   "expected": "131 degC",
+   "seconds": 1.67
+  },
+  {
+   "task": "m7",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: Battery capacity (in mAh or mAs)",
+   "detail": "",
+   "expected": "ask for capacity",
+   "seconds": 1.12
+  },
+  {
+   "task": "m8",
+   "discipline": "embedded",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: LED forward voltage drop (Vf) in volts",
+   "detail": "",
+   "expected": "ask for forward",
+   "seconds": 0.8
+  },
+  {
+   "task": "c1",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "30 grams",
+   "detail": "I don't know the unit \"grams\".",
+   "expected": "30 g",
+   "seconds": 0.97
+  },
+  {
+   "task": "c2",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "215 grams",
+   "detail": "I don't know the unit \"grams\".",
+   "expected": "215 g",
+   "seconds": 0.73
+  },
+  {
+   "task": "c3",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: Total weight or volume of cabbage for sauerkraut",
+   "detail": "",
+   "expected": "ask for vegetables",
+   "seconds": 0.36
+  },
+  {
+   "task": "g1",
+   "discipline": "greenhouse",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "16800 BTU/hour",
+   "detail": "I don't know the unit \"BTU/hour\".",
+   "expected": "16,800 BTU/h",
+   "seconds": 1.17
+  },
+  {
+   "task": "g2",
+   "discipline": "greenhouse",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "2,304 cfm",
+   "detail": "",
+   "expected": "2,304 cfm",
+   "seconds": 0.86
+  },
+  {
+   "task": "g3",
+   "discipline": "greenhouse",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "40 gallons",
+   "detail": "I don't know the unit \"gallons\".",
+   "expected": "40 gal",
+   "seconds": 0.67
+  },
+  {
+   "task": "g4",
+   "discipline": "greenhouse",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "2.3 gallons",
+   "detail": "I don't know the unit \"gallons\".",
+   "expected": "2.295 gal",
+   "seconds": 1.5
+  },
+  {
+   "task": "g5",
+   "discipline": "greenhouse",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: U-value of the glazing, insulation properties, ventilation rate, and type of glazing material",
+   "detail": "",
+   "expected": "ask for u",
+   "seconds": 0.97
+  },
+  {
+   "task": "e1",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "1,500 W",
+   "detail": "",
+   "expected": "1,500 W",
+   "seconds": 0.42
+  },
+  {
+   "task": "e2",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "4.764 V",
+   "detail": "",
+   "expected": "4.764 V",
+   "seconds": 0.39
+  },
+  {
+   "task": "e3",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "10",
+   "detail": "",
+   "expected": "10",
+   "seconds": 0.34
+  },
+  {
+   "task": "e4",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "1,920 W",
+   "detail": "",
+   "expected": "1,920 W",
+   "seconds": 0.25
+  },
+  {
+   "task": "e5",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "14.4 h",
+   "detail": "",
+   "expected": "14.4 h",
+   "seconds": 0.41
+  },
+  {
+   "task": "e6",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "4",
+   "detail": "",
+   "expected": "4",
+   "seconds": 0.34
+  },
+  {
+   "task": "e7",
+   "discipline": "electrical",
+   "mode": "tools",
+   "verdict": "guessed",
+   "got": "10 AWG copper: it carries 30 A (you need 30 A), and over 0 ft one way the drop is 0.0% (limit 3%). Largest breaker: 30 A.",
+   "detail": "the question didn't give length",
+   "expected": "ask for length",
+   "seconds": 0.31
+  },
+  {
+   "task": "m1",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "150 ohm",
+   "detail": "",
+   "expected": "150 ohm",
+   "seconds": 0.38
+  },
+  {
+   "task": "m2",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "3.333 V",
+   "detail": "",
+   "expected": "3.333 V",
+   "seconds": 0.38
+  },
+  {
+   "task": "m3",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "0.2766 mA",
+   "detail": "",
+   "expected": "0.2766 mA",
+   "seconds": 0.45
+  },
+  {
+   "task": "m4",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "3.5 W",
+   "detail": "",
+   "expected": "3.5 W",
+   "seconds": 0.38
+  },
+  {
+   "task": "m5",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "0.8057 mV",
+   "detail": "",
+   "expected": "0.8057 mV",
+   "seconds": 0.22
+  },
+  {
+   "task": "m6",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "131 degC",
+   "detail": "",
+   "expected": "131 degC",
+   "seconds": 0.47
+  },
+  {
+   "task": "m7",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "unreadable",
+   "got": "battery_life",
+   "detail": "capacity (the battery's capacity) should be in mAh: I can't read \"mAh\" as a number with a unit.",
+   "expected": "ask for capacity",
+   "seconds": 0.42
+  },
+  {
+   "task": "m8",
+   "discipline": "embedded",
+   "mode": "tools",
+   "verdict": "guessed",
+   "got": "(5 V - 2 V) / 20 mA = 150 ohm. The next standard value up is 150 ohm, giving 20 mA through the LED and 60 mW in the resistor.",
+   "detail": "the question didn't give forward",
+   "expected": "ask for forward",
+   "seconds": 0.3
+  },
+  {
+   "task": "c1",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "30 g",
+   "detail": "",
+   "expected": "30 g",
+   "seconds": 0.38
+  },
+  {
+   "task": "c2",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "215 g",
+   "detail": "",
+   "expected": "215 g",
+   "seconds": 0.23
+  },
+  {
+   "task": "c3",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "guessed",
+   "got": "2% of 2000 g (water and vegetables together) is 40 g of salt.",
+   "detail": "the question didn't give vegetables",
+   "expected": "ask for vegetables",
+   "seconds": 0.34
+  },
+  {
+   "task": "g1",
+   "discipline": "greenhouse",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "16,800 BTU/h",
+   "detail": "",
+   "expected": "16,800 BTU/h",
+   "seconds": 0.5
+  },
+  {
+   "task": "g2",
+   "discipline": "greenhouse",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "2,304 cfm",
+   "detail": "",
+   "expected": "2,304 cfm",
+   "seconds": 0.3
+  },
+  {
+   "task": "g3",
+   "discipline": "greenhouse",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "40 gal",
+   "detail": "",
+   "expected": "40 gal",
+   "seconds": 0.31
+  },
+  {
+   "task": "g4",
+   "discipline": "greenhouse",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "2.295 gal",
+   "detail": "",
+   "expected": "2.295 gal",
+   "seconds": 0.33
+  },
+  {
+   "task": "g5",
+   "discipline": "greenhouse",
+   "mode": "tools",
+   "verdict": "guessed",
+   "got": "600 ft2 of glazing at U 1, 40 degF colder outside, loses 24,000 BTU/h (7,034 W) through the glazing; air leaks add to it.",
+   "detail": "the question didn't give u",
+   "expected": "ask for u",
+   "seconds": 0.45
+  }
+ ]
+}

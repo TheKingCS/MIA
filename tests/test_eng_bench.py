@@ -1,5 +1,6 @@
 """The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply
-is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators."""
+is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators; a
+thinking model's working is left out, and only a readable value for a missing input is a guess."""
 
 import json
 

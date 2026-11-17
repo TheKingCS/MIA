@@ -1,6 +1,6 @@
 """MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py;
-DEC-0197): each calculator against an example worked by hand, units that don't go together refused, and a missing
-input named, never guessed."""
+DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing
+input named, never guessed, and no input's description offering a value a model could copy."""
 
 import pytest
 

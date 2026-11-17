@@ -10,8 +10,8 @@ results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.e
 counts (the model choosing calculators, code computing). For each benched model, its results on the disciplines
 the specialist's worksheet uses (`core.specialist_work.DISCIPLINES`) are added up: the share it got good (right,
 or asked for what was missing) and how often it **guessed** an input it wasn't given, the dangerous failure. The
-best is the one benched on the most of those disciplines, then the highest share, then the fewest guesses, then
-the fastest. It **passes** at `PASS` with no guess and every discipline benched; one
+best is the one benched on the most of those disciplines, then the fewest guesses (a guessed input can't be seen in
+the answer, where a wrong pick of calculator can), then the highest share, then the fastest. It **passes** at `PASS` with no guess and every discipline benched; one
 below is still the best this PC has, and the worksheet says so on its answer rather than pretend otherwise. A
 specialist whose disciplines no model has been benched on, or a PC with no results at all, uses MIA's everyday
 model, and says that too.
@@ -92,12 +92,12 @@ def choose(specialist_id: str, results: Optional[dict] = None) -> Choice:
         found = _totals(summary, disciplines)
         if found:
             tasks, good, guessed, seconds, covered = found
-            scored.append((covered, good / tasks, -guessed, -seconds, model, found))
+            scored.append((covered, -guessed, good / tasks, -seconds, model, found))
     if not scored:
         why = ("no model on this PC has been benched on this work yet, so it uses my everyday model"
                if results else "this PC has no bench results yet, so it uses my everyday model")
         return Choice(None, False, why=why)
-    covered, share, _g, _s, model, (tasks, good, guessed, seconds, _c) = max(scored)
+    covered, _g, share, _s, model, (tasks, good, guessed, seconds, _c) = max(scored)
     passed = share >= PASS and guessed == 0 and covered == len(disciplines)
     said = f"{model} got {good} of {tasks} of the bench's problems for this work right"
     said += f" and guessed {guessed} time{'s' if guessed != 1 else ''} when something was missing" if guessed else ""

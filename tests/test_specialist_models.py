@@ -41,6 +41,14 @@ def test_a_specialist_gets_the_best_model_on_its_own_disciplines_in_the_workshee
     assert sm.choose("electrical", alone_only).model is None  # only the tools mode counts
 
 
+def test_a_model_that_never_guesses_beats_one_that_scores_more_but_guesses():
+    """The PC's run (2026-11-17): qwen3-coder got more embedded problems right than qwen2.5:32b but guessed twice."""
+    results = {"coder:30b": {"tools": {"electrical": _cell(7, 6, guessed=1), "embedded": _cell(8, 6, guessed=1)}},
+               "careful:32b": {"tools": {"electrical": _cell(7, 7), "embedded": _cell(8, 4)}}}
+    pick = sm.choose("embedded", results)
+    assert pick.model == "careful:32b" and not pick.passed and pick.guessed == 0
+
+
 def test_guessing_a_missing_input_fails_a_model_and_the_answer_says_so():
     only_small = {"small:14b": RESULTS["small:14b"]}
     pick = sm.choose("embedded", only_small)

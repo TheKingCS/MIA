@@ -213,7 +213,8 @@ def _readable(value) -> bool:
 def score(task: Task, mode: str, reply: str) -> dict:
     """One reply's verdict: {"verdict", "got" (what was read from it, in words), "detail"}. In "tools" mode the
     named calculator is run by code with the inputs given; a calculator that refuses for a missing input counts as
-    the model having asked only if the model itself said what's needed. A thinking model's <think> part is left
+    the model having asked only if the model itself said what's needed, and as a guess only if the model gave a
+    readable value for the missing input (a placeholder for it is unreadable). A thinking model's <think> part is left
     out first (its working may hold an early ANSWER or a brace that isn't its answer); a reply cut off while still
     thinking has no answer."""
     reply = re.sub(r"<think>.*?(</think>|$)", "", str(reply or ""), flags=re.S | re.I)

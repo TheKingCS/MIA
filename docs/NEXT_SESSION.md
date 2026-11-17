@@ -36,13 +36,22 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   greenhouse ones too. New units: mL (the first PC run couldn't read it), ft3, BTU/h, cfm, gpm, gph, U-values.
   Found on the way: `calculate()` refused every negative input, so a night below 0 °F couldn't be entered; a
   calculator now names the inputs that may be negative (`signed`).
-- **S0b, the bench's PC run** (`python -m tools.eng_bench --model <m>`), 2026-11-17. The first try stalled: qwen3
-  thinks without end (over an hour on 36 tasks). Now each task is capped at 3072 tokens and a `<think>` part is left
-  out before scoring. First result before those fixes, qwen2.5:14b with calculators: electrical 86%, embedded 50%,
-  crafts 33%; it guesses when an input is missing (the dangerous failure). The full run (qwen2.5:14b,
-  qwen3-coder:30b, qwen2.5:32b, qwen3:14b) is in `work/eng_bench/`; see K-0280 for the table.
-- **Next (Opus):** T1's second part (each specialist's model from the bench, a reviewer on a different local
-  model); the next S4 specialists (the hoodie's: acoustics, audio DSP, textiles, power).
+- **S0b, the bench's PC run, done** (`work/eng_bench/`, K-0280). With calculators (the worksheet's way), share good
+  and guesses: qwen2.5:32b electrical 100%, greenhouse 100%, embedded 50%, crafts 67%, never guessed; qwen3:14b
+  86 / 100 / 75 / 67, never guessed (10 s a task); qwen3-coder:30b 86 / 80 / 75 / 67 but guessed in every
+  discipline; qwen2.5:14b 86 / 80 / 50 / 67. Alone (no calculators) every model is far worse at greenhouse and
+  crafts, which is why the worksheet exists. Fixes the run forced: thinking capped at 3072 tokens and left out
+  before scoring; a placeholder for a missing input isn't a guess; descriptions never offer a value (two models
+  copied "about 1.15" as a U-value); cfm/ft2 is a unit.
+- **Built, T1's second part:** `core/specialist_models.py`, each specialist's model from that table (most disciplines
+  benched, then fewest guesses, then share, then speed; passes at 80% with no guess). Now: embedded, maker and
+  software on qwen3:14b; electrical, greenhouse, HVAC, radio, homesteading on qwen2.5:32b; crafts on qwen2.5:32b
+  but not passing (only 3 bench tasks); construction and carpentry not benched (structural has no tasks yet). The
+  worksheet plans and writes on that model, and says so when it didn't pass.
+- **Next (Opus):** more bench tasks for crafts and structural (so they can pass or fail honestly); S5, a reviewer on
+  a different local model; the next S4 specialists (the hoodie's: acoustics, audio DSP, textiles, power); T3.
+  **Hardware (Prompt 06):** the 24 GB card holds one 32B model at a time; the bench is what a bigger card would be
+  measured against.
 - **Not mine, left uncommitted on the PC:** a third session's email inbox files, budget/Plaid edits and specialist
   workbook notes. Its homesteading notes make `tests/test_connections.py::test_a_plan_is_found_only_when_it_really_is_a_plan_for_it`
   fail on the PC (it passes on a clean checkout), and its Plaid edit fails `test_import_transaction_transfer_is_skipped`.

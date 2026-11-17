@@ -17,9 +17,13 @@ session. Last updated: 2026-11-17 (Opus: reviews of Fable's work, the specialist
   it. You can propose a team of specialists for a project; it starts only when you press Start, and MIA can never
   press it for you. Teams don't do work yet; that's the next stage. By voice: "note a constraint for the greenhouse:
   ...", "what's in the greenhouse workspace?".
-- **Measuring:** the engineering bench is running on your graphics card. The first model, qwen2.5 14B, got the
-  electrical problems 86% right when it used MIA's calculators, but guesses when something is missing.
-- **Next:** the rest of the bench, then each specialist gets the model that did best on its work.
+- **Measured on your graphics card:** four local models on real engineering problems. With MIA's calculators,
+  qwen2.5 32B got every electrical and greenhouse problem right and never guessed a missing number; qwen3 14B did
+  best on electronics. Without the calculators they all do much worse, which is the point of them.
+- **Built: each specialist now thinks on the model that did best at its own work**, and tells you when even the
+  best on this PC didn't pass (crafts, for now). Your greenhouse specialist uses qwen2.5 32B.
+- **New: a Greenhouse systems specialist**, with calculators for heat loss, fan size, drip water and heater propane.
+- **Next:** more test problems for crafts and building, then a second model checking each specialist's work.
 
 
 **2026-11-16, latest (Claude on Fable: the reviews, and the MIA OS architecture).**
