@@ -5,7 +5,15 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 and 13)*
+*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 14)*
+
+**New 2026-11-18, Prompt 14 (Claude on Opus).**
+- **Zac answered Q-91 to Q-94:** sensitive data never to a cloud model; two-step offered, not required; a lockdown
+  phrase (to build); add-ons only from MIA's repository, and everything local once she's built out.
+- **Prompt 14 (boot, updates, recovery and reliability) is done:**
+  `docs/mia_os/MIA_OS_BOOT_AND_STARTUP_ARCHITECTURE.md` and twenty-five more; DEC-0255 to 0261 proposed;
+  REQ-REL-015 to 037. **Waiting on Zac:** Q-95 (updates at night), Q-96 (the off-PC backup), Q-97 (a UPS), Q-98
+  (a monthly restore drill). Prompt 15 on his go.
 
 **New 2026-11-18, Prompt 13 (Claude on Opus).**
 - **Zac answered Q-87 to Q-90:** the Pi 5 first a household display on the TV; Tailscale only away; the laptop (he

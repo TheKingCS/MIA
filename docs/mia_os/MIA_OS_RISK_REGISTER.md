@@ -69,3 +69,7 @@ report that found it. Rated H, M or L.*
 | R-71 | An approval used for something it wasn't shown | H | L | Prompt 13 | approvals | binding to the parameter hash |
 | R-72 | Security rules drift as MIA grows | M | M | Prompt 13 | growth | the protected list; boundary tests; a yearly ASVS review |
 | R-73 | A known-vulnerable dependency in the phone build | M | M | Prompt 13 | the phone | its OSV check |
+| R-74 | An update rolls back after the newer MIA changed his data's shape | H | L | Prompt 14 | updates | additive changes; versioned migrations; the pre-update snapshot |
+| R-75 | The only backup is on the disk that fails | H | M | Prompt 14 | backups | the off-PC copy; the phone's sync |
+| R-76 | A restore never tried fails when needed | H | M | Prompt 14 | backups | the monthly drill |
+| R-77 | Windows updates restart the PC overnight until MIA OS | L | H | Prompt 14 | today | active hours; Night School resumes |

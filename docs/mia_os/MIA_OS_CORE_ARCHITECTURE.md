@@ -283,3 +283,7 @@ Prompt 05 stops here. Prompt 06 waits for Zac's review and go.
 ## Security (Prompt 13, 2026-11-18)
 
 The runtime's privilege, the helper and the trust boundaries are in `MIA_OS_LINUX_PRIVILEGE_AND_SYSTEM_SECURITY.md` and `MIA_OS_SECURITY_TRUST_BOUNDARIES.md` (DEC-0248, DEC-0253).
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Boot order, readiness, units, updates and recovery: `MIA_OS_BOOT_AND_STARTUP_ARCHITECTURE.md` (DEC-0255 to 0261).

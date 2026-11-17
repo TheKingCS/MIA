@@ -129,3 +129,7 @@ price sources in `docs/HARDWARE.md`. Each document lists the ones it rests on.
 ## Across devices (Prompt 12, 2026-11-18)
 
 Each machine's place among his devices (hub, full engine, endpoint, node, controller, sensor) is in `MIA_OS_DEVICE_CLASS_AND_RUNTIME_ARCHITECTURE.md`; the support level of each in `MIA_OS_DEVICE_SUPPORT_MATRIX.md`.
+
+## Reliability (Prompt 14, 2026-11-18)
+
+A UPS and an off-PC backup drive are the reliability purchases (Q-96, Q-97).

@@ -55,7 +55,10 @@
   twenty-nine supporting documents; DEC-0248 to 0254 proposed; REQ-SEC-011 to 039 added; specifics in `audit/`.
 - Prompt 13 reviewed by Zac (2026-11-18): sensitive data never to a cloud model; two-step offered, not required; a
   lockdown phrase; add-ons only from MIA's repository, and everything local once she's built out.
-- **Next:** Prompt 14 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture,
+- **Prompt 14 (boot, updates, recovery and reliability) is done** (Opus, 2026-11-18):
+  `MIA_OS_BOOT_AND_STARTUP_ARCHITECTURE.md` and twenty-five supporting documents; DEC-0255 to 0261 proposed;
+  REQ-REL-015 to 037 added.
+- **Next:** Zac's review of Prompt 14 (Q-95 to Q-98); Prompt 15 on his go; to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

@@ -71,3 +71,7 @@ kernel's audit subsystem is left as the distribution configures it.
 - Prompt 13: who may read which logs; redaction rules as policy.
 - Prompt 14: crash-loop handling, the recovery environment, update health checks.
 - Prompt 15: build and test telemetry for the image.
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Readiness levels and how recoveries are told: `MIA_OS_HEALTH_CHECK_AND_READINESS_ARCHITECTURE.md`, `MIA_OS_DIAGNOSTICS_AND_USER_COMMUNICATION.md`.

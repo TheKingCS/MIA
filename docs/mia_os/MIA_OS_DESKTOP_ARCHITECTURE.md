@@ -121,3 +121,7 @@ fourteen states in `MIA_OS_ORB_VISUAL_AND_BEHAVIOR_SPECIFICATION.md` (DEC-0237).
 ## Across devices (Prompt 12, 2026-11-18)
 
 The desktop is the hub's interface; a conversation started there continues on the phone (`MIA_OS_CROSS_DEVICE_SESSION_CONTINUITY.md`).
+
+## Reliability (Prompt 14, 2026-11-18)
+
+What he sees at start: `MIA_OS_MIA_FIRST_STARTUP_EXPERIENCE.md`; safe mode: `MIA_OS_SAFE_MODE_AND_DESKTOP_FALLBACK.md`.

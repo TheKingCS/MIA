@@ -115,3 +115,7 @@ listed, each able to be taken back.
 ## Security (Prompt 13, 2026-11-18)
 
 Device keys, scopes and the lost-device path are in `MIA_OS_DISTRIBUTED_DEVICE_SECURITY.md`; the household key in `MIA_OS_HOUSEHOLD_PRIVACY_AND_ACCESS_CONTROL.md`.
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Each device's recovery: `MIA_OS_DISTRIBUTED_DEVICE_RELIABILITY.md`.

@@ -108,3 +108,7 @@ things stay on his devices, encrypted, and never go to a cloud model; a lost dev
 `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md`, `MIA_OS_SECURITY_ARCHITECTURE_DIAGRAMS.md`,
 `MIA_OS_SECURITY_SCENARIO_ANALYSIS.md`, `MIA_OS_SECURITY_ACCEPTANCE_CRITERIA.md`, `MIA_OS_SECURITY_OPEN_QUESTIONS.md`,
 `MIA_OS_SECURITY_RISK_REGISTER.md`.
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Secure Boot, the TPM-bound disk key and signed updates: `MIA_OS_BOOT_INTEGRITY_AND_RECOVERY_SECURITY.md`.

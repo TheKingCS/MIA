@@ -138,3 +138,7 @@ herself, and there is no "run this command" path.
 Anything MIA changed in `/etc` went through a named helper operation and is in the journal with what it was before.
 Validation, migration and backup of MIA's own configuration are the existing mechanisms (defaults merged on load;
 `config.json` in the nightly backup).
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Each unit's order, restart limits, watchdog and slice: `MIA_OS_SERVICE_STARTUP_AND_DEPENDENCY_MODEL.md` (DEC-0256).

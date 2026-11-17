@@ -121,3 +121,7 @@ The fuller hardware evaluation, device classes and the minimum profile are Promp
   screens stay a Windows concern (DEC-0168: fixes only).
 - **Edge is her browser on Windows** (Playwright). On Linux the same code drives Chromium: an adapter choice, tested
   in PoC 4.
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Updates are whole images rolled back by greenboot (DEC-0257); safe mode and the previous deployment are the fallbacks (DEC-0260).

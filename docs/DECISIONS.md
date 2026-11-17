@@ -3904,3 +3904,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
+### DEC-0255: The OS boots without MIA; readiness in levels
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: Nothing of MIA's is in the boot path or required for login; her runtime starts as his user service (lingering), Wanting optional services, never Requiring them; it reports core, voice, models and all ready, and the shell opens at core ready saying what isn't ready yet.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+
+### DEC-0256: Each part its own unit, with restart limits, a watchdog and its own slice
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: The runtime, the shell, Ollama, the helper and the node link are separate systemd units; the runtime is restarted at most three times in a row then stops and says so; a watchdog catches a hang; each runs in a slice with limits.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+
+### DEC-0257: Whole-image updates at a restart he allows, rolled back by themselves
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: The signed image (the OS and MIA's code) is checked, downloaded in the background, verified, staged, his data snapshotted, applied at a restart he allows; greenboot's health checks failing twice boot the previous deployment.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+
+### DEC-0258: Data reliability in layers
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: Atomic writes and the previous copy (built), Btrfs snapshots hourly and before updates, the append-only history, a start-time integrity check, a damaged settings file never stopping MIA, his data never pruned for space.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+
+### DEC-0259: Backups in two places, restored monthly by a drill
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: The nightly encrypted backup (built) also copied off the PC, 7 nightly, 4 weekly and 6 monthly kept; a monthly drill restores into a scratch folder, opens every store and reports.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+
+### DEC-0260: Plasma, safe mode and the previous deployment as the fallbacks
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: Plasma at login; MIA safe mode with no jobs, models, grants or custom theme; the previous deployment in the boot menu; a recovery USB with the recovery key.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+
+### DEC-0261: Reliability objectives
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 14
+- Decision: No records lost to a crash; at most a day if the PC is destroyed, none if the phone synced; login to Home under 10 seconds; a new PC running his MIA in about two hours; every recovery told in plain words.
+- Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
+

@@ -89,3 +89,7 @@ second abstraction over both would be a new thing to secure and nothing would be
 - Prompt 13: the exact sealing and key design; the sandbox's view of the filesystem.
 - Prompt 14: backup scope for `/etc` and his folders; snapshot policy; the restore rehearsal.
 - Prompt 12: where household data lives when two people share one machine.
+
+## Reliability (Prompt 14, 2026-11-18)
+
+Snapshots, backups in two places and the restore drill: DEC-0258, DEC-0259.

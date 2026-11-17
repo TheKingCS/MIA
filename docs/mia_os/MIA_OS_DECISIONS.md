@@ -185,3 +185,17 @@ Full records: `MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0254 | Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten | APPROVED (Q-93) |
 
 Full records: `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 14 (2026-11-18)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0255 | The OS boots without MIA; readiness in levels | PROPOSED |
+| DEC-0256 | Each part its own unit, with restart limits, a watchdog and its own slice | PROPOSED |
+| DEC-0257 | Whole-image updates at a restart he allows, rolled back by themselves | PROPOSED |
+| DEC-0258 | Data reliability in layers | PROPOSED |
+| DEC-0259 | Backups in two places, restored monthly by a drill | PROPOSED |
+| DEC-0260 | Plasma, safe mode and the previous deployment as the fallbacks | PROPOSED |
+| DEC-0261 | Reliability objectives | PROPOSED |
+
+Full records: `MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md` §2.

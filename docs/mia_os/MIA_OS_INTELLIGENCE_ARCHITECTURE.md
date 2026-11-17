@@ -165,3 +165,7 @@ Which machine thinks: the most capable reachable one, the device's own model the
 ## Security (Prompt 13, 2026-11-18)
 
 The model has no authority; outside content reaches it marked as data; sensitive data never goes to a cloud model (DEC-0249, DEC-0251; `MIA_OS_AI_SECURITY_AND_PROMPT_INJECTION_DEFENSE.md`).
+
+## Reliability (Prompt 14, 2026-11-18)
+
+The model server's failures and recovery: `MIA_OS_AI_SERVICE_RELIABILITY.md`.

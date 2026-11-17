@@ -105,6 +105,10 @@ folded in here.*
 | Q-92 | **Answered (Zac, 2026-11-18): "no but it should offer it"**: two-step stays offered, not required; DEC-0250 approved as amended. Was: Should two-step sign-in be required for every device signing in away from the PC itself, not just offered? Recommended: Yes | DEC-0250 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
 | Q-93 | **Answered yes (Zac, 2026-11-18)**; DEC-0254 approved. Was: An emergency lockdown: one phrase or press that signs out every device, stops everything, locks the vaults and pauses her messages and lab until you unlock with your password? Recommended: Yes | DEC-0254 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
 | Q-94 | **Answered yes (Zac, 2026-11-18), with: "but should all be able to run locally by the time she is built out"**: every add-on and capability runs on his own machines once MIA is complete; DEC-0253 approved as amended. Was: MIA add-ons only from MIA's own repository until add-ons run sandboxed? Recommended: Yes | DEC-0253 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
+| Q-95 | **Open (Prompt 14).** On MIA OS, should updates install only at a restart you choose, or by themselves at night (say 3 am) when nothing's running? A bad one undoes itself either way. Recommended: At night by themselves, with a message in the morning | DEC-0257 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
+| Q-96 | **Open (Prompt 14).** Where should the second copy of the nightly backup live: an external USB drive left plugged in (about $60 for 2 TB), the laptop, or both? Recommended: An external drive, and the laptop too | DEC-0259 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
+| Q-97 | **Open (Prompt 14).** A UPS (battery backup, about $150 to $250) so a power blip doesn't cut off overnight work? Recommended: Yes, when convenient | DEC-0258 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
+| Q-98 | **Open (Prompt 14).** A monthly restore drill MIA runs herself (restore into a scratch folder, check every store opens, report, delete)? Recommended: Yes | DEC-0259 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 
