@@ -34,8 +34,9 @@ reaches the model framed as the person's words, and the notes as reference
 material: neither is ever an instruction, and nothing the model replies is
 run except a calculator's id and inputs, which code validates.
 
-Not here yet: review by a second local model (S5), picking the model per
-specialist (S3: it uses whatever `context.llm` is), web look-up.
+The model that plans and writes is the specialist's own, chosen from this PC's bench results
+(core/specialist_models.py); one that didn't pass the bench is said on the answer. Not here yet: review by a
+second local model (S5), web look-up.
 
 `tool()` is the Assistant's `work_it_out` tool: the same worksheet by voice.
 """
@@ -181,23 +182,27 @@ def _json(reply: str) -> Optional[dict]:
     return got if isinstance(got, dict) else None
 
 
-def _ask(context, prompt: str) -> str:
-    """The local model's reply to a prompt ("" when there's no model or it doesn't answer)."""
+def _ask(context, prompt: str, chosen=None) -> str:
+    """The local model's reply to a prompt: the specialist's own model when one was chosen for it
+    (core/specialist_models.py), else MIA's everyday model ("" when there's no model or it doesn't answer)."""
     llm = getattr(context, "llm", None)
-    if llm is None:
+    if chosen is None and llm is None:
         return ""
     try:
-        return str(llm.generate(prompt) or "")
+        return str((chosen(prompt) if chosen is not None else llm.generate(prompt)) or "")
     except Exception:  # noqa: BLE001 - a model that fails is a model that didn't answer
         log.exception("The specialist's model didn't answer")
         return ""
 
 
-def _done(spec, status: str, answer: str, results: list = (), notes: list = (), need: str = "", checked: str = "") -> dict:
-    """A worksheet's result in one shape."""
+def _done(spec, status: str, answer: str, results: list = (), notes: list = (), need: str = "", checked: str = "",
+          model=None) -> dict:
+    """A worksheet's result in one shape; `model` is the specialist_models.Choice that did its thinking."""
     return {
         "status": status, "specialist": spec.id if spec else "", "specialist_name": spec.name if spec else "",
         "answer": answer, "need": need, "checked": checked,
+        "model": model.model if model is not None else None,
+        "model_note": model.why if model is not None and model.model and not model.passed else "",
         "calculations": [{"calculator": r["calculator"], "said": r["said"], "basis": r["basis"]} for r in results],
         "sources": [{"title": n["title"], "status": n["status"], "sources": n.get("sources", [])} for n in notes],
         "caveat": next((r["caveat"] for r in results if r["caveat"]), ""),
@@ -222,7 +227,12 @@ def work(context, question: str, specialist: str = "", folder=None) -> dict:
         said = specialists.answer(question, spec.id, folder)
         return _done(spec, "no_calculator", f"My {spec.name} specialist has no calculators yet, so it can't give you "
                      f"figures it has checked. From its notes: {said}", notes=notes)
-    plan = _json(_ask(context, _PLAN.format(name=spec.name, calculators=_listing(calculators), question=question)))
+    from core import specialist_models
+
+    choice = specialist_models.choose(spec.id)
+    chosen = specialist_models.asker(context, choice)
+    plan = _json(_ask(context, _PLAN.format(name=spec.name, calculators=_listing(calculators), question=question),
+                      chosen))
     if plan is None:
         return _done(spec, "no_model", "My model isn't answering well enough to plan this right now. The calculators "
                      f"I'd use are: {', '.join(c['label'] for c in calculators)}.", notes=notes)
@@ -255,27 +265,32 @@ def work(context, question: str, specialist: str = "", folder=None) -> dict:
     again, checked = "", ""
     for attempt in (1, 2):
         written = re.sub(r"\*\*|__|^#{1,6}\s*", "", _ask(context, _ANSWER.format(
-            name=spec.name, question=question, results=facts, notes=reference, again=again)), flags=re.M).strip()
+            name=spec.name, question=question, results=facts, notes=reference, again=again), chosen),
+            flags=re.M).strip()
         if not written:
             break
         stray = untraced(written, allowed)
         if not stray:
             checked = "Every number in this answer comes from a calculator, your question or a note."
-            return _done(spec, "answered", written, results, notes, checked=checked)
+            return _done(spec, "answered", written, results, notes, checked=checked, model=choice)
         again = ("\n\nYour last answer used numbers that are not in the results: "
                  + ", ".join(f"{n:g}" for n in stray[:5]) + ". Write it again using only the results' numbers.")
     checked = ("My model's wording didn't pass the number check, so this is the calculators' own result."
                if again else "My model didn't write an explanation, so this is the calculators' own result.")
-    return _done(spec, "answered", plain, results, notes, checked=checked)
+    return _done(spec, "answered", plain, results, notes, checked=checked, model=choice)
 
 
 def say(result: dict) -> str:
-    """A worksheet's result as MIA says it: the answer, the caveat when there is one, and how it was checked."""
+    """A worksheet's result as MIA says it: the answer, the caveat when there is one, how it was checked, and, when
+    the model that planned it didn't pass the bench for this work, that too."""
     parts = [result["answer"]]
     if result["status"] == "answered":
         if result["caveat"]:
             parts.append(result["caveat"])
         parts.append(f"({result['specialist_name']} specialist. {result['checked']})")
+        if result.get("model_note"):
+            parts.append(f"(The model that planned this: {result['model_note']}. The figures are still the "
+                         "calculators' own; check that it picked the right ones.)")
     return " ".join(p for p in parts if p)
 
 

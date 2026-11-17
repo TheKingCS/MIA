@@ -251,10 +251,11 @@ def _greenhouse_heat(area: Quantity, u: Quantity, inside: Quantity, outside: Qua
 
 
 def _vent_fan(floor: Quantity, rate: Quantity) -> dict:
-    """Fan capacity for summer cooling: cfm per square foot of floor."""
-    flow = q(floor.number("ft2") * rate.value, "cfm")
+    """Fan capacity for summer cooling: the floor area times the airflow per square foot."""
+    per_ft2 = rate.number("cfm/ft2")
+    flow = q(floor.number("ft2") * per_ft2, "cfm")
     return {"values": {"flow": flow},
-            "said": f"{floor.to('ft2')} of floor at {rate.value:g} cfm per square foot needs fans moving {flow} "
+            "said": f"{floor.to('ft2')} of floor at {per_ft2:g} cfm per square foot needs fans moving {flow} "
                     f"(more at high elevation or under glazing with no shade)."}
 
 
@@ -339,14 +340,14 @@ CALCULATORS: tuple[Calculator, ...] = (
     Calculator("greenhouse_heat", "greenhouse", "Greenhouse Heat Loss", "Heat lost through the glazing on the "
                "coldest night, which the heater must make up.",
                {"area": ("ft2", "the glazing's total area, walls and roof", None),
-                "u": ("BTU/h/ft2/degF", "the glazing's U-value (single poly about 1.15, twin-wall about 0.7)", None),
+                "u": ("BTU/h/ft2/degF", "the glazing's U-value, from its maker's sheet", None),
                 "inside": ("degF", "the lowest temperature to keep inside", None),
                 "outside": ("degF", "the coldest outside temperature to plan for", None)},
                _greenhouse_heat, "Q = U x A x (inside - outside), conduction through the glazing only", True,
                signed=("inside", "outside")),
     Calculator("vent_fan", "greenhouse", "Greenhouse Fan Size", "Exhaust fan capacity for summer cooling.",
                {"floor": ("ft2", "the floor area", None),
-                "rate": ("", "cfm per square foot of floor", str(VENT_CFM_PER_FT2))},
+                "rate": ("cfm/ft2", "the airflow per square foot of floor", f"{VENT_CFM_PER_FT2} cfm/ft2")},
                _vent_fan, "8 cfm per square foot of floor below 1000 ft elevation (NGMA, ASABE EP406)"),
     Calculator("drip_irrigation", "greenhouse", "Drip Zone Water", "A drip zone's flow and the water it uses.",
                {"emitters": ("", "how many emitters", None), "rate": ("gph", "each emitter's flow", None),
@@ -355,7 +356,7 @@ CALCULATORS: tuple[Calculator, ...] = (
     Calculator("heater_fuel", "greenhouse", "Heater Propane", "Propane a heater burns making up a heat load.",
                {"load": ("BTU/h", "the heat needed (from Greenhouse Heat Loss)", None),
                 "hours": ("h", "how many hours it runs", None),
-                "efficiency": ("%", "the heater's efficiency (unvented about 100%, vented about 80%)", "80 %")},
+                "efficiency": ("%", "the heater's efficiency", "80 %")},
                _heater_fuel, "gallons = load x hours / (91,500 BTU per gallon x efficiency); an unvented heater "
                "needs fresh air and a CO alarm", True),
 )

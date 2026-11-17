@@ -150,18 +150,20 @@ class OllamaBackend:
     """LLMBackend implementation for a local Ollama server."""
 
     def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE,
-                 num_ctx: int = 0, think: Optional[bool] = None) -> None:
+                 num_ctx: int = 0, think: Optional[bool] = None, num_predict: int = 0) -> None:
         # Windows tries localhost's IPv6 address first, and Ollama isn't there:
         # 2 seconds lost on every call, enough to read as "the computer's down".
         """A local Ollama server: its address (localhost turned into 127.0.0.1, since Windows tries IPv6 first and
         loses two seconds), the model, how long to keep it loaded (a number of seconds, or a duration like "30m"),
-        temperature, context size (0: the server's) and whether a thinking model thinks.
+        temperature, context size (0: the server's), whether a thinking model thinks, and the most a reply may
+        run to (0: no limit; a specialist's model is capped, core/specialist_models.py).
         """
         self._base_url = base_url.rstrip("/").replace("://localhost", "://127.0.0.1")
         self._model = model
         self._temperature = temperature
         self._num_ctx = int(num_ctx or 0)  # 0: leave it to the server
         self._think = think  # None: the model's default; False: answer without a thinking pass (qwen3)
+        self._num_predict = int(num_predict or 0)  # 0: no limit
         # Ollama's keep_alive must be a bare JSON number of seconds
         # (e.g. -1 to never unload) OR a Go duration *string* with a
         # unit suffix (e.g. "30m") — a quoted "-1" is rejected with
@@ -180,10 +182,12 @@ class OllamaBackend:
         return {} if self._think is None else {"think": bool(self._think)}
 
     def _options(self) -> dict:
-        """The request's model options: temperature, and the context size when one is set."""
+        """The request's model options: temperature, and the context size and reply limit when they're set."""
         options: dict = {"temperature": self._temperature}
         if self._num_ctx > 0:
             options["num_ctx"] = self._num_ctx
+        if self._num_predict > 0:
+            options["num_predict"] = self._num_predict
         return options
 
     def generate(self, prompt: str, timeout: float) -> str:

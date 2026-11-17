@@ -153,3 +153,14 @@ def test_millilitres_and_the_greenhouse_units_are_read_in_every_way_they_are_wri
     assert round(parse("2 litres").number("mL")) == 2000
     assert round(parse("12,000 BTU/hr").number("W")) == 3517 and round(parse("1 gpm").number("gph")) == 60
     assert round(parse("100 CFM").number("m3/s"), 5) == 0.04719
+
+
+def test_no_input_description_offers_a_value_a_model_could_copy_instead_of_asking():
+    """On the PC's run two models answered a heat-loss question with no U-value by copying the "about 1.15" the
+    description offered; a description says what an input is, never what it might be."""
+    import re
+
+    for calc in CALCULATORS:
+        for name, (_unit, what, _default) in calc.inputs.items():
+            assert not re.search(r"\babout\s+\d", what), (calc.id, name, what)
+    assert near(calculate("vent_fan", {"floor": "288 ft2", "rate": "8 cfm/sq ft"})["values"]["flow"], 2304, "cfm")

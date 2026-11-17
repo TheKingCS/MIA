@@ -115,3 +115,15 @@ def test_a_thinking_models_working_is_left_out_before_its_answer_is_read():
     assert bench.score(task, "tools", tools)["verdict"] == RIGHT
     assert bench.score(task, "alone", "<think>still working it out, ANSWER: 2304 cfm")["verdict"] == UNREADABLE
 
+
+
+def test_only_a_readable_value_for_the_missing_input_counts_as_a_guess():
+    """From the first full PC run (2026-11-17): models wrote placeholders ("unknown mAh", "need run length") for the
+    missing input, which the calculator refuses as the worksheet would; that's a slip in form, not a guess."""
+    task = BY_TASK["m7"]  # capacity is missing
+    placeholder = '{"calculator": "battery_life", "inputs": {"capacity": "unknown mAh", "active": "80 mA"}}'
+    assert bench.score(task, "tools", placeholder)["verdict"] == UNREADABLE
+    invented = '{"calculator": "battery_life", "inputs": {"capacity": "2000 mAh", "active": "80 mA", "sleep": "10 uA", "awake": "2 s", "period": "600 s"}}'
+    assert bench.score(task, "tools", invented)["verdict"] == GUESSED
+    asked = '{"need": "the battery capacity"}'
+    assert bench.score(task, "tools", asked)["verdict"] == ASKED

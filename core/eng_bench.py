@@ -128,7 +128,7 @@ TASKS: tuple[Task, ...] = (
          "hour does it lose through the glazing?", "greenhouse_heat",
          {"area": "600 ft2", "u": "0.7 BTU/h/ft2/degF", "inside": "45 degF", "outside": "5 degF"}, "heat_loss", "BTU/h"),
     Task("g2", "How many cfm of exhaust fan does a 12 by 24 foot greenhouse floor need for summer cooling, at 8 cfm "
-         "per square foot?", "vent_fan", {"floor": "288 ft2", "rate": 8}, "flow", "cfm"),
+         "per square foot?", "vent_fan", {"floor": "288 ft2", "rate": "8 cfm/ft2"}, "flow", "cfm"),
     Task("g3", "A drip zone has 40 emitters at half a gallon per hour each and runs for 2 hours. How many gallons "
          "does it use?", "drip_irrigation", {"emitters": 40, "rate": "0.5 gph", "hours": "2 h"}, "water", "gal"),
     Task("g4", "A propane heater has to make up 16,800 BTU per hour for 10 hours at 80% efficiency. How many gallons "
@@ -199,6 +199,17 @@ def _judge(task: Task, got: Optional[Quantity], asked: bool) -> str:
     return RIGHT if want.close_to(got, task.within) else WRONG
 
 
+def _readable(value) -> bool:
+    """Pure logic. Whether a value a model gave reads as a number (with or without a unit)."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return True
+    try:
+        parse(str(value))
+        return True
+    except UnitError:
+        return False
+
+
 def score(task: Task, mode: str, reply: str) -> dict:
     """One reply's verdict: {"verdict", "got" (what was read from it, in words), "detail"}. In "tools" mode the
     named calculator is run by code with the inputs given; a calculator that refuses for a missing input counts as
@@ -230,8 +241,12 @@ def score(task: Task, mode: str, reply: str) -> dict:
     try:
         result = calculate(str(raw.get("calculator") or ""), raw.get("inputs") if isinstance(raw.get("inputs"), dict) else {})
     except CalcError as problem:
-        return {"verdict": UNREADABLE if not task.missing else GUESSED if raw.get("inputs") else UNREADABLE,
-                "got": str(raw.get("calculator") or ""), "detail": str(problem)}
+        # Only a readable value for the missing input is a guess; a placeholder for it, or leaving it out, the
+        # calculator refuses, as the worksheet would, so the model just didn't follow the form.
+        given = (raw.get("inputs") or {}).get(task.missing) if isinstance(raw.get("inputs"), dict) else None
+        guessed = bool(task.missing) and given not in (None, "") and _readable(given)
+        return {"verdict": GUESSED if guessed else UNREADABLE, "got": str(raw.get("calculator") or ""),
+                "detail": str(problem)}
     if task.missing:  # it filled in something the question never gave
         return {"verdict": GUESSED, "got": result["said"], "detail": f"the question didn't give {task.missing}"}
     got = result["values"].get(task.answer) if result["calculator"] == task.calculator else None
