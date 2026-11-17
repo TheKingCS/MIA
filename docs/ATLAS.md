@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1478 files, 330,838 lines; 1478 files describe themselves; 18,147 of 18,245 classes and functions are documented.
+1482 files, 331,728 lines; 1482 files describe themselves; 18,207 of 18,305 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-575 files, 166,308 lines; 8,575 of 8,661 classes and functions documented
+578 files, 167,012 lines; 8,627 of 8,713 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -81,6 +81,7 @@
 - `core/assistant_subscription_actions.py`: "Still using it?" by voice (DEC-0054, DEC-0125): "I still use Netflix" marks that subscription in use today (the same `bill.still_using` as Money's button), and "which subscriptions haven't I checked?" lists the ones not said to be in use in three months (core/subscriptions.py).
 - `core/assistant_tagging_actions.py`: Assistant tools for sorting bank charges to businesses (core/business_tagging.py): "which charges need a business?" and "the Shell charge was for lawn care" / "the Walmart one was personal".
 - `core/assistant_taught_skill_actions.py`: Taught skills by voice (DEC-0123, core/taught_skills.py): "Watch me: the Friday reset" ... "that's it" "What skills have I taught you?" "Run the Friday reset" ... "yes" / "done" / an answer "Stop the skill" "Forget the Friday reset skill"
+- `core/assistant_teamwork_actions.py`: A project's workspace and team by voice (core/teamwork.py, T2), each tool doing what its button on the Projects page does (core/teamwork_actions.py), so voice and screen agree (DEC-0125):
 - `core/assistant_textbook_actions.py`: Assistant tools for the textbook tutor (core/textbook_manager.py): what books MIA has, a quick "where does the book talk about X" lookup, and making a Classroom course from a book. Studying and quizzing themselves are conversation modes (core/textbook_study.py: "let's study the wiring book", "quiz m
 - `core/assistant_today_actions.py`: "What's on today?" (core/today.py, 2026-10-01): everything that needs the person today, across every app, in one answer. And the rest of the Dashboard by voice (DEC-0153, 2026-11-11): "what's this week?" (Your Week, core/today.week_days), "what's the weather?" and "my town is Springfield, Illinois" 
 - `core/assistant_toolbox_actions.py`: The Toolbox by voice, for what the web Toolbox added (DEC-0125: full use both ways). "How many board feet in ten 2x6s, 8 feet long", "how much concrete for a 10 by 12 pad, 4 inches thick", "turn off my wake up alarm". Each tool uses the same core math (core/toolbox_calcs.py) or the same action kind 
@@ -471,6 +472,8 @@
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list.
 - `core/taught_skill_actions.py`: Taught skills' actions (DEC-0123, core/taught_skills.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/taught_skills.py`: Taught skills, phase 1 (DEC-0123, approved 2026-11-15; part of MIA's one skills system, DEC-0167; the proposal is `docs/PROCEDURES_PROPOSAL.md`): something the person teaches MIA once, made of things she can already do, that she practises with them watching until it's proven.
+- `core/teamwork.py`: A project's team and workspace (T2 of `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`, sections 4 and 5; DEC-0198). The workspace is the structured record of work on one project: what was found, what must be respected, what is asked, recommended, disputed, reviewed, decided and delivered. It replace
+- `core/teamwork_actions.py`: A project's workspace and team (core/teamwork.py, T2) on the action contract in core/actions.py:
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
 - `core/textbook_study.py`: The study and quiz conversation modes of the textbook tutor (2026-09-28): which book and chapter a conversation is on, and the passages MIA answers from each turn. The library itself is core/textbook_manager.py; the tone lines are in core/conversation_modes.py (STUDY, QUIZ).
 - `core/the_loop.py`: The Loop (DEC-0047, step 1; Zac 2026-10-27): the normal week, run as the same grind every week, and MIA learning *when* it happens so she knows when to start each part and remind you.
@@ -869,7 +872,7 @@
 
 ## tests/: the test suite: what each part must do
 
-507 files, 85,941 lines; 7,238 of 7,250 classes and functions documented
+508 files, 86,070 lines; 7,246 of 7,258 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1274,6 +1277,7 @@
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).
 - `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, the steps that ask every time whatever was learned, and each run kept in the run book through its waits to its end (UI-1).
+- `tests/test_teamwork.py`: A project's workspace and team (core/teamwork.py, T2 of the specialized agent teams; DEC-0198): the person's entries are confirmed and a specialist's derived until he confirms; a specialist's entry names its model, a finding of its on a source names the source, and it can only come from a real speci
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared.
 - `tests/test_theme_manager.py`: Unit tests for gui.theme_manager. Pure string-lookup logic — no Qt event loop needed.
@@ -1381,7 +1385,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-114 files, 21,193 lines
+114 files, 21,250 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
