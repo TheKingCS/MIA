@@ -3453,3 +3453,24 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Cost: her browser holds his live sessions, so a mistake or a manipulated page reaches more than before; the four
   rules and the existing gate are what contain it.
 - Related: DEC-0117, DEC-0188, DEC-0194
+
+### DEC-0197: The specialists run on local models able to do the engineering; MIA knows what he's working on
+- Status: APPROVED
+- Decided by: zac, 2026-11-17, answering Q-53 and Q-44: "The specialists should be local models that are capable of
+  doing the engineering. We need to do whatever work makes that possible." and "Yes, mia should know what I am
+  working on."
+- Decision:
+  - **Q-53:** a team's specialists think on models that run on his own machines, not on the cloud models the
+    council uses. Making local models capable of real engineering is now work to do, not a reason to use the cloud.
+    This changes `MIA_OS_SPECIALIZED_AGENT_TEAMS.md`'s recommendation, and the proposed DEC-0197 to DEC-0199 there
+    are renumbered when written down.
+  - **Q-44:** MIA notes what he's working on (the app and document in front of him) to tie work to a project. The
+    review's safeguards still apply unless he says otherwise: names and titles only, an indicator while it's on,
+    and an erase button. It moves up from "build it last".
+- Consequences (to plan, Fable): which local models can do engineering on the PC's 24 GB card, measured on
+  engineering tasks, not assumed; the specialists grounded in their notes and given calculators in code for every
+  number (as `core/build_calcs.py` already does for builds); a checker that compares a specialist's numbers against
+  code; the Pi asks the PC's model (its AI HAT+ 2 runs only small models). Q-54 to Q-58 are still open.
+- Related: DEC-0188, DEC-0168, DEC-0118, `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`,
+  `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md`
+

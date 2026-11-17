@@ -7,6 +7,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-16 (the Fable run: review queue 14 to 23, prompt 23's review, MIA OS Prompt 05)*
 
+**New 2026-11-17, from Zac's phone (Claude, cloud session; the PC session needs Zac to sign in again).**
+- **Q-53 answered (DEC-0197):** the specialists run on local models that can do the engineering; build whatever makes
+  that possible. **Q-44 answered yes:** MIA should know what he's working on. Q-54 to Q-58 still open.
+- Next: the plan for engineering-capable local specialists (Fable): measure local models on engineering tasks,
+  ground them in the specialists' notes, numbers from calculators in code, a checker.
+
 **New 2026-11-16, on the PC (Claude on Fable): the Fable run Zac asked for.**
 - **Review queue items 14 to 23**: done (K-0261; what changed is listed under the queue below).
 - **Prompt 23 (Universal Intelligence)**: Fable's architectural review is `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md`.
