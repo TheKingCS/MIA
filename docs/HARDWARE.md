@@ -583,7 +583,7 @@ power supply.
 | Memory speed (EXPO) | **on**: running at 6400 MT/s | nothing | — |
 | Virtualization (SVM) | **on** | nothing | — |
 | Resizable BAR (Smart Access Memory) | unknown | enable if it's off (helps the card read system memory) | Zac, in the BIOS: **Re-Size BAR Support**, with Above 4G Decoding |
-| Ollama for MIA's work | defaults | flash attention on and the attention cache at 8-bit (`OLLAMA_FLASH_ATTENTION=1`, `OLLAMA_KV_CACHE_TYPE=q8_0`): longer contexts in the same 24 GB, and room for the everyday model beside a 14B | Claude, after the bench run ends, then re-bench to check nothing got worse |
+| Ollama for MIA's work | **done 2026-11-18** (Claude, overnight): flash attention on and the attention cache at 8-bit (`OLLAMA_FLASH_ATTENTION=1`, `OLLAMA_KV_CACHE_TYPE=q8_0`, his user variables), Ollama restarted with them | measured before and after at his 32k context: **qwen2.5:32b 2.2× faster** (writing 9–13 to 20–29 tokens/s, reading up to 2.5×; it had been spilling out of the 24 GB), same answers; **qwen2.5:14b 3 GB less memory** (15.3 to 12.3 GB) and 4–6% slower writing, two answers the same and one reworded | to undo: delete the two user variables and restart Ollama |
 | Windows update restarts | active hours 7 pm to noon | leave; MIA's long runs move to MIA OS later | — |
 | Power plan | Balanced | leave (Zen 5 boosts fully on it) | — |
 

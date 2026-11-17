@@ -15,6 +15,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off (`gui/ambient_screens.py`). **Zac to try:** restart MIA with both monitors on, then turn the 1080p one off and
   on. `gui.ambient_screen: false` turns it off.
 - CLAUDE.md now names the everyday model correctly (qwen2.5:14b, 32k).
+- **Ollama tuned** (Q-67, `docs/HARDWARE.md` §4): flash attention and an 8-bit attention cache, as your user
+  variables; Ollama restarted with them. Measured before and after at 32k context: the specialists' qwen2.5:32b went
+  from 9–13 to 20–29 tokens/s with the same answers; qwen2.5:14b uses 3 GB less and writes about 5% slower.
 - **Recall by meaning, first slice** (DEC-0210, Q-71): `core/recall_index.py`. What MIA remembers, notes, notes to
   self and projects are embedded every 10 minutes (refs, hashes and vectors only, in your folder); "what do I have
   about the coop?" finds them by meaning and re-reads each from its store; without the embedding model it matches
