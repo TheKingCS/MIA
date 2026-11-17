@@ -104,3 +104,14 @@ def test_the_command_line_runs_a_model_keeps_the_results_and_prints_a_table(tmp_
     assert kept["model"] == "test:27b" and len(kept["rows"]) == 2 * len(TASKS)
     said = capsys.readouterr().out
     assert "tools  embedded    good 100.0%" in said and "Kept in" in said
+
+
+def test_a_thinking_models_working_is_left_out_before_its_answer_is_read():
+    """qwen3 writes <think>...</think> first; an ANSWER or a brace inside it is working, not the answer."""
+    task = BY_TASK["g2"]
+    said = '<think>Maybe ANSWER: 99 cfm? {"calculator": "power"} no.</think>\nANSWER: 2304 cfm'
+    assert bench.score(task, "alone", said)["verdict"] == RIGHT
+    tools = '<think>{"calculator": "power", "inputs": {}}</think>{"calculator": "vent_fan", "inputs": {"floor": "288 ft2"}}'
+    assert bench.score(task, "tools", tools)["verdict"] == RIGHT
+    assert bench.score(task, "alone", "<think>still working it out, ANSWER: 2304 cfm")["verdict"] == UNREADABLE
+

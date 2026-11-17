@@ -22,7 +22,8 @@ the values, a sentence, the basis and the caveat.
 The first set: electrical (power, voltage drop, wire gauge, circuit load,
 battery runtime), embedded (LED resistor, voltage divider, battery life
 with sleep, regulator heat, ADC step), structural (floor joist), and
-homestead crafts (brine salt, candle wax). Each is checked in
+homestead crafts (brine salt, candle wax), and the greenhouse (heat loss, fan size,
+drip water, heater propane; S4's first specialist). Each is checked in
 tests/test_eng_calcs.py against a worked example done by hand.
 
 Tables here are for copper wire at ordinary indoor temperatures and are a
@@ -58,7 +59,7 @@ class CalcError(ValueError):
 class Calculator:
     """One calculator: its id, discipline, name, what it works out, its inputs (name -> (unit, what it is, the
     default as text or None when it must be given)), what it runs, the rule or table it follows, and whether the
-    result is safety-critical."""
+    result is safety-critical, and which inputs may be negative (`signed`)."""
     id: str
     discipline: str
     label: str
@@ -67,6 +68,7 @@ class Calculator:
     run: Callable[..., dict] = field(repr=False, compare=False, default=None)
     basis: str = ""
     safety: bool = False
+    signed: tuple = ()  # inputs that may be below zero (a temperature on a scale); every other input may not
 
 
 def _ohms_per_ft(awg: int) -> float:
@@ -231,6 +233,52 @@ def _candle_wax(volume: Quantity, fragrance: Quantity) -> dict:
                     f"{fragrance.si * 100:g}% fragrance is {oil}."}
 
 
+PROPANE_BTU_PER_GAL = 91_500  # the heat in a US gallon of propane (higher heating value, the figure suppliers give)
+VENT_CFM_PER_FT2 = 8  # summer cooling: 8 cfm per square foot of floor below 1000 ft elevation (NGMA, ASABE EP406)
+
+
+def _greenhouse_heat(area: Quantity, u: Quantity, inside: Quantity, outside: Quantity) -> dict:
+    """Heat lost through a greenhouse's glazing on the coldest night: U x A x the inside-outside difference."""
+    from core.quantities import temperature
+
+    diff = temperature(inside.value, inside.unit, "degF") - temperature(outside.value, outside.unit, "degF")
+    if diff <= 0:
+        raise CalcError("Inside must be warmer than outside for there to be heat to make up.")
+    loss = q(u.number("BTU/h/ft2/degF") * area.number("ft2") * diff, "BTU/h")
+    return {"values": {"heat_loss": loss, "watts": loss.to("W")},
+            "said": f"{area.to('ft2')} of glazing at U {u.number('BTU/h/ft2/degF'):g}, {diff:g} degF colder outside, "
+                    f"loses {loss} ({loss.to('W')}) through the glazing; air leaks add to it."}
+
+
+def _vent_fan(floor: Quantity, rate: Quantity) -> dict:
+    """Fan capacity for summer cooling: cfm per square foot of floor."""
+    flow = q(floor.number("ft2") * rate.value, "cfm")
+    return {"values": {"flow": flow},
+            "said": f"{floor.to('ft2')} of floor at {rate.value:g} cfm per square foot needs fans moving {flow} "
+                    f"(more at high elevation or under glazing with no shade)."}
+
+
+def _drip(emitters: Quantity, rate: Quantity, hours: Quantity) -> dict:
+    """Water for a drip zone: emitters x their flow x hours run."""
+    flow = q(emitters.value * rate.number("gph"), "gph")
+    used = q(flow.value * hours.number("h"), "gal")
+    return {"values": {"flow": flow, "gpm": flow.to("gpm"), "water": used},
+            "said": f"{emitters.value:g} emitters at {rate.to('gph')} is {flow} ({flow.to('gpm')}); "
+                    f"run {hours.to('h')} that's {used}."}
+
+
+def _heater_fuel(load: Quantity, hours: Quantity, efficiency: Quantity) -> dict:
+    """Propane for a heater: the heat needed over the hours, divided by propane's heat per gallon and the heater's
+    efficiency."""
+    if efficiency.si <= 0:
+        raise CalcError("A heater's efficiency has to be more than 0%.")
+    heat = load.number("BTU/h") * hours.number("h")
+    gallons = q(heat / (PROPANE_BTU_PER_GAL * efficiency.si), "gal")
+    return {"values": {"propane": gallons},
+            "said": f"{load.to('BTU/h')} for {hours.to('h')} at {efficiency.si * 100:g}% efficiency burns {gallons} "
+                    f"of propane ({PROPANE_BTU_PER_GAL:,} BTU a gallon)."}
+
+
 CALCULATORS: tuple[Calculator, ...] = (
     Calculator("power", "electrical", "Power", "Watts from volts and amps.",
                {"volts": ("V", "the voltage", None), "amps": ("A", "the current", None)}, _power, "P = V x I"),
@@ -288,6 +336,28 @@ CALCULATORS: tuple[Calculator, ...] = (
                {"volume": ("L", "the container's volume", None), "fragrance": ("%", "the fragrance load", "8 %")},
                _candle_wax, "common candle-making practice: wax at 0.86 g per mL; check the wax maker's own maximum "
                "fragrance load"),
+    Calculator("greenhouse_heat", "greenhouse", "Greenhouse Heat Loss", "Heat lost through the glazing on the "
+               "coldest night, which the heater must make up.",
+               {"area": ("ft2", "the glazing's total area, walls and roof", None),
+                "u": ("BTU/h/ft2/degF", "the glazing's U-value (single poly about 1.15, twin-wall about 0.7)", None),
+                "inside": ("degF", "the lowest temperature to keep inside", None),
+                "outside": ("degF", "the coldest outside temperature to plan for", None)},
+               _greenhouse_heat, "Q = U x A x (inside - outside), conduction through the glazing only", True,
+               signed=("inside", "outside")),
+    Calculator("vent_fan", "greenhouse", "Greenhouse Fan Size", "Exhaust fan capacity for summer cooling.",
+               {"floor": ("ft2", "the floor area", None),
+                "rate": ("", "cfm per square foot of floor", str(VENT_CFM_PER_FT2))},
+               _vent_fan, "8 cfm per square foot of floor below 1000 ft elevation (NGMA, ASABE EP406)"),
+    Calculator("drip_irrigation", "greenhouse", "Drip Zone Water", "A drip zone's flow and the water it uses.",
+               {"emitters": ("", "how many emitters", None), "rate": ("gph", "each emitter's flow", None),
+                "hours": ("h", "how long it runs", "1 h")},
+               _drip, "flow = emitters x each one's flow; water = flow x hours"),
+    Calculator("heater_fuel", "greenhouse", "Heater Propane", "Propane a heater burns making up a heat load.",
+               {"load": ("BTU/h", "the heat needed (from Greenhouse Heat Loss)", None),
+                "hours": ("h", "how many hours it runs", None),
+                "efficiency": ("%", "the heater's efficiency (unvented about 100%, vented about 80%)", "80 %")},
+               _heater_fuel, "gallons = load x hours / (91,500 BTU per gallon x efficiency); an unvented heater "
+               "needs fresh air and a CO alarm", True),
 )
 BY_ID = {c.id: c for c in CALCULATORS}
 DISCIPLINES = tuple(dict.fromkeys(c.discipline for c in CALCULATORS))
@@ -328,8 +398,9 @@ def calculate(calc_id: str, inputs: dict) -> dict:
         raise CalcError(f"{calc.label} needs {'; '.join(missing)}.")
     values = {name: _read(calc, name, inputs[name] if inputs.get(name) not in (None, "") else default)
               for name, (_unit, _what, default) in calc.inputs.items()}
-    if any(v.si < 0 for v in values.values()):
-        raise CalcError("None of the inputs can be negative.")
+    negative = [name for name, v in values.items() if v.si < 0 and name not in calc.signed]
+    if negative:
+        raise CalcError(f"{', '.join(negative)} can't be negative.")
     try:
         result = calc.run(**values)
     except UnitError as problem:

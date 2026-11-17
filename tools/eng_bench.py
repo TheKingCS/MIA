@@ -28,11 +28,18 @@ from core.data_root import WORK_DIR
 URL = "http://127.0.0.1:11434/api/generate"
 
 
-def ollama(model: str, url: str = URL, timeout: float = 600.0):
-    """A function from a prompt to that model's reply, at temperature 0 so a run can be repeated."""
+# The most a model may write for one task. A thinking model (qwen3) otherwise thinks without end: on the PC's first
+# run (2026-11-17) it spent over an hour on 36 tasks and never finished. Past this, its answer is cut and unreadable.
+MAX_TOKENS = 3072
+
+
+def ollama(model: str, url: str = URL, timeout: float = 600.0, max_tokens: int = MAX_TOKENS):
+    """A function from a prompt to that model's reply, at temperature 0 so a run can be repeated, cut at
+    max_tokens."""
     def ask(prompt: str) -> str:
         """One question to the model."""
-        body = json.dumps({"model": model, "prompt": prompt, "stream": False, "options": {"temperature": 0}}).encode()
+        body = json.dumps({"model": model, "prompt": prompt, "stream": False,
+                           "options": {"temperature": 0, "num_predict": max_tokens}}).encode()
         request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(request, timeout=timeout) as answer:
             return json.loads(answer.read()).get("response", "")

@@ -122,6 +122,21 @@ TASKS: tuple[Task, ...] = (
     Task("c2", "How many grams of wax fill a 250 millilitre candle jar, with wax at 0.86 grams per millilitre?",
          "candle_wax", {"volume": "0.25 L"}, "wax", "g"),
     Task("c3", "How much salt for my sauerkraut at 2%?", "brine_salt", {"strength": "2 %"}, missing="vegetables"),
+    # ---- greenhouse (the greenhouse systems specialist, S4)
+    Task("g1", "A greenhouse has 600 square feet of twin-wall polycarbonate glazing with a U-value of 0.7 BTU per hour "
+         "per square foot per degree F. I keep it at 45 degrees F and plan for 5 degrees F outside. How many BTU per "
+         "hour does it lose through the glazing?", "greenhouse_heat",
+         {"area": "600 ft2", "u": "0.7 BTU/h/ft2/degF", "inside": "45 degF", "outside": "5 degF"}, "heat_loss", "BTU/h"),
+    Task("g2", "How many cfm of exhaust fan does a 12 by 24 foot greenhouse floor need for summer cooling, at 8 cfm "
+         "per square foot?", "vent_fan", {"floor": "288 ft2", "rate": 8}, "flow", "cfm"),
+    Task("g3", "A drip zone has 40 emitters at half a gallon per hour each and runs for 2 hours. How many gallons "
+         "does it use?", "drip_irrigation", {"emitters": 40, "rate": "0.5 gph", "hours": "2 h"}, "water", "gal"),
+    Task("g4", "A propane heater has to make up 16,800 BTU per hour for 10 hours at 80% efficiency. How many gallons "
+         "of propane is that?", "heater_fuel", {"load": "16800 BTU/h", "hours": "10 h", "efficiency": "80 %"},
+         "propane", "gal"),
+    Task("g5", "How big a heater does my greenhouse need for 5 degrees F outside? It has 600 square feet of glazing "
+         "and I keep it at 45.", "greenhouse_heat", {"area": "600 ft2", "inside": "45 degF", "outside": "5 degF"},
+         missing="u"),
 )
 BY_TASK = {t.id: t for t in TASKS}
 
@@ -187,8 +202,10 @@ def _judge(task: Task, got: Optional[Quantity], asked: bool) -> str:
 def score(task: Task, mode: str, reply: str) -> dict:
     """One reply's verdict: {"verdict", "got" (what was read from it, in words), "detail"}. In "tools" mode the
     named calculator is run by code with the inputs given; a calculator that refuses for a missing input counts as
-    the model having asked only if the model itself said what's needed."""
-    reply = str(reply or "")
+    the model having asked only if the model itself said what's needed. A thinking model's <think> part is left
+    out first (its working may hold an early ANSWER or a brace that isn't its answer); a reply cut off while still
+    thinking has no answer."""
+    reply = re.sub(r"<think>.*?(</think>|$)", "", str(reply or ""), flags=re.S | re.I)
     if mode == "alone":
         need, answer = _NEED.search(reply), _ANSWER.findall(reply)
         if need and not answer:

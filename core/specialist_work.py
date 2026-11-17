@@ -55,9 +55,9 @@ log = get_logger(__name__)
 # Which calculators each specialist may use, by discipline (a specialist not listed has none yet, and says so).
 DISCIPLINES: dict[str, tuple[str, ...]] = {
     "embedded": ("embedded", "electrical"), "electrical": ("electrical",), "crafts": ("crafts",),
-    "carpentry": ("structural",), "maker": ("embedded", "electrical"), "homesteading": ("crafts", "electrical"),
-    "construction": ("structural", "electrical"), "radio": ("electrical",), "hvac": ("electrical",),
-    "engineering": ("embedded", "electrical"),
+    "carpentry": ("structural",), "maker": ("embedded", "electrical"), "homesteading": ("crafts", "electrical", "greenhouse"),
+    "construction": ("structural", "electrical"), "radio": ("electrical",), "hvac": ("electrical", "greenhouse"),
+    "engineering": ("embedded", "electrical"), "greenhouse": ("greenhouse", "electrical"),
 }
 MAX_CALCULATIONS = 4
 

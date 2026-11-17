@@ -50,13 +50,23 @@ UNITS: dict[str, tuple[float, tuple]] = {
     "Hz": (1.0, (0, 0, -1, 0, 0)), "kHz": (1e3, (0, 0, -1, 0, 0)), "MHz": (1e6, (0, 0, -1, 0, 0)),
     "K": (1.0, _K), "degC": (1.0, _K), "degF": (5.0 / 9.0, _K),  # as differences
     "m2": (1.0, (2, 0, 0, 0, 0)), "ft2": (0.09290304, (2, 0, 0, 0, 0)),
-    "m3": (1.0, (3, 0, 0, 0, 0)), "L": (1e-3, (3, 0, 0, 0, 0)), "gal": (3.785411784e-3, (3, 0, 0, 0, 0)),
+    "m3": (1.0, (3, 0, 0, 0, 0)), "L": (1e-3, (3, 0, 0, 0, 0)), "mL": (1e-6, (3, 0, 0, 0, 0)),
+    "gal": (3.785411784e-3, (3, 0, 0, 0, 0)), "ft3": (0.028316846592, (3, 0, 0, 0, 0)),
+    # Flows and the greenhouse's heat (the greenhouse specialist, S4): BTU per hour is a power; a U-value is a power
+    # per area per degree.
+    "BTU/h": (0.29307107, _WATT), "m3/s": (1.0, (3, 0, -1, 0, 0)), "cfm": (4.719474432e-4, (3, 0, -1, 0, 0)),
+    "gpm": (6.30901964e-5, (3, 0, -1, 0, 0)), "gph": (1.051503273e-6, (3, 0, -1, 0, 0)),
+    "W/m2K": (1.0, (0, 1, -3, 0, -1)), "BTU/h/ft2/degF": (5.678263337, (0, 1, -3, 0, -1)),
     "N": (1.0, (1, 1, -2, 0, 0)), "Pa": (1.0, (-1, 1, -2, 0, 0)), "psi": (6894.757293168, (-1, 1, -2, 0, 0)),
     "degC/W": (1.0, (-2, -1, 3, 0, 1)),
 }
 _ALIASES = {"Ω": "ohm", "ohms": "ohm", "kΩ": "kohm", "MΩ": "Mohm", "µA": "uA", "µF": "uF", "°C": "degC", "°F": "degF",
             "volt": "V", "volts": "V", "amp": "A", "amps": "A", "watt": "W", "watts": "W", "feet": "ft", "foot": "ft",
-            "inch": "in", "inches": "in", "hr": "h", "hours": "h", "hour": "h", "sec": "s", "percent": "%"}
+            "inch": "in", "inches": "in", "hr": "h", "hours": "h", "hour": "h", "sec": "s", "percent": "%",
+            "ml": "mL", "millilitre": "mL", "millilitres": "mL", "milliliter": "mL", "milliliters": "mL",
+            "litre": "L", "litres": "L", "liter": "L", "liters": "L", "l": "L", "Btu/h": "BTU/h", "btu/h": "BTU/h",
+            "BTU/hr": "BTU/h", "Btu/hr": "BTU/h", "btuh": "BTU/h", "CFM": "cfm", "GPM": "gpm", "GPH": "gph",
+            "cu ft": "ft3", "sq ft": "ft2", "ft²": "ft2", "m²": "m2", "ft³": "ft3"}
 _TEXT = re.compile(r"^\s*(-?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*(.*?)\s*$")
 _THOUSANDS = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$")
 

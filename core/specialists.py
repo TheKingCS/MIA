@@ -166,6 +166,21 @@ SPECIALISTS: tuple[Specialist, ...] = (
                             "What tools does a beginner need for leatherwork?"),
                words=("ferment", "brine", "sauerkraut", "candle", "wax", "soap", "lye", "leather", "sewing", "sew",
                       "basket", "cordage", "dye", "carving", "whittle", "craft", "knit", "weave")),
+    # S4's first batch (the greenhouse pilot, DEC-0198: new specialists on a standing schedule).
+    Specialist("greenhouse", "Greenhouse systems", "Running a greenhouse as a machine: glazing and heat loss, "
+               "heaters and their fuel, ventilation and exhaust fans, shade and evaporative cooling, drip and "
+               "misting, the sensors and controllers that run them (her greenhouse node), and keeping plants inside "
+               "their temperature and humidity through every season.", skills=("Homestead", "Technology"),
+               limits="Numbers come from her calculators (core/eng_calcs.py), never from memory. A heater burning "
+               "fuel inside needs fresh air and a carbon monoxide alarm, and it says so; a controller that runs heat, "
+               "water or fans fails safe; mains wiring for fans and heaters is the electrical specialist's and a "
+               "licensed electrician's.",
+               starts_from=("How big a heater does a greenhouse need for its coldest night?",
+                            "How much exhaust fan does a greenhouse need for summer cooling?",
+                            "What should a greenhouse controller do when a sensor stops answering?"),
+               words=("greenhouse", "glazing", "polycarbonate", "heat loss", "exhaust fan", "shade cloth",
+                      "evaporative", "swamp cooler", "misting", "drip", "emitter", "vent", "u-value", "propane heater",
+                      "high tunnel", "hoop house")),
     Specialist("outdoors", "Outdoors and fieldcraft", "Being out there: navigation by map and compass and grid, "
                "hiking, camping, survival skills, weather, water, first aid in the field.", skills=("Outdoor",),
                limits="First aid is first aid: anything serious says to get emergency help.",
@@ -299,6 +314,13 @@ ROLES: dict[str, dict] = {
                      needs=("code", "numbers"), reviews=("maker", "radio", "electrical"),
                      caveat="A draft for you to check; mains voltage and lithium batteries need a qualified "
                             "person's review before they're built."),
+    "greenhouse": dict(department="engineering", task_types=("research", "design", "estimate", "review",
+                                                            "safety_review"),
+                       tools=_READ + ("list_sensors", "get_weather", "get_homestead_next_step", "list_lab_readings",
+                                      "check_price"),
+                       reasoning="high", needs=("numbers",), reviews=("homesteading", "embedded", "hvac"),
+                       caveat="A draft for you to check; a fuel-burning heater needs fresh air and a CO alarm, and "
+                              "mains wiring for fans and heaters needs a licensed electrician."),
     "crafts": dict(department="homestead", task_types=("research", "design", "estimate", "write", "review"),
                    tools=_READ + ("list_inventory", "check_price", "list_materials"), needs=("numbers",),
                    reviews=("homesteading", "maker"),

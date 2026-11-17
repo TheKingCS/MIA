@@ -120,3 +120,36 @@ def test_a_missing_input_is_named_and_nothing_is_guessed_or_taken_in_the_wrong_u
         calculate("power", {"volts": -5, "amps": 1})
     with pytest.raises(CalcError, match="don't have 3 AWG"):
         calculate("voltage_drop", {"volts": 120, "amps": 10, "length": 10, "gauge": 3})
+
+
+def test_the_greenhouse_calculators_match_hand_worked_examples_and_name_what_is_missing():
+    """The greenhouse systems specialist's calculators (S4): heat loss 600 x 0.7 x 40 = 16,800 BTU/h; a 12 x 24 floor
+    at 8 cfm per square foot is 2,304 cfm; 40 emitters at 0.5 gph for 2 h is 40 gal; 16,800 BTU/h for 10 h at 80%
+    is 168,000 / 73,200 = 2.295 gal of propane. Heat loss and the heater carry the caveat."""
+    heat = calculate("greenhouse_heat", {"area": "600 ft2", "u": "0.7 BTU/h/ft2/degF", "inside": "45 degF",
+                                         "outside": "5 degF"})
+    assert near(heat["values"]["heat_loss"], 16_800, "BTU/h") and near(heat["values"]["watts"], 4923.6, "W", 0.01)
+    assert heat["caveat"] == CAVEAT
+    assert near(calculate("vent_fan", {"floor": "288 sq ft"})["values"]["flow"], 2304, "cfm")
+    drip = calculate("drip_irrigation", {"emitters": 40, "rate": "0.5 gph", "hours": "2 h"})
+    assert near(drip["values"]["water"], 40, "gal") and near(drip["values"]["gpm"], 20 / 60, "gpm")
+    fuel = calculate("heater_fuel", {"load": "16,800 Btu/h", "hours": "10 h"})
+    assert near(fuel["values"]["propane"], 168_000 / (91_500 * 0.8), "gal") and fuel["caveat"]
+    with pytest.raises(CalcError, match="u"):
+        calculate("greenhouse_heat", {"area": "600 ft2", "inside": "45 degF", "outside": "5 degF"})
+    with pytest.raises(CalcError, match="warmer"):
+        calculate("greenhouse_heat", {"area": "600 ft2", "u": "0.7", "inside": "40 degF", "outside": "50 degF"})
+    cold = calculate("greenhouse_heat", {"area": "600 ft2", "u": "0.7", "inside": "45 degF", "outside": "-10 degF"})
+    assert near(cold["values"]["heat_loss"], 600 * 0.7 * 55, "BTU/h")  # below zero outside is a winter night
+    with pytest.raises(CalcError, match="area can't be negative"):
+        calculate("greenhouse_heat", {"area": "-600 ft2", "u": "0.7", "inside": "45 degF", "outside": "5 degF"})
+    assert near(calculate("greenhouse_heat", {"area": "55.74 m2", "u": "3.975 W/m2K", "inside": "7.22 degC",
+                                              "outside": "-15 degC"})["values"]["heat_loss"], 16_800, "BTU/h", 0.01)
+
+
+def test_millilitres_and_the_greenhouse_units_are_read_in_every_way_they_are_written():
+    """The bench's first run on the PC (2026-11-17) found "mL" unreadable, so a candle answer couldn't be judged."""
+    assert parse("250 mL").number("L") == 0.25 and parse("250 ml").number("L") == 0.25
+    assert round(parse("2 litres").number("mL")) == 2000
+    assert round(parse("12,000 BTU/hr").number("W")) == 3517 and round(parse("1 gpm").number("gph")) == 60
+    assert round(parse("100 CFM").number("m3/s"), 5) == 0.04719

@@ -29,12 +29,20 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   nothing runs in it until T3. On each project's card (Projects page): Workspace, Note Something, Confirm, Withdraw,
   Propose A Team, Start, Stop. By voice: "note a constraint for the greenhouse: ...", "what's in the workspace",
   "confirm entry 1", "propose a team", "start the team".
-- **S0b, the bench's PC run** (`python -m tools.eng_bench`), started 2026-11-17 on qwen2.5:14b, qwen3:14b,
-  qwen3-coder:30b, qwen2.5:32b; results in `work/eng_bench/`. First result, qwen2.5:14b: with calculators,
-  electrical 86%, embedded 50%, crafts 33%; alone, 29% / 75% / 33%. It guesses when an input is missing (the
-  dangerous failure). **Two harness gaps it found:** the units module doesn't know mL, and "forward V" isn't read.
-- **Next (Opus):** fix those two, finish S0b, then T1's second part (each specialist's model from the bench, a
-  reviewer on a different local model), and S4's first batch of new specialists (the greenhouse pilot's).
+- **S4, the first new specialist: Greenhouse systems** (the pilot's), complete by the plan's bar: charter and
+  limits, caveat, starter questions, its role, four calculators in `core/eng_calcs.py` (glazing heat loss, fan size,
+  drip water, heater propane; each checked against a hand-worked example) and five bench tasks (g1 to g5, one with a
+  missing input). Its worksheet uses the greenhouse and electrical calculators; homesteading and HVAC get the
+  greenhouse ones too. New units: mL (the first PC run couldn't read it), ft3, BTU/h, cfm, gpm, gph, U-values.
+  Found on the way: `calculate()` refused every negative input, so a night below 0 °F couldn't be entered; a
+  calculator now names the inputs that may be negative (`signed`).
+- **S0b, the bench's PC run** (`python -m tools.eng_bench --model <m>`), 2026-11-17. The first try stalled: qwen3
+  thinks without end (over an hour on 36 tasks). Now each task is capped at 3072 tokens and a `<think>` part is left
+  out before scoring. First result before those fixes, qwen2.5:14b with calculators: electrical 86%, embedded 50%,
+  crafts 33%; it guesses when an input is missing (the dangerous failure). The full run (qwen2.5:14b,
+  qwen3-coder:30b, qwen2.5:32b, qwen3:14b) is in `work/eng_bench/`; see K-0280 for the table.
+- **Next (Opus):** T1's second part (each specialist's model from the bench, a reviewer on a different local
+  model); the next S4 specialists (the hoodie's: acoustics, audio DSP, textiles, power).
 - **Not mine, left uncommitted on the PC:** a third session's email inbox files, budget/Plaid edits and specialist
   workbook notes. Its homesteading notes make `tests/test_connections.py::test_a_plan_is_found_only_when_it_really_is_a_plan_for_it`
   fail on the PC (it passes on a clean checkout), and its Plaid edit fails `test_import_transaction_transfer_is_skipped`.
