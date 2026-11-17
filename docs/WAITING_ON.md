@@ -4,9 +4,22 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-16*
+*Last updated: 2026-11-18*
 
 ## Zac
+
+### From the Opus night (2026-11-17 into the 18th)
+0s. [ ] **Prompt 11, the look: four questions** (Q-83 to Q-86, `docs/mia_os/MIA_OS_VISUAL_OPEN_QUESTIONS.md`): the
+   Theme Studio starting from one of your pictures; quiet interface sounds (listening, "needs you", errors on; done
+   and message chimes off; alarms always); a Light theme now, Graffiti and Neon later; Zeta Astralis tried on a small
+   Android phone in a forearm mount first. Then say go for Prompt 12 (every device).
+0r. [ ] **Try the second monitor** (Q-80): restart MIA with both monitors on. The ambient view (clock, day, weather,
+   what's due, music, what MIA is doing) should open on the monitor MIA's window isn't on; turn that monitor off and
+   on and it should go and come back. `gui.ambient_screen: false` in config turns it off.
+0q. [ ] **Look at the new indicator** (Q-44): the sidebar says "Noting your active app" while MIA notes which program
+   is in front of you. Settings › MIA has the switch and Erase. Ask "what am I working on?".
+0p. [ ] **Try by voice:** "what's waiting for me?", "approve it from now on", "what do I have about the greenhouse?",
+   "what did you change in yourself?", "what can't you change?".
 
 ### From the Fable run (2026-11-16)
 0n. [ ] **MIA OS architecture: five questions** (Q-47 to Q-51, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 1). In short: is the PC's base Fedora's KDE desktop as an image built from the repository (Ubuntu the fallback)? Should MIA's own screen run on KDE's window manager so ordinary programs can open beside her? May the tests be run? Should system changes always ask your password? Should MIA keep running when you're signed out?
