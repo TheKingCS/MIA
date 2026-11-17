@@ -117,6 +117,7 @@ from core.paths import PathBook
 from core.browser_routines import BrowserRoutines
 from core.runs import RunBook
 from core.shelf import Shelf
+from core.teamwork import TeamworkBook
 from core.step_plans import StepPlanBook
 from core.plan_library import PlanLibrary
 from core.life_notes import LifeNotes
@@ -200,6 +201,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("browser_routines", BrowserRoutines),  # browser tasks they showed MIA, and how practised (DEC-0117)
     ("step_plans", StepPlanBook),  # plans across apps, done one step at a time (UI-7, REQ-FUN-220)
     ("shelf", Shelf),  # what they sent to their shelf, short-lived (UI-4, Q-43)
+    ("teamwork", TeamworkBook),  # each project's workspace of entries and its teams of specialists (T2, DEC-0198)
     ("runs", RunBook),  # what MIA is running in steps for them, where each is, why each ended (DEC-0188, UI-1)
     ("life_notes", LifeNotes),  # what they promised, decided, want to try, set aside (DEC-0054)
     ("gps_tracks", GpsTracks),  # walks, rides and drives from GPX: where they went is theirs (DEC-0099)

@@ -3,7 +3,9 @@
  * Renders MIA.projects() (core/web_projects.py): underway first, each with its status, due date, budget, spent and
  * left (a meter, amber when over), what the money went on, tools bought, the reason it serves, and its tasks to tick.
  * Every change is an action (project.add/edit/delete/budget, task.add/done/reopen/delete), as "add a task to the
- * greenhouse: frame the door" does by voice. Formatting only.
+ * greenhouse: frame the door" does by voice. Its workspace (core/teamwork.py, T2): entries newest first, a
+ * specialist's marked until confirmed, Note Something, Confirm and Withdraw (teamwork.*), and its teams with
+ * Propose A Team, Start (his yes) and Stop (team.*). Formatting only.
  */
 (function () {
   "use strict";
@@ -56,6 +58,60 @@
         onclick: () => act({ kind: "task.delete", params: { task_id: t.id } }) }, "✕"));
   }
 
+  async function note(p) {
+    const w = p.workspace;
+    const v = await form("Note For " + p.name, [
+      { name: "kind", label: "What it is", type: "choice", options: w.kinds.map((k) => k.value), required: true, default: "constraint" },
+      { name: "text", label: "The entry", type: "textarea", required: true }], {});
+    if (v) act({ kind: "teamwork.note", params: Object.assign({ project_id: p.id }, v) });
+  }
+  async function proposeTeam(p) {
+    const pick = (n, required) => ({ name: "m" + n, label: "Specialist " + n, type: "pick", options: ["specialists"], required });
+    const v = await form("A Team For " + p.name, [
+      { name: "objective", label: "What it's for", type: "text", required: true },
+      pick(1, true), pick(2, false), pick(3, false)], {},
+      { specialists: p.workspace.specialists.map((s) => ({ id: s.value, name: s.label })) });
+    if (v) act({ kind: "team.propose", params: { project_id: p.id, objective: v.objective,
+      members: [v.m1, v.m2, v.m3].filter(Boolean).join(",") } });
+  }
+
+  function entry(e) {
+    const mine = e.by === "You";
+    return el("div", { class: "row pj-entry" + (e.status === "derived" ? " pj-derived" : "") },
+      el("div", {},
+        el("div", { class: "row-title" }, el("span", { class: "chip" }, e.kind_label), " ", e.text),
+        el("div", { class: "row-sub" }, [mine ? "You" : e.by + (e.model ? " (" + e.model + ")" : ""),
+          e.basis ? "basis: " + e.basis : null, e.affects.length ? "affects " + e.affects.join(", ") : null,
+          e.status === "derived" ? "not confirmed yet" : null, e.sources.length ? "from " + e.sources.join("; ") : null]
+          .filter(Boolean).join(" · "))),
+      el("div", { class: "row-buttons" },
+        e.status === "derived" ? btn("Confirm", "btn-green btn-small", () => act({ kind: "teamwork.confirm", params: { entry_id: e.id } }, { quick: true })) : null,
+        btn("Withdraw", "btn-ghost btn-small", () => act({ kind: "teamwork.withdraw", params: { entry_id: e.id } }))));
+  }
+
+  function team(t) {
+    return el("div", { class: "row" },
+      el("div", {}, el("div", { class: "row-title" }, t.objective),
+        el("div", { class: "row-sub" }, t.members.map((m) => m.name).join(", "))),
+      el("span", { class: "chip " + (t.status === "proposed" ? "chip-soon" : "") }, t.status.replace(/_/g, " ")),
+      el("div", { class: "row-buttons" },
+        t.status === "proposed" ? btn("Start", "btn-amber btn-small", () => act({ kind: "team.start", params: { team_id: t.id } })) : null,
+        t.status !== "stopped" && t.status !== "delivered" ? btn("Stop", "btn-ghost btn-small", () => act({ kind: "team.stop", params: { team_id: t.id } })) : null));
+  }
+
+  function workspace(p) {
+    const w = p.workspace;
+    if (!w) return [];
+    return [
+      el("h4", {}, "Workspace" + (w.open ? " · " + w.open + " open" : "")),
+      w.entries.length ? el("div", { class: "rows" }, w.entries.map(entry))
+        : el("p", { class: "dim" }, "Findings, constraints, questions, risks and decisions for this project go here. Or say “note a constraint for " + p.name + ": …”."),
+      ...(w.teams.length ? [el("h4", {}, "Team"), el("div", { class: "rows" }, w.teams.map(team))] : []),
+      el("div", { class: "row-buttons" },
+        btn("Note Something", "btn-ghost", () => note(p)),
+        btn("Propose A Team", "btn-ghost", () => proposeTeam(p)))];
+  }
+
   function missionCard(m) {
     return el("a", { class: "row money-row pj-mission" + (m.status !== "active" ? " finished" : ""),
       href: "missions.html#mission=" + encodeURIComponent(m.id) },
@@ -85,6 +141,7 @@
           : el("p", { class: "dim" }, "No missions yet. Open a mission and choose Part Of A Project, or say “make the coop mission part of the homestead”."),
         el("h4", {}, "Tasks" + (p.tasks_total ? " " + p.tasks_done + "/" + p.tasks_total : "")),
         p.tasks.length ? el("ul", { class: "gear-list pj-tasks" }, p.tasks.map(task)) : el("p", { class: "dim" }, "No tasks yet."),
+        ...workspace(p),
         el("div", { class: "row-buttons" },
           btn("Add A Task", "btn-amber", () => addTask(p)),
           btn(p.budget ? "Budget" : "Set A Budget", "btn-ghost", () => setBudget(p)),

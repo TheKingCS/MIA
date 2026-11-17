@@ -2330,3 +2330,7 @@ body.sel-card { background: var(--bg); color: var(--text); margin: 0; font-famil
 .sel-result { white-space: pre-wrap; overflow-wrap: anywhere; }
 .sel-list { padding-left: 18px; }
 .sel-list a { color: rgb(var(--rgb-accent)); }
+
+/* A project's workspace (core/teamwork.py, T2): a specialist's entry is marked until he confirms it. */
+.pj-entry .chip { margin-right: 4px; }
+.pj-derived { border-left: 2px solid rgba(var(--rgb-accent), 0.5); padding-left: 8px; }

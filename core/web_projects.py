@@ -33,8 +33,8 @@ ORDER = {"Active": 0, "Planning": 1, "On Hold": 2, "Complete": 3}
 
 def _card(context, project, tasks_store, names: dict) -> dict:
     """One project for the page: status, due, description, money (budget, spent, left, percent, the biggest kinds of
-    spending), tools bought, the reason it serves, its tasks (open first), its missions, its progress from both, and
-    its form values."""
+    spending), tools bought, the reason it serves, its tasks (open first), its missions, its progress from both, its
+    workspace and teams (T2), and its form values."""
     from core.mission_projects import mission_card, missions_for, progress
     from core.homestead_costs import build_cost
     from core.region import money
@@ -59,8 +59,19 @@ def _card(context, project, tasks_store, names: dict) -> dict:
             "tasks_done": sum(1 for t in tasks if t.done), "tasks_total": len(tasks),
             "missions": [mission_card(context, m) for m in missions_for(context, project.project_id)],
             "progress": progress(context, project),
+            "workspace": _workspace(context, project.project_id),
             "values": {"name": project.name, "status": project.status, "due_date": project.due_date,
                        "description": project.description}}
+
+
+def _workspace(context, project_id: str) -> dict:
+    """The project's workspace and teams (core/teamwork.card_for), or None when it can't be read."""
+    try:
+        from core.teamwork import card_for
+
+        return card_for(context, project_id)
+    except Exception:  # noqa: BLE001 - the card still shows without its workspace
+        return None
 
 
 def projects_page(context) -> dict:

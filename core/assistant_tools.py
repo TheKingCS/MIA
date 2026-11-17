@@ -130,6 +130,7 @@ from core.project_manager import PROJECT_STATUSES
 from core.real_estate_manager import Property, equity as property_equity
 from core.region import money
 from core.specialists import register_specialist_actions
+from core.assistant_teamwork_actions import register_teamwork_actions
 from core.subnet_calculator import calculate_subnet
 from core.system_health import format_system_health, read_system_health
 from core.talk_it_out import register_journal_actions
@@ -209,6 +210,7 @@ class AssistantTools:
         register_self_actions(self.context.assistant_actions)  # "what model are you?" from the runtime
         register_capability_actions(self.context.assistant_actions)  # what MIA can do, how she's built (DEC-0041)
         register_specialist_actions(self.context.assistant_actions)  # her specialists' workbooks (DEC-0109)
+        register_teamwork_actions(self.context.assistant_actions)  # a project's workspace and team (T2)
         register_energy_actions(self.context.assistant_actions)  # solar, generator, propane by voice (T-0053)
         register_path_actions(self.context.assistant_actions)  # learning paths: guitar and more (DEC-0111, DEC-0112)
         register_browser_actions(self.context.assistant_actions)  # MIA's own browser, taught by showing (DEC-0117)

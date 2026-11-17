@@ -38,7 +38,8 @@
       "insights",
       "intents",
       "projects",
-      "tasks"
+      "tasks",
+      "teamwork"
     ],
     "agents": [],
     "workflows": [],
@@ -76,7 +77,14 @@
       "switch_alarm",
       "todays_seed",
       "unlink_my_reason",
-      "unlink_things"
+      "unlink_things",
+      "note_for_project",
+      "whats_in_the_workspace",
+      "confirm_workspace_entry",
+      "withdraw_workspace_entry",
+      "propose_team",
+      "start_team",
+      "stop_team"
     ],
     "actions": [
       "direction.add",
@@ -94,7 +102,13 @@
       "task.reopen",
       "why.achieve",
       "why.link",
-      "why.unlink"
+      "why.unlink",
+      "teamwork.note",
+      "teamwork.confirm",
+      "teamwork.withdraw",
+      "team.propose",
+      "team.start",
+      "team.stop"
     ],
     "tiers": {
       "add_alarm": "act_within_grant",
@@ -143,7 +157,20 @@
       "task.reopen": "act_within_grant",
       "why.achieve": "act_within_grant",
       "why.link": "act_within_grant",
-      "why.unlink": "act_within_grant"
+      "why.unlink": "act_within_grant",
+      "note_for_project": "act_within_grant",
+      "whats_in_the_workspace": "observe",
+      "confirm_workspace_entry": "act_within_grant",
+      "withdraw_workspace_entry": "act_within_grant",
+      "propose_team": "suggest",
+      "start_team": "act_with_approval",
+      "stop_team": "act_within_grant",
+      "teamwork.note": "act_within_grant",
+      "teamwork.confirm": "act_within_grant",
+      "teamwork.withdraw": "act_within_grant",
+      "team.propose": "suggest",
+      "team.start": "act_with_approval",
+      "team.stop": "act_within_grant"
     },
     "outside": []
   },
@@ -153,7 +180,8 @@
     "stores.write:insights",
     "stores.write:intents",
     "stores.write:projects",
-    "stores.write:tasks"
+    "stores.write:tasks",
+    "stores.write:teamwork"
   ],
   "dependencies": [],
   "runtime": {

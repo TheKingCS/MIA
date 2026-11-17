@@ -12,7 +12,14 @@ session. Last updated: 2026-11-17 (Opus: reviews of Fable's work, the specialist
 - **Built:** every specialist (18 now, with Embedded systems and Homestead crafts) is a role a team can use: what
   kinds of work it takes, the tools it may read with (none can change anything), who checks its work, and the
   warning it carries. Ask "what specialists do you have?".
-- **Next:** each specialist's model chosen from the engineering bench's results, then the team's shared workspace.
+- **Built: each project's workspace.** On a project's card there's now a Workspace: findings, constraints,
+  questions, risks and decisions, yours and (later) the specialists'. A specialist's entry is marked until you confirm
+  it. You can propose a team of specialists for a project; it starts only when you press Start, and MIA can never
+  press it for you. Teams don't do work yet; that's the next stage. By voice: "note a constraint for the greenhouse:
+  ...", "what's in the greenhouse workspace?".
+- **Measuring:** the engineering bench is running on your graphics card. The first model, qwen2.5 14B, got the
+  electrical problems 86% right when it used MIA's calculators, but guesses when something is missing.
+- **Next:** the rest of the bench, then each specialist gets the model that did best on its work.
 
 
 **2026-11-16, latest (Claude on Fable: the reviews, and the MIA OS architecture).**

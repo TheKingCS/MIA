@@ -21,9 +21,20 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   department, task types, read-only tools, reasoning, needs, reviewers, caveat for all 18; one whose answers rest on
   figures has the worksheet (`work_it_out`); `list_specialists` by voice. Tests: no agent can call a tool that
   changes anything; every safety department carries its caveat. Maker's esp32/arduino words moved to embedded.
-- **Next (Opus):** T1's second part, the router: each specialist's model chosen from `core/eng_bench.py`'s results
-  (the bench needs its PC run first, S0), then "ask the right specialist with one reviewer on a different local
-  model"; then T2 (the workspace).
+- **Built (T2, the workspace, DEC-0198):** `core/teamwork.py`. Each project has a workspace of entries (finding,
+  constraint, question, recommendation, conflict, review, decision, risk, deliverable): his are confirmed, a
+  specialist's derived until he confirms (it must name its model; a sourced finding names its source; withdrawn ones
+  are kept, marked). `framed()` hands a specialist exactly the entries named, as outside text. A team is proposed
+  (`team.propose`) and is `ready` only on his yes (`team.start`, tier act_with_approval, so MIA can never start one);
+  nothing runs in it until T3. On each project's card (Projects page): Workspace, Note Something, Confirm, Withdraw,
+  Propose A Team, Start, Stop. By voice: "note a constraint for the greenhouse: ...", "what's in the workspace",
+  "confirm entry 1", "propose a team", "start the team".
+- **S0b, the bench's PC run** (`python -m tools.eng_bench`), started 2026-11-17 on qwen2.5:14b, qwen3:14b,
+  qwen3-coder:30b, qwen2.5:32b; results in `work/eng_bench/`. First result, qwen2.5:14b: with calculators,
+  electrical 86%, embedded 50%, crafts 33%; alone, 29% / 75% / 33%. It guesses when an input is missing (the
+  dangerous failure). **Two harness gaps it found:** the units module doesn't know mL, and "forward V" isn't read.
+- **Next (Opus):** fix those two, finish S0b, then T1's second part (each specialist's model from the bench, a
+  reviewer on a different local model), and S4's first batch of new specialists (the greenhouse pilot's).
 - **Not mine, left uncommitted on the PC:** a third session's email inbox files, budget/Plaid edits and specialist
   workbook notes. Its homesteading notes make `tests/test_connections.py::test_a_plan_is_found_only_when_it_really_is_a_plan_for_it`
   fail on the PC (it passes on a clean checkout), and its Plaid edit fails `test_import_transaction_transfer_is_skipped`.

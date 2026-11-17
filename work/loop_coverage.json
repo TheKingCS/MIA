@@ -372,6 +372,18 @@
   "action:grant": {
    "status": "none",
    "why": "taking a grant back is the person's own decision about what MIA may do alone; nothing to improve by measuring it"
+  },
+  "store:teamwork": {
+   "status": "none",
+   "why": "a project's workspace and team records (T2): it judges nothing itself; how good the specialists' entries are is measured from confirmations and withdrawals when teams run (T7's loop)"
+  },
+  "action:teamwork": {
+   "status": "none",
+   "why": "teamwork.note, confirm and withdraw are him writing and judging entries in his own project's workspace (T2); his confirmations and withdrawals are what T7's loop will learn from"
+  },
+  "action:team": {
+   "status": "none",
+   "why": "team.propose, start and stop are records of a team he says yes to (Q-54); nothing runs in a team until T3, whose run gets its loop"
   }
  }
 }

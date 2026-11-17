@@ -430,6 +430,7 @@ import core.connectors  # noqa: E402,F401  (importing from other apps: files, re
 import core.more_actions  # noqa: E402,F401  (Journal, Workshop, Expeditions, Music, Files)
 import core.inbox_actions  # noqa: E402,F401  (the Inbox: file, dismiss, send a note)
 import core.shelf_actions  # noqa: E402,F401  (the shelf: keep, take off, clear; UI-4)
+import core.teamwork_actions  # noqa: E402,F401  (a project's workspace and team: note, confirm, withdraw, propose, start, stop; T2)
 import core.step_plan_actions  # noqa: E402,F401  (plans across apps, one step at a time; UI-7)
 import core.game_actions  # noqa: E402,F401  (the game layer: Reward Shop, DEC-0028)
 import core.craft_actions  # noqa: E402,F401  (crafting recipes and builds, DEC-0030)
