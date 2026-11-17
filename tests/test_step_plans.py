@@ -7,6 +7,9 @@ whether it can be undone; nothing runs when a plan is made; the person does, cha
 a kind that reaches outside, can't be undone or is tiered never is listed as "can't" and is never run from a plan;
 a step is checked again when it's done; undoing a step puts back its change and the step waits again; a plan is a
 run that waits on the person; the week's plan comes from today's list in code; and voice does what the screen does.
+Opus's review (2026-11-17): nothing that pays, buys, sends, publishes, deletes or touches a grant is a step (marking a
+bill paid is bookkeeping); the card pins the step it showed; a finished plan takes no more changes; a failed step can
+be tried again; and doing a step by voice never rides along with other calls.
 """
 
 from __future__ import annotations
@@ -100,6 +103,7 @@ def test_a_kind_that_reaches_outside_cant_be_undone_or_is_unknown_is_never_a_ste
 
 
 def test_a_step_is_checked_again_when_it_is_done_and_a_broken_one_fails_without_taking_the_plan(world, monkeypatch):
+    """(The stand-in is "test.mark": a kind ending in .pay always asks, so it can't be a step.)"""
     state = {"ok": True}
 
     def describe(context, params):
@@ -110,10 +114,10 @@ def test_a_step_is_checked_again_when_it_is_done_and_a_broken_one_fails_without_
     def execute(context, params):
         raise RuntimeError("disk on fire")
 
-    monkeypatch.setitem(ACTION_TYPES, "test.pay", ActionType("test.pay", "Mark Paid", {}, describe, lambda c, p: "Paid"))
+    monkeypatch.setitem(ACTION_TYPES, "test.mark", ActionType("test.mark", "Mark Paid", {}, describe, lambda c, p: "Paid"))
     monkeypatch.setitem(ACTION_TYPES, "test.break", ActionType("test.break", "Break", {}, lambda c, p: "Break it",
                                                                execute))
-    plan = world.step_plans.make(world, "Bills", [{"kind": "test.pay", "params": {}},
+    plan = world.step_plans.make(world, "Bills", [{"kind": "test.mark", "params": {}},
                                                   {"kind": "test.break", "params": {}}] + ITEMS[:1])
     state["ok"] = False
     with pytest.raises(PlanError, match="already paid"):
@@ -198,3 +202,67 @@ def test_voice_reads_the_plan_and_does_and_drops_steps_by_number(world):
     assert "Left out" in _plan_step("steps.drop")(world, {"step": "2"})
     assert "no step 7" in _plan_step("steps.do")(world, {"step": "7"})
     assert [s.status for s in plan.steps] == [DONE, DROPPED, WAITING]
+
+
+def test_no_kind_that_pays_buys_sends_publishes_deletes_or_touches_a_grant_is_ever_a_step():
+    from core.taught_skills import always_asks
+
+    let_through = [kind for kind in ACTION_TYPES
+                   if not step_plans._allowed(kind) and (always_asks(kind) or kind.startswith("grant."))]
+    assert sorted(let_through) == sorted(step_plans.BOOKKEEPING)  # marking a bill or debt paid moves no money
+    for kind in ("shop.buy", "order.pay", "quote.send", "quote.email", "creation.publish", "mission.delete",
+                 "grant.take_back", "taught_skill.keep", "profile.edit", "freedom.fund_account"):
+        assert step_plans._allowed(kind) == step_plans.ELSEWHERE, kind
+
+
+def test_the_approval_card_pins_the_step_so_a_change_before_the_press_is_refused(world):
+    plan = world.step_plans.make(world, "Get ready", ITEMS)
+    proposal = world.actions.propose(world, "steps.do", {"plan_id": plan.plan_id, "step_id": "1"})
+    assert proposal.params["seen"] == step_plans.fingerprint(plan.steps[0])
+    world.step_plans.change(world, plan.plan_id, 1, {"name": "Something else entirely"})
+    missions = len(world.missions.all_missions())
+    refused = world.actions.approve(world, proposal.proposal_id)
+    assert refused.status == "failed" and "changed since you saw it" in refused.result
+    assert len(world.missions.all_missions()) == missions and plan.steps[0].status == WAITING
+
+
+def test_a_finished_or_dropped_plan_cant_be_changed_or_done_again(world, monkeypatch):
+    monkeypatch.setitem(ACTION_TYPES, "test.no", ActionType("test.no", "No", {"x": "x"},
+                                                            lambda c, p: (_ for _ in ()).throw(ActionError("not now")),
+                                                            lambda c, p: "ran"))
+    plan = world.step_plans.make(world, "Short", ITEMS[:1] + [{"kind": "test.no", "params": {"x": "1"}}])
+    assert plan.steps[1].status == CANT
+    world.step_plans.drop_plan(world, plan.plan_id)
+    for call in (lambda: world.step_plans.change(world, plan.plan_id, 2, {"x": "2"}),
+                 lambda: world.step_plans.do(world, plan.plan_id, 1),
+                 lambda: world.step_plans.drop(world, plan.plan_id, 1)):
+        with pytest.raises(PlanError):
+            call()
+    assert plan.status == "dropped" and [s.status for s in plan.steps] == [DROPPED, CANT]
+
+
+def test_a_failed_step_can_be_tried_again_and_its_failure_is_said_not_raised(world, monkeypatch):
+    tries = []
+
+    def execute(context, params):
+        tries.append(1)
+        if len(tries) == 1:
+            raise ActionError("the disk was busy")
+        return "Done at last"
+
+    monkeypatch.setitem(ACTION_TYPES, "test.flaky", ActionType("test.flaky", "Go", {}, lambda c, p: "Try it", execute))
+    plan = world.step_plans.make(world, "Flaky", [{"kind": "test.flaky", "params": {}}])
+    proposal = world.actions.propose(world, "steps.do", {"plan_id": plan.plan_id, "step_id": "1"})
+    first = world.actions.approve(world, proposal.proposal_id)
+    assert first.status == "executed" and "didn't work" in first.result and "the disk was busy" in first.result
+    assert plan.steps[0].status == FAILED and plan.status == "open"
+    assert world.step_plans.do(world, plan.plan_id, 1).status == DONE and plan.status == "done"
+
+
+def test_doing_a_step_by_voice_is_never_run_when_bundled_with_other_calls():
+    from core.assistant_actions import AssistantActionRegistry
+    from core.assistant_taught_skill_actions import register_taught_skill_actions
+
+    registry = AssistantActionRegistry()
+    register_taught_skill_actions(registry)
+    assert registry.is_destructive("do_plan_step") and not registry.is_destructive("whats_the_plan")

@@ -252,9 +252,17 @@ def paused_topics(log: list[dict], now: datetime, resumed: Optional[dict] = None
     return paused
 
 
+def _never_held() -> frozenset:
+    """The topics "stop everything" never holds: the reminders he set (core/stop.TOPICS_NEVER_HELD)."""
+    from core import stop
+
+    return stop.TOPICS_NEVER_HELD
+
+
 def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, settings: dict) -> list[Decision]:
     """Pure logic. One Decision per candidate, in order. While the person has said "stop everything" (DEC-0181),
-    and in flow (DEC-0148), everything but the urgent waits. Each
+    everything but the urgent and the reminders he set (core/stop.TOPICS_NEVER_HELD) waits; in flow (DEC-0148),
+    everything but the urgent waits. Each
     kind's learned pace a day (`state.allowances`) holds back what's past it; a fixed cap applies only when the person
     set one (`daily_budget` above 0)."""
     budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]) or 0)
@@ -282,7 +290,7 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
         if sent_at is not None:
             decisions.append(Decision(candidate, DROP, f"nothing new since {sent_at:%b %d}"))
             continue
-        if state.stopped and candidate.urgency != URGENT:  # "stop everything": held until he says carry on
+        if state.stopped and candidate.topic not in _never_held():  # "stop everything": held until he says carry on
             candidate.not_before = (now + _BUSY_DEFER).isoformat(timespec="seconds")
             decisions.append(Decision(candidate, DEFER, "you asked me to stop everything"))
             continue

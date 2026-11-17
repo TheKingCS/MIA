@@ -152,8 +152,15 @@ class BackgroundJobs:
     def schedule(self, scheduler, first_after: Optional[float] = None) -> None:
         """Puts every job in JOBS on the scheduler with its interval (the scheduler runs each under the store
         lock), and gives the scheduler the say on which jobs wait (a "stop everything" first, core/stop.py, then
-        homeostasis's easing off) and who hears of a backoff.
+        homeostasis's easing off) and who hears of a backoff. Asks core/stop.py once first, so a "stop everything"
+        kept from before a restart is known to `grants.require` from the start (both the PC and the server boot here).
         `first_after` is passed on for each job's first run (None: one interval from now, as the timers did)."""
+        try:
+            from core import stop
+
+            stop.state(self.context)
+        except Exception:  # noqa: BLE001 - a hold that can't be read never stops the boot
+            log.exception("Couldn't read whether everything is stopped.")
         for name, seconds, method in JOBS:
             scheduler.add(name, seconds, getattr(self, method), first_after=first_after)
         scheduler.defer = self._defer_reason  # a stop-everything first, then easing off (DEC-0181, DEC-0173)

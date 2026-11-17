@@ -1870,7 +1870,13 @@ def create_app(context: AppContext) -> FastAPI:
                 stop.carry_on(view)
                 said = "Carrying on: my background work and messages are back."
             elif body.what == "everything":
-                said = stop.report(stop.stop_everything(view, stop.until_from(body.until or "")), everything=True)
+                try:
+                    until = stop.until_from(body.until or "")
+                except ValueError:  # a time she can't read is asked about, never held forever
+                    stop.stop_now(view)
+                    return {"said": "I stopped what I was doing, but I didn't catch until when, so nothing is held.",
+                            "stopped": stop.for_shell(view)}
+                said = stop.report(stop.stop_everything(view, until), everything=True)
             else:
                 said = stop.report(stop.stop_now(view), everything=False)
             return {"said": said, "stopped": stop.for_shell(view)}

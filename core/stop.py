@@ -7,19 +7,22 @@ everything really means"; the definition is `docs/mia_os/MIA_OS_AUTONOMY_AND_TRU
 this module is that table in code). Prompt 23's review, UI-2, built on the run record (core/runs.py).
 
 **Recognised in code, never by a model** (`recognise`): the whole message is "stop" (or "stop it", "halt"...), "stop
-everything" (optionally "until tonight", "for two hours"), or, only while a stop-everything is on, "carry on".
-"Stop the timer" or "stop the skill" are other things and aren't taken here. The turn pipeline asks first, before
-anything else (core/assistant_turn.py), so it works when the model is slow, wrong or down, on every device.
+everything" (optionally "until tonight", "for two hours"; a time it can't read is asked about, never held with no
+end), or, only while a stop-everything is on, "carry on". "Stop the timer", "stop the skill" or "stop all alarms" are
+other things and aren't taken here. The turn pipeline asks first, before anything else (core/assistant_turn.py, the
+model's turn and the desktop panels' `instant_answer`), so it works when the model is slow, wrong or down, on every
+device.
 
 **"Stop"** (`stop_now`) ends what MIA is doing right now for the person: her speech, the taught skill she's running
-with them, and her browser tasks (a held step is let go, never pressed; the run ends at its step). Nothing is undone:
+with them, the job she's walking them through, and her browser tasks (a held step is let go, never pressed; the run
+ends at its step). Step plans aren't touched: they wait on him, nothing of hers runs in them. Nothing is undone:
 what finished stays finished, each change with its Undo. Runs she started on her own, background jobs and her
 messages keep going.
 
 **"Stop everything"** (`stop_everything`) does that, and holds all of her own initiative until "carry on" or the
 time he named (`holding`): background jobs that change records or reach outside wait (`defer_reason`, asked by the
 scheduler and the daily checks; `JOBS_THAT_WAIT`, `CHECKS_THAT_WAIT`), her unprompted messages are held by the gate
-and offered when he resumes (urgent ones still come), and anything she'd start herself that changes a record is
+and offered when he resumes (urgent ones and the reminders he set, `TOPICS_NEVER_HELD`, still come), and anything she'd start herself that changes a record is
 refused (`core/grants.require` asks `held_now`). It survives a restart: the hold is his own setting.
 
 **Never stopped, by either:** alarms and reminders he set, the safety floor, nightly backups, sync of what he
@@ -57,51 +60,139 @@ CHECKS_THAT_WAIT = frozenset({"workflows", "night_school", "good_news", "chronic
 CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "greenhouse", "grow_alert", "obligation_reminders", "loop",
                                     "recurring_mission", "calendar_digest", "birthday", "warranty",
                                     "insurance_renewal", "promises"})
+# The rest only notice something and offer a message: they run, and the gate holds what they offer until he resumes.
+CHECKS_THAT_ONLY_OFFER = frozenset({"checkin", "budget_nudge", "smart_suggestion", "maintenance_insight",
+                                    "mission_insight", "pattern_insight", "skill_pattern_insight",
+                                    "skill_decline_insight", "skill_momentum_insight", "walkthrough_suggestion",
+                                    "journal_reflection", "memory_callback", "season", "operating_journal",
+                                    "direction_nudge", "capability_reminder"})
+# The gate's topics (core/communication_gate.py) of what the checks in CHECKS_THAT_ALWAYS_RUN offer: reminders he set
+# and the greenhouse's alerts, which "stop everything" never holds (as she says in `report`).
+TOPICS_NEVER_HELD = frozenset({"birthday", "calendar_digest", "warranty", "grow_alert", "greenhouse",
+                               "insurance_renewal", "obligation_deadline", "promise_due"})
 
-_STOP = re.compile(r"^\s*(?:hey\s+)?(?:mia[,:]?\s+)?(?:please\s+)?(?:stop|stop it|stop that|stop now|stop talking|halt|"
-                   r"that'?s enough,? stop|cancel that)\s*[.!]*\s*$", re.I)
-_EVERYTHING = re.compile(r"^\s*(?:hey\s+)?(?:mia[,:]?\s+)?(?:please\s+)?(?:stop|halt|pause|freeze)\s+"
-                         r"(?:everything|it all|all of it|all)\b\s*(.*?)\s*[.!]*\s*$", re.I)
+_PRE = r"^\s*(?:hey,?\s+)?(?:mia[,:]?\s+)?(?:please\s+)?"  # "hey MIA, please ..."
+_POST = r"(?:[,\s]+(?:please|now|mia))*\s*[.!]*\s*$"  # "..., please", "..., MIA", "!"
+_STOP = re.compile(_PRE + r"(?:stop|stop it|stop this|stop that|stop now|stop talking|halt|that'?s enough,? stop|"
+                   r"cancel that)" + _POST, re.I)
+# Only nothing or a time may follow "stop everything": "stop all alarms" or "freeze all my cards" are other things.
+_EVERYTHING = re.compile(_PRE + r"(?:stop|halt|pause|freeze)\s+(?:everything|it all|all of it)"
+                         r"(?:[,\s]+((?:until|till|til|'til|for)\s.*?|tonight|this evening|tomorrow(?:\s+morning)?))?"
+                         + _POST, re.I)
 _CARRY_ON = re.compile(r"^\s*(?:hey\s+)?(?:mia[,:]?\s+)?(?:ok(?:ay)?[,]?\s+)?(?:please\s+)?(?:carry on|you can carry on|"
                        r"go ahead again|resume everything|start again|you can start again|unpause)\s*[.!]*\s*$", re.I)
-_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "eight": 8, "twelve": 12}
+_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+            "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+            "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40,
+            "forty five": 45, "fifty": 50, "sixty": 60, "ninety": 90}
+_HALF = frozenset({"half", "half a", "half an", "a half"})
+_UNTIL_HE_SAYS = frozenset({"", "now", "for now", "for the moment", "for the time being", "until i say",
+                            "until i say so", "until i say carry on"})
 
 _held_until: Optional[datetime] = None  # this process's copy of the hold, for checks that have no context
 _held_known = False
 
 
-def until_from(words: str, now: Optional[datetime] = None) -> Optional[datetime]:
-    """Pure logic. When a stop-everything ends, from the words after it: "until tonight" (8 pm), "until tomorrow"
-    (8 am), "until noon", "until 5pm", "for two hours", "for 30 minutes"; None for no end (until he says)."""
-    now = now or datetime.now()
-    low = (words or "").lower()
-    m = re.search(r"for\s+(\d+|[a-z]+)\s*(minute|min|hour|hr|day)s?", low)
-    if m:
-        n = int(m.group(1)) if m.group(1).isdigit() else _NUMBERS.get(m.group(1))
-        if n:
-            unit = {"minute": "minutes", "min": "minutes", "hour": "hours", "hr": "hours", "day": "days"}[m.group(2)]
-            return now + timedelta(**{unit: n})
-    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    if "tomorrow" in low or "morning" in low:
-        return day + timedelta(days=1, hours=8)
-    if "tonight" in low or "this evening" in low:
-        return max(day.replace(hour=20), now + timedelta(minutes=1))
-    if "noon" in low:
-        noon = day.replace(hour=12)
-        return noon if noon > now else noon + timedelta(days=1)
-    m = re.search(r"until\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", low)
-    if m:
-        hour = int(m.group(1)) % 12 + (12 if m.group(3) == "pm" else 0) if m.group(3) else int(m.group(1))
-        if hour < 24:
-            at = day.replace(hour=hour, minute=int(m.group(2) or 0))
-            return at if at > now else at + timedelta(days=1)
+def _number(words: str) -> Optional[float]:
+    """Pure logic. A count in digits or words: "30", "seven", "twenty five", "a couple of", "half an", "one and a
+    half"; None when it isn't one."""
+    text = " ".join(re.sub(r"-", " ", words or "").split())
+    extra = 0.0
+    if text.endswith(" and a half"):
+        text, extra = text[: -len(" and a half")], 0.5
+    if text in _HALF:
+        return 0.5 + extra
+    if re.fullmatch(r"(?:a )?couple(?: of)?", text):
+        return 2 + extra
+    if re.fullmatch(r"\d+(?:\.\d+)?", text):
+        return float(text) + extra
+    if text in _NUMBERS:
+        return _NUMBERS[text] + extra
+    parts = text.split()
+    if len(parts) == 2 and _NUMBERS.get(parts[0], 0) >= 20 and 0 < _NUMBERS.get(parts[1], 0) < 10:
+        return _NUMBERS[parts[0]] + _NUMBERS[parts[1]] + extra
     return None
+
+
+def _clock(text: str, now: datetime, tomorrow: bool) -> Optional[datetime]:
+    """Pure logic. A time of day ("5pm", "5:30", "9 in the morning", "17:00"), at its next occurrence (on tomorrow's
+    date when `tomorrow`); with no am or pm, "5" is the next 5 o'clock in 12-hour terms. None when the words aren't a
+    time; ValueError for one that can't be ("5:75", "13pm")."""
+    m = re.fullmatch(r"(\d{1,2})(?::(\d{2}))?\s*(am|pm)?(?:\s*o'?clock)?(?:\s+(?:in the\s+)?"
+                     r"(morning|afternoon|evening|tonight|night))?", text)
+    if not m:
+        return None
+    hour, minute = int(m.group(1)), int(m.group(2) or 0)
+    if minute > 59:
+        raise ValueError(f"{text} isn't a time")
+    meridiem = m.group(3) or {"morning": "am"}.get(m.group(4) or "", "pm" if m.group(4) else "")
+    if meridiem:
+        if not 1 <= hour <= 12:
+            raise ValueError(f"{text} isn't a time")
+        hours = [hour % 12 + (12 if meridiem == "pm" else 0)]
+    elif hour > 23:
+        raise ValueError(f"{text} isn't a time")
+    elif hour == 0 or hour > 12:
+        hours = [hour]
+    else:
+        hours = [hour % 12, hour % 12 + 12]
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if tomorrow:
+        if len(hours) > 1:  # "until 5 tomorrow": 1 to 6 o'clock in the afternoon, 7 to 11 in the morning, 12 noon
+            hours = [hours[1] if hour <= 6 or hour == 12 else hours[0]]
+        return day + timedelta(days=1, hours=hours[0], minutes=minute)
+    return min(at for h in hours for at in (day + timedelta(hours=h, minutes=minute),
+                                            day + timedelta(days=1, hours=h, minutes=minute)) if at > now)
+
+
+def until_from(words: str, now: Optional[datetime] = None) -> Optional[datetime]:
+    """Pure logic. When a stop-everything ends, from the words after it: "until tonight" (8 pm; after 7 pm or before
+    5 am, the next morning at 8), "until morning" (8 am: today's before 8), "until tomorrow" (8 am), "until noon",
+    "until 5pm", "until 5pm tomorrow", "until 5" (the next 5 o'clock), "for two hours", "for fifteen minutes", "for
+    half an hour", "for a couple of hours", "for today" (the next morning); None for no end (until he says, or "for
+    now"). ValueError for words it can't read, so an unreadable time never becomes a hold with no end."""
+    now = now or datetime.now()
+    low = " ".join(str(words or "").lower().replace("’", "'").replace("a.m.", "am").replace("p.m.", "pm").split())
+    low = low.strip(" ,.!")
+    if low in _UNTIL_HE_SAYS:
+        return None
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    morning_after = day + timedelta(days=0 if now.hour < 5 else 1, hours=8)
+    if re.fullmatch(r"for (?:today|the day|the rest of (?:the|to)day)", low):
+        return morning_after
+    if low.startswith("for "):
+        m = re.fullmatch(r"for\s+(.+?)\s*(minute|min|hour|hr|day|week)s?(\s+and\s+a\s+half)?", low)
+        n = _number(m.group(1)) if m else None
+        if not n or n <= 0:
+            raise ValueError(f"I can't tell how long \"{words}\" is")
+        n += 0.5 if m.group(3) else 0
+        unit = {"minute": "minutes", "min": "minutes", "hour": "hours", "hr": "hours", "day": "days",
+                "week": "weeks"}[m.group(2)]
+        return now + timedelta(**{unit: n})
+    rest = re.sub(r"^(?:until|till|til|'til|up to)\s+", "", low)
+    tomorrow = bool(re.search(r"\btomorrow\b", rest))
+    rest = " ".join(re.sub(r"\b(?:tomorrow|today|at)\b", " ", rest).split())
+    at = _clock(rest, now, tomorrow)
+    if at is not None:
+        return at
+    if rest in ("noon", "midday", "lunch", "lunchtime"):
+        noon = day + timedelta(days=1 if tomorrow else 0, hours=12)
+        return noon if tomorrow or noon > now else noon + timedelta(days=1)
+    if rest == "midnight":
+        return day + timedelta(days=1)
+    if rest in ("tonight", "this evening", "evening", "night", "tomorrow night", "tomorrow evening"):
+        if tomorrow:
+            return day + timedelta(days=1, hours=20)
+        return morning_after if now.hour >= 19 or now.hour < 5 else day + timedelta(hours=20)
+    if rest in ("", "morning", "the morning", "this morning"):
+        return day + timedelta(hours=8) if not tomorrow and now.hour < 8 else day + timedelta(days=1, hours=8)
+    raise ValueError(f"I can't tell when \"{words}\" is")
 
 
 def recognise(prompt: str, holding_now: bool = False) -> Optional[tuple[str, str]]:
     """Pure logic. ("stop", ""), ("everything", the words after it) or ("carry_on", "") when the whole message is one
-    of the commands, else None. "Carry on" counts only while a stop-everything is on (elsewhere it means other
-    things)."""
+    of the commands, else None: "stop everything" only with nothing or a time after it ("stop all alarms" is
+    None). "Carry on" counts only while a stop-everything is on (elsewhere it means other things)."""
     text = str(prompt or "")
     m = _EVERYTHING.match(text)
     if m:
@@ -181,10 +272,35 @@ def quiet(context) -> None:
         log.exception("Stop: her speech didn't stop cleanly.")
 
 
+def _stop_job(context) -> list[str]:
+    """Ends the job or diagnosis she's walking the person through (core/trade_session.py), as `trade.stop` does when
+    he says "stop the job" (proposed and approved as the person, so it's recorded like any other change). Step plans
+    aren't touched: they wait on the person, nothing of hers is running in them. Returns what was stopped, in words."""
+    store = getattr(context, "trade_session", None)
+    live = store.live() if store is not None else None
+    if live is None:
+        return []
+    where = f"\"{live.title}\"" + (f" at step {live.at + 1}" if live.kind == "job" else "")
+    actions = getattr(context, "actions", None)
+    if actions is not None:
+        import core.trade_actions  # noqa: F401 - registers trade.stop
+
+        done = actions.approve(context, actions.propose(context, "trade.stop", {}, proposed_by="person").proposal_id)
+        if done.status != "executed":
+            log.warning("Stop: the job walkthrough didn't stop: %s", done.result)
+            return []
+    else:
+        from core import trade_session
+
+        trade_session.stop(live)
+        store.save()
+    return [f"walking you through {where}"]
+
+
 def stop_now(context) -> dict:
-    """"Stop": ends her speech, the skill she's running with the person and her browser tasks, after the step in
-    progress. Returns {"stopped": [what, in words], "left": [what keeps going]}. Never raises: a part that fails to
-    stop is logged and the rest still stop."""
+    """"Stop": ends her speech, the skill she's running with the person, the job she's walking them through
+    (`_stop_job`) and her browser tasks, after the step in progress. Returns {"stopped": [what, in words]}. Never
+    raises: a part that fails to stop is logged and the rest still stop."""
     stopped: list[str] = []
     quiet(context)
     try:
@@ -198,6 +314,10 @@ def stop_now(context) -> dict:
                 stopped.append(f"\"{skill.name if skill else 'the skill'}\" at step {at}")
     except Exception:  # noqa: BLE001
         log.exception("Stop: the skill didn't stop cleanly.")
+    try:
+        stopped.extend(_stop_job(context))
+    except Exception:  # noqa: BLE001
+        log.exception("Stop: the job walkthrough didn't stop cleanly.")
     try:
         hub = getattr(context, "browsers", None)
         browser = hub.for_person(context) if hub is not None else None
@@ -294,7 +414,7 @@ def report(done: dict, everything: bool, now: Optional[datetime] = None) -> str:
 
 def handle(context, prompt: str) -> Optional[str]:
     """The turn pipeline's first question: when the message is a stop command, does it and returns what she says;
-    else None."""
+    else None. A "stop everything" whose time can't be read stops what's running, holds nothing and asks."""
     command = recognise(prompt, holding_now=_read(context) is not None)
     if command is None:
         return None
@@ -303,16 +423,22 @@ def handle(context, prompt: str) -> Optional[str]:
         carry_on(context)
         return "Carrying on: my background work and messages are back. Anything I held comes through at its own pace."
     if kind == "everything":
-        return report(stop_everything(context, until_from(rest)), everything=True)
+        try:
+            until = until_from(rest)
+        except ValueError:  # an unreadable time never becomes a hold with no end: what's running stops, and she asks
+            return (report(stop_now(context), everything=False) + f" I didn't catch how long you meant by \"{rest}\", "
+                    "so nothing is held yet. Say \"stop everything for two hours\", \"until 5pm\" or \"until "
+                    "tonight\", or just \"stop everything\" to hold it until you say \"carry on\".")
+        return report(stop_everything(context, until), everything=True)
     return report(stop_now(context), everything=False)
 
 
 def for_shell(context, now: Optional[datetime] = None) -> Optional[dict]:
-    """What the frame shows while a stop-everything is on: {"since", "until", "line"}, else None. `now` is the time
-    to judge it at (the clock's, unless a test passes one)."""
+    """What the frame shows while a stop-everything is on at `now` (the clock's when None): {"since", "until",
+    "line"}, else None."""
     value = state(context, now)
     if not value:
         return None
     until = datetime.fromisoformat(value["until"]) if value.get("until") else None
     return {"since": value["since"], "until": value.get("until", ""),
-            "line": f"Everything of MIA's own is stopped {_when(until)}."}
+            "line": f"Everything of MIA's own is stopped {_when(until, now)}."}

@@ -5,7 +5,10 @@ tests.test_app_scaffold
 MIA Forge's scaffold (phase M7, core/app_scaffold.py, tools/new_app.py): from one short description it writes a
 manifest the Application Registry accepts, a screen on the shared frame, a first test, and the two code edits that
 list the app; it refuses a bad id, a taken id, an unknown area and a file it would overwrite, writing nothing; a dry
-run writes nothing; and a scaffolded app has no capabilities, permissions or stores of its own.
+run writes nothing; and a scaffolded app has no capabilities, permissions or stores of its own. Its hardening: a write
+that fails partway is undone, text that would break the generated test or script is refused (and neutralised
+anyway), an id with a trailing newline, a Windows device name or one already listed is refused, a comment by a
+list's last element can't swallow the new one, a byte-order mark is read and a missing root is a plain refusal.
 """
 
 from __future__ import annotations
@@ -151,3 +154,91 @@ def test_text_from_the_description_cant_break_out_of_the_page():
     nasty = AppSpec("scaffold_probe", 'Seeds <script>alert(1)</script>', "home", 'a "quote" & more', ask='"><img src=x>')
     page = app_scaffold.page(nasty)
     assert "<script>alert" not in page and "<img" not in page and "&lt;script&gt;" in page
+
+
+def test_a_write_that_fails_partway_puts_every_file_back_and_a_retry_works(root, monkeypatch):
+    before, real, calls = _tree(root), Path.write_text, []
+
+    def flaky(self, *args, **kwargs):
+        """Path.write_text that fails on the sixth file, after four are created and one is changed."""
+        calls.append(self)
+        if len(calls) == 6:
+            raise PermissionError(13, "locked", str(self))
+        return real(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", flaky)
+    with pytest.raises(ScaffoldError, match="Nothing was scaffolded"):
+        app_scaffold.write(SPEC, root)
+    assert _tree(root) == before and not (root / "apps" / "scaffold_probe").exists()
+    monkeypatch.setattr(Path, "write_text", real)
+    assert app_scaffold.write(SPEC, root)["create"]  # nothing left behind to refuse a retry
+
+
+def test_a_name_or_tagline_that_would_break_the_generated_files_is_refused_and_the_emitters_are_safe_anyway(root):
+    for bad in ("Seeds \\New", "\\x", "\\u", 'a """ b', "X */ alert(1); /*", "two\nlines"):
+        for spec in (AppSpec("scaffold_probe", bad, "home"), AppSpec("scaffold_probe", "Probe", "home", bad)):
+            assert any("control character" in p for p in app_scaffold.problems(spec, root)), bad
+        spec = AppSpec("scaffold_probe", bad, "home", bad)
+        doc = ast.get_docstring(ast.parse(app_scaffold.first_test(spec)))
+        assert doc.split(" (scaffolded")[0].splitlines()[-1] == bad.replace("\n", " ")  # read back as written
+        js = app_scaffold.script(spec)
+        assert js.count("*/") == 1 and js.index("*/") < js.index("(function")
+
+
+def test_an_id_with_a_trailing_newline_or_a_windows_device_name_is_refused(root):
+    assert any("snake_case" in p for p in app_scaffold.problems(AppSpec("seed_bank\n", "Seed Bank", "home"), root))
+    for name in ("con", "prn", "aux", "nul", "com1", "lpt9"):
+        assert any("Windows" in p for p in app_scaffold.problems(AppSpec(name, "Device", "home"), root)), name
+    assert app_scaffold.problems(AppSpec("console", "Console", "home"), root) == []
+
+
+def test_a_comment_after_the_last_element_or_before_the_closer_doesnt_swallow_the_new_one():
+    def members(out, name):
+        """The literal assigned to `name` in `out`, evaluated."""
+        node = next(n for n in ast.parse(out).body if getattr(n.targets[0], "id", "") == name)
+        return ast.literal_eval(node.value.args[0] if isinstance(node.value, ast.Call) else node.value)
+
+    for source in ('X = {"a", "b"  # the last\n}\n', 'X = {"a",\n     "b",\n     # more later\n}\n',
+                   'X = frozenset({"a", ("b")})  # wrapped\n', 'X = {"a", "b",}\n'):
+        assert members(app_scaffold.with_listed(source, "X", '"new"'), "X") == {"a", "b", "new"}, source
+    dicts = ('LIMITS = {"a": "x",  # note\n}\n', 'LIMITS = {}\n')
+    for source in dicts:
+        assert members(app_scaffold.with_listed(source, "LIMITS", '"new": ""'), "LIMITS")["new"] == "", source
+    for source, want in (('A = Area("home", "H", "h", "d", ("a",  # c\n))\n', ("a", "new")),
+                         ('A = Area("home", "H", "h", "d", ())\n', ("new",))):
+        out = app_scaffold.with_area_member(source, "home", "new")
+        call = next(c for c in ast.walk(ast.parse(out)) if isinstance(c, ast.Call))
+        assert ast.literal_eval(call.args[4]) == want, source
+    with pytest.raises(ScaffoldError):
+        app_scaffold._insert_at('X = {"a"}\n', ast.parse('X = {"a"}\n').body[0].value, '"b"', ")")
+
+
+def test_a_plan_that_would_write_python_that_doesnt_parse_is_refused(root, monkeypatch):
+    monkeypatch.setattr(app_scaffold, "with_web_only", lambda source, app_id: "WEB_ONLY = (\n")
+    with pytest.raises(ScaffoldError, match="isn't valid Python"):
+        app_scaffold.plan(SPEC, root)
+
+
+def test_a_byte_order_mark_is_read_and_a_missing_root_is_a_plain_refusal(root, tmp_path, capsys):
+    from tools import new_app
+
+    for rel in ("work/parity.json", "docs/schema/apps.example.json", "core/glasses.py"):
+        (root / rel).write_bytes(b"\xef\xbb\xbf" + (root / rel).read_bytes())
+    assert app_scaffold.write(SPEC, root)["change"]
+    missing = tmp_path / "nowhere"
+    with pytest.raises(ScaffoldError, match="isn't a MIA checkout"):
+        app_scaffold.plan(SPEC, missing)
+    assert new_app.main(["scaffold_probe", "Scaffold Probe", "home", "--root", str(missing)]) == 1
+    assert "isn't a MIA checkout" in capsys.readouterr().err
+
+
+def test_an_id_already_in_one_of_the_lists_is_refused(root):
+    parity = json.loads((root / "work/parity.json").read_text(encoding="utf-8"))
+    parity["gaps"]["scaffold_probe:voice"] = {"status": "none", "why": "left over"}
+    (root / "work/parity.json").write_text(json.dumps(parity), encoding="utf-8")
+    surfaces = root / "core" / "web_surfaces.py"
+    surfaces.write_text(app_scaffold.with_web_only(surfaces.read_text(encoding="utf-8"), "scaffold_probe"),
+                        encoding="utf-8")
+    found = app_scaffold.problems(SPEC, root)
+    assert any("WEB_ONLY" in p for p in found) and any("parity.json" in p for p in found)
+    assert any("core.parity" in step for step in app_scaffold.NEXT_STEPS)

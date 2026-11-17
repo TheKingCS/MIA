@@ -154,7 +154,8 @@ def register_taught_skill_actions(registry: AssistantActionRegistry) -> None:
     """Registers the taught-skill tools: watch_me_teach, keep_taught_skill, stop_watching_me, teach_skill_in_steps,
     change_taught_skill, forget_taught_skill, list_taught_skills, run_taught_skill, answer_taught_skill and
     stop_taught_skill; whats_running, every run of steps in one list (UI-1); and the plans across apps (UI-7):
-    plan_my_week, whats_the_plan, do_plan_step and drop_plan_step."""
+    plan_my_week, whats_the_plan, do_plan_step and drop_plan_step (do_plan_step is destructive, so it never runs
+    when the model bundles it with other calls)."""
     none = {"type": "object", "properties": {}, "required": []}
     which = {"type": "string", "description": "The skill's name, as they said it."}
     lines = {"type": "string", "description": "The steps, one a line: tell: words / ask: question -> name / "
@@ -205,8 +206,10 @@ def register_taught_skill_actions(registry: AssistantActionRegistry) -> None:
         ("drop_plan_step", "Leave one numbered step out of the open plan.", step, _plan_step("steps.drop"),
          ("drop step", "skip step", "leave out step")),
     ):
+        # Doing a step changes a record: never run when bundled with other calls in one reply (Opus's review).
         registry.register(AssistantAction(name=name, domain=DOMAIN, description=description, parameters=parameters,
-                                          handler=handler, trigger_phrases=phrases, subjects=("plan", "step", "week")))
+                                          handler=handler, trigger_phrases=phrases, subjects=("plan", "step", "week"),
+                                          destructive=name == "do_plan_step"))
     registry.register(AssistantAction(
         name="whats_running", domain=DOMAIN,
         description="What MIA is running in steps right now (browser tasks, taught skills, workflows), where each is or "

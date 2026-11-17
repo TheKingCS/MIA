@@ -103,7 +103,18 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     dishes", core/did_it.py), or a question one lookup answers, run by
     code, no model; None when a question plan will answer (it comes
     first, as in run_assistant_turn) or it's for the model. Never in a
-    personal mode or the journal."""
+    personal mode or the journal, except "stop", "stop everything" and
+    "carry on" (core/stop.py), asked first in every conversation, as in
+    a turn."""
+    from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
+
+    try:
+        stopped = stop.handle(context, prompt)
+    except Exception:
+        log.exception("Couldn't follow the stop")
+        stopped = None
+    if stopped is not None:
+        return stopped
     if _personal(conversation):
         return None
     from core.trade_actions import reply as job_reply

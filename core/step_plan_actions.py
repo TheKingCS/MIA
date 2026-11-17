@@ -10,8 +10,8 @@ Plans across apps (UI-7, core/step_plans.py) on the action contract in core/acti
 - `steps.change`: give a waiting step new details, checked by its own action.
 - `steps.drop`: leave one step out. `steps.drop_plan`: leave out everything still waiting.
 
-A plan's steps are only ever kinds that reach the person's own records and can be undone (core/step_plans._allowed),
-so `steps.do` never reaches further than that either.
+A plan's steps are only ever kinds that reach the person's own records, can be undone and don't always ask
+(core/step_plans._allowed), so `steps.do` never reaches further than that either; its card pins the step it shows.
 """
 
 from __future__ import annotations
@@ -68,12 +68,17 @@ def _plan_week(context, params) -> str:
 
 
 def _describe_do(context, params) -> str:
-    """The sentence for `steps.do`: the step's own, checked as things are now, and where it sits in its plan."""
-    from core.step_plans import WAITING, _allowed, _said
+    """The sentence for `steps.do`: the step's own, checked as things are now, and where it sits in its plan. It
+    pins the step it shows: the proposal's `seen` is the step's fingerprint, so a step changed before the press is
+    refused rather than run as something the card didn't say."""
+    from core.step_plans import FAILED, WAITING, _allowed, _said, fingerprint
 
     plan, step = _step(context, params)
-    if step.status != WAITING:
+    if step.status not in (WAITING, FAILED):
         raise ActionError(f"Step {plan.number(step)} is already {_said(step.status)}.")
+    params.setdefault("seen", fingerprint(step))
+    if params["seen"] != fingerprint(step):
+        raise ActionError(f"Step {plan.number(step)} changed since you saw it. Look at it again first.")
     if _allowed(step.kind):
         raise ActionError(f"Step {plan.number(step)} can't be done here: {_allowed(step.kind)}.")
     try:
@@ -84,11 +89,13 @@ def _describe_do(context, params) -> str:
 
 
 def _do(context, params) -> str:
-    """Does `steps.do` and says what happened and what's next."""
+    """Does `steps.do` and says what happened and what's next. A step that fails is said, not raised, so the plan's
+    change (the step marked failed, to try again, change or drop) is recorded for undo like any other."""
     plan, step = _step(context, params)
-    done = _run(lambda: _plans(context).do(context, plan.plan_id, step.step_id))
+    done = _run(lambda: _plans(context).do(context, plan.plan_id, step.step_id, seen=str(params.get("seen") or "")))
     if done.status != "done":
-        raise ActionError(f"Step {plan.number(done)} didn't work: {done.why}")
+        return (f"Step {plan.number(done)} didn't work: {done.why}. It's still in the plan: "
+                "try it again, change it or drop it.")
     left = plan.waiting()
     return done.result + (f" Next: step {plan.number(left[0])}, {left[0].summary}." if left
                           else f" That was the last step of \"{plan.title}\".")

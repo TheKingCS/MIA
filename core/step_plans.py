@@ -12,9 +12,11 @@ change. (The Library's building plans are something else: core/plan_library.py.)
 its own `describe` gave, the app it belongs to, its tier (core/grants.py), and what it reaches and whether it can be
 undone (core/action_effects.py). Its status is waiting, done, dropped, failed, or **can't** with the reason.
 
-**What may be a step** (`_allowed`): only a kind that reaches the person's own records and can be undone. A kind that
-reaches the system or someone outside, that can't be undone, or that is tiered *never*, is listed in the plan as
-"can't: do this one from its own screen", so a plan can never be the way around an approval card.
+**What may be a step** (`_allowed`): only a kind that reaches the person's own records and can be undone, and that
+doesn't always ask. A kind that reaches the system or someone outside, that can't be undone, that is tiered *never*,
+that pays, buys, sends, publishes or deletes, or that touches a grant or a taught skill, is listed in the plan as
+"can't: do this one from its own screen", so a plan can never be the way around an approval card. Marking a bill or a
+debt paid (BOOKKEEPING) is the one exception: it writes his own record and moves no money.
 
 **The first planner** (`plan_week`, the requirements' scenario W-2, "get me ready for the week") is code, not a
 model: it takes today's list (core/today.py: overdue, today, waiting, soon) and makes a step of each item that
@@ -22,7 +24,9 @@ carries a suggested action. Other planners (a team's coordinator, a model's draf
 kinds and parameters and get the same checks.
 
 **One at a time:** `do()` checks the step again as things are now (its `describe`), runs it as the person, and moves
-on; `change()` gives it new parameters, re-checked; `drop()` leaves it out. A plan with no step waiting is finished.
+on; `change()` gives it new parameters, re-checked; `drop()` leaves it out. The approval card pins the step it showed
+(`fingerprint`), so a step changed before the press is refused. A failed step stays to try again, change or drop. A
+plan with no step waiting or failed is finished, and a finished or dropped plan takes no more changes.
 
 **A plan is a run** (core/runs.py, source "plans"): it shows in "what's running", waiting on the person at its next
 step, and a restart finds it where it was. Each person's own (PERSONAL_STORES), sealed, written atomically so undoing
@@ -51,6 +55,8 @@ KEEP_FINISHED = 20
 MAX_STEPS = 40
 WAITING, DONE, DROPPED, FAILED, CANT = "waiting", "done", "dropped", "failed", "cant"
 ELSEWHERE = "do this one from its own screen"
+# Kinds that always ask by their name but only mark the person's own record paid (no money moves): may be steps.
+BOOKKEEPING = frozenset({"bill.pay", "debt.pay"})
 
 
 class PlanError(ValueError):
@@ -87,8 +93,8 @@ class StepPlan:
     steps: list = field(default_factory=list)
 
     def waiting(self) -> list[Step]:
-        """The steps still to decide."""
-        return [s for s in self.steps if s.status == WAITING]
+        """The steps still to decide: waiting, or failed (to try again, change or drop)."""
+        return [s for s in self.steps if s.status in (WAITING, FAILED)]
 
     def number(self, step: Step) -> int:
         """A step's number as the plan lists it (1 is the first)."""
@@ -96,19 +102,34 @@ class StepPlan:
 
 
 def _allowed(kind: str) -> str:
-    """Pure logic. "" when a kind may be a plan's step, else why not (see the module's opening)."""
+    """Pure logic. "" when a kind may be a plan's step, else why not (see the module's opening). Besides reach and
+    undo, a kind that always asks (paying, buying, sending, publishing, deleting, a profile, a taught skill: core/
+    taught_skills.always_asks) or that touches a grant is never a step, except BOOKKEEPING: marking a bill or a debt
+    paid writes the person's own record and moves no money (Opus's review of UI-7, 2026-11-17)."""
     from core import grants
     from core.action_effects import effect_of
     from core.actions import ACTION_TYPES
+    from core.taught_skills import always_asks
 
     if kind not in ACTION_TYPES:
         return "MIA has no such action"
     if kind.startswith("steps."):
         return "a plan can't hold a plan's own steps"
+    if kind.startswith("grant.") or (always_asks(kind) and kind not in BOOKKEEPING):
+        return ELSEWHERE
     reach, reversible = effect_of(kind)
     if grants.tier_of(kind) == grants.NEVER or reach != "records" or reversible != "undoable":
         return ELSEWHERE
     return ""
+
+
+def fingerprint(step: Step) -> str:
+    """Pure logic. A short hash of a step's kind and parameters: the approval card carries it, so the step that runs
+    is the one the person saw (a change in between makes `do` refuse)."""
+    import hashlib
+
+    body = json.dumps([step.kind, step.params], sort_keys=True, default=str)
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
 
 
 def _app_of(kind: str) -> str:
@@ -242,18 +263,23 @@ class StepPlanBook:
 
     # ------------------------------------------------------------------ one step at a time
 
-    def do(self, context, plan_id: str, which) -> Step:
-        """Does one waiting step as the person: checked again as things are now, then run. PlanError when it isn't
-        waiting or can no longer be done (it stays waiting, to change or drop); a step that breaks while running is
-        marked failed with why."""
+    def do(self, context, plan_id: str, which, seen: str = "") -> Step:
+        """Does one waiting (or failed, to try again) step as the person: checked again as things are now, then run.
+        `seen` is the step's `fingerprint` from the approval card; when given and the step has changed since, it
+        refuses. PlanError when it can't be done (it stays as it was, to change or drop); a step that breaks while
+        running is marked failed with why, and may be tried again."""
         from core import grants
         from core.actions import ACTION_TYPES
 
         with self._lock:
             plan = self.get(plan_id)
             step = self.step(plan, which)
-            if step.status != WAITING:
+            if plan.status != "open":
+                raise PlanError("That plan is already finished.")
+            if step.status not in (WAITING, FAILED):
                 raise PlanError(f"Step {plan.number(step)} is already {_said(step.status)}.")
+            if seen and seen != fingerprint(step):
+                raise PlanError(f"Step {plan.number(step)} changed since you saw it. Look at it again first.")
             refused = _allowed(step.kind)
             if refused:
                 raise PlanError(f"Step {plan.number(step)} can't be done here: {refused}.")
@@ -276,14 +302,15 @@ class StepPlanBook:
             return step
 
     def change(self, context, plan_id: str, which, params: dict) -> Step:
-        """Gives a waiting step new parameters (merged over its own), checked by its action; PlanError when the
-        action refuses them, and the step is left as it was."""
+        """Gives a waiting, failed or can't step of an open plan new parameters (merged over its own), checked by
+        its action; PlanError when the plan is finished or the action refuses them, and the step is left as it was.
+        A step changed after its card was shown is refused at the press (`fingerprint`)."""
         from core.actions import ACTION_TYPES
 
         with self._lock:
             plan = self.get(plan_id)
             step = self.step(plan, which)
-            if step.status not in (WAITING, CANT) or _allowed(step.kind):
+            if plan.status != "open" or step.status not in (WAITING, CANT, FAILED) or _allowed(step.kind):
                 raise PlanError(f"Step {plan.number(step)} can't be changed.")
             merged = {**step.params, **{k: v for k, v in dict(params or {}).items() if k in step.params}}
             try:
@@ -291,16 +318,15 @@ class StepPlanBook:
             except ValueError as problem:
                 raise PlanError(str(problem)) from None
             step.params, step.summary, step.status, step.why = merged, summary, WAITING, ""
-            plan.status = "open"
             self._save()
             return step
 
     def drop(self, context, plan_id: str, which) -> Step:
-        """Leaves one waiting step out of the plan."""
+        """Leaves one waiting (or failed) step out of the plan."""
         with self._lock:
             plan = self.get(plan_id)
             step = self.step(plan, which)
-            if step.status != WAITING:
+            if plan.status != "open" or step.status not in (WAITING, FAILED):
                 raise PlanError(f"Step {plan.number(step)} is already {_said(step.status)}.")
             step.status = DROPPED
             self._moved(context, plan, step)
