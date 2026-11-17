@@ -40,7 +40,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **09** | **Self-awareness, inspection and self-development** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-76 to Q-78 yes; DEC-0222 and 0225 approved)** | `MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more (listed in it) |
 | **10** | **The desktop and primary interface** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-79 to Q-81 yes; Q-82: the household display for him and his wife; DEC-0227, 0228, 0231 approved)** | `MIA_OS_DESKTOP_ARCHITECTURE.md` and twenty-four more (listed in it) |
 | **11** | **Visual identity, themes and spatial interfaces** | **done 2026-11-17 (Opus); reviewed by Zac 2026-11-18 (Q-83 to Q-85 yes; Q-86: an old Android or the Pi 5; DEC-0235, 0236, 0239, 0240 approved)** | `MIA_OS_VISUAL_IDENTITY.md` and twenty-four more (listed in it) |
-| 12–17 | (see `prompts/`) | not started | |
+| **12** | **One MIA across many devices** | **done 2026-11-18 (Opus); waiting for Zac's review (Q-87 to Q-90; DEC-0241 to 0247 proposed)** | `MIA_OS_DISTRIBUTED_ARCHITECTURE.md` and twenty-five more (listed in it) |
+| 13–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -81,6 +82,17 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3l. Prompt 12 in brief
+
+The architecture is [MIA_OS_DISTRIBUTED_ARCHITECTURE.md](MIA_OS_DISTRIBUTED_ARCHITECTURE.md), with twenty-five
+supporting documents. The audit found MIA already one MIA on two full engines: the phone runs the whole engine with
+its own model, links once with his password, uses the PC's model when it can reach it, and syncs both ways by a
+three-way merge; the glasses ride on the phone; sensors and the greenhouse node feed the PC. The PC is the hub, full
+engines work alone (DEC-0241); trust by pairing, one scoped key per device (DEC-0242); sync stays the merge
+(DEC-0243); HTTP and SSE over the home network or Tailscale (DEC-0244); thinking on the most capable reachable
+machine (DEC-0245); controllers keep their loops and safety (DEC-0246); a lost device unlinked from anywhere
+(DEC-0247). REQ-DST-001 to 033; scenarios A to J.
 
 ## 3k. Prompt 11 in brief
 

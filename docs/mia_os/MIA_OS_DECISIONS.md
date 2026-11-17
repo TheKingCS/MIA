@@ -157,3 +157,17 @@ Full records: `MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0240 | A small local audio identity | APPROVED (Q-84) |
 
 Full records: `MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 12 (2026-11-18)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0241 | One MIA per person: the PC the hub, full engines that work alone | PROPOSED |
+| DEC-0242 | Trust by pairing: one key per device | PROPOSED |
+| DEC-0243 | Sync stays the three-way merge by record id | PROPOSED |
+| DEC-0244 | HTTP and server-sent events over the home network or Tailscale | PROPOSED |
+| DEC-0245 | Thinking on the most capable reachable machine | PROPOSED |
+| DEC-0246 | Controllers keep their loops and their safety | PROPOSED |
+| DEC-0247 | A lost device is unlinked from anywhere | PROPOSED |
+
+Full records: `MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md` §2.

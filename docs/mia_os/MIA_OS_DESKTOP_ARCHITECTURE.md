@@ -117,3 +117,7 @@ beside it, and Plasma is a click away. She sees only what he shows her.
 
 Each region's surface tier, accent use and states are in `MIA_OS_DESKTOP_VISUAL_LANGUAGE.md`; the orb's
 fourteen states in `MIA_OS_ORB_VISUAL_AND_BEHAVIOR_SPECIFICATION.md` (DEC-0237).
+
+## Across devices (Prompt 12, 2026-11-18)
+
+The desktop is the hub's interface; a conversation started there continues on the phone (`MIA_OS_CROSS_DEVICE_SESSION_CONTINUITY.md`).

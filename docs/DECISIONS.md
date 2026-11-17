@@ -3806,3 +3806,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
+### DEC-0241: One MIA per person: the PC the hub, full engines that work alone
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: The PC is the hub (records of truth, big models, heavy jobs); the phone (later the laptop) runs the full engine and works alone; the glasses, the household display and Zeta Astralis are endpoints that keep no records; Pi nodes run the Core edition; controllers and sensors keep their own firmware. One codebase, told apart by profile.
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+
+### DEC-0242: Trust by pairing: one key per device
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: A device is paired by the person (his password, never an account), holds its own key whose hash alone the hub keeps, is listed in Sign-ins with its kind and last contact, and can be unlinked from any trusted device; keys are scoped to their kind (a person's, a household's, a sensor's one series, a node's snapshots).
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+
+### DEC-0243: Sync stays the three-way merge by record id
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: Driven by the device that travels, with the hub only answering; one base per device; the history merged by event id; a conflict on the same field keeps the losing value in the history and tells him; derived and device-only data never syncs.
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+
+### DEC-0244: HTTP and server-sent events over the home network or Tailscale
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: Every request signed by a paired device; changes reach other devices as signals to re-read; no open ports, no broker; encrypted on the home network as through Tailscale away.
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+
+### DEC-0245: Thinking on the most capable reachable machine
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: The hub's GPU, then a model node when one exists, then the device's own model, said each time; speech recognised where it was heard; long jobs on the hub, the asking device told when done; a cloud model only on his yes for that request.
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+
+### DEC-0246: Controllers keep their loops and their safety
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: A controller's safety never depends on MIA, the PC or the network; MIA reads, explains and proposes; a change is an approved action sent to the controller's own interface and read back; stop everything never touches the greenhouse.
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+
+### DEC-0247: A lost device is unlinked from anywhere
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 12
+- Decision: Its key refused at once, its data sealed with its own key and erased when it next reaches the hub; a new device is paired and filled by sync; a replaced hub is refilled from a backup or a full engine.
+- Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
+

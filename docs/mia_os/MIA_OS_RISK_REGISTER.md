@@ -60,3 +60,7 @@ report that found it. Rated H, M or L.*
 | R-62 | Many themes and personal palettes break readability | M | M | Prompt 11 | themes | contrast checks refuse a failing theme |
 | R-63 | The glasses' SDK limits what can be shown and changes between releases | M | H | Prompt 11 | glasses | design within cards; verify each release |
 | R-64 | The look drifts between designs, code and documents | M | M | Prompt 11 | the design system | tokens the only source; a token export |
+| R-65 | A third full engine makes sync conflicts more frequent | M | M | Prompt 12 | the laptop | one base per device through the hub; conflicts kept and told |
+| R-66 | A lost phone that never reconnects keeps his data | H | L | Prompt 12 | device loss | sealed with its own key; unlinked at once |
+| R-67 | The glasses depend on the phone app staying alive | M | M | Prompt 12 | the glasses | a foreground service; the glasses say so |
+| R-68 | The PC off means no big model away from home | M | H | Prompt 12 | travel | the phone's model said plainly; a model node later |

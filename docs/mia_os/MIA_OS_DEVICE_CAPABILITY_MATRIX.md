@@ -31,3 +31,7 @@ is later (DEC-0015).*
 | Send to MIA on a selection | ● (hotkey, MIA OS service) | ● (selection menu, share) | — | — | — | yes for local actions |
 | Development council, agents | ● | ○ view | — | — | — | ✗ (cloud) |
 | Backups, sync | ● | ● | — | — | ◐ | sync needs reach |
+
+## Across devices (Prompt 12, 2026-11-18)
+
+Each paired device reports its capabilities to the hub when it pairs and on change (`MIA_OS_DEVICE_DISCOVERY_AND_CAPABILITY_REGISTRY.md`, REQ-DST-007).

@@ -97,6 +97,10 @@ folded in here.*
 | Q-84 | **Answered yes (Zac, 2026-11-18)**; DEC-0240 approved. Was: Beside the win chimes MIA already plays: quiet interface sounds, listening on and off, "needs you" and errors on by default; done and message chimes off; alarms always; the sound switch turns them all off? Recommended: Yes | DEC-0240 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
 | Q-85 | **Answered yes (Zac, 2026-11-18)**; DEC-0235 approved. Was: Add a Light theme now (high contrast is already a setting), and Graffiti and a Neon theme later? Recommended: Yes | DEC-0235 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
 | Q-86 | **Answered (Zac, 2026-11-18): "I was thinking either an old android or the pi5"**: the first Zeta Astralis prototype runs on an old Android phone or the Raspberry Pi 5 with a small screen; DEC-0239 approved as amended. Was: Zeta Astralis: try the forearm interface first on a small Android phone in a forearm mount, before any custom display? Recommended: Yes | DEC-0239 | `MIA_OS_VISUAL_OPEN_QUESTIONS.md` |
+| Q-87 | **Open (Prompt 12).** What should the Raspberry Pi 5 do first: the Zeta Astralis prototype, the household display for you and your wife, or a second always-on node in the house? Recommended: The household display | DEC-0241 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
+| Q-88 | **Open (Prompt 12).** Away from home, MIA is reached only through Tailscale, never an open port on your router? Recommended: Yes | DEC-0244 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
+| Q-89 | **Open (Prompt 12).** When the laptop comes, should it run MIA's whole engine like the phone (its own copy, works without the PC, syncs when it can)? Recommended: Yes | DEC-0241 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
+| Q-90 | **Open (Prompt 12).** When you unlink a lost phone, should MIA on that phone erase its MIA data the next time it reaches your PC? Recommended: Yes | DEC-0247 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 

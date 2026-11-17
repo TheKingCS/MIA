@@ -43,3 +43,7 @@ vectors; an erased item can't be recalled from a stale vector (the index is chec
 | REQ-INT-015 | Every memory shall carry its source, how it's known (said, observed, derived, confirmed) and when. | Must | MVP | All | Exists (DEC-0173) | T: test_living_system | DEC-0210 → 07 |
 | REQ-INT-016 | The private journal and private-mode turns shall never enter the recall index unless he includes them. | Must | MVP | All | Exists (core/recall_index.SOURCES) | T | DEC-0210 → 07, 13 |
 | REQ-INT-017 | With no embedding model available, recall shall fall back to word search and say so. | Must | R1 | All | Exists in `meaning.py` | T | DEC-0210 → 07 |
+
+## Across devices (Prompt 12, 2026-11-18)
+
+What syncs and what doesn't: records and the history yes; the recall index (derived) and what he's working on (device-only) no (`MIA_OS_DISTRIBUTED_MEMORY_AND_CONTEXT.md`, REQ-DST-011).

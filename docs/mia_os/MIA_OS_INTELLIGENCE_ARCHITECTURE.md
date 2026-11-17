@@ -157,3 +157,7 @@ intelligence services (section 11 of this prompt's open questions document lists
 
 Which models and services are working, degraded or unavailable is held in the capability truth registry
 (DEC-0220), and every statement she makes about her own abilities carries its provenance (DEC-0221).
+
+## Across devices (Prompt 12, 2026-11-18)
+
+Which machine thinks: the most capable reachable one, the device's own model the floor (DEC-0245, `MIA_OS_DISTRIBUTED_INTELLIGENCE_ARCHITECTURE.md`).

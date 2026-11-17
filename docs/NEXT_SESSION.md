@@ -5,7 +5,16 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-17 (Opus on the PC: Prompt 09 built, Prompts 10 and 11)*
+*Last updated: 2026-11-18 (Opus on the PC: Prompt 12)*
+
+**New 2026-11-18, Prompt 12 (Claude on Opus).**
+- **Zac answered Q-83 to Q-86:** the Theme Studio from a picture, interface sounds, a Light theme (all to build);
+  Zeta Astralis first on an old Android or the Pi 5.
+- **Prompt 12 (one MIA across many devices) is done:** `docs/mia_os/MIA_OS_DISTRIBUTED_ARCHITECTURE.md` and
+  twenty-five more; DEC-0241 to 0247 proposed; REQ-DST-001 to 033; scenarios A to J. It keeps today's shape (the PC
+  the hub, the phone a full engine, the glasses through the phone, the greenhouse node read-only). **Waiting on
+  Zac:** Q-87 (the Pi 5's first job), Q-88 (Tailscale only away), Q-89 (the laptop a full engine), Q-90 (a lost
+  phone erases itself on reconnecting). Prompt 13 on his go.
 
 **New 2026-11-17, built overnight (Claude on Opus).**
 - **Voice approvals:** "approve it", "approve 2", "approve it from now on", "reject it", "what's

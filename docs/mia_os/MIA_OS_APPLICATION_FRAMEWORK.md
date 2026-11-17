@@ -210,3 +210,7 @@ Linux apps stay native, listed from their desktop entries and never added to her
 
 An app's manifest names its atmosphere colour; its screens take every other value from tokens (DEC-0234).
 `MIA_OS_APPLICATION_VISUAL_INTEGRATION.md` covers conventional Linux apps.
+
+## Across devices (Prompt 12, 2026-11-18)
+
+An app's manifest gains `runtime.devices` entries for the household display and wearables (`MIA_OS_DISTRIBUTED_APPLICATION_ARCHITECTURE.md`, REQ-DST-017).

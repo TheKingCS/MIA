@@ -125,3 +125,7 @@ price sources in `docs/HARDWARE.md`. Each document lists the ones it rests on.
 | `MIA_OS_HARDWARE_ARCHITECTURE_DIAGRAMS.md` | The ten diagrams the prompt asks for |
 | `MIA_OS_HARDWARE_ACCEPTANCE_CRITERIA.md` | How each requirement is checked |
 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` | Questions, gaps and the tests still to run |
+
+## Across devices (Prompt 12, 2026-11-18)
+
+Each machine's place among his devices (hub, full engine, endpoint, node, controller, sensor) is in `MIA_OS_DEVICE_CLASS_AND_RUNTIME_ARCHITECTURE.md`; the support level of each in `MIA_OS_DEVICE_SUPPORT_MATRIX.md`.

@@ -117,3 +117,7 @@ able to start from one of his pictures.
 `MIA_OS_VISUAL_ACCESSIBILITY_STANDARDS.md`, `MIA_OS_RENDERING_AND_PERFORMANCE_STRATEGY.md`,
 `MIA_OS_VISUAL_DESIGN_SPECIFICATIONS.md`, `MIA_OS_VISUAL_ARCHITECTURE_DIAGRAMS.md`,
 `MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md`, `MIA_OS_VISUAL_ACCEPTANCE_CRITERIA.md`, `MIA_OS_VISUAL_OPEN_QUESTIONS.md`.
+
+## Across devices (Prompt 12, 2026-11-18)
+
+The household display and Zeta Astralis are endpoints rendering MIA's screens in the ambient and compact layouts (`MIA_OS_DEVICE_CLASS_AND_RUNTIME_ARCHITECTURE.md`).
