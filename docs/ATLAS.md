@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1486 files, 333,129 lines; 1486 files describe themselves; 18,269 of 18,367 classes and functions are documented.
+1491 files, 333,829 lines; 1491 files describe themselves; 18,299 of 18,397 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-580 files, 168,040 lines; 8,668 of 8,754 classes and functions documented
+582 files, 168,490 lines; 8,685 of 8,771 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -326,6 +326,7 @@
 - `core/mission_projects.py`: Projects and Missions, connected (Zac's handoff, 2026-11-09, DEC-0152): "Projects represent what the user is working toward. Missions represent how MIA helps the user accomplish it."
 - `core/model_bench.py`: "Can the model on this device do MIA's job?" (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Replays MIA's golden set (tests live_model_check.py) against a model and reports two things:
 - `core/model_forge.py`: MIA's model forge (DEC-0106, stage 1): where she trains small models of her own, measures them honestly, and keeps a card saying what each one is.
+- `core/model_inspection.py`: Claude inspects MIA's models before they're used (DEC-0200; Zac, 2026-11-17: "MIA should have the ability to have her models inspected by Claude to test and approve them. This is similar to the Night School detail we have discussed."). The Specialist Forge's F6 (`docs/mia_os/MIA_OS_SPECIALIST_FORGE.
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information").
 - `core/module_manager.py`: Discovers and manages MIA modules.
 - `core/module_validator.py`: Validates a candidate module folder against the compatibility contract in docs/MODULE_SPEC.md, before it's installed into modules/.
@@ -451,6 +452,7 @@
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/specialist_models.py`: Which local model does each specialist's thinking (T1's second part; the local specialists plan, S3; DEC-0197: "the model per specialist is chosen from this table, not from a guide"). The table is the engineering bench's results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.
 - `core/specialist_review.py`: A second local model checks a specialist's work (the local specialists plan, S5; DEC-0198, Q-57: "a safety review can block a design until he's seen it"; the teams design: review is independent only across models).
+- `core/specialist_roster.py`: The specialists' roster and the "counts as added" bar, in code (the Specialist Forge, F1; DEC-0199; `docs/mia_os/MIA_OS_LOCAL_SPECIALISTS_PLAN.md` section 7: "a name with a paragraph is not a specialist").
 - `core/specialist_work.py`: A specialist's worksheet (the local specialists plan, S1; DEC-0197): how one of MIA's specialists answers an engineering question on a local model without the model ever producing a number of its own.
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
@@ -591,7 +593,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,519 lines; 57 of 57 classes and functions documented
+2 files, 4,528 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -874,7 +876,7 @@
 
 ## tests/: the test suite: what each part must do
 
-510 files, 86,436 lines; 7,267 of 7,279 classes and functions documented
+512 files, 86,630 lines; 7,280 of 7,292 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1137,6 +1139,7 @@
 - `tests/test_missions_module.py`: Unit tests for modules.missions.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_model_bench.py`: The model test (core/model_bench.py) and the llama.cpp backend (core/llm_manager.OpenAIBackend), 2026-10-07, DEC-0019: scoring follows the live check's rules, the frozen cases match the golden set, and the backend speaks llama-server's chat API, tested against a tiny fake server on 127.0.0.1.
 - `tests/test_model_forge.py`: MIA's model forge (core/model_forge.py, DEC-0106): the features, a router that learns from its tools' own words and is scored honestly on requests it never saw, its card, and saving and loading it.
+- `tests/test_model_inspection.py`: Claude inspects MIA's models (DEC-0200, core/model_inspection.py): every specialist's chosen model is pending until a verdict on its current bench results; a re-run of the bench makes it pending again; the inspector is shown the bench counts and the problems it got wrong, never asked to change anyth
 - `tests/test_model_registry.py`: MIA about herself (core/model_registry.py): "What AI model are you using?" answered from the runtime, saying where each fact came from, never from the model's guess.
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager.
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder.
@@ -1261,6 +1264,7 @@
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialist_models.py`: Which local model does each specialist's thinking (core/specialist_models.py, DEC-0197): chosen from this PC's bench results in the worksheet's own mode, over the disciplines that specialist uses; a model that guesses a missing input doesn't pass however many it gets right; the best that didn't pass
 - `tests/test_specialist_review.py`: A second local model checks a specialist's work (core/specialist_review.py, S5): it reviews the plan (calculators and inputs), never the arithmetic; the reviewer is the best other model on the bench, independent only from another family, and said so; a doubt holds the answer in MIA's words; an unrea
+- `tests/test_specialist_roster.py`: The "counts as added" bar in code (the Specialist Forge's F1, core/specialist_roster.py; DEC-0199): a specialist missing its charter, limits, words, starter questions, role or caveat is in progress with each gap named; one whose answers rest on figures needs calculators and enough bench tasks for ev
 - `tests/test_specialist_work.py`: A specialist's worksheet (core/specialist_work.py, DEC-0197): the model chooses calculators, code works out the numbers, and code checks that the answer's numbers all come from somewhere. *(2 undocumented)*
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
@@ -1389,7 +1393,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-114 files, 21,250 lines
+115 files, 21,297 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
@@ -1487,6 +1491,7 @@
 - `web/skills.js`: skills.js — the Skills screen (claude, 2026-10-06, DEC-0017/0018, H-0013). Renders MIA.skills() (core/web_progress.py): the skill tree by category (your interests first), each skill's level, XP and capability, what a locked one needs, the next honest step, each skill's pathways (Start), challenge ch
 - `web/sound.js`: sound.js — MIA's sounds (claude, 2026-10-17, DEC-0028 #11). Short tones made in the browser (Web Audio: no sound files to download, works offline): a chime for an objective, a quest-complete arpeggio for a mission, a fanfare for a level. MIA's voice line (from the engine's reward.say, core/actions.v
 - `web/spatial.js`: spatial.js — MIA's spatial components (DEC-0130, claude, 2026-11-08). MIASpatial.vapor(canvas, hues)  smoky RGB light drifting on black: a few big soft lights in the areas' hues, drawn small and blurred by CSS (cheap), paused when hidden, still under reduced motion. Returns a stop function. MIASpati
+- `web/specialists.js`: specialists.js — Specialists (claude, 2026-11-17; the Specialist Forge's F1, core/specialist_roster.py). Renders MIA.specialistRoster(): each specialist with its standing (added, built but not passing its bench, in progress with what's missing), the model it runs on and its bench, then the planned o
 - `web/start.js`: start.js — Start Here (claude, 2026-11-07). Renders MIA.guide() (core/web_guide.py): what she does, grouped by what you want to get done; each with how it works, "Try saying" buttons that open Talk with the words typed in (press Enter to send), and the page to open; the apps still empty, to fill in;
 - `web/steps.js`: steps.js — Step By Step (claude, 2026-11-17, UI-7; core/step_plans.py). Renders MIA.stepPlans(): each open plan with every step in order. A waiting step shows its sentence, the app it changes, and Do It (steps.do, which asks first), Change (steps.change, its details in a form) and Leave Out (steps.d
 - `web/studio.js`: studio.js — the Theme Studio (DEC-0136, claude, 2026-11-08). Draws MIA.themes() (core/themes.studio): pick a theme to start from, tweak its colours, corners, font, material and the 3D room's light, and see it at once on this whole page (MIAShell.previewTheme, not kept) and in a little room (web/nexu

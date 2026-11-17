@@ -112,7 +112,7 @@ def test_a_lesson_is_graded_by_code_and_practice_never_merges(tmp_path):
 
 @pytest.fixture
 def school(tmp_path, monkeypatch):
-    """A night school with everything in a temporary folder and the outside held still: no real audit, curriculum or specialists, a fixed build plan, a teacher with budget, one loop below target, nothing in the ledger or coverage."""
+    """A night school with everything in a temporary folder and the outside held still: no real audit, curriculum, inspection or specialists, a fixed build plan, a teacher with budget, one loop below target, nothing in the ledger or coverage."""
     from core import dev_ledger, loop_coverage, loops, self_audit, work_review
 
     monkeypatch.setattr(self_audit, "due", lambda *a, **k: False)  # a test night never audits the real code
@@ -122,6 +122,9 @@ def school(tmp_path, monkeypatch):
     from core import specialists
 
     monkeypatch.setattr(specialists, "study", lambda ask, *a, **k: {"specialist": "radio", "kept": [], "refused": []})
+    from core import model_inspection
+
+    monkeypatch.setattr(model_inspection, "pending", lambda *a, **k: [])  # no real model is inspected in a test night
 
     monkeypatch.setattr(ns, "STOP_FILE", tmp_path / "STOP")
     monkeypatch.setattr(ns, "PLAN", tmp_path / "BUILD_PLAN.md")

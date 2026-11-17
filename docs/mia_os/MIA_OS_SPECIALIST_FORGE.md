@@ -60,7 +60,7 @@ a missing input (the right answer is a question). The bench is what makes "added
 **Measure.** The new tasks run on each local model (`tools.eng_bench`); `core/specialist_models.py` picks the model
 or marks the discipline not passing.
 
-**Inspect (DEC-0200).** Before Zac sees it, Claude inspects it the way Night School's teacher works: read-only, in the lab. Claude runs the bench, reads sample worksheets, checks each calculator against its cited worked example and the caveat against the discipline, and writes a verdict with its evidence. A pass can't stand against a failing bench. A model choice or an adapter goes live on Claude's pass; code goes on to Zac.
+**Inspect (DEC-0200).** Before Zac sees it, Claude inspects it the way Night School's teacher works: read-only, in the lab. Claude runs the bench, reads sample worksheets, checks each calculator against its cited worked example and the caveat against the discipline, and writes a verdict with its evidence. A pass can't stand against a failing bench. A model choice, an adapter, and the specialist's code all go live on Claude's pass (Zac: "Claudes pass can cover code too"); he sees every verdict and can take any back.
 
 **Approve.** The whole specialist arrives as one lab proposal: the diff, the sources, the bench table. Zac's
 approval merges it; nothing reaches the running MIA before that. The registry stays code, so tests still check every
@@ -148,12 +148,12 @@ agents are isolated browser contexts with drawn cursors, read-only at first, eac
 
 | Step | What | Needs |
 |---|---|---|
-| **F1** | The "counts as added" bar as a check in code, and the roster page | nothing |
+| **F1** | The "counts as added" bar as a check in code, and the roster page | nothing. **Built 2026-11-17** (`core/specialist_roster.py`, the Specialists page, `specialist_roster`) |
 | **F2** | Online to offline: a pack made from pages read (text, address, date, edition, hash), searched beside the Kiwix packs | Q-61 |
 | **F3** | Drafting: a specialist's charter and the rest written by a local model, checked by code, shown to Zac | Q-59 |
 | **F4** | The lab builds a specialist: calculators against cited worked examples, bench tasks, the bench run, one proposal | Q-59, F2, F3 |
 | **F5** | Refinement proposals from evidence of use | Q-60 |
-| **F6** | Claude's inspection: the verdict record, its checks in code, one a night in Night School | DEC-0200 |
+| **F6** | Claude's inspection: the verdict record, its checks in code, one a night in Night School | DEC-0200. **Built 2026-11-17** for model choices (`core/model_inspection.py`); inspecting the Forge's code waits on F4 |
 | **W1** | Measure: how many agents the card serves at once, with which model, at what speed | the PC |
 | **W2** | The Workroom: parallel browser contexts, drawn cursors, the tiled live view, read-only | Q-62, W1 |
 | **W3** | Desktop apps in parallel, on MIA OS | Prompt 10, PoC 3 |

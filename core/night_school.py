@@ -36,6 +36,9 @@ of the window, or when her teacher is resting at a usage limit:
    passes, and the full suite has nothing new failing. Her teacher reads
    what she did and writes the one lesson in it, which she's given the next
    time she works that skill.
+5a0. **An inspection** (core/model_inspection.py, DEC-0200): when a specialist's chosen model hasn't been
+   inspected on its current bench results, her teacher inspects one, before study hall; code never lets a pass
+   stand against a failing bench.
 5a. **Study hall** (core/specialists.py, DEC-0109): one of her specialists
    (construction, homesteading, radio, strategy, making, outdoors,
    research, testing, engineering), the one that studied longest ago,
@@ -80,7 +83,7 @@ PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
             "loop_families": 1, "teachers": ["claude-code", "codex"], "teacher_calls": 8, "benchmarks": True,
-            "curriculum": True, "audit": True, "specialists": True,
+            "curriculum": True, "audit": True, "specialists": True, "inspections": True,
             # A standing objective (Zac) she shapes every night's work toward, over and above the nightly focus. "" = none.
             "directive": ""}
 MODES = ("plan", "self")
@@ -514,7 +517,7 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     """One night of school, as far as the window, the budget and her teacher allow: her progress, what she'd
     study, the focus, her teacher's exercises (one for her curriculum, DEC-0107, chosen from and recorded on her own
     learning paths, DEC-0112), her lessons graded by code, a shadow
-    attempt at real work, study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks, the
+    attempt at real work, an inspection of one specialist's chosen model (DEC-0200), study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks, the
     weekly self-audit (DEC-0108) and the shared development history brought up to date (core/dev_history.py,
     T-0021). Returns the night's record."""
     from core import dev_ledger, loop_coverage, loops
@@ -679,6 +682,20 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
             loops.run(None, "device", loops=bench_loops, force=True, heavy=True, tasks_dir=tasks_dir, log=log)
         except Exception as problem:
             record["notes"].append(f"the benchmark loops couldn't run: {str(problem)[:120]}")
+
+    # 7a1. An inspection (core/model_inspection.py, DEC-0200): her teacher inspects one specialist's chosen model
+    teacher_now = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
+    if cfg.get("inspections", True) and teacher_now and not STOP_FILE.exists() and left() > 20:
+        from core import model_inspection
+
+        try:
+            waiting = model_inspection.pending()
+            if waiting:
+                record["inspection"] = model_inspection.inspect(waiting[0], lambda prompt: ask(teacher_now, prompt),
+                                                                teacher_now)
+                calls += 1
+        except Exception as problem:
+            record["notes"].append(f"the inspection didn't finish: {str(problem)[:120]}")
 
     # 7a2. Study hall (core/specialists.py, DEC-0109): one of her specialists studies, in turn
     teacher_now = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))

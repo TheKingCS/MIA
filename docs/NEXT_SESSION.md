@@ -7,6 +7,30 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
 
+**New 2026-11-17, later still (Claude on Opus): Zac's "Yes to all" (Q-59 to Q-62, DEC-0199), Claude's inspection (DEC-0200), hardware.**
+- **Decided:** the Specialist Forge, online learning kept offline, the Workroom (DEC-0199). **DEC-0200:** Claude inspects
+  a new specialist, calculator, model choice or adapter before it's used, as Night School's teacher does; a model
+  choice goes live on Claude's pass, code still merges on Zac's approval (Claude's reading of "to test and approve
+  them", flagged for him to correct).
+- **Hardware recommendation** in `docs/HARDWARE.md` ("What to add for the specialists"): bench gpt-oss-20b and
+  Mistral Small first (a different-family reviewer, free); then a second graphics card (a used RX 7900 XTX is the best
+  value; check the power supply, slot and case), a 2 to 4 TB drive, memory later, a second machine much later.
+- **Built, F1:** `core/specialist_roster.py`, the "counts as added" bar in code; the Specialists page (AI Tools); voice
+  `specialist_roster`. It found Software and AI engineering had one starter question (fixed). Today: the hoodie's
+  four are built but not passing, because no model has been benched on their disciplines yet.
+- **The bench is re-running all four models** on the full task set (the hoodie's tasks landed mid-run). Commit
+  `work/eng_bench/` when it's done; the roster and each specialist's model update from it.
+- **Built, F6 (DEC-0200):** `core/model_inspection.py`. Each specialist's chosen model is pending until Claude inspects it
+  on its current bench results (a re-run makes it pending again). Code builds the evidence (the bench counts, the
+  problems it got wrong with what was expected); the inspector only reads; a pass can't stand against a failing
+  bench and an unreadable reply is a hold; every verdict is kept in `work/inspections.json`. Night School inspects
+  one a night before study hall. The Specialists page shows inspected, held or not yet; by voice
+  `model_inspections`. **Not yet:** the worksheet still uses a chosen model before it's inspected (DEC-0200 says
+  before it's used: gate it once the first inspections are in, so the specialists don't all fall back to the
+  everyday model overnight); inspecting the Forge's code (with F4).
+- **Next:** F2 (online to offline packs), F3 and F4 (the Forge drafts and builds the next
+  planned specialist, IoT and sensors), W1 (how many agents the card serves). Q-44 still unbuilt.
+
 **New 2026-11-17, later, on the PC (Claude on Opus), after the PC restarted for an update.**
 - **The bench re-run was cut off by the restart** (2 of 4 models done, with the new structural and crafts tasks):
   qwen2.5:14b and qwen3-coder:30b kept; qwen3:14b and qwen2.5:32b re-running. Commit all four with the

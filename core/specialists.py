@@ -270,7 +270,8 @@ SPECIALISTS: tuple[Specialist, ...] = (
                                                       "deploying", "monitoring"),
                loops=("models.router_shadow", "dev.docs", "dev.loop_coverage"),
                limits="Changes go through the lab and Zac approves them.",
-               starts_from=("How should a small router model be evaluated before it's used?",),
+               starts_from=("How should a small router model be evaluated before it's used?",
+                            "How do you tell whether a change made a web page slower for someone on a phone?"),
                words=("code", "software", "python", "deploy", "model", "api", "web page", "app", "programming")),
     # Trade Master (DEC-0149, Zac 2026-11-08: "one specialist per trade"): each studies its own trade for the jobs in
     # core/trade_jobs.py, with Construction as the general one.
@@ -784,8 +785,9 @@ def _action_ask(context, arguments: dict) -> str:
 
 
 def register_specialist_actions(registry) -> None:
-    """Registers the ask_specialist and list_specialists tools, and work_it_out (a specialist's worksheet with her
-    calculators, core/specialist_work.py)."""
+    """Registers the ask_specialist and list_specialists tools, work_it_out (a specialist's worksheet with her
+    calculators, core/specialist_work.py), specialist_roster (core/specialist_roster.py) and model_inspections
+    (Claude's verdicts on their models, core/model_inspection.py)."""
     from core.assistant_actions import AssistantAction
     from core.specialist_work import register as register_worksheet
 
@@ -806,6 +808,26 @@ def register_specialist_actions(registry) -> None:
                          "your radio specialist", "your homesteading specialist", "your strategy specialist",
                          "what do your specialists", "ask the expert", "specialist say"),
         subjects=("specialist", "expert"),
+    ))
+    registry.register(AssistantAction(
+        name="model_inspections", domain="knowledge",
+        description="Which specialists' models Claude has inspected and passed, held (and why), or not looked at yet "
+                    "(core/model_inspection.py, DEC-0200).",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: __import__("core.model_inspection", fromlist=["said"]).said(),
+        trigger_phrases=("did claude inspect", "inspected models", "which models passed inspection",
+                         "model inspections", "has claude checked the models"),
+        subjects=("inspection", "inspections", "model", "models"),
+    ))
+    registry.register(AssistantAction(
+        name="specialist_roster", domain="knowledge",
+        description="How far along each of MIA's specialists is: added, built but not passing its bench, in progress "
+                    "(and what's missing), and which are planned next (core/specialist_roster.py).",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: __import__("core.specialist_roster", fromlist=["said"]).said(),
+        trigger_phrases=("specialist roster", "which specialists are ready", "how are the specialists coming",
+                         "which specialists pass", "what specialists are planned"),
+        subjects=("specialist", "specialists", "roster"),
     ))
     registry.register(AssistantAction(
         name="list_specialists", domain="knowledge",

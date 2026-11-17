@@ -735,6 +735,8 @@
       : call("POST", "/api/ual/offer", { capture }),
     // The shelf (core/shelf.py, UI-4): what's on it, and several entries used together as one selection.
     // Plans across apps (core/step_plans.py, UI-7): the open plans and their steps.
+    // The specialists' roster (core/specialist_roster.py): standing, model and bench of each, and the planned ones.
+    specialistRoster: () => demo ? Promise.resolve({ specialists: [], planned: [], counts: {} }) : call("GET", "/api/specialists/roster"),
     stepPlans: () => demo ? Promise.resolve({ open: [], finished: [] }) : call("GET", "/api/steps"),
     shelf: () => demo ? Promise.resolve({ entries: [], keep_days: 7 }) : call("GET", "/api/shelf"),
     shelfUse: (which, action_id) => demo ? demoOnly() : call("POST", "/api/shelf/use", { which: which || [], action_id: action_id || "" }),

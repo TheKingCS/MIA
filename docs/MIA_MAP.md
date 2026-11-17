@@ -4,19 +4,19 @@
 
 ## At a glance
 
-- **Architecture** — 833 Python files across 571 core, 93 modules, 123 gui, 2 server, 44 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 195 logged (docs/DECISIONS.md); the why behind every part.
+- **Architecture** — 845 Python files across 582 core, 93 modules, 123 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Decisions** — 199 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 274 dev entries (work/knowledge/).
+- **Knowledge she's written** — 284 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
-- **What she keeps** — 52 personal + 42 household stores, 54 sealed at rest.
+- **What she keeps** — 53 personal + 42 household stores, 54 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
 
 ## Decisions — why MIA is built the way she is
 
 **ACCEPTED** (5): DEC-0129, DEC-0130, DEC-0135, DEC-0136, DEC-0140
-**APPROVED** (163): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0123, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0170, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0185, DEC-0186, DEC-0187, DEC-0189, DEC-0191, DEC-0196
+**APPROVED** (167): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0123, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0170, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0185, DEC-0186, DEC-0187, DEC-0189, DEC-0191, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200
 **Approach** (1): DEC-0137
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
@@ -221,6 +221,10 @@
 - **DEC-0194** [PROPOSED] — Privilege: a helper only for what Linux would ask an administrator for, confirmed in the OS's own dialog
 - **DEC-0195** [PROPOSED] — Resources and observability from Linux's own mechanisms
 - **DEC-0196** [APPROVED] — One browser: MIA's browser becomes Zac's everyday browser
+- **DEC-0197** [APPROVED] — The specialists run on local models able to do the engineering; MIA knows what he's working on
+- **DEC-0198** [APPROVED] — Teams as recommended (Q-54 to Q-58); growing the specialist roster stays a priority
+- **DEC-0199** [APPROVED] — MIA adds and refines her own specialists, learns online and works offline, and runs agents in parallel
+- **DEC-0200** [APPROVED] — Claude inspects MIA's models and specialists before they're used
 
 </details>
 
@@ -228,11 +232,11 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 274 entries 39 lesson, 18 debugging, 20 decision, 9 method, 7 test-procedure, 3 failed-experiment, 176 implementation, 2 security-finding.
+- **Dev-knowledge** — 284 entries 42 lesson, 18 debugging, 23 decision, 9 method, 7 test-procedure, 3 failed-experiment, 180 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 
-- 52 personal stores (each person's own) and 42 household stores.
+- 53 personal stores (each person's own) and 42 household stores.
 - 54 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
 
 ## How you shape her

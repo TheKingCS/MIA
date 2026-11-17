@@ -3515,12 +3515,12 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   specialist's model, an adapter trained by `core/model_forge.py`. Claude runs the bench itself, reads a sample of
   real worksheets, checks calculators against their cited sources, and writes a verdict (pass or hold, with the
   evidence). Code keeps it honest: a pass can't stand against a failing bench, and every verdict is kept.
-- Who approves, as read from "to test and approve them":
-  - **Claude's pass is enough** for model choices and adapters (which local model runs which specialist): they
-    change no code and are undone by choosing again.
-  - **Code still merges only on Zac's approval** (DEC-0058, the lab), with Claude's inspection attached: a new
-    specialist, calculator or charter change.
-  - If he meant Claude's pass to merge code too, that is his to say; this decision would change with it.
+- Who approves: **Claude's pass is enough, for code too** (Zac, 2026-11-17: "Claudes pass can cover code too.").
+  A model choice or adapter goes live on Claude's pass; a Forge-built specialist, calculator or charter change in
+  the lab merges on Claude's pass (DEC-0058's merge, with the same suite before and after and the automatic revert
+  on a new failure). Zac sees every verdict and can take any back. The rules that never move: a pass can't stand
+  against a failing bench or a failing suite, the inspector only reads, and nothing MIA reads can grant her
+  anything (DEC-0156).
 - Pending inspections go into Night School: one a night when any wait, before its other work.
 - Related: DEC-0100 (Night School), DEC-0058 (the lab), DEC-0174 (another model reviews), DEC-0199
 
