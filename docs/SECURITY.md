@@ -97,3 +97,7 @@ most likely first:
    real and tested (`core/account_data.py`). Still to do: a yearly review of this file against the latest OWASP ASVS.
 
 ⏸ marks a step waiting on Zac.
+
+## 5. MIA OS (Prompt 13, 2026-11-18)
+
+The security, privacy and permission architecture for MIA OS is `docs/mia_os/MIA_OS_SECURITY_ARCHITECTURE.md` and its twenty-nine documents (DEC-0248 to 0254). Keep both true.

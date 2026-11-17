@@ -35,3 +35,7 @@ is later (DEC-0015).*
 ## Across devices (Prompt 12, 2026-11-18)
 
 Each paired device reports its capabilities to the hub when it pairs and on change (`MIA_OS_DEVICE_DISCOVERY_AND_CAPABILITY_REGISTRY.md`, REQ-DST-007).
+
+## Security (Prompt 13, 2026-11-18)
+
+Each device's key scope and encryption are in `MIA_OS_DISTRIBUTED_DEVICE_SECURITY.md`.

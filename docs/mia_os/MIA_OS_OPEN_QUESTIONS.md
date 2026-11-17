@@ -101,6 +101,10 @@ folded in here.*
 | Q-88 | **Answered yes (Zac, 2026-11-18)**; DEC-0244 approved. Was: Away from home, MIA is reached only through Tailscale, never an open port on your router? Recommended: Yes | DEC-0244 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
 | Q-89 | **Answered yes (Zac, 2026-11-18): "I have the laptop already but not sure its hardware will do everything MIA requires."** It runs as a full engine; with a modest machine it keeps its records and its own small model or none, and thinks on the PC when it can reach it (DEC-0245). Its model and memory to be checked. Was: When the laptop comes, should it run MIA's whole engine like the phone (its own copy, works without the PC, syncs when it can)? Recommended: Yes | DEC-0241 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
 | Q-90 | **Answered yes (Zac, 2026-11-18)**; DEC-0247 approved. Was: When you unlink a lost phone, should MIA on that phone erase its MIA data the next time it reaches your PC? Recommended: Yes | DEC-0247 | `MIA_OS_DISTRIBUTED_OPEN_QUESTIONS.md` |
+| Q-91 | **Open (Prompt 13).** Should your sensitive things (health, money, journal, where you've been, relationships, conversations) never go to a cloud model, even on a yes in the moment? Everyday things would still be allowed on your yes. Recommended: Yes, never | DEC-0251 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
+| Q-92 | **Open (Prompt 13).** Should two-step sign-in be required for every device signing in away from the PC itself, not just offered? Recommended: Yes | DEC-0250 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
+| Q-93 | **Open (Prompt 13).** An emergency lockdown: one phrase or press that signs out every device, stops everything, locks the vaults and pauses her messages and lab until you unlock with your password? Recommended: Yes | DEC-0254 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
+| Q-94 | **Open (Prompt 13).** MIA add-ons only from MIA's own repository until add-ons run sandboxed? Recommended: Yes | DEC-0253 | `MIA_OS_SECURITY_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 

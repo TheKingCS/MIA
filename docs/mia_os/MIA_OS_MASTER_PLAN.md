@@ -41,7 +41,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **10** | **The desktop and primary interface** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-79 to Q-81 yes; Q-82: the household display for him and his wife; DEC-0227, 0228, 0231 approved)** | `MIA_OS_DESKTOP_ARCHITECTURE.md` and twenty-four more (listed in it) |
 | **11** | **Visual identity, themes and spatial interfaces** | **done 2026-11-17 (Opus); reviewed by Zac 2026-11-18 (Q-83 to Q-85 yes; Q-86: an old Android or the Pi 5; DEC-0235, 0236, 0239, 0240 approved)** | `MIA_OS_VISUAL_IDENTITY.md` and twenty-four more (listed in it) |
 | **12** | **One MIA across many devices** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (the Pi first a TV display; Tailscale only away; the laptop a full engine; lost phones erase; DEC-0241, 0244, 0247 approved)** | `MIA_OS_DISTRIBUTED_ARCHITECTURE.md` and twenty-five more (listed in it) |
-| 13–17 | (see `prompts/`) | not started | |
+| **13** | **Security, privacy and permissions** | **done 2026-11-18 (Opus); waiting for Zac's review (Q-91 to Q-94; DEC-0248 to 0254 proposed)** | `MIA_OS_SECURITY_ARCHITECTURE.md` and twenty-nine more (listed in it) |
+| 14–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -82,6 +83,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3m. Prompt 13 in brief
+
+The architecture is [MIA_OS_SECURITY_ARCHITECTURE.md](MIA_OS_SECURITY_ARCHITECTURE.md), with twenty-nine supporting
+documents (the specific gaps found stay on the PC, in `audit/`, until fixed: the repository is public). Much is
+built: hashed passwords with a guessing wait, two-step, sessions that end, a security log, a CSP, encrypted vaults, 56
+sealed store files, a weekly dependency check, secrets kept out of logs by test. Authority only from the person
+(DEC-0248); outside content is data (DEC-0249); approvals bound and used once (DEC-0250); four data classes, sensitive
+never to a cloud model (DEC-0251); encryption in three layers (DEC-0252); least privilege (DEC-0253); fail closed,
+safety outside MIA, an audit trail that can't be rewritten (DEC-0254). REQ-SEC-011 to 039; scenarios A to L.
 
 ## 3l. Prompt 12 in brief
 

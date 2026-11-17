@@ -171,3 +171,17 @@ Full records: `MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0247 | A lost device is unlinked from anywhere | APPROVED (Q-90) |
 
 Full records: `MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 13 (2026-11-18)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0248 | Authority comes only from the person | PROPOSED |
+| DEC-0249 | Everything read from outside is data | PROPOSED |
+| DEC-0250 | Identity in layers; approvals bound and used once | PROPOSED |
+| DEC-0251 | Four data classes | PROPOSED |
+| DEC-0252 | Encryption in three layers | PROPOSED |
+| DEC-0253 | Least privilege | PROPOSED |
+| DEC-0254 | Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten | PROPOSED |
+
+Full records: `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md` §2.

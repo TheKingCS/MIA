@@ -109,3 +109,7 @@ days, always as a plan he can see, stop and undo.
 
 Changes to MIA's own code are not actions on the contract: they go only through the lab (DEC-0225), and the
 grant, stop, effect and safety rules this document relies on join the lab's protected list.
+
+## Security (Prompt 13, 2026-11-18)
+
+Approvals are bound to one proposal, its parameters and the person, used once (DEC-0250); when authorization can't be evaluated, a change waits (DEC-0254).

@@ -3855,3 +3855,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
+### DEC-0248: Authority comes only from the person
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: Every change goes through the one action contract (tier, grants, card, stop, record, undo); grants come only from his own acts; nothing MIA reads can grant her anything; each trust boundary is enforced in code where it's crossed.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+
+### DEC-0249: Everything read from outside is data
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: Web pages, email, documents, messages, photos, other agents' notes and model output reach the model marked as data; no proposal they lead to runs without a card or a grant he gave; an injection test set runs with the suite.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+
+### DEC-0250: Identity in layers; approvals bound and used once
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: The OS's own login on MIA OS; MIA's accounts with two-step away from the PC; a key per device; an approval bound to one proposal, the exact parameters its card showed and the person, used once and expiring.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+
+### DEC-0251: Four data classes
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: Public, personal, sensitive (health, money, journal, location history, relationships, conversations) and secret (passwords, keys, codes), each deciding sealing, sync, model use, display and voice; sensitive and secret never to a cloud model; personal only on his yes, minimised.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+
+### DEC-0252: Encryption in three layers
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: The whole drive (LUKS2 with the TPM on MIA OS), each store sealed (AES-256-GCM, the data key in the TPM, DPAPI or the Android Keystore), each vault under its own key; backups encrypted; the recovery key his, offline.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+
+### DEC-0253: Least privilege
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: The runtime unprivileged with systemd's sandboxing; system changes only through the fixed-operation helper and the OS's own dialog; agents read-only, delegation never raising scope; apps limited to their manifest; third-party add-ons only once sandboxed; every dependency pinned and checked.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+
+### DEC-0254: Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 13
+- Decision: When a session, grant or authorization can't be evaluated, a change waits and says why; physical safety lives in hardware and controllers; the security log is hash-chained with its head copied to another device; a lockdown in one phrase.
+- Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
+

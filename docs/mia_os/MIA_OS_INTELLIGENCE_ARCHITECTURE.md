@@ -161,3 +161,7 @@ Which models and services are working, degraded or unavailable is held in the ca
 ## Across devices (Prompt 12, 2026-11-18)
 
 Which machine thinks: the most capable reachable one, the device's own model the floor (DEC-0245, `MIA_OS_DISTRIBUTED_INTELLIGENCE_ARCHITECTURE.md`).
+
+## Security (Prompt 13, 2026-11-18)
+
+The model has no authority; outside content reaches it marked as data; sensitive data never goes to a cloud model (DEC-0249, DEC-0251; `MIA_OS_AI_SECURITY_AND_PROMPT_INJECTION_DEFENSE.md`).

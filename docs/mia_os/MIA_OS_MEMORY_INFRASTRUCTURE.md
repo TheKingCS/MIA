@@ -47,3 +47,7 @@ vectors; an erased item can't be recalled from a stale vector (the index is chec
 ## Across devices (Prompt 12, 2026-11-18)
 
 What syncs and what doesn't: records and the history yes; the recall index (derived) and what he's working on (device-only) no (`MIA_OS_DISTRIBUTED_MEMORY_AND_CONTEXT.md`, REQ-DST-011).
+
+## Security (Prompt 13, 2026-11-18)
+
+Data classes decide what's sealed, synced and allowed near a model; forgetting is complete (`MIA_OS_DATA_CLASSIFICATION_AND_PRIVACY.md`, `MIA_OS_MEMORY_PRIVACY_AND_USER_CONTROL.md`).

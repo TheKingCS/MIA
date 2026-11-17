@@ -64,3 +64,8 @@ report that found it. Rated H, M or L.*
 | R-66 | A lost phone that never reconnects keeps his data | H | L | Prompt 12 | device loss | sealed with its own key; unlinked at once |
 | R-67 | The glasses depend on the phone app staying alive | M | M | Prompt 12 | the glasses | a foreground service; the glasses say so |
 | R-68 | The PC off means no big model away from home | M | H | Prompt 12 | travel | the phone's model said plainly; a model node later |
+| R-69 | A new kind of outside content reaches the model unmarked | H | M | Prompt 13 | new sources | every entry point marked; the injection set grows |
+| R-70 | A device's data readable before full-disk encryption is everywhere | H | M | Prompt 13 | devices | sealed stores; drive encryption |
+| R-71 | An approval used for something it wasn't shown | H | L | Prompt 13 | approvals | binding to the parameter hash |
+| R-72 | Security rules drift as MIA grows | M | M | Prompt 13 | growth | the protected list; boundary tests; a yearly ASVS review |
+| R-73 | A known-vulnerable dependency in the phone build | M | M | Prompt 13 | the phone | its OSV check |

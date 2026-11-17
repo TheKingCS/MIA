@@ -214,3 +214,7 @@ An app's manifest names its atmosphere colour; its screens take every other valu
 ## Across devices (Prompt 12, 2026-11-18)
 
 An app's manifest gains `runtime.devices` entries for the household display and wearables (`MIA_OS_DISTRIBUTED_APPLICATION_ARCHITECTURE.md`, REQ-DST-017).
+
+## Security (Prompt 13, 2026-11-18)
+
+Apps write only their manifest's stores; third-party add-ons only once sandboxed (`MIA_OS_APPLICATION_AND_PLUGIN_SECURITY.md`).

@@ -279,3 +279,7 @@ that measurement. Hardware that needs an out-of-tree kernel module is a cost on 
 flagged. Anything MIA uses must be reachable through a standard Linux service, because that is the only way in.
 
 Prompt 05 stops here. Prompt 06 waits for Zac's review and go.
+
+## Security (Prompt 13, 2026-11-18)
+
+The runtime's privilege, the helper and the trust boundaries are in `MIA_OS_LINUX_PRIVILEGE_AND_SYSTEM_SECURITY.md` and `MIA_OS_SECURITY_TRUST_BOUNDARIES.md` (DEC-0248, DEC-0253).

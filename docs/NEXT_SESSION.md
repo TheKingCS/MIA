@@ -5,7 +5,16 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-18 (Opus on the PC: Prompt 12)*
+*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 and 13)*
+
+**New 2026-11-18, Prompt 13 (Claude on Opus).**
+- **Zac answered Q-87 to Q-90:** the Pi 5 first a household display on the TV; Tailscale only away; the laptop (he
+  has it; its model to check) a full engine; a lost phone erases itself on reconnecting.
+- **Prompt 13 (security, privacy and permissions) is done:** `docs/mia_os/MIA_OS_SECURITY_ARCHITECTURE.md` and
+  twenty-nine more; DEC-0248 to 0254 proposed; REQ-SEC-011 to 039; scenarios A to L. **The specific gaps are in
+  `audit/SECURITY_GAPS_2026-11-18.md` on the PC only** (the repo is public). **Waiting on Zac:** Q-91 (sensitive
+  never to a cloud model), Q-92 (two-step required away), Q-93 (a lockdown phrase), Q-94 (add-ons only from MIA's
+  own repository until sandboxed). Prompt 14 on his go.
 
 **New 2026-11-18, Prompt 12 (Claude on Opus).**
 - **Zac answered Q-83 to Q-86:** the Theme Studio from a picture, interface sounds, a Light theme (all to build);

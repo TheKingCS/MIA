@@ -102,3 +102,7 @@ change he can see, with the test that proves it, Claude's verdict and an automat
 `MIA_OS_SELF_AWARENESS_SECURITY_AND_INTEGRITY.md`, `MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md`,
 `MIA_OS_SELF_AWARENESS_ARCHITECTURE_DIAGRAMS.md`, `MIA_OS_SELF_AWARENESS_ACCEPTANCE_CRITERIA.md`,
 `MIA_OS_SELF_AWARENESS_OPEN_QUESTIONS.md`.
+
+## Security (Prompt 13, 2026-11-18)
+
+The protected list is part of the security design (`MIA_OS_SECURITY_TRUST_BOUNDARIES.md`, B8).
