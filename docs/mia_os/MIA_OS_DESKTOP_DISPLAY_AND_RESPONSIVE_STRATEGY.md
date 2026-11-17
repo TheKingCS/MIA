@@ -23,4 +23,4 @@ idle memory before release.
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-DSK-027 | The shell idle shall use under 600 MB of memory and no continuous GPU work. | Should | R1 | PC | New | T: measured | DEC-0227, DEC-0204 → 10 |
-| REQ-DSK-033 | When a monitor is turned off or unplugged, MIA shall carry on on the screens that remain: the ambient view folds into the main screen's Home and returns when the monitor does, with nothing lost and no setting to change. | Must | MVP | PC | New | T: monitors added and removed while running | DEC-0231 (Q-80) → 10, 11 |
+| REQ-DSK-033 | When a monitor is turned off or unplugged, MIA shall carry on on the screens that remain: the ambient view folds into the main screen's Home and returns when the monitor does, with nothing lost and no setting to change. | Must | MVP | PC | Partial (built on Windows 2026-11-17: gui/ambient_screens.py) | T: monitors added and removed while running | DEC-0231 (Q-80) → 10, 11 |

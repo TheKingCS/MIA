@@ -275,6 +275,7 @@
     communications: () => read("/api/communications", "communications"),
     hub: (area) => demo ? read("", "hub").then((d) => ({ ...d, ...(d.by_area[area] || d.by_area.home) })) : call("GET", "/api/hub/" + encodeURIComponent(area)),
     dashboard: () => read("/api/dashboard", "dashboard"),
+    ambient: () => read("/api/ambient", "ambient"),  // the second monitor's view (core/ambient.py, DEC-0231)
     apps: () => read("/api/apps", "apps"),
     calendar: (month) => read("/api/calendar" + (month ? "?month=" + encodeURIComponent(month) : ""), "calendar"),
     // The glasses' app cards and one menu item's panel (core/glasses.py).

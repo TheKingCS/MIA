@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>MIA · Ambient</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="ui.css">
+  <link rel="stylesheet" href="ambient.css">
+</head>
+<body data-app="web_home" data-mode="ambient">
+  <!--
+    The ambient view (DEC-0231; Zac, 2026-11-17, Q-80): a screen to glance at on the second monitor, opened full
+    screen there by the desktop window (gui/ambient_screens.py) and gone when that monitor is (Home holds the same).
+    Data: MIA.ambient() (core/ambient.py, Home's own data, only what's glanceable). No sidebar, no Talk: the clock,
+    the day, what's due, music, the mission and what she's doing. Formatting only.
+  -->
+  <main class="amb" id="app" hidden>
+    <section class="amb-time" aria-label="The time">
+      <div class="amb-clock" id="clock"></div>
+      <div class="amb-date" id="date"></div>
+      <div class="amb-weather" id="weather"></div>
+    </section>
+    <section class="amb-cols">
+      <div class="amb-col" id="due" aria-label="Due"></div>
+      <div class="amb-col" id="side" aria-label="Now"></div>
+    </section>
+    <footer class="amb-foot">
+      <span class="mia-orb amb-orb" data-presence-orb aria-hidden="true"></span>
+      <span id="doing" class="amb-doing" role="status" aria-live="polite"></span>
+    </footer>
+  </main>
+  <script src="icons.js"></script>
+  <script src="mia.js"></script>
+  <script src="sound.js"></script>
+  <script src="shell.js"></script>
+  <script src="ambient.js"></script>
+</body>
+</html>

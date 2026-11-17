@@ -21,6 +21,10 @@ MIA's web front end (the web_home module) edge to edge, the header and
 character panel hidden, because the web is where MIA now lives. All of the
 above is the classic view: Ctrl+Shift+C, the header's "Main screen" to go
 back, and any app that lives only here opens in it.
+
+**The ambient view** (DEC-0231, gui/ambient_screens.py): once the window is
+shown, a second monitor gets MIA's ambient view full screen, and it goes
+when that monitor does (`showEvent`, closed in `closeEvent`).
 """
 
 from __future__ import annotations
@@ -79,14 +83,14 @@ def format_level_badge_text(level: int, prestige_tier: int = 0) -> str:
 
 class MainWindow(QMainWindow):
     """MIA's desktop window: the header (her wordmark, the nav tabs, the level badge and the profile menu), Home, the Apps grid and each app's screen in one stack, the character panel beside them, and the window-wide shortcuts (Ctrl+K search, quick capture, kiosk exit). It reacts to MIA's events: apps opened by voice, notifications, email drafts, records changed. It opens maximized
-    (START_MAXIMIZED)."""
+    (START_MAXIMIZED), and puts MIA's ambient view on a second monitor when there is one (gui/ambient_screens.py)."""
 
     # It opens maximized (Zac, 2026-11-17: the 1100 x 700 window was too small to see the page).
     START_MAXIMIZED = True  # opens maximized (core/application._display, gui.start_maximized)
     switch_profile_requested = Signal()
 
     def __init__(self, context: AppContext, module_manager: ModuleManager) -> None:
-        """Sizes the window from the config, builds everything, sets up the shortcuts (Ctrl+K search, Ctrl+Shift+Space quick capture, Ctrl+Shift+R read the screen, Ctrl+Shift+C classic view, kiosk exit), notifications and module events, opens in web mode (gui.web_first), and says MIA core online."""
+        """Sizes the window from the config, builds everything, sets up the shortcuts (Ctrl+K search, Ctrl+Shift+Space quick capture, Ctrl+Shift+R read the screen, Ctrl+Shift+C classic view, kiosk exit), notifications and module events, opens in web mode (gui.web_first), readies the ambient view for a second monitor, and says MIA core online."""
         super().__init__()
         self.context = context
         self.module_manager = module_manager
@@ -118,6 +122,9 @@ class MainWindow(QMainWindow):
         self._setup_notifications()
         self._setup_module_events()
         self._setup_web_mode()
+        from gui.ambient_screens import AmbientScreens
+
+        self._ambient = AmbientScreens(context, self)  # the second monitor's ambient view (DEC-0231), from showEvent
         self.statusBar().showMessage("MIA core online.")
 
     # ------------------------------------------------------------------
@@ -379,15 +386,23 @@ class MainWindow(QMainWindow):
         self.context.config.set("profile.always_show_login_screen", checked)
         self.context.config.save()
 
+    def showEvent(self, event) -> None:
+        """Once the window is on screen, the ambient view takes the other monitor, if there is one
+        (gui/ambient_screens.py; it follows monitors as they come and go)."""
+        super().showEvent(event)
+        self._ambient.start()
+
     def closeEvent(self, event) -> None:
         """
-        Unsubscribe from the event bus before this window is destroyed.
+        Closes the ambient view (gui/ambient_screens.py), and
+        unsubscribes from the event bus before this window is destroyed.
         Without this, EventBus would keep a reference to these bound
         methods after "Switch User" rebuilds MainWindow — the next
         notification would then try to call into a deleted Qt widget.
         EventBus.publish() catches and logs that as an error rather than
         crashing, but it's still a real leak worth closing properly.
         """
+        self._ambient.stop()
         self.context.events.unsubscribe("notification.created", self._on_notification_created)
         self.context.events.unsubscribe("notification.updated", self._on_notification_updated)
         self.context.events.unsubscribe("modules.enabled_changed", self._on_modules_changed)

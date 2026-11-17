@@ -21,7 +21,8 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 NOT_OWNED = {"index.html", "hub.html", "nexus.html", "glasses.html", "presence.html", "start.html", "asset.html",
              "recipe.html", "grow.html", "dev-window.html", "finances.html", "worlds.html", "dashboard.html", "biz.html",
              "maintenance.html", "property.html", "diagnostics.html", "settings.html",
-             "selection.html"}  # the phone's card over another app (DEC-0165 U2)
+             "selection.html",  # the phone's card over another app (DEC-0165 U2)
+             "ambient.html"}  # the second monitor's ambient view (DEC-0231), opened by the desktop window
 
 
 def test_the_eight_destinations_in_zacs_order():

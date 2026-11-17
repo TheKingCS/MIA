@@ -41,7 +41,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | `profile.reward_unlocked` | `core/profile_manager.py` | `core/progress_history.py` |
 | `profile.skill_xp_changed` | `core/skill_manager.py` | `modules/skills/module.py` |
 | `profile.switch_requested` | `gui/account_dialogs.py`, `modules/settings/module.py` | `gui/main_window.py` |
-| `profile.switched` | `core/profile_manager.py` | `core/activity_log_manager.py`, `core/personal_data.py`, `modules/web_home/module.py` |
+| `profile.switched` | `core/profile_manager.py` | `core/activity_log_manager.py`, `core/personal_data.py`, `gui/ambient_screens.py`, `modules/web_home/module.py` |
 | `profile.xp_changed` | `core/profile_manager.py` | `gui/main_window.py`, `modules/skills/module.py` |
 | `records.changed` | `core/actions.py`, `core/child_accounts.py`, `core/imports.py`, `core/main_thread.py`, `core/starter_templates.py`, `core/undo_log.py` | `gui/main_window.py` |
 | `textbooks.updated` | `core/background_jobs.py` | — |

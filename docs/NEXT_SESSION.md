@@ -7,6 +7,15 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-17 (Opus on the PC: Prompt 09 built, Prompts 10 and 11)*
 
+**New 2026-11-17, built overnight (Claude on Opus).**
+- **Voice approvals:** "approve it", "approve 2", "yes, and from now on", "always do that", "reject it", "what's
+  waiting for me?" (`core/spoken_approval.py`, heard in code before anything else; the model never approves).
+- **The ambient view on the second monitor** (Q-80): `web/ambient.html` (clock, day, weather, due, music, mission,
+  what she's doing) opens full screen on the monitor MIA's window isn't on, and closes when that monitor is turned
+  off (`gui/ambient_screens.py`). **Zac to try:** restart MIA with both monitors on, then turn the 1080p one off and
+  on. `gui.ambient_screen: false` turns it off.
+- CLAUDE.md now names the everyday model correctly (qwen2.5:14b, 32k).
+
 **New 2026-11-17, Prompt 11 (Claude on Opus, overnight).**
 - **Prompt 11 (visual identity, themes and spatial interfaces) is done:** `docs/mia_os/MIA_OS_VISUAL_IDENTITY.md`
   and twenty-four more; DEC-0234 to 0240 proposed; REQ-VIS-001 to 026. It keeps the built identity (Aquatic glass,

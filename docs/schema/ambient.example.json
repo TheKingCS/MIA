@@ -1,0 +1,60 @@
+{
+ "date": "Fri, Oct 16, 2026",
+ "weather": {
+  "place": "Springfield, Illinois",
+  "text": "48°F, partly cloudy"
+ },
+ "due": [
+  {
+   "title": "Sharpen blades: Mower",
+   "when": "Overdue",
+   "time": ""
+  },
+  {
+   "title": "HVAC filter: Maple House",
+   "when": "Overdue",
+   "time": ""
+  },
+  {
+   "title": "Check oil: Mower",
+   "when": "Overdue",
+   "time": ""
+  },
+  {
+   "title": "Tire rotation: Pickup truck",
+   "when": "Overdue",
+   "time": ""
+  }
+ ],
+ "next": {
+  "title": "Test run: Generator",
+  "when": "Soon",
+  "time": ""
+ },
+ "music": {
+  "title": "Harvest Moon",
+  "artist": "Neil Young",
+  "playing": true
+ },
+ "mission": {
+  "name": "Build the chicken coop",
+  "next": "Frame the walls",
+  "done": 2,
+  "total": 5
+ },
+ "activity": [
+  {
+   "what": "Order widgets: waiting for you at step 2 (Press Place order on shop.example).",
+   "status": "waiting"
+  },
+  {
+   "what": "Logged 6 eggs from your note",
+   "status": "done"
+  },
+  {
+   "what": "Filed the hardware store receipt",
+   "status": "done"
+  }
+ ],
+ "briefing": "Good afternoon, Robin. It's Fri, Oct 16, 2026. 8 things need you today: Sharpen blades: Mower, HVAC filter: Maple House, Check oil: Mower, and 5 more. One more coming up soon. One thing I noticed: insurance $340.00 is due in 4 days; pay arrives in 6."
+}

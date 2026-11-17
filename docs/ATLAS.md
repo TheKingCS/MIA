@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1499 files, 335,277 lines; 1499 files describe themselves; 18,389 of 18,487 classes and functions are documented.
+1505 files, 335,885 lines; 1505 files describe themselves; 18,435 of 18,534 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-586 files, 169,359 lines; 8,728 of 8,814 classes and functions documented
+588 files, 169,534 lines; 8,734 of 8,820 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -18,6 +18,7 @@
 - `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history).
 - `core/agent_activity.py`: The Dashboard's Agent Activity (DEC-0153, Zac 2026-11-11: "All of these"): what MIA did on her own and what the agents that build her are doing, in one card, each line opening where it came from.
 - `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager.
+- `core/ambient.py`: MIA's ambient view (DEC-0231; Zac, 2026-11-17, Q-80: "yes", with "MIA should be adaptable and understanding of available monitors so if I turn one off she flows with just 1"). A screen to glance at, not to work in: shown full screen on his second monitor by the desktop window (gui/ambient_screens.py
 - `core/answer_compare.py`: "Do you prefer this response, or this one?" (DEC-0138): the surface over core/response_style.py. Now and then, after a reply in Talk, MIA offers the same answer a second way that differs on one dimension of style (how long, how it's laid out, its tone, what comes first), the one she's least sure abo
 - `core/answer_ratings.py`: Zac's 👍 and 👎 on MIA's answers (DEC-0067's tuning, step 3): what she was asked, what she said, on which device, and how it landed. Personal: each person's own, in their folder (core/personal_data.py).
 - `core/app_context.py`: Defines AppContext: a small bundle of shared services (config, logger factory, event bus) that gets handed to every module and every GUI component.
@@ -459,6 +460,7 @@
 - `core/specialist_roster.py`: The specialists' roster and the "counts as added" bar, in code (the Specialist Forge, F1; DEC-0199; `docs/mia_os/MIA_OS_LOCAL_SPECIALISTS_PLAN.md` section 7: "a name with a paragraph is not a specialist").
 - `core/specialist_work.py`: A specialist's worksheet (the local specialists plan, S1; DEC-0197): how one of MIA's specialists answers an engineering question on a local model without the model ever producing a number of its own.
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
+- `core/spoken_approval.py`: Approving a waiting card by voice, "yes, and from now on" included (DEC-0215; Zac, 2026-11-17: "MIA should offer an approve for now or Approve going forward option"; the card's two buttons, said). A quick command (core/quick_commands.py): his own words, matched in code, never the model's, so nothing
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
 - `core/startup_briefing.py`: Pure logic for the "Good evening, Zac. Welcome back." launch greeting — docs/VISION.md's 2026-07-15 companion-philosophy update, "Startup Dashboard Briefing."
@@ -597,14 +599,14 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,530 lines; 57 of 57 classes and functions documented
+2 files, 4,538 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
 
 ## gui/: the desktop's Qt shell and dialogs
 
-123 files, 21,955 lines; 1,095 of 1,095 classes and functions documented
+124 files, 22,135 lines; 1,109 of 1,109 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -650,6 +652,7 @@
 - `gui/add_profile_dialog.py`: A small, focused dialog for creating an additional profile from the profile-select screen. Deliberately not a full QWizard like first-run setup — adding a second/third profile only needs a name and an optional password, so a full multi-page wizard would be more ceremony than the task warrants.
 - `gui/add_revenue_dialog.py`: Small dialog for manually recording a revenue entry not tied to a specific product sale (a commission, a flat fee) — used by modules/workshop/module.py's Ledger tab. amount/description/notes; date defaults to today inside core/ledger_manager.py's add_revenue() itself, so it isn't asked for here. For
 - `gui/add_trail_map_dialog.py`: Small dialog for cataloging one trail map PDF into core.trail_map_library.TrailMapLibrary, used by modules/maps/module.py. Same "validate-then-expose-via-properties on accept" shape as gui/add_edit_waypoint_dialog.py. Source is exactly one of a URL or a local file — picking one clears the other, sin
+- `gui/ambient_screens.py`: MIA's ambient view on the second monitor, flowing with however many monitors there are (DEC-0231; Zac, 2026-11-17, Q-80: "MIA should be adaptable and understanding of available monitors so if I turn one off she flows with just 1").
 - `gui/backup_dialog.py`: Prompts for backup encryption options when creating a backup (see modules/settings/module.py and core/backup_manager.py). Unlike profile passwords (gui/add_profile_dialog.py), a backup passphrase has no recovery path if mistyped — losing it means losing the backup — so this dialog requires it to be 
 - `gui/business_tags_dialog.py`: Review Business Tags (2026-09-28, core/business_tagging.py): bank charges nobody has sorted yet, each with a choice of Decide later / Personal / one of the owner's businesses, MIA's guess preselected with its reason; and below, what MIA tagged on her own, which can be changed the same way.
 - `gui/character_panel.py`: MIA's reactive companion panel — docs/ROADMAP.md milestone 6.2. Subscribes to the module-activity events milestone 6.1 added ("module.opened"/"menu.shown" from gui/main_window.py's navigation methods, plus "home.shown" added in the 2026-07-14 aesthetic pass part 3 once Home became its own landing sc
@@ -880,7 +883,7 @@
 
 ## tests/: the test suite: what each part must do
 
-516 files, 87,020 lines; 7,327 of 7,339 classes and functions documented
+518 files, 87,218 lines; 7,353 of 7,366 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -900,6 +903,7 @@
 - `tests/test_activity_log_manager.py`: Unit tests for core.activity_log_manager. Isolates _DATA_DIR _ACTIVITY_LOG_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_alarm_manager.py`: Unit tests for core.alarm_manager. Isolates _DATA_DIR/_ALARMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths). check_due() takes `now` as a plain datetime rather than reading the real clock, so firing behavior is tested with fixed timestamps 
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
+- `tests/test_ambient.py`: MIA's ambient view for the second monitor, flowing to one monitor when the other goes (core/ambient.py, gui/ambient_screens.py, DEC-0231, Zac's Q-80).
 - `tests/test_answer_compare.py`: How MIA answers (DEC-0138): offering an answer two ways, the facts checked, the picks and the screen, and the voice tools that run the same style.* actions.
 - `tests/test_answer_ratings.py`: Rating her answers (DEC-0067, core/answer_ratings.py): a 👍 is kept as a rating, a 👎 is kept and still reaches the Fix-It Log, and each person's ratings are their own.
 - `tests/test_app_ecosystem.py`: MIA's understanding of her own apps (migration phase M2, DEC-0178; core/app_ecosystem.py, core/assistant_app_registry_actions.py): the inventory, one app's parts, which app does something, and the check (health, overlaps, gaps) are answered from the manifests and the runtime; a failing job is pinned
@@ -1276,6 +1280,7 @@
 - `tests/test_specialist_work.py`: A specialist's worksheet (core/specialist_work.py, DEC-0197): the model chooses calculators, code works out the numbers, and code checks that the answer's numbers all come from somewhere. *(2 undocumented)*
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
+- `tests/test_spoken_approval.py`: Approving a waiting card by voice, "yes, and from now on" included (core/spoken_approval.py, DEC-0215). *(1 undocumented)*
 - `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back.
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
@@ -1401,9 +1406,10 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-115 files, 21,365 lines
+116 files, 21,412 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
+- `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.
 - `web/arcade/arcade.js`: Lens Arcade storefront logic. BUY FLOW: set STRIPE_LINKS below to your live Stripe Payment Link URLs and purchases go through Stripe. Leave a link empty and that product stays in demo mode (simulated purchase, no charge). After payment, Stripe redirects to ?bought=<product-id> which unlocks the game

@@ -1,0 +1,21 @@
+/*
+ * ambient.css: the ambient view (DEC-0231): large type to read across a room, the theme's own tokens only
+ * (no colour here that a theme doesn't set), nothing that moves but the clock and her orb.
+ */
+body[data-mode="ambient"] { background: var(--bg); color: var(--text); margin: 0; overflow: hidden; }
+.amb { box-sizing: border-box; height: 100vh; display: grid; grid-template-rows: auto 1fr auto; gap: 4vh; padding: 6vh 6vw; }
+.amb-clock { font-size: clamp(4rem, 14vh, 12rem); font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.amb-date { font-size: clamp(1.4rem, 4vh, 3rem); color: var(--text-dim); margin-top: 1vh; }
+.amb-weather { font-size: clamp(1.1rem, 3vh, 2.2rem); color: var(--text-dim); margin-top: 0.5vh; }
+.amb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 5vw; align-content: start; min-height: 0; }
+.amb-block { margin-bottom: 4vh; }
+.amb-label { font-family: var(--font-mono); font-size: clamp(0.8rem, 1.8vh, 1.2rem); letter-spacing: var(--label-track);
+  text-transform: uppercase; color: var(--accent); font-weight: 500; margin: 0 0 1.5vh; }
+.amb-row { display: flex; justify-content: space-between; gap: 2vw; font-size: clamp(1.1rem, 3vh, 2.2rem); padding: 0.8vh 0;
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.4); }
+.amb-row-when { color: var(--text-dim); white-space: nowrap; }
+.amb-big { font-size: clamp(1.3rem, 3.6vh, 2.6rem); margin: 0; }
+.amb-quiet, .amb-next { color: var(--text-dim); font-size: clamp(1rem, 2.6vh, 1.9rem); margin: 0.6vh 0 0; }
+.amb-foot { display: flex; align-items: center; gap: 1.5vw; font-size: clamp(1rem, 2.4vh, 1.7rem); color: var(--text-dim); }
+.amb-orb { --orb-d: clamp(2.5rem, 7vh, 4.5rem); }
+@media (max-width: 900px) { .amb-cols { grid-template-columns: 1fr; } }

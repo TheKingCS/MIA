@@ -332,7 +332,7 @@ Ubuntu-WSL deployment.
 
 ## Known intentional simplifications (don't "fix" these without cause)
 
-- Assistant runs on a small local model (llama3.2:3b via Ollama); facts
+- Assistant runs on a local model (qwen2.5:14b via Ollama on the PC, 32k context); facts
   are assembled in code and the model only phrases them. Crisis handling
   (`core/safety_floor.py`) never depends on the model, and its numbers
   follow the person's country (`core/region.py`). Format money with
