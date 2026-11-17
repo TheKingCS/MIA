@@ -534,38 +534,40 @@ walking through the actual wiring surfaced it.
 
 ## What to add for the specialists (Claude, 2026-11-17; prices checked that day, and moving fast)
 
-Zac asked what to add to the PC for the specialists, the Forge and parallel agents (DEC-0197, DEC-0199). The PC:
-Ryzen 7 9800X3D, Radeon RX 7900 XTX (24 GB), 32 GB of system memory, a 1 TB NVMe. The bench (`work/eng_bench/`)
-shows the 32B models do the engineering when code does the arithmetic; what the card can't do is hold two of them at
-once, or anything bigger.
+Zac asked what to add to the PC for the specialists, the Forge and parallel agents (DEC-0197, DEC-0199).
+
+**Corrected the same day, after reading the PC itself** (Prompt 06's baseline, read-only commands): the motherboard
+is a **Gigabyte A620I AX, a Mini-ITX board** with **one** graphics slot and two memory slots (BIOS F8c). So a second
+graphics card can't go in this PC, which the first version of this section recommended; that advice is withdrawn.
+What's in it: Ryzen 7 9800X3D, Radeon RX 7900 XTX (24 GB), 32 GB DDR5-6400 (2 x 16 GB Corsair, both slots full), a
+1 TB Crucial P3 NVMe (524 GB free), 2.5 Gb Ethernet, Wi-Fi 6E, Bluetooth; a 4K 240 Hz monitor on the 7900 XTX and a
+1080p one on the processor's own graphics; Windows 11 Home. Not readable from software: the case, the power supply.
+
+The bench (`work/eng_bench/`) shows the 32B models do the engineering when code does the arithmetic; what the card
+can't do is hold two of them at once, or anything bigger.
 
 **First, free: a reviewer from another family.** The second-model review says "not fully independent" because every
-capable model benched is a Qwen. Two from other families fit the 24 GB card today: gpt-oss-20b (OpenAI) and
-Mistral Small 24B. Bench them before buying anything.
+capable model benched is a Qwen. gpt-oss-20b (OpenAI) and Mistral Small 24B fit the 24 GB card and were pulled on
+2026-11-17; bench them before buying anything.
 
-**1. A second graphics card (the one purchase that changes the most).** It doubles what fits: a specialist's model
-and its reviewer loaded at once (no swapping between them), several Workroom agents served at once, or one
-70B-class model split across both cards (estimates put a 70B at Q4 near 18 to 22 tokens a second across two
-cards; to be measured, not trusted).
-- **Best value: a second RX 7900 XTX**, used, about $800 to $850 (summer 2026 trackers; new ones were $1,100 to
-  $1,500). The same chip as the first, so the same drivers and the least to go wrong under ROCm. 48 GB in all.
-- **More headroom: a Radeon AI PRO R9700 (32 GB)**, $1,299 list but $2,000 at retailers. 56 GB in all; a newer chip
-  (RDNA 4), so mixing it with the 7900 XTX is less proven.
-- **Before buying, check three things:** the power supply (two 7900 XTX cards with the 9800X3D want about 1200 W;
-  most builds have 850 to 1000 W, so this is often a second purchase), a second full-length slot on the
-  motherboard (4 or 8 lanes is fine for this work), and room in the case.
+**1. A second machine for models (the one purchase that changes the most, given the one slot).** A Ryzen AI Max+ 395
+mini PC with 128 GB of unified memory (about $3,300 to $4,350 now; about $2,000 a year ago) sits on the network beside
+the PC. It runs mixture-of-experts models fast (gpt-oss-120b at about 31 to 34 tokens a second), a dense 70B slowly (5
+to 7), and holds several models at once, so a specialist's model and its reviewer from another family can both be
+loaded while the PC's card does the rest. It also fits the distributed MIA that Prompt 12 plans (the PC asks it, as
+the Pi will ask the PC). On the PC's 2.5 Gb Ethernet, the network is not the limit.
 
 **2. A bigger drive: 2 to 4 TB NVMe.** Each 32B model is about 20 GB, a 70B about 40 GB; the bench keeps several,
 and the offline packs (Kiwix and the Forge's) and the MIA OS test machines all want room. 1 TB is already tight.
+Check how many M.2 slots the A620I AX has free (its manual); if none, the new drive replaces the old one.
 
-**3. System memory to 64 GB, but not at today's prices.** It helps with large models partly on the processor, test
-machines, and big packs, but memory prices have jumped (a 64 GB DDR5 kit is $750 to $1,400 in November 2026 listings).
-Wait unless something specific needs it.
+**3. Swapping the graphics card for a bigger one: only a small step.** The one slot means a bigger card replaces the
+7900 XTX. A Radeon AI PRO R9700 (32 GB, $1,299 list, about $2,000 in shops) is 8 GB more and a newer chip; not worth
+it alone. A 48 GB card (Radeon PRO W7900) costs far more. Before any card: check the case's length limit and the
+power supply.
 
-**4. Later, if the specialists outgrow one PC: a second machine for models.** A Ryzen AI Max+ 395 mini PC with 128 GB
-of unified memory (about $3,300 to $4,350 now; it was $2,000 a year ago) runs mixture-of-experts models fast
-(gpt-oss-120b at about 31 to 34 tokens a second) and a dense 70B slowly (5 to 7). It would run overnight work and a
-different-family reviewer without touching the PC. Not before the second card shows what one PC can do.
+**4. System memory to 64 GB, not at today's prices.** Both slots are full, so 64 GB means replacing both sticks with
+2 x 32 GB, and a 64 GB DDR5 kit is $750 to $1,400 in November 2026 listings. Wait unless something specific needs it.
 
 **5. A UPS** (about $150 to $250) so a long overnight bench or Night School run survives a power blip. A Windows
 update restarting the PC (2026-11-17) is a different problem: set active hours, or run long jobs on MIA OS later.
