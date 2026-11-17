@@ -15,6 +15,8 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off (`gui/ambient_screens.py`). **Zac to try:** restart MIA with both monitors on, then turn the 1080p one off and
   on. `gui.ambient_screen: false` turns it off.
 - CLAUDE.md now names the everyday model correctly (qwen2.5:14b, 32k).
+- **Q-68 measured: qwen2.5:14b stays the everyday model.** Same routes and flags on the 112 questions; qwen3:14b
+  invented context more on open questions and was slower (`pc-check/intelligence-*.md` on the PC; not in git).
 - **MIA notes what you're working on** (Q-44, DEC-0197): the program and window title in front of you on the PC,
   every 30 seconds, kept 7 days in your folder; never password managers, private windows, sign-ins or MIA herself.
   The sidebar says "Noting your active app" while it's on; Settings has the switch and **Erase**. Ask "what am I
