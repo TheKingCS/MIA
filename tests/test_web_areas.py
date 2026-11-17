@@ -4,8 +4,8 @@ tests.test_web_areas
 
 MIA's eight destinations and their subdashboards (DEC-0153, core/web_areas.py; the area hues from DEC-0130): the
 eight in Zac's order, every app and page with exactly one owner, every web page owned or listed as part of the
-frame, old area ids still opening, a hub listing its subdashboards, what the person can open and the way back, and no
-area's hue a status color.
+frame, old area ids still opening, a hub listing its subdashboards, what the person can open and the way back, an
+area's dashboard of its subcategories with what needs him in each, and no area's hue a status color.
 """
 
 from pathlib import Path
@@ -118,3 +118,25 @@ def test_no_area_hue_is_a_status_color():
             assert not (deg <= 12 or deg >= 350), f"{a.id} is red ({a.hue})"
     hue = {a.id: a.hue for a in AREAS}
     assert hue["homestead"] == "#35d4ff" and hue["kitchen"] == "#e9d4a8" and hue["health"] == "#ff8a3d"
+
+
+def test_an_area_opens_a_dashboard_of_its_subcategories_with_what_needs_him_in_each(monkeypatch):
+    """Zac, 2026-11-17: each area (Home, Garage, Finances...) opens its own dashboard of its subcategories, not the
+    portals; every card counts what needs him there from the same day list the Dashboard uses."""
+    import core.today as today
+    from core import web_areas
+
+    monkeypatch.setattr(surfaces, "_visible", lambda context, app: True)
+    item = lambda module, when, title: SimpleNamespace(module_id=module, when=when, title=title, detail="")  # noqa: E731
+    days = [item("kitchen", "today", "Plan dinner"), item("garage", "overdue", "Check oil"),
+            item("garage", "soon", "Tire rotation"), item("greenhouse", "overdue", "Water the beds")]
+    monkeypatch.setattr(today, "today_items", lambda context, day=None: days)
+    home = {c["id"]: c for c in hub(SimpleNamespace(), "home")["dashboard"]}
+    assert list(home)[:3] == ["kitchen", "smart_devices", "homestead"]
+    assert home["kitchen"]["needs_count"] == 1 and home["kitchen"]["needs"][0]["title"] == "Plan dinner"
+    assert home["homestead"]["needs_count"] == 1 and home["homestead"]["overdue"] == 1  # an app two levels down
+    garage = {c["id"]: c for c in hub(SimpleNamespace(), "garage")["dashboard"]}
+    assert garage["garage"]["needs_count"] == 1 and garage["garage"]["next"]["title"] == "Tire rotation"
+    assert garage["toolbox"]["needs_count"] == 0 and garage["toolbox"]["next"] is None
+    monkeypatch.setattr(today, "today_items", lambda context, day=None: 1 / 0)
+    assert all(c["needs_count"] == 0 for c in web_areas.hub(SimpleNamespace(), "home")["dashboard"])  # still shows

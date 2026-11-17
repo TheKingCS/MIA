@@ -11,6 +11,9 @@ Settings' Security, accounts, data and System). Every app and page has one
 owner: it is a member of exactly one area, and other areas reach it through
 `shortcuts`, never a copy (`docs/NAVIGATION_ARCHITECTURE.md`).
 
+An area opens its own dashboard (`dashboard`, Zac 2026-11-17: "they should each have their own dashboards
+for all their sub categories"): a card per subdashboard and app with what needs him there, from the day list.
+
 - `AREAS`: each area's id, name, icon, line, members in order, hue, parent,
   shortcuts and, for the Dashboard, its own page. A member is an app's
   module id (core/web_surfaces.APPS) or a `Page` that isn't an app of its
@@ -36,6 +39,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional, Union
+
+from core.logger import get_logger
+
+log = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -253,10 +260,47 @@ def sidebar(context) -> list[dict]:
     return out
 
 
+def _apps_under(area_id: str) -> set:
+    """Every app id in an area and its subdashboards, all the way down."""
+    area = AREAS_BY_ID.get(area_id)
+    if area is None:
+        return set()
+    ids = {m for m in area.members if isinstance(m, str)}
+    for child in children(area_id):
+        ids |= _apps_under(child.id)
+    return ids
+
+
+def dashboard(context, entries: list[dict], today=None) -> list[dict]:
+    """An area's dashboard (Zac, 2026-11-17): one card per subdashboard or app, in the area's order, each with what
+    needs him there (overdue and today, the first three) and what's coming, from the same day list the Dashboard uses
+    (core/today.py); a card with nothing due says so. Never breaks the page: an unreadable day list leaves the cards
+    without counts."""
+    try:
+        from core.today import today_items
+
+        items = today_items(context, today)
+    except Exception:  # noqa: BLE001 - the cards still show without their counts
+        log.exception("An area's dashboard couldn't read today's list")
+        items = []
+    cards = []
+    for entry in entries:
+        ids = _apps_under(entry["id"]) if entry.get("sub") else {entry["id"]}
+        mine = [i for i in items if i.module_id in ids]
+        needs = [i for i in mine if i.when in ("overdue", "today")]
+        soon = [i for i in mine if i.when in ("soon", "waiting")]
+        cards.append({**entry, "needs": [{"title": i.title, "detail": i.detail, "when": i.when} for i in needs[:3]],
+                      "needs_count": len(needs), "overdue": sum(1 for i in needs if i.when == "overdue"),
+                      "next": ({"title": soon[0].title, "detail": soon[0].detail} if soon else None),
+                      "soon_count": len(soon)})
+    return cards
+
+
 def hub(context, area_id: str) -> Optional[dict]:
     """One hub's screen: {id, name, icon, tagline, hue, apps (its subdashboards first, then what it owns), shortcuts,
-    back: {name, page} one level up, areas: the eight, environment: its own space or None}; None for an id that
-    isn't an area (old ids open the area that took their place)."""
+    back: {name, page} one level up, areas: the eight, environment: its own space or None, dashboard: a card per
+    subdashboard and app with what needs him there (`dashboard`)}; None for an id that isn't an area (old ids open
+    the area that took their place)."""
     area = resolve(area_id)
     if area is None:
         return None
@@ -270,4 +314,6 @@ def hub(context, area_id: str) -> Optional[dict]:
             "back": back, "parent": area.parent,
             "areas": [{"id": a.id, "name": a.name, "page": _page(a)} for a in destinations()],
             # DEC-0130 M3: the area's own space (core/web_environments.py), None while it still uses its tiles
-            "environment": environment(context, area.id)}
+            "environment": environment(context, area.id),
+            # Zac, 2026-11-17: every area opens a dashboard of its subcategories; the room stays one click away
+            "dashboard": dashboard(context, subs + _entries(context, area.members))}

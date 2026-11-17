@@ -5,6 +5,8 @@
  * space (core/web_environments.py) draws that instead; the Garage's is a 3D room on the Nexus's engine where the
  * graphics card allows (garageRoom), its flat layout otherwise. Every other area is a room of its apps in the Spatial
  * look (areaRoom), its tiles otherwise.
+ * Since 2026-11-17 (Zac: "the navigation should not be the portals anymore") an area opens its dashboard first: a
+ * card per subcategory and app with what needs him there (core/web_areas.dashboard); the room is `&room=1`.
  */
 (function () {
   "use strict";
@@ -228,11 +230,38 @@
       el("div", { class: "hub-grid" }, h.shortcuts.map(tile))) : null;
   }
 
+  // The area's dashboard (Zac, 2026-11-17): a card per subcategory and app, each with what needs him there and what's
+  // next, opening its own page. The area's room (its 3D space or portals) is one click away, never the default.
+  function card(c) {
+    const ico = el("span", { class: "hub-ico", "aria-hidden": "true" });
+    const pic = window.MIAIcons && (MIAIcons.svg(c.id) || MIAIcons.svg(c.icon));
+    if (pic) ico.append(pic); else ico.textContent = "•";
+    const head = el("div", { class: "dash-head" }, ico, el("span", { class: "dash-name" }, c.name),
+      c.needs_count ? el("span", { class: "chip " + (c.overdue ? "chip-soon" : "") }, c.needs_count + " need you") : el("span", { class: "chip ok" }, "All clear"));
+    const rows = (c.needs || []).map((n) => el("li", {}, el("span", {}, n.title),
+      el("span", { class: "dash-when" + (n.when === "overdue" ? " due" : "") }, n.detail || n.when)));
+    return el("a", { class: "glass dash-card" + (c.sub ? " dash-sub" : ""), href: c.page }, ...[
+      head,
+      rows.length ? el("ul", { class: "dash-needs" }, rows) : el("p", { class: "dim dash-line" }, c.tagline || ""),
+      c.next ? el("p", { class: "dim dash-next" }, "Next: " + c.next.title + (c.next.detail ? " · " + c.next.detail : "")) : null,
+    ].filter(Boolean));
+  }
+
+  function dashboardView(h) {
+    const room = h.environment ? el("a", { class: "btn btn-ghost btn-small", href: "hub.html?area=" + encodeURIComponent(h.id) + "&room=1" },
+      h.environment.kind === "garage" ? "Open The Garage Room" : "Open The Room") : null;
+    $("panel").replaceChildren(...[
+      room ? el("div", { class: "row-buttons dash-room" }, room) : null,
+      (h.dashboard || []).length ? el("div", { class: "dash-grid" }, h.dashboard.map(card)) : el("p", { class: "empty" }, "Nothing here yet."),
+      shortcuts(h), others(h)].filter(Boolean));
+  }
+
   function paint(h) {
     document.title = h.name + " — MIA";
     $("hub-name").textContent = h.name;
     $("hub-sub").textContent = h.tagline;
     document.body.style.setProperty("--hue", h.hue || "");
+    if (!new URLSearchParams(location.search).has("room") && h.dashboard) { dashboardView(h); return; }
     if (h.environment && h.environment.kind === "room") {  // every other area: a room of its apps, or its tiles
       if (areaRoom(h, h.environment)) return;
     }

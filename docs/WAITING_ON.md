@@ -42,10 +42,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 7. [ ] **Encrypt the PC's drive** (Windows 11 Home has Device Encryption: details under Security).
 
 ### Zac's feedback on the window, 2026-11-17 (to fix, Claude)
-- [ ] **The window is too tall**: the sidebar and the page run past the bottom of the screen, so he has to scroll to
+- [x] **The window is too tall** (fixed 2026-11-17: it opens maximized, the Dashboard uses two columns on wide screens and fits, the sidebar tightens on short screens): the sidebar and the page run past the bottom of the screen, so he has to scroll to
       reach the bottom. Everything should fit his screen.
-- [ ] **The page is crammed to one side with empty space beside it**: use the width.
-- [ ] **Navigation isn't the portals any more**: clicking an area (Home, Garage, Finances...) opens that area's own
+- [x] **The page is crammed to one side with empty space beside it**: use the width. (Fixed the same day.)
+- [x] **Navigation isn't the portals any more** (built the same day: each area opens a dashboard of cards, one per subcategory and app, each with what needs you there; the room is one button away): clicking an area (Home, Garage, Finances...) opens that area's own
       dashboard, holding all its subcategories and their dashboards.
 - [ ] **No USB stick yet** for the graphics card test from Fedora (`os/poc/README.md`); it waits.
 

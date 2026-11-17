@@ -399,6 +399,45 @@ body.mia-dropping::after { content: "Drop to keep it on your shelf"; position: f
 .step-finished { margin: 8px 0 0; padding-left: 18px; }
 @media (max-width: 640px) { .step-row { grid-template-columns: auto minmax(0, 1fr); } .step-buttons { grid-column: 1 / -1; justify-content: flex-start; } }
 
+/* Wide screens (Zac, 2026-11-17: "crammed on the left side ... a bunch of unused empty space"): the page uses the
+   width instead of a fixed column, and the Dashboard splits into two columns so it fits the screen's height. */
+@media (min-width: 1600px) {
+  .layout-main { max-width: 1760px; }
+  main.layout-main.home-main { max-width: none; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr; column-gap: calc(var(--gap) * 1.5); align-items: start; }
+  main.home-main > .home-top { grid-column: 1 / -1; }
+  .home-left, .home-right { min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
+  .home-right .home-life { margin-top: 0; }
+}
+/* Short screens: the sidebar tightens so every destination fits without scrolling. */
+@media (max-height: 1500px) and (min-width: 721px) {
+  .side { gap: 1px; padding-top: 12px; padding-bottom: 12px; }
+  .side a.nav { min-height: 34px; padding: 5px 12px; font-size: var(--text-sm); }
+  .side .side-heading { margin: 8px 12px 2px; }
+  .side .brand { padding-bottom: 8px; }
+}
+@media (max-height: 1000px) and (min-width: 721px) {
+  .side a.nav { min-height: 30px; padding: 3px 12px; }
+  .side .side-heading { margin: 6px 12px 0; }
+}
+
+/* An area's dashboard (core/web_areas.dashboard, web/hub.js): a card per subcategory and app. */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--gap); margin-top: 8px; }
+.dash-card { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; color: var(--text); text-decoration: none;
+  min-height: 150px; border-top: 2px solid rgba(var(--rgb-accent), 0.25); }
+.dash-card:hover, .dash-card:focus-visible { border-color: var(--line-strong); }
+.dash-sub { border-top-color: var(--hue, rgba(var(--rgb-accent), 0.6)); }
+.dash-head { display: flex; align-items: center; gap: 10px; }
+.dash-head .hub-ico { width: 28px; height: 28px; display: inline-grid; place-items: center; }
+.dash-name { font-size: var(--text-lg); font-weight: 600; flex: 1; }
+.dash-needs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--text-sm); }
+.dash-needs li { display: flex; justify-content: space-between; gap: 10px; }
+.dash-when { color: var(--text-dim); white-space: nowrap; }
+.dash-when.due { color: var(--attention); }
+.dash-line, .dash-next { margin: 0; font-size: var(--text-sm); }
+.dash-next { margin-top: auto; }
+.dash-room { margin-bottom: 4px; }
+
 /* Stop (core/stop.py, REQ-AUT-010): the control in the frame, and the banner while everything of hers is stopped. */
 .side-stop { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 8px; min-height: 36px; padding: 0 10px;
   border-radius: var(--radius-sm); border: 1px solid var(--line); background: transparent; color: var(--text-dim);

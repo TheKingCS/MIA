@@ -222,7 +222,34 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "good_news",
+     "name": "Good News Radio",
+     "icon": "📻",
+     "tagline": "What went right today.",
+     "page": "news.html",
+     "ask": "What's the good news?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "notifications",
+     "name": "Notifications",
+     "icon": "inbox",
+     "tagline": "What MIA told you.",
+     "page": "notifications.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "home": {
    "id": "home",
@@ -343,7 +370,130 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "kitchen",
+     "name": "Kitchen",
+     "icon": "kitchen",
+     "tagline": "Meals, recipes and the pantry.",
+     "page": "hub.html?area=kitchen",
+     "sub": true,
+     "needs": [
+      {
+       "title": "Plan Thursday's dinner",
+       "detail": "today",
+       "when": "today"
+      }
+     ],
+     "needs_count": 1,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "smart_devices",
+     "name": "Smart Devices",
+     "icon": "power",
+     "tagline": "Cameras, power, sensors and what's plugged in.",
+     "page": "hub.html?area=smart_devices",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "homestead",
+     "name": "Homestead",
+     "icon": "greenhouse",
+     "tagline": "What grows and who you feed.",
+     "page": "hub.html?area=homestead",
+     "sub": true,
+     "needs": [
+      {
+       "title": "Water: Raised bed",
+       "detail": "2 days late",
+       "when": "overdue"
+      }
+     ],
+     "needs_count": 1,
+     "overdue": 1,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "recreation",
+     "name": "Recreation",
+     "icon": "expeditions",
+     "tagline": "Music, games, maps, trips and the worlds.",
+     "page": "hub.html?area=recreation",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "personal_tools",
+     "name": "Personal Tools",
+     "icon": "notes",
+     "tagline": "Your days, your words, your people and what you keep.",
+     "page": "hub.html?area=personal_tools",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "learning",
+     "name": "Learning",
+     "icon": "classroom",
+     "tagline": "Study, the library and what you're learning.",
+     "page": "hub.html?area=learning",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "household",
+     "name": "Household",
+     "icon": "🧺",
+     "tagline": "A home that runs itself.",
+     "page": "household.html",
+     "ask": "I did the dishes.",
+     "needs": [
+      {
+       "title": "HVAC filter: Maple House",
+       "detail": "6 days late",
+       "when": "overdue"
+      }
+     ],
+     "needs_count": 1,
+     "overdue": 1,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "upkeep_home",
+     "name": "Home Upkeep",
+     "icon": "maintenance",
+     "tagline": "The house and its appliances, cared for.",
+     "page": "real-estate.html#home",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "garage": {
    "id": "garage",
@@ -566,7 +716,46 @@
       "line": "Builds and their tasks"
      }
     ]
-   }
+   },
+   "dashboard": [
+    {
+     "id": "garage",
+     "name": "Garage",
+     "icon": "🚗",
+     "tagline": "Keep it running. Keep it ready.",
+     "page": "garage.html",
+     "ask": "What upkeep is due on my vehicles?",
+     "needs": [
+      {
+       "title": "Check oil: Mower",
+       "detail": "14 days late",
+       "when": "overdue"
+      },
+      {
+       "title": "Tire rotation: Pickup truck",
+       "detail": "9 days late",
+       "when": "overdue"
+      }
+     ],
+     "needs_count": 2,
+     "overdue": 2,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "toolbox",
+     "name": "Toolbox",
+     "icon": "🧰",
+     "tagline": "Quick tools.",
+     "page": "toolbox.html",
+     "ask": "Convert 5 gallons to liters.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "finances": {
    "id": "finances",
@@ -673,7 +862,74 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "businesses",
+     "name": "Businesses",
+     "icon": "business",
+     "tagline": "Each business: its money, its work, its customers.",
+     "page": "businesses.html",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "budget",
+     "name": "Money",
+     "icon": "💰",
+     "tagline": "Know where it goes.",
+     "page": "money.html",
+     "ask": "Which debt should I pay first?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "freedom",
+     "name": "Freedom",
+     "icon": "🌄",
+     "tagline": "Your way out, in numbers.",
+     "page": "freedom.html",
+     "ask": "When can I work from home?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "insurance",
+     "name": "Insurance",
+     "icon": "☂️",
+     "tagline": "Covered, for less.",
+     "page": "insurance.html",
+     "ask": "When does my car insurance renew?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "compliance",
+     "name": "Compliance",
+     "icon": "📋",
+     "tagline": "Every deadline, on time.",
+     "page": "compliance.html",
+     "ask": "What's due for taxes?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "health": {
    "id": "health",
@@ -762,7 +1018,46 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "health",
+     "name": "Health",
+     "icon": "workout",
+     "tagline": "Sleep, visits, medications and records.",
+     "page": "health.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "workout",
+     "name": "Workout",
+     "icon": "🏋",
+     "tagline": "Stronger body. Clearer mind.",
+     "page": "workout.html",
+     "ask": "Log a 30 minute workout.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "plan",
+     "name": "My Plan",
+     "icon": "plan",
+     "tagline": "Goals, the training week and meals.",
+     "page": "plan.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "ai_tools": {
    "id": "ai_tools",
@@ -873,7 +1168,97 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "sight",
+     "name": "Look",
+     "icon": "👁",
+     "tagline": "Show MIA something.",
+     "page": "look.html",
+     "ask": "What is this?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "browser",
+     "name": "Browser",
+     "icon": "🌐",
+     "tagline": "She browses. You approve.",
+     "page": "browser.html",
+     "ask": "Open the county website.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "lookup",
+     "name": "Look It Up Online",
+     "icon": "search",
+     "tagline": "Search the web through your own search engine.",
+     "page": "lookup.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "inbox",
+     "name": "Inbox",
+     "icon": "📥",
+     "tagline": "Paperwork, handled.",
+     "page": "inbox.html",
+     "ask": "What's waiting in my inbox?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "communications",
+     "name": "Communications",
+     "icon": "inbox",
+     "tagline": "Email, MIA's messages and people to reach.",
+     "page": "communications.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "assistant",
+     "name": "MIA Assistant",
+     "icon": "🗨",
+     "tagline": "Always here. Always with you.",
+     "page": "assistant.html",
+     "ask": "Undo that.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "made",
+     "name": "Made by MIA",
+     "icon": "apps",
+     "tagline": "The screens she builds for you.",
+     "page": "made.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "missions": {
    "id": "missions",
@@ -1006,7 +1391,134 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "missions",
+     "name": "Missions",
+     "icon": "🏆",
+     "tagline": "Explore. Complete. Level up.",
+     "page": "missions.html",
+     "ask": "Add a mission to build a chicken coop.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "projects",
+     "name": "Projects",
+     "icon": "workshop",
+     "tagline": "Plans, budgets and the tasks in them.",
+     "page": "projects.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "dungeon",
+     "name": "The Dungeon",
+     "icon": "🏰",
+     "tagline": "Clear the run. Bank the loot.",
+     "page": "dungeon.html",
+     "ask": "How much loot this week?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "skills",
+     "name": "Skills",
+     "icon": "⚔",
+     "tagline": "Do the thing. Earn the level. Unlock the next thing.",
+     "page": "skills.html",
+     "ask": "Which skills am I growing?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "character",
+     "name": "Character",
+     "icon": "👤",
+     "tagline": "Your story so far.",
+     "page": "character.html",
+     "ask": "What level am I?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "reward_shop",
+     "name": "Reward Shop",
+     "icon": "🎁",
+     "tagline": "Spend what you earn.",
+     "page": "shop.html",
+     "ask": "What can I buy with my credits?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "party",
+     "name": "Party",
+     "icon": "missions",
+     "tagline": "Raids and quests.",
+     "page": "party.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "chronicle",
+     "name": "The Chronicle",
+     "icon": "character",
+     "tagline": "Your story, told back.",
+     "page": "chronicle.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "why",
+     "name": "My Why",
+     "icon": "character",
+     "tagline": "What it's all for.",
+     "page": "why.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "directions",
+     "name": "My Directions",
+     "icon": "character",
+     "tagline": "What you're steering by.",
+     "page": "directions.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "settings": {
    "id": "settings",
@@ -1125,7 +1637,110 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "security",
+     "name": "Security",
+     "icon": "security",
+     "tagline": "Passwords, IDs and who signed in.",
+     "page": "hub.html?area=security",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "accounts",
+     "name": "You and Your Accounts",
+     "icon": "profile",
+     "tagline": "Who you are to MIA, and what's linked.",
+     "page": "hub.html?area=accounts",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "your_data",
+     "name": "Your Data",
+     "icon": "files",
+     "tagline": "What MIA keeps, what changed, and taking it out.",
+     "page": "hub.html?area=your_data",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "system",
+     "name": "System",
+     "icon": "diagnostics",
+     "tagline": "How she's doing, and the team that builds her.",
+     "page": "hub.html?area=system",
+     "sub": true,
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "studio",
+     "name": "Theme Studio",
+     "icon": "settings",
+     "tagline": "Make MIA look like you: themes, colours, light.",
+     "page": "studio.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "answers",
+     "name": "How MIA Answers",
+     "icon": "assistant",
+     "tagline": "How long, laid out how, the tone: your way.",
+     "page": "answers.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "about",
+     "name": "About MIA",
+     "icon": "assistant",
+     "tagline": "What she is, what she's for, what she knows.",
+     "page": "about.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "module_browser",
+     "name": "Apps",
+     "icon": "🧩",
+     "tagline": "Everything MIA can do.",
+     "page": "apps.html",
+     "ask": "",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "kitchen": {
    "id": "kitchen",
@@ -1199,7 +1814,28 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "kitchen",
+     "name": "Kitchen",
+     "icon": "🍳",
+     "tagline": "Good food. Good mood.",
+     "page": "kitchen.html",
+     "ask": "What can I make with what's in the pantry?",
+     "needs": [
+      {
+       "title": "Plan Thursday's dinner",
+       "detail": "today",
+       "when": "today"
+      }
+     ],
+     "needs_count": 1,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "smart_devices": {
    "id": "smart_devices",
@@ -1296,7 +1932,73 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "security",
+     "name": "Cameras",
+     "icon": "🛡️",
+     "tagline": "Your cameras, at home.",
+     "page": "security.html",
+     "ask": "Are the cameras working?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "power",
+     "name": "Power",
+     "icon": "🔋",
+     "tagline": "Energy, tracked.",
+     "page": "power.html",
+     "ask": "How's the battery?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "sensors",
+     "name": "Sensors",
+     "icon": "lab",
+     "tagline": "Sensors that send their own readings.",
+     "page": "sensors.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "lab",
+     "name": "The Lab",
+     "icon": "🧪",
+     "tagline": "Experiments and sensors.",
+     "page": "lab.html",
+     "ask": "Start a temperature experiment.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "field_kit",
+     "name": "Field Kit",
+     "icon": "🛠",
+     "tagline": "Devices and scripts.",
+     "page": "field-kit.html",
+     "ask": "What devices are connected?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "homestead": {
    "id": "homestead",
@@ -1377,7 +2079,47 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "greenhouse",
+     "name": "Greenhouse",
+     "icon": "🌱",
+     "tagline": "Grow food. Grow freedom.",
+     "page": "greenhouse.html",
+     "ask": "What needs doing in the greenhouse?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "flock",
+     "name": "Chickens",
+     "icon": "🐔",
+     "tagline": "Eggs, every day.",
+     "page": "flock.html",
+     "ask": "How many eggs this week?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "pets",
+     "name": "Pets",
+     "icon": "relationships",
+     "tagline": "Your animals, their care and vet visits.",
+     "page": "people.html?only=pets",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "recreation": {
    "id": "recreation",
@@ -1517,7 +2259,146 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "music",
+     "name": "Music",
+     "icon": "🎵",
+     "tagline": "Your music.",
+     "page": "music.html",
+     "ask": "Play something relaxing.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "play",
+     "name": "Play",
+     "icon": "🏓",
+     "tagline": "Games and sports, counted.",
+     "page": "play.html",
+     "ask": "Played pickleball for an hour, it was hard.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "expeditions",
+     "name": "Expeditions",
+     "icon": "🏕",
+     "tagline": "Plan the trip.",
+     "page": "expeditions.html",
+     "ask": "Plan a weekend camping trip.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "maps",
+     "name": "Maps",
+     "icon": "🗺",
+     "tagline": "Know the ground.",
+     "page": "maps.html",
+     "ask": "Which trail maps do I have?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "navigation",
+     "name": "Navigation",
+     "icon": "🧭",
+     "tagline": "Find the way.",
+     "page": "navigation.html",
+     "ask": "How far is camp from the trailhead?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "trails",
+     "name": "Trail Maps",
+     "icon": "maps",
+     "tagline": "Official park and trail map PDFs, offline.",
+     "page": "trails.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "tracks",
+     "name": "Tracks",
+     "icon": "expeditions",
+     "tagline": "Your walks, rides and drives from GPX files.",
+     "page": "tracks.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "worldmap",
+     "name": "World Map",
+     "icon": "memories",
+     "tagline": "Everywhere you've been.",
+     "page": "worldmap.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "places",
+     "name": "My Places",
+     "icon": "maps",
+     "tagline": "Places you go, and quests there.",
+     "page": "places.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "worlds",
+     "name": "Living Worlds",
+     "icon": "character",
+     "tagline": "Your worlds, campaigns and character, through the Nexus.",
+     "page": "nexus.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "portals",
+     "name": "Portal Pictures",
+     "icon": "apps",
+     "tagline": "Put your own paintings in the Nexus's portals.",
+     "page": "portals.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "personal_tools": {
    "id": "personal_tools",
@@ -1661,7 +2542,150 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "calendar",
+     "name": "Calendar",
+     "icon": "📅",
+     "tagline": "Everything with a date.",
+     "page": "calendar.html",
+     "ask": "What's on my calendar this week?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "notes",
+     "name": "Journal",
+     "icon": "📓",
+     "tagline": "Write it down.",
+     "page": "journal.html",
+     "ask": "Make a note: call the plumber Friday.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "life_notes",
+     "name": "Kept",
+     "icon": "📌",
+     "tagline": "What you said you'd do.",
+     "page": "kept.html",
+     "ask": "What did I promise?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "operating_journal",
+     "name": "Operating Journal",
+     "icon": "🧭",
+     "tagline": "How you mean to live, and how you do.",
+     "page": "operating.html",
+     "ask": "Am I living how I said I want to?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "memories",
+     "name": "Memories",
+     "icon": "📸",
+     "tagline": "Remember the trip.",
+     "page": "memories.html",
+     "ask": "Show me my last trip.",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "vault",
+     "name": "Memory Vault",
+     "icon": "🗄",
+     "tagline": "Your photos, kept safe.",
+     "page": "vault.html",
+     "ask": "Are my photos backed up?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "files",
+     "name": "Files",
+     "icon": "🗂",
+     "tagline": "Your files.",
+     "page": "files.html",
+     "ask": "What's in my MIA folder?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "relationships",
+     "name": "People",
+     "icon": "👥",
+     "tagline": "The ones who matter.",
+     "page": "people.html",
+     "ask": "When is the next birthday?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "checkin",
+     "name": "Sunday Check-In",
+     "icon": "calendar",
+     "tagline": "The week, looked back on.",
+     "page": "checkin.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "observations",
+     "name": "Observations",
+     "icon": "🔍",
+     "tagline": "What MIA noticed.",
+     "page": "observations.html",
+     "ask": "What have you noticed lately?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "connections",
+     "name": "Connections",
+     "icon": "notes",
+     "tagline": "What MIA tied together, and what not to raise.",
+     "page": "connections.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "learning": {
    "id": "learning",
@@ -1758,7 +2782,59 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "classroom",
+     "name": "Classroom",
+     "icon": "🎓",
+     "tagline": "Keep learning.",
+     "page": "classroom.html",
+     "ask": "How is my learning progress?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "knowledge",
+     "name": "Knowledge",
+     "icon": "📚",
+     "tagline": "The offline library.",
+     "page": "knowledge.html",
+     "ask": "How do I purify water?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "guitar",
+     "name": "Guitar",
+     "icon": "classroom",
+     "tagline": "A learning path, stage by stage.",
+     "page": "guitar.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "trades",
+     "name": "Trade Master",
+     "icon": "workshop",
+     "tagline": "Any job or diagnosis, walked through step by step.",
+     "page": "trades.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "businesses": {
    "id": "businesses",
@@ -1863,7 +2939,72 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "real_estate",
+     "name": "Real Estate",
+     "icon": "🏘",
+     "tagline": "Cash flow. Equity. Freedom.",
+     "page": "real-estate.html",
+     "ask": "How are my rentals doing this month?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "workshop",
+     "name": "Workshop",
+     "icon": "🔩",
+     "tagline": "Parts, jobs and products.",
+     "page": "workshop.html",
+     "ask": "How much plywood do I have?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "business",
+     "name": "Orders & Quotes",
+     "icon": "🧾",
+     "tagline": "Customers, quotes and orders.",
+     "page": "business.html",
+     "ask": "How much profit did I make this month?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "labels",
+     "name": "Labels",
+     "icon": "workshop",
+     "tagline": "Print labels for what you make.",
+     "page": "label.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "showoff",
+     "name": "Show Off",
+     "icon": "workshop",
+     "tagline": "What you've made, to share.",
+     "page": "showoff.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "security": {
    "id": "security",
@@ -1943,7 +3084,46 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "passwords",
+     "name": "Passwords",
+     "icon": "🔐",
+     "tagline": "Every login, locked.",
+     "page": "passwords.html",
+     "ask": "",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "id_wallet",
+     "name": "ID Wallet",
+     "icon": "passwords",
+     "tagline": "IDs, passports, insurance cards and registrations.",
+     "page": "wallet.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "signins",
+     "name": "Sign-Ins",
+     "icon": "passwords",
+     "tagline": "Who signed in, from where.",
+     "page": "signins.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "accounts": {
    "id": "accounts",
@@ -2022,7 +3202,45 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "profile",
+     "name": "Profile",
+     "icon": "character",
+     "tagline": "You, and how MIA knows you.",
+     "page": "profile.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "sync",
+     "name": "Getting To Know You",
+     "icon": "profile",
+     "tagline": "Her questions about you, and your answers.",
+     "page": "sync.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "connect",
+     "name": "Connect Apps",
+     "icon": "settings",
+     "tagline": "Your accounts, linked.",
+     "page": "connect.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "your_data": {
    "id": "your_data",
@@ -2094,7 +3312,33 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "yourdata",
+     "name": "Your Data",
+     "icon": "files",
+     "tagline": "What MIA keeps, and taking it out.",
+     "page": "yourdata.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "changes",
+     "name": "Recent Changes",
+     "icon": "issues",
+     "tagline": "What changed, with Undo.",
+     "page": "changes.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   },
   "system": {
    "id": "system",
@@ -2181,7 +3425,181 @@
      "page": "hub.html?area=settings"
     }
    ],
-   "environment": null
+   "environment": null,
+   "dashboard": [
+    {
+     "id": "issues",
+     "name": "Fix-It Log",
+     "icon": "🛠",
+     "tagline": "Where MIA stumbled, so it gets fixed.",
+     "page": "issues.html",
+     "ask": "What's been going wrong?",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "council",
+     "name": "The Council",
+     "icon": "assistant",
+     "tagline": "The agents who build MIA, talking.",
+     "page": "council.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "dev",
+     "name": "Development",
+     "icon": "workshop",
+     "tagline": "What's being built, and by whom.",
+     "page": "dev.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    },
+    {
+     "id": "model_test",
+     "name": "Model Check",
+     "icon": "model",
+     "tagline": "How her model does on its test questions.",
+     "page": "model-test.html",
+     "needs": [],
+     "needs_count": 0,
+     "overdue": 0,
+     "next": null,
+     "soon_count": 0
+    }
+   ]
   }
- }
+ },
+ "dashboard": [
+  {
+   "id": "kitchen",
+   "name": "Kitchen",
+   "icon": "kitchen",
+   "tagline": "Meals, recipes and the pantry.",
+   "page": "hub.html?area=kitchen",
+   "sub": true,
+   "needs": [
+    {
+     "title": "Plan Thursday's dinner",
+     "detail": "today",
+     "when": "today"
+    }
+   ],
+   "needs_count": 1,
+   "overdue": 0,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "smart_devices",
+   "name": "Smart Devices",
+   "icon": "power",
+   "tagline": "Cameras, power, sensors and what's plugged in.",
+   "page": "hub.html?area=smart_devices",
+   "sub": true,
+   "needs": [],
+   "needs_count": 0,
+   "overdue": 0,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "homestead",
+   "name": "Homestead",
+   "icon": "greenhouse",
+   "tagline": "What grows and who you feed.",
+   "page": "hub.html?area=homestead",
+   "sub": true,
+   "needs": [
+    {
+     "title": "Water: Raised bed",
+     "detail": "2 days late",
+     "when": "overdue"
+    }
+   ],
+   "needs_count": 1,
+   "overdue": 1,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "recreation",
+   "name": "Recreation",
+   "icon": "expeditions",
+   "tagline": "Music, games, maps, trips and the worlds.",
+   "page": "hub.html?area=recreation",
+   "sub": true,
+   "needs": [],
+   "needs_count": 0,
+   "overdue": 0,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "personal_tools",
+   "name": "Personal Tools",
+   "icon": "notes",
+   "tagline": "Your days, your words, your people and what you keep.",
+   "page": "hub.html?area=personal_tools",
+   "sub": true,
+   "needs": [],
+   "needs_count": 0,
+   "overdue": 0,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "learning",
+   "name": "Learning",
+   "icon": "classroom",
+   "tagline": "Study, the library and what you're learning.",
+   "page": "hub.html?area=learning",
+   "sub": true,
+   "needs": [],
+   "needs_count": 0,
+   "overdue": 0,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "household",
+   "name": "Household",
+   "icon": "🧺",
+   "tagline": "A home that runs itself.",
+   "page": "household.html",
+   "ask": "I did the dishes.",
+   "needs": [
+    {
+     "title": "HVAC filter: Maple House",
+     "detail": "6 days late",
+     "when": "overdue"
+    }
+   ],
+   "needs_count": 1,
+   "overdue": 1,
+   "next": null,
+   "soon_count": 0
+  },
+  {
+   "id": "upkeep_home",
+   "name": "Home Upkeep",
+   "icon": "maintenance",
+   "tagline": "The house and its appliances, cared for.",
+   "page": "real-estate.html#home",
+   "needs": [],
+   "needs_count": 0,
+   "overdue": 0,
+   "next": null,
+   "soon_count": 0
+  }
+ ]
 }

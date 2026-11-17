@@ -78,7 +78,11 @@ def format_level_badge_text(level: int, prestige_tier: int = 0) -> str:
 
 
 class MainWindow(QMainWindow):
-    """MIA's desktop window: the header (her wordmark, the nav tabs, the level badge and the profile menu), Home, the Apps grid and each app's screen in one stack, the character panel beside them, and the window-wide shortcuts (Ctrl+K search, quick capture, kiosk exit). It reacts to MIA's events: apps opened by voice, notifications, email drafts, records changed."""
+    """MIA's desktop window: the header (her wordmark, the nav tabs, the level badge and the profile menu), Home, the Apps grid and each app's screen in one stack, the character panel beside them, and the window-wide shortcuts (Ctrl+K search, quick capture, kiosk exit). It reacts to MIA's events: apps opened by voice, notifications, email drafts, records changed. It opens maximized
+    (START_MAXIMIZED)."""
+
+    # It opens maximized (Zac, 2026-11-17: the 1100 x 700 window was too small to see the page).
+    START_MAXIMIZED = True  # opens maximized (core/application._display, gui.start_maximized)
     switch_profile_requested = Signal()
 
     def __init__(self, context: AppContext, module_manager: ModuleManager) -> None:
@@ -99,6 +103,7 @@ class MainWindow(QMainWindow):
         self._history: list[QWidget] = []
 
         self.setWindowTitle("MIA — Multifunctional Intelligent Assistant")
+        # the size it returns to when un-maximized; it opens maximized (core/application._display)
         self.resize(
             context.config.get("gui.window_width", 1100),
             context.config.get("gui.window_height", 700),

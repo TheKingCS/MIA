@@ -404,7 +404,8 @@ class MIAApplication(BackgroundJobs, AssistantTools):
 
     def _display(self, widget) -> None:
         """
-        Show a top-level screen, going fullscreen if kiosk_mode is on.
+        Show a top-level screen, going fullscreen if kiosk_mode is on; the main window opens maximized unless
+        `gui.start_maximized` is off (a screen class says it wants that with START_MAXIMIZED).
 
         This is the single place kiosk-mode display behavior lives.
         Previously, only MainWindow applied fullscreen (in its own
@@ -439,6 +440,8 @@ class MIAApplication(BackgroundJobs, AssistantTools):
             if screen is not None:
                 widget.resize(screen.size())
             widget.showFullScreen()
+        elif getattr(widget, "START_MAXIMIZED", False) and self.config.get("gui.start_maximized", True):
+            widget.showMaximized()  # Zac, 2026-11-17: the fixed 1100 x 700 window left the page too long to see
         else:
             widget.show()
 
