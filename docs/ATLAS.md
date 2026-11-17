@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1482 files, 331,899 lines; 1482 files describe themselves; 18,214 of 18,312 classes and functions are documented.
+1484 files, 332,189 lines; 1484 files describe themselves; 18,229 of 18,327 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-578 files, 167,132 lines; 8,631 of 8,717 classes and functions documented
+579 files, 167,312 lines; 8,638 of 8,724 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -449,6 +449,7 @@
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
 - `core/smart_closet.py`: Smart Closet (DEC-0162; Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them, maybe let me see what they would look like together"). The design is `docs/specs/SMART_CLOSET.md`.
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
+- `core/specialist_models.py`: Which local model does each specialist's thinking (T1's second part; the local specialists plan, S3; DEC-0197: "the model per specialist is chosen from this table, not from a guide"). The table is the engineering bench's results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.
 - `core/specialist_work.py`: A specialist's worksheet (the local specialists plan, S1; DEC-0197): how one of MIA's specialists answers an engineering question on a local model without the model ever producing a number of its own.
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
@@ -872,7 +873,7 @@
 
 ## tests/: the test suite: what each part must do
 
-508 files, 86,114 lines; 7,249 of 7,261 classes and functions documented
+509 files, 86,224 lines; 7,257 of 7,269 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1008,8 +1009,8 @@
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths.
-- `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators.
-- `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, and a missing input named, never guessed.
+- `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators; a thinking model's working is left out, and only a readable value for a missi
+- `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing input named, never guessed, and no input's description offering a value a model co
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
@@ -1257,6 +1258,7 @@
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py.
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
+- `tests/test_specialist_models.py`: Which local model does each specialist's thinking (core/specialist_models.py, DEC-0197): chosen from this PC's bench results in the worksheet's own mode, over the disciplines that specialist uses; a model that guesses a missing input doesn't pass however many it gets right; the best that didn't pass
 - `tests/test_specialist_work.py`: A specialist's worksheet (core/specialist_work.py, DEC-0197): the model chooses calculators, code works out the numbers, and code checks that the answer's numbers all come from somewhere. *(2 undocumented)*
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
