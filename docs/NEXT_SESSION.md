@@ -12,8 +12,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   for that kind, listed and taken back with his other grants, lapsing after 90 days unused.
 - **Prompt 09 (self-awareness, inspection and self-development) is done:**
   `docs/mia_os/MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more; DEC-0220 to 0226 proposed; REQ-SLF-001
-  to 021. **Waiting on Zac:** Q-76 (a daily summary of her own merged changes instead of approving each), Q-77
-  (restart her own services on a failed check), Q-78 (show him the protected list and extend it). Prompt 10 on his go.
+  to 021. **Zac said yes to all:** a daily summary of her own merged changes with an Undo each (Q-76), restarting her
+  own services on a failed check (Q-77), the protected list shown and extended (Q-78); DEC-0222 and 0225 approved,
+  **to build**. Prompt 10 on his go.
 
 **New 2026-11-17, Prompt 08 (Claude on Opus).**
 - **Prompt 08 (autonomy, agents and execution) is done:** `docs/mia_os/MIA_OS_AUTONOMY_ARCHITECTURE.md` and

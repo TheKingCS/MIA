@@ -4,6 +4,10 @@
 
 ## 1. For Zac
 
+**Answered 2026-11-17: "yes to all".** A daily summary of her merged changes with an Undo each (Q-76); she
+restarts her own services, reloads models and re-runs failed jobs on a failed check, telling him after (Q-77); the
+protected list is shown to him and extended (Q-78). DEC-0222 and DEC-0225 approved.
+
 | Q | Question | Recommended |
 |---|---|---|
 | **Q-76** | MIA's own fixes and improvements (Night School, findings) merge on Claude's pass when the suite passes (you said Claude's pass covers code). Should you get a daily summary of what merged, each with its reason and an Undo, rather than approving each? Protected files still never change. | Yes, a daily summary |

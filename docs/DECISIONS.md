@@ -3674,7 +3674,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
 ### DEC-0222: Health and performance from Linux and her own counters
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-17, Q-77 yes): she may restart her own services, reload a model or re-run a failed job when a check fails (no code or settings change), telling him after.
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: systemd, the journal, hwmon, SMART, psutil, the turn trace and the loops, joined in one view; no metrics server.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
@@ -3695,7 +3695,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
 ### DEC-0225: Self-development only through the lab
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-17, Q-76 and Q-78 yes): her merged changes reach him as a daily summary, each with an Undo; the protected list is shown to him and extended with grants, the stop, browser safety, action effects and her inspection.
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: No change reaches her code except through the lab (worktree, test first, suite before and after, Claude's pass, merge, automatic revert); the protected list (her safeguards, the lab, grants, the stop, browser safety, action effects, inspection) is never hers to change.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2

@@ -37,7 +37,8 @@
 - **Prompt 09 (self-awareness, inspection and self-development) is done** (Opus, 2026-11-17):
   `MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one supporting documents; DEC-0220 to 0226 proposed;
   REQ-SLF-001 to 021 added.
-- **Next:** Zac's review of Prompt 09 (Q-76 to Q-78); Prompt 10 on his go.
+- Prompt 09 reviewed by Zac (Q-76 to Q-78 yes; DEC-0222 and DEC-0225 approved).
+- **Next:** Prompt 10 on his go; build the daily summary of her changes, her own restarts and the protected list.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
 **Changes outside the planning documents, on Zac's say-so:**

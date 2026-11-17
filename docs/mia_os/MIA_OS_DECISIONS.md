@@ -122,10 +122,10 @@ Full records: `MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md` §2.
 |---|---|---|
 | DEC-0220 | One capability truth registry | PROPOSED |
 | DEC-0221 | Provenance on every self-statement | PROPOSED |
-| DEC-0222 | Health and performance from Linux and her own counters | PROPOSED |
+| DEC-0222 | Health and performance from Linux and her own counters | APPROVED (Q-77) |
 | DEC-0223 | Quality by code checks, corrections and fixed sets | PROPOSED |
 | DEC-0224 | Investigations end in a reproducing test | PROPOSED |
-| DEC-0225 | Self-development only through the lab | PROPOSED |
+| DEC-0225 | Self-development only through the lab | APPROVED (Q-76, Q-78) |
 | DEC-0226 | New capabilities only through one path | PROPOSED |
 
 Full records: `MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md` §2.
