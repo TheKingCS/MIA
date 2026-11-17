@@ -13,8 +13,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 - **Prompt 09 (self-awareness, inspection and self-development) is done:**
   `docs/mia_os/MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more; DEC-0220 to 0226 proposed; REQ-SLF-001
   to 021. **Zac said yes to all:** a daily summary of her own merged changes with an Undo each (Q-76), restarting her
-  own services on a failed check (Q-77), the protected list shown and extended (Q-78); DEC-0222 and 0225 approved,
-  **to build**. Prompt 10 on his go.
+  own services on a failed check (Q-77), the protected list shown and extended (Q-78); DEC-0222 and 0225 approved.
+- **Built the same day:** `core/self_merges.py` (Night School step 7a1b: one kept change a night reviewed; Claude's
+  pass merges through the lab; a daily summary; Undo is `lab.revert`, on Diagnostics or "undo my change"),
+  `core/self_repair.py` (every five minutes: Ollama started, the model reloaded, a stuck job run again; told after),
+  `core/protected_list.py` (the list in words on Diagnostics and "what can't you change?"; grants, the stop, browser
+  safety, action effects, the inspection, the lab's actions and these three files added to `PROTECTED`).
+  Prompt 10 on his go.
 
 **New 2026-11-17, Prompt 08 (Claude on Opus).**
 - **Prompt 08 (autonomy, agents and execution) is done:** `docs/mia_os/MIA_OS_AUTONOMY_ARCHITECTURE.md` and

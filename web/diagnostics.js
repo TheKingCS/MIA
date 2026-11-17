@@ -4,6 +4,9 @@
  * one passive inspection (nothing is probed or changed), what passed, what to
  * look at, and what couldn't be read (never counted as a pass). The PC's
  * owner's page. Formatting only; the look is muse's.
+ * Her care of herself (DEC-0222, DEC-0225): the changes she made to herself,
+ * each with Undo (the action lab.revert, approved on its card), what she put
+ * right, and what she can never change. All decided in core (self_view).
  */
 (function () {
   "use strict";
@@ -33,6 +36,34 @@
         : [el("p", { class: "dim" }, "Every file her docs name is there, and every requirement is installed.")]));
   }
 
+  // Her care of herself (core/diagnostics.self_view): what she changed in herself, what she put right, and what she
+  // can never change. Undo is the action lab.revert, through the approval card like any change.
+  function selfPanels(s) {
+    if (!s) return [];
+    const changes = el("details", { class: "glass dx-list dx-repo", open: s.changes.length ? "" : null },
+      el("summary", { class: "dx-label" }, "Changes I Made To Myself · " + s.changes.length),
+      ...(s.changes.length ? s.changes.map((c) => el("div", { class: "dx-hw-row" },
+        el("span", { class: "dx-hw-name" }, c.why || c.title),
+        el("span", { class: "dim" }, when(c.at) + " · " + c.proposal + (c.status === "undone" ? " · undone" : "")),
+        c.status === "merged" ? el("button", { type: "button", class: "btn btn-quiet btn-small",
+          onclick: async () => { await MIAShell.act({ kind: "lab.revert", params: { proposal_id: c.proposal } });
+            paint(await MIA.diagnostics()); } }, "Undo") : null))
+        : [el("p", { class: "dim" }, "Nothing lately. What Night School keeps goes in only on Claude's pass, and you get a summary.")]));
+    const repairs = el("details", { class: "glass dx-list dx-repo" },
+      el("summary", { class: "dx-label" }, "What I Put Right · " + s.repairs.length),
+      ...(s.repairs.length ? s.repairs.map((r) => el("div", { class: "dx-log-row" },
+        el("span", { class: "dx-dot " + (r.ok ? "ok" : "look"), "aria-hidden": "true" }),
+        el("div", {}, el("div", { class: "dx-log-text" }, r.said), el("div", { class: "dim" }, when(r.at)))))
+        : [el("p", { class: "dim" }, "Nothing needed restarting lately.")]));
+    const kept = el("details", { class: "glass dx-list dx-repo" },
+      el("summary", { class: "dx-label" }, "What I Can Never Change"),
+      el("p", { class: "dim" }, "A change that touches any of these is refused before it's tested, whoever wrote it."),
+      ...s.protected.filter((g) => g.count).map((g) => el("div", { class: "dx-repo-group" },
+        el("p", { class: "dx-repo-title" }, g.name), el("p", { class: "dim" }, g.why))));
+    return [changes, repairs, kept];
+  }
+  const when = (iso) => !iso ? "" : new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
   function paint(data) {
     const sum = (f) => data.checks.reduce((n, c) => n + f(c), 0);
     const passed = sum((c) => c.passed), look = sum((c) => c.failed.length), unread = sum((c) => c.unknown.length);
@@ -54,6 +85,7 @@
           el("div", {}, el("div", { class: "dx-log-text" }, p.text), el("div", { class: "dim" }, p.when + " · " + p.where))))
           : [el("p", { class: "dim" }, "No warnings or errors lately.")])),
       repoPanel(data.repository),
+      ...selfPanels(data.self),
       el("p", { class: "dim dx-foot" }, "Looks only. Nothing is probed or changed. Anything it couldn't read is never counted as a pass. "
         + "You can also ask her: \"check my PC\", \"check the network\"."),
       el("button", { type: "button", class: "btn btn-ghost", onclick: async () => paint(await MIA.diagnostics()) }, "Run Again"),

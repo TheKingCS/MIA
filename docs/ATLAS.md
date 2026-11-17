@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1493 files, 334,288 lines; 1493 files describe themselves; 18,319 of 18,417 classes and functions are documented.
+1499 files, 335,237 lines; 1499 files describe themselves; 18,389 of 18,487 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-583 files, 168,705 lines; 8,696 of 8,782 classes and functions documented
+586 files, 169,359 lines; 8,728 of 8,814 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -390,6 +390,7 @@
 - `core/profile_manager.py`: Manages MIA user profiles — distinct from ConfigManager, which holds app-wide settings (theme, kiosk mode, etc.) that apply regardless of who's using the device. A "profile" is a person: their display name, when they were created, an optional password, and (going forward) the namespace their persona
 - `core/progress_history.py`: A prestige reached or a reward unlocked, kept in that person's history (2026-11-09, from the self-audit's unheard events). The profile manager publishes `profile.prestiged` and `profile.reward_unlocked`, and until now nothing heard either: a toast said it, and then it was gone, so the Chronicle and 
 - `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage
+- `core/protected_list.py`: What MIA can never change about herself, in words (DEC-0225; Zac, 2026-11-17, Q-78: "show me the list, and add grants, the stop, browser safety and her inspection to it"). The list itself is `core.dev_lab.PROTECTED`: a lab change that touches any of it is refused before it's tested, whoever wrote it
 - `core/push_subscription_manager.py`: Persists the Web Push subscriptions a profile's browser/PWA has registered — the endpoint URL + keys `PushManager.subscribe()` returns, per the standard Web Push API. One profile can have more than one subscription (a phone and a laptop, say), so this is a list keyed by profile_id, not a single fiel
 - `core/push_to_talk_source.py`: The headless counterpart to `core/push_to_talk_trigger.py` — that module is a `QObject` (needs Qt signals to marshal a GPIO interrupt back onto the GUI thread), which `core/voice_loop.py` deliberately avoids so a Core deployment never needs PySide6/Qt installed at all (see `core/core_runtime.py`'s d
 - `core/push_to_talk_trigger.py`: Unifies the two ways a push-to-talk press can originate — a real GPIO button interrupt in kiosk deployment, or the on-screen "Hold to Talk" button in dev (docs/ROADMAP.md milestone 5.3, docs/HARDWARE.md's Voice interface section) — behind one `pressed`/`released` signal pair, so modules/assistant/mo
@@ -438,6 +439,8 @@
 - `core/self_audit.py`: MIA audits herself every week (DEC-0108; Zac, 2026-11-07: "a regular process of auditing her own code and files and searching for ways to improve or beef up whatever she is doing, make it more efficient, more well designed" and "a regular audit for seeing how any of her existing infrastructure can b
 - `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from 
 - `core/self_knowledge.py`: What MIA can honestly say about herself — grounded in real data, never guessed. When the person asks "what are you?", "what can you do?", "what are you working on?" or "what do you know about me?", her answer should come from the facts (the system map, her Night School focus, the person's own stored
+- `core/self_merges.py`: MIA's own changes going in on Claude's pass, and the daily summary that tells Zac (DEC-0225; Zac, 2026-11-17, Q-76: yes to "her own fixes merge on Claude's pass when the suite passes, with a daily summary and an Undo each, rather than approving each").
+- `core/self_repair.py`: MIA puts her own services right when a check fails, and tells Zac after (DEC-0222; Zac, 2026-11-17, Q-77: yes to "restart her own services, reload a model or re-run a failed job on her own when a check fails, no code or settings change"). A background job every five minutes (core/background_jobs.py,
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta
 - `core/sensors.py`: Sensors that send their own readings (claude, 2026-11-09; DEC-0019: the computer adds sensors; DEC-0125: the Greenhouse, Power and the Lab had readings by hand only). A sensor is anything on the home network that can make an HTTP request (an ESP32, a Raspberry Pi, a smart plug's script): it sends on
 - `core/service_map.py`: What MIA runs on, and what depends on what (T-0007; the personality and ecosystem plan's phase 3, docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md section C; beside core/self_knowledge.py, which says what she is, this says what she runs on), so she can answer "if Ollama stops, what breaks?", "what does the b
@@ -877,7 +880,7 @@
 
 ## tests/: the test suite: what each part must do
 
-513 files, 86,757 lines; 7,289 of 7,301 classes and functions documented
+516 files, 87,020 lines; 7,327 of 7,339 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1209,6 +1212,7 @@
 - `tests/test_project_tool.py`: Unit tests for modules.toolbox.tools.project_tool's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_property_module.py`: Unit tests for modules.property.module's pure functions — same style and, deliberately, near-identical cases to tests/test_garage_module.py, since the two modules share the same logic shape and differ only in which Maintenance categories they filter to.
 - `tests/test_property_photo.py`: A property's photo (Q-0014, 2026-11-07): kept in the household's own folder, linked with a name that changes with the file, and never served from outside that folder.
+- `tests/test_protected_list.py`: What MIA can never change about herself, in words, kept true to the lab's own list (core/protected_list.py, DEC-0225, R-56).
 - `tests/test_push_subscription_manager.py`: Unit tests for core.push_subscription_manager — same isolation pattern as tests/test_notification_manager.py (monkeypatch _DATA_DIR/_*_FILE into tmp_path, a minimal fake config since these tests never touch it).
 - `tests/test_question_plans.py`: Question plans (DEC-0052 step 2a, core/question_plans.py): the right plan for a question, lookups gathered by code onto a marked sheet, and an answer that never states a number MIA didn't look up.
 - `tests/test_questlines.py`: Questlines and seasons (DEC-0028): linked chapters, each one a mission; finishing a chapter opens the next with MIA's line for it; seasons follow the date and the hemisphere; and the same by voice (core/assistant_game_actions.py).
@@ -1248,6 +1252,8 @@
 - `tests/test_security_log.py`: The security log (core/security_log.py, docs/SECURITY.md step 3): devices said in words, events kept per account newest first, never a password; a sign-in from a new device and repeated wrong passwords alert the account's owner; and "sign out everywhere" ends every other session; a password or email
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's report and tasks, and the series written from the principles and
 - `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
+- `tests/test_self_merges.py`: MIA's own changes going in on Claude's pass, the daily summary and the Undo (core/self_merges.py, DEC-0225).
+- `tests/test_self_repair.py`: MIA putting her own services right and telling Zac after (core/self_repair.py, DEC-0222).
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.
 - `tests/test_sensors.py`: tests/test_sensors.py — sensors that send their own readings (core/sensors.py): a sensor added by a person gets a key shown once and kept as a hash; its readings go through its app's own reading action (the Lab, Power, the Greenhouse) as that person; a key does nothing else, a reading must be a numb
 - `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
@@ -1395,7 +1401,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-115 files, 21,333 lines
+115 files, 21,365 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she

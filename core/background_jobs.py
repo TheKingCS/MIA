@@ -84,6 +84,7 @@ JOBS: tuple[tuple[str, int, str], ...] = (
     ("online", 60, "_check_online"),  # the connection dropping or returning; "remind me when I'm back online"
     ("mission_auto_assignment", 300, "_check_mission_auto_assignment"),
     ("world_intel", 600, "_check_world_intel"),  # World Intelligence: due watches run, new finds offered (DEC-0170)
+    ("self_repair", 300, "_check_self_repair"),  # she restarts Ollama, reloads her model, re-runs a stuck job (DEC-0222)
 )
 
 # The once-a-day checks, in the order they run: (name, the method). Each has its own "already ran today" gate.
@@ -117,6 +118,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("loops", "_check_loops"),
     ("night_school", "_check_night_school"),
     ("self_report", "_check_self_report"),
+    ("self_changes", "_check_self_changes"),
     ("capability_gaps", "_check_capability_gaps"),
     ("seasons_of_memory", "_check_seasons_of_memory"),
     ("operating_journal", "_check_operating_journal"),
@@ -152,7 +154,7 @@ class BackgroundJobs:
     def schedule(self, scheduler, first_after: Optional[float] = None) -> None:
         """Puts every job in JOBS on the scheduler with its interval (the scheduler runs each under the store
         lock), and gives the scheduler the say on which jobs wait (a "stop everything" first, core/stop.py, then
-        homeostasis's easing off) and who hears of a backoff. Asks core/stop.py once first, so a "stop everything"
+        homeostasis's easing off) and who hears of a backoff, and keeps it for her self-repair (core/self_repair.py). Asks core/stop.py once first, so a "stop everything"
         kept from before a restart is known to `grants.require` from the start (both the PC and the server boot here).
         `first_after` is passed on for each job's first run (None: one interval from now, as the timers did)."""
         try:
@@ -164,6 +166,7 @@ class BackgroundJobs:
         for name, seconds, method in JOBS:
             scheduler.add(name, seconds, getattr(self, method), first_after=first_after)
         scheduler.defer = self._defer_reason  # a stop-everything first, then easing off (DEC-0181, DEC-0173)
+        self._scheduler = scheduler  # her self-repair re-runs a job that keeps failing (core/self_repair.py)
         scheduler.on_backoff = self.homeostasis.backing_off
 
     def _defer_reason(self, name: str) -> str:
@@ -373,6 +376,25 @@ class BackgroundJobs:
         from core import self_report
 
         self._offers.extend(self_report.offer(self.context, now))
+
+    def _check_self_changes(self, now: datetime, today_iso: str) -> None:
+        """The daily summary of the changes she made to herself that went in on Claude's pass (core/self_merges.py,
+        DEC-0225), to the PC's owner, through the gate, each with how to undo it."""
+        from core import self_merges
+
+        self._offers.extend(self_merges.offer(self.context, now))
+
+    def _check_self_repair(self) -> None:
+        """Every five minutes (core/self_repair.py, DEC-0222): Ollama started again if it stopped, her model reloaded,
+        a job that keeps failing run again; what she did is told through the gate."""
+        from core import self_repair
+
+        if not self_repair.check(self.context, getattr(self, "_scheduler", None)):
+            return
+        gate = getattr(self.context, "communication", None)
+        for candidate in self_repair.offer(self.context):
+            if gate is not None:
+                gate.offer(candidate)
 
     def _check_capability_gaps(self, now: datetime, today_iso: str) -> None:
         """Self-enablement (core/capability_gaps.py, step 9): what she was asked and couldn't do, grouped; a

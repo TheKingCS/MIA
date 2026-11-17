@@ -5,6 +5,12 @@ core.assistant_self_actions
 MIA about herself (2026-10-21, the intelligence spec's first slice):
 "What AI model are you using?" answered from the runtime
 (core/model_registry.py), never from the model's guess about itself.
+
+And her care of herself (DEC-0222, DEC-0225; Zac, 2026-11-17, Q-76 to Q-78):
+what she changed in herself (core/self_merges.py) and undoing one
+(`lab.revert`, after he says yes to the change she names), what she put
+right (core/self_repair.py), and what she can never change
+(core/protected_list.py).
 """
 
 from __future__ import annotations
@@ -203,4 +209,74 @@ def register_capability_actions(registry: AssistantActionRegistry) -> None:
                          "how are you built", "how were you built", "mia's design", "your design", "how does mia",
                          "which decision"),
         subjects=("decide", "decision", "design", "mia", "you"),
+    ))
+
+
+def _action_undo_my_change(context, arguments: dict) -> str:
+    """Tool undo_my_change: names the change first; with confirm, after he said yes, the lab takes it back out
+    (`lab.revert`, approved by his yes)."""
+    from core.actions import ActionError
+    from core.lab_actions import _describe_revert
+
+    params = {"proposal_id": str(arguments.get("change") or "").strip()}
+    if not params["proposal_id"]:
+        from core import self_merges
+
+        return self_merges.said() + " Which one should I undo? Tell me its number."
+    try:
+        card = _describe_revert(context, params)
+    except ActionError as problem:
+        return str(problem)
+    if str(arguments.get("confirm", "")).lower() not in ("true", "yes", "1"):
+        return card + ". Shall I? Say yes and I'll undo it."
+    actions = getattr(context, "actions", None)
+    if actions is None:
+        return "I can't undo from here."
+    done = actions.approve(context, actions.propose(context, "lab.revert", params).proposal_id)
+    return str(done.result)
+
+
+def register_self_care_actions(registry: AssistantActionRegistry) -> None:
+    """Registers my_own_changes, undo_my_change, what_i_put_right and what_i_cant_change."""
+    registry.register(AssistantAction(
+        name="my_own_changes", domain="system",
+        description="The changes MIA made to her own code that went in on Claude's pass lately, each with its number "
+                    "(core/self_merges.py, DEC-0225).",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: __import__("core.self_merges", fromlist=["said"]).said(),
+        trigger_phrases=("what did you change in yourself", "changes you made to yourself", "your own changes",
+                         "what have you changed about yourself", "did you change yourself"),
+        subjects=("change", "changes", "yourself"),
+    ))
+    registry.register(AssistantAction(
+        name="undo_my_change", domain="system",
+        description="Undo one change MIA made to her own code, by its number: say what it is first, and only with "
+                    "confirm after the person said yes.",
+        parameters={"type": "object", "properties": {
+            "change": {"type": "string", "description": "The change's number, like the one in her summary."},
+            "confirm": {"type": "boolean", "description": "True only after the person said yes to undoing it."}},
+            "required": []},
+        handler=_action_undo_my_change,
+        trigger_phrases=("undo my change", "undo your change", "take that change out", "undo the change you made"),
+        subjects=("change", "undo"),
+    ))
+    registry.register(AssistantAction(
+        name="what_i_put_right", domain="system",
+        description="What MIA restarted or ran again in herself lately when a check failed (Ollama, her model, a "
+                    "stuck job), and whether it worked (core/self_repair.py, DEC-0222).",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: __import__("core.self_repair", fromlist=["said"]).said(),
+        trigger_phrases=("did you restart", "what did you fix in yourself", "what did you put right",
+                         "did anything stop working"),
+        subjects=("restart", "repair"),
+    ))
+    registry.register(AssistantAction(
+        name="what_i_cant_change", domain="system",
+        description="The parts of herself MIA can never change, whoever writes the change: her safety rules, what she "
+                    "may do on her own, the stop, the lab and what judges her (core/protected_list.py, DEC-0225).",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=lambda context, arguments: __import__("core.protected_list", fromlist=["said"]).said(),
+        trigger_phrases=("what can't you change", "what can you never change", "your protected list",
+                         "what are you not allowed to change"),
+        subjects=("protected", "safeguards"),
     ))

@@ -50,7 +50,7 @@ KEY = "mia.stop_everything"  # the person's setting: {"since", "until"} while a 
 # watching the connection (which is how "remind me when I'm back online" works).
 JOBS_THAT_WAIT = frozenset({"world_intel", "mission_auto_assignment", "inbox", "inbox_mail", "finance_snapshots",
                             "homestead_snapshots", "lite_captures"})
-JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online"})
+JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online", "self_repair"})
 # Daily checks (DAILY_CHECKS) that wait: her own work, things she makes or changes, and anything that goes online.
 # The rest only notice something and offer a message, which the gate holds until he resumes.
 CHECKS_THAT_WAIT = frozenset({"workflows", "night_school", "good_news", "chronicle", "chronicle_issue",
@@ -61,7 +61,7 @@ CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "greenhouse", "grow_alert", "
                                     "recurring_mission", "calendar_digest", "birthday", "warranty",
                                     "insurance_renewal", "promises"})
 # The rest only notice something and offer a message: they run, and the gate holds what they offer until he resumes.
-CHECKS_THAT_ONLY_OFFER = frozenset({"checkin", "budget_nudge", "smart_suggestion", "maintenance_insight",
+CHECKS_THAT_ONLY_OFFER = frozenset({"self_changes", "checkin", "budget_nudge", "smart_suggestion", "maintenance_insight",
                                     "mission_insight", "pattern_insight", "skill_pattern_insight",
                                     "skill_decline_insight", "skill_momentum_insight", "walkthrough_suggestion",
                                     "journal_reflection", "memory_callback", "season", "operating_journal",

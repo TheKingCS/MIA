@@ -189,6 +189,10 @@
    "status": "none",
    "why": "the nightly backup either is made or is not: a failed night is kept as backup.auto_problem, shown on the Backups screen and logged, and tried again the next night; there is no judgement of MIA's in it to improve"
   },
+  "check:self_changes": {
+   "status": "none",
+   "why": "the daily summary only reports what went in on Claude's pass (core/self_merges.py, DEC-0225); whether her changes were good is measured where they are made: Night School's grades, the dev ledger and his Undo"
+  },
   "check:birthday": {
    "status": "none",
    "why": "a greeting once a year: there is nothing in how it lands to learn from"

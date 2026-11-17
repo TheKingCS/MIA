@@ -42,6 +42,7 @@ EFFECTS: dict[str, tuple[str, str, str]] = {
     "map.tak_share": ("outside", "irreversible", "sends his places to TAK apps on the network, where they stay"),
     # system
     "lab.approve": ("system", "compensable", "merges a change into MIA's own code; a later change can revert it"),
+    "lab.revert": ("system", "compensable", "takes one of her changes back out of her code; it can be retried"),
     # device: can't be put back
     "myfile.delete": ("device", "irreversible", "deletes one of his files or folders for good"),
     "track.delete": ("device", "irreversible", "deletes a music file from the disk"),

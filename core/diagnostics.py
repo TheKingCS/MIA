@@ -23,7 +23,9 @@ screen's hardware list (This PC), saying only what was read; and
 `recent_problems()` reads the newest warnings and errors from MIA's own log
 ("any errors in your log?" reads them out: `log_words`). `repository_view()`
 puts the inspection of her own repository (T-0020: where her docs disagree
-with it) on the same screen, grouped.
+with it) on the same screen, grouped; `self_view()` adds her care of herself
+(DEC-0222, DEC-0225): the changes she made to herself with their Undo, what
+she put right, and what she can never change.
 """
 
 from __future__ import annotations
@@ -32,6 +34,10 @@ import fnmatch
 import re
 from pathlib import Path
 from typing import Optional
+
+from core.logger import get_logger
+
+log = get_logger(__name__)
 
 OPS = {"<": lambda a, b: a < b, "<=": lambda a, b: a <= b, ">": lambda a, b: a > b, ">=": lambda a, b: a >= b,
        "==": lambda a, b: a == b, "!=": lambda a, b: a != b, "present": lambda a, b: a not in (None, "", [], {}),
@@ -219,10 +225,25 @@ def repository_view(report) -> dict:
             "groups": [g for g in groups if g["items"]]}
 
 
+def self_view() -> dict:
+    """Her care of herself, for Diagnostics (DEC-0222, DEC-0225): the changes she made to herself lately, each with
+    its Undo (core/self_merges.py), what she put right (core/self_repair.py), and what she can never change
+    (core/protected_list.py). A part that can't be read is left empty, never guessed."""
+    out = {"changes": [], "repairs": [], "protected": []}
+    for key, read in (("changes", lambda: __import__("core.self_merges", fromlist=["recent"]).recent()),
+                      ("repairs", lambda: __import__("core.self_repair", fromlist=["recent"]).recent()),
+                      ("protected", lambda: __import__("core.protected_list", fromlist=["groups"]).groups())):
+        try:
+            out[key] = read()
+        except Exception:  # noqa: BLE001 - one side panel never stops the page
+            log.exception("Couldn't read %s for Diagnostics", key)
+    return out
+
+
 def screen(context, inspect=None) -> dict:
     """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
-    passive inspection, the hardware list it read (hardware), the log's newest problems (recent_problems), and where
-    her docs disagree with her own repository (repository_view)."""
+    passive inspection, the hardware list it read (hardware), the log's newest problems (recent_problems), where
+    her docs disagree with her own repository (repository_view), and her care of herself (self_view)."""
     if inspect is None:
         from core.inspection import inspect
     try:
@@ -246,7 +267,8 @@ def screen(context, inspect=None) -> dict:
         repo = repository_view(inspect(context, "repository"))
     except Exception:  # noqa: BLE001 - her repository is a side panel; the PC's check-up stands without it
         repo = repository_view(None)
-    return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems(), "repository": repo}
+    return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems(), "repository": repo,
+            "self": self_view()}
 
 
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),

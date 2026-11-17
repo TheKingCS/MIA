@@ -119,12 +119,38 @@ def _reject(context, params) -> str:
     return f"Rejected: {p.title}. The lab copy is gone."
 
 
+def _describe_revert(context, params) -> str:
+    """The sentence the approval card shows for `lab.revert` (Propose); raises ActionError when it can't be done. Only
+    a change that's in can be undone."""
+    _grown_up(context)
+    p = _proposal(params)
+    if p.status != "merged":
+        raise ActionError(f"Only a change that's in can be undone; this one is {p.status}.")
+    return f"Undo “{p.title}” (take it back out of MIA; the history keeps both)"
+
+
+def _revert(context, params) -> str:
+    """Does `lab.revert` once approved: the lab reverts the merge (core/dev_lab.revert) and her record of her own
+    changes says it was undone (core/self_merges.py, DEC-0225)."""
+    from core import dev_lab, self_merges
+
+    _grown_up(context)
+    p = _proposal(params)
+    try:
+        dev_lab.revert(p.proposal_id)
+    except (ValueError, RuntimeError) as exc:
+        raise ActionError(str(exc)) from None
+    self_merges.mark_undone(p.proposal_id)
+    return f"Undone: {p.title}. It's out the next time MIA restarts."
+
+
 _KINDS = [
     ActionType("lab.propose", "Start in the lab", {"title": "", "problem": "", "evidence": "", "plan": ""},
                _describe_propose, _propose),
     ActionType("lab.approve", "Put it in", {"proposal_id": "the proposal"}, _describe_approve, _approve),
     ActionType("lab.reject", "Reject", {"proposal_id": "the proposal", "why": ""},
                lambda c, p: f"Reject the lab proposal “{_proposal(p).title}”", _reject),
+    ActionType("lab.revert", "Undo it", {"proposal_id": "the change"}, _describe_revert, _revert),
 ]
 LAB_ACTIONS = {k.kind: k for k in _KINDS}
 ACTION_TYPES.update(LAB_ACTIONS)

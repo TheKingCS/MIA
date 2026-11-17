@@ -81,7 +81,7 @@ from core.assistant_progress_actions import register_progress_actions
 from core.assistant_proposal_actions import register_proposal_actions
 from core.assistant_records_actions import register_records_actions
 from core.assistant_screen_tools import register_screen_tools
-from core.assistant_self_actions import register_capability_actions, register_self_actions
+from core.assistant_self_actions import register_capability_actions, register_self_actions, register_self_care_actions
 from core.assistant_starter_actions import register_starter_actions
 from core.assistant_subscription_actions import register_subscription_actions
 from core.assistant_tagging_actions import register_tagging_actions
@@ -177,7 +177,8 @@ class AssistantTools:
         the one place independent core services get wired together
         (tools in their own files register here too, such as
         core/assistant_screen_tools.py: look it up online, what isn't
-        working, past conversations).
+        working, past conversations; core/assistant_self_actions.py: her
+        model, and her care of herself, DEC-0222/0225).
         Every handler below is a `@staticmethod` — a pure function of
         (context, arguments) — except that none of them actually need
         `self` at all; `context.module_manager` (set right above) is
@@ -208,6 +209,7 @@ class AssistantTools:
         register_undo_actions(self.context.assistant_actions)
         register_today_actions(self.context.assistant_actions)
         register_self_actions(self.context.assistant_actions)  # "what model are you?" from the runtime
+        register_self_care_actions(self.context.assistant_actions)  # her own changes, repairs, protected list
         register_capability_actions(self.context.assistant_actions)  # what MIA can do, how she's built (DEC-0041)
         register_specialist_actions(self.context.assistant_actions)  # her specialists' workbooks (DEC-0109)
         register_teamwork_actions(self.context.assistant_actions)  # a project's workspace and team (T2)

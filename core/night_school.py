@@ -56,9 +56,13 @@ of the window, or when her teacher is resting at a usage limit:
    the dev window's Night School panel and by `python -m tools.night_school`.
 
 Practice never merges. An exercise her teacher marks as real progress on the
-plan, which she passes, stays in the lab as a proposal for Zac
-(`python -m tools.lab approve <id>`); every other attempt is rejected once
-graded. This file is on the lab's protected list: she can't grade herself.
+plan, which she passes, stays in the lab as a proposal; each night one is
+reviewed (7a1b, core/self_merges.py, DEC-0225) and Claude's pass puts it in
+through the lab (suite before and after, reverted by itself on a new
+failure), told to Zac in the next day's summary with an Undo. Anything else
+waits for him (`python -m tools.lab approve <id>`); every other attempt is
+rejected once graded. This file is on the lab's protected list: she can't
+grade herself.
 """
 
 from __future__ import annotations
@@ -517,7 +521,8 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     """One night of school, as far as the window, the budget and her teacher allow: her progress, what she'd
     study, the focus, her teacher's exercises (one for her curriculum, DEC-0107, chosen from and recorded on her own
     learning paths, DEC-0112), her lessons graded by code, a shadow
-    attempt at real work, an inspection of one specialist's chosen model (DEC-0200), study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks, the
+    attempt at real work, an inspection of one specialist's chosen model (DEC-0200), one of her kept changes reviewed and
+    put in on Claude's pass (core/self_merges.py, DEC-0225), study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks, the
     weekly self-audit (DEC-0108) and the shared development history brought up to date (core/dev_history.py,
     T-0021). Returns the night's record."""
     from core import dev_ledger, loop_coverage, loops
@@ -696,6 +701,20 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
                 calls += 1
         except Exception as problem:
             record["notes"].append(f"the inspection didn't finish: {str(problem)[:120]}")
+
+    # 7a1b. Her own changes, on Claude's pass (core/self_merges.py, DEC-0225): one kept exercise reviewed; a pass
+    # merges through the lab (suite before and after, reverted by itself on a new failure), told in tomorrow's summary
+    teacher_now = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
+    if cfg.get("self_merges", True) and teacher_now and not STOP_FILE.exists() and left() > 30:
+        from core import self_merges
+
+        try:
+            reviewed = self_merges.review_and_merge(lambda prompt: ask(teacher_now, prompt), teacher_now, lab=lab)
+            if reviewed:
+                record["self_merges"] = reviewed
+                calls += 1
+        except Exception as problem:
+            record["notes"].append(f"her own changes weren't reviewed: {str(problem)[:120]}")
 
     # 7a2. Study hall (core/specialists.py, DEC-0109): one of her specialists studies, in turn
     teacher_now = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))

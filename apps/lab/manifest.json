@@ -44,6 +44,7 @@
       "lab.approve",
       "lab.propose",
       "lab.reject",
+      "lab.revert",
       "lab_reading.add",
       "lab_reading.delete"
     ],
@@ -55,6 +56,7 @@
       "lab.approve": "act_with_approval",
       "lab.propose": "act_within_grant",
       "lab.reject": "act_within_grant",
+      "lab.revert": "act_with_approval",
       "lab_reading.add": "act_within_grant",
       "lab_reading.delete": "act_with_approval"
     },

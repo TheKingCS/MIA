@@ -11,13 +11,13 @@ from core.scheduler import Scheduler
 # added since (World Intelligence's watches, DEC-0170).
 THE_TIMERS = {"alarms": 20, "power": 30, "daily_occasions": 300, "finance_snapshots": 60, "homestead_snapshots": 60,
               "lite_captures": 60, "inbox": 30, "inbox_mail": 600, "online": 60, "mission_auto_assignment": 300,
-              "world_intel": 600}
+              "world_intel": 600, "self_repair": 300}
 THE_DAILY_CHECKS = (
     "birthday calendar_digest checkin budget_nudge smart_suggestion maintenance_insight mission_insight "
     "pattern_insight skill_pattern_insight skill_decline_insight skill_momentum_insight recurring_mission rewards "
     "walkthrough_suggestion journal_reflection warranty chronicle memory_callback grow_alert season "
     "insurance_renewal findings obligation_reminders loop fix_report workflows loops night_school self_report "
-    "capability_gaps seasons_of_memory operating_journal good_news chronicle_issue promises vault_captions "
+    "self_changes capability_gaps seasons_of_memory operating_journal good_news chronicle_issue promises vault_captions "
     "dependency_audit system_map direction_nudge capability_reminder momentum greenhouse auto_backup").split()
 
 
@@ -27,9 +27,10 @@ def test_every_timer_the_desktop_had_is_a_job_with_the_same_interval():
 
 
 def test_every_daily_check_is_still_there_in_the_same_order():
-    assert [name for name, _ in DAILY_CHECKS] == THE_DAILY_CHECKS and len(DAILY_CHECKS) == 43
+    """The daily checks, in order: the 43 the desktop had, and the summary of her own changes (DEC-0225)."""
+    assert [name for name, _ in DAILY_CHECKS] == THE_DAILY_CHECKS and len(DAILY_CHECKS) == 44
     assert all(callable(getattr(BackgroundJobs, method)) for _, method in DAILY_CHECKS)
-    assert len({method for _, method in DAILY_CHECKS}) == 43  # no check listed twice under two names
+    assert len({method for _, method in DAILY_CHECKS}) == 44  # no check listed twice under two names
 
 
 def test_the_jobs_need_no_qt_and_nothing_from_the_gui_or_the_modules():

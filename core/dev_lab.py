@@ -21,10 +21,12 @@ reaches the running MIA only when Zac approves.
   refused, whatever it is. Then the full suite runs in the lab and its
   failures are compared with the same suite at the starting commit: a
   proposal is ready only with no new failure.
-- **Approved by Zac only** (an action that's never a child's, never the
-  glasses'): the branch is merged into the running copy, the suite runs
-  again, and a new failure reverts the merge by itself (`git revert`,
-  history kept). MIA restarts to load it.
+- **Approved by Zac** (an action that's never a child's, never the
+  glasses'), **or, for what Night School keeps, by Claude's pass**
+  (core/self_merges.py, DEC-0225, Zac's yes to Q-76): the branch is merged
+  into the running copy, the suite runs again, and a new failure reverts
+  the merge by itself (`git revert`, history kept). MIA restarts to load
+  it. `revert` is his Undo on a change that's in.
 
 Proposals are kept on this device (`data/lab/proposals.json`), and beside
 them each coder attempt's method trace (`data/lab/traces/<id>.json`, T-0025):
@@ -79,6 +81,12 @@ PROTECTED = (
     # Night School grades her and keeps the map of what her loops watch (DEC-0100, DEC-0101).
     "core/night_school.py", "core/loop_coverage.py", "tools/night_school.py", "core/dev_checks.py",
     "core/corrections.py", "core/benchmarks.py", "tools/weekly_bench.py", "core/capability_gaps.py", "core/good_news.py",
+    # What she may do on her own, how she's stopped, and what judges her models and her own changes (DEC-0225;
+    # Zac, 2026-11-17, Q-78): her grants, the stop, browser safety, every kind's reach, the model inspection, the
+    # lab's actions, her merges and repairs, and the list itself (core/protected_list.py says it in words).
+    "core/grants.py", "core/kind_grants.py", "core/stop.py", "core/browser_safety.py", "core/action_effects.py",
+    "core/model_inspection.py", "core/lab_actions.py", "core/self_merges.py", "core/self_repair.py",
+    "core/protected_list.py",
 )
 DRAFTED, WRITTEN, READY, NOT_READY, MERGED, REVERTED, REJECTED = (
     "drafted", "written", "ready", "not ready", "merged", "reverted", "rejected")
@@ -456,6 +464,21 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
         p.status, p.note = REVERTED, "It broke here: " + ", ".join(fresh) + ". Reverted; the history keeps both."
     else:
         p.status, p.note = MERGED, "In. Restart MIA to load it."
+    return _put(p)
+
+
+def revert(proposal_id: str, why: str = "") -> Proposal:
+    """Takes a merged proposal back out of the running copy (Zac's Undo on one of her own changes, DEC-0225): its merge
+    commit is reverted, history kept, and it can be retried later. ValueError for one that isn't in, or whose files
+    have unsaved edits here."""
+    p = get(proposal_id)
+    if p.status != MERGED or not p.merged_as:
+        raise ValueError(f"Only a change that's in can be undone; this one is {p.status}.")
+    dirty = [ln[3:] for ln in _git("status", "--porcelain").splitlines()]
+    if set(dirty) & set(p.files):
+        raise ValueError("Files it changed have unsaved edits here: " + ", ".join(sorted(set(dirty) & set(p.files))))
+    _git("revert", "-m", "1", "--no-edit", p.merged_as, author=OWNER)
+    p.status, p.note = REVERTED, (why or "Undone by Zac.") + " Restart MIA to load it; the history keeps both."
     return _put(p)
 
 
