@@ -307,9 +307,10 @@ def handle(context, prompt: str) -> Optional[str]:
     return report(stop_now(context), everything=False)
 
 
-def for_shell(context) -> Optional[dict]:
-    """What the frame shows while a stop-everything is on: {"since", "until", "line"}, else None."""
-    value = state(context)
+def for_shell(context, now: Optional[datetime] = None) -> Optional[dict]:
+    """What the frame shows while a stop-everything is on: {"since", "until", "line"}, else None. `now` is the time
+    to judge it at (the clock's, unless a test passes one)."""
+    value = state(context, now)
     if not value:
         return None
     until = datetime.fromisoformat(value["until"]) if value.get("until") else None

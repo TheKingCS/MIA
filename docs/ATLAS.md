@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1470 files, 328,412 lines; 1470 files describe themselves; 18,013 of 18,109 classes and functions are documented.
+1476 files, 329,561 lines; 1476 files describe themselves; 18,078 of 18,174 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-571 files, 164,648 lines; 8,497 of 8,583 classes and functions documented
+574 files, 165,488 lines; 8,544 of 8,630 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -198,6 +198,8 @@
 - `core/dungeon_master.py`: Living Worlds Phase 2 (DEC-0134): a playable turn. The player says what they do; the **model proposes** narrative and the state changes it implies; **authoritative code validates and commits** them; MIA narrates the committed result. This is the spec's hardest rule (§9.1) made real — the language mo
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
 - `core/energy_manager.py`: Manual energy/utility source tracking — 2026-09-09, the last of four "Field Manual" brainstorm items the user picked this session. Original seed: "Solar, generator, propane are currently just Maintenance usage logs by convention — could be a real Power/Energy expansion once real monitoring hardware 
+- `core/eng_bench.py`: "Can this model do engineering for MIA?" measured, not assumed (the local specialists plan, S0a; DEC-0197). The existing model bench (core/model_bench.py) only measures whether a model picks the right tool in conversation; this one measures engineering answers.
+- `core/eng_calcs.py`: MIA's engineering calculators (the local specialists plan, S2 first part; DEC-0197): where a specialist's numbers come from.
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), "trac
@@ -388,6 +390,7 @@
 - `core/push_subscription_manager.py`: Persists the Web Push subscriptions a profile's browser/PWA has registered — the endpoint URL + keys `PushManager.subscribe()` returns, per the standard Web Push API. One profile can have more than one subscription (a phone and a laptop, say), so this is a list keyed by profile_id, not a single fiel
 - `core/push_to_talk_source.py`: The headless counterpart to `core/push_to_talk_trigger.py` — that module is a `QObject` (needs Qt signals to marshal a GPIO interrupt back onto the GUI thread), which `core/voice_loop.py` deliberately avoids so a Core deployment never needs PySide6/Qt installed at all (see `core/core_runtime.py`'s d
 - `core/push_to_talk_trigger.py`: Unifies the two ways a push-to-talk press can originate — a real GPIO button interrupt in kiosk deployment, or the on-screen "Hold to Talk" button in dev (docs/ROADMAP.md milestone 5.3, docs/HARDWARE.md's Voice interface section) — behind one `pressed`/`released` signal pair, so modules/assistant/mo
+- `core/quantities.py`: Numbers with their units, for MIA's engineering calculators (the local specialists plan, S0a; DEC-0197).
 - `core/question_plans.py`: Question plans (DEC-0052 step 2a; docs/INTELLIGENCE_BENCHMARK.md section 4). The detailed questions people ask most ("What are my priorities today?", "Which debt should I prioritize?") each get a plan: the lookups it needs, run by code at once, the arithmetic between them done by code, and every lin
 - `core/questlines.py`: Questlines and seasons (DEC-0028, the game layer's seventh idea; Zac, 2026-10-17): linked chapters ("Harvest Home: Ch. 1 Bring it in → Ch. 2 Put it up → Ch. 3 Put the beds to bed"), seasonal starters, and MIA as the quest-giver and narrator.
 - `core/quick_capture.py`: Quick capture (2026-10-01): one box, reachable from anywhere (the "+" in the header, or Ctrl+Shift+Space), for whatever is on your mind: "milk and eggs", "changed the truck's oil today", "dentist Tuesday at 2", "Pat's email is pat@example.com", "idea: a rain barrel by the shed". MIA files it where i
@@ -815,7 +818,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-44 files, 4,831 lines; 154 of 154 classes and functions documented
+45 files, 4,911 lines; 157 of 157 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -831,6 +834,7 @@
 - `tools/dev_window.py`: The development board in its own window (Zac, 2026-11-03: "I want this in a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it"). The same board as `web/dev.html` inside MIA (core/work_dashboard.py), without MIA running or a s
 - `tools/docs.py`: Working down the documentation backlog (DEC-0104, core/code_atlas.py): see what a file still lacks, write the docstrings (by reading the code: what it does, and how when that isn't plain), and put them in place.
 - `tools/dump_assistant_capabilities.py`: Regenerates `docs/ASSISTANT_CAPABILITIES.md`'s tool-registry table directly from the real, live `AssistantActionRegistry` (`core/application.py`'s `_register_assistant_actions()`) — never hand-typed, so this can't silently drift the way a hand-maintained list would (this project has hit that exact s
+- `tools/eng_bench.py`: Runs MIA's engineering bench (core/eng_bench.py) against a model on this computer's Ollama, to see whether it can do a specialist's work (the local specialists plan, S0b; DEC-0197):
 - `tools/export_state.py`: Print (or save) a person's Life State v2 as JSON, computed from their data (core/context_assembler.py), checked against the published schema (docs/schema/life_state.schema.json). Engine Phase 1, 2026-10-05.
 - `tools/fix_report.py`: The Fix-It Log's daily report (core/failure_log.py, DEC-0049), for Claude on the PC: each person's open issues, worst first, with examples and the test to write first. The report is sealed on disk like the log it comes from (DEC-0126), so it's read through this, never opened as a file:
 - `tools/gaps.py`: The PC owner's capability gaps (core/capability_gaps.py, build plan step 9): what MIA was asked and couldn't do, grouped, with what each would take. The requests are the person's own words, so they're read here, on this PC, and never copied into the repo.
@@ -864,7 +868,7 @@
 
 ## tests/: the test suite: what each part must do
 
-504 files, 85,261 lines; 7,185 of 7,195 classes and functions documented
+506 files, 85,490 lines; 7,200 of 7,210 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1000,6 +1004,8 @@
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths.
+- `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators.
+- `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, and a missing input named, never guessed.
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.

@@ -16,6 +16,22 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   code computes every number, a second local model checks. Order: S0a the units module and engineering bench
   (Fable), S1 the worksheet engine (Fable), S2 calculators with electrical first (Opus), S4 the roster track from
   week one (Opus), S0b the measurement run **on the PC**.
+- **Zac, 2026-11-17: "Lets build."** He wants specialists for embedded systems and homestead crafts for sure, and is
+  open to buying better hardware for the models (`MIA_OS_LOCAL_SPECIALISTS_PLAN.md` section 9).
+- **Built (Fable): S0a and the start of S2** (K-0275):
+  - `core/quantities.py`: numbers with units; adding metres to volts is refused.
+  - `core/eng_calcs.py`: 13 calculators (electrical 5, embedded 5, structural 1, crafts 2), each tested against an
+    example worked by hand; a missing input is named, never guessed; safety-critical ones carry the caveat.
+  - `core/eng_bench.py` and `python -m tools.eng_bench --model <name>`: 18 tasks whose answers code checks, asked two
+    ways (the model alone, and the model choosing calculators); counts right, wrong, **guessed**, asked, unreadable.
+  - Two new specialists: **Embedded systems** and **Homestead crafts** (18 now).
+  - Fixed on the way: `tests/test_stop.py` had a test that only passed on 2026-11-16 (it used the real clock).
+- **Zac at the PC (S0b):** pull the candidate models in Ollama, then `python -m tools.eng_bench --model <name>` for
+  each (and for `qwen2.5:14b` as the baseline). Results land in `work/eng_bench/`; commit them.
+- **Next:** S1, the worksheet engine (`core/specialist_work.py`: frame, look up, calculate, answer, check; a voice
+  tool and a screen so the calculators are usable) **(Fable)**; S2 more calculators (radio, plumbing, HVAC,
+  acoustics, greenhouse) **(Opus)**; S4 the next batch of specialists (greenhouse systems, IoT, acoustics, textile)
+  **(Opus)**.
 - The teams document (`MIA_OS_SPECIALIZED_AGENT_TEAMS.md`) still says cloud models in its sections 1 and 12: read it
   with DEC-0197.
 

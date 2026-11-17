@@ -124,6 +124,29 @@ SPECIALISTS: tuple[Specialist, ...] = (
                             "How do you wire a sensor to an ESP32?"),
                words=("3d print", "cad", "solder", "arduino", "esp32", "laser", "cnc", "weld", "prototype",
                       "filament", "woodwork")),
+    Specialist("embedded", "Embedded systems", "Small computers in real things: microcontrollers (ESP32, Arduino, "
+               "Raspberry Pi Pico), sensors and actuators, I2C, SPI and serial, power budgets and batteries, "
+               "regulators and level shifting, reading a datasheet, firmware structure, and getting a device to talk "
+               "to MIA.", skills=("Technology", "Maker"),
+               limits="Numbers come from her calculators (core/eng_calcs.py), never from memory. Mains voltage, "
+               "lithium batteries and anything worn on the body are named as dangerous, with the safe way, and say a "
+               "qualified person must check the design.",
+               starts_from=("How do you work out a battery-powered sensor's life?",
+                            "How do you choose between a linear and a switching regulator?",
+                            "How do you connect a 5 volt sensor to a 3.3 volt microcontroller safely?"),
+               words=("microcontroller", "esp32", "arduino", "pico", "firmware", "i2c", "spi", "uart", "gpio", "adc",
+                      "pwm", "sensor node", "datasheet", "regulator", "pull-up", "embedded", "breadboard", "pcb")),
+    Specialist("crafts", "Homestead crafts", "Making useful things by hand at home: fermenting and brining, candle and "
+               "soap making, leather and sewing, basketry and cordage, natural dyes, woodcraft and carving, and "
+               "keeping the tools for them.", skills=("Homestead", "Maker"),
+               limits="Quantities come from her calculators (core/eng_calcs.py) or a named recipe. Canning, curing "
+               "and anything eaten follow tested guidance and say which. Lye for soap is never sized from memory: it "
+               "comes from a tested lye calculator, with the safety gear named.",
+               starts_from=("How much salt does a vegetable ferment need?",
+                            "How do you make a container candle that burns evenly?",
+                            "What tools does a beginner need for leatherwork?"),
+               words=("ferment", "brine", "sauerkraut", "candle", "wax", "soap", "lye", "leather", "sewing", "sew",
+                      "basket", "cordage", "dye", "carving", "whittle", "craft", "knit", "weave")),
     Specialist("outdoors", "Outdoors and fieldcraft", "Being out there: navigation by map and compass and grid, "
                "hiking, camping, survival skills, weather, water, first aid in the field.", skills=("Outdoor",),
                limits="First aid is first aid: anything serious says to get emergency help.",

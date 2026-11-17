@@ -7,6 +7,8 @@
 - [Radio and communications](radio.md): 3 notes (0 confirmed), 3 open questions
 - [Strategy and preparedness](strategy.md): 0 notes (0 confirmed), 3 open questions
 - [Making and fabrication](maker.md): 0 notes (0 confirmed), 2 open questions
+- [Embedded systems](embedded.md): 0 notes (0 confirmed), 3 open questions
+- [Homestead crafts](crafts.md): 0 notes (0 confirmed), 3 open questions
 - [Outdoors and fieldcraft](outdoors.md): 0 notes (0 confirmed), 2 open questions
 - [Music and guitar](music.md): 0 notes (0 confirmed), 3 open questions
 - [Research](research.md): 0 notes (0 confirmed), 2 open questions

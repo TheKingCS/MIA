@@ -144,7 +144,8 @@ def test_it_survives_a_restart_and_ends_on_carry_on_or_at_the_time_he_named(pers
     monkeypatch.setattr(stop, "_held_known", False)  # a new process: only the person's setting remains
     assert stop.held_now(now) is False and stop.holding(person, now + timedelta(hours=1)) is True
     assert stop.held_now(now + timedelta(hours=1)) is True
-    assert stop.for_shell(person)["line"].startswith("Everything of MIA's own is stopped until")
+    # Judged at a time inside the two hours: with the real clock this test only passed on the day it was written.
+    assert stop.for_shell(person, now + timedelta(hours=1))["line"].startswith("Everything of MIA's own is stopped until")
     assert stop.holding(person, now + timedelta(hours=3)) is False and person.kept[stop.KEY] is None  # the time passed
     stop.stop_everything(person)
     assert stop.handle(person, "carry on").startswith("Carrying on") and not stop.holding(person)

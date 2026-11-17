@@ -1,0 +1,346 @@
+"""
+core.eng_calcs
+================
+
+MIA's engineering calculators (the local specialists plan, S2 first part;
+DEC-0197): where a specialist's numbers come from.
+
+Why: Zac wants specialists that do real engineering on local models. A
+local model can choose the right calculation and its inputs; it can't be
+trusted to do the arithmetic or remember a table. So every number a
+specialist gives comes from here, the way material lists come from
+`core/build_calcs.py` (DEC-0118). The model never works one out.
+
+What it is: `CALCULATORS`, each described once (`Calculator`): its
+discipline, what it works out, its inputs with their units, the rule or
+table it follows (`basis`), and whether its result is safety-critical
+(`safety`: then it carries the caveat that a qualified person must check
+it, DEC-0198 Q-57). `calculate(id, inputs)` reads the inputs with units
+(core/quantities.py), refuses a missing one by name, runs it, and returns
+the values, a sentence, the basis and the caveat.
+
+The first set: electrical (power, voltage drop, wire gauge, circuit load,
+battery runtime), embedded (LED resistor, voltage divider, battery life
+with sleep, regulator heat, ADC step), structural (floor joist), and
+homestead crafts (brine salt, candle wax). Each is checked in
+tests/test_eng_calcs.py against a worked example done by hand.
+
+Tables here are for copper wire at ordinary indoor temperatures and are a
+starting point, never a substitute for the code where the person lives.
+
+Pure logic: no I/O.
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+from typing import Callable
+
+from core.quantities import Quantity, UnitError, parse, q, unit_of
+
+CAVEAT = ("This is a draft calculation. Electrical, battery and structural work must be checked by a qualified "
+          "person and against the code where you live before anything is built or energised.")
+
+# Copper wire by AWG: (ohms per 1000 ft at 20 degC, ampacity at the 60 degC column, the largest breaker allowed).
+# The 60 degC column is the conservative one for ordinary cable; 14, 12 and 10 AWG are capped at 15, 20 and 30 A.
+AWG = {14: (2.525, 15, 15), 12: (1.588, 20, 20), 10: (0.9989, 30, 30), 8: (0.6282, 40, 40), 6: (0.3951, 55, 50),
+       4: (0.2485, 70, 70), 2: (0.1563, 95, 90)}
+SMALL_AWG = {24: 25.67, 22: 16.14, 20: 10.15, 18: 6.385, 16: 4.016}  # ohms per 1000 ft, for low-voltage runs
+E12 = (10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82)  # standard resistor values per decade
+
+
+class CalcError(ValueError):
+    """A calculation that can't be done as asked; its message is a plain sentence (what's missing, or why)."""
+
+
+@dataclass(frozen=True)
+class Calculator:
+    """One calculator: its id, discipline, name, what it works out, its inputs (name -> (unit, what it is, the
+    default as text or None when it must be given)), what it runs, the rule or table it follows, and whether the
+    result is safety-critical."""
+    id: str
+    discipline: str
+    label: str
+    about: str
+    inputs: dict
+    run: Callable[..., dict] = field(repr=False, compare=False, default=None)
+    basis: str = ""
+    safety: bool = False
+
+
+def _ohms_per_ft(awg: int) -> float:
+    """Copper's resistance per foot for a gauge in the tables. CalcError for one that isn't."""
+    if awg in AWG:
+        return AWG[awg][0] / 1000
+    if awg in SMALL_AWG:
+        return SMALL_AWG[awg] / 1000
+    raise CalcError(f"I don't have {awg} AWG in my table (I have {', '.join(str(a) for a in sorted({**AWG, **SMALL_AWG}))}).")
+
+
+def _gauge(value: Quantity) -> int:
+    """The AWG number from a plain-number input."""
+    return int(round(value.value))
+
+
+def _power(volts: Quantity, amps: Quantity) -> dict:
+    """Power from voltage and current."""
+    watts = (volts * amps).to("W")
+    return {"values": {"power": watts}, "said": f"{volts} at {amps} is {watts}."}
+
+
+def _voltage_drop(volts: Quantity, amps: Quantity, length: Quantity, gauge: Quantity) -> dict:
+    """The drop over a two-wire copper run: out and back, so twice the one-way length."""
+    awg = _gauge(gauge)
+    ohms = q(2 * length.number("ft") * _ohms_per_ft(awg), "ohm")
+    drop = (amps * ohms).to("V")
+    percent = q(100 * drop.si / volts.si, "")
+    return {"values": {"drop": drop, "percent": percent, "at_load": (volts - drop).to("V")},
+            "said": f"{awg} AWG copper, {length} one way at {amps}: a drop of {drop} ({percent.value:.1f}% of {volts}), "
+                    f"leaving {(volts - drop).to('V')} at the load."}
+
+
+def _wire_gauge(volts: Quantity, amps: Quantity, length: Quantity, max_drop: Quantity, continuous: Quantity) -> dict:
+    """The smallest copper gauge that carries the current and keeps the drop within the limit."""
+    need = amps.number("A") * (1.25 if continuous.value else 1.0)  # a continuous load is sized at 125%
+    limit = max_drop.si * 100 if max_drop.unit == "%" else max_drop.value
+    for awg in sorted(AWG, reverse=True):
+        _ohms, ampacity, breaker = AWG[awg]
+        if ampacity < need:
+            continue
+        drop = _voltage_drop(volts, amps, length, q(awg))["values"]
+        if drop["percent"].value <= limit:
+            return {"values": {"gauge": q(awg), "ampacity": q(ampacity, "A"), "breaker": q(breaker, "A"),
+                               "drop": drop["drop"], "percent": drop["percent"]},
+                    "said": f"{awg} AWG copper: it carries {ampacity} A (you need {need:.4g} A"
+                            f"{', sized at 125% for a continuous load' if continuous.value else ''}), and over {length} "
+                            f"one way the drop is {drop['percent'].value:.1f}% (limit {limit:g}%). Largest breaker: "
+                            f"{breaker} A."}
+    raise CalcError(f"Nothing up to 2 AWG in my table carries {need:.4g} A over {length} within {limit:g}% drop. "
+                    f"This needs a larger conductor than I can size.")
+
+
+def _circuit_load(breaker: Quantity, volts: Quantity) -> dict:
+    """What a breaker may carry: its full rating, and 80% of it for a load that runs three hours or more."""
+    steady = (breaker * 0.8).to("A")
+    return {"values": {"continuous_amps": steady, "continuous_watts": (steady * volts).to("W"),
+                       "peak_watts": (breaker * volts).to("W")},
+            "said": f"A {breaker} breaker at {volts}: up to {(breaker * volts).to('W')} briefly, and {steady} "
+                    f"({(steady * volts).to('W')}) for a load that runs three hours or more."}
+
+
+def _battery_runtime(capacity: Quantity, volts: Quantity, load: Quantity, usable: Quantity, efficiency: Quantity) -> dict:
+    """How long a battery runs a load: its energy, times the part that may be used, times the converter's efficiency."""
+    energy = (capacity * volts).to("Wh")
+    hours = q(energy.value * usable.si * efficiency.si / load.number("W"), "h")
+    return {"values": {"energy": energy, "runtime": hours},
+            "said": f"{capacity} at {volts} holds {energy}. Using {usable.si * 100:g}% of it at {efficiency.si * 100:g}% "
+                    f"efficiency, a {load} load runs about {hours}."}
+
+
+def _led_resistor(supply: Quantity, forward: Quantity, current: Quantity) -> dict:
+    """The series resistor for an LED: the voltage left over divided by the current, then the next standard value up."""
+    if supply <= forward:
+        raise CalcError(f"The supply ({supply}) has to be higher than the LED's forward voltage ({forward}).")
+    exact = ((supply - forward) / current).to("ohm")
+    decade = 10.0 ** (math.floor(math.log10(exact.value)) - 1)  # E12 runs 10 to 82, so 150 ohm is 15 x 10
+    standard = next((v * decade for v in E12 if v * decade >= exact.value * 0.9999), 100 * decade)
+    chosen = q(standard, "ohm")
+    actual = ((supply - forward) / chosen).to("mA")
+    heat = ((supply - forward) * actual).to("mW")
+    return {"values": {"exact": exact, "resistor": chosen, "current": actual, "resistor_power": heat},
+            "said": f"({supply} - {forward}) / {current} = {exact}. The next standard value up is {chosen}, giving "
+                    f"{actual} through the LED and {heat} in the resistor."}
+
+
+def _voltage_divider(vin: Quantity, r1: Quantity, r2: Quantity) -> dict:
+    """The output of two resistors in series, taken across the lower one, unloaded."""
+    vout = q(vin.si * r2.si / (r1.si + r2.si), "V")
+    current = (vin / (r1 + r2)).to("mA")
+    return {"values": {"vout": vout, "current": current},
+            "said": f"{vin} across {r1} over {r2} gives {vout} at the middle, drawing {current} (with nothing "
+                    f"connected to the output; a load pulls it lower)."}
+
+
+def _battery_life(capacity: Quantity, active: Quantity, sleep: Quantity, awake: Quantity, period: Quantity,
+                  usable: Quantity) -> dict:
+    """A device that wakes for a while each period: its average current, and the life of a battery at that."""
+    if period < awake:
+        raise CalcError("The time awake can't be longer than the whole period.")
+    share = awake.si / period.si
+    average = q((active.si * share + sleep.si * (1 - share)) * 1000, "mA")
+    hours = q(capacity.number("mAh") * usable.si / average.value, "h")
+    return {"values": {"average_current": average, "life": hours, "life_days": q(hours.value / 24, "day")},
+            "said": f"Awake {awake} of every {period} at {active}, asleep at {sleep}: an average of {average}. "
+                    f"{capacity} with {usable.si * 100:g}% usable lasts about {hours.value:.4g} hours "
+                    f"({hours.value / 24:.3g} days)."}
+
+
+def _regulator_heat(vin: Quantity, vout: Quantity, current: Quantity, theta: Quantity, ambient: Quantity,
+                    limit: Quantity) -> dict:
+    """A linear regulator's heat: the voltage it drops times the current, and how hot its junction gets."""
+    if vin <= vout:
+        raise CalcError(f"A linear regulator needs its input ({vin}) above its output ({vout}).")
+    heat = ((vin - vout) * current).to("W")
+    rise = q(heat.value * theta.value, "degC")
+    junction = q(ambient.value + rise.value, "degC")
+    ok = junction.value <= limit.value
+    return {"values": {"heat": heat, "rise": rise, "junction": junction, "within_limit": q(1 if ok else 0)},
+            "said": f"({vin} - {vout}) x {current} = {heat} of heat. At {theta.value:g} degC/W that is {rise.value:.4g} "
+                    f"degC above the {ambient.value:g} degC around it: a junction at {junction.value:.4g} degC, "
+                    + (f"under its {limit.value:g} degC limit." if ok else
+                       f"OVER its {limit.value:g} degC limit. It needs a heatsink, less drop, or a switching regulator.")}
+
+
+def _adc_step(vref: Quantity, bits: Quantity) -> dict:
+    """The smallest change an analog-to-digital converter can see: the reference divided by its number of steps."""
+    n = int(round(bits.value))
+    if not 1 <= n <= 32:
+        raise CalcError("An ADC has between 1 and 32 bits.")
+    step = q(vref.si / (2 ** n) * 1000, "mV")
+    return {"values": {"steps": q(2 ** n), "step": step},
+            "said": f"A {n}-bit converter on a {vref} reference has {2 ** n} steps of {step} each."}
+
+
+def _joist(span: Quantity) -> dict:
+    """The floor joist size for a span, from the builder's table (16 inches on centre)."""
+    from core.build_calcs import joist_for
+
+    size = joist_for(span.number("ft"))
+    if not size:
+        raise CalcError(f"A {span.to('ft')} span is past my joist table: it needs a beam or an engineered joist, "
+                        f"sized by an engineer.")
+    return {"values": {"span": span.to("ft")}, "choice": size,
+            "said": f"A {span.to('ft')} span at 16 inches on centre: {size} joists, from my span table."}
+
+
+def _brine_salt(water: Quantity, vegetables: Quantity, strength: Quantity) -> dict:
+    """Salt for fermenting vegetables: a percentage of the combined weight of the water and the vegetables."""
+    total = water.number("g") + vegetables.number("g")
+    salt = q(total * strength.si, "g")
+    return {"values": {"salt": salt},
+            "said": f"{strength.si * 100:g}% of {total:.4g} g (water and vegetables together) is {salt} of salt."}
+
+
+def _candle_wax(volume: Quantity, fragrance: Quantity) -> dict:
+    """Wax for a container candle: the container's volume times wax's density, and fragrance as a share of the wax."""
+    wax = q(volume.number("L") * 1000 * 0.86, "g")
+    oil = q(wax.value * fragrance.si, "g")
+    return {"values": {"wax": wax, "fragrance": oil},
+            "said": f"A {volume} container takes about {wax} of wax (wax is lighter than water: 0.86 g per mL), and "
+                    f"{fragrance.si * 100:g}% fragrance is {oil}."}
+
+
+CALCULATORS: tuple[Calculator, ...] = (
+    Calculator("power", "electrical", "Power", "Watts from volts and amps.",
+               {"volts": ("V", "the voltage", None), "amps": ("A", "the current", None)}, _power, "P = V x I"),
+    Calculator("voltage_drop", "electrical", "Voltage Drop", "The voltage lost along a two-wire copper run.",
+               {"volts": ("V", "the supply voltage", None), "amps": ("A", "the current", None),
+                "length": ("ft", "the one-way length of the run", None), "gauge": ("", "the wire's AWG number", None)},
+               _voltage_drop, "V = I x R, with copper's resistance per foot at 20 degC, out and back", True),
+    Calculator("wire_gauge", "electrical", "Wire Gauge", "The smallest copper wire for a load and a run length.",
+               {"volts": ("V", "the supply voltage", None), "amps": ("A", "the load's current", None),
+                "length": ("ft", "the one-way length of the run", None),
+                "max_drop": ("%", "the most voltage drop allowed", "3 %"),
+                "continuous": ("", "1 if the load runs three hours or more, else 0", "0")},
+               _wire_gauge, "the 60 degC ampacity column for copper, the small-conductor breaker limits, 125% for a "
+               "continuous load, and voltage drop out and back", True),
+    Calculator("circuit_load", "electrical", "Circuit Load", "What a breaker may carry, briefly and continuously.",
+               {"breaker": ("A", "the breaker's rating", None), "volts": ("V", "the circuit's voltage", None)},
+               _circuit_load, "a load of three hours or more is held to 80% of the breaker", True),
+    Calculator("battery_runtime", "electrical", "Battery Runtime", "How long a battery runs a load.",
+               {"capacity": ("Ah", "the battery's capacity", None), "volts": ("V", "the battery's voltage", None),
+                "load": ("W", "the load's power", None), "usable": ("%", "how much of the battery may be used", "80 %"),
+                "efficiency": ("%", "the inverter's or converter's efficiency", "90 %")},
+               _battery_runtime, "energy = Ah x V; runtime = energy x usable x efficiency / load", True),
+    Calculator("led_resistor", "embedded", "LED Resistor", "The series resistor for an LED.",
+               {"supply": ("V", "the supply voltage", None), "forward": ("V", "the LED's forward voltage", None),
+                "current": ("mA", "the LED current wanted", None)},
+               _led_resistor, "R = (Vsupply - Vforward) / I, rounded up to the E12 series"),
+    Calculator("voltage_divider", "embedded", "Voltage Divider", "The output of two resistors in series.",
+               {"vin": ("V", "the input voltage", None), "r1": ("ohm", "the upper resistor", None),
+                "r2": ("ohm", "the lower resistor, across the output", None)},
+               _voltage_divider, "Vout = Vin x R2 / (R1 + R2), unloaded"),
+    Calculator("battery_life", "embedded", "Battery Life With Sleep", "The life of a battery in a device that sleeps.",
+               {"capacity": ("mAh", "the battery's capacity", None), "active": ("mA", "the current while awake", None),
+                "sleep": ("uA", "the current while asleep", None), "awake": ("s", "how long it's awake each time", None),
+                "period": ("s", "how often it wakes", None), "usable": ("%", "how much of the battery may be used", "85 %")},
+               _battery_life, "average current = the time-weighted mean of awake and asleep; life = capacity / average"),
+    Calculator("regulator_heat", "embedded", "Linear Regulator Heat", "A linear regulator's heat and temperature.",
+               {"vin": ("V", "the input voltage", None), "vout": ("V", "the output voltage", None),
+                "current": ("mA", "the load current", None),
+                "theta": ("degC/W", "the package's junction-to-air thermal resistance", None),
+                "ambient": ("degC", "the temperature around it", "25 degC"),
+                "limit": ("degC", "the most its junction may reach", "125 degC")},
+               _regulator_heat, "P = (Vin - Vout) x I; junction = ambient + P x thermal resistance", True),
+    Calculator("adc_step", "embedded", "ADC Step Size", "The smallest voltage change an ADC can see.",
+               {"vref": ("V", "the reference voltage", None), "bits": ("", "the converter's resolution in bits", None)},
+               _adc_step, "step = Vref / 2^bits"),
+    Calculator("floor_joist", "structural", "Floor Joist", "The joist size for a floor span.",
+               {"span": ("ft", "the clear span", None)}, _joist,
+               "MIA's span table (core/build_calcs.py): common lumber at 16 inches on centre, a 40 psf floor", True),
+    Calculator("brine_salt", "crafts", "Brine Salt", "Salt for fermenting vegetables.",
+               {"water": ("g", "the weight of water", None), "vegetables": ("g", "the weight of vegetables", None),
+                "strength": ("%", "the salt percentage", "2 %")},
+               _brine_salt, "common fermenting practice: salt as a percentage of the water and vegetables together; "
+               "for canning and curing, follow a tested recipe instead"),
+    Calculator("candle_wax", "crafts", "Candle Wax", "Wax and fragrance for a container candle.",
+               {"volume": ("L", "the container's volume", None), "fragrance": ("%", "the fragrance load", "8 %")},
+               _candle_wax, "common candle-making practice: wax at 0.86 g per mL; check the wax maker's own maximum "
+               "fragrance load"),
+)
+BY_ID = {c.id: c for c in CALCULATORS}
+DISCIPLINES = tuple(dict.fromkeys(c.discipline for c in CALCULATORS))
+
+
+def _read(calc: Calculator, name: str, given) -> Quantity:
+    """One input as a quantity in the kind of unit the calculator expects: a quantity as it is, text with a unit
+    read, a bare number taken in the declared unit. CalcError naming the input when it doesn't fit."""
+    unit, what, _default = calc.inputs[name]
+    try:
+        if isinstance(given, Quantity):
+            value = given
+        elif isinstance(given, (int, float)) and not isinstance(given, bool):
+            value = q(given, unit)
+        else:
+            value = parse(str(given))
+            if value.unit == "" and unit != "":
+                value = q(value.value, unit)
+        return value.to(unit) if unit != "%" or value.unit == "%" else q(value.value, "%")
+    except UnitError as problem:
+        raise CalcError(f"{name} ({what}) should be in {unit or 'a plain number'}: {problem}") from None
+
+
+def calculate(calc_id: str, inputs: dict) -> dict:
+    """Runs a calculator: {"calculator", "values" (name -> Quantity), "said", "basis", "caveat" ("" unless it's
+    safety-critical), and "choice" when the answer is a size in words}. CalcError for a calculator MIA doesn't
+    have, an input it doesn't take, a missing input (each named with what it is), or values that can't work."""
+    calc = BY_ID.get(str(calc_id or ""))
+    if calc is None:
+        raise CalcError(f"I don't have a calculator called \"{calc_id}\".")
+    inputs = dict(inputs or {})
+    unknown = sorted(set(inputs) - set(calc.inputs))
+    if unknown:
+        raise CalcError(f"{calc.label} doesn't take {', '.join(unknown)}. It takes {', '.join(calc.inputs)}.")
+    missing = [f"{name} ({what}, in {unit or 'a plain number'})" for name, (unit, what, default) in calc.inputs.items()
+               if default is None and inputs.get(name) in (None, "")]
+    if missing:
+        raise CalcError(f"{calc.label} needs {'; '.join(missing)}.")
+    values = {name: _read(calc, name, inputs[name] if inputs.get(name) not in (None, "") else default)
+              for name, (_unit, _what, default) in calc.inputs.items()}
+    if any(v.si < 0 for v in values.values()):
+        raise CalcError("None of the inputs can be negative.")
+    try:
+        result = calc.run(**values)
+    except UnitError as problem:
+        raise CalcError(str(problem)) from None
+    return {"calculator": calc.id, "values": result["values"], "said": result["said"], "basis": calc.basis,
+            "caveat": CAVEAT if calc.safety else "", **({"choice": result["choice"]} if "choice" in result else {})}
+
+
+def catalogue(discipline: str = "") -> list[dict]:
+    """The calculators as a specialist is shown them (for one discipline, or all): id, discipline, name, what it
+    works out, and each input with its unit, what it is and its default."""
+    return [{"id": c.id, "discipline": c.discipline, "label": c.label, "about": c.about, "safety": c.safety,
+             "inputs": {n: {"unit": u, "what": w, "default": d} for n, (u, w, d) in c.inputs.items()}}
+            for c in CALCULATORS if not discipline or c.discipline == discipline]
