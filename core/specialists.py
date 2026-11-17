@@ -561,8 +561,12 @@ def _action_ask(context, arguments: dict) -> str:
 
 
 def register_specialist_actions(registry) -> None:
-    """Registers the ask_specialist tool."""
+    """Registers the ask_specialist tool, and work_it_out (a specialist's worksheet with her calculators,
+    core/specialist_work.py)."""
     from core.assistant_actions import AssistantAction
+    from core.specialist_work import register as register_worksheet
+
+    register_worksheet(registry)
 
     registry.register(AssistantAction(
         name="ask_specialist", domain="knowledge",

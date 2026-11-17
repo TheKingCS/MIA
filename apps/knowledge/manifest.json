@@ -49,7 +49,8 @@
       "plan_shopping_list",
       "plan_sources",
       "show_plan",
-      "start_plan_project"
+      "start_plan_project",
+      "work_it_out"
     ],
     "actions": [
       "plan.delete",
@@ -71,7 +72,8 @@
       "plan.delete": "act_with_approval",
       "plan.import": "act_within_grant",
       "plan.keep": "act_within_grant",
-      "plan.project": "act_within_grant"
+      "plan.project": "act_within_grant",
+      "work_it_out": "suggest"
     },
     "outside": []
   },

@@ -28,8 +28,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   - Fixed on the way: `tests/test_stop.py` had a test that only passed on 2026-11-16 (it used the real clock).
 - **Zac at the PC (S0b):** pull the candidate models in Ollama, then `python -m tools.eng_bench --model <name>` for
   each (and for `qwen2.5:14b` as the baseline). Results land in `work/eng_bench/`; commit them.
-- **Next:** S1, the worksheet engine (`core/specialist_work.py`: frame, look up, calculate, answer, check; a voice
-  tool and a screen so the calculators are usable) **(Fable)**; S2 more calculators (radio, plumbing, HVAC,
+- **Built (Fable): S1, the worksheet** (K-0276): `core/specialist_work.py`. The model plans which calculators to run
+  (JSON), code runs them, the model writes the explanation, and code checks every number in it traces to a
+  calculator, the question or a note; one that doesn't is sent back once, then the calculators' own sentences are
+  the answer. A missing value is asked for. By voice: `work_it_out` ("what wire gauge...", "what resistor...").
+  **Not yet:** a screen for it (parity), review by a second local model (S5), the model chosen per specialist (S3).
+- **Next:** a Specialists screen with the worksheet and the roster **(Opus)**; S2 more calculators (radio, plumbing, HVAC,
   acoustics, greenhouse) **(Opus)**; S4 the next batch of specialists (greenhouse systems, IoT, acoustics, textile)
   **(Opus)**.
 - The teams document (`MIA_OS_SPECIALIZED_AGENT_TEAMS.md`) still says cloud models in its sections 1 and 12: read it
