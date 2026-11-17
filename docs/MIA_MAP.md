@@ -4,13 +4,13 @@
 
 ## At a glance
 
-- **Architecture** — 852 Python files across 588 core, 93 modules, 124 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Architecture** — 853 Python files across 589 core, 93 modules, 124 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
 - **Decisions** — 239 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 288 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
-- **What she keeps** — 53 personal + 42 household stores, 54 sealed at rest.
+- **What she keeps** — 54 personal + 42 household stores, 54 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
 
 ## Decisions — why MIA is built the way she is
@@ -276,7 +276,7 @@
 
 ## What she keeps, and how it's protected
 
-- 53 personal stores (each person's own) and 42 household stores.
+- 54 personal stores (each person's own) and 42 household stores.
 - 54 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
 
 ## How you shape her

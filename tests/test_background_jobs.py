@@ -11,7 +11,7 @@ from core.scheduler import Scheduler
 # added since (World Intelligence's watches, DEC-0170).
 THE_TIMERS = {"alarms": 20, "power": 30, "daily_occasions": 300, "finance_snapshots": 60, "homestead_snapshots": 60,
               "lite_captures": 60, "inbox": 30, "inbox_mail": 600, "online": 60, "mission_auto_assignment": 300,
-              "world_intel": 600, "self_repair": 300}
+              "world_intel": 600, "self_repair": 300, "activity_watch": 30}
 THE_DAILY_CHECKS = (
     "birthday calendar_digest checkin budget_nudge smart_suggestion maintenance_insight mission_insight "
     "pattern_insight skill_pattern_insight skill_decline_insight skill_momentum_insight recurring_mission rewards "

@@ -50,6 +50,7 @@
       "voice": true
     },
     "background": [
+      "activity_watch",
       "auto_backup",
       "capability_gaps",
       "capability_reminder",

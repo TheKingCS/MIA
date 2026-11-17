@@ -197,7 +197,8 @@ def shell(context, today: Optional[date] = None) -> dict:
     (each with its life area and its ask, shown as "Say: …" on its screen), the sidebar's eight destinations with
     their subdashboards (DEC-0153, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA
     made, the owner's pages, the weather (core/weather.py), sound, places, the person's display style (DEC-0135:
-    spatial or cards), and `stopped` while a stop-everything is in force (core/stop.py), for the frame's banner.
+    spatial or cards), `stopped` while a stop-everything is in force (core/stop.py), for the frame's banner, and
+    `noting` while MIA notes which app is in front of him (core/activity_watch.py, DEC-0197), for its indicator.
     """
     from core.child_accounts import is_child
 
@@ -226,7 +227,19 @@ def shell(context, today: Optional[date] = None) -> dict:
         # DEC-0135: the person's look; the page decides "auto" itself (only it knows it's on a phone)
         "display": _display(context),
         "stopped": _stopped(context),  # a stop-everything in force: the frame's banner and its Carry On (core/stop.py)
+        "noting": _noting(context),  # DEC-0197: the indicator while she notes the app in front of him
     }
+
+
+def _noting(context) -> bool:
+    """Whether MIA is noting which app is in front of him on this PC (core/activity_watch.py), for the sidebar's
+    indicator; False where nothing can be noted."""
+    try:
+        from core import activity_watch
+
+        return getattr(context, "activity", None) is not None and activity_watch.noting(context)
+    except Exception:  # noqa: BLE001 - an indicator that can't be read shows nothing
+        return False
 
 
 def _areas(context) -> list:

@@ -15,6 +15,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   off (`gui/ambient_screens.py`). **Zac to try:** restart MIA with both monitors on, then turn the 1080p one off and
   on. `gui.ambient_screen: false` turns it off.
 - CLAUDE.md now names the everyday model correctly (qwen2.5:14b, 32k).
+- **MIA notes what you're working on** (Q-44, DEC-0197): the program and window title in front of you on the PC,
+  every 30 seconds, kept 7 days in your folder; never password managers, private windows, sign-ins or MIA herself.
+  The sidebar says "Noting your active app" while it's on; Settings has the switch and **Erase**. Ask "what am I
+  working on?" or "where was I?". `core/activity_watch.py`. Still to do: let it shape when her offers come (Q-74).
 
 **New 2026-11-17, Prompt 11 (Claude on Opus, overnight).**
 - **Prompt 11 (visual identity, themes and spatial interfaces) is done:** `docs/mia_os/MIA_OS_VISUAL_IDENTITY.md`

@@ -422,6 +422,15 @@
     return style === "spatial" || style === "cards" ? style : onPhone() ? "cards" : "spatial";
   }
 
+  // While MIA notes which app is in front of him (core/activity_watch.py, DEC-0197): said in the sidebar, with the
+  // way to turn it off or erase it (Settings).
+  function notingLine(shell) {
+    if (!shell.noting) return null;
+    return el("a", { class: "side-more side-noting", href: "settings.html#s-activity-on",
+      title: "Names and window titles only, kept 7 days on this PC. Turn it off or erase it in Settings." },
+      "◉ Noting your active app");
+  }
+
   function renderNav(shell) {
     shellData = shell;
     if (shell.display && shell.display.theme) applyTheme(shell.display.theme);
@@ -443,7 +452,7 @@
         el("button", { type: "button", class: "side-search", onclick: () => openSearch(), "aria-keyshortcuts": "Control+K" },
           el("span", {}, "Search"), el("kbd", {}, "Ctrl K")),
         ...sideLinks(shell),
-        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell), stopButton("side-stop")));
+        el("div", { class: "side-foot" }, levelBlock(shell.person), more(shell), notingLine(shell), stopButton("side-stop")));
     }
     stoppedBanner(shell.stopped);
     // Phone: the concept's bottom bar.

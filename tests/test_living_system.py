@@ -38,7 +38,7 @@ EPISTEMIC_BASELINE = frozenset({
     "flock", "freedom_log", "gps_tracks", "grow_lab", "health", "homestead", "id_wallet", "inbox", "insights",
     "insurance", "intents", "inventory", "jobs", "journal", "kitchen", "ledger", "life_events", "life_notes", "links",
     "lite_captures", "living_worlds", "loop", "maintenance", "materials", "memory_vault", "my_record_sets",
-    "net_worth", "notifications", "obligations", "online_reminders", "operating_journal", "passwords", "paths",
+    "net_worth", "notifications", "obligations", "online_reminders", "activity", "operating_journal", "passwords", "paths",
     "personal_life_events", "places", "plaid", "plans", "private_journal", "products", "projects", "quest_book",
     "ratings", "real_estate", "record_sets", "recreation", "relationships", "response_style", "reward_shop",
     "saga_moments", "scripts", "security", "tasks", "taught_skills", "textbooks", "traces", "trade_session",

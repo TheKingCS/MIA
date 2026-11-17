@@ -1,6 +1,10 @@
 {
  "about": "core/loop_coverage.py (DEC-0101): every process MIA has, with a loop or a reason. status: todo (needs a loop), proposed (a task drafts it), none (why: no loop needed).",
  "processes": {
+  "action:activity": {
+   "status": "none",
+   "why": "turning noting on or off and erasing what was noted are his own choices about his privacy (DEC-0197); nothing of MIA's to improve in them"
+  },
   "action:alarm": {
    "status": "none",
    "why": "alarms set, switched and deleted by hand (Toolbox, DEC-0125): her own clock times, nothing of MIA's to improve"
@@ -220,6 +224,10 @@
   "check:system_map": {
    "status": "none",
    "why": "The daily system-map regen is itself the loop that keeps MIA_MAP.md current; it reads state and rewrites the doc, nothing to watch over it."
+  },
+  "store:activity": {
+   "status": "none",
+   "why": "names and window titles noted for him (core/activity_watch.py, DEC-0197); what MIA does with them, the offers she makes, is measured by the communication gate's own pacing and its loops"
   },
   "store:art": {
    "status": "none",

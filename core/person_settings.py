@@ -64,6 +64,7 @@ PERSONAL_SETTINGS = (
     "sound.on",
     "sound.voice",
     "places.watch",
+    "activity.on",  # DEC-0197: noting which app is in front of him
     "vault.on",
     "vault.wifi_only",
     "vault.keep_days",

@@ -103,7 +103,7 @@ def test_the_runtime_runs_the_schedule_on_a_thread_and_says_how_it_is_doing(else
     finally:
         runtime.stop()
     assert ran and health["running"] and health["window"] is False and health["started_at"]
-    assert health["jobs_failing"] == ["power"] and len(health["jobs"]) == 12
+    assert health["jobs_failing"] == ["power"] and len(health["jobs"]) == 13
     assert health["services"] >= 90 and health["tools"] >= 400
     assert runtime.health()["running"] is False  # stopped cleanly
 
@@ -130,4 +130,4 @@ def test_the_health_endpoint_reports_the_runtime_to_a_signed_in_person(elsewhere
     assert client.get("/api/runtime/health").status_code == 401
     token = client.post("/api/login", json={"profile_id": alice.profile_id, "password": "hunter2"}).json()["token"]
     health = client.get("/api/runtime/health", headers={"Authorization": f"Bearer {token}"}).json()
-    assert health["window"] is False and health["running"] is False and len(health["jobs"]) == 12
+    assert health["window"] is False and health["running"] is False and len(health["jobs"]) == 13

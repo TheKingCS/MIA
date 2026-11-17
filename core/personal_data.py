@@ -85,6 +85,7 @@ from core.maintenance_manager import MaintenanceManager
 from core.material_manager import MaterialManager
 from core.notification_manager import NotificationManager
 from core.online_watch import OnlineReminders
+from core.activity_watch import ActivityLog
 from core.reward_shop import RewardShop
 from core.craft_recipes import CraftRecipeBook
 from core.business_book import BusinessBook
@@ -174,6 +175,7 @@ PERSONAL_STORES: tuple[tuple[str, type], ...] = (
     ("private_journal", PrivateJournalManager),
     ("communication", CommunicationGate),
     ("online_reminders", OnlineReminders),
+    ("activity", ActivityLog),  # the app and title in front of him (DEC-0197, Q-44)
     ("reward_shop", RewardShop),
     ("boss_book", BossBook),
     ("dungeon", DungeonBook),

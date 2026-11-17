@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1505 files, 335,885 lines; 1505 files describe themselves; 18,435 of 18,534 classes and functions are documented.
+1507 files, 336,353 lines; 1507 files describe themselves; 18,474 of 18,573 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-588 files, 169,534 lines; 8,734 of 8,820 classes and functions documented
+589 files, 169,866 lines; 8,757 of 8,843 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -16,6 +16,7 @@
 - `core/action_effects.py`: What each kind of action reaches, and whether it can be undone (REQ-AUT-006, REQ-AUT-007; DEC-0181; prompt 23's review, UI-3). Every action kind is one of four reaches and three reversibilities:
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
 - `core/activity_log_manager.py`: The Activity/Memory Log shared service — docs/ROADMAP.md milestone 9.1, the "Activity/Memory Log (system-wide event history via the event bus)" row of the shared core services table (used by the Memories section, "what did I do on Project X" queries, Diagnostics history).
+- `core/activity_watch.py`: What he's working on (DEC-0197; Zac, 2026-11-17, Q-44: "Yes, mia should know what I am working on"; DEC-0217, Q-74: it may shape when and which offers she makes). On the PC, MIA notes **the app and window title in front of him**, so she can tie work to a project and answer "where was I?".
 - `core/agent_activity.py`: The Dashboard's Agent Activity (DEC-0153, Zac 2026-11-11: "All of these"): what MIA did on her own and what the agents that build her are doing, in one card, each line opening where it came from.
 - `core/alarm_manager.py`: Backs the Alarm tool (modules/toolbox/tools/alarm_tool.py) — persisted to data/alarms.json, same durability pattern as core.calendar_manager.CalendarManager.
 - `core/ambient.py`: MIA's ambient view (DEC-0231; Zac, 2026-11-17, Q-80: "yes", with "MIA should be adaptable and understanding of available monitors so if I turn one off she flows with just 1"). A screen to glance at, not to work in: shown full screen on his second monitor by the desktop window (gui/ambient_screens.py
@@ -883,7 +884,7 @@
 
 ## tests/: the test suite: what each part must do
 
-518 files, 87,218 lines; 7,353 of 7,366 classes and functions documented
+519 files, 87,341 lines; 7,369 of 7,382 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -901,6 +902,7 @@
 - `tests/test_action_effects.py`: What each action kind reaches and whether it can be undone (REQ-AUT-006, REQ-AUT-007; core/action_effects.py): every declared effect is a real kind with a known reach and reversibility; a kind whose code deletes or moves files, uses the network, talks to a device, runs a program or merges code is de
 - `tests/test_actions.py`: The action contract and live updates (Phase 2 foundation, DEC-0013, 2026-10-05): Propose → Approve → Execute → Record → Undo, the endpoints the web front end uses, and the state version that tells it to refresh.
 - `tests/test_activity_log_manager.py`: Unit tests for core.activity_log_manager. Isolates _DATA_DIR _ACTIVITY_LOG_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
+- `tests/test_activity_watch.py`: What he's working on: the app and title in front of him, with its safeguards (core/activity_watch.py, DEC-0197).
 - `tests/test_alarm_manager.py`: Unit tests for core.alarm_manager. Isolates _DATA_DIR/_ALARMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths). check_due() takes `now` as a plain datetime rather than reading the real clock, so firing behavior is tested with fixed timestamps 
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_ambient.py`: MIA's ambient view for the second monitor, flowing to one monitor when the other goes (core/ambient.py, gui/ambient_screens.py, DEC-0231, Zac's Q-80).
@@ -1406,7 +1408,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,412 lines
+116 files, 21,425 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

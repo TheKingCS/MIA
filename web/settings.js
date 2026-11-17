@@ -22,7 +22,11 @@
     if (s.kind === "toggle") {
       const box = el("input", { id, type: "checkbox", role: "switch", checked: s.value ? true : null,
         onchange: () => change(s.key, box.checked) });
-      return el("span", { class: "switch" }, box, el("span", { "aria-hidden": "true" }));
+      const sw = el("span", { class: "switch" }, box, el("span", { "aria-hidden": "true" }));
+      // What MIA noted about his apps (core/activity_watch.py, DEC-0197): erased with one press, undoable.
+      if (s.key === "activity.on") return el("span", { class: "row-buttons" }, sw, el("button", { type: "button",
+        class: "btn btn-ghost btn-small", onclick: () => act({ kind: "activity.erase", params: {} }) }, "Erase"));
+      return sw;
     }
     if (s.kind === "choice") {
       const pick = el("select", { id, onchange: () => change(s.key, pick.value) },

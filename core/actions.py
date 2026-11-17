@@ -425,6 +425,7 @@ import core.conversation_export  # noqa: E402,F401  (a conversation saved to Fil
 import core.web_connections  # noqa: E402,F401  (connections: don't bring that up, allow again, DEC-0146)
 import core.portal_pictures  # noqa: E402,F401  (Portal Pictures: your painting in a story's portal, DEC-0140)
 import core.weather  # noqa: E402,F401  (the Dashboard's weather: which town, DEC-0153)
+import core.activity_watch  # noqa: E402,F401  (noting the app in front of him, and erasing it, DEC-0197)
 import core.art_studio  # noqa: E402  (pictures MIA painted: deleting one, DEC-0140)
 core.art_studio._register()
 from core.offline_maps import _register as _register_map_areas  # noqa: E402  (vector map areas from the Maps page)

@@ -128,6 +128,11 @@ SETTINGS: tuple[Setting, ...] = (
     Setting("budget.private", "Money", "Keep my money private", "toggle", False,
             "Your budget and bank accounts are kept apart from the household's.", child_ok=False),
     # Sound (DEC-0028 #11): chimes and fanfares on wins (web/sound.js), MIA's voice lines.
+    # DEC-0197 (Zac, Q-44: "Yes, mia should know what I am working on"): names and titles only, kept 7 days.
+    Setting("activity.on", "MIA", "Note which app I'm working in", "toggle", True,
+            "The program and window title in front of you, on this PC, so MIA can tie work to a project and answer "
+            "\"where was I?\". Never the screen or what you type; never password managers or private windows. Kept "
+            "7 days, only here.", child_ok=False),
     Setting("sound.on", "Sound", "Sounds when you win", "toggle", True,
             "A chime for an objective, a fanfare for a level. Never for anything you didn't do."),
     Setting("sound.voice", "Sound", "MIA says a line when you win", "toggle", False,

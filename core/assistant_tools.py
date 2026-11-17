@@ -178,7 +178,8 @@ class AssistantTools:
         (tools in their own files register here too, such as
         core/assistant_screen_tools.py: look it up online, what isn't
         working, past conversations; core/assistant_self_actions.py: her
-        model, and her care of herself, DEC-0222/0225).
+        model, and her care of herself, DEC-0222/0225; core/activity_watch.py:
+        what he's working on, DEC-0197).
         Every handler below is a `@staticmethod` — a pure function of
         (context, arguments) — except that none of them actually need
         `self` at all; `context.module_manager` (set right above) is
@@ -210,6 +211,9 @@ class AssistantTools:
         register_today_actions(self.context.assistant_actions)
         register_self_actions(self.context.assistant_actions)  # "what model are you?" from the runtime
         register_self_care_actions(self.context.assistant_actions)  # her own changes, repairs, protected list
+        from core.activity_watch import register_activity_actions
+
+        register_activity_actions(self.context.assistant_actions)  # what he's working on (DEC-0197)
         register_capability_actions(self.context.assistant_actions)  # what MIA can do, how she's built (DEC-0041)
         register_specialist_actions(self.context.assistant_actions)  # her specialists' workbooks (DEC-0109)
         register_teamwork_actions(self.context.assistant_actions)  # a project's workspace and team (T2)

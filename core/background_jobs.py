@@ -85,6 +85,7 @@ JOBS: tuple[tuple[str, int, str], ...] = (
     ("mission_auto_assignment", 300, "_check_mission_auto_assignment"),
     ("world_intel", 600, "_check_world_intel"),  # World Intelligence: due watches run, new finds offered (DEC-0170)
     ("self_repair", 300, "_check_self_repair"),  # she restarts Ollama, reloads her model, re-runs a stuck job (DEC-0222)
+    ("activity_watch", 30, "_check_activity_watch"),  # the app and title in front of him, when he allows it (DEC-0197)
 )
 
 # The once-a-day checks, in the order they run: (name, the method). Each has its own "already ran today" gate.
@@ -383,6 +384,13 @@ class BackgroundJobs:
         from core import self_merges
 
         self._offers.extend(self_merges.offer(self.context, now))
+
+    def _check_activity_watch(self) -> None:
+        """Every 30 seconds: notes the app and window title in front of him, when noting is on (core/activity_watch.py,
+        DEC-0197); names and titles only."""
+        from core import activity_watch
+
+        activity_watch.sample(self.context)
 
     def _check_self_repair(self) -> None:
         """Every five minutes (core/self_repair.py, DEC-0222): Ollama started again if it stopped, her model reloaded,
