@@ -38,7 +38,16 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
        `.venv\Scripts\python -m tools.data_key seal --history`) or say leave them plain.
 5. [ ] **Start SearXNG** for online lookups (`docs/ONLINE_LOOKUP.md`: Docker Desktop and one command).
 6. [ ] **Commit the DEC-0133 email files and finish Plaid** on the PC (both are your uncommitted work: details below).
+   **Plaid deferred (Zac, 2026-11-17):** "I will not be connecting Plaid until this is much further along and secure."
 7. [ ] **Encrypt the PC's drive** (Windows 11 Home has Device Encryption: details under Security).
+
+### Zac's feedback on the window, 2026-11-17 (to fix, Claude)
+- [ ] **The window is too tall**: the sidebar and the page run past the bottom of the screen, so he has to scroll to
+      reach the bottom. Everything should fit his screen.
+- [ ] **The page is crammed to one side with empty space beside it**: use the width.
+- [ ] **Navigation isn't the portals any more**: clicking an area (Home, Garage, Finances...) opens that area's own
+      dashboard, holding all its subcategories and their dashboards.
+- [ ] **No USB stick yet** for the graphics card test from Fedora (`os/poc/README.md`); it waits.
 
 ### The greenhouse (2026-11-08: approved and built, DEC-0150)
 - [ ] **When you start:** say "let's set up the greenhouse". MIA keeps the ten steps in order and "what's next?"
