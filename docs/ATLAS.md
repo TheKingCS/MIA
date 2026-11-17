@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1509 files, 336,897 lines; 1509 files describe themselves; 18,524 of 18,623 classes and functions are documented.
+1511 files, 337,078 lines; 1511 files describe themselves; 18,536 of 18,635 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-590 files, 170,219 lines; 8,780 of 8,866 classes and functions documented
+591 files, 170,338 lines; 8,785 of 8,871 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -319,6 +319,7 @@
 - `core/memory_callbacks.py`: Remembering at the right moment (DEC-0029, ALICE pick 3): MIA brings up something you told her when it's about to matter, instead of waiting to be asked.
 - `core/memory_manager.py`: Memories — docs/ROADMAP.md milestone v0.17, the first of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). A **read-only aggregation service**, deliberately unlike every other core manager in this project: it owns no persisted file of its own and compute
 - `core/memory_vault.py`: The memory vault (DEC-0030 phase E, Zac 2026-10-18): the phone's photos and videos, kept safe on the home computer, so the phone can let them go.
+- `core/message_kind.py`: Intent before action, first step (T-0009; `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md` A7 P3): sorting what someone said into the kind of message it is, in code, before any path is chosen: a command, a question, chat, humor, frustration, a feeling, a plan, a follow-up, a request for advice, a hypotheti
 - `core/message_reasons.py`: "Why are you telling me this?" (2026-10-01, accounts stage 5): a plain answer for each kind of message MIA sends on her own (core/communication_gate.py topics), plus finding the kind someone means by their own words ("stop telling me about the budget").
 - `core/mia_coder.py`: MIA's own coder, and her shadow attempts (DEC-0074, T-0027; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` sections 3.3 and 4.3).
 - `core/mission_actions.py`: Every change the Missions, Skills and Character screens make (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: missions (add, edit, delete, complete, give up on with a reason, reopen), their objectives (add, remove, count one more), the skill a mission teaches, startin
@@ -885,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-520 files, 87,532 lines; 7,396 of 7,409 classes and functions documented
+521 files, 87,594 lines; 7,403 of 7,416 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1142,6 +1143,7 @@
 - `tests/test_memory_callbacks.py`: Remembering at the right moment (DEC-0029, ALICE pick 3): a birthday, a plan or due upkeep brings back what you told MIA, only when there's something remembered to add.
 - `tests/test_memory_manager.py`: Unit tests for core.memory_manager.MemoryManager — docs/ROADMAP.md milestone v0.17, Memories. Isolates every underlying manager's data dir into a tmp_path scratch area, same monkeypatch pattern as test_trip_manager.py's isolated_paths, since MemoryManager aggregates across Expedition/Trip/Waypoint/J
 - `tests/test_memory_vault.py`: The memory vault (core/memory_vault.py): the phone's camera roll read by fingerprint, sent to the home computer in pieces that resume, checked there, and only ever offered for removal once the computer confirms it holds each file.
+- `tests/test_message_kind.py`: Intent before action, watched first: what kind of message it is, sorted in code (core/message_kind.py, T-0009).
 - `tests/test_mia_coder.py`: MIA's own coder and her shadow attempts (DEC-0074, core/mia_coder.py): no tools, only the files the task lists, never a protected one, graded by the lab's own check, never merged.
 - `tests/test_mia_voice.py`: MIA's voice (DEC-0029, docs/design/MIA_VOICE.md): what she writes on her own never guilts the person (DEC-0014).
 - `tests/test_mission_insights.py`: Unit tests for core.mission_insights — isolates _DATA_DIR for mission/insight files into a tmp_path scratch area, same monkeypatch pattern as test_maintenance_insights.py's own isolated_paths.

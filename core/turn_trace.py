@@ -8,7 +8,9 @@ docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). The route that answered (a fixed
 reply, a plain-word command, a question plan, the model), what was asked and
 said, the tools offered and called, the memories used, which model and which
 computer answered, and how long it took. And the shadow: what MIA's own
-router would have offered (core/model_forge.py, DEC-0106), tool names only.
+router would have offered (core/model_forge.py, DEC-0106), tool names only;
+and what kind of message it was (core/message_kind.py, T-0009), watched
+before it's allowed to steer.
 
 The Fix-It Log keeps where she stumbled; this keeps every turn, so "why did
 she answer like that?" has an answer, and the conversation corpus and Zac's
@@ -82,8 +84,8 @@ class TurnTraces:
 
 
 def record(context, conversation, prompt: str, turn, seconds: float, surface: str = "") -> None:
-    """Trace one finished turn, with her own router's picks in the shadow (tool names only). Never raises, and
-    never traces a private one."""
+    """Trace one finished turn, with her own router's picks in the shadow (tool names only) and the message's kind
+    (core/message_kind.py). Never raises, and never traces a private one."""
     try:
         traces = getattr(context, "traces", None)
         if traces is None:
@@ -96,6 +98,7 @@ def record(context, conversation, prompt: str, turn, seconds: float, surface: st
         llm = getattr(context, "llm", None)
         backend = getattr(llm, "backend", None) if llm is not None else None
         reply = " ".join(getattr(turn, "replies", []) or [])
+        from core import message_kind
         from core.model_forge import shadow_picks
 
         shadow = shadow_picks(context, prompt or "")
@@ -115,6 +118,7 @@ def record(context, conversation, prompt: str, turn, seconds: float, surface: st
             "where": getattr(llm, "level", "") if llm is not None else "",
             "model_answered": bool(getattr(turn, "llm_available", True)),
             "seconds": round(seconds, 2),
+            "kind": message_kind.sort(prompt or ""),  # what kind of message, watched before it steers (T-0009)
             **({"shadow": shadow} if shadow else {}),
         })
     except Exception:  # a trace is never in the way of an answer

@@ -2,7 +2,23 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-17 (Opus: reviews of Fable's work, the specialists as agents), by claude.*
+session. Last updated: 2026-11-18 (Opus, overnight: Prompts 09 to 11, and building what Zac approved), by claude.*
+
+**2026-11-17 into the 18th (Claude on Opus, at the PC, Zac asleep for the second half).**
+- **Planned and reviewed: MIA OS Prompts 09, 10 and 11** (self-awareness, the desktop, the look). Zac answered 09 and
+  10 the same day; **Prompt 11 waits on Q-83 to Q-86** (the Theme Studio from a picture, interface sounds, a Light
+  theme, Zeta Astralis on a small phone). Prompt 12 on his go.
+- **Built, approved by Zac:** her own fixes go in on Claude's pass with a daily summary and an Undo each; she restarts
+  Ollama, reloads her model and re-runs a stuck job herself and tells him; the list of what she can never change is on
+  Diagnostics; "yes, and from now on" works by voice; the second monitor shows her ambient view and folds into one
+  monitor when he turns it off; she notes the app and window in front of him (names and titles only, an indicator,
+  Erase) and holds non-urgent offers while he's focused; recall by meaning over his memories, notes and projects.
+- **Measured:** qwen2.5:14b stays the everyday model (qwen3:14b invented context more); flash attention and an 8-bit
+  cache made the specialists' 32B model 2.2x faster, so Ollama now runs with them.
+- **Started:** sorting a message's kind before acting (T-0009), recorded in the traces, not yet steering.
+- **Corrected:** CLAUDE.md names the everyday model as it is (qwen2.5:14b); Prompt 11's audit first missed the Theme
+  Studio, high contrast and the win sounds, all built before.
+- **Waiting on Zac:** Q-83 to Q-86; restart MIA with both monitors on and try turning one off; Prompt 12's go.
 
 **2026-11-17 (Claude on Opus, at the PC: three reviews and the specialists as agents).**
 - **Reviewed and fixed: the stop, plans step by step, and Forge.** Plans could have held a step that buys, sends or
