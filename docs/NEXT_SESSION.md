@@ -9,7 +9,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 **New 2026-11-17, on the PC (Claude on Opus), alongside the cloud session below.**
 - **Opus's independent review of Fable's three** (the stop UI-2, Forge's scaffold M7, plans across apps UI-7): all
-  fixed, each with tests (K-0275). Plans: nothing that pays, buys, sends, publishes, deletes or touches a grant is a
+  fixed, each with tests (K-0277). Plans: nothing that pays, buys, sends, publishes, deletes or touches a grant is a
   step any more (marking a bill or debt paid is the one bookkeeping exception); the card pins the step it showed; a
   finished plan takes no more changes; a failed step can be retried; "do step N" never rides along with other calls.
   The stop: "stop all alarms" is no longer "stop everything"; "tonight" late at night ends next morning; a time she
