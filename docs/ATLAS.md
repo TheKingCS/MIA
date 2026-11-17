@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1509 files, 336,788 lines; 1509 files describe themselves; 18,514 of 18,613 classes and functions are documented.
+1509 files, 336,897 lines; 1509 files describe themselves; 18,524 of 18,623 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-590 files, 170,164 lines; 8,777 of 8,863 classes and functions documented
+590 files, 170,219 lines; 8,780 of 8,866 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -885,7 +885,7 @@
 
 ## tests/: the test suite: what each part must do
 
-520 files, 87,478 lines; 7,389 of 7,402 classes and functions documented
+520 files, 87,532 lines; 7,396 of 7,409 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -903,7 +903,7 @@
 - `tests/test_action_effects.py`: What each action kind reaches and whether it can be undone (REQ-AUT-006, REQ-AUT-007; core/action_effects.py): every declared effect is a real kind with a known reach and reversibility; a kind whose code deletes or moves files, uses the network, talks to a device, runs a program or merges code is de
 - `tests/test_actions.py`: The action contract and live updates (Phase 2 foundation, DEC-0013, 2026-10-05): Propose → Approve → Execute → Record → Undo, the endpoints the web front end uses, and the state version that tells it to refresh.
 - `tests/test_activity_log_manager.py`: Unit tests for core.activity_log_manager. Isolates _DATA_DIR _ACTIVITY_LOG_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
-- `tests/test_activity_watch.py`: What he's working on: the app and title in front of him, with its safeguards (core/activity_watch.py, DEC-0197).
+- `tests/test_activity_watch.py`: What he's working on: the app and title in front of him, with its safeguards (core/activity_watch.py, DEC-0197), and how his focus holds her non-urgent offers once in the communication gate (DEC-0217).
 - `tests/test_alarm_manager.py`: Unit tests for core.alarm_manager. Isolates _DATA_DIR/_ALARMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths). check_due() takes `now` as a plain datetime rather than reading the real clock, so firing behavior is tested with fixed timestamps 
 - `tests/test_alarm_tool.py`: Unit test for modules.toolbox.tools.alarm_tool.format_alarm_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_ambient.py`: MIA's ambient view for the second monitor, flowing to one monitor when the other goes (core/ambient.py, gui/ambient_screens.py, DEC-0231, Zac's Q-80).

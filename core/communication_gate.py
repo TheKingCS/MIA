@@ -152,12 +152,14 @@ class Decision:
 @dataclass
 class GateState:
     """What decide_batch() needs to know: what's been sent, whether the person is mid-conversation in a personal
-    mode or in flow getting things done (core/momentum.py), whether they've said "stop everything" (core/stop.py),
-    what's paused, and each offered kind's learned pace a day with its reason (`allowances`, DEC-0171)."""
+    mode or in flow getting things done (core/momentum.py), what they're focused on in front of them (`focus`, the
+    project or app, core/activity_watch.py), whether they've said "stop everything" (core/stop.py), what's paused, and
+    each offered kind's learned pace a day with its reason (`allowances`, DEC-0171)."""
 
     sent: list[dict] = field(default_factory=list)  # {at, key, topic, urgency, digest_id}
     user_busy: bool = False
     in_flow: bool = False  # getting things done right now (core/momentum.py, DEC-0148): non-urgent waits
+    focus: str = ""  # what he's focused on in front of him (core/activity_watch.focus, DEC-0217): non-urgent waits but this
     stopped: bool = False  # he said "stop everything" (core/stop.py, DEC-0181): non-urgent waits until he resumes
     paused: dict = field(default_factory=dict)  # topic -> until (datetime), from paused_topics()
     allowances: dict = field(default_factory=dict)  # topic -> (a day, why), from learned_allowance()
@@ -262,7 +264,8 @@ def _never_held() -> frozenset:
 def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, settings: dict) -> list[Decision]:
     """Pure logic. One Decision per candidate, in order. While the person has said "stop everything" (DEC-0181),
     everything but the urgent and the reminders he set (core/stop.TOPICS_NEVER_HELD) waits; in flow (DEC-0148),
-    everything but the urgent waits. Each
+    everything but the urgent waits; focused on one thing in front of him (`state.focus`, DEC-0217), everything but
+    the urgent and what's about it waits once (a candidate already deferred isn't held for focus again). Each
     kind's learned pace a day (`state.allowances`) holds back what's past it; a fixed cap applies only when the person
     set one (`daily_budget` above 0)."""
     budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]) or 0)
@@ -298,6 +301,15 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
             candidate.not_before = (now + _BUSY_DEFER).isoformat(timespec="seconds")
             decisions.append(Decision(candidate, DEFER, "you were in the middle of getting things done"))
             continue
+        # Focused on one thing (DEC-0217): held unless it's about it, and only once (at most _BUSY_DEFER), so a long
+        # stretch in one app never keeps her quiet all day.
+        if state.focus and candidate.urgency != URGENT and not candidate.not_before:
+            from core.activity_watch import about
+
+            if not about(f"{candidate.title} {candidate.message}", state.focus):
+                candidate.not_before = (now + _BUSY_DEFER).isoformat(timespec="seconds")
+                decisions.append(Decision(candidate, DEFER, f"you were focused on {state.focus}"))
+                continue
         if state.user_busy:
             if candidate.urgency == TIMELY:
                 candidate.not_before = (now + _BUSY_DEFER).isoformat(timespec="seconds")
@@ -457,6 +469,18 @@ class CommunicationGate:
         updated = _parse(conversation.updated_at)
         return updated is not None and now - updated <= _BUSY_WINDOW
 
+    def _focus(self, now: datetime) -> str:
+        """What he's focused on in front of him (the project, else the app), or "" (core/activity_watch.focus,
+        DEC-0217); "" when it can't be told."""
+        try:
+            from core.activity_watch import focus
+
+            found = focus(self.context, now)
+        except Exception:  # noqa: BLE001 - a gate that can't tell delivers as usual
+            log.exception("Couldn't tell what the person is focused on")
+            return ""
+        return (found.get("project") or found.get("app") or "") if found else ""
+
     def _stopped(self, now: datetime) -> bool:
         """Whether he has said "stop everything" (core/stop.py); False when it can't be told."""
         try:
@@ -467,11 +491,11 @@ class CommunicationGate:
             return False
 
     def _state(self, now: datetime, topics=()) -> GateState:
-        """What the decision needs now: what's been sent, whether the person is busy or in flow, whether they've said
-        "stop everything", what's paused, and the learned pace of each kind among `topics`."""
+        """What the decision needs now: what's been sent, whether the person is busy, in flow or focused, whether
+        they've said "stop everything", what's paused, and the learned pace of each kind among `topics`."""
         sent = [e for e in self._log if e.get("action") == ACT]
         return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now),
-                         in_flow=self._in_flow(now), stopped=self._stopped(now),
+                         in_flow=self._in_flow(now), focus=self._focus(now), stopped=self._stopped(now),
                          allowances={t: learned_allowance(self._log, t, now) for t in set(topics) if t})
 
     def pace(self, now: Optional[datetime] = None) -> list[dict]:

@@ -1,4 +1,5 @@
-"""What he's working on: the app and title in front of him, with its safeguards (core/activity_watch.py, DEC-0197)."""
+"""What he's working on: the app and title in front of him, with its safeguards (core/activity_watch.py, DEC-0197),
+and how his focus holds her non-urgent offers once in the communication gate (DEC-0217)."""
 
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -121,3 +122,56 @@ def test_the_sidebar_indicator_follows_the_setting(tmp_path, monkeypatch):
     assert _noting(_context(tmp_path / "a", monkeypatch, on=True))
     assert not _noting(_context(tmp_path / "b", monkeypatch, on=False))
     assert not _noting(SimpleNamespace())
+
+
+def _focused(tmp_path, monkeypatch, minutes, last_seen_ago=30, title="chicken coop plans", projects=()):
+    """A context where he's been on one window for `minutes`, last seen `last_seen_ago` seconds ago."""
+    ctx = _context(tmp_path, monkeypatch, projects=projects)
+    now = datetime(2026, 11, 18, 10, 0, 0)
+    end = now - timedelta(seconds=last_seen_ago)
+    ctx.activity._spans = [{"app": "Code", "title": title, "start": (end - timedelta(minutes=minutes)).isoformat(),
+                            "end": end.isoformat()}]
+    return ctx, now
+
+
+def test_ten_minutes_on_one_window_and_still_there_is_focus(tmp_path, monkeypatch):
+    ctx, now = _focused(tmp_path, monkeypatch, 12, projects=[SimpleNamespace(name="Chicken Coop")])
+    found = aw.focus(ctx, now)
+    assert found["project"] == "Chicken Coop" and found["minutes"] >= aw.FOCUS_MIN
+
+
+def test_a_few_minutes_or_having_walked_away_is_not_focus(tmp_path, monkeypatch):
+    short, now = _focused(tmp_path / "a", monkeypatch, 4)
+    gone, now2 = _focused(tmp_path / "b", monkeypatch, 12, last_seen_ago=600)
+    assert aw.focus(short, now) is None and aw.focus(gone, now2) is None
+
+
+def _decide(candidates, focus):
+    """The gate's decisions for these candidates while he's focused on `focus`."""
+    from core.communication_gate import GateState, decide_batch
+
+    return decide_batch(candidates, datetime(2026, 11, 18, 10), GateState(focus=focus), {"daily_budget": 10})
+
+
+def test_while_focused_an_unrelated_offer_waits_and_one_about_his_focus_comes():
+    from core.communication_gate import ACT, DEFER, Candidate
+
+    other = Candidate(topic="budget_nudge", title="Budget", message="You're near your grocery limit")
+    mine = Candidate(topic="insight", title="Coop", message="Lumber for the chicken coop is cheaper this week")
+    got = {d.candidate.topic: d for d in _decide([other, mine], "Chicken Coop")}
+    assert got["budget_nudge"].action == DEFER and "focused on Chicken Coop" in got["budget_nudge"].reason
+    assert got["insight"].action == ACT
+
+
+def test_an_offer_waits_for_his_focus_only_once():
+    from core.communication_gate import ACT, Candidate
+
+    again = Candidate(topic="budget_nudge", title="Budget", message="near the limit", not_before="2026-11-18T09:30:00")
+    assert _decide([again], "Chicken Coop")[0].action == ACT
+
+
+def test_urgent_never_waits_for_focus():
+    from core.communication_gate import ACT, URGENT, Candidate
+
+    alarm = Candidate(topic="smoke", title="Smoke", message="Smoke in the garage", urgency=URGENT)
+    assert _decide([alarm], "Chicken Coop")[0].action == ACT

@@ -23,6 +23,10 @@ nothing yet (on MIA OS, a KWin script, Prompt 10). A background job samples ever
 
 **What she does with it** (`working_on`): the app and title he spent most of the last `RECENT_MINUTES` on, and the
 project whose name it mentions, if one does. Asked "what am I working on?" (`what_am_i_working_on`), she says so.
+**When she speaks up** (DEC-0217, Q-74: what he's working on may shape when and which offers come, never creating
+one): `focus` says he's focused (the window in front of him now, and one app and title for `FOCUS_MIN` of the last
+`FOCUS_WINDOW` minutes); the communication gate then holds non-urgent offers as it does in flow, except one about
+the project he's focused on (`about`).
 """
 
 from __future__ import annotations
@@ -47,6 +51,9 @@ KEEP_DAYS = 7
 JOIN_SECONDS = 120  # the same app and title again within this extends its span
 RECENT_MINUTES = 30
 TITLE_CHARS = 120
+FOCUS_WINDOW = 15  # minutes looked at for focus
+FOCUS_MIN = 10  # minutes on one app and title in that window that count as focused
+FOCUS_FRESH = 120  # seconds: the last look must be this recent (he's still there)
 SKIP_APPS = ("keepass", "1password", "bitwarden", "lastpass", "dashlane", "keeper", "credentialuibroker",
              "lockapp", "logonui")
 SKIP_WORDS = ("inprivate", "incognito", "private browsing", "password", "sign in", "log in")
@@ -204,6 +211,30 @@ def working_on(context, now: Optional[datetime] = None) -> Optional[dict]:
     projects = getattr(context, "projects", None)
     found["project"] = project_for(found["title"], projects.all_projects() if projects is not None else [])
     return found
+
+
+def focus(context, now: Optional[datetime] = None) -> Optional[dict]:
+    """He's focused (see the module's opening): {app, title, minutes, project}; None when he isn't, noting is off or
+    nothing's been noted lately."""
+    store = getattr(context, "activity", None)
+    if store is None or not noting(context):
+        return None
+    now = now or datetime.now()
+    spans = store.spans(now - timedelta(minutes=FOCUS_WINDOW))
+    if not spans or (now - datetime.fromisoformat(spans[-1]["end"])).total_seconds() > FOCUS_FRESH:
+        return None
+    found = main_thing(spans)
+    if found is None or found["minutes"] < FOCUS_MIN:
+        return None
+    projects = getattr(context, "projects", None)
+    found["project"] = project_for(found["title"], projects.all_projects() if projects is not None else [])
+    return found
+
+
+def about(text: str, focus_name: str) -> bool:
+    """Pure logic. Whether an offer's words are about what he's focused on (every word of its name, as words)."""
+    name = set(re.findall(r"[a-z0-9]+", (focus_name or "").lower())) - {"the", "a", "my"}
+    return bool(name) and name <= set(re.findall(r"[a-z0-9]+", (text or "").lower()))
 
 
 def said(context) -> str:
