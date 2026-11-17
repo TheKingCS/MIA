@@ -25,7 +25,11 @@
 - **Prompt 06 (hardware and platform) is done** (Opus, 2026-11-17): `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and
   twenty supporting documents; the PC's hardware read from the machine; DEC-0201 to 0205 proposed; REQ-HW-007 to
   031 added.
-- **Next:** Zac's review of Prompt 06 (Q-63 to Q-67); Prompt 07 on his go.
+- Prompt 06 reviewed by Zac (Q-63 to Q-67 answered; DEC-0202 approved).
+- **Prompt 07 (intelligence infrastructure) is done** (Opus, 2026-11-17): `MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and
+  twenty supporting documents; DEC-0206 to 0212 proposed; REQ-INT-001 to 036 added.
+- Prompt 07 reviewed by Zac (Q-68 to Q-72 yes; DEC-0206 to 0212 approved; knowing who's talking not planned).
+- **Next:** Prompt 08 (agents and autonomy) on his go.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
 **Changes outside the planning documents, on Zac's say-so:**

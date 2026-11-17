@@ -5,7 +5,7 @@
 ## At a glance
 
 - **Architecture** — 845 Python files across 582 core, 93 modules, 123 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 204 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 211 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 284 dev entries (work/knowledge/).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (19): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204
+**PROPOSED** (26): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212
 **PROPOSED;** (2): DEC-0190, DEC-0205
 
 <details><summary>Every decision</summary>
@@ -230,6 +230,13 @@
 - **DEC-0203** [PROPOSED] — A hardware capability registry from Linux's own sources
 - **DEC-0204** [PROPOSED] — Linux schedules; MIA places models and orders the GPU queue
 - **DEC-0205** [PROPOSED;] — The device family's tiers
+- **DEC-0206** [PROPOSED] — MIA is the program, not the model
+- **DEC-0207** [PROPOSED] — One provider interface; local first; cloud only on a per-request yes
+- **DEC-0208** [PROPOSED] — Routing in code from measurements
+- **DEC-0209** [PROPOSED] — MIA's own council on local models of different families
+- **DEC-0210** [PROPOSED] — Memory in her stores, one recall index beside them
+- **DEC-0211** [PROPOSED] — Voice stays local; whisper.cpp measured for the PC
+- **DEC-0212** [PROPOSED] — Three kinds of learning, each with its own gate
 
 </details>
 

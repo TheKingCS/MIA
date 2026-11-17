@@ -34,7 +34,7 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 | DEC-0160 | Retire the Companion app; signing key from secrets | APPROVED |
 | DEC-0161 | The Life Enrichment Protocol | APPROVED as direction |
 | DEC-0162 | Smart Closet | APPROVED |
-| DEC-0163 | MIA tells who's talking | APPROVED as a requirement |
+| DEC-0163 | MIA tells who's talking | APPROVED as a requirement; low priority, not planned (Zac, 2026-11-17) |
 | DEC-0164 | Send to MIA on any selection | absorbed into DEC-0165 |
 | DEC-0165 | The Universal Action Layer | APPROVED as direction; phases await approval |
 | DEC-0166 | Which Claude model does which work | APPROVED as direction |
@@ -87,3 +87,17 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC-0205 | The device family's tiers; nothing depends on a later device | PROPOSED; laptop, tablet and smart display planned (Q-66) |
 
 Full records: `MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md` §3.
+
+## Proposed by Prompt 07 (2026-11-17)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0206 | MIA is the program, not the model: identity, memory and decisions in her code and stores | APPROVED (2026-11-17) |
+| DEC-0207 | One provider interface; local first; cloud for her own work only on a per-request yes | APPROVED (2026-11-17) |
+| DEC-0208 | Routing in code from measurements, with a fallback chain | APPROVED (2026-11-17) |
+| DEC-0209 | MIA's own council on local models of different families; disagreement kept | APPROVED (2026-11-17) |
+| DEC-0210 | Memory in her stores, one recall index beside them, provenance on every memory | APPROVED (2026-11-17) |
+| DEC-0211 | Voice stays local; whisper.cpp measured for the PC | APPROVED (2026-11-17) |
+| DEC-0212 | Three kinds of learning, each with its own gate | APPROVED (2026-11-17) |
+
+Full records: `MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md` §3.

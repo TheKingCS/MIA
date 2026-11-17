@@ -2853,6 +2853,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   rather than guesses, and nothing consequential is approved on an unidentified voice. The technology is chosen in
   MIA OS Prompt 07. Supersedes the "Zac alone" part of DEC-0119 only for being heard as a second voice; DEC-0119's
   other limits stand.
+- **Priority lowered (Zac, 2026-11-17):** "I am not too concerned about MIA knowing who is talking to her." MIA is for Zac alone (DEC-0119), so speaker recognition is not planned; the requirement stays recorded but nothing is built for it unless he raises it.
 
 ### DEC-0164: MIA's tools on anything you select, in any app
 - Status: PROPOSED (Zac's idea, 2026-11-15: "highlight a section and right click it and be able to assign MIA to
@@ -3559,4 +3560,53 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Decision: Current: the PC, the phone (Android with MIA's app), the glasses through the phone, the homestead's Pi node and safety controller. Next: a model node, the Pi running MIA Core. Later: a laptop, a smart display, the truck. Speculative: MIA's own hardware. Nothing depends on a later or speculative device.
 - Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
 - Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
+
+### DEC-0206: MIA is the program, not the model
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: Her identity (`core/personality.py`), memory (her stores), decisions and safety (code) live in MIA; any capable model can speak as her; no identity in weights.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
+
+### DEC-0207: One provider interface; local first; cloud only on a per-request yes
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: `LLMBackend` widened (structured output, embeddings, vision) with adapters for Ollama, OpenAI-compatible runners and later Hailo; a cloud adapter refuses any request without a consent token for exactly that content.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
+
+### DEC-0208: Routing in code from measurements
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: Task class, the capability registry's measured results and the device's state choose the model; a model's claims are never used; every route has a fallback ending in a computed answer.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
+
+### DEC-0209: MIA's own council on local models of different families
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: Independent answers, cross-family critique, synthesis in code where possible, disagreement kept; the development council unchanged.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
+
+### DEC-0210: Memory in her stores, one recall index beside them
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: A per-person sqlite-vec index of refs and vectors, hits re-read from the stores; nomic-embed-text now, qwen3-embedding measured; the private journal excluded by default.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
+
+### DEC-0211: Voice stays local; whisper.cpp measured for the PC
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: Vosk and Kokoro stay; whisper.cpp replaces Vosk on the PC only if it measures better on his own phrases; barge-in through the stop.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
+
+### DEC-0212: Three kinds of learning, each with its own gate
+- Status: APPROVED (Zac, 2026-11-17: "Yes to all your recommendations, however I am not too concerned about MIA knowing who is talking to her.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 07
+- Decision: Remembering by his words; behaviour from evidence, undoable; weights only through the model forge, the bench and Claude's inspection; no training on his private records without his yes for that dataset.
+- Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
 

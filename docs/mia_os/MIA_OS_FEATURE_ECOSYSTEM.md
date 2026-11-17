@@ -159,3 +159,9 @@ The third pattern is partial:
 3. **Two people at once** has no identity layer (DEC-0163).
 4. **Cross-app plans** have no planner (Prompt 08).
 5. **Discovery:** with ~378 tools and 102 pages, finding a capability depends on search and asking MIA. See `MIA_OS_NAVIGATION_AND_DISCOVERY.md`.
+
+## Intelligence dependencies (Prompt 07, 2026-11-17)
+
+Which intelligence services each family of features needs is in
+`MIA_OS_INTELLIGENCE_OPEN_QUESTIONS.md` §4. The rule that matters: every feature that doesn't need words or judgement
+works with no model at all (REQ-INT-036), and figures are always computed in code.

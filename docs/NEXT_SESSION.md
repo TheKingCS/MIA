@@ -7,6 +7,23 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
 
+**New 2026-11-17, later at the PC (Claude on Opus): Prompt 06 answered, the window, Prompt 07.**
+- **Zac answered Q-63 to Q-67:** case and power supply unknown (his brother built it); grow by nodes approved
+  (DEC-0202); a bigger drive approved, but the board has **one** M.2 slot, so it replaces the 1 TB; a laptop, tablet
+  and smart display are planned (DEC-0205 amended); tune the PC: **multithreading is back on** (Gigabyte's X3D Turbo
+  Mode had switched it off), EXPO and virtualization already on. Ollama's flash attention and q8_0 cache wait for a
+  bench before and after.
+- **The window** opens maximized; the Dashboard uses two columns on wide screens and fits; the sidebar tightens on
+  short screens; **each area opens its own dashboard** (a card per subcategory with what needs him there), the room
+  one button away (`d6864114`).
+- **Prompt 07 (intelligence infrastructure) is done:** `docs/mia_os/MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and twenty
+  more; DEC-0206 to 0212 proposed; REQ-INT-001 to 036. **Found: the everyday model is qwen2.5:14b with a 32k
+  context; CLAUDE.md still says llama3.2 3B.** **Zac: "Yes to all your recommendations"** (DEC-0206 to 0212 approved); knowing who's talking is low priority,
+  not planned (DEC-0163). Prompt 08 on his go. **To build from it:** measure qwen3:14b vs qwen2.5:14b on his own
+  questions (Q-68), whisper.cpp vs Vosk on his voice (Q-70), the recall index without the journal (Q-71).
+- **The bench:** qwen3:14b done on the full set; the other three and gpt-oss:20b, mistral-small:24b running (a
+  session restart killed the first attempt). Commit `work/eng_bench/` when it ends.
+
 **New 2026-11-17, at the PC (Claude on Opus): Prompt 06, and Zac's word on Plaid and the window.**
 - **Prompt 06 (hardware and platform) is done:** `docs/mia_os/MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty
   more. The PC was read from the machine: **a Mini-ITX build (Gigabyte A620I AX): one graphics slot, two memory slots,

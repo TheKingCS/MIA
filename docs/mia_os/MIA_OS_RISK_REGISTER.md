@@ -40,3 +40,8 @@ report that found it. Rated H, M or L.*
 | R-42 | The one-slot PC can't hold a specialist and an independent reviewer at once | M | H | Prompt 06 | relying on independent review | DEC-0202; a different-family model that fits (benched first) |
 | R-43 | Heat in a small case during long model runs | M | M | Prompt 06 | unattended overnight work on Linux | REQ-HW-024; measure on the image |
 | R-44 | Hardware advice that doesn't fit the machine (happened 2026-11-17) | M | M | Prompt 06 | any recommendation | REQ-HW-009: advice reads the capability record |
+| R-45 | Local models fall short and pressure grows to send his data to the cloud | H | M | Prompt 07 | any cloud use | DEC-0207's consent token; the model node first |
+| R-46 | An Ollama or model update changes behaviour silently | M | H | Prompt 07 | every update | REQ-INT-027, 032 |
+| R-47 | The recall index leaks a deleted or private record | H | L | Prompt 07 | UI-5 | refs only, re-read from stores; exclusions |
+| R-48 | Reviews look independent but share a model family | M | H | Prompt 07 | relying on review | labelled; non-Qwen reviewers benched |
+| R-49 | Context grows until answers slow and blur | M | M | Prompt 07 | the recall index | budgets; the trace |
