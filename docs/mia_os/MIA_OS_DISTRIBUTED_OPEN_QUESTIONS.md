@@ -4,6 +4,8 @@
 
 ## 1. For Zac
 
+**Answered 2026-11-18.** Q-87: "display that connects to tv": the Pi 5 first becomes the household display, on the TV over HDMI. Q-88 yes. Q-89 yes: he already has the laptop, not sure its hardware does everything; it runs as a full engine and thinks on the PC when it can (its model and memory to be checked). Q-90 yes. DEC-0241, 0244, 0247 approved.
+
 | Q | Question | Recommended |
 |---|---|---|
 | **Q-87** | What should the Raspberry Pi 5 do first: the Zeta Astralis prototype (a small screen on your forearm), the household display for you and your wife, or a second always-on node in the house? | The household display: it's the one you said is important, and the Pi's kiosk mode is built for it |

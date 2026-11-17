@@ -49,7 +49,9 @@
 - Prompt 11 reviewed by Zac (2026-11-18): Q-83 to Q-85 yes; Zeta Astralis first on an old Android or the Pi 5.
 - **Prompt 12 (one MIA across many devices) is done** (Opus, 2026-11-18): `MIA_OS_DISTRIBUTED_ARCHITECTURE.md` and
   twenty-five supporting documents; DEC-0241 to 0247 proposed; REQ-DST-001 to 033 added.
-- **Next:** Zac's review of Prompt 12 (Q-87 to Q-90); Prompt 13 on his go; to build: the Theme Studio from a picture,
+- Prompt 12 reviewed by Zac (2026-11-18): the Pi 5 first the household display on the TV; Tailscale only away;
+  the laptop (he has it) a full engine; a lost phone erases itself on reconnecting.
+- **Next:** Prompt 13 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

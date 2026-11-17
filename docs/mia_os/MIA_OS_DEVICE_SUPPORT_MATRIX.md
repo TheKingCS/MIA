@@ -7,11 +7,11 @@
 | His PC (Ryzen 7 9800X3D, RX 7900 XTX 24 GB, 32 GB) | hub | Windows 11 now; MIA OS (Fedora KDE) | the desktop app; the service on MIA OS | qwen2.5 14B, 32B, mistral-small 24B, gpt-oss 20B, qwen2.5-VL 7B | Vosk, Piper | none | **supported** |
 | His Android phone | full engine | Android | the phone app (Chaquopy) | a small llama.cpp model | the phone's | yes | **supported** |
 | Meta Ray-Ban Display glasses | endpoint | Meta's | through the phone (DAT) | none | through the phone | yes (photo) | **supported** (view, voice, camera) |
-| Raspberry Pi 5 + AI HAT+ 2 | node | Raspberry Pi OS / MIA OS (cage) | the Core edition | small (the HAT) | possible | possible | **planned** (Q-87) |
+| Raspberry Pi 5 + AI HAT+ 2 | first the household display (Q-87: on the TV over HDMI); later a node | Raspberry Pi OS / MIA OS (cage) | an engine's web screens with the household key; later the Core edition | small (the HAT) | possible | possible | **planned: the TV display first** |
 | The greenhouse node | node | Pi (homestead image) | `homestead/` | none | none | none | **supported** (read-only to MIA) |
 | ESP32 sensors and controllers | sensor / controller | firmware | their own | none | none | none | **supported** (sensors) |
 | Household display | endpoint | a tablet or small screen | an engine's web screens, household key | none | through an engine | optional | **planned** (Q-82) |
-| Laptop | full engine | MIA OS or Windows | the full engine | small or none | yes | yes | **planned** (Q-66, Q-89) |
+| Laptop (he has it, Q-89) | full engine | MIA OS or Windows | the full engine | small or none, thinking on the PC when it can | yes | yes | **planned: its model and memory to be checked** |
 | Tablet | endpoint or full engine | Android | the phone app | small | yes | yes | **planned** (Q-66) |
 | Zeta Astralis | endpoint | an old Android or the Pi 5 (Q-86) | the phone app compact layout, or web screens on the Pi | none | through its host | none | **prototype** |
 | Spatial headset | endpoint | — | WebXR | none | — | — | **future** |

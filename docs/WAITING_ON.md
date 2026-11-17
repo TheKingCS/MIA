@@ -9,6 +9,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From the Opus night (2026-11-17 into the 18th)
+0t. [ ] **The laptop's model name** (Q-89): tell Claude its make and model (or open MIA on it and say "check this computer"), so the plan knows how much it can do itself.
 0s. [x] ~~**Prompt 11, the look: four questions**~~ (answered 2026-11-18) (Q-83 to Q-86, `docs/mia_os/MIA_OS_VISUAL_OPEN_QUESTIONS.md`): the
    Theme Studio starting from one of your pictures; quiet interface sounds (listening, "needs you", errors on; done
    and message chimes off; alarms always); a Light theme now, Graffiti and Neon later; Zeta Astralis tried on a small

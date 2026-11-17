@@ -3807,7 +3807,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0241: One MIA per person: the PC the hub, full engines that work alone
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-87 and Q-89): the Pi 5's first job is the household display on the TV (HDMI); the laptop he already has runs as a full engine, thinking on the PC when it can.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: The PC is the hub (records of truth, big models, heavy jobs); the phone (later the laptop) runs the full engine and works alone; the glasses, the household display and Zeta Astralis are endpoints that keep no records; Pi nodes run the Core edition; controllers and sensors keep their own firmware. One codebase, told apart by profile.
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
@@ -3828,7 +3828,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0244: HTTP and server-sent events over the home network or Tailscale
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-88 yes): away from home only through Tailscale, never an open port.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: Every request signed by a paired device; changes reach other devices as signals to re-read; no open ports, no broker; encrypted on the home network as through Tailscale away.
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
@@ -3849,7 +3849,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0247: A lost device is unlinked from anywhere
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-90 yes): an unlinked phone erases its MIA data when it next reaches the PC.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: Its key refused at once, its data sealed with its own key and erased when it next reaches the hub; a new device is paired and filled by sync; a replaced hub is refilled from a backup or a full engine.
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
