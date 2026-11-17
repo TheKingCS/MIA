@@ -22,8 +22,8 @@ the values, a sentence, the basis and the caveat.
 The first set: electrical (power, voltage drop, wire gauge, circuit load,
 battery runtime), embedded (LED resistor, voltage divider, battery life
 with sleep, regulator heat, ADC step), structural (floor joist), and
-homestead crafts (brine salt, candle wax), and the greenhouse (heat loss, fan size,
-drip water, heater propane; S4's first specialist). Each is checked in
+structural (stair risers, board feet, concrete), homestead crafts (brine salt, candle wax, soap
+lye, alum mordant), and the greenhouse (heat loss, fan size, drip water, heater propane; S4's first specialist). Each is checked in
 tests/test_eng_calcs.py against a worked example done by hand.
 
 Tables here are for copper wire at ordinary indoor temperatures and are a
@@ -40,8 +40,9 @@ from typing import Callable
 
 from core.quantities import Quantity, UnitError, parse, q, unit_of
 
-CAVEAT = ("This is a draft calculation. Electrical, battery and structural work must be checked by a qualified "
-          "person and against the code where you live before anything is built or energised.")
+CAVEAT = ("This is a draft calculation. Electrical, battery, structural and chemical work (lye, fuel) must be "
+          "checked by a qualified person and against the code where you live before anything is built, energised "
+          "or mixed.")
 
 # Copper wire by AWG: (ohms per 1000 ft at 20 degC, ampacity at the 60 degC column, the largest breaker allowed).
 # The 60 degC column is the conservative one for ordinary cable; 14, 12 and 10 AWG are capped at 15, 20 and 30 A.
@@ -280,6 +281,73 @@ def _heater_fuel(load: Quantity, hours: Quantity, efficiency: Quantity) -> dict:
                     f"of propane ({PROPANE_BTU_PER_GAL:,} BTU a gallon)."}
 
 
+# NaOH saponification values (grams of sodium hydroxide per gram of oil), as published lye calculators use them.
+SAP_NAOH = {"olive": 0.135, "coconut": 0.183, "lard": 0.138, "tallow": 0.143, "castor": 0.128}
+
+
+def _stair_risers(rise: Quantity) -> dict:
+    """The fewest equal risers that keep each at or under 7 3/4 in, from MIA's stair rule (core/build_calcs.py)."""
+    from core.build_calcs import MAX_RISE_IN
+
+    total = rise.number("in")
+    if total <= 0:
+        raise CalcError("The total rise has to be more than 0.")
+    count = math.ceil(total / MAX_RISE_IN)
+    riser = q(total / count, "in")
+    return {"values": {"risers": q(count), "riser": riser},
+            "said": f"A {rise.to('in')} rise takes {count} risers of {riser} each (none over {MAX_RISE_IN} in)."}
+
+
+def _board_feet(thickness: Quantity, width: Quantity, length: Quantity, count: Quantity) -> dict:
+    """Board feet of lumber: nominal inches x inches x feet / 12, times how many (core/toolbox_calcs.py)."""
+    from core.toolbox_calcs import board_feet
+
+    try:
+        found = board_feet(thickness.number("in"), width.number("in"), length.number("ft"), count.value)
+    except ValueError as problem:
+        raise CalcError(str(problem)) from None
+    return {"values": {"board_feet": q(found["total"])}, "said": found["text"] + "."}
+
+
+def _concrete_yards(length: Quantity, width: Quantity, thickness: Quantity, extra: Quantity) -> dict:
+    """Concrete for a slab: length x width x thickness, plus the extra asked for, in cubic yards and 80 lb bags."""
+    from core.build_calcs import BAG_80LB_CUFT
+
+    cubic_ft = length.number("ft") * width.number("ft") * thickness.number("ft") * (1 + extra.si)
+    yards = q(cubic_ft, "ft3").to("yd3")
+    bags = math.ceil(cubic_ft / BAG_80LB_CUFT)
+    return {"values": {"concrete": yards, "bags_80lb": q(bags)},
+            "said": f"{length.to('ft')} by {width.to('ft')} at {thickness.to('in')} thick, with {extra.si * 100:g}% "
+                    f"extra, is {yards} ({cubic_ft:.3g} cu ft), or {bags} bags of 80 lb mix."}
+
+
+def _soap_lye(olive: Quantity, coconut: Quantity, lard: Quantity, tallow: Quantity, castor: Quantity,
+              superfat: Quantity, water: Quantity) -> dict:
+    """Sodium hydroxide for cold-process soap: each oil's weight times its saponification value (SAP_NAOH), less
+    the superfat; water as a share of the oils."""
+    oils = {"olive": olive, "coconut": coconut, "lard": lard, "tallow": tallow, "castor": castor}
+    grams = {name: value.number("g") for name, value in oils.items()}
+    total = sum(grams.values())
+    if total <= 0:
+        raise CalcError("Soap Lye needs the oils: the grams of at least one of olive, coconut, lard, tallow or castor.")
+    if superfat.si >= 1:
+        raise CalcError("A superfat has to be under 100%.")
+    lye = q(sum(g * SAP_NAOH[name] for name, g in grams.items()) * (1 - superfat.si), "g")
+    wet = q(total * water.si, "g")
+    used = ", ".join(f"{g:g} g {name}" for name, g in grams.items() if g)
+    return {"values": {"lye": lye, "water": wet},
+            "said": f"{used} at {superfat.si * 100:g}% superfat takes {lye} of sodium hydroxide (lye), in {wet} of "
+                    f"water. Wear gloves and eye protection, add lye to water (never water to lye), and work with "
+                    f"air moving."}
+
+
+def _alum_mordant(fibre: Quantity, rate: Quantity) -> dict:
+    """Alum for mordanting fibre: a share of the dry fibre's weight."""
+    alum = q(fibre.number("g") * rate.si, "g")
+    return {"values": {"alum": alum},
+            "said": f"{fibre.to('g')} of dry fibre at {rate.si * 100:g}% of its weight takes {alum} of alum."}
+
+
 CALCULATORS: tuple[Calculator, ...] = (
     Calculator("power", "electrical", "Power", "Watts from volts and amps.",
                {"volts": ("V", "the voltage", None), "amps": ("A", "the current", None)}, _power, "P = V x I"),
@@ -337,6 +405,32 @@ CALCULATORS: tuple[Calculator, ...] = (
                {"volume": ("L", "the container's volume", None), "fragrance": ("%", "the fragrance load", "8 %")},
                _candle_wax, "common candle-making practice: wax at 0.86 g per mL; check the wax maker's own maximum "
                "fragrance load"),
+    Calculator("stair_risers", "structural", "Stair Risers", "How many equal risers a stair needs, and how tall "
+               "each is.", {"rise": ("in", "the total rise, floor to floor", None)}, _stair_risers,
+               "the fewest equal risers at or under 7 3/4 in each, the common residential code limit; check yours",
+               True),
+    Calculator("board_feet", "structural", "Board Feet", "Board feet of lumber.",
+               {"thickness": ("in", "the nominal thickness", None), "width": ("in", "the nominal width", None),
+                "length": ("ft", "each board's length", None), "count": ("", "how many boards", "1")},
+               _board_feet, "thickness (in) x width (in) x length (ft) / 12, times the count"),
+    Calculator("concrete_yards", "structural", "Concrete For A Slab", "Concrete for a slab or pad, in cubic yards "
+               "and 80 lb bags.",
+               {"length": ("ft", "the slab's length", None), "width": ("ft", "the slab's width", None),
+                "thickness": ("in", "the slab's thickness", None),
+                "extra": ("%", "extra for waste and uneven ground", "10 %")},
+               _concrete_yards, "length x width x thickness, plus the extra; 0.6 cu ft from an 80 lb bag"),
+    Calculator("soap_lye", "crafts", "Soap Lye", "Sodium hydroxide (lye) and water for cold-process soap.",
+               {"olive": ("g", "olive oil's weight", "0 g"), "coconut": ("g", "coconut oil's weight", "0 g"),
+                "lard": ("g", "lard's weight", "0 g"), "tallow": ("g", "beef tallow's weight", "0 g"),
+                "castor": ("g", "castor oil's weight", "0 g"),
+                "superfat": ("%", "the oil left unsaponified", "5 %"),
+                "water": ("%", "water as a share of the oils' weight", "38 %")},
+               _soap_lye, "each oil's weight x its NaOH saponification value (olive 0.135, coconut 0.183, lard 0.138, "
+               "tallow 0.143, castor 0.128), less the superfat", True),
+    Calculator("alum_mordant", "crafts", "Alum Mordant", "Alum to mordant fibre before dyeing.",
+               {"fibre": ("g", "the dry fibre's weight", None), "rate": ("%", "alum as a share of the fibre", "15 %")},
+               _alum_mordant, "alum at a share of the weight of fibre (15% is common for wool); follow the dye "
+               "maker's own rate"),
     Calculator("greenhouse_heat", "greenhouse", "Greenhouse Heat Loss", "Heat lost through the glazing on the "
                "coldest night, which the heater must make up.",
                {"area": ("ft2", "the glazing's total area, walls and roof", None),

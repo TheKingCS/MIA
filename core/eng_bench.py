@@ -122,6 +122,32 @@ TASKS: tuple[Task, ...] = (
     Task("c2", "How many grams of wax fill a 250 millilitre candle jar, with wax at 0.86 grams per millilitre?",
          "candle_wax", {"volume": "0.25 L"}, "wax", "g"),
     Task("c3", "How much salt for my sauerkraut at 2%?", "brine_salt", {"strength": "2 %"}, missing="vegetables"),
+    Task("c4", "Cold-process soap with 1000 grams of olive oil at a 5% superfat: how many grams of sodium hydroxide?",
+         "soap_lye", {"olive": "1000 g", "superfat": "5 %"}, "lye", "g"),
+    Task("c5", "A soap recipe uses 700 grams of olive oil and 300 grams of coconut oil at a 5% superfat. How many grams "
+         "of sodium hydroxide?", "soap_lye", {"olive": "700 g", "coconut": "300 g", "superfat": "5 %"}, "lye", "g"),
+    Task("c6", "How many grams of alum mordant for 500 grams of wool at 15% of the fibre's weight?", "alum_mordant",
+         {"fibre": "500 g", "rate": "15 %"}, "alum", "g"),
+    Task("c7", "How many grams of fragrance oil go in my candle at 8%?", "candle_wax", {"fragrance": "8 %"},
+         missing="volume"),
+    Task("c8", "How much alum do I need to mordant my wool before dyeing it?", "alum_mordant", {"rate": "15 %"},
+         missing="fibre"),
+    # ---- structural
+    Task("s1", "A stair rises 108 inches in total and no riser may be over 7 3/4 inches. With the fewest equal risers, "
+         "how tall is each riser in inches?", "stair_risers", {"rise": "108 in"}, "riser", "in"),
+    Task("s2", "How many risers does a 42 inch rise need if no riser may be taller than 7 3/4 inches?",
+         "stair_risers", {"rise": "42 in"}, "risers", "", 0.0),
+    Task("s3", "How many board feet are in ten 2x6 boards, each 8 feet long?", "board_feet",
+         {"thickness": "2 in", "width": "6 in", "length": "8 ft", "count": 10}, "board_feet", ""),
+    Task("s4", "How many cubic yards of concrete for a 10 by 12 foot slab, 4 inches thick, with no extra?",
+         "concrete_yards", {"length": "10 ft", "width": "12 ft", "thickness": "4 in", "extra": "0 %"}, "concrete",
+         "yd3"),
+    Task("s5", "How many 80 pound bags of concrete for a 4 by 4 foot pad, 4 inches thick, with 10% extra? (an 80 lb bag "
+         "makes 0.6 cubic feet)", "concrete_yards", {"length": "4 ft", "width": "4 ft", "thickness": "4 in",
+                                                       "extra": "10 %"}, "bags_80lb", "", 0.0),
+    Task("s6", "How much concrete do I need for a 10 by 12 foot slab?", "concrete_yards",
+         {"length": "10 ft", "width": "12 ft"}, missing="thickness"),
+    Task("s7", "How tall should each riser be on my deck stairs?", "stair_risers", {}, missing="rise"),
     # ---- greenhouse (the greenhouse systems specialist, S4)
     Task("g1", "A greenhouse has 600 square feet of twin-wall polycarbonate glazing with a U-value of 0.7 BTU per hour "
          "per square foot per degree F. I keep it at 45 degrees F and plan for 5 degrees F outside. How many BTU per "

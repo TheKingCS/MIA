@@ -164,3 +164,27 @@ def test_no_input_description_offers_a_value_a_model_could_copy_instead_of_askin
         for name, (_unit, what, _default) in calc.inputs.items():
             assert not re.search(r"\babout\s+\d", what), (calc.id, name, what)
     assert near(calculate("vent_fan", {"floor": "288 ft2", "rate": "8 cfm/sq ft"})["values"]["flow"], 2304, "cfm")
+
+
+def test_the_structural_and_crafts_calculators_match_hand_worked_examples():
+    """108 in of rise is 14 risers of 7.714 in; ten 2x6x8s are 80 board feet; a 10 x 12 slab 4 in thick is 1.481 cu
+    yd; 1000 g of olive oil at 5% superfat takes 1000 x 0.135 x 0.95 = 128.25 g of lye; 700 g olive and 300 g coconut
+    take (94.5 + 54.9) x 0.95 = 141.93 g; 500 g of wool at 15% takes 75 g of alum."""
+    stairs = calculate("stair_risers", {"rise": "108 in"})
+    assert stairs["values"]["risers"].value == 14 and near(stairs["values"]["riser"], 108 / 14, "in")
+    assert stairs["caveat"] == CAVEAT
+    assert calculate("board_feet", {"thickness": "2 in", "width": "6 in", "length": "8 ft", "count": 10})[
+        "values"]["board_feet"].value == 80
+    slab = calculate("concrete_yards", {"length": "10 ft", "width": "12 ft", "thickness": "4 in", "extra": "0 %"})
+    assert near(slab["values"]["concrete"], 40 / 27, "yd3")
+    assert calculate("concrete_yards", {"length": "4 ft", "width": "4 ft", "thickness": "4 in"})[
+        "values"]["bags_80lb"].value == 10
+    lye = calculate("soap_lye", {"olive": "1000 grams"})
+    assert near(lye["values"]["lye"], 128.25, "g") and near(lye["values"]["water"], 380, "g") and lye["caveat"]
+    assert "never water to lye" in lye["said"]
+    assert near(calculate("soap_lye", {"olive": "700 g", "coconut": "300 g"})["values"]["lye"], 141.93, "g")
+    assert near(calculate("alum_mordant", {"fibre": "500 g"})["values"]["alum"], 75, "g")
+    with pytest.raises(CalcError, match="needs the oils"):
+        calculate("soap_lye", {})
+    with pytest.raises(CalcError, match="needs fibre"):
+        calculate("alum_mordant", {})

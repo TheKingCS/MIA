@@ -57,6 +57,7 @@ UNITS: dict[str, tuple[float, tuple]] = {
     "BTU/h": (0.29307107, _WATT), "m3/s": (1.0, (3, 0, -1, 0, 0)), "cfm": (4.719474432e-4, (3, 0, -1, 0, 0)),
     "gpm": (6.30901964e-5, (3, 0, -1, 0, 0)), "gph": (1.051503273e-6, (3, 0, -1, 0, 0)),
     "cfm/ft2": (4.719474432e-4 / 0.09290304, (1, 0, -1, 0, 0)),
+    "yd3": (0.764554857984, (3, 0, 0, 0, 0)),
     "W/m2K": (1.0, (0, 1, -3, 0, -1)), "BTU/h/ft2/degF": (5.678263337, (0, 1, -3, 0, -1)),
     "N": (1.0, (1, 1, -2, 0, 0)), "Pa": (1.0, (-1, 1, -2, 0, 0)), "psi": (6894.757293168, (-1, 1, -2, 0, 0)),
     "degC/W": (1.0, (-2, -1, 3, 0, 1)),
@@ -68,7 +69,8 @@ _ALIASES = {"Ω": "ohm", "ohms": "ohm", "kΩ": "kohm", "MΩ": "Mohm", "µA": "uA
             "litre": "L", "litres": "L", "liter": "L", "liters": "L", "l": "L", "Btu/h": "BTU/h", "btu/h": "BTU/h",
             "BTU/hr": "BTU/h", "Btu/hr": "BTU/h", "btuh": "BTU/h", "CFM": "cfm", "GPM": "gpm", "GPH": "gph",
             "cu ft": "ft3", "sq ft": "ft2", "ft²": "ft2", "m²": "m2", "ft³": "ft3", "cfm/sq ft": "cfm/ft2",
-            "CFM/ft2": "cfm/ft2", "cfm per sq ft": "cfm/ft2"}
+            "CFM/ft2": "cfm/ft2", "cfm per sq ft": "cfm/ft2",
+            "cu yd": "yd3", "cubic yards": "yd3", "yd³": "yd3", "grams": "g", "gram": "g"}
 _TEXT = re.compile(r"^\s*(-?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*(.*?)\s*$")
 _THOUSANDS = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$")
 
