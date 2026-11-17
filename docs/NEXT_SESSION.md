@@ -5,7 +5,14 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-17 (Opus on the PC: Approve From Now On, Prompt 09)*
+*Last updated: 2026-11-17 (Opus on the PC: Prompt 09 built, Prompt 10)*
+
+**New 2026-11-17, Prompt 10 (Claude on Opus).**
+- **Prompt 10 (the desktop and primary interface) is done:** `docs/mia_os/MIA_OS_DESKTOP_ARCHITECTURE.md` and
+  twenty-four more; DEC-0227 to 0233 proposed; REQ-DSK-001 to 032. Her shell on MIA OS is today's web front end,
+  full screen under KWin, Linux windows beside it, Plasma one press away. **Zac's answers:** Q-79 to Q-81
+  yes; she must flow to one monitor when he turns one off (REQ-DSK-033); Q-82 no: the household display is for
+  him and his wife, planned for real (REQ-DSK-028, 034). Prompt 11 on his go.
 
 **New 2026-11-17, Prompt 09 (Claude on Opus).**
 - **Approve From Now On is built** (`core/kind_grants.py`; DEC-0215): a card's second button makes a standing grant

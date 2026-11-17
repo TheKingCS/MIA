@@ -199,3 +199,9 @@ MIA_OS_APPLICATION_EXTENSION_ARCHITECTURE.md · MIA_OS_MULTI_DEVICE_APPLICATION_
 MIA_OS_APPLICATION_TECHNOLOGY_EVALUATION.md · MIA_OS_APPLICATION_ARCHITECTURE_DIAGRAMS.md ·
 MIA_OS_APPLICATION_COMPATIBILITY_MODEL.md · MIA_OS_APPLICATION_FRAMEWORK_ACCEPTANCE_CRITERIA.md ·
 MIA_OS_APPLICATION_FRAMEWORK_OPEN_QUESTIONS.md
+
+## On the desktop (Prompt 10, 2026-11-17)
+
+MIA's apps open inside her shell on the shared web frame, and in their own window on request; conventional
+Linux apps stay native, listed from their desktop entries and never added to her registry (DEC-0233).
+`MIA_OS_APPLICATION_DESKTOP_INTEGRATION.md` lists each concern.

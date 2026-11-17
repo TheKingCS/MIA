@@ -52,3 +52,7 @@ report that found it. Rated H, M or L.*
 | R-54 | She reports herself healthier than she is (stale evidence) | M | M | Prompt 09 | the registry | the unverified state; a test on the registry's honesty |
 | R-55 | Self-made changes add small harms the tests don't catch | M | M | Prompt 09 | self-development | loops watched after merges; a daily summary; revert |
 | R-56 | The protected list falls behind new safeguards | H | L | Prompt 09 | new safeguards | reviewed each prompt; a test that named safeguards are on it |
+| R-57 | KWin as a session for one shell isn't a supported KDE path and breaks on an update | H | M | Prompt 10 | MIA's session | PoC 3; cage fallback; pinned release |
+| R-58 | The shell's web window uses memory the models need | M | M | Prompt 10 | the shell | an idle limit, measured; models unloaded first |
+| R-59 | Wayland's isolation makes sharing context clumsy | M | H | Prompt 10 | context | chips; portal picks |
+| R-60 | Modes, workspaces and dashboards add up to clutter | M | M | Prompt 10 | the desktop | ranked Home; one navigation; his yes for workspaces |

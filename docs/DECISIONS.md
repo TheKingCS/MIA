@@ -3708,3 +3708,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
+### DEC-0227: The shell is MIA's web front end in a full-screen window under KWin
+- Status: APPROVED (Zac, 2026-11-17, Q-79 yes): ordinary windows in MIA's session are switched from her own strip; KDE's taskbar stays in the Plasma session. Proof of concept 3 still confirms the compositor.
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: In MIA's session, KWin manages every window; her shell is the existing web front end in its Qt WebEngine host, full screen, restarted by a systemd user unit; ordinary Linux apps open as KWin windows beside it; KDE Plasma is a login entry and one press away. Settles DEC-0191's lean; proof of concept 3 confirms; cage is the MVP fallback.
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+
+### DEC-0228: One navigation model
+- Status: APPROVED as amended (Zac, 2026-11-17, Q-82: "the display is important and is for me and my wife to use"): the household display is planned for real, a shared view of household stores for him and his wife.
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: Areas, each area's dashboard, then apps; Talk from anywhere; a status strip; the same on every device, shown differently (DEC-0125).
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+
+### DEC-0229: Unified search that never executes a change
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: One search over her records, the recall index, the system's file index (Baloo), desktop entries and capabilities; every result typed open, find, ask, start or do; start and do only open an approval card.
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+
+### DEC-0230: Context only by explicit share; workspaces restored through KWin
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: She reads a window, file or selection only when he shares it through the system's portal, each shown as a removable chip; project workspaces are her records bound to KWin virtual desktops and restored from desktop entries, with no app integration needed.
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+
+### DEC-0231: Ambient, Workspace and Immersive as states of one shell
+- Status: APPROVED (Zac, 2026-11-17, Q-80 yes): the second monitor shows the ambient view; "MIA should be adaptable and understanding of available monitors so if I turn one off she flows with just 1."
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: Three presentation states of the same shell and session, each returning him where he was; alarms and urgent messages are never held.
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+
+### DEC-0232: One notification pipeline
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: Her own messages through the communication gate; apps' and the OS's through the freedesktop notification service; one history with source and why.
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+
+### DEC-0233: Apps stay in the framework that suits them
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 10
+- Decision: MIA's apps on the shared web frame; conventional Linux apps native through Flatpak and their desktop entries; no framework forced on either.
+- Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
+

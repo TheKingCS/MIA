@@ -129,3 +129,17 @@ Full records: `MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0226 | New capabilities only through one path | PROPOSED |
 
 Full records: `MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 10 (2026-11-17)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0227 | The shell is MIA's web front end in a full-screen window under KWin | APPROVED (Q-79) |
+| DEC-0228 | One navigation model | APPROVED as amended (Q-82: the household display for him and his wife) |
+| DEC-0229 | Unified search that never executes a change | PROPOSED |
+| DEC-0230 | Context only by explicit share; workspaces restored through KWin | PROPOSED |
+| DEC-0231 | Ambient, Workspace and Immersive as states of one shell | APPROVED (Q-80; flows to one monitor) |
+| DEC-0232 | One notification pipeline | PROPOSED |
+| DEC-0233 | Apps stay in the framework that suits them | PROPOSED |
+
+Full records: `MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md` §2.

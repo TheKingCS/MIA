@@ -167,3 +167,7 @@ intelligence stays OS-independent), DEC-0157 (the PC image) and DEC-0158 (the pr
 Prompt 04 stops here. Zac answered its questions (2026-11-15, 16) and gave Prompt 05 to Fable (DEC-0166).
 
 **Prompt 05 is done (2026-11-16):** the architecture these constraints bind is [MIA_OS_CORE_ARCHITECTURE.md](MIA_OS_CORE_ARCHITECTURE.md); every requirement is mapped to its component in [MIA_OS_CORE_ARCHITECTURE_ACCEPTANCE_CRITERIA.md](MIA_OS_CORE_ARCHITECTURE_ACCEPTANCE_CRITERIA.md) §3.
+
+**Prompt 10 is done (2026-11-17):** the desktop's requirements are REQ-DSK-001 to 032, in the Prompt 10 documents
+([MIA_OS_DESKTOP_ARCHITECTURE.md](MIA_OS_DESKTOP_ARCHITECTURE.md)); REQ-FUN-001, 003 and REQ-UX-023 are met by
+DEC-0227's sessions and shell.

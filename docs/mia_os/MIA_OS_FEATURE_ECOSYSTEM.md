@@ -177,3 +177,8 @@ which module does which.
 
 Every feature has a record in the capability truth registry (DEC-0220) with its state and evidence, and a new
 feature reaches the running MIA only with its tier, tests, parity decision, loop and documentation (DEC-0226).
+
+## On the desktop (Prompt 10, 2026-11-17)
+
+Every feature is reached the same way: its area, the area's dashboard, the app; by search; or by asking her
+(DEC-0228). Activities are labelled real, simulated or game (REQ-DSK-021).

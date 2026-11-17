@@ -5,10 +5,10 @@
 ## At a glance
 
 - **Architecture** — 849 Python files across 586 core, 93 modules, 123 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 225 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 232 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 285 dev entries (work/knowledge/).
+- **Knowledge she's written** — 286 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 53 personal + 42 household stores, 54 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (29): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204, DEC-0213, DEC-0214, DEC-0216, DEC-0218, DEC-0219, DEC-0220, DEC-0221, DEC-0223, DEC-0224, DEC-0226
+**PROPOSED** (36): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204, DEC-0213, DEC-0214, DEC-0216, DEC-0218, DEC-0219, DEC-0220, DEC-0221, DEC-0223, DEC-0224, DEC-0226, DEC-0227, DEC-0228, DEC-0229, DEC-0230, DEC-0231, DEC-0232, DEC-0233
 **PROPOSED;** (2): DEC-0190, DEC-0205
 
 <details><summary>Every decision</summary>
@@ -251,6 +251,13 @@
 - **DEC-0224** [PROPOSED] — Investigations end in a reproducing test
 - **DEC-0225** [APPROVED] — Self-development only through the lab
 - **DEC-0226** [PROPOSED] — New capabilities only through one path
+- **DEC-0227** [PROPOSED] — The shell is MIA's web front end in a full-screen window under KWin
+- **DEC-0228** [PROPOSED] — One navigation model
+- **DEC-0229** [PROPOSED] — Unified search that never executes a change
+- **DEC-0230** [PROPOSED] — Context only by explicit share; workspaces restored through KWin
+- **DEC-0231** [PROPOSED] — Ambient, Workspace and Immersive as states of one shell
+- **DEC-0232** [PROPOSED] — One notification pipeline
+- **DEC-0233** [PROPOSED] — Apps stay in the framework that suits them
 
 </details>
 
@@ -258,7 +265,7 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 285 entries 42 lesson, 18 debugging, 23 decision, 9 method, 7 test-procedure, 3 failed-experiment, 181 implementation, 2 security-finding.
+- **Dev-knowledge** — 286 entries 42 lesson, 18 debugging, 23 decision, 9 method, 7 test-procedure, 3 failed-experiment, 182 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

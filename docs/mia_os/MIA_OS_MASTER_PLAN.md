@@ -38,7 +38,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **07** | **Intelligence infrastructure** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-68 to Q-72 yes; DEC-0206 to 0212 approved)** | `MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and twenty more (listed in it) |
 | **08** | **Autonomy, agents and execution** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Approve Once / From Now On; Q-74 yes; no quiet hours)** | `MIA_OS_AUTONOMY_ARCHITECTURE.md` and twenty-three more (listed in it) |
 | **09** | **Self-awareness, inspection and self-development** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-76 to Q-78 yes; DEC-0222 and 0225 approved)** | `MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more (listed in it) |
-| 10–17 | (see `prompts/`) | not started | |
+| **10** | **The desktop and primary interface** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-79 to Q-81 yes; Q-82: the household display for him and his wife; DEC-0227, 0228, 0231 approved)** | `MIA_OS_DESKTOP_ARCHITECTURE.md` and twenty-four more (listed in it) |
+| 11–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -79,6 +80,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3j. Prompt 10 in brief
+
+The architecture is [MIA_OS_DESKTOP_ARCHITECTURE.md](MIA_OS_DESKTOP_ARCHITECTURE.md), with twenty-four supporting
+documents. The audit found MIA's desktop already built as her web front end: 109 screens on one frame, 19 area
+dashboards, Talk everywhere, Ctrl+K search, one change path with Approve Once or From Now On, themes apart from
+behaviour. On MIA OS it becomes a full-screen window under KWin with ordinary windows beside it and Plasma one
+press away (DEC-0227); one navigation model (DEC-0228); search that never executes a change (DEC-0229); context
+only when shared, workspaces restored through KWin (DEC-0230); three modes of one shell (DEC-0231); one
+notification pipeline (DEC-0232); apps left in the framework that suits them (DEC-0233). REQ-DSK-001 to 032.
 
 ## 3i. Prompt 09 in brief
 
