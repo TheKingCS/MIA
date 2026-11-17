@@ -20,7 +20,7 @@ its computer. `MIA_OS_FUTURE_CAPABILITIES.md` lists it as research.*
 | Step | Hardware |
 |---|---|
 | The compact layout as a web page at its aspect ratio | any screen (a browser window) |
-| On the wrist | a small Android phone or an Android watch-sized device in a forearm mount, running the phone app (Q-86) |
+| On the wrist | **Zac's choice (Q-86): an old Android phone, or the Raspberry Pi 5 with a small screen**, in a forearm mount. The phone runs MIA's phone app in the compact layout; the Pi runs the same web screens full screen (cage, as the Pi's kiosk, DEC-0191), reaching the PC's engine over the home network |
 | Custom display | a flexible display with a microcontroller: custom hardware, later |
 
 **Power:** the display shows nothing while not looked at; the phone does the work.

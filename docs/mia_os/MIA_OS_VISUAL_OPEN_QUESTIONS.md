@@ -4,6 +4,8 @@
 
 ## 1. For Zac
 
+**Answered 2026-11-18.** Q-83 "sure", Q-84 yes, Q-85 yes. Q-86: "I was thinking either an old android or the pi5": the Zeta Astralis prototype runs on an old Android phone or the Pi 5 with a small screen (`MIA_OS_ZETA_ASTRALIS_INTERFACE_CONCEPT.md` §2). DEC-0235, 0236, 0240 approved; DEC-0239 approved as amended.
+
 | Q | Question | Recommended |
 |---|---|---|
 | **Q-83** | The Theme Studio already lets you make, save and share your own themes. Add to it: start from one of your pictures and MIA suggests colours from it that stay readable, and pick the orb's style? | Yes |

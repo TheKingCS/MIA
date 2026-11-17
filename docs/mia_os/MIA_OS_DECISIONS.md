@@ -149,11 +149,11 @@ Full records: `MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md` §2.
 | DEC | Title | Status |
 |---|---|---|
 | DEC-0234 | One design system for every device | PROPOSED |
-| DEC-0235 | The identity holds without colour, transparency or motion | PROPOSED |
-| DEC-0236 | Themes and personalisation are validated data, never code | PROPOSED |
+| DEC-0235 | The identity holds without colour, transparency or motion | APPROVED (Q-85) |
+| DEC-0236 | Themes and personalisation are validated data, never code | APPROVED (Q-83) |
 | DEC-0237 | The orb: one component, fourteen states | PROPOSED |
 | DEC-0238 | Motion in three speeds, meaningful apart from decorative | PROPOSED |
-| DEC-0239 | Spatial interfaces are views of the same capabilities | PROPOSED |
-| DEC-0240 | A small local audio identity | PROPOSED |
+| DEC-0239 | Spatial interfaces are views of the same capabilities | APPROVED as amended (Q-86: an old Android or the Pi 5) |
+| DEC-0240 | A small local audio identity | APPROVED (Q-84) |
 
 Full records: `MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md` §2.

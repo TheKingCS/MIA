@@ -3765,14 +3765,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0235: The identity holds without colour, transparency or motion
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-85 yes): a Light theme now; Graffiti and a Neon theme later.
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: The orb's shapes and labels, the one accent that means MIA, mono technical labels and the layered layout carry the identity; a Light theme beside the existing high-contrast setting; contrast checked for every theme and tier.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0236: Themes and personalisation are validated data, never code
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-83 "sure"): the Theme Studio may start from one of his pictures, with a readable palette suggested, and the orb's style chosen.
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: As the Theme Studio already does: a theme is checked data (known tokens, clamped values, a backdrop as one of his pictures, a chime set), saved, exported and imported as a mia-theme/1 file; no CSS, script or URLs; a theme failing contrast is refused with the reason; meaning colours, the approval card and the orb's state shapes can't be changed.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
@@ -3793,14 +3793,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0239: Spatial interfaces are views of the same capabilities
-- Status: PROPOSED
+- Status: APPROVED as amended (Zac, 2026-11-18, Q-86: "I was thinking either an old android or the pi5"): the Zeta Astralis prototype runs on an old Android phone or the Raspberry Pi 5 with a small screen.
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: Portals open the same screens and actions as the sidebar, search and Talk; the Nexus stays Living Worlds'; every spatial feature is labelled by the hardware it needs.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0240: A small local audio identity
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-84 yes): listening on and off, "needs you" and errors on by default; done and message chimes off; alarms always.
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: The win sounds kept; quiet listening, needs-you, error and done tones added the same way (made in the browser), each with a visual twin, all off with the existing sound setting; alarms always sound.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2

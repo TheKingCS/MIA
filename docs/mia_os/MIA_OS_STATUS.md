@@ -46,7 +46,8 @@
   display is for him and his wife (Q-82, REQ-DSK-034). DEC-0227, 0228 (amended), 0231 approved.
 - **Prompt 11 (visual identity, themes and spatial interfaces) is done** (Opus, 2026-11-17):
   `MIA_OS_VISUAL_IDENTITY.md` and twenty-four supporting documents; DEC-0234 to 0240 proposed; REQ-VIS-001 to 026.
-- **Next:** Zac's review of Prompt 11 (Q-83 to Q-86); Prompt 12 on his go.
+- Prompt 11 reviewed by Zac (2026-11-18): Q-83 to Q-85 yes; Zeta Astralis first on an old Android or the Pi 5.
+- **Next:** Prompt 12 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture, interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
 **Changes outside the planning documents, on Zac's say-so:**

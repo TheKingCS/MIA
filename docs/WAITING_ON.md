@@ -9,7 +9,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From the Opus night (2026-11-17 into the 18th)
-0s. [ ] **Prompt 11, the look: four questions** (Q-83 to Q-86, `docs/mia_os/MIA_OS_VISUAL_OPEN_QUESTIONS.md`): the
+0s. [x] ~~**Prompt 11, the look: four questions**~~ (answered 2026-11-18) (Q-83 to Q-86, `docs/mia_os/MIA_OS_VISUAL_OPEN_QUESTIONS.md`): the
    Theme Studio starting from one of your pictures; quiet interface sounds (listening, "needs you", errors on; done
    and message chimes off; alarms always); a Light theme now, Graffiti and Neon later; Zeta Astralis tried on a small
    Android phone in a forearm mount first. Then say go for Prompt 12 (every device).
