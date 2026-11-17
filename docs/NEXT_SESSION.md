@@ -5,7 +5,29 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-16 (the Fable run: review queue 14 to 23, prompt 23's review, MIA OS Prompt 05)*
+*Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
+
+**New 2026-11-17, on the PC (Claude on Opus), alongside the cloud session below.**
+- **Opus's independent review of Fable's three** (the stop UI-2, Forge's scaffold M7, plans across apps UI-7): all
+  fixed, each with tests (K-0275). Plans: nothing that pays, buys, sends, publishes, deletes or touches a grant is a
+  step any more (marking a bill or debt paid is the one bookkeeping exception); the card pins the step it showed; a
+  finished plan takes no more changes; a failed step can be retried; "do step N" never rides along with other calls.
+  The stop: "stop all alarms" is no longer "stop everything"; "tonight" late at night ends next morning; a time she
+  can't read is asked about, never held forever; "stop it" ends a job walkthrough; the desktop's Qt chat and
+  push-to-talk now hear the stop; reminders he set still come while stopped; the hold is known from boot. Forge:
+  all-or-nothing on a failed write; unsafe names, a trailing-newline id and Windows device names refused; a comment
+  after a list's last item no longer swallows the new one. **The review queue for Fable's UI-2, M7, UI-7 is clear.**
+- **Built (T1, first part, DEC-0198):** every specialist is an agent role (`core/specialists.py` `ROLES`):
+  department, task types, read-only tools, reasoning, needs, reviewers, caveat for all 18; one whose answers rest on
+  figures has the worksheet (`work_it_out`); `list_specialists` by voice. Tests: no agent can call a tool that
+  changes anything; every safety department carries its caveat. Maker's esp32/arduino words moved to embedded.
+- **Next (Opus):** T1's second part, the router: each specialist's model chosen from `core/eng_bench.py`'s results
+  (the bench needs its PC run first, S0), then "ask the right specialist with one reviewer on a different local
+  model"; then T2 (the workspace).
+- **Not mine, left uncommitted on the PC:** a third session's email inbox files, budget/Plaid edits and specialist
+  workbook notes. Its homesteading notes make `tests/test_connections.py::test_a_plan_is_found_only_when_it_really_is_a_plan_for_it`
+  fail on the PC (it passes on a clean checkout), and its Plaid edit fails `test_import_transaction_transfer_is_skipped`.
+
 
 **New 2026-11-17, from Zac's phone (Claude, cloud session; the PC session needs Zac to sign in again).**
 - **Q-53 answered (DEC-0197):** the specialists run on local models that can do the engineering; build whatever makes

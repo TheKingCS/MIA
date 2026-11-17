@@ -36,6 +36,14 @@ specialist named, or every one), with the note's sources and whether it's
 confirmed. A question no note answers is never written into a workbook (they
 are in the repo, and a person's words stay in their own folder): the
 specialist only counts it, and study hall takes the most-asked one first; `python -m tools.specialists` lists, shows, confirms and runs them.
+
+**As an agent** (DEC-0198, T1 of `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`): each specialist is also a role a
+team can use, set in `ROLES` beside its charter: its department, the kinds of task it takes (`TASK_TYPES`), the tools
+it may call (only ones tiered observe or suggest: an agent changes nothing), how hard its thinking is
+(`reasoning`) and what else its model must do (`needs`; one whose answers rest on figures works them out on the
+worksheet, `work_it_out`), whose work it may review, and the caveat its output carries
+where a qualified person must check it (Q-57). Its model is never named here: the router picks the best local
+model the engineering bench (core/eng_bench.py) found good enough for the task (DEC-0197). An agent holds no grants and never talks to the person; only MIA does.
 """
 
 from __future__ import annotations
@@ -45,7 +53,7 @@ from core.data_root import work_path
 import json
 import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
@@ -67,7 +75,9 @@ COMMON_LIMITS = ("Every note says where it comes from; a claim without a source 
 @dataclass(frozen=True)
 class Specialist:
     """One worker for one area of what MIA knows: its charter, the skills and curriculum tracks it develops, the
-    loops it watches, its limits, and the questions it starts from."""
+    loops it watches, its limits, and the questions it starts from; and, as an agent a team can use (DEC-0198, from
+    ROLES), its department, task types, read-only tools, how hard its thinking is, what its model needs, whom it
+    may review and the caveat its output carries."""
     id: str
     name: str
     charter: str
@@ -77,6 +87,14 @@ class Specialist:
     limits: str = ""
     starts_from: tuple[str, ...] = ()
     words: tuple[str, ...] = ()  # what a question about its area sounds like
+    # As an agent (DEC-0197; filled from ROLES below)
+    department: str = ""
+    task_types: tuple[str, ...] = ()
+    tools: tuple[str, ...] = ()
+    reasoning: str = "medium"  # low | medium | high
+    needs: tuple[str, ...] = ()  # of NEEDS
+    reviews: tuple[str, ...] = ()  # specialist ids whose work it may review
+    caveat: str = ""
 
 
 SPECIALISTS: tuple[Specialist, ...] = (
@@ -118,12 +136,13 @@ SPECIALISTS: tuple[Specialist, ...] = (
                words=("strategy", "military", "tactic", "logistics", "ooda", "preparedness", "emergency", "plan",
                       "sun tzu", "clausewitz", "battle", "campaign", "contingency")),
     Specialist("maker", "Making and fabrication", "Making things: 3D printing, CAD, woodworking, metalwork, "
-               "electronics and microcontrollers, laser engraving, prototyping.", skills=("Maker", "Technology"),
+               "laser engraving, enclosures and prototyping (the electronics inside them are the embedded "
+               "specialist's).", skills=("Maker", "Technology"),
                limits="Mains electricity and pressure systems are named as dangerous, with the safe way.",
                starts_from=("How do you choose a 3D-printing filament for an outdoor part?",
-                            "How do you wire a sensor to an ESP32?"),
-               words=("3d print", "cad", "solder", "arduino", "esp32", "laser", "cnc", "weld", "prototype",
-                      "filament", "woodwork")),
+                            "How do you design a printed enclosure that keeps water out?"),
+               words=("3d print", "cad", "laser", "cnc", "weld", "prototype", "filament", "woodwork", "enclosure",
+                      "fabricat")),
     Specialist("embedded", "Embedded systems", "Small computers in real things: microcontrollers (ESP32, Arduino, "
                "Raspberry Pi Pico), sensors and actuators, I2C, SPI and serial, power budgets and batteries, "
                "regulators and level shifting, reading a datasheet, firmware structure, and getting a device to talk "
@@ -242,7 +261,118 @@ SPECIALISTS: tuple[Specialist, ...] = (
                       "fascia", "metal roof", "drip edge")),
 )
 
+# ------------------------------------------------------------------ as agents (DEC-0198: the teams design's roles)
+
+DEPARTMENTS = ("research", "engineering", "software", "fabrication", "trades", "homestead", "preparedness",
+               "creative")
+# Departments whose work can hurt someone or something: every agent in one carries a caveat (Q-57).
+SAFETY_DEPARTMENTS = frozenset({"engineering", "fabrication", "trades", "homestead"})
+TASK_TYPES = ("research", "compare", "design", "estimate", "review", "safety_review", "write", "build_code")
+REASONING = ("low", "medium", "high")
+NEEDS = ("code", "vision", "numbers")  # numbers: its answers rest on figures code should check
+
+_PRO = "A draft for you to check, not a substitute for a licensed {who}; codes vary by place."
+_READ = ("look_up_online", "search_textbook", "list_projects", "get_project_missions")
+_FIGURES = ("work_it_out",)  # the worksheet: the model picks calculators, code computes (core/specialist_work.py)
+_BUILD = ("find_plans", "show_plan", "list_materials", "get_build_costs", "check_price", "list_inventory")
+
+ROLES: dict[str, dict] = {
+    "construction": dict(department="trades", task_types=("research", "design", "estimate", "review", "safety_review"),
+                         tools=_READ + _BUILD, reasoning="high", needs=("numbers",),
+                         reviews=("carpentry", "plumbing", "electrical", "hvac", "appliances", "exterior"),
+                         caveat=_PRO.format(who="contractor or engineer")),
+    "homesteading": dict(department="homestead", task_types=("research", "design", "estimate", "review"),
+                         tools=_READ + ("get_homestead_next_step", "list_sensors", "get_weather", "list_lab_readings"),
+                         needs=("numbers",), reviews=("crafts",),
+                         caveat="Food safety follows tested guidance; animal health beyond basics needs a vet."),
+    "radio": dict(department="engineering", task_types=("research", "design", "compare", "review"),
+                  tools=_READ, needs=("numbers",), reviews=("embedded",),
+                  caveat="Transmitting needs the right licence where you are; check the band plan."),
+    "strategy": dict(department="preparedness", task_types=("research", "compare", "write", "review"),
+                     tools=_READ + ("get_weather", "get_energy", "list_inventory")),
+    "maker": dict(department="fabrication", task_types=("research", "design", "compare", "review"),
+                  tools=_READ + _BUILD, needs=("numbers",), reviews=("embedded", "crafts"),
+                  caveat="A draft for you to check; mains power and pressure are dangerous."),
+    "embedded": dict(department="engineering", task_types=("research", "design", "compare", "review",
+                                                           "safety_review", "build_code"),
+                     tools=_READ + ("list_sensors", "list_inventory", "check_price", "get_energy"), reasoning="high",
+                     needs=("code", "numbers"), reviews=("maker", "radio", "electrical"),
+                     caveat="A draft for you to check; mains voltage and lithium batteries need a qualified "
+                            "person's review before they're built."),
+    "crafts": dict(department="homestead", task_types=("research", "design", "estimate", "write", "review"),
+                   tools=_READ + ("list_inventory", "check_price", "list_materials"), needs=("numbers",),
+                   reviews=("homesteading", "maker"),
+                   caveat="Lye, hot wax and dyes are dangerous; follow a tested recipe and a lye calculator."),
+    "outdoors": dict(department="preparedness", task_types=("research", "write", "review"),
+                     tools=_READ + ("get_weather", "list_trail_maps"),
+                     caveat="First aid is first aid: anything serious needs emergency help."),
+    "music": dict(department="creative", task_types=("research", "write"), tools=_READ, reasoning="low"),
+    "research": dict(department="research", task_types=("research", "compare", "review"),
+                     tools=_READ + ("world_finds",),
+                     reviews=("construction", "homesteading", "radio", "strategy", "maker", "embedded", "crafts",
+                              "outdoors", "music", "engineering")),
+    "testing": dict(department="software", task_types=("review", "safety_review", "build_code"), tools=_READ,
+                    reasoning="high", needs=("code",), reviews=("engineering", "embedded")),
+    "engineering": dict(department="software", task_types=("research", "design", "review", "build_code", "write"),
+                        tools=_READ, reasoning="high", needs=("code",), reviews=("testing", "embedded")),
+    "carpentry": dict(department="trades", task_types=("research", "design", "estimate", "review", "safety_review"),
+                      tools=_READ + _BUILD, reasoning="high", needs=("numbers",), reviews=("construction", "exterior"),
+                      caveat=_PRO.format(who="contractor, or an engineer for anything structural")),
+    "plumbing": dict(department="trades", task_types=("research", "design", "estimate", "review"),
+                     tools=_READ + _BUILD, needs=("numbers",), reviews=("construction",),
+                     caveat=_PRO.format(who="plumber")),
+    "electrical": dict(department="trades", task_types=("research", "design", "estimate", "review", "safety_review"),
+                       tools=_READ + _BUILD, reasoning="high", needs=("numbers",),
+                       reviews=("construction", "embedded", "appliances"), caveat=_PRO.format(who="electrician")),
+    "hvac": dict(department="trades", task_types=("research", "design", "estimate", "review"), tools=_READ + _BUILD,
+                 needs=("numbers",), reviews=("construction",),
+                 caveat=_PRO.format(who="HVAC technician (refrigerant needs a certified one)")),
+    "appliances": dict(department="trades", task_types=("research", "review"),
+                       tools=_READ + ("list_asset_parts", "check_price"), reviews=("electrical",),
+                       caveat=_PRO.format(who="appliance technician (gas work needs a qualified one)")),
+    "exterior": dict(department="trades", task_types=("research", "design", "estimate", "review"),
+                     tools=_READ + _BUILD, needs=("numbers",), reviews=("carpentry", "construction"),
+                     caveat=_PRO.format(who="roofer or contractor")),
+}
+
+def _as_agent(spec: Specialist) -> Specialist:
+    """Pure logic. A charter with its role (ROLES) on it; one whose answers rest on figures also gets the worksheet."""
+    role = dict(ROLES.get(spec.id, {}))
+    if "numbers" in role.get("needs", ()):
+        role["tools"] = tuple(role.get("tools", ())) + _FIGURES
+    return replace(spec, **role)
+
+
+SPECIALISTS = tuple(_as_agent(s) for s in SPECIALISTS)
 BY_ID = {s.id: s for s in SPECIALISTS}
+
+
+def agents_for(task_type: str = "", department: str = "") -> list[Specialist]:
+    """Pure logic. The specialists that take a kind of task (and are in a department, when one is given), in the
+    registry's order."""
+    return [s for s in SPECIALISTS if (not task_type or task_type in s.task_types)
+            and (not department or s.department == department)]
+
+
+def reviewers_of(sid: str) -> list[Specialist]:
+    """Pure logic. The specialists qualified to review one's work (never itself)."""
+    return [s for s in SPECIALISTS if sid in s.reviews and s.id != sid]
+
+
+def describe_registry() -> str:
+    """Pure logic. MIA's specialists as agents, by department, in plain words (the registry's spoken summary)."""
+    lines = []
+    for dept in DEPARTMENTS:
+        members = [s.name for s in SPECIALISTS if s.department == dept]
+        if members:
+            lines.append(f"{dept.capitalize()}: {', '.join(members)}.")
+    return (f"I have {len(SPECIALISTS)} specialists. " + " ".join(lines)
+            + " Each one works only on what I give it, changes nothing, and I check its work before it reaches you.")
+
+
+def _action_list(context, arguments: dict) -> str:
+    """Tool list_specialists: the registry by department (describe_registry)."""
+    return describe_registry()
 
 
 # ------------------------------------------------------------------ the workbooks
@@ -561,8 +691,8 @@ def _action_ask(context, arguments: dict) -> str:
 
 
 def register_specialist_actions(registry) -> None:
-    """Registers the ask_specialist tool, and work_it_out (a specialist's worksheet with her calculators,
-    core/specialist_work.py)."""
+    """Registers the ask_specialist and list_specialists tools, and work_it_out (a specialist's worksheet with her
+    calculators, core/specialist_work.py)."""
     from core.assistant_actions import AssistantAction
     from core.specialist_work import register as register_worksheet
 
@@ -570,8 +700,9 @@ def register_specialist_actions(registry) -> None:
 
     registry.register(AssistantAction(
         name="ask_specialist", domain="knowledge",
-        description=("Ask one of MIA's specialists (construction, homesteading, radio, strategy and preparedness, "
-                     "making, outdoors, research, testing, engineering) what its workbook says about a question, "
+        description=("Ask one of MIA's specialists (construction and the trades, homesteading, homestead crafts, "
+                     "radio, embedded systems, strategy and preparedness, making, outdoors, research, testing, "
+                     "engineering) what its workbook says about a question, "
                      "with its sources and whether a person has confirmed it."),
         parameters={"type": "object", "properties": {
             "question": {"type": "string", "description": "The question, in their words."},
@@ -582,4 +713,13 @@ def register_specialist_actions(registry) -> None:
                          "your radio specialist", "your homesteading specialist", "your strategy specialist",
                          "what do your specialists", "ask the expert", "specialist say"),
         subjects=("specialist", "expert"),
+    ))
+    registry.register(AssistantAction(
+        name="list_specialists", domain="knowledge",
+        description="Which specialists MIA has, by department, and what each kind is for.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_list,
+        trigger_phrases=("what specialists do you have", "which specialists", "list your specialists",
+                         "who are your specialists"),
+        subjects=("specialist", "specialists", "expert"),
     ))

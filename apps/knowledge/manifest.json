@@ -41,6 +41,7 @@
   "capabilities": {
     "tools": [
       "ask_specialist",
+      "list_specialists",
       "cut_list",
       "find_plans",
       "forget_plan",
@@ -60,6 +61,7 @@
     ],
     "tiers": {
       "ask_specialist": "act_within_grant",
+      "list_specialists": "observe",
       "cut_list": "act_within_grant",
       "find_plans": "observe",
       "forget_plan": "act_with_approval",

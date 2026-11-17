@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1478 files, 329,988 lines; 1478 files describe themselves; 18,102 of 18,200 classes and functions are documented.
+1478 files, 330,838 lines; 1478 files describe themselves; 18,147 of 18,245 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-575 files, 165,799 lines; 8,557 of 8,643 classes and functions documented
+575 files, 166,308 lines; 8,575 of 8,661 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -586,7 +586,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,513 lines; 57 of 57 classes and functions documented
+2 files, 4,519 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -869,7 +869,7 @@
 
 ## tests/: the test suite: what each part must do
 
-507 files, 85,606 lines; 7,211 of 7,223 classes and functions documented
+507 files, 85,941 lines; 7,238 of 7,250 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1255,14 +1255,14 @@
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialist_work.py`: A specialist's worksheet (core/specialist_work.py, DEC-0197): the model chooses calculators, code works out the numbers, and code checks that the answer's numbers all come from somewhere. *(2 undocumented)*
-- `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed.
+- `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
 - `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back.
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.
 - `tests/test_startup_briefing.py`: Unit tests for core.startup_briefing's pure functions — see gui/home_dashboard.py for how these feed the launch-greeting banner.
 - `tests/test_state_export.py`: The state export (Engine Phase 1 step 4, 2026-10-05): Life State v2 as JSON from `python -m tools.export_state` and `/api/state`, matching the published schema docs/schema/life_state.schema.json.
 - `tests/test_step_plans.py`: Plans across apps (UI-7, core/step_plans.py; REQ-FUN-220): a plan shows every step with its app, tier, reach and whether it can be undone; nothing runs when a plan is made; the person does, changes or drops steps one at a time; a kind that reaches outside, can't be undone or is tiered never is liste
-- `tests/test_stop.py`: "Stop" and "stop everything" (REQ-AUT-010; core/stop.py), one test per row of the definition's table (docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md section 4): the commands are recognised in code and nothing else is mistaken for them; "stop" ends her speech, the skill she's running with the 
+- `tests/test_stop.py`: "Stop" and "stop everything" (REQ-AUT-010; core/stop.py), one test per row of the definition's table (docs/mia_os/MIA_OS_AUTONOMY_AND_TRUST_REQUIREMENTS.md section 4): the commands are recognised in code and nothing else is mistaken for them ("stop all alarms", "bus stop"); a time is read from words
 - `tests/test_stopwatch_format.py`: Unit tests for modules.toolbox.tools.stopwatch_tool.format_elapsed — pure formatting logic, no Qt/QApplication needed.
 - `tests/test_store_lock.py`: The server's store lock (core/store_lock.py, roadmap 2.3): released() lets go of the locks this thread holds and takes them back; a turn lets go of it while the model thinks, so another request (here /api/state) answers meanwhile; and one conversation's turns still run one after another.
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).

@@ -5,7 +5,10 @@ tests.test_specialists
 MIA's specialists (core/specialists.py, DEC-0109): their charters name real
 skills, tracks and loops; a workbook keeps only sourced notes; a person
 confirms or withdraws; study hall takes them in turn; and the answer always
-says where a note came from and whether it's confirmed.
+says where a note came from and whether it's confirmed. As agents (DEC-0197):
+each has a department, task types and real reviewers, may call only tools that
+change nothing, carries its caveat where its work can hurt someone, and the
+embedded systems and homestead crafts specialists answer their own questions.
 """
 
 from __future__ import annotations
@@ -118,3 +121,64 @@ def test_study_is_grounded_in_her_reference_library(tmp_path):
     sp.study(lambda prompt: asked.append(prompt) or '{"notes": []}', "radio", folder=tmp_path, pages=None,
              search=lambda q, n: [hit])
     assert "Reference library: <pack>, '<article>'" in asked[0] and "'Dipole antenna'" in asked[0]
+
+
+# ------------------------------------------------------------------ as agents (DEC-0198, T1)
+
+def test_every_specialist_is_a_whole_agent_role_with_a_department_task_types_and_real_reviewers():
+    for s in sp.SPECIALISTS:
+        assert s.department in sp.DEPARTMENTS, s.id
+        assert s.task_types and set(s.task_types) <= set(sp.TASK_TYPES), s.id
+        assert s.reasoning in sp.REASONING and set(s.needs) <= set(sp.NEEDS), s.id
+        assert set(s.reviews) <= set(sp.BY_ID) and s.id not in s.reviews, s.id
+        if "review" in s.task_types or "safety_review" in s.task_types:
+            pass  # a reviewer may also have reviewers of its own
+    assert set(sp.ROLES) == set(sp.BY_ID)  # no role without a charter, no charter without a role
+
+
+def test_no_agent_may_call_a_tool_that_changes_anything():
+    """The teams design's section 6: an agent's ceiling is reading and drafting; every tool it lists is real and
+    tiered observe or suggest in its app's manifest. One whose answers rest on figures has the worksheet."""
+    from core import grants
+
+    tiers = grants.tiers()
+    for s in sp.SPECIALISTS:
+        for tool in s.tools:
+            assert tiers.get(tool) in (grants.OBSERVE, grants.SUGGEST), (s.id, tool, tiers.get(tool))
+        assert ("work_it_out" in s.tools) == ("numbers" in s.needs), s.id
+
+
+def test_every_agent_whose_work_can_hurt_someone_carries_its_caveat():
+    """Q-57: electrical, battery, structural, food and chemical work is a draft a qualified person checks."""
+    for s in sp.SPECIALISTS:
+        if s.department in sp.SAFETY_DEPARTMENTS:
+            assert s.caveat, s.id
+    for sid in ("electrical", "carpentry", "embedded", "crafts", "plumbing"):
+        assert sp.BY_ID[sid].caveat, sid
+    assert "lithium" in sp.BY_ID["embedded"].caveat and "lye" in sp.BY_ID["crafts"].caveat.lower()
+
+
+def test_embedded_systems_and_homestead_crafts_specialists_answer_their_own_questions():
+    """Zac, 2026-11-17 (Q-56): specialists for embedded systems projects and homestead crafts."""
+    assert sp.who_knows("how do I power an esp32 sensor node from a battery")[0].id == "embedded"
+    assert sp.who_knows("my i2c sensor isn't answering the microcontroller")[0].id == "embedded"
+    assert sp.who_knows("cold process soap and how much lye")[0].id == "crafts"
+    assert sp.who_knows("tanning a deer hide into leather")[0].id == "crafts"
+    assert "never sized from memory" in sp.BY_ID["crafts"].limits
+    assert "qualified person must check" in sp.BY_ID["embedded"].limits
+
+
+def test_agents_are_found_by_task_and_department_and_reviewers_are_never_themselves():
+    designers = {s.id for s in sp.agents_for("build_code")}
+    assert {"embedded", "engineering", "testing"} <= designers and "music" not in designers
+    assert {s.id for s in sp.agents_for(department="homestead")} == {"homesteading", "crafts"}
+    assert "electrical" in {s.id for s in sp.reviewers_of("embedded")}
+    for s in sp.SPECIALISTS:
+        assert s not in sp.reviewers_of(s.id)
+
+
+def test_she_says_which_specialists_she_has_by_department():
+    said = sp.describe_registry()
+    assert f"I have {len(sp.SPECIALISTS)} specialists" in said and "Embedded systems" in said
+    assert "Homestead crafts" in said and "changes nothing" in said
+

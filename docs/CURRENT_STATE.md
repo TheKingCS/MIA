@@ -2,7 +2,18 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-16 (the Fable run: reviews, and MIA OS Prompt 05), by claude.*
+session. Last updated: 2026-11-17 (Opus: reviews of Fable's work, the specialists as agents), by claude.*
+
+**2026-11-17 (Claude on Opus, at the PC: three reviews and the specialists as agents).**
+- **Reviewed and fixed: the stop, plans step by step, and Forge.** Plans could have held a step that buys, sends or
+  deletes, and a step could be changed after you'd seen its card; both are closed. "Stop all alarms" used to stop
+  everything of hers with no end; "until tonight" late in the evening lasted a minute; the desktop's own chat didn't
+  hear "stop" at all. All fixed. Forge now writes a new app whole or not at all.
+- **Built:** every specialist (18 now, with Embedded systems and Homestead crafts) is a role a team can use: what
+  kinds of work it takes, the tools it may read with (none can change anything), who checks its work, and the
+  warning it carries. Ask "what specialists do you have?".
+- **Next:** each specialist's model chosen from the engineering bench's results, then the team's shared workspace.
+
 
 **2026-11-16, latest (Claude on Fable: the reviews, and the MIA OS architecture).**
 - **Reviewed:** all of Opus's recent work (app status, the requirements, the whole glass look). Three things fixed: a picture used for a theme is now read only as PNG, JPEG or WebP; a glass theme whose text can't be read is refused when saved (before, only the built-in themes were checked); and "make it warmer" on its own no longer changes the theme, since it may be about the heat.
