@@ -1,6 +1,6 @@
 # MIA OS status
 
-*Updated 2026-11-16 by Claude (Fable).*
+*Updated 2026-11-17 by Claude (Opus).*
 
 **Phase:** planning.
 
@@ -21,8 +21,11 @@
 - **Prompt 05 (the core operating system architecture) is done** (Fable, 2026-11-16):
   `MIA_OS_CORE_ARCHITECTURE.md` and fourteen supporting documents; DEC-0189 to DEC-0195 proposed; six proofs of
   concept described, none run. Nothing was installed, built or migrated.
-- **Next:** Zac's review of Prompt 05 (Q-47 to Q-51) and of prompt 23's review (Q-43 to Q-46); then Prompt 06 on
-  his go.
+- Prompt 05 reviewed by Zac (Q-47 to Q-51 answered); PoC 2, 4 and 6 passed, PoC 1 waits on a USB stick.
+- **Prompt 06 (hardware and platform) is done** (Opus, 2026-11-17): `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and
+  twenty supporting documents; the PC's hardware read from the machine; DEC-0201 to 0205 proposed; REQ-HW-007 to
+  031 added.
+- **Next:** Zac's review of Prompt 06 (Q-63 to Q-67); Prompt 07 on his go.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
 **Changes outside the planning documents, on Zac's say-so:**

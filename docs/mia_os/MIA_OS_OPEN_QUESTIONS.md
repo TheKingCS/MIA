@@ -73,6 +73,11 @@ folded in here.*
 | Q-60 | **Answered yes, as recommended (Zac, 2026-11-17: "Yes to all")**; DEC-0199. Was: Refinements: notes, study priority, bench re-runs and model choice change without asking; new calculators, bench tasks and changes to a charter, limits, caveat or tools only on your approval. Recommended: yes | DEC-0199 | `MIA_OS_SPECIALIST_FORGE.md` section 6 |
 | Q-61 | **Answered yes, as recommended (Zac, 2026-11-17: "Yes to all")**; DEC-0199. Was: May specialists research online through your own search engine and her browser, keeping what they read as offline packs (date and edition), never sending your records? Recommended: yes | DEC-0199 | `MIA_OS_SPECIALIST_FORGE.md` section 6 |
 | Q-62 | **Answered yes, as recommended (Zac, 2026-11-17: "Yes to all")**; DEC-0199. Was: Build the Workroom: up to four of her browser agents at once, read-only research at first, each with its own drawn cursor, shown live side by side? Recommended: yes, after measuring how many your card can serve | DEC-0199 | `MIA_OS_SPECIALIST_FORGE.md` section 6 |
+| Q-63 | **Open (2026-11-17)**: What case and power supply does the PC have, and how many M.2 slots are free? (Software can't read them.) | — | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
+| Q-64 | **Open (2026-11-17)**: Approve "grow by nodes": the next AI hardware is a second machine for models, bought only when the bench or the Workroom shows the need? Recommended: yes | DEC-0202 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
+| Q-65 | **Open (2026-11-17)**: Add a 2 to 4 TB NVMe drive for Fedora, Windows keeping its drive? Recommended: yes, before installing Fedora on the PC | DEC-0193 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
+| Q-66 | **Open (2026-11-17)**: Is a laptop, tablet or smart display in your plans? Nothing assumes one | DEC-0205 | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
+| Q-67 | **Open (2026-11-17)**: Turn simultaneous multithreading on in the BIOS (Windows sees 8 of 16 threads)? Recommended: yes, and measure the suite | — | `MIA_OS_HARDWARE_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 

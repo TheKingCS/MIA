@@ -5,7 +5,7 @@
 ## At a glance
 
 - **Architecture** — 845 Python files across 582 core, 93 modules, 123 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 199 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 204 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 284 dev entries (work/knowledge/).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (16): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195
+**PROPOSED** (21): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205
 **PROPOSED;** (1): DEC-0190
 
 <details><summary>Every decision</summary>
@@ -225,6 +225,11 @@
 - **DEC-0198** [APPROVED] — Teams as recommended (Q-54 to Q-58); growing the specialist roster stays a priority
 - **DEC-0199** [APPROVED] — MIA adds and refines her own specialists, learns online and works offline, and runs agents in parallel
 - **DEC-0200** [APPROVED] — Claude inspects MIA's models and specialists before they're used
+- **DEC-0201** [PROPOSED] — The reference PC as built is MIA OS's first target
+- **DEC-0202** [PROPOSED] — Grow by nodes, not cards
+- **DEC-0203** [PROPOSED] — A hardware capability registry from Linux's own sources
+- **DEC-0204** [PROPOSED] — Linux schedules; MIA places models and orders the GPU queue
+- **DEC-0205** [PROPOSED] — The device family's tiers
 
 </details>
 

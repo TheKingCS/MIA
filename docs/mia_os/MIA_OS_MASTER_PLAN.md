@@ -34,7 +34,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **03** | **Application framework** | **done; reviewed by Zac 2026-11-15 (DEC-0175 to 0177; prompt 22 follows)** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
 | **04** | **Requirements and system philosophy** | **done 2026-11-15 (Opus); reviewed by Zac (Q-32 to Q-36 answered, DEC-0179 to 0182 approved) and by Fable (2026-11-16)** | `MIA_OS_SYSTEM_PHILOSOPHY.md`, `MIA_OS_SYSTEM_REQUIREMENTS.md` and fourteen more (listed in it) |
 | **05** | **Core operating system architecture** | **done 2026-11-16 (Fable); waiting for Zac's review (Q-47 to Q-51; DEC-0189 to 0195 proposed; six proofs of concept described, none run)** | `MIA_OS_CORE_ARCHITECTURE.md` and fourteen more (listed below) |
-| 06–17 | (see `prompts/`) | not started | |
+| **06** | **Hardware and platform** | **done 2026-11-17 (Opus); waiting for Zac's review (Q-63 to Q-67; DEC-0201 to 0205 proposed)** | `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty more (listed in it) |
+| 07–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -75,6 +76,17 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3f. Prompt 06 in brief
+
+The strategy is [MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md](MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md), with twenty
+supporting documents. The PC was read on 2026-11-17: a Mini-ITX build (one graphics slot, two full memory slots),
+Ryzen 7 9800X3D, RX 7900 XTX 24 GB, 32 GB, 1 TB. It's enough for the MVP with nothing bought (DEC-0201). It can't
+grow inside, so MIA grows by adding machines on the network, the next being a model-serving node when measurements
+show the need (DEC-0202). Linux owns the hardware; a capability registry reads Linux's own sources (DEC-0203); Linux
+schedules and MIA places models, one job per GPU, conversation first (DEC-0204); the device family is tiered and
+nothing depends on a later device (DEC-0205). REQ-HW-007 to 031 added. Still to run: PoC 1 (needs a USB stick),
+PoC 3, W1.
 
 ## 3e. Prompt 05 in brief
 

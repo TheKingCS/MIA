@@ -35,3 +35,8 @@ report that found it. Rated H, M or L.*
 | R-38 | A program he runs as himself can reach what MIA can (the limit of running as the person) | M | M | Prompt 05 | storing anything more sensitive | Prompt 13: sealing, credential binding, Flatpak, workers |
 | R-39 | A Fedora rebase twice a year becomes a chore that gets skipped | M | M | Prompt 05 | each Fedora release | Prompt 15: an automated build and the acceptance list in a VM |
 | R-21 | Scope: 17 prompts asking for ~300 documents could bury the engineering | M | M | review of the library | throughout | Claude: keep documents small, and merge where the directive allows ("avoid duplicating") |
+| R-40 | The 7900 XTX underperforms or breaks under Fedora's ROCm | H | M | Prompt 06 | installing Fedora on the PC | PoC 1; Vulkan fallback; Ubuntu (DEC-0189) |
+| R-41 | The 1 TB drive fills with models, packs and snapshots | M | H | Prompt 06 | dual boot | Q-65; REQ-HW-013 |
+| R-42 | The one-slot PC can't hold a specialist and an independent reviewer at once | M | H | Prompt 06 | relying on independent review | DEC-0202; a different-family model that fits (benched first) |
+| R-43 | Heat in a small case during long model runs | M | M | Prompt 06 | unattended overnight work on Linux | REQ-HW-024; measure on the image |
+| R-44 | Hardware advice that doesn't fit the machine (happened 2026-11-17) | M | M | Prompt 06 | any recommendation | REQ-HW-009: advice reads the capability record |

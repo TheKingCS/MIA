@@ -75,3 +75,15 @@ DEC-0154 (intelligence independent of the OS), listed for re-examination in Prom
 | DEC-0194 | A fixed-operation helper, each system change confirmed in the OS's own dialog; rules in the image | PROPOSED (Q-50; PoC 5, 6) |
 | DEC-0195 | Resources and observability from systemd, the kernel and the journal | PROPOSED |
 | DEC-0196 | One browser: MIA's browser becomes his everyday browser | APPROVED (Q-45, Q-52) |
+
+## Proposed by Prompt 06 (2026-11-17)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0201 | The reference PC as built is MIA OS's first target; nothing to buy for the MVP | PROPOSED |
+| DEC-0202 | Grow by nodes, not cards: the next AI hardware is a model-serving machine, when measured | PROPOSED (Q-64), experimental |
+| DEC-0203 | A capability registry read only from Linux's own sources | PROPOSED |
+| DEC-0204 | Linux schedules; MIA places models and orders the GPU queue, conversation first | PROPOSED |
+| DEC-0205 | The device family's tiers; nothing depends on a later device | PROPOSED |
+
+Full records: `MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md` §3.

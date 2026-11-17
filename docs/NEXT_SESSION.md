@@ -7,6 +7,20 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
 
+**New 2026-11-17, at the PC (Claude on Opus): Prompt 06, and Zac's word on Plaid and the window.**
+- **Prompt 06 (hardware and platform) is done:** `docs/mia_os/MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty
+  more. The PC was read from the machine: **a Mini-ITX build (Gigabyte A620I AX): one graphics slot, two memory slots,
+  both full**, 1 TB drive; SMT appears off. So MIA grows by adding machines, not cards (DEC-0202). DEC-0201 to 0205
+  proposed; REQ-HW-007 to 031 added (the matrix reads them). **Waiting on Zac: Q-63 to Q-67.** Prompt 07 on his go.
+- **Corrected:** the hardware advice recommended a second graphics card, which can't fit this PC; `docs/HARDWARE.md`
+  now recommends a model-serving machine, a bigger drive, memory later.
+- **Zac:** no Plaid until MIA is much further along and secure; no USB stick yet (PoC 1 waits). **The window** is
+  too tall (he scrolls to reach the bottom), crammed to one side with empty space, and the areas (Home, Garage,
+  Finances...) should open their own dashboards of subcategories, not the portals: in `docs/WAITING_ON.md`, to fix.
+  His main monitor is 3840 x 2160; check the layout at that size and his scaling.
+- **Bench:** gpt-oss:20b and mistral-small:24b pulled; the four-model re-run is in progress; bench the two new ones
+  after it.
+
 **New 2026-11-17, later still (Claude on Opus): Zac's "Yes to all" (Q-59 to Q-62, DEC-0199), Claude's inspection (DEC-0200), hardware.**
 - **Decided:** the Specialist Forge, online learning kept offline, the Workroom (DEC-0199). **DEC-0200:** Claude inspects
   a new specialist, calculator, model choice or adapter before it's used, as Night School's teacher does; a model

@@ -3524,3 +3524,38 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Pending inspections go into Night School: one a night when any wait, before its other work.
 - Related: DEC-0100 (Night School), DEC-0058 (the lab), DEC-0174 (another model reviews), DEC-0199
 
+### DEC-0201: The reference PC as built is MIA OS's first target
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 06
+- Decision: Start on the PC as it is (Ryzen 7 9800X3D, RX 7900 XTX 24 GB, 32 GB, 1 TB, Mini-ITX); nothing needs buying for the MVP. Conditional on PoC 1 (the card under Fedora).
+- Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
+
+### DEC-0202: Grow by nodes, not cards
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 06
+- Decision: The PC has one graphics slot and two full memory slots (read 2026-11-17), so MIA's compute grows by adding machines on the network. Every device is a node with a capability record. The next AI hardware is a model-serving machine (a 128 GB unified-memory mini PC class), bought only when the bench or the Workroom shows the need. Experimental until measured (Q-64).
+- Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
+
+### DEC-0203: A hardware capability registry from Linux's own sources
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 06
+- Decision: One record per device, built from sysfs, udev, D-Bus services and read-only helper operations, each field with its source; MIA never probes hardware.
+- Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
+
+### DEC-0204: Linux schedules; MIA places models and orders the GPU queue
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 06
+- Decision: cgroups and the kernel schedule; MIA keeps one model job per GPU at a time, conversation first, then specialists, the Workroom, background work.
+- Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
+
+### DEC-0205: The device family's tiers
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 06
+- Decision: Current: the PC, the phone (Android with MIA's app), the glasses through the phone, the homestead's Pi node and safety controller. Next: a model node, the Pi running MIA Core. Later: a laptop, a smart display, the truck. Speculative: MIA's own hardware. Nothing depends on a later or speculative device.
+- Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
+- Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
+
