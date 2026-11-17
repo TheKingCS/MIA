@@ -8,7 +8,7 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 *Last updated: 2026-11-17 (Opus on the PC: Prompt 09 built, Prompts 10 and 11)*
 
 **New 2026-11-17, built overnight (Claude on Opus).**
-- **Voice approvals:** "approve it", "approve 2", "yes, and from now on", "always do that", "reject it", "what's
+- **Voice approvals:** "approve it", "approve 2", "approve it from now on", "reject it", "what's
   waiting for me?" (`core/spoken_approval.py`, heard in code before anything else; the model never approves).
 - **The ambient view on the second monitor** (Q-80): `web/ambient.html` (clock, day, weather, due, music, mission,
   what she's doing) opens full screen on the monitor MIA's window isn't on, and closes when that monitor is turned

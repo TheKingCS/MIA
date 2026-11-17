@@ -166,13 +166,13 @@ def _played(context, text: str) -> Optional[str]:
 
 def handle(context, text: str) -> Optional[str]:
     """Does it, if it's a quick command; returns MIA's reply, or None. Words to a waiting card ("approve it",
-    "yes, and from now on", core/spoken_approval.py) are heard first."""
+    "approve it from now on", core/spoken_approval.py) are heard first."""
     from core.actions import ActionError
     from core.person_settings import person_id
 
     from core.spoken_approval import reply as approval_reply
 
-    said = approval_reply(context, text)  # "approve it", "yes, and from now on", "reject 2" (DEC-0215)
+    said = approval_reply(context, text)  # "approve it", "approve it from now on", "reject 2" (DEC-0215)
     if said is not None:
         return said
     said = _workout(context, text)

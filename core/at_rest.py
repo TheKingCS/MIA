@@ -117,6 +117,8 @@ SEALED = frozenset({
     "creations.json",
     "record_sets.json",
     "online_reminders.json",
+    "activity.json",  # the windows he worked in (DEC-0197)
+    "recall_index.json",  # his records' vectors (DEC-0210)
     "art.json",
     "loop.json",
     "training_session.json",

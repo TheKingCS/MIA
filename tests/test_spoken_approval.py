@@ -1,4 +1,4 @@
-"""Approving a waiting card by voice, "yes, and from now on" included (core/spoken_approval.py, DEC-0215)."""
+"""Approving a waiting card by voice, "approve it from now on" included (core/spoken_approval.py, DEC-0215)."""
 
 from types import SimpleNamespace
 
@@ -16,9 +16,7 @@ from core.actions import ActionError
     ("approve 2", ("approve", 2, False)),
     ("Approve it from now on", ("approve", None, True)),
     ("yes, approve it, and from now on", ("approve", None, True)),
-    ("Yes, and from now on", ("approve", None, True)),
-    ("yes going forward", ("approve", None, True)),
-    ("Always do that", ("approve", None, True)),
+    ("approve that going forward", ("approve", None, True)),
     ("approve number 3 going forward", ("approve", 3, True)),
     ("reject it", ("reject", None, False)),
     ("no, decline 2", ("reject", 2, False)),
@@ -28,7 +26,10 @@ def test_his_words_for_a_waiting_card_are_understood(text, expected):
 
 
 @pytest.mark.parametrize("text", ["yes", "do it", "approve the budget plan for next year and email Sam",
-                                  "from now on call me Z", "always", "I approve of that movie"])
+                                  "from now on call me Z", "always", "I approve of that movie",
+                                  # these name no card, and answer too many of her other questions (the review)
+                                  "Yes, and from now on", "okay, going forward", "yes going forward",
+                                  "Always do that"])
 def test_words_that_answer_something_else_are_left_alone(text):
     assert sa.parse(text) is None
 
@@ -70,7 +71,7 @@ def _context(monkeypatch, cards):
 
 def test_one_waiting_card_is_approved_from_now_on_and_he_is_told_how_to_take_it_back(monkeypatch):
     ctx = _context(monkeypatch, [_card("p1", "Add milk to the list")])
-    said = sa.reply(ctx, "yes, and from now on")
+    said = sa.reply(ctx, "approve it from now on")
     assert ctx.actions.calls == [("approve", "p1", True)] and "take that back in your grants" in said
 
 

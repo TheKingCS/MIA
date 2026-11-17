@@ -130,3 +130,38 @@ def test_undo_is_an_action_kind_with_its_tier_and_reach():
     from core.actions import ACTION_TYPES
 
     assert "lab.revert" in ACTION_TYPES and EFFECTS["lab.revert"][0] == "system"
+
+
+def test_a_merge_or_revert_that_fails_is_backed_out_before_the_error(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    ran = []
+
+    def fake_run(args, **_kw):
+        """git: the revert fails, the abort is recorded."""
+        ran.append(args)
+        return NS(returncode=1 if "revert" in args and "--abort" not in args else 0, stdout="", stderr="conflict")
+
+    monkeypatch.setattr(dev_lab.subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="conflict"):
+        dev_lab._git("revert", "-m", "1", "--no-edit", "abc", undo=("revert", "--abort"))
+    assert ran[-1] == ["git", "revert", "--abort"]
+
+
+def test_the_merge_rechecks_the_protected_list_as_it_is_now(monkeypatch):
+    p = dev_lab.Proposal("x", "t", "p", status=dev_lab.READY, files=["core/a.py"], branch="lab/x", base="b0")
+    monkeypatch.setattr(dev_lab, "get", lambda _pid: p)
+    monkeypatch.setattr(dev_lab, "_git", lambda *a, **k: "core/grants.py\ncore/a.py" if "diff" in a else "")
+    with pytest.raises(ValueError, match="core/grants.py"):
+        dev_lab.approve("x", suite=lambda _p: {"failed": []})
+
+
+def test_the_daily_summary_waits_for_an_opening_rather_than_being_dropped(tmp_path, monkeypatch):
+    from core.communication_gate import TIMELY
+
+    path = tmp_path / "m.json"
+    self_merges.review_and_merge(lambda _p: '{"verdict": "pass"}', "claude-code", lab=_Lab([_proposal("a")]),
+                                 diff=lambda _pid: "", path=path)
+    monkeypatch.setattr("core.person_settings.person_id", lambda _c: "me")
+    monkeypatch.setattr("core.self_report._owner", lambda _c: "me")
+    assert self_merges.offer(None, path=path)[0].urgency == TIMELY

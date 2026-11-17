@@ -2,16 +2,17 @@
 core.spoken_approval
 ======================
 
-Approving a waiting card by voice, "yes, and from now on" included (DEC-0215; Zac, 2026-11-17: "MIA should offer an
+Approving a waiting card by voice, "approve it from now on" included (DEC-0215; Zac, 2026-11-17: "MIA should offer an
 approve for now or Approve going forward option"; the card's two buttons, said). A quick command (core/quick_commands.py):
 his own words, matched in code, never the model's, so nothing she reads or writes can approve anything.
 
 **What it hears** (the whole thing he said, `parse`):
 - "what's waiting for me?", "anything to approve?": the cards waiting, numbered;
 - "approve it", "approve that", "approve 2": Approve Once;
-- "approve it from now on", "yes, and from now on", "yes, going forward", "always do that", "approve 2 from now on":
-  Approve From Now On, refused in the card's own words for a kind that always asks (money, messages, publishing,
-  deletion outside undo, system changes: core/kind_grants.py);
+- "approve it from now on", "yes, approve it going forward", "approve 2 from now on": Approve From Now On, refused
+  in the card's own words for a kind that always asks (money, messages, publishing, deletion outside undo, system
+  changes: core/kind_grants.py). Always with the word "approve" (or "accept"): a bare "yes, from now on" or "always
+  do that" answers too many other questions (the review of 2026-11-18);
 - "reject it", "decline that", "reject 2": declined, nothing runs.
 
 A bare "yes" or "do it" isn't taken: those answer her other questions. With several cards waiting and no number, she
@@ -27,13 +28,12 @@ _LIST = re.compile(r"^(what'?s|what is|anything|is there anything) (waiting|to a
                    r"approval|that needs my approval)( for me)?\??$|^what needs my approval\??$")
 _ALWAYS = r"(,? ?(and )?(from now on|going forward|always))"
 _APPROVE = re.compile(r"^(yes,? ?)?(approve|accept) (it|that|this|(number )?(?P<n>\d+))" + _ALWAYS + r"?[.!]?$")
-_YES_ALWAYS = re.compile(r"^(yes|yeah|ok|okay),? ?(and )?(from now on|going forward)[.!]?$|^always do (that|this|it)[.!]?$")
 _REJECT = re.compile(r"^(no,? ?)?(reject|decline) (it|that|this|(number )?(?P<n>\d+))[.!]?$")
 
 
 def parse(text: str) -> Optional[tuple[str, Optional[int], bool]]:
     """Pure logic. (what, which, from_now_on) for words that are for this, else None: what is "list", "approve" or
-    "reject"; which is the card's number when he said one."""
+    "reject"; which is the card's number when he said one. Approving always needs the word "approve" or "accept"."""
     said = " ".join((text or "").lower().replace("’", "'").split()).strip()
     if _LIST.match(said):
         return "list", None, False
@@ -41,8 +41,6 @@ def parse(text: str) -> Optional[tuple[str, Optional[int], bool]]:
     if m:
         return "approve", int(m.group("n")) if m.group("n") else None, bool(re.search(r"from now on|going forward|always",
                                                                                     said))
-    if _YES_ALWAYS.match(said):
-        return "approve", None, True
     m = _REJECT.match(said)
     if m:
         return "reject", int(m.group("n")) if m.group("n") else None, False

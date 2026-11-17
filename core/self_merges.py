@@ -193,9 +193,9 @@ def summary(entries: list[dict]) -> str:
 
 
 def offer(context, now: Optional[datetime] = None, path: Optional[Path] = None) -> list:
-    """For the PC's owner, once a day: the changes that went in since the last summary, as one Candidate for the
-    gate; they're marked summarized when offered."""
-    from core.communication_gate import Candidate
+    """For the PC's owner, once a day: the changes that went in since the last summary, as one timely Candidate for
+    the gate (held for an opening, never dropped); they're marked summarized when offered."""
+    from core.communication_gate import TIMELY, Candidate
     from core.person_settings import person_id
     from core.self_report import _owner
 
@@ -209,8 +209,9 @@ def offer(context, now: Optional[datetime] = None, path: Optional[Path] = None) 
     for e in fresh:
         e["summarized"] = now.date().isoformat()
     _save(entries, path)
+    # TIMELY: held for an opening, never dropped like a nice-to-know (Zac's yes to Q-76 rests on this summary).
     return [Candidate(topic=TOPIC, title="What I changed in myself", message=summary(fresh), source="lab",
-                      fingerprint=f"{TOPIC}:{now.date().isoformat()}")]
+                      urgency=TIMELY, fingerprint=f"{TOPIC}:{now.date().isoformat()}")]
 
 
 def said(days: int = 7) -> str:

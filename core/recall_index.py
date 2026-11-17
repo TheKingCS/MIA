@@ -6,7 +6,7 @@ Recall by meaning (DEC-0210; Prompt 07's memory infrastructure, `docs/mia_os/MIA
 Zac's yes to Q-71: every personal store except the private journal and private-mode conversations). One index per
 person, beside the stores and never instead of them.
 
-**What it holds** (`recall_index.json` in his folder, a personal store): for each record that may be recalled, its
+**What it holds** (`recall_index.json` in his folder, a personal store, sealed at rest): for each record that may be recalled, its
 `kind:id` ref, a hash of its text, a vector and when it was indexed, plus which embedding model made the vectors.
 **Never the record itself**: every hit is re-read from its store (`search`), so an erased record can't come back from
 a stale vector, and a record that's gone is dropped from the index on the next refresh.
@@ -15,7 +15,8 @@ a stale vector, and a record that's gone is dropped from the index on the next r
 plain one, never the private journal), what he promised, decided or set aside (`life_notes`) and his projects. Not the
 private journal, not conversations (a later slice: those not in a private mode).
 
-**How:** a background job (`recall_index`, every 10 minutes, held by stop everything) embeds what's new or changed,
+**How:** a background job (`recall_index`, every 10 minutes, held by stop everything; the embedding on a thread of
+its own, `refresh_later`, so the window never waits) embeds what's new or changed,
 `BATCH` at a time, with the embedding model on this computer's Ollama (`llm.embed_model`, nomic-embed-text, with its
 document and query prefixes), called here so his vectors never land in the device's shared cache. Search embeds the
 question and ranks by cosine; with no embedding model it falls back to matching words and says so (REQ-INT-017).
@@ -28,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -128,7 +130,8 @@ class RecallIndex:
     """One person's recall index (see the module's opening): refs, text hashes and vectors only."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
-        """Loads the index from a person's folder (or data/); an unreadable one starts empty (it's rebuilt)."""
+        """Loads the index from a person's folder (or data/), sealed at rest; an unreadable one starts empty (it's
+        rebuilt). A lock for a refresh on its own thread, and whether one is running."""
         from core.at_rest import open_text
 
         self.context = context
@@ -136,6 +139,8 @@ class RecallIndex:
         self._file = self.data_dir / _FILE.name
         self.model = ""
         self.items: dict[str, dict] = {}
+        self._lock = threading.Lock()  # a refresh on its own thread and a search may meet
+        self._refreshing = threading.Event()
         if self._file.exists():
             try:
                 data = json.loads(open_text(self._file))
@@ -148,15 +153,44 @@ class RecallIndex:
         self.__init__(self.context, self.data_dir)
 
     def _save(self) -> None:
-        """Writes the index atomically."""
+        """Writes the index atomically, sealed (core/at_rest.py), without telling open screens to re-read."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(self._file, json.dumps({"model": self.model, "items": self.items}))
+        atomic_write_text(self._file, json.dumps({"model": self.model, "items": self.items}), live=False)
 
-    def refresh(self, context, embed=None, now: Optional[datetime] = None) -> dict:
-        """Drops what's gone, embeds up to BATCH new or changed records; {added, dropped, waiting}. A different
-        embedding model starts the index over."""
-        embed = embed if embed is not None else embedder(context)
+    def snapshot(self) -> list[tuple[str, list]]:
+        """(ref, vector) of every indexed record, copied under the lock (a refresh may be writing)."""
+        with self._lock:
+            return [(ref, item["v"]) for ref, item in self.items.items()]
+
+    def refresh_later(self, context, embed=None) -> bool:
+        """The background job's refresh: the records read now, on the caller's thread (it holds the stores), and the
+        embedding on a thread of its own; False when one is already running."""
+        if self._refreshing.is_set():
+            return False
+        self._refreshing.set()
         found = records(context)
+
+        def run():
+            """The refresh itself."""
+            try:
+                self.refresh(context, embed=embed, found=found)
+            except Exception:  # noqa: BLE001 - a refresh that fails is tried again next time
+                log.exception("The recall index couldn't refresh")
+            finally:
+                self._refreshing.clear()
+        threading.Thread(target=run, name="mia-recall", daemon=True).start()
+        return True
+
+    def refresh(self, context, embed=None, now: Optional[datetime] = None, found: Optional[dict] = None) -> dict:
+        """Drops what's gone, embeds up to BATCH new or changed records; {added, dropped, waiting}. A different
+        embedding model starts the index over. `found` is the records when already read (refresh_later)."""
+        embed = embed if embed is not None else embedder(context)
+        found = records(context) if found is None else found
+        with self._lock:
+            return self._refresh(found, embed, now)
+
+    def _refresh(self, found: dict, embed, now: Optional[datetime]) -> dict:
+        """refresh's work, under the lock."""
         dropped = [ref for ref in self.items if ref not in found]
         for ref in dropped:
             del self.items[ref]
@@ -182,9 +216,10 @@ class RecallIndex:
         return {"added": added, "dropped": len(dropped), "waiting": len(found) - len(self.items)}
 
     def forget(self, ref: str) -> None:
-        """Takes one record out of the index at once (a deleted memory, an erased note)."""
-        if self.items.pop(ref, None) is not None:
-            self._save()
+        """Takes one record out of the index at once (a deleted memory, an erased note), under the lock."""
+        with self._lock:
+            if self.items.pop(ref, None) is not None:
+                self._save()
 
 
 def _reread(context, ref: str):
@@ -218,7 +253,8 @@ def words_of(text: str) -> set:
 
 def search(context, query: str, embed=None, shown: int = SHOWN) -> dict:
     """What he has about `query`: {hits, how} where how is "meaning" or "words" (no embedding model, REQ-INT-017).
-    Every hit is re-read from its store; a ref whose record is gone is dropped from the index."""
+    The vectors are read from a snapshot (a refresh may be writing); every hit is re-read from its store; a ref whose
+    record is gone is dropped from the index."""
     index = getattr(context, "recall", None)
     embed = embed if embed is not None else embedder(context)
     vectors = embed([query], "query") if (embed is not None and index is not None and index.items) else None
@@ -226,7 +262,7 @@ def search(context, query: str, embed=None, shown: int = SHOWN) -> dict:
     if vectors:
         from core.meaning import cosine
 
-        ranked = sorted(((cosine(vectors[0], item["v"]), ref) for ref, item in index.items.items()), reverse=True)
+        ranked = sorted(((cosine(vectors[0], v), ref) for ref, v in index.snapshot()), reverse=True)
         for score, ref in ranked:
             if score < MIN_SCORE or len(hits) >= shown:
                 break

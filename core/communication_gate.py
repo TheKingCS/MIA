@@ -264,8 +264,8 @@ def _never_held() -> frozenset:
 def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, settings: dict) -> list[Decision]:
     """Pure logic. One Decision per candidate, in order. While the person has said "stop everything" (DEC-0181),
     everything but the urgent and the reminders he set (core/stop.TOPICS_NEVER_HELD) waits; in flow (DEC-0148),
-    everything but the urgent waits; focused on one thing in front of him (`state.focus`, DEC-0217), everything but
-    the urgent and what's about it waits once (a candidate already deferred isn't held for focus again). Each
+    everything but the urgent waits; focused on one thing in front of him (`state.focus`, DEC-0217), a nice-to-know
+    that isn't about it waits once (a candidate already deferred isn't held for focus again). Each
     kind's learned pace a day (`state.allowances`) holds back what's past it; a fixed cap applies only when the person
     set one (`daily_budget` above 0)."""
     budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]) or 0)
@@ -301,9 +301,9 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
             candidate.not_before = (now + _BUSY_DEFER).isoformat(timespec="seconds")
             decisions.append(Decision(candidate, DEFER, "you were in the middle of getting things done"))
             continue
-        # Focused on one thing (DEC-0217): held unless it's about it, and only once (at most _BUSY_DEFER), so a long
-        # stretch in one app never keeps her quiet all day.
-        if state.focus and candidate.urgency != URGENT and not candidate.not_before:
+        # Focused on one thing (DEC-0217): a nice-to-know is held unless it's about it, and only once (at most
+        # _BUSY_DEFER), so a long stretch in one app never keeps her quiet all day; a timely one isn't delayed.
+        if state.focus and candidate.urgency == AMBIENT and not candidate.not_before:
             from core.activity_watch import about
 
             if not about(f"{candidate.title} {candidate.message}", state.focus):

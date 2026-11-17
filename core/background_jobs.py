@@ -388,10 +388,11 @@ class BackgroundJobs:
 
     def _check_recall_index(self) -> None:
         """Every 10 minutes: what's new or changed in his memories, notes and projects is embedded for recall by
-        meaning, and what's gone is dropped (core/recall_index.py, DEC-0210); nothing without an embedding model."""
+        meaning, and what's gone is dropped (core/recall_index.py, DEC-0210); nothing without an embedding model.
+        The embedding runs on its own thread (it can take a minute), never holding the window or the stores."""
         index = getattr(self.context, "recall", None)
         if index is not None:
-            index.refresh(self.context)
+            index.refresh_later(self.context)  # the records read here; the embedding on its own thread
 
     def _check_activity_watch(self) -> None:
         """Every 30 seconds: notes the app and window title in front of him, when noting is on (core/activity_watch.py,
@@ -401,12 +402,12 @@ class BackgroundJobs:
         activity_watch.sample(self.context)
 
     def _check_self_repair(self) -> None:
-        """Every five minutes (core/self_repair.py, DEC-0222): Ollama started again if it stopped, her model reloaded,
-        a job that keeps failing run again; what she did is told through the gate."""
+        """Every five minutes (core/self_repair.py, DEC-0222): Ollama started again if it stopped (on its own thread,
+        so the window never waits), her model reloaded, a job that keeps failing run again; whatever she did, now or
+        on that thread since the last round, is told through the gate."""
         from core import self_repair
 
-        if not self_repair.check(self.context, getattr(self, "_scheduler", None)):
-            return
+        self_repair.check(self.context, getattr(self, "_scheduler", None))  # Ollama's start finishes on its own thread
         gate = getattr(self.context, "communication", None)
         for candidate in self_repair.offer(self.context):
             if gate is not None:

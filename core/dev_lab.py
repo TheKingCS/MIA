@@ -121,15 +121,21 @@ def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
 
-def _git(*args: str, cwd: Optional[Path] = None, author: Optional[tuple] = None, check: bool = True) -> str:
+def _git(*args: str, cwd: Optional[Path] = None, author: Optional[tuple] = None, check: bool = True,
+         undo: Optional[tuple] = None) -> str:
     """Runs git (in the running copy unless told otherwise, with an author when committing) and returns its output;
-    RuntimeError with git's words when it fails and check is on.
+    RuntimeError with git's words when it fails and check is on. `undo` is what backs a failed step out (a merge or
+    revert that conflicts runs `merge --abort` or `revert --abort`), so the running copy is never left half-way with
+    conflict markers in her code (the review of 2026-11-18).
     """
     cwd = cwd or ROOT
     who = ["-c", f"user.name={author[0]}", "-c", f"user.email={author[1]}"] if author else []
     out = subprocess.run(["git", *who, *args], cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300,
                          creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if check and out.returncode != 0:
+        if undo:
+            subprocess.run(["git", *undo], cwd=str(cwd), capture_output=True, text=True, timeout=120,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         raise RuntimeError((out.stderr or out.stdout or "git failed").strip()[:400])
     return (out.stdout or "").strip()
 
@@ -416,10 +422,11 @@ def run_suite(cwd: Path, once: Callable[[Path], dict] = _suite_once) -> dict:
 
 
 def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
-    """The rules, then the suite in the lab against the suite at the start."""
+    """The rules (a protected file, counted by both names when renamed, refuses it), then the suite in the lab
+    against the suite at the start."""
     p = get(proposal_id)
     lab = folder(p)
-    p.files = [f for f in _git("diff", "--name-only", f"{p.base}...{p.branch}").splitlines() if f]
+    p.files = [f for f in _git("diff", "--name-only", "--no-renames", f"{p.base}...{p.branch}").splitlines() if f]
     p.refused = touches_protected(p.files)
     if p.refused:
         p.status, p.note = NOT_READY, "It changes files the lab may never change: " + ", ".join(p.refused)
@@ -441,10 +448,17 @@ def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
 
 
 def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
-    """Zac's approval: merged into the running copy, the suite again, reverted by itself on a new failure."""
+    """Zac's approval (or Claude's pass, core/self_merges.py): the protected list checked again as it is now, then
+    merged into the running copy (a merge that conflicts is aborted, never left half-way), the suite again, reverted by
+    itself on a new failure."""
     p = get(proposal_id)
     if p.status != READY:
         raise ValueError(f"Only a ready proposal can go in; this one is {p.status}.")
+    # The protected list as it is now, not as it was when the proposal was checked; a rename counts by both names.
+    files = [f for f in _git("diff", "--name-only", "--no-renames", f"{p.base}...{p.branch}").splitlines() if f]
+    refused = touches_protected(files)
+    if refused:
+        raise ValueError("It changes files the lab may never change: " + ", ".join(refused))
     dirty = [ln[3:] for ln in _git("status", "--porcelain").splitlines()]
     if set(dirty) & set(p.files):
         raise ValueError("Files it changes have unsaved edits here: " + ", ".join(sorted(set(dirty) & set(p.files))))
@@ -452,7 +466,8 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     # never saw (2026-11-03: Zac's uncommitted Plaid work failed a Plaid test,
     # and the merge was reverted for a failure that was already there).
     before = (suite or run_suite)(ROOT)
-    _git("merge", "--no-ff", "--no-edit", p.branch, "-m", f"From the lab: {p.title} ({p.proposal_id})", author=OWNER)
+    _git("merge", "--no-ff", "--no-edit", p.branch, "-m", f"From the lab: {p.title} ({p.proposal_id})", author=OWNER,
+         undo=("merge", "--abort"))
     p.merged_as = _git("rev-parse", "HEAD")
     after = (suite or run_suite)(ROOT)  # the running copy
     known = set(before.get("failed", [])) | set(p.tests.get("lab_failed", []))
@@ -460,7 +475,7 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     if not after.get("finished", True):
         fresh = fresh or ["(the suite didn't finish)"]
     if fresh:
-        _git("revert", "-m", "1", "--no-edit", "HEAD", author=OWNER)
+        _git("revert", "-m", "1", "--no-edit", "HEAD", author=OWNER, undo=("revert", "--abort"))
         p.status, p.note = REVERTED, "It broke here: " + ", ".join(fresh) + ". Reverted; the history keeps both."
     else:
         p.status, p.note = MERGED, "In. Restart MIA to load it."
@@ -469,15 +484,15 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
 
 def revert(proposal_id: str, why: str = "") -> Proposal:
     """Takes a merged proposal back out of the running copy (Zac's Undo on one of her own changes, DEC-0225): its merge
-    commit is reverted, history kept, and it can be retried later. ValueError for one that isn't in, or whose files
-    have unsaved edits here."""
+    commit is reverted, history kept, and it can be retried later; a revert that conflicts is aborted, so her code is
+    never left with conflict markers. ValueError for one that isn't in, or whose files have unsaved edits here."""
     p = get(proposal_id)
     if p.status != MERGED or not p.merged_as:
         raise ValueError(f"Only a change that's in can be undone; this one is {p.status}.")
     dirty = [ln[3:] for ln in _git("status", "--porcelain").splitlines()]
     if set(dirty) & set(p.files):
         raise ValueError("Files it changed have unsaved edits here: " + ", ".join(sorted(set(dirty) & set(p.files))))
-    _git("revert", "-m", "1", "--no-edit", p.merged_as, author=OWNER)
+    _git("revert", "-m", "1", "--no-edit", p.merged_as, author=OWNER, undo=("revert", "--abort"))
     p.status, p.note = REVERTED, (why or "Undone by Zac.") + " Restart MIA to load it; the history keeps both."
     return _put(p)
 

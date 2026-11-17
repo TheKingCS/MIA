@@ -13,8 +13,9 @@ him**, so she can tie work to a project and answer "where was I?".
 - **an indicator while it's on**: the sidebar says so (`/api/shell` carries `noting`), and Settings shows it;
 - **an erase button**: `activity.erase` (Settings, or "erase what you noted about my apps"), undoable like any
   change for a few minutes, then gone;
-- **his own, kept 7 days** (`KEEP_DAYS`): `activity.json` in his folder (a personal store), sealed at rest like
-  the others; never sent anywhere; never in a private or personal turn;
+- **his own, kept 7 days** (`KEEP_DAYS`): `activity.json` in his folder (a personal store), sealed at rest
+  (`core/at_rest.SEALED`); never sent anywhere; written without reloading open screens, and a span only growing
+  longer at most every `SAVE_EVERY` seconds;
 - **off with one press** (`activity.noting`, the setting `activity.on`); stop everything holds it too.
 
 **How** (`foreground`): on Windows, the foreground window's title and its program (user32 and psutil); elsewhere
@@ -49,6 +50,7 @@ _FILE = DATA_DIR / "activity.json"
 SETTING = "activity.on"
 KEEP_DAYS = 7
 JOIN_SECONDS = 120  # the same app and title again within this extends its span
+SAVE_EVERY = 300  # seconds: a span only growing longer is written at most this often
 RECENT_MINUTES = 30
 TITLE_CHARS = 120
 FOCUS_WINDOW = 15  # minutes looked at for focus
@@ -101,13 +103,15 @@ class ActivityLog:
     atomic_write_text so an erase can be undone)."""
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
-        """Loads the spans from a person's folder (or data/); an unreadable file starts empty."""
+        """Loads the spans from a person's folder (or data/), sealed at rest; an unreadable file starts empty. Nothing
+        written yet this run (`_saved_at`)."""
         from core.at_rest import open_text
 
         self.context = context
         self.data_dir = Path(data_dir) if data_dir is not None else _FILE.parent
         self._file = self.data_dir / _FILE.name
         self._spans: list[dict] = []
+        self._saved_at: Optional[datetime] = None
         if self._file.exists():
             try:
                 self._spans = [s for s in json.loads(open_text(self._file)).get("spans", []) if isinstance(s, dict)]
@@ -119,13 +123,14 @@ class ActivityLog:
         self.__init__(self.context, self.data_dir)
 
     def _save(self) -> None:
-        """Writes the spans atomically."""
+        """Writes the spans atomically, sealed (core/at_rest.py), without telling open screens to re-read (no screen
+        shows them, and a write every 30 seconds would reload every page)."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_text(self._file, json.dumps({"spans": self._spans}, indent=1, ensure_ascii=False))
+        atomic_write_text(self._file, json.dumps({"spans": self._spans}, indent=1, ensure_ascii=False), live=False)
 
     def note(self, app: str, title: str, now: Optional[datetime] = None) -> bool:
-        """Notes the window in front of him, if it may be noted; True when something was kept. Spans older than
-        KEEP_DAYS go."""
+        """Notes the window in front of him, if it may be noted; True when something was kept. A new span is written
+        at once; a span only growing longer at most every SAVE_EVERY seconds. Spans older than KEEP_DAYS go."""
         if not keep_this(app, title):
             return False
         now = now or datetime.now()
@@ -135,11 +140,14 @@ class ActivityLog:
         if last and last["app"] == app and last["title"] == title and \
                 (now - datetime.fromisoformat(last["end"])).total_seconds() <= JOIN_SECONDS:
             last["end"] = at
+            if self._saved_at is not None and (now - self._saved_at).total_seconds() < SAVE_EVERY:
+                return True  # kept in memory; written with the next new span or within SAVE_EVERY
         else:
             self._spans.append({"app": app, "title": title, "start": at, "end": at})
         cutoff = (now - timedelta(days=KEEP_DAYS)).isoformat(timespec="seconds")
         self._spans = [s for s in self._spans if s["end"] >= cutoff]
         self._save()
+        self._saved_at = now
         return True
 
     def spans(self, since: Optional[datetime] = None) -> list[dict]:

@@ -58,7 +58,10 @@ def _context(tmp_path, memories=None, projects=None):
 def test_the_index_holds_refs_hashes_and_vectors_never_the_text(tmp_path):
     ctx = _context(tmp_path, {"m1": "Zac wants to build a chicken coop this spring"})
     ctx.recall.refresh(ctx, embed=_embed)
-    saved = (tmp_path / "recall_index.json").read_text(encoding="utf-8")
+    from core.at_rest import open_text
+
+    assert (tmp_path / "recall_index.json").read_text(encoding="utf-8").startswith("MIA-SEALED")  # sealed on disk
+    saved = open_text(tmp_path / "recall_index.json")
     assert "memory:m1" in saved and "chicken" not in saved and "spring" not in saved
 
 
@@ -135,3 +138,23 @@ def test_the_index_is_a_personal_store_rebuilt_by_a_job_held_by_stop():
 
     assert "recall" in PERSONAL_ATTRIBUTES and "recall_index" in JOBS_THAT_WAIT
     assert ("recall_index", 600, "_check_recall_index") in JOBS
+
+
+def test_the_background_refresh_embeds_on_its_own_thread_once_at_a_time(tmp_path):
+    import time
+
+    ctx = _context(tmp_path, {"m1": "hens"})
+    assert ctx.recall.refresh_later(ctx, embed=_embed)
+    for _ in range(100):
+        if not ctx.recall._refreshing.is_set():
+            break
+        time.sleep(0.02)
+    assert "memory:m1" in ctx.recall.items
+
+
+def test_a_second_background_refresh_waits_for_the_first():
+    import tempfile
+
+    index = ri.RecallIndex(None, tempfile.mkdtemp())
+    index._refreshing.set()
+    assert index.refresh_later(SimpleNamespace()) is False

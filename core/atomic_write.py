@@ -95,7 +95,7 @@ def _replace(tmp_path: Path, path: Path) -> None:
             time.sleep(0.05 * (attempt + 1))
 
 
-def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
+def atomic_write_text(path: Path, text: str, encoding: str = "utf-8", live: bool = True) -> None:
     """
     Write `text` to `path` crash-safely — same call shape as
     `Path.write_text()` (just with `path` as an explicit first
@@ -106,7 +106,9 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
     module's docstring). `path`'s parent directory must already exist
     (same requirement every existing call site already satisfies via
     its own `_DATA_DIR.mkdir(parents=True, exist_ok=True)` before
-    calling this).
+    calling this). `live=False` skips telling open screens to re-read
+    (core/live.py), for a file no screen shows: the window noted every
+    30 seconds, the recall index's vectors.
     """
     path = Path(path)
     from core.at_rest import seal_text
@@ -130,6 +132,7 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
         tmp_path.unlink(missing_ok=True)
         raise
     # Live updates (core/live.py): open screens re-read the state.
-    from core import live
+    if live:
+        from core import live
 
-    live.bump()
+        live.bump()

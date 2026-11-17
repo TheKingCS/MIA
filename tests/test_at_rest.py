@@ -220,6 +220,8 @@ SEALED_STORES = [
     ("core.creations", "Creations", "creations.json"),
     ("core.record_sets", "RecordSets", "record_sets.json"),
     ("core.online_watch", "OnlineReminders", "online_reminders.json"),
+    ("core.activity_watch", "ActivityLog", "activity.json"),
+    ("core.recall_index", "RecallIndex", "recall_index.json"),
     ("core.art_studio", "ArtStore", "art.json"),
     ("core.the_loop", "LoopBook", "loop.json"),
     ("core.training_session", "TrainingStore", "training_session.json"),
