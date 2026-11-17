@@ -55,8 +55,17 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   safety-critical work or when he asks ("check it"); the best other model on the bench; independent only across
   families, and every capable model here is a qwen, so it says "not fully independent"; a doubt holds the answer;
   an unreadable or missing review is never agreement.
-- **Next (Opus):** the next S4 specialists (the hoodie's: acoustics, audio DSP, textiles, power), each with its
-  calculators and bench tasks; T3, the team's coordination on UI-7's task engine. **For Zac:** an independent
+- **S4's second batch, the hoodie's four (Opus, after the broken session's sign-in failure):** Acoustics and audio,
+  Audio signal processing, Textiles and wearables, Portable power, each complete by the plan's bar: charter and
+  limits (NIOSH listening time near the ears; heat and burns from anything electric worn; lithium named a fire risk
+  every time), caveat, starter questions, role, worksheet disciplines, 19 calculators in `core/eng_calcs.py` (SPL at
+  distance, amplifier power, sealed box, sound delay, safe listening time; buffer latency, data rate, dynamic range,
+  FFT resolution, delay in samples; yardage, fabric weight, shrinkage, conductive thread; battery pack, charge time,
+  C-rate, converter input current), each against a hand-worked example, and 22 bench tasks (a, d, t, p; one missing
+  input each). New units: dB, data rates and sizes, GSM and oz/yd2, ohm/m. **Fixed on the way:** a temperature
+  given on another scale was converted as a difference (7 degC into a degF input became 12.6, not 44.6).
+- **Next (Opus):** T3, the team's coordination on UI-7's task engine; the next S4 batch (the rest of the Engineering
+  department). Zac's question in the broken session ("what were Q-54 to Q-58?") was answered by DEC-0198 since. **For Zac:** an independent
   reviewer needs a capable model from another family (a Llama or Mistral of 30B or more) or a bigger card.
   **Hardware (Prompt 06):** the 24 GB card holds one 32B model at a time; the bench is what a bigger card would be
   measured against.

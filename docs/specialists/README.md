@@ -10,6 +10,10 @@
 - [Embedded systems](embedded.md): 0 notes (0 confirmed), 3 open questions
 - [Homestead crafts](crafts.md): 0 notes (0 confirmed), 3 open questions
 - [Greenhouse systems](greenhouse.md): 0 notes (0 confirmed), 3 open questions
+- [Acoustics and audio](acoustics.md): 0 notes (0 confirmed), 3 open questions
+- [Audio signal processing](audio_dsp.md): 0 notes (0 confirmed), 3 open questions
+- [Textiles and wearables](textiles.md): 0 notes (0 confirmed), 3 open questions
+- [Portable power](power.md): 0 notes (0 confirmed), 3 open questions
 - [Outdoors and fieldcraft](outdoors.md): 0 notes (0 confirmed), 2 open questions
 - [Music and guitar](music.md): 0 notes (0 confirmed), 3 open questions
 - [Research](research.md): 0 notes (0 confirmed), 2 open questions

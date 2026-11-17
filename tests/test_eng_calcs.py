@@ -1,6 +1,8 @@
 """MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py;
 DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing
-input named, never guessed, and no input's description offering a value a model could copy."""
+input named, never guessed, and no input's description offering a value a model could copy. The hoodie's
+calculators (acoustics, audio DSP, textiles, portable power) are checked the same way, with their units, and a
+temperature given on another scale is read as a temperature, not a difference."""
 
 import pytest
 
@@ -188,3 +190,90 @@ def test_the_structural_and_crafts_calculators_match_hand_worked_examples():
         calculate("soap_lye", {})
     with pytest.raises(CalcError, match="needs fibre"):
         calculate("alum_mordant", {})
+
+
+
+def test_the_acoustics_and_audio_calculators_match_hand_worked_examples():
+    """The hoodie's specialists (S4's second batch). An 88 dB speaker on 10 W at 4 m: 88 + 10 - 12.04 = 85.96 dB;
+    90 dB at 2 m from 85 dB with 3 dB headroom: 10^(14.02 / 10) = 25.24 W; Vas 20 L, Qts 0.35 to Qtc 0.707:
+    20 / ((0.707 / 0.35)^2 - 1) = 6.493 L; 3.43 m in 20 degC air (343.42 m/s) is 9.988 ms; 94 dBA is 8 / 2^3 = 1 h a
+    day. 256 samples at 48 kHz is 5.333 ms; 48 kHz x 16 bit x 2 is 1,536 kbps and 691.2 MB an hour; 24 bits are
+    24 x 6.02 + 1.76 = 146.25 dB; a 1024 point FFT at 48 kHz has 46.875 Hz bins; 10 ms at 48 kHz is 480 samples."""
+    assert near(calculate("spl_at_distance", {"sensitivity": "88 dB", "power": "10 W", "distance": "4 m"})
+                ["values"]["spl"], 85.959, "dB")
+    assert near(calculate("amp_power", {"target": "90 dB", "sensitivity": "85 dB SPL", "distance": "2 m"})
+                ["values"]["power"], 25.238, "W")
+    assert near(calculate("sealed_box", {"vas": "20 L", "qts": 0.35})["values"]["volume"], 6.4927, "L")
+    with pytest.raises(CalcError, match="above its Qts"):
+        calculate("sealed_box", {"vas": "20 L", "qts": 0.9})
+    assert near(calculate("sound_delay", {"distance": "3.43 m"})["values"]["delay"], 9.9878, "ms")
+    exposure = calculate("noise_exposure", {"level": "94 dBA"})
+    assert near(exposure["values"]["hours"], 1.0, "h") and "doesn't come back" in exposure["said"]
+    assert "full 8 hour day" in calculate("noise_exposure", {"level": "80 dB"})["said"]
+    assert near(calculate("buffer_latency", {"buffer": 256, "rate": "48 kHz"})["values"]["latency"], 5.3333, "ms")
+    rate = calculate("audio_bitrate", {"rate": "48000 Hz", "bits": 16})["values"]
+    assert near(rate["bitrate"], 1536, "kbps") and near(rate["per_hour"], 691.2, "MB")
+    assert near(calculate("dynamic_range", {"bits": 24})["values"]["range"], 146.25, "dB")
+    assert near(calculate("fft_resolution", {"rate": "48 kHz", "size": 1024})["values"]["bin"], 46.875, "Hz")
+    assert calculate("delay_samples", {"delay": "10 ms", "rate": "48 kHz"})["values"]["samples"].value == 480
+    assert "fractional" in calculate("delay_samples", {"delay": "1 ms", "rate": "44.1 kHz"})["said"]
+    with pytest.raises(CalcError, match="needs buffer"):
+        calculate("buffer_latency", {"rate": "48 kHz"})
+
+
+def test_the_textile_and_portable_power_calculators_match_hand_worked_examples_and_carry_the_caveat():
+    """Four 24 x 20 in pieces with 1/2 in seams are cut 25 x 21: two fit across 58 in fabric, two rows, 50 in =
+    1.389 yd (and 50 / 0.95 at 5% shrinkage); 1.5 x 2 m of 300 GSM is 900 g, 8.848 oz per sq yd; 36 in after 5%
+    shrinkage is cut 37.89 in; 0.5 m of 10 ohm/m thread on 3.7 V is 5 ohm, 0.74 A, 2.738 W. A 2S2P pack of 3.7 V,
+    3000 mAh cells is 7.4 V, 6000 mAh, 44.4 Wh; 3000 mAh at 1000 mA and 85% is 3.529 h; 1.5 A from 2000 mAh is
+    0.75C; 5 V at 2 A from 3.7 V at 90% draws 3.003 A. Anything electric on the body, and every lithium figure,
+    carries the caveat."""
+    pieces = {"count": 4, "length": "24 in", "width": "20 in", "fabric": "58 in"}
+    yardage = calculate("fabric_yardage", pieces)["values"]
+    assert near(yardage["yards"], 50 / 36, "yd") and yardage["across"].value == 2 and yardage["rows"].value == 2
+    assert near(calculate("fabric_yardage", {**pieces, "shrink": "5 %"})["values"]["yards"], 50 / 36 / 0.95, "yd")
+    with pytest.raises(CalcError, match="fit across"):
+        calculate("fabric_yardage", {**pieces, "fabric": "20 in"})
+    weight = calculate("fabric_weight", {"gsm": "300 gsm", "length": "1.5 m", "width": "2 m"})["values"]
+    assert near(weight["weight"], 900, "g") and near(weight["oz_per_yd2"], 8.848, "oz/yd2")
+    assert near(calculate("shrink_allowance", {"finished": "36 in", "shrink": "5 %"})["values"]["cut"], 37.895, "in")
+    thread = calculate("conductive_trace", {"resistance": "10 ohm/m", "length": "50 cm", "volts": "3.7 V"})
+    assert near(thread["values"]["power"], 2.738, "W") and near(thread["values"]["current"], 0.74, "A")
+    assert thread["caveat"] == CAVEAT and not calculate("fabric_weight", {"gsm": 300, "length": 1, "width": 1})["caveat"]
+    pack = calculate("battery_pack", {"cell_volts": "3.7 V", "cell_capacity": "3000 mAh", "series": 2,
+                                      "parallel": 2})
+    assert near(pack["values"]["energy"], 44.4, "Wh") and near(pack["values"]["volts"], 7.4, "V")
+    assert pack["caveat"] and "protection board" in pack["said"] and "airlines" not in pack["said"]
+    big = calculate("battery_pack", {"cell_volts": "3.6 V", "cell_capacity": "3500 mAh", "series": 4, "parallel": 3})
+    assert "100 Wh" in big["said"]  # 151.2 Wh can't go on a plane without approval
+    assert near(calculate("charge_time", {"capacity": "3000 mAh", "current": "1 A"})["values"]["hours"], 3.5294, "h")
+    assert "fast charge" in calculate("charge_time", {"capacity": "1000 mAh", "current": "2000 mA"})["said"]
+    c = calculate("c_rate", {"capacity": "2000 mAh", "load": "1500 mA"})["values"]
+    assert c["c_rate"].value == pytest.approx(0.75) and c["within"].value == 1
+    assert calculate("c_rate", {"capacity": "2000 mAh", "load": "3 A"})["values"]["within"].value == 0
+    assert near(calculate("boost_current", {"vout": "5 V", "iout": "2 A", "vin": "3.7 V"})["values"]
+                ["input_current"], 3.003, "A")
+    with pytest.raises(CalcError, match="needs current"):
+        calculate("charge_time", {"capacity": "3000 mAh"})
+
+
+def test_a_temperature_on_another_scale_is_read_as_a_temperature_not_a_difference():
+    """7 degC into an input in degF is 44.6 degF (a point on the scale), where the arithmetic of a difference would
+    make it 12.6; 68 degF of air is 20 degC, so sound covers 3.43 m in the same 9.988 ms; 77 degF around a regulator
+    is 25 degC."""
+    heat = calculate("greenhouse_heat", {"area": "100 ft2", "u": 1, "inside": "7 degC", "outside": "34.6 degF"})
+    assert near(heat["values"]["heat_loss"], 100 * 10, "BTU/h")  # 44.6 - 34.6 = 10 degF
+    assert near(calculate("sound_delay", {"distance": "3.43 m", "air": "68 degF"})["values"]["delay"], 9.9878, "ms")
+    hot = calculate("regulator_heat", {"vin": "12 V", "vout": "5 V", "current": "100 mA", "theta": "50 degC/W",
+                                       "ambient": "77 degF"})
+    assert near(hot["values"]["junction"], 25 + 0.7 * 50, "degC")
+
+
+def test_the_hoodies_units_are_read_in_the_ways_they_are_written():
+    """Decibels as dB SPL and dBA, fabric weight as GSM or oz per sq yd, data rates and sizes, resistance per length,
+    and metres, yards and kHz spelt out or in lower case."""
+    assert parse("88 dB SPL").number("dB") == 88 and parse("94 dBA").unit == "dB"
+    assert parse("300 gsm").number("g/m2") == 300 and round(parse("10 oz/sq yd").number("g/m2"), 1) == 339.1
+    assert parse("1,536 kbps").number("bps") == 1_536_000 and round(parse("1 MB").number("bit")) == 8_000_000
+    assert round(parse("3 ohms/ft").number("ohm/m"), 3) == 9.843 and parse("48 khz").number("Hz") == 48_000
+    assert parse("2 metres").number("m") == 2 and round(parse("1.5 yards").number("in"), 6) == 54

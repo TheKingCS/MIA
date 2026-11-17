@@ -181,6 +181,58 @@ SPECIALISTS: tuple[Specialist, ...] = (
                words=("greenhouse", "glazing", "polycarbonate", "heat loss", "exhaust fan", "shade cloth",
                       "evaporative", "swamp cooler", "misting", "drip", "emitter", "vent", "u-value", "propane heater",
                       "high tunnel", "hoop house")),
+    # S4's second batch: the hoodie's (DEC-0198 Q-55: the hoodie is the second team's project). Embedded systems,
+    # the fifth it names, is already here.
+    Specialist("acoustics", "Acoustics and audio", "Sound in the air: speakers and their sensitivity, how loud they "
+               "are at a distance, amplifier power, enclosures (sealed and ported boxes from Thiele-Small figures), "
+               "placing and delaying speakers so sound arrives together, microphones, and keeping listening levels "
+               "safe for hearing.", skills=("Technology", "Creative"),
+               limits="Numbers come from her calculators (core/eng_calcs.py), never from memory. Sound close to the "
+               "ears says how long it's safe to hear (NIOSH's limit), and hearing protection is named where it's "
+               "needed; never anything to harm or harass with sound.",
+               starts_from=("How loud does a small speaker need to be in a hood, and is that safe for hearing?",
+                            "How do you choose an enclosure for a small full-range driver?",
+                            "How do you place two speakers so their sound arrives together?"),
+               words=("speaker", "loudspeaker", "woofer", "tweeter", "subwoofer", "amplifier", "decibel", "dba",
+                      "sound pressure", "sealed box", "ported box", "thiele", "acoustics", "hearing",
+                      "loudness", "microphone")),
+    Specialist("audio_dsp", "Audio signal processing", "Sound as numbers: sample rates and bit depth, buffers and "
+               "latency, filters and equalisers, FFTs, delays and mixing, codecs, I2S and audio on a "
+               "microcontroller, and keeping audio smooth on small hardware.", skills=("Technology", "Creative"),
+               limits="Numbers come from her calculators (core/eng_calcs.py), never from memory. A change that makes "
+               "audio louder says how loud it ends up at the ears (the acoustics specialist's safe listening time).",
+               starts_from=("How small can an audio buffer be on an ESP32 before it crackles?",
+                            "What sample rate and bit depth does voice need, and what does music need?",
+                            "How do you design a simple equaliser filter?"),
+               words=("sample rate", "bit depth", "latency", "audio buffer", "fft", "dsp", "bitrate", "bit rate",
+                      "equaliser", "equalizer", "biquad", "codec", "i2s", "audio delay", "aliasing", "nyquist")),
+    Specialist("textiles", "Textiles and wearables", "Fabric and garments: fibres and weaves, fabric weight (GSM), "
+               "patterns, yardage and layout, seams and shrinkage, sewing machines and stitches, and e-textiles: "
+               "conductive thread, pockets and channels for electronics, washability and comfort against the body.",
+               skills=("Maker", "Creative"),
+               limits="Numbers come from her calculators (core/eng_calcs.py), never from memory. Anything electric "
+               "worn on the body (a heated panel, a lit seam, a battery pocket) says how much heat it makes, names "
+               "burns and lithium batteries as dangerous, and says a qualified person must check the design before "
+               "it's worn.",
+               starts_from=("How much fabric does a hoodie take, and how do you lay out the pieces?",
+                            "How do you sew conductive thread so it survives washing?",
+                            "Where can electronics sit in a garment so they're comfortable and safe?"),
+               words=("fabric", "textile", "garment", "hoodie", "yardage", "seam allowance", "gsm", "fleece",
+                      "conductive thread", "e-textile", "wearable", "pattern piece", "shrinkage", "stitch")),
+    Specialist("power", "Portable power", "Batteries and power for things that move or are worn: lithium cells and "
+               "packs (series and parallel), protection boards (BMS), charging and its time, C-rates, boost and buck "
+               "converters, USB power, power budgets, and keeping a battery cool and safe.",
+               skills=("Technology", "Maker"),
+               limits="Numbers come from her calculators (core/eng_calcs.py), never from memory. Lithium cells are "
+               "named as a fire risk every time: a pack needs a protection board and matched cells, a charger made "
+               "for its chemistry, and a qualified person's review before it's built; house wiring is the electrical "
+               "specialist's.",
+               starts_from=("How do you size a battery pack for a wearable that runs all day?",
+                            "How do you charge a lithium pack safely?",
+                            "When do you need a boost converter, and what does it draw from the battery?"),
+               words=("lipo", "li-ion", "lithium", "18650", "battery pack", "power bank", "bms", "c-rate",
+                      "boost converter", "buck converter", "charge time", "charging", "usb-c power",
+                      "cell pack")),
     Specialist("outdoors", "Outdoors and fieldcraft", "Being out there: navigation by map and compass and grid, "
                "hiking, camping, survival skills, weather, water, first aid in the field.", skills=("Outdoor",),
                limits="First aid is first aid: anything serious says to get emergency help.",
@@ -321,6 +373,25 @@ ROLES: dict[str, dict] = {
                        reasoning="high", needs=("numbers",), reviews=("homesteading", "embedded", "hvac"),
                        caveat="A draft for you to check; a fuel-burning heater needs fresh air and a CO alarm, and "
                               "mains wiring for fans and heaters needs a licensed electrician."),
+    "acoustics": dict(department="engineering", task_types=("research", "design", "estimate", "compare", "review"),
+                      tools=_READ + ("list_inventory", "check_price"), reasoning="high", needs=("numbers",),
+                      reviews=("audio_dsp", "textiles"),
+                      caveat="A draft for you to check; sound close to the ears can damage hearing, so check the "
+                             "safe listening time."),
+    "audio_dsp": dict(department="engineering", task_types=("research", "design", "review", "build_code"),
+                      tools=_READ + ("list_inventory",), reasoning="high", needs=("code", "numbers"),
+                      reviews=("acoustics", "embedded"),
+                      caveat="A draft for you to check; test levels quietly first, since a mistake can be very loud."),
+    "textiles": dict(department="fabrication", task_types=("research", "design", "estimate", "review"),
+                     tools=_READ + ("list_inventory", "check_price", "list_materials"), needs=("numbers",),
+                     reviews=("crafts", "maker", "power"),
+                     caveat="A draft for you to check; anything electric worn on the body needs a qualified person's "
+                            "review before it's worn."),
+    "power": dict(department="engineering", task_types=("research", "design", "estimate", "review", "safety_review"),
+                  tools=_READ + ("list_inventory", "check_price", "get_energy"), reasoning="high", needs=("numbers",),
+                  reviews=("embedded", "textiles", "electrical"),
+                  caveat="A draft for you to check; lithium batteries can catch fire, and a pack needs a qualified "
+                         "person's review before it's built."),
     "crafts": dict(department="homestead", task_types=("research", "design", "estimate", "write", "review"),
                    tools=_READ + ("list_inventory", "check_price", "list_materials"), needs=("numbers",),
                    reviews=("homesteading", "maker"),

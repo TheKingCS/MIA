@@ -8,7 +8,8 @@ confirms or withdraws; study hall takes them in turn; and the answer always
 says where a note came from and whether it's confirmed. As agents (DEC-0197):
 each has a department, task types and real reviewers, may call only tools that
 change nothing, carries its caveat where its work can hurt someone, and the
-embedded systems and homestead crafts specialists answer their own questions.
+embedded systems and homestead crafts specialists answer their own questions, as do the hoodie's four
+(acoustics, audio DSP, textiles, portable power), each naming its dangers.
 """
 
 from __future__ import annotations
@@ -182,3 +183,25 @@ def test_she_says_which_specialists_she_has_by_department():
     assert f"I have {len(sp.SPECIALISTS)} specialists" in said and "Embedded systems" in said
     assert "Homestead crafts" in said and "changes nothing" in said
 
+
+
+
+def test_the_hoodies_specialists_answer_their_own_questions_and_name_their_dangers():
+    """S4's second batch (DEC-0198 Q-55, the hoodie second): acoustics, audio DSP, textiles and portable power, each
+    a whole agent whose worksheet has its own calculators; an acoustic guitar is still music's and a mahogany frame
+    is never a battery question."""
+    from core.eng_calcs import DISCIPLINES as CALC_DISCIPLINES
+    from core.specialist_work import DISCIPLINES
+
+    assert sp.who_knows("how loud is a speaker in a hood at 10 cm")[0].id == "acoustics"
+    assert sp.who_knows("what sample rate and bit depth for voice")[0].id == "audio_dsp"
+    assert sp.who_knows("how many yards of fleece for a hoodie")[0].id == "textiles"
+    assert sp.who_knows("how long does a lipo battery pack take to charge")[0].id == "power"
+    assert sp.who_knows("which acoustic guitar strings should I buy")[0].id == "music"
+    assert "power" not in {s.id for s in sp.who_knows("refinishing a mahogany display frame")}
+    for sid in ("acoustics", "audio_dsp", "textiles", "power"):
+        spec = sp.BY_ID[sid]
+        assert spec.caveat and "work_it_out" in spec.tools and len(spec.starts_from) == 3, sid
+        assert DISCIPLINES[sid][0] == sid and sid in CALC_DISCIPLINES, sid
+    assert "NIOSH" in sp.BY_ID["acoustics"].limits and "fire risk" in sp.BY_ID["power"].limits
+    assert "burns" in sp.BY_ID["textiles"].limits and "qualified person" in sp.BY_ID["textiles"].limits

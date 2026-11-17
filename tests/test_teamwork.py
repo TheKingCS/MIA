@@ -56,7 +56,7 @@ def test_a_specialists_entry_must_be_honest_about_where_it_came_from(world):
     with pytest.raises(TeamworkError, match="names the source"):
         world.teamwork.note(gh, "finding", "x", by="embedded", model="m", basis="source")
     with pytest.raises(TeamworkError, match="no specialist"):
-        world.teamwork.note(gh, "finding", "x", by="acoustics", model="m")
+        world.teamwork.note(gh, "finding", "x", by="astrology", model="m")
     with pytest.raises(TeamworkError, match="no specialist"):
         world.teamwork.note(gh, "constraint", "x", affects=["nobody"])
     with pytest.raises(TeamworkError, match="one of"):

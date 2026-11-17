@@ -61,6 +61,15 @@ UNITS: dict[str, tuple[float, tuple]] = {
     "W/m2K": (1.0, (0, 1, -3, 0, -1)), "BTU/h/ft2/degF": (5.678263337, (0, 1, -3, 0, -1)),
     "N": (1.0, (1, 1, -2, 0, 0)), "Pa": (1.0, (-1, 1, -2, 0, 0)), "psi": (6894.757293168, (-1, 1, -2, 0, 0)),
     "degC/W": (1.0, (-2, -1, 3, 0, 1)),
+    # The hoodie's specialists (S4's second batch): a level in decibels (a plain number on a log scale: added to
+    # and subtracted from other levels, never multiplied), data rates and sizes, a fabric's weight per area, and a
+    # conductive thread's resistance per length.
+    "dB": (1.0, _NONE),
+    "bps": (1.0, (0, 0, -1, 0, 0)), "kbps": (1e3, (0, 0, -1, 0, 0)), "Mbps": (1e6, (0, 0, -1, 0, 0)),
+    "bit": (1.0, _NONE), "B": (8.0, _NONE), "kB": (8e3, _NONE), "MB": (8e6, _NONE), "GB": (8e9, _NONE),
+    "yd2": (0.83612736, (2, 0, 0, 0, 0)),
+    "g/m2": (1e-3, (-2, 1, 0, 0, 0)), "oz/yd2": (0.028349523125 / 0.83612736, (-2, 1, 0, 0, 0)),
+    "ohm/m": (1.0, (1, 1, -3, -2, 0)), "ohm/ft": (1 / 0.3048, (1, 1, -3, -2, 0)),
 }
 _ALIASES = {"Ω": "ohm", "ohms": "ohm", "kΩ": "kohm", "MΩ": "Mohm", "µA": "uA", "µF": "uF", "°C": "degC", "°F": "degF",
             "volt": "V", "volts": "V", "amp": "A", "amps": "A", "watt": "W", "watts": "W", "feet": "ft", "foot": "ft",
@@ -70,7 +79,13 @@ _ALIASES = {"Ω": "ohm", "ohms": "ohm", "kΩ": "kohm", "MΩ": "Mohm", "µA": "uA
             "BTU/hr": "BTU/h", "Btu/hr": "BTU/h", "btuh": "BTU/h", "CFM": "cfm", "GPM": "gpm", "GPH": "gph",
             "cu ft": "ft3", "sq ft": "ft2", "ft²": "ft2", "m²": "m2", "ft³": "ft3", "cfm/sq ft": "cfm/ft2",
             "CFM/ft2": "cfm/ft2", "cfm per sq ft": "cfm/ft2",
-            "cu yd": "yd3", "cubic yards": "yd3", "yd³": "yd3", "grams": "g", "gram": "g"}
+            "cu yd": "yd3", "cubic yards": "yd3", "yd³": "yd3", "grams": "g", "gram": "g",
+            "db": "dB", "dBA": "dB", "dba": "dB", "dB SPL": "dB", "dBSPL": "dB", "decibel": "dB", "decibels": "dB",
+            "kb/s": "kbps", "Mb/s": "Mbps", "bits": "bit", "bytes": "B", "hz": "Hz", "khz": "kHz", "KHz": "kHz",
+            "gsm": "g/m2", "GSM": "g/m2", "g/m²": "g/m2", "oz/yd²": "oz/yd2", "oz/sq yd": "oz/yd2",
+            "sq yd": "yd2", "yd²": "yd2", "Ω/m": "ohm/m", "ohms/m": "ohm/m", "ohm per m": "ohm/m",
+            "Ω/ft": "ohm/ft", "ohms/ft": "ohm/ft", "metres": "m", "meters": "m", "metre": "m", "meter": "m",
+            "yards": "yd", "yard": "yd"}
 _TEXT = re.compile(r"^\s*(-?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*(.*?)\s*$")
 _THOUSANDS = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$")
 

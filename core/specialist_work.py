@@ -60,6 +60,8 @@ DISCIPLINES: dict[str, tuple[str, ...]] = {
     "carpentry": ("structural",), "maker": ("embedded", "electrical"), "homesteading": ("crafts", "electrical", "greenhouse"),
     "construction": ("structural", "electrical"), "radio": ("electrical",), "hvac": ("electrical", "greenhouse"),
     "engineering": ("embedded", "electrical"), "greenhouse": ("greenhouse", "electrical"),
+    "acoustics": ("acoustics", "audio_dsp"), "audio_dsp": ("audio_dsp", "acoustics"),
+    "textiles": ("textiles", "power"), "power": ("power", "electrical", "embedded"),
 }
 MAX_CALCULATIONS = 4
 

@@ -163,6 +163,61 @@ TASKS: tuple[Task, ...] = (
     Task("g5", "How big a heater does my greenhouse need for 5 degrees F outside? It has 600 square feet of glazing "
          "and I keep it at 45.", "greenhouse_heat", {"area": "600 ft2", "inside": "45 degF", "outside": "5 degF"},
          missing="u"),
+    # ---- acoustics (the hoodie's specialists, S4's second batch)
+    Task("a1", "A speaker rated 88 dB at 1 watt and 1 metre is driven with 10 watts. What sound pressure level, in dB, "
+         "is it at 4 metres in the open?", "spl_at_distance",
+         {"sensitivity": "88 dB", "power": "10 W", "distance": "4 m"}, "spl", "dB", 0.01),
+    Task("a2", "How many watts of amplifier power does a speaker rated 85 dB at 1 watt and 1 metre need to reach 90 dB "
+         "at 2 metres, with 3 dB of headroom for peaks?", "amp_power",
+         {"target": "90 dB", "sensitivity": "85 dB", "distance": "2 m", "headroom": "3 dB"}, "power", "W"),
+    Task("a3", "A woofer has a Vas of 20 litres and a Qts of 0.35. What sealed box volume, in litres, gives a Qtc of "
+         "0.707?", "sealed_box", {"vas": "20 L", "qts": 0.35, "qtc": 0.707}, "volume", "L"),
+    Task("a4", "Sound at my ears is 94 dBA. Under NIOSH's limit (85 dBA for 8 hours, halved for every 3 dB more), how "
+         "many hours a day can I listen?", "noise_exposure", {"level": "94 dB"}, "hours", "h"),
+    Task("a5", "How many milliseconds does sound take to travel 3.43 metres in 20 degree C air?", "sound_delay",
+         {"distance": "3.43 m", "air": "20 degC"}, "delay", "ms"),
+    Task("a6", "How many watts of amplifier does my speaker need to be 95 dB at 3 metres?", "amp_power",
+         {"target": "95 dB", "distance": "3 m"}, missing="sensitivity"),
+    # ---- audio DSP
+    Task("d1", "How many milliseconds of audio does a 256 sample buffer hold at a 48 kHz sample rate?",
+         "buffer_latency", {"buffer": 256, "rate": "48 kHz"}, "latency", "ms"),
+    Task("d2", "What is the bit rate, in kbps, of uncompressed 48 kHz, 16-bit stereo (2 channel) audio?",
+         "audio_bitrate", {"rate": "48 kHz", "bits": 16, "channels": 2}, "bitrate", "kbps"),
+    Task("d3", "What is the theoretical dynamic range, in dB, of 24-bit audio?", "dynamic_range", {"bits": 24},
+         "range", "dB", 0.01),
+    Task("d4", "A 1024 point FFT runs on audio sampled at 48 kHz. How many Hz apart are its bins?", "fft_resolution",
+         {"rate": "48 kHz", "size": 1024}, "bin", "Hz"),
+    Task("d5", "How many samples is a 10 millisecond delay at 48 kHz?", "delay_samples",
+         {"delay": "10 ms", "rate": "48 kHz"}, "samples", "", 0.0),
+    Task("d6", "How much latency does my audio buffer add at 48 kHz?", "buffer_latency", {"rate": "48 kHz"},
+         missing="buffer"),
+    # ---- textiles
+    Task("t1", "I need 4 pieces, each 24 inches long and 20 inches wide, cut from 58 inch wide fabric with a half inch "
+         "seam allowance on every edge and no shrinkage. Laid out side by side across the width, how many yards of "
+         "fabric?", "fabric_yardage", {"count": 4, "length": "24 in", "width": "20 in", "fabric": "58 in",
+                                       "seam": "0.5 in", "shrink": "0 %"}, "yards", "yd"),
+    Task("t2", "How many grams does a 1.5 by 2 metre piece of 300 GSM fleece weigh?", "fabric_weight",
+         {"gsm": "300 g/m2", "length": "1.5 m", "width": "2 m"}, "weight", "g"),
+    Task("t3", "I want a panel 36 inches long after washing, and the fabric shrinks 5%. How many inches should I cut?",
+         "shrink_allowance", {"finished": "36 in", "shrink": "5 %"}, "cut", "in"),
+    Task("t4", "Half a metre of conductive thread rated 10 ohms per metre is put across a 3.7 volt battery. How many "
+         "watts of heat does it make?", "conductive_trace",
+         {"resistance": "10 ohm/m", "length": "0.5 m", "volts": "3.7 V"}, "power", "W"),
+    Task("t5", "How much does a 2 by 1.5 metre piece of my fleece weigh?", "fabric_weight",
+         {"length": "2 m", "width": "1.5 m"}, missing="gsm"),
+    # ---- portable power
+    Task("p1", "A pack is built from 3.7 volt, 3000 mAh cells, 2 in series and 2 in parallel. How many watt-hours is "
+         "it?", "battery_pack", {"cell_volts": "3.7 V", "cell_capacity": "3000 mAh", "series": 2, "parallel": 2},
+         "energy", "Wh"),
+    Task("p2", "How many hours does a 3000 mAh battery take to charge at 1000 mA, if charging is 85% efficient?",
+         "charge_time", {"capacity": "3000 mAh", "current": "1000 mA", "efficiency": "85 %"}, "hours", "h"),
+    Task("p3", "A 1.5 amp load runs from a 2000 mAh battery. What C-rate is that?", "c_rate",
+         {"capacity": "2000 mAh", "load": "1.5 A"}, "c_rate", ""),
+    Task("p4", "A boost converter makes 5 volts at 2 amps from a 3.7 volt battery at 90% efficiency. How many amps "
+         "does it draw from the battery?", "boost_current",
+         {"vout": "5 V", "iout": "2 A", "vin": "3.7 V", "efficiency": "90 %"}, "input_current", "A"),
+    Task("p5", "How long will my 3000 mAh pack take to charge?", "charge_time", {"capacity": "3000 mAh"},
+         missing="current"),
 )
 BY_TASK = {t.id: t for t in TASKS}
 

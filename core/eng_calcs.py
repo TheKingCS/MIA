@@ -23,8 +23,11 @@ The first set: electrical (power, voltage drop, wire gauge, circuit load,
 battery runtime), embedded (LED resistor, voltage divider, battery life
 with sleep, regulator heat, ADC step), structural (floor joist), and
 structural (stair risers, board feet, concrete), homestead crafts (brine salt, candle wax, soap
-lye, alum mordant), and the greenhouse (heat loss, fan size, drip water, heater propane; S4's first specialist). Each is checked in
-tests/test_eng_calcs.py against a worked example done by hand.
+lye, alum mordant), and the greenhouse (heat loss, fan size, drip water, heater propane; S4's first specialist).
+S4's second batch, the hoodie's: acoustics (SPL at distance, amplifier power, sealed box, sound delay, safe
+listening time), audio DSP (buffer latency, data rate, dynamic range, FFT resolution, delay in samples), textiles
+(yardage, fabric weight, shrinkage, conductive thread) and portable power (battery pack, charge time, C-rate,
+converter input current). Each is checked in tests/test_eng_calcs.py against a worked example done by hand.
 
 Tables here are for copper wire at ordinary indoor temperatures and are a
 starting point, never a substitute for the code where the person lives.
@@ -348,6 +351,226 @@ def _alum_mordant(fibre: Quantity, rate: Quantity) -> dict:
             "said": f"{fibre.to('g')} of dry fibre at {rate.si * 100:g}% of its weight takes {alum} of alum."}
 
 
+# ---- the hoodie's specialists (S4's second batch): acoustics, audio DSP, textiles and portable power
+
+SOUND_SPEED_0C = 331.3  # metres a second in dry air at 0 degC, rising 0.606 m/s for each degree
+SOUND_SPEED_PER_DEGC = 0.606
+NIOSH_DBA, NIOSH_HOURS, NIOSH_EXCHANGE = 85.0, 8.0, 3.0  # NIOSH's recommended limit: 85 dBA for 8 h, 3 dB halves it
+
+
+def _spl_at_distance(sensitivity: Quantity, power: Quantity, distance: Quantity) -> dict:
+    """A speaker's sound pressure level at a distance: its sensitivity (dB at 1 W and 1 m), plus 10 log10 of the
+    watts, less 20 log10 of the metres (the inverse square law, in the open)."""
+    watts, metres = power.number("W"), distance.number("m")
+    if watts <= 0 or metres <= 0:
+        raise CalcError("The power and the distance both have to be more than 0.")
+    spl = q(sensitivity.number("dB") + 10 * math.log10(watts) - 20 * math.log10(metres), "dB")
+    return {"values": {"spl": spl},
+            "said": f"A speaker of {sensitivity.number('dB'):g} dB (1 W, 1 m) given {power.to('W')} is about {spl} at "
+                    f"{distance.to('m')} in the open; a room's reflections add a little."}
+
+
+def _amp_power(target: Quantity, sensitivity: Quantity, distance: Quantity, headroom: Quantity) -> dict:
+    """The amplifier power for a level at a distance: the inverse of SPL At Distance, plus headroom for peaks."""
+    metres = distance.number("m")
+    if metres <= 0:
+        raise CalcError("The distance has to be more than 0.")
+    needed = target.number("dB") - sensitivity.number("dB") + 20 * math.log10(metres) + headroom.number("dB")
+    watts = q(10 ** (needed / 10), "W")
+    return {"values": {"power": watts},
+            "said": f"To reach {target.number('dB'):g} dB at {distance.to('m')} from a speaker of "
+                    f"{sensitivity.number('dB'):g} dB (1 W, 1 m), with {headroom.number('dB'):g} dB of headroom for peaks, takes {watts} of amplifier "
+                    f"power (every 3 dB more doubles it)."}
+
+
+def _sealed_box(vas: Quantity, qts: Quantity, qtc: Quantity) -> dict:
+    """A sealed box's volume for a driver: Vb = Vas / ((Qtc / Qts)^2 - 1), from its Thiele-Small figures."""
+    if qts.value <= 0 or qtc.value <= qts.value:
+        raise CalcError("A sealed box only raises a driver's Q, so the Qtc wanted has to be above its Qts.")
+    ratio = (qtc.value / qts.value) ** 2 - 1
+    box = q(vas.number("L") / ratio, "L")
+    return {"values": {"volume": box, "alpha": q(ratio)},
+            "said": f"A driver with Vas {vas.to('L')} and Qts {qts.value:g} reaches Qtc {qtc.value:g} in a sealed "
+                    f"box of {box} inside, not counting the driver's own volume or bracing."}
+
+
+def _sound_delay(distance: Quantity, air: Quantity) -> dict:
+    """How long sound takes over a distance: the speed of sound in air at that temperature (331.3 m/s at 0 degC,
+    plus 0.606 for each degree)."""
+    from core.quantities import temperature
+
+    celsius = temperature(air.value, air.unit, "degC")
+    speed = SOUND_SPEED_0C + SOUND_SPEED_PER_DEGC * celsius
+    if speed <= 0:
+        raise CalcError("That's too cold for air to carry sound in this formula.")
+    delay = q(distance.number("m") / speed * 1000, "ms")
+    return {"values": {"delay": delay, "speed": q(speed)},
+            "said": f"Sound covers {distance.to('m')} in {delay} in {celsius:g} degC air ({speed:.4g} m/s)."}
+
+
+def _noise_exposure(level: Quantity) -> dict:
+    """How long a day a sound level may be heard: NIOSH's 8 hours at 85 dBA, halved for every 3 dB above it."""
+    hours = q(NIOSH_HOURS / 2 ** ((level.number("dB") - NIOSH_DBA) / NIOSH_EXCHANGE), "h")
+    if level.number("dB") <= NIOSH_DBA:
+        said = f"{level.number('dB'):g} dBA is within NIOSH's limit for a full 8 hour day."
+    else:
+        said = (f"At {level.number('dB'):g} dBA, NIOSH's limit is reached after {hours.to('h')} "
+                f"({hours.to('min')}) a day. Turn it down: hearing lost to noise doesn't come back.")
+    return {"values": {"hours": hours}, "said": said}
+
+
+def _buffer_latency(buffer: Quantity, rate: Quantity) -> dict:
+    """The time one audio buffer holds: its samples divided by the sample rate."""
+    hertz = rate.number("Hz")
+    if hertz <= 0 or buffer.value <= 0:
+        raise CalcError("The buffer and the sample rate both have to be more than 0.")
+    latency = q(buffer.value / hertz * 1000, "ms")
+    return {"values": {"latency": latency},
+            "said": f"A {buffer.value:g} sample buffer at {rate.to('kHz')} holds {latency}; input and output "
+                    f"buffers add up, so a round trip is at least twice that."}
+
+
+def _audio_bitrate(rate: Quantity, bits: Quantity, channels: Quantity) -> dict:
+    """Uncompressed audio's data rate: sample rate x bits x channels, and what an hour of it takes."""
+    per_second = rate.number("Hz") * bits.value * channels.value
+    bitrate = q(per_second, "bps").to("kbps")
+    hour = q(per_second * 3600, "bit").to("MB")
+    return {"values": {"bitrate": bitrate, "per_hour": hour},
+            "said": f"{rate.to('kHz')}, {bits.value:g} bit, {channels.value:g} channel audio is {bitrate} "
+                    f"uncompressed, {hour} an hour."}
+
+
+def _dynamic_range(bits: Quantity) -> dict:
+    """The dynamic range of a converter's bits, for a full-scale sine: 6.02 dB a bit plus 1.76 dB."""
+    if bits.value < 1:
+        raise CalcError("The bit depth has to be at least 1.")
+    dr = q(20 * math.log10(2) * bits.value + 1.76, "dB")
+    return {"values": {"range": dr},
+            "said": f"{bits.value:g} bits give at most {dr} of dynamic range; real converters and analogue parts "
+                    f"give less."}
+
+
+def _fft_resolution(rate: Quantity, size: Quantity) -> dict:
+    """An FFT's frequency resolution and frame length: sample rate / size, and size / sample rate."""
+    hertz = rate.number("Hz")
+    if hertz <= 0 or size.value < 2:
+        raise CalcError("The sample rate has to be more than 0 and the FFT size at least 2.")
+    return {"values": {"bin": q(hertz / size.value, "Hz"), "frame": q(size.value / hertz * 1000, "ms")},
+            "said": f"A {size.value:g} point FFT at {rate.to('kHz')} has bins {q(hertz / size.value, 'Hz')} apart "
+                    f"and needs {q(size.value / hertz * 1000, 'ms')} of audio a frame."}
+
+
+def _delay_samples(delay: Quantity, rate: Quantity) -> dict:
+    """A time delay as a whole number of samples at a sample rate (the nearest one)."""
+    exact = delay.number("s") * rate.number("Hz")
+    samples = round(exact)
+    return {"values": {"samples": q(samples), "exact": q(exact)},
+            "said": f"{delay.to('ms')} at {rate.to('kHz')} is {samples} samples"
+                    + (f" (exactly {exact:.4g}; the rest needs a fractional delay)." if abs(exact - samples) > 1e-9
+                       else ".")}
+
+
+def _fabric_yardage(count: Quantity, length: Quantity, width: Quantity, fabric: Quantity, seam: Quantity,
+                    shrink: Quantity) -> dict:
+    """Fabric for pieces laid in rows across its width: each piece with its seam allowance on every edge, as many
+    across as fit, rows down the length, plus the shrinkage when it's washed first."""
+    cut_long, cut_wide = length.number("in") + 2 * seam.number("in"), width.number("in") + 2 * seam.number("in")
+    across = math.floor(fabric.number("in") / cut_wide) if cut_wide > 0 else 0
+    if across < 1:
+        raise CalcError(f"A piece cut {cut_wide:g} in wide doesn't fit across {fabric.to('in')} fabric: turn it or "
+                        f"piece it.")
+    if shrink.si >= 1:
+        raise CalcError("Shrinkage has to be under 100%.")
+    rows = math.ceil(count.value / across)
+    inches = rows * cut_long / (1 - shrink.si)
+    yards = q(inches, "in").to("yd")
+    return {"values": {"yards": yards, "across": q(across), "rows": q(rows)},
+            "said": f"{count.value:g} pieces cut {cut_long:g} by {cut_wide:g} in (with seam allowance) fit {across} "
+                    f"across {fabric.to('in')} fabric, in {rows} rows: {yards} ({q(inches, 'in')}). Add more for "
+                    f"matching a pattern or a nap."}
+
+
+def _fabric_weight(gsm: Quantity, length: Quantity, width: Quantity) -> dict:
+    """A piece of fabric's weight: its weight per area times its area; and the weight per area in oz per sq yd."""
+    area = length.number("m") * width.number("m")
+    grams = q(gsm.number("g/m2") * area, "g")
+    return {"values": {"weight": grams, "oz_per_yd2": gsm.to("oz/yd2")},
+            "said": f"{area:.4g} m2 of {gsm.to('g/m2')} fabric ({gsm.to('oz/yd2')}) weighs {grams}."}
+
+
+def _shrink_allowance(finished: Quantity, shrink: Quantity) -> dict:
+    """The length to cut so it's the length wanted after it shrinks: finished / (1 - shrinkage)."""
+    if shrink.si >= 1:
+        raise CalcError("Shrinkage has to be under 100%.")
+    cut = q(finished.number("in") / (1 - shrink.si), "in")
+    return {"values": {"cut": cut},
+            "said": f"For {finished.to('in')} after {shrink.si * 100:g}% shrinkage, cut {cut}; better still, wash it "
+                    f"before cutting."}
+
+
+def _conductive_trace(resistance: Quantity, length: Quantity, volts: Quantity) -> dict:
+    """A conductive thread or trace's resistance (per length x length), and the current and heat it takes at a
+    voltage (Ohm's law, P = V^2 / R)."""
+    ohms = q(resistance.number("ohm/m") * length.number("m"), "ohm")
+    if ohms.si <= 0:
+        raise CalcError("The thread's resistance and length both have to be more than 0.")
+    amps = (volts / ohms).to("A")
+    watts = (volts * amps).to("W")
+    return {"values": {"resistance": ohms, "current": amps, "power": watts},
+            "said": f"{length.to('m')} of thread at {resistance.to('ohm/m')} is {ohms}; across {volts.to('V')} it "
+                    f"carries {amps} and turns {watts} into heat in the fabric against the body."}
+
+
+def _battery_pack(cell_volts: Quantity, cell_capacity: Quantity, series: Quantity, parallel: Quantity) -> dict:
+    """A pack of identical cells: the voltage adds in series, the capacity in parallel; energy is the two times."""
+    s, p = int(round(series.value)), int(round(parallel.value))
+    if s < 1 or p < 1:
+        raise CalcError("A pack needs at least one cell in series and one in parallel.")
+    volts = q(cell_volts.number("V") * s, "V")
+    mah = q(cell_capacity.number("mAh") * p, "mAh")
+    energy = (volts * mah).to("Wh")
+    carry = " (over the 100 Wh airlines allow in a carry-on without approval)" if energy.number("Wh") > 100 else ""
+    return {"values": {"volts": volts, "capacity": mah, "energy": energy},
+            "said": f"{s}S{p}P of {cell_volts.to('V')}, {cell_capacity.to('mAh')} cells is {volts}, {mah}, "
+                    f"{energy}{carry}. A lithium pack needs a protection board (BMS) and matched cells."}
+
+
+def _charge_time(capacity: Quantity, current: Quantity, efficiency: Quantity) -> dict:
+    """Roughly how long a charge takes: capacity / (charge current x efficiency); the last part, at constant
+    voltage, tapers and takes longer."""
+    if current.si <= 0 or efficiency.si <= 0:
+        raise CalcError("The charge current and efficiency have to be more than 0.")
+    hours = q(capacity.number("mAh") / (current.number("mA") * efficiency.si), "h")
+    rate = current.number("mA") / capacity.number("mAh") if capacity.si > 0 else 0
+    warn = f" {rate:.2g}C is a fast charge: check the cell's datasheet allows it." if rate > 1 else ""
+    return {"values": {"hours": hours, "c_rate": q(rate)},
+            "said": f"{capacity.to('mAh')} at {current.to('mA')} ({rate:.2g}C), {efficiency.si * 100:g}% efficient, "
+                    f"takes about {hours}; the constant-voltage end adds time.{warn}"}
+
+
+def _c_rate(capacity: Quantity, load: Quantity, limit: Quantity) -> dict:
+    """How hard a load works a battery: its current over the capacity (the C-rate), against the cell's limit."""
+    if capacity.si <= 0:
+        raise CalcError("The capacity has to be more than 0.")
+    rate = load.number("mA") / capacity.number("mAh")
+    within = rate <= limit.value
+    return {"values": {"c_rate": q(rate), "within": q(1 if within else 0)},
+            "said": f"{load.to('A')} from {capacity.to('mAh')} is {rate:.3g}C, "
+                    + ("within" if within else "over") + f" the cell's {limit.value:g}C."}
+
+
+def _boost_current(vout: Quantity, iout: Quantity, vin: Quantity, efficiency: Quantity) -> dict:
+    """The current a converter draws from its input: output power / efficiency / input voltage."""
+    if efficiency.si <= 0 or vin.si <= 0:
+        raise CalcError("The input voltage and efficiency have to be more than 0.")
+    out = (vout * iout).to("W")
+    into = q(out.si / efficiency.si, "W")
+    amps = (into / vin).to("A")
+    return {"values": {"input_current": amps, "input_power": into, "loss": q(into.si - out.si, "W")},
+            "said": f"{vout.to('V')} at {iout.to('A')} is {out}; at {efficiency.si * 100:g}% efficiency it draws "
+                    f"{into} from {vin.to('V')}, which is {amps} (and {q(into.si - out.si, 'W')} of heat)."}
+
+
 CALCULATORS: tuple[Calculator, ...] = (
     Calculator("power", "electrical", "Power", "Watts from volts and amps.",
                {"volts": ("V", "the voltage", None), "amps": ("A", "the current", None)}, _power, "P = V x I"),
@@ -453,14 +676,99 @@ CALCULATORS: tuple[Calculator, ...] = (
                 "efficiency": ("%", "the heater's efficiency", "80 %")},
                _heater_fuel, "gallons = load x hours / (91,500 BTU per gallon x efficiency); an unvented heater "
                "needs fresh air and a CO alarm", True),
+    # ---- acoustics
+    Calculator("spl_at_distance", "acoustics", "SPL At Distance", "How loud a speaker is at a distance.",
+               {"sensitivity": ("dB", "the speaker's sensitivity at 1 W and 1 m, from its sheet", None),
+                "power": ("W", "the amplifier power into it", None),
+                "distance": ("m", "how far away the listener is", None)},
+               _spl_at_distance, "SPL = sensitivity + 10 log10(W) - 20 log10(m), the inverse square law in the open"),
+    Calculator("amp_power", "acoustics", "Amplifier Power", "The amplifier power for a level at a distance.",
+               {"target": ("dB", "the sound level wanted at the listener", None),
+                "sensitivity": ("dB", "the speaker's sensitivity at 1 W and 1 m, from its sheet", None),
+                "distance": ("m", "how far away the listener is", None),
+                "headroom": ("dB", "extra for peaks above the level wanted", "3 dB")},
+               _amp_power, "W = 10^((target - sensitivity + 20 log10(m) + headroom) / 10)"),
+    Calculator("sealed_box", "acoustics", "Sealed Box Volume", "The sealed enclosure for a driver.",
+               {"vas": ("L", "the driver's Vas (equivalent air volume), from its sheet", None),
+                "qts": ("", "the driver's Qts, from its sheet", None),
+                "qtc": ("", "the box's total Q wanted", "0.707")},
+               _sealed_box, "Vb = Vas / ((Qtc / Qts)^2 - 1), Thiele-Small; 0.707 is the flattest response"),
+    Calculator("sound_delay", "acoustics", "Sound Delay", "How long sound takes to travel a distance (for placing "
+               "speakers, or delaying one to line up with another).",
+               {"distance": ("m", "the distance", None), "air": ("degC", "the air's temperature", "20 degC")},
+               _sound_delay, "speed of sound = 331.3 + 0.606 x degC metres a second, in dry air", signed=("air",)),
+    Calculator("noise_exposure", "acoustics", "Safe Listening Time", "How long a day a sound level may be heard.",
+               {"level": ("dB", "the A-weighted level at the ears", None)},
+               _noise_exposure, "NIOSH's recommended limit: 85 dBA for 8 hours, halved for every 3 dB above"),
+    # ---- audio DSP
+    Calculator("buffer_latency", "audio_dsp", "Buffer Latency", "The time an audio buffer holds.",
+               {"buffer": ("", "the buffer's length in samples", None), "rate": ("kHz", "the sample rate", None)},
+               _buffer_latency, "latency = samples / sample rate, for one buffer"),
+    Calculator("audio_bitrate", "audio_dsp", "Audio Data Rate", "Uncompressed audio's data rate and size an hour.",
+               {"rate": ("kHz", "the sample rate", None), "bits": ("", "the bit depth", None),
+                "channels": ("", "how many channels", "2")},
+               _audio_bitrate, "bit rate = sample rate x bits x channels; 8 bits a byte"),
+    Calculator("dynamic_range", "audio_dsp", "Dynamic Range", "The most dynamic range a bit depth can hold.",
+               {"bits": ("", "the bit depth", None)},
+               _dynamic_range, "DR = 6.02 x bits + 1.76 dB, for a full-scale sine and ideal quantisation"),
+    Calculator("fft_resolution", "audio_dsp", "FFT Resolution", "An FFT's bin spacing and frame length.",
+               {"rate": ("kHz", "the sample rate", None), "size": ("", "the FFT's size in samples", None)},
+               _fft_resolution, "bin = sample rate / size; frame = size / sample rate"),
+    Calculator("delay_samples", "audio_dsp", "Delay In Samples", "A delay as a number of samples.",
+               {"delay": ("ms", "the delay", None), "rate": ("kHz", "the sample rate", None)},
+               _delay_samples, "samples = delay x sample rate, to the nearest whole sample"),
+    # ---- textiles
+    Calculator("fabric_yardage", "textiles", "Fabric Yardage", "Fabric for a set of pattern pieces.",
+               {"count": ("", "how many pieces", None), "length": ("in", "each piece's length, along the grain", None),
+                "width": ("in", "each piece's width", None), "fabric": ("in", "the fabric's width off the bolt", None),
+                "seam": ("in", "the seam allowance on every edge", "0.5 in"),
+                "shrink": ("%", "how much it shrinks when washed first", "0 %")},
+               _fabric_yardage, "pieces with seam allowance laid in rows across the width, rows x length, divided by "
+               "(1 - shrinkage); pattern and nap matching need more"),
+    Calculator("fabric_weight", "textiles", "Fabric Weight", "A piece of fabric's weight, and its weight per sq yd.",
+               {"gsm": ("g/m2", "the fabric's weight per square metre (GSM)", None),
+                "length": ("m", "the piece's length", None), "width": ("m", "the piece's width", None)},
+               _fabric_weight, "weight = GSM x area; 1 oz per sq yd is 33.9 g per sq m"),
+    Calculator("shrink_allowance", "textiles", "Shrinkage Allowance", "The length to cut for a length after "
+               "shrinking.", {"finished": ("in", "the length wanted after washing", None),
+                              "shrink": ("%", "how much it shrinks", None)},
+               _shrink_allowance, "cut = finished / (1 - shrinkage)"),
+    Calculator("conductive_trace", "textiles", "Conductive Thread", "A conductive thread's resistance, current and "
+               "heat.", {"resistance": ("ohm/m", "the thread's resistance per length, from its maker", None),
+                         "length": ("m", "the length of the run", None), "volts": ("V", "the voltage across it", None)},
+               _conductive_trace, "R = resistance per length x length; I = V / R; P = V x I", True),
+    # ---- portable power
+    Calculator("battery_pack", "power", "Battery Pack", "A pack's voltage, capacity and energy from its cells.",
+               {"cell_volts": ("V", "one cell's nominal voltage", None),
+                "cell_capacity": ("mAh", "one cell's capacity", None),
+                "series": ("", "cells in series", None), "parallel": ("", "cells in parallel", "1")},
+               _battery_pack, "volts = cell x series; capacity = cell x parallel; Wh = V x Ah", True),
+    Calculator("charge_time", "power", "Charge Time", "Roughly how long a battery takes to charge.",
+               {"capacity": ("mAh", "the battery's capacity", None), "current": ("mA", "the charge current", None),
+                "efficiency": ("%", "the charge's efficiency", "85 %")},
+               _charge_time, "hours = capacity / (current x efficiency), before the constant-voltage taper", True),
+    Calculator("c_rate", "power", "C-Rate", "How hard a load works a battery.",
+               {"capacity": ("mAh", "the battery's capacity", None), "load": ("A", "the load's current", None),
+                "limit": ("", "the cell's rated continuous C-rate, from its sheet", "1")},
+               _c_rate, "C-rate = current / capacity (1C empties it in an hour)", True),
+    Calculator("boost_current", "power", "Converter Input Current", "The current a boost or buck converter draws.",
+               {"vout": ("V", "the output voltage", None), "iout": ("A", "the output current", None),
+                "vin": ("V", "the input (battery) voltage", None),
+                "efficiency": ("%", "the converter's efficiency, from its sheet", "90 %")},
+               _boost_current, "input current = Vout x Iout / efficiency / Vin", True),
 )
 BY_ID = {c.id: c for c in CALCULATORS}
+_POINTS = ("degC", "degF", "K")  # an input in one of these is a temperature, not a difference of one
 DISCIPLINES = tuple(dict.fromkeys(c.discipline for c in CALCULATORS))
 
 
 def _read(calc: Calculator, name: str, given) -> Quantity:
     """One input as a quantity in the kind of unit the calculator expects: a quantity as it is, text with a unit
-    read, a bare number taken in the declared unit. CalcError naming the input when it doesn't fit."""
+    read, a bare number taken in the declared unit. CalcError naming the input when it doesn't fit. An input in degC
+    or degF is a temperature (a point on a scale), so one given on another scale is converted as a point: 7 degC is
+    44.6 degF, not the 12.6 a difference would be."""
+    from core.quantities import temperature
+
     unit, what, _default = calc.inputs[name]
     try:
         if isinstance(given, Quantity):
@@ -471,6 +779,8 @@ def _read(calc: Calculator, name: str, given) -> Quantity:
             value = parse(str(given))
             if value.unit == "" and unit != "":
                 value = q(value.value, unit)
+        if unit in _POINTS and value.unit in _POINTS and value.unit != unit:
+            return q(temperature(value.value, value.unit, unit), unit)
         return value.to(unit) if unit != "%" or value.unit == "%" else q(value.value, "%")
     except UnitError as problem:
         raise CalcError(f"{name} ({what}) should be in {unit or 'a plain number'}: {problem}") from None
