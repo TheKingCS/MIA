@@ -104,3 +104,8 @@ days, always as a plan he can see, stop and undo.
 `MIA_OS_AUTONOMY_OBSERVABILITY_AND_AUDIT.md`, `MIA_OS_AUTONOMY_RESOURCE_MANAGEMENT.md`,
 `MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md`, `MIA_OS_AUTONOMY_ARCHITECTURE_DIAGRAMS.md`,
 `MIA_OS_AUTONOMY_ACCEPTANCE_CRITERIA.md`, `MIA_OS_AUTONOMY_OPEN_QUESTIONS.md`.
+
+## Later: self-development (Prompt 09, 2026-11-17)
+
+Changes to MIA's own code are not actions on the contract: they go only through the lab (DEC-0225), and the
+grant, stop, effect and safety rules this document relies on join the lab's protected list.

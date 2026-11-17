@@ -172,3 +172,8 @@ Every feature that changes something does it through an action kind on the one c
 that works in steps (plans, workflows, taught skills, browser routines, teams) is a run that "stop" reaches (DEC-0214);
 every unprompted message goes through the communication gate (DEC-0217). `MIA_OS_AUTONOMY_ARCHITECTURE.md` §2 lists
 which module does which.
+
+## Capability truth (Prompt 09, 2026-11-17)
+
+Every feature has a record in the capability truth registry (DEC-0220) with its state and evidence, and a new
+feature reaches the running MIA only with its tier, tests, parity decision, loop and documentation (DEC-0226).

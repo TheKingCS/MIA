@@ -152,3 +152,8 @@ intelligence services (section 11 of this prompt's open questions document lists
 | `MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md` | each technology, and the decision records |
 | `MIA_OS_INTELLIGENCE_ACCEPTANCE_CRITERIA.md` | how each requirement is checked |
 | `MIA_OS_INTELLIGENCE_OPEN_QUESTIONS.md` | questions, risks, measurements still to make |
+
+## Later: self-awareness (Prompt 09, 2026-11-17)
+
+Which models and services are working, degraded or unavailable is held in the capability truth registry
+(DEC-0220), and every statement she makes about her own abilities carries its provenance (DEC-0221).

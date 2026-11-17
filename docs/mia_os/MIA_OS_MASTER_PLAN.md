@@ -37,7 +37,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **06** | **Hardware and platform** | **done 2026-11-17 (Opus); waiting for Zac's review (Q-63 to Q-67; DEC-0201 to 0205 proposed)** | `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty more (listed in it) |
 | **07** | **Intelligence infrastructure** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-68 to Q-72 yes; DEC-0206 to 0212 approved)** | `MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and twenty more (listed in it) |
 | **08** | **Autonomy, agents and execution** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Approve Once / From Now On; Q-74 yes; no quiet hours)** | `MIA_OS_AUTONOMY_ARCHITECTURE.md` and twenty-three more (listed in it) |
-| 09–17 | (see `prompts/`) | not started | |
+| **09** | **Self-awareness, inspection and self-development** | **done 2026-11-17 (Opus); waiting for Zac's review (Q-76 to Q-78; DEC-0220 to 0226 proposed)** | `MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more (listed in it) |
+| 10–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -78,6 +79,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3i. Prompt 09 in brief
+
+The architecture is [MIA_OS_SELF_AWARENESS_ARCHITECTURE.md](MIA_OS_SELF_AWARENESS_ARCHITECTURE.md), with twenty-one
+supporting documents. The audit found most of her self-knowledge built in pieces: capability status from the code,
+the service map, the model registry, the Fix-It Log, the loops, the weekly self-audit and the lab. One capability
+truth registry joins them with explicit states (DEC-0220); every self-statement carries its provenance (DEC-0221);
+health and performance come from Linux and her counters (DEC-0222); quality from code checks, corrections and fixed
+sets (DEC-0223); investigations end in a reproducing test (DEC-0224); self-development only through the lab, the
+protected list never hers to change (DEC-0225); new capabilities through one path (DEC-0226). REQ-SLF-001 to 021.
 
 ## 3h. Prompt 08 in brief
 

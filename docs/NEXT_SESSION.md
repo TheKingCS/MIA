@@ -5,7 +5,15 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
+*Last updated: 2026-11-17 (Opus on the PC: Approve From Now On, Prompt 09)*
+
+**New 2026-11-17, Prompt 09 (Claude on Opus).**
+- **Approve From Now On is built** (`core/kind_grants.py`; DEC-0215): a card's second button makes a standing grant
+  for that kind, listed and taken back with his other grants, lapsing after 90 days unused.
+- **Prompt 09 (self-awareness, inspection and self-development) is done:**
+  `docs/mia_os/MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more; DEC-0220 to 0226 proposed; REQ-SLF-001
+  to 021. **Waiting on Zac:** Q-76 (a daily summary of her own merged changes instead of approving each), Q-77
+  (restart her own services on a failed check), Q-78 (show him the protected list and extend it). Prompt 10 on his go.
 
 **New 2026-11-17, Prompt 08 (Claude on Opus).**
 - **Prompt 08 (autonomy, agents and execution) is done:** `docs/mia_os/MIA_OS_AUTONOMY_ARCHITECTURE.md` and

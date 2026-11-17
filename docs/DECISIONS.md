@@ -3659,3 +3659,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
 
+### DEC-0220: One capability truth registry
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: One registry of what MIA can do, derived from the code, tests, runtime and the Fix-It Log, with explicit states (working, partial, degraded, unavailable here, malfunctioning, unverified, planned, retired); never edited by hand or by a model.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+
+### DEC-0221: Provenance on every self-statement
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: Everything MIA says about herself carries its provenance (verified, inferred, documented, planned, unknown) and only the strongest label it can prove; never "I can" from a plan.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+
+### DEC-0222: Health and performance from Linux and her own counters
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: systemd, the journal, hwmon, SMART, psutil, the turn trace and the loops, joined in one view; no metrics server.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+
+### DEC-0223: Quality by code checks, corrections and fixed sets
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: Response quality is judged by rules in code, his corrections and ratings, and fixed evaluation sets; a drop opens a finding with its evidence.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+
+### DEC-0224: Investigations end in a reproducing test
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: A root cause is a hypothesis until a test that fails now reproduces it; every fix she proposes comes with that test.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+
+### DEC-0225: Self-development only through the lab
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: No change reaches her code except through the lab (worktree, test first, suite before and after, Claude's pass, merge, automatic revert); the protected list (her safeguards, the lab, grants, the stop, browser safety, action effects, inspection) is never hers to change.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+
+### DEC-0226: New capabilities only through one path
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 09
+- Decision: Gap, proposal, lab, then the registry, each new capability arriving with its tier, tests, parity decision, loop or reason, and documentation.
+- Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
+

@@ -5,7 +5,7 @@
 ## At a glance
 
 - **Architecture** — 846 Python files across 583 core, 93 modules, 123 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 218 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 225 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 285 dev entries (work/knowledge/).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (24): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204, DEC-0213, DEC-0214, DEC-0216, DEC-0218, DEC-0219
+**PROPOSED** (31): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204, DEC-0213, DEC-0214, DEC-0216, DEC-0218, DEC-0219, DEC-0220, DEC-0221, DEC-0222, DEC-0223, DEC-0224, DEC-0225, DEC-0226
 **PROPOSED;** (2): DEC-0190, DEC-0205
 
 <details><summary>Every decision</summary>
@@ -244,6 +244,13 @@
 - **DEC-0217** [APPROVED] — Proactive help only through the gate
 - **DEC-0218** [PROPOSED] — Done means read back
 - **DEC-0219** [PROPOSED] — Agents propose; the coordinator acts
+- **DEC-0220** [PROPOSED] — One capability truth registry
+- **DEC-0221** [PROPOSED] — Provenance on every self-statement
+- **DEC-0222** [PROPOSED] — Health and performance from Linux and her own counters
+- **DEC-0223** [PROPOSED] — Quality by code checks, corrections and fixed sets
+- **DEC-0224** [PROPOSED] — Investigations end in a reproducing test
+- **DEC-0225** [PROPOSED] — Self-development only through the lab
+- **DEC-0226** [PROPOSED] — New capabilities only through one path
 
 </details>
 

@@ -49,3 +49,6 @@ report that found it. Rated H, M or L.*
 | R-51 | Model-drafted steps look right but do the wrong thing | H | M | Prompt 08 | plans from models | each step checked by its action; read-back verification |
 | R-52 | Step engines diverge and the stop misses one | M | M | Prompt 08 | a new engine | the run record for all; a test |
 | R-53 | Desktop automation acts on the wrong window | H | M | Prompt 08 | automating his apps | portals first; input only while he watches |
+| R-54 | She reports herself healthier than she is (stale evidence) | M | M | Prompt 09 | the registry | the unverified state; a test on the registry's honesty |
+| R-55 | Self-made changes add small harms the tests don't catch | M | M | Prompt 09 | self-development | loops watched after merges; a daily summary; revert |
+| R-56 | The protected list falls behind new safeguards | H | L | Prompt 09 | new safeguards | reviewed each prompt; a test that named safeguards are on it |

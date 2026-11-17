@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1493 files, 334,270 lines; 1493 files describe themselves; 18,319 of 18,417 classes and functions are documented.
+1493 files, 334,288 lines; 1493 files describe themselves; 18,319 of 18,417 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -827,7 +827,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-45 files, 4,974 lines; 157 of 157 classes and functions documented
+45 files, 4,992 lines; 157 of 157 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
