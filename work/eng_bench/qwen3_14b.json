@@ -1,17 +1,17 @@
 {
  "model": "qwen3:14b",
- "at": "2026-11-17T02:32:24",
+ "at": "2026-11-17T04:20:17",
  "summary": {
   "alone": {
    "electrical": {
     "tasks": 7,
     "right": 5,
-    "asked": 1,
+    "asked": 0,
     "wrong": 0,
-    "guessed": 0,
+    "guessed": 1,
     "unreadable": 1,
-    "seconds": 17.99,
-    "good": 0.857
+    "seconds": 37.83,
+    "good": 0.714
    },
    "embedded": {
     "tasks": 8,
@@ -20,18 +20,28 @@
     "wrong": 0,
     "guessed": 0,
     "unreadable": 0,
-    "seconds": 13.22,
+    "seconds": 25.59,
     "good": 1.0
    },
    "crafts": {
-    "tasks": 3,
-    "right": 0,
-    "asked": 1,
-    "wrong": 0,
+    "tasks": 8,
+    "right": 3,
+    "asked": 3,
+    "wrong": 2,
     "guessed": 0,
-    "unreadable": 2,
-    "seconds": 3.65,
-    "good": 0.333
+    "unreadable": 0,
+    "seconds": 14.38,
+    "good": 0.75
+   },
+   "structural": {
+    "tasks": 7,
+    "right": 1,
+    "asked": 2,
+    "wrong": 1,
+    "guessed": 0,
+    "unreadable": 3,
+    "seconds": 19.03,
+    "good": 0.429
    },
    "greenhouse": {
     "tasks": 5,
@@ -40,8 +50,48 @@
     "wrong": 1,
     "guessed": 0,
     "unreadable": 2,
-    "seconds": 4.09,
+    "seconds": 8.72,
     "good": 0.4
+   },
+   "acoustics": {
+    "tasks": 6,
+    "right": 2,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 3,
+    "seconds": 40.94,
+    "good": 0.5
+   },
+   "audio_dsp": {
+    "tasks": 6,
+    "right": 3,
+    "asked": 1,
+    "wrong": 1,
+    "guessed": 0,
+    "unreadable": 1,
+    "seconds": 20.52,
+    "good": 0.667
+   },
+   "textiles": {
+    "tasks": 5,
+    "right": 3,
+    "asked": 1,
+    "wrong": 1,
+    "guessed": 0,
+    "unreadable": 0,
+    "seconds": 32.15,
+    "good": 0.8
+   },
+   "power": {
+    "tasks": 5,
+    "right": 2,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 2,
+    "seconds": 31.18,
+    "good": 0.6
    }
   },
   "tools": {
@@ -52,7 +102,7 @@
     "wrong": 0,
     "guessed": 0,
     "unreadable": 1,
-    "seconds": 10.47,
+    "seconds": 23.42,
     "good": 0.857
    },
    "embedded": {
@@ -62,18 +112,28 @@
     "wrong": 2,
     "guessed": 0,
     "unreadable": 0,
-    "seconds": 6.77,
+    "seconds": 16.15,
     "good": 0.75
    },
    "crafts": {
-    "tasks": 3,
-    "right": 1,
-    "asked": 1,
+    "tasks": 8,
+    "right": 4,
+    "asked": 3,
     "wrong": 0,
     "guessed": 0,
     "unreadable": 1,
-    "seconds": 17.12,
-    "good": 0.667
+    "seconds": 26.3,
+    "good": 0.875
+   },
+   "structural": {
+    "tasks": 7,
+    "right": 5,
+    "asked": 2,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 0,
+    "seconds": 10.77,
+    "good": 1.0
    },
    "greenhouse": {
     "tasks": 5,
@@ -82,7 +142,47 @@
     "wrong": 0,
     "guessed": 0,
     "unreadable": 0,
-    "seconds": 4.4,
+    "seconds": 9.97,
+    "good": 1.0
+   },
+   "acoustics": {
+    "tasks": 6,
+    "right": 5,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 0,
+    "seconds": 9.52,
+    "good": 1.0
+   },
+   "audio_dsp": {
+    "tasks": 6,
+    "right": 3,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 2,
+    "seconds": 6.45,
+    "good": 0.667
+   },
+   "textiles": {
+    "tasks": 5,
+    "right": 4,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 0,
+    "seconds": 18.33,
+    "good": 1.0
+   },
+   "power": {
+    "tasks": 5,
+    "right": 4,
+    "asked": 1,
+    "wrong": 0,
+    "guessed": 0,
+    "unreadable": 0,
+    "seconds": 8.9,
     "good": 1.0
    }
   }
@@ -96,7 +196,7 @@
    "got": "1,500 W",
    "detail": "",
    "expected": "1,500 W",
-   "seconds": 18.92
+   "seconds": 13.8
   },
   {
    "task": "e2",
@@ -106,7 +206,7 @@
    "got": "4.76 V",
    "detail": "",
    "expected": "4.764 V",
-   "seconds": 9.44
+   "seconds": 26.58
   },
   {
    "task": "e3",
@@ -116,7 +216,7 @@
    "got": "",
    "detail": "no ANSWER line",
    "expected": "10",
-   "seconds": 42.64
+   "seconds": 92.3
   },
   {
    "task": "e4",
@@ -126,7 +226,7 @@
    "got": "1,920 W",
    "detail": "",
    "expected": "1,920 W",
-   "seconds": 10.52
+   "seconds": 19.41
   },
   {
    "task": "e5",
@@ -136,7 +236,7 @@
    "got": "14.4 h",
    "detail": "",
    "expected": "14.4 h",
-   "seconds": 9.3
+   "seconds": 20.33
   },
   {
    "task": "e6",
@@ -146,17 +246,17 @@
    "got": "4",
    "detail": "",
    "expected": "4",
-   "seconds": 25.38
+   "seconds": 68.8
   },
   {
    "task": "e7",
    "discipline": "electrical",
    "mode": "alone",
-   "verdict": "asked",
-   "got": "NEED: Type of wire (copper or aluminum) and installation conditions (e.g., conduit, ambient temperature)",
+   "verdict": "guessed",
+   "got": "10",
    "detail": "",
    "expected": "ask for length",
-   "seconds": 9.73
+   "seconds": 23.61
   },
   {
    "task": "m1",
@@ -166,7 +266,7 @@
    "got": "150 ohm",
    "detail": "",
    "expected": "150 ohm",
-   "seconds": 5.7
+   "seconds": 11.36
   },
   {
    "task": "m2",
@@ -176,7 +276,7 @@
    "got": "3.33 V",
    "detail": "",
    "expected": "3.333 V",
-   "seconds": 5.94
+   "seconds": 12.73
   },
   {
    "task": "m3",
@@ -186,7 +286,7 @@
    "got": "0.277 mA",
    "detail": "",
    "expected": "0.2766 mA",
-   "seconds": 37.77
+   "seconds": 60.39
   },
   {
    "task": "m4",
@@ -196,7 +296,7 @@
    "got": "3.5 W",
    "detail": "",
    "expected": "3.5 W",
-   "seconds": 8.17
+   "seconds": 14.23
   },
   {
    "task": "m5",
@@ -206,7 +306,7 @@
    "got": "0.8057 mV",
    "detail": "",
    "expected": "0.8057 mV",
-   "seconds": 29.61
+   "seconds": 64.05
   },
   {
    "task": "m6",
@@ -216,57 +316,177 @@
    "got": "131 degC",
    "detail": "",
    "expected": "131 degC",
-   "seconds": 9.47
+   "seconds": 20.81
   },
   {
    "task": "m7",
    "discipline": "embedded",
    "mode": "alone",
    "verdict": "asked",
-   "got": "NEED: Battery capacity (e.g., in milliamp-hours)",
+   "got": "NEED: battery capacity",
    "detail": "",
    "expected": "ask for capacity",
-   "seconds": 4.94
+   "seconds": 12.03
   },
   {
    "task": "m8",
    "discipline": "embedded",
    "mode": "alone",
    "verdict": "asked",
-   "got": "NEED: LED forward voltage",
+   "got": "NEED: Forward voltage of the LED",
    "detail": "",
    "expected": "ask for forward",
-   "seconds": 4.2
+   "seconds": 9.11
   },
   {
    "task": "c1",
    "discipline": "crafts",
    "mode": "alone",
-   "verdict": "unreadable",
-   "got": "30 grams",
-   "detail": "I don't know the unit \"grams\".",
+   "verdict": "right",
+   "got": "30 g",
+   "detail": "",
    "expected": "30 g",
-   "seconds": 3.44
+   "seconds": 7.42
   },
   {
    "task": "c2",
    "discipline": "crafts",
    "mode": "alone",
-   "verdict": "unreadable",
-   "got": "215 grams",
-   "detail": "I don't know the unit \"grams\".",
+   "verdict": "right",
+   "got": "215 g",
+   "detail": "",
    "expected": "215 g",
-   "seconds": 4.27
+   "seconds": 8.05
   },
   {
    "task": "c3",
    "discipline": "crafts",
    "mode": "alone",
    "verdict": "asked",
-   "got": "NEED: Weight of cabbage / quantity of sauerkraut mixture",
+   "got": "NEED: total weight of sauerkraut (cabbage + brine) or cabbage weight",
    "detail": "",
    "expected": "ask for vegetables",
-   "seconds": 3.23
+   "seconds": 10.78
+  },
+  {
+   "task": "c4",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "wrong",
+   "got": "NEED: saponification value of olive oil",
+   "detail": "",
+   "expected": "128.2 g",
+   "seconds": 48.2
+  },
+  {
+   "task": "c5",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "wrong",
+   "got": "NEED: Saponification values for olive oil and coconut oil",
+   "detail": "",
+   "expected": "141.9 g",
+   "seconds": 13.78
+  },
+  {
+   "task": "c6",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "75 g",
+   "detail": "",
+   "expected": "75 g",
+   "seconds": 9.69
+  },
+  {
+   "task": "c7",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: weight of the candle wax / total weight of the candle mixture",
+   "detail": "",
+   "expected": "ask for volume",
+   "seconds": 6.51
+  },
+  {
+   "task": "c8",
+   "discipline": "crafts",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: weight of wool",
+   "detail": "",
+   "expected": "ask for fibre",
+   "seconds": 10.61
+  },
+  {
+   "task": "s1",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "7 5/7 inches",
+   "detail": "I don't know the unit \"5/7 inches\".",
+   "expected": "7.714 in",
+   "seconds": 33.09
+  },
+  {
+   "task": "s2",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "6 risers",
+   "detail": "I don't know the unit \"risers\".",
+   "expected": "6",
+   "seconds": 21.22
+  },
+  {
+   "task": "s3",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "wrong",
+   "got": "NEED: whether the 2x6 dimensions are nominal or actual",
+   "detail": "",
+   "expected": "80",
+   "seconds": 25.75
+  },
+  {
+   "task": "s4",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "1.48 yd3",
+   "detail": "",
+   "expected": "1.481 yd3",
+   "seconds": 18.59
+  },
+  {
+   "task": "s5",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "10 bags",
+   "detail": "I don't know the unit \"bags\".",
+   "expected": "10",
+   "seconds": 18.42
+  },
+  {
+   "task": "s6",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: thickness of the slab",
+   "detail": "",
+   "expected": "ask for thickness",
+   "seconds": 5.94
+  },
+  {
+   "task": "s7",
+   "discipline": "structural",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: total vertical height from the deck to the ground level",
+   "detail": "",
+   "expected": "ask for rise",
+   "seconds": 10.19
   },
   {
    "task": "g1",
@@ -276,7 +496,7 @@
    "got": "16800 BTU per hour",
    "detail": "I don't know the unit \"BTU per hour\".",
    "expected": "16,800 BTU/h",
-   "seconds": 3.66
+   "seconds": 7.8
   },
   {
    "task": "g2",
@@ -286,7 +506,7 @@
    "got": "2,304 cfm",
    "detail": "",
    "expected": "2,304 cfm",
-   "seconds": 4.16
+   "seconds": 8.48
   },
   {
    "task": "g3",
@@ -296,7 +516,7 @@
    "got": "40 gallons",
    "detail": "I don't know the unit \"gallons\".",
    "expected": "40 gal",
-   "seconds": 3.88
+   "seconds": 8.31
   },
   {
    "task": "g4",
@@ -306,7 +526,7 @@
    "got": "NEED: Energy content of propane per gallon (BTU/gallon)",
    "detail": "",
    "expected": "2.295 gal",
-   "seconds": 3.78
+   "seconds": 8.06
   },
   {
    "task": "g5",
@@ -316,7 +536,227 @@
    "got": "NEED: U-value of the glazing / thermal conductivity of materials / insulation details",
    "detail": "",
    "expected": "ask for u",
-   "seconds": 4.98
+   "seconds": 10.97
+  },
+  {
+   "task": "a1",
+   "discipline": "acoustics",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "86 dB",
+   "detail": "",
+   "expected": "85.96 dB",
+   "seconds": 26.73
+  },
+  {
+   "task": "a2",
+   "discipline": "acoustics",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "",
+   "detail": "no ANSWER line",
+   "expected": "25.24 W",
+   "seconds": 76.94
+  },
+  {
+   "task": "a3",
+   "discipline": "acoustics",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "",
+   "detail": "no ANSWER line",
+   "expected": "6.493 L",
+   "seconds": 92.45
+  },
+  {
+   "task": "a4",
+   "discipline": "acoustics",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "1 h",
+   "detail": "",
+   "expected": "1 h",
+   "seconds": 12.58
+  },
+  {
+   "task": "a5",
+   "discipline": "acoustics",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "10 milliseconds",
+   "detail": "I don't know the unit \"milliseconds\".",
+   "expected": "9.988 ms",
+   "seconds": 16.27
+  },
+  {
+   "task": "a6",
+   "discipline": "acoustics",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: Speaker sensitivity (dB/W/m)",
+   "detail": "",
+   "expected": "ask for sensitivity",
+   "seconds": 20.66
+  },
+  {
+   "task": "d1",
+   "discipline": "audio_dsp",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "5.33 ms",
+   "detail": "",
+   "expected": "5.333 ms",
+   "seconds": 50.69
+  },
+  {
+   "task": "d2",
+   "discipline": "audio_dsp",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "1,536 kbps",
+   "detail": "",
+   "expected": "1,536 kbps",
+   "seconds": 13.16
+  },
+  {
+   "task": "d3",
+   "discipline": "audio_dsp",
+   "mode": "alone",
+   "verdict": "wrong",
+   "got": "144.5 dB",
+   "detail": "",
+   "expected": "146.3 dB",
+   "seconds": 33.47
+  },
+  {
+   "task": "d4",
+   "discipline": "audio_dsp",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "46.88 Hz",
+   "detail": "",
+   "expected": "46.88 Hz",
+   "seconds": 10.33
+  },
+  {
+   "task": "d5",
+   "discipline": "audio_dsp",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "480 samples",
+   "detail": "I don't know the unit \"samples\".",
+   "expected": "480",
+   "seconds": 8.19
+  },
+  {
+   "task": "d6",
+   "discipline": "audio_dsp",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: buffer size in samples",
+   "detail": "",
+   "expected": "ask for buffer",
+   "seconds": 7.27
+  },
+  {
+   "task": "t1",
+   "discipline": "textiles",
+   "mode": "alone",
+   "verdict": "wrong",
+   "got": "NEED: How the pieces are arranged (e.g., number of rows or direction of layout)",
+   "detail": "",
+   "expected": "1.389 yd",
+   "seconds": 86.78
+  },
+  {
+   "task": "t2",
+   "discipline": "textiles",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "900 g",
+   "detail": "",
+   "expected": "900 g",
+   "seconds": 8.5
+  },
+  {
+   "task": "t3",
+   "discipline": "textiles",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "37.89 in",
+   "detail": "",
+   "expected": "37.89 in",
+   "seconds": 20.3
+  },
+  {
+   "task": "t4",
+   "discipline": "textiles",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "2.74 W",
+   "detail": "",
+   "expected": "2.738 W",
+   "seconds": 37.67
+  },
+  {
+   "task": "t5",
+   "discipline": "textiles",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: Weight per unit area or thickness of the fleece material",
+   "detail": "",
+   "expected": "ask for gsm",
+   "seconds": 7.5
+  },
+  {
+   "task": "p1",
+   "discipline": "power",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "44.4 Wh",
+   "detail": "",
+   "expected": "44.4 Wh",
+   "seconds": 17.94
+  },
+  {
+   "task": "p2",
+   "discipline": "power",
+   "mode": "alone",
+   "verdict": "right",
+   "got": "3.53 h",
+   "detail": "",
+   "expected": "3.529 h",
+   "seconds": 32.64
+  },
+  {
+   "task": "p3",
+   "discipline": "power",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "0.75 C",
+   "detail": "I don't know the unit \"C\".",
+   "expected": "0.75",
+   "seconds": 10.75
+  },
+  {
+   "task": "p4",
+   "discipline": "power",
+   "mode": "alone",
+   "verdict": "unreadable",
+   "got": "",
+   "detail": "no ANSWER line",
+   "expected": "3.003 A",
+   "seconds": 82.44
+  },
+  {
+   "task": "p5",
+   "discipline": "power",
+   "mode": "alone",
+   "verdict": "asked",
+   "got": "NEED: Charging current or charger specifications",
+   "detail": "",
+   "expected": "ask for current",
+   "seconds": 12.11
   },
   {
    "task": "e1",
@@ -326,7 +766,7 @@
    "got": "1,500 W",
    "detail": "",
    "expected": "1,500 W",
-   "seconds": 4.31
+   "seconds": 8.78
   },
   {
    "task": "e2",
@@ -336,7 +776,7 @@
    "got": "4.764 V",
    "detail": "",
    "expected": "4.764 V",
-   "seconds": 3.28
+   "seconds": 7.2
   },
   {
    "task": "e3",
@@ -346,7 +786,7 @@
    "got": "10",
    "detail": "",
    "expected": "10",
-   "seconds": 6.73
+   "seconds": 14.34
   },
   {
    "task": "e4",
@@ -356,7 +796,7 @@
    "got": "",
    "detail": "no JSON object",
    "expected": "1,920 W",
-   "seconds": 43.08
+   "seconds": 97.17
   },
   {
    "task": "e5",
@@ -366,7 +806,7 @@
    "got": "14.4 h",
    "detail": "",
    "expected": "14.4 h",
-   "seconds": 5.62
+   "seconds": 11.48
   },
   {
    "task": "e6",
@@ -376,7 +816,7 @@
    "got": "4",
    "detail": "",
    "expected": "4",
-   "seconds": 6.77
+   "seconds": 17.25
   },
   {
    "task": "e7",
@@ -386,7 +826,7 @@
    "got": "need: length",
    "detail": "",
    "expected": "ask for length",
-   "seconds": 3.48
+   "seconds": 7.72
   },
   {
    "task": "m1",
@@ -396,7 +836,7 @@
    "got": "150 ohm",
    "detail": "",
    "expected": "150 ohm",
-   "seconds": 3.56
+   "seconds": 7.66
   },
   {
    "task": "m2",
@@ -406,17 +846,17 @@
    "got": "3.333 V",
    "detail": "",
    "expected": "3.333 V",
-   "seconds": 5.11
+   "seconds": 11.39
   },
   {
    "task": "m3",
    "discipline": "embedded",
    "mode": "tools",
    "verdict": "wrong",
-   "got": "need: a calculator for average current",
+   "got": "need: calculator for average current",
    "detail": "",
    "expected": "0.2766 mA",
-   "seconds": 16.98
+   "seconds": 45.67
   },
   {
    "task": "m4",
@@ -426,7 +866,7 @@
    "got": "need: theta",
    "detail": "",
    "expected": "3.5 W",
-   "seconds": 10.06
+   "seconds": 22.66
   },
   {
    "task": "m5",
@@ -436,7 +876,7 @@
    "got": "0.8057 mV",
    "detail": "",
    "expected": "0.8057 mV",
-   "seconds": 5.02
+   "seconds": 11.33
   },
   {
    "task": "m6",
@@ -446,7 +886,7 @@
    "got": "131 degC",
    "detail": "",
    "expected": "131 degC",
-   "seconds": 6.8
+   "seconds": 15.47
   },
   {
    "task": "m7",
@@ -456,7 +896,7 @@
    "got": "need: capacity",
    "detail": "",
    "expected": "ask for capacity",
-   "seconds": 3.62
+   "seconds": 8.17
   },
   {
    "task": "m8",
@@ -466,7 +906,7 @@
    "got": "need: forward voltage",
    "detail": "",
    "expected": "ask for forward",
-   "seconds": 3.05
+   "seconds": 6.84
   },
   {
    "task": "c1",
@@ -476,7 +916,7 @@
    "got": "30 g",
    "detail": "",
    "expected": "30 g",
-   "seconds": 5.75
+   "seconds": 9.7
   },
   {
    "task": "c2",
@@ -486,17 +926,137 @@
    "got": "",
    "detail": "no JSON object",
    "expected": "215 g",
-   "seconds": 42.83
+   "seconds": 96.78
   },
   {
    "task": "c3",
    "discipline": "crafts",
    "mode": "tools",
    "verdict": "asked",
-   "got": "need: water and vegetables weight",
+   "got": "need: water weight and vegetables weight",
    "detail": "",
    "expected": "ask for vegetables",
-   "seconds": 2.77
+   "seconds": 5.28
+  },
+  {
+   "task": "c4",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "128.2 g",
+   "detail": "",
+   "expected": "128.2 g",
+   "seconds": 35.52
+  },
+  {
+   "task": "c5",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "141.9 g",
+   "detail": "",
+   "expected": "141.9 g",
+   "seconds": 42.27
+  },
+  {
+   "task": "c6",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "75 g",
+   "detail": "",
+   "expected": "75 g",
+   "seconds": 9.55
+  },
+  {
+   "task": "c7",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: volume of the container in L",
+   "detail": "",
+   "expected": "ask for volume",
+   "seconds": 5.2
+  },
+  {
+   "task": "c8",
+   "discipline": "crafts",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: the weight of the wool (fibre)",
+   "detail": "",
+   "expected": "ask for fibre",
+   "seconds": 6.06
+  },
+  {
+   "task": "s1",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "7.714 in",
+   "detail": "",
+   "expected": "7.714 in",
+   "seconds": 14.0
+  },
+  {
+   "task": "s2",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "6",
+   "detail": "",
+   "expected": "6",
+   "seconds": 8.91
+  },
+  {
+   "task": "s3",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "80",
+   "detail": "",
+   "expected": "80",
+   "seconds": 22.64
+  },
+  {
+   "task": "s4",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "1.481 yd3",
+   "detail": "",
+   "expected": "1.481 yd3",
+   "seconds": 9.19
+  },
+  {
+   "task": "s5",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "10",
+   "detail": "",
+   "expected": "10",
+   "seconds": 12.22
+  },
+  {
+   "task": "s6",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: thickness",
+   "detail": "",
+   "expected": "ask for thickness",
+   "seconds": 4.33
+  },
+  {
+   "task": "s7",
+   "discipline": "structural",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: total rise (floor to floor) in inches",
+   "detail": "",
+   "expected": "ask for rise",
+   "seconds": 4.08
   },
   {
    "task": "g1",
@@ -506,7 +1066,7 @@
    "got": "16,800 BTU/h",
    "detail": "",
    "expected": "16,800 BTU/h",
-   "seconds": 4.81
+   "seconds": 13.56
   },
   {
    "task": "g2",
@@ -516,7 +1076,7 @@
    "got": "2,304 cfm",
    "detail": "",
    "expected": "2,304 cfm",
-   "seconds": 4.25
+   "seconds": 8.66
   },
   {
    "task": "g3",
@@ -526,7 +1086,7 @@
    "got": "40 gal",
    "detail": "",
    "expected": "40 gal",
-   "seconds": 3.53
+   "seconds": 7.53
   },
   {
    "task": "g4",
@@ -536,7 +1096,7 @@
    "got": "2.295 gal",
    "detail": "",
    "expected": "2.295 gal",
-   "seconds": 4.69
+   "seconds": 10.03
   },
   {
    "task": "g5",
@@ -546,7 +1106,227 @@
    "got": "need: u (the glazing's U-value, from its maker's sheet, in BTU/h/ft2/degF)",
    "detail": "",
    "expected": "ask for u",
-   "seconds": 4.7
+   "seconds": 10.06
+  },
+  {
+   "task": "a1",
+   "discipline": "acoustics",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "85.96 dB",
+   "detail": "",
+   "expected": "85.96 dB",
+   "seconds": 8.02
+  },
+  {
+   "task": "a2",
+   "discipline": "acoustics",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "25.24 W",
+   "detail": "",
+   "expected": "25.24 W",
+   "seconds": 9.08
+  },
+  {
+   "task": "a3",
+   "discipline": "acoustics",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "6.493 L",
+   "detail": "",
+   "expected": "6.493 L",
+   "seconds": 16.88
+  },
+  {
+   "task": "a4",
+   "discipline": "acoustics",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "1 h",
+   "detail": "",
+   "expected": "1 h",
+   "seconds": 9.08
+  },
+  {
+   "task": "a5",
+   "discipline": "acoustics",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "9.988 ms",
+   "detail": "",
+   "expected": "9.988 ms",
+   "seconds": 9.2
+  },
+  {
+   "task": "a6",
+   "discipline": "acoustics",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: sensitivity",
+   "detail": "",
+   "expected": "ask for sensitivity",
+   "seconds": 4.84
+  },
+  {
+   "task": "d1",
+   "discipline": "audio_dsp",
+   "mode": "tools",
+   "verdict": "unreadable",
+   "got": "buffer_latency",
+   "detail": "buffer (the buffer's length in samples) should be in a plain number: I don't know the unit \"samples\".",
+   "expected": "5.333 ms",
+   "seconds": 7.36
+  },
+  {
+   "task": "d2",
+   "discipline": "audio_dsp",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "1,536 kbps",
+   "detail": "",
+   "expected": "1,536 kbps",
+   "seconds": 5.53
+  },
+  {
+   "task": "d3",
+   "discipline": "audio_dsp",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "146.3 dB",
+   "detail": "",
+   "expected": "146.3 dB",
+   "seconds": 9.2
+  },
+  {
+   "task": "d4",
+   "discipline": "audio_dsp",
+   "mode": "tools",
+   "verdict": "unreadable",
+   "got": "fft_resolution",
+   "detail": "size (the FFT's size in samples) should be in a plain number: I don't know the unit \"samples\".",
+   "expected": "46.88 Hz",
+   "seconds": 7.06
+  },
+  {
+   "task": "d5",
+   "discipline": "audio_dsp",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "480",
+   "detail": "",
+   "expected": "480",
+   "seconds": 6.09
+  },
+  {
+   "task": "d6",
+   "discipline": "audio_dsp",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: buffer length in samples",
+   "detail": "",
+   "expected": "ask for buffer",
+   "seconds": 3.48
+  },
+  {
+   "task": "t1",
+   "discipline": "textiles",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "1.389 yd",
+   "detail": "",
+   "expected": "1.389 yd",
+   "seconds": 57.3
+  },
+  {
+   "task": "t2",
+   "discipline": "textiles",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "900 g",
+   "detail": "",
+   "expected": "900 g",
+   "seconds": 10.11
+  },
+  {
+   "task": "t3",
+   "discipline": "textiles",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "37.89 in",
+   "detail": "",
+   "expected": "37.89 in",
+   "seconds": 9.28
+  },
+  {
+   "task": "t4",
+   "discipline": "textiles",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "2.738 W",
+   "detail": "",
+   "expected": "2.738 W",
+   "seconds": 11.19
+  },
+  {
+   "task": "t5",
+   "discipline": "textiles",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: gsm",
+   "detail": "",
+   "expected": "ask for gsm",
+   "seconds": 3.77
+  },
+  {
+   "task": "p1",
+   "discipline": "power",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "44.4 Wh",
+   "detail": "",
+   "expected": "44.4 Wh",
+   "seconds": 8.64
+  },
+  {
+   "task": "p2",
+   "discipline": "power",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "3.529 h",
+   "detail": "",
+   "expected": "3.529 h",
+   "seconds": 7.2
+  },
+  {
+   "task": "p3",
+   "discipline": "power",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "0.75",
+   "detail": "",
+   "expected": "0.75",
+   "seconds": 12.02
+  },
+  {
+   "task": "p4",
+   "discipline": "power",
+   "mode": "tools",
+   "verdict": "right",
+   "got": "3.003 A",
+   "detail": "",
+   "expected": "3.003 A",
+   "seconds": 10.78
+  },
+  {
+   "task": "p5",
+   "discipline": "power",
+   "mode": "tools",
+   "verdict": "asked",
+   "got": "need: current (in mA)",
+   "detail": "",
+   "expected": "ask for current",
+   "seconds": 5.84
   }
  ]
 }
