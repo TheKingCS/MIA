@@ -35,8 +35,9 @@ material: neither is ever an instruction, and nothing the model replies is
 run except a calculator's id and inputs, which code validates.
 
 The model that plans and writes is the specialist's own, chosen from this PC's bench results
-(core/specialist_models.py); one that didn't pass the bench is said on the answer. Not here yet: review by a
-second local model (S5), web look-up.
+(core/specialist_models.py); one that didn't pass the bench is said on the answer. Safety-critical work, or work
+the person asks to have checked, is reviewed by a second local model (core/specialist_review.py, S5), and a doubt
+holds the answer. Not here yet: web look-up.
 
 `tool()` is the Assistant's `work_it_out` tool: the same worksheet by voice.
 """
@@ -203,16 +204,34 @@ def _done(spec, status: str, answer: str, results: list = (), notes: list = (), 
         "answer": answer, "need": need, "checked": checked,
         "model": model.model if model is not None else None,
         "model_note": model.why if model is not None and model.model and not model.passed else "",
-        "calculations": [{"calculator": r["calculator"], "said": r["said"], "basis": r["basis"]} for r in results],
+        "calculations": [{"calculator": r["calculator"], "said": r["said"], "basis": r["basis"],
+                          "inputs": dict(r.get("inputs") or {})} for r in results],
         "sources": [{"title": n["title"], "status": n["status"], "sources": n.get("sources", [])} for n in notes],
         "caveat": next((r["caveat"] for r in results if r["caveat"]), ""),
     }
 
 
-def work(context, question: str, specialist: str = "", folder=None) -> dict:
+def _reviewed(context, question: str, result: dict, spec, choice, check: bool) -> dict:
+    """An answered worksheet checked by a second local model when it's safety-critical or the person asked for a
+    check (core/specialist_review.py): `review` added; a doubt holds it (`held`)."""
+    from core import specialist_models, specialist_review
+
+    if result["status"] != "answered" or not (check or result["caveat"]):
+        return result
+    reviewer = specialist_review.reviewer_for(spec.id, choice.model)
+    ask = specialist_models.asker(context, reviewer) if reviewer is not None else None
+    found = specialist_review.review(question, result, ask, reviewer.model if reviewer else "", choice.model or "")
+    result["review"] = {"verdict": found.verdict, "model": found.model, "independent": found.independent,
+                        "problem": found.problem, "said": specialist_review.said(found)}
+    result["held"] = found.verdict == specialist_review.DOUBTED
+    return result
+
+
+def work(context, question: str, specialist: str = "", folder=None, check: bool = False) -> dict:
     """Runs the worksheet for a question, on the specialist's own model (core/specialist_models.py): {"status",
     "specialist", "answer", "calculations", "sources", "need", "checked", "caveat", "model", "model_note" (said when
-    that model didn't pass the bench for this work)}. `folder` is where the specialists' workbooks are (theirs, unless a test passes one). status is "answered", "need" (a value must be asked for: `need` says which), "no_calculator"
+    that model didn't pass the bench for this work), and for safety-critical work or with `check`, "review" and
+    "held" (a second model doubted it)}. `folder` is where the specialists' workbooks are (theirs, unless a test passes one). status is "answered", "need" (a value must be asked for: `need` says which), "no_calculator"
     (the specialist has none that fits: it says so plainly, with what its notes hold), "no_specialist" or
     "no_model". `checked` says how the answer's numbers were verified."""
     question = " ".join(str(question or "").split())[:1500]
@@ -273,17 +292,20 @@ def work(context, question: str, specialist: str = "", folder=None) -> dict:
         stray = untraced(written, allowed)
         if not stray:
             checked = "Every number in this answer comes from a calculator, your question or a note."
-            return _done(spec, "answered", written, results, notes, checked=checked, model=choice)
+            return _reviewed(context, question, _done(spec, "answered", written, results, notes, checked=checked,
+                                                      model=choice), spec, choice, check)
         again = ("\n\nYour last answer used numbers that are not in the results: "
                  + ", ".join(f"{n:g}" for n in stray[:5]) + ". Write it again using only the results' numbers.")
     checked = ("My model's wording didn't pass the number check, so this is the calculators' own result."
                if again else "My model didn't write an explanation, so this is the calculators' own result.")
-    return _done(spec, "answered", plain, results, notes, checked=checked, model=choice)
+    return _reviewed(context, question, _done(spec, "answered", plain, results, notes, checked=checked,
+                                              model=choice), spec, choice, check)
 
 
 def say(result: dict) -> str:
-    """A worksheet's result as MIA says it: the answer, the caveat when there is one, how it was checked, and, when
-    the model that planned it didn't pass the bench for this work, that too."""
+    """A worksheet's result as MIA says it: the answer, the caveat when there is one, how it was checked, when the
+    model that planned it didn't pass the bench for this work, that too, and a second model's review when there was
+    one (a doubt said first in its words)."""
     parts = [result["answer"]]
     if result["status"] == "answered":
         if result["caveat"]:
@@ -292,12 +314,17 @@ def say(result: dict) -> str:
         if result.get("model_note"):
             parts.append(f"(The model that planned this: {result['model_note']}. The figures are still the "
                          "calculators' own; check that it picked the right ones.)")
+        if result.get("review"):
+            parts.append(result["review"]["said"])
     return " ".join(p for p in parts if p)
 
 
 def tool(context, arguments: dict) -> str:
-    """Tool work_it_out: runs a specialist's worksheet for an engineering question and says the result."""
-    return say(work(context, str(arguments.get("question") or ""), str(arguments.get("specialist") or "")))
+    """Tool work_it_out: runs a specialist's worksheet for an engineering question and says the result; with
+    `check` (the person asked for it to be checked), a second model reviews it even when it isn't safety-critical."""
+    check = str(arguments.get("check") or "").strip().lower() in ("1", "true", "yes")
+    return say(work(context, str(arguments.get("question") or ""), str(arguments.get("specialist") or ""),
+                    check=check))
 
 
 def register(registry) -> None:
@@ -308,16 +335,20 @@ def register(registry) -> None:
         name="work_it_out", domain="knowledge",
         description=("Have one of MIA's specialists work out an engineering figure with her calculators: wire gauge, "
                      "voltage drop, battery runtime or life, an LED resistor, a voltage divider, regulator heat, a "
-                     "floor joist, brine salt, candle wax. Numbers come from code, never from memory."),
+                     "floor joist, stair risers, board feet, concrete, brine salt, candle wax, soap lye, alum, "
+                     "greenhouse heat loss, fans, drip water, heater propane. Numbers come from code, never from "
+                     "memory."),
         parameters={"type": "object", "properties": {
             "question": {"type": "string", "description": "The whole question, in their words, with every number "
                                                           "and unit they gave."},
-            "specialist": {"type": "string", "description": "Which specialist, only if they named one."}},
+            "specialist": {"type": "string", "description": "Which specialist, only if they named one."},
+            "check": {"type": "string", "description": "yes only if they asked for it to be checked."}},
             "required": ["question"]},
         handler=tool,
         trigger_phrases=("what wire gauge", "what gauge wire", "voltage drop", "how long will the battery",
                          "how long will my battery", "battery last", "what resistor", "what size resistor",
                          "voltage divider", "how hot will", "what size joist", "how much salt for", "how much wax",
-                         "work out the", "calculate the"),
+                         "work out the", "calculate the", "how much lye", "how many risers", "how much concrete",
+                         "heat loss", "how big a heater", "how many board feet"),
         subjects=("wire", "battery", "resistor", "regulator", "joist", "brine", "candle"),
     ))

@@ -48,8 +48,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
   software on qwen3:14b; electrical, greenhouse, HVAC, radio, homesteading on qwen2.5:32b; crafts on qwen2.5:32b
   but not passing (only 3 bench tasks); construction and carpentry not benched (structural has no tasks yet). The
   worksheet plans and writes on that model, and says so when it didn't pass.
-- **Next (Opus):** more bench tasks for crafts and structural (so they can pass or fail honestly); S5, a reviewer on
-  a different local model; the next S4 specialists (the hoodie's: acoustics, audio DSP, textiles, power); T3.
+- **Built:** structural and crafts calculators (stair risers, board feet, concrete with 80 lb bags; soap lye from
+  published NaOH values for five oils, alum mordant) and 12 new bench tasks, so those disciplines can pass or fail;
+  re-benched on the PC (`work/eng_bench/`). **S5, the review** (`core/specialist_review.py`): a second local model
+  checks the worksheet's plan (calculators and inputs against the question, never the arithmetic) for
+  safety-critical work or when he asks ("check it"); the best other model on the bench; independent only across
+  families, and every capable model here is a qwen, so it says "not fully independent"; a doubt holds the answer;
+  an unreadable or missing review is never agreement.
+- **Next (Opus):** the next S4 specialists (the hoodie's: acoustics, audio DSP, textiles, power), each with its
+  calculators and bench tasks; T3, the team's coordination on UI-7's task engine. **For Zac:** an independent
+  reviewer needs a capable model from another family (a Llama or Mistral of 30B or more) or a bigger card.
   **Hardware (Prompt 06):** the 24 GB card holds one 32B model at a time; the bench is what a bigger card would be
   measured against.
 - **Not mine, left uncommitted on the PC:** a third session's email inbox files, budget/Plaid edits and specialist
