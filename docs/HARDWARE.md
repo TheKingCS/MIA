@@ -532,6 +532,49 @@ the camera+mic module, the FiiO DAC — all riding the one IP67 cable
 back to the Compute Block) that wasn't an explicit line item until
 walking through the actual wiring surfaced it.
 
+## What to add for the specialists (Claude, 2026-11-17; prices checked that day, and moving fast)
+
+Zac asked what to add to the PC for the specialists, the Forge and parallel agents (DEC-0197, DEC-0199). The PC:
+Ryzen 7 9800X3D, Radeon RX 7900 XTX (24 GB), 32 GB of system memory, a 1 TB NVMe. The bench (`work/eng_bench/`)
+shows the 32B models do the engineering when code does the arithmetic; what the card can't do is hold two of them at
+once, or anything bigger.
+
+**First, free: a reviewer from another family.** The second-model review says "not fully independent" because every
+capable model benched is a Qwen. Two from other families fit the 24 GB card today: gpt-oss-20b (OpenAI) and
+Mistral Small 24B. Bench them before buying anything.
+
+**1. A second graphics card (the one purchase that changes the most).** It doubles what fits: a specialist's model
+and its reviewer loaded at once (no swapping between them), several Workroom agents served at once, or one
+70B-class model split across both cards (estimates put a 70B at Q4 near 18 to 22 tokens a second across two
+cards; to be measured, not trusted).
+- **Best value: a second RX 7900 XTX**, used, about $800 to $850 (summer 2026 trackers; new ones were $1,100 to
+  $1,500). The same chip as the first, so the same drivers and the least to go wrong under ROCm. 48 GB in all.
+- **More headroom: a Radeon AI PRO R9700 (32 GB)**, $1,299 list but $2,000 at retailers. 56 GB in all; a newer chip
+  (RDNA 4), so mixing it with the 7900 XTX is less proven.
+- **Before buying, check three things:** the power supply (two 7900 XTX cards with the 9800X3D want about 1200 W;
+  most builds have 850 to 1000 W, so this is often a second purchase), a second full-length slot on the
+  motherboard (4 or 8 lanes is fine for this work), and room in the case.
+
+**2. A bigger drive: 2 to 4 TB NVMe.** Each 32B model is about 20 GB, a 70B about 40 GB; the bench keeps several,
+and the offline packs (Kiwix and the Forge's) and the MIA OS test machines all want room. 1 TB is already tight.
+
+**3. System memory to 64 GB, but not at today's prices.** It helps with large models partly on the processor, test
+machines, and big packs, but memory prices have jumped (a 64 GB DDR5 kit is $750 to $1,400 in November 2026 listings).
+Wait unless something specific needs it.
+
+**4. Later, if the specialists outgrow one PC: a second machine for models.** A Ryzen AI Max+ 395 mini PC with 128 GB
+of unified memory (about $3,300 to $4,350 now; it was $2,000 a year ago) runs mixture-of-experts models fast
+(gpt-oss-120b at about 31 to 34 tokens a second) and a dense 70B slowly (5 to 7). It would run overnight work and a
+different-family reviewer without touching the PC. Not before the second card shows what one PC can do.
+
+**5. A UPS** (about $150 to $250) so a long overnight bench or Night School run survives a power blip. A Windows
+update restarting the PC (2026-11-17) is a different problem: set active hours, or run long jobs on MIA OS later.
+
+Sources: AMD's R9700 page and launch coverage (OC3D, TechRadar), Micro Center's listing; RX 7900 XTX trackers
+(gpupoet, gpuprix, videocardprices, resaleprices, TweakTown on used prices); Strix Halo roundups (computingforgeeks,
+compute-market, terminalbytes); DDR5 trackers (pgrid, theramageddon, Pangoly); Puget Systems and specpicks on two-card
+inference. All figures are estimates from those pages, to be checked against current listings and then measured here.
+
 ## Open questions to revisit as hardware is acquired
 
 - **Battery/UPS HAT — reopened 2026-07-19, pick this up first next

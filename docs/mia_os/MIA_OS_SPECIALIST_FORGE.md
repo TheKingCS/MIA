@@ -1,6 +1,6 @@
 # The Specialist Forge, online and offline knowledge, and agents working in parallel
 
-*Claude (Opus), 2026-11-17, for Zac's request of the same day (`docs/mia_os/prompts/26_SPECIALIST_FORGE_AND_PARALLEL_AGENTS.md`,
+*Approved 2026-11-17 (DEC-0199: "Yes to all"; DEC-0200 adds Claude's inspection). Claude (Opus), 2026-11-17, for Zac's request of the same day (`docs/mia_os/prompts/26_SPECIALIST_FORGE_AND_PARALLEL_AGENTS.md`,
 kept verbatim). A design with decisions for Zac (section 6). Nothing here is built yet. It extends
 `MIA_OS_LOCAL_SPECIALISTS_PLAN.md` (DEC-0197) and `MIA_OS_SPECIALIZED_AGENT_TEAMS.md` (DEC-0198); it doesn't replace
 them.*
@@ -59,6 +59,8 @@ a missing input (the right answer is a question). The bench is what makes "added
 
 **Measure.** The new tasks run on each local model (`tools.eng_bench`); `core/specialist_models.py` picks the model
 or marks the discipline not passing.
+
+**Inspect (DEC-0200).** Before Zac sees it, Claude inspects it the way Night School's teacher works: read-only, in the lab. Claude runs the bench, reads sample worksheets, checks each calculator against its cited worked example and the caveat against the discipline, and writes a verdict with its evidence. A pass can't stand against a failing bench. A model choice or an adapter goes live on Claude's pass; code goes on to Zac.
 
 **Approve.** The whole specialist arrives as one lab proposal: the diff, the sources, the bench table. Zac's
 approval merges it; nothing reaches the running MIA before that. The registry stays code, so tests still check every
@@ -151,6 +153,7 @@ agents are isolated browser contexts with drawn cursors, read-only at first, eac
 | **F3** | Drafting: a specialist's charter and the rest written by a local model, checked by code, shown to Zac | Q-59 |
 | **F4** | The lab builds a specialist: calculators against cited worked examples, bench tasks, the bench run, one proposal | Q-59, F2, F3 |
 | **F5** | Refinement proposals from evidence of use | Q-60 |
+| **F6** | Claude's inspection: the verdict record, its checks in code, one a night in Night School | DEC-0200 |
 | **W1** | Measure: how many agents the card serves at once, with which model, at what speed | the PC |
 | **W2** | The Workroom: parallel browser contexts, drawn cursors, the tiled live view, read-only | Q-62, W1 |
 | **W3** | Desktop apps in parallel, on MIA OS | Prompt 10, PoC 3 |

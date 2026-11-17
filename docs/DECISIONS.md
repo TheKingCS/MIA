@@ -3491,3 +3491,36 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
   project; review is independent only across models) stand, with "cloud model" replaced by DEC-0197's local ones.
 - Related: DEC-0197, DEC-0188, DEC-0109, `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`
 
+### DEC-0199: MIA adds and refines her own specialists, learns online and works offline, and runs agents in parallel
+- Status: APPROVED
+- Decided by: zac, 2026-11-17, answering Q-59 to Q-62: "Yes to all. MIA should have the ability to have her models inspected by Claude to test and approve them. This is similar to the Night School detail we have discussed. You should also recommend Hardware you would suggest adding to my PC set up for this ambitious project. lets continue"
+- Decision (`docs/mia_os/MIA_OS_SPECIALIST_FORGE.md`, from his request in `docs/mia_os/prompts/26_SPECIALIST_FORGE_AND_PARALLEL_AGENTS.md`):
+  - Q-59: MIA drafts new specialists herself (from his ask, a project's need, or a gap she notices) and builds each
+    one in the lab: charter, sources, calculators tested against cited worked examples, bench tasks, the bench run.
+  - Q-60: notes, study priority, bench re-runs and model choice change without asking; new calculators, bench tasks
+    and any change to a charter, limits, caveat or tools only through the lab and approval.
+  - Q-61: specialists research online through his own search engine and her browser, keep what they read as offline
+    packs (with date and edition), and never send his records.
+  - Q-62: the Workroom: up to four of her browser agents at once, read-only research first, each with its own drawn
+    cursor, shown live side by side; how many his card serves is measured first.
+- Related: DEC-0197, DEC-0198, DEC-0200, DEC-0117, DEC-0196
+
+### DEC-0200: Claude inspects MIA's models and specialists before they're used
+- Status: APPROVED (his request); the split of who approves what is Claude's reading of it, for him to correct
+- Decided by: zac, 2026-11-17, in the same message: "MIA should have the ability to have her models inspected by
+  Claude to test and approve them. This is similar to the Night School detail we have discussed."
+- Decision: an **inspection** by Claude (Claude Code, headless and read-only, as Night School's teacher already is;
+  Codex when Claude is resting) is a required step for anything that changes which model does a specialist's work
+  or what a specialist knows how to compute: a new specialist from the Forge, a new calculator, a change in a
+  specialist's model, an adapter trained by `core/model_forge.py`. Claude runs the bench itself, reads a sample of
+  real worksheets, checks calculators against their cited sources, and writes a verdict (pass or hold, with the
+  evidence). Code keeps it honest: a pass can't stand against a failing bench, and every verdict is kept.
+- Who approves, as read from "to test and approve them":
+  - **Claude's pass is enough** for model choices and adapters (which local model runs which specialist): they
+    change no code and are undone by choosing again.
+  - **Code still merges only on Zac's approval** (DEC-0058, the lab), with Claude's inspection attached: a new
+    specialist, calculator or charter change.
+  - If he meant Claude's pass to merge code too, that is his to say; this decision would change with it.
+- Pending inspections go into Night School: one a night when any wait, before its other work.
+- Related: DEC-0100 (Night School), DEC-0058 (the lab), DEC-0174 (another model reviews), DEC-0199
+
