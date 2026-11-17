@@ -29,7 +29,11 @@
 - **Prompt 07 (intelligence infrastructure) is done** (Opus, 2026-11-17): `MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and
   twenty supporting documents; DEC-0206 to 0212 proposed; REQ-INT-001 to 036 added.
 - Prompt 07 reviewed by Zac (Q-68 to Q-72 yes; DEC-0206 to 0212 approved; knowing who's talking not planned).
-- **Next:** Prompt 08 (agents and autonomy) on his go.
+- **Prompt 08 (autonomy, agents and execution) is done** (Opus, 2026-11-17): `MIA_OS_AUTONOMY_ARCHITECTURE.md` and
+  twenty-three supporting documents; DEC-0213 to 0219 proposed; REQ-AGT-001 to 034 added.
+- Prompt 08 reviewed by Zac (DEC-0215 amended: Approve Once or Approve From Now On on every card; DEC-0217 approved;
+  no quiet hours).
+- **Next:** Prompt 09 on his go; build Approve From Now On on the cards.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 
 **Changes outside the planning documents, on Zac's say-so:**

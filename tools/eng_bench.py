@@ -58,7 +58,11 @@ def table(summary: dict) -> str:
 
 
 def main(argv: Optional[list] = None) -> int:
-    """`python -m tools.eng_bench --model NAME [--mode alone|tools] [--url URL]`: 0 when the run finished."""
+    """`python -m tools.eng_bench --model NAME [--mode alone|tools] [--url URL]`: 0 when the run finished. Prints in
+    UTF-8 whatever the console's own encoding (2026-11-17: gpt-oss writes a narrow no-break space, which Windows'
+    console encoding can't print, and the run died half way)."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = list(argv if argv is not None else sys.argv[1:])
 
     def option(name: str, default: str = "") -> str:

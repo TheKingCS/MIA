@@ -36,7 +36,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **05** | **Core operating system architecture** | **done 2026-11-16 (Fable); waiting for Zac's review (Q-47 to Q-51; DEC-0189 to 0195 proposed; six proofs of concept described, none run)** | `MIA_OS_CORE_ARCHITECTURE.md` and fourteen more (listed below) |
 | **06** | **Hardware and platform** | **done 2026-11-17 (Opus); waiting for Zac's review (Q-63 to Q-67; DEC-0201 to 0205 proposed)** | `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty more (listed in it) |
 | **07** | **Intelligence infrastructure** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-68 to Q-72 yes; DEC-0206 to 0212 approved)** | `MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and twenty more (listed in it) |
-| 08–17 | (see `prompts/`) | not started | |
+| **08** | **Autonomy, agents and execution** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Approve Once / From Now On; Q-74 yes; no quiet hours)** | `MIA_OS_AUTONOMY_ARCHITECTURE.md` and twenty-three more (listed in it) |
+| 09–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -77,6 +78,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3h. Prompt 08 in brief
+
+The architecture is [MIA_OS_AUTONOMY_ARCHITECTURE.md](MIA_OS_AUTONOMY_ARCHITECTURE.md), with twenty-three supporting
+documents. The audit found the execution boundary built: 482 action kinds on one contract, each tiered, with reach,
+reversibility, undo, runs and the stop. The action contract is the one boundary for apps, the system and devices
+(DEC-0213); one task model of goals, plans with dependencies and runs (DEC-0214); autonomy grows only by grants he
+gives, offered with evidence (DEC-0215); risk computed in code sets each kind's least tier (DEC-0216); proactive help
+only through the gate (DEC-0217); done means read back (DEC-0218); agents propose, the coordinator acts (DEC-0219).
+REQ-AGT-001 to 034.
 
 ## 3g. Prompt 07 in brief
 

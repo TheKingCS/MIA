@@ -7,6 +7,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-17 (Opus on the PC: the three reviews of Fable's work, T1's registry; and the cloud session below)*
 
+**New 2026-11-17, Prompt 08 (Claude on Opus).**
+- **Prompt 08 (autonomy, agents and execution) is done:** `docs/mia_os/MIA_OS_AUTONOMY_ARCHITECTURE.md` and
+  twenty-three more; DEC-0213 to 0219 proposed; REQ-AGT-001 to 034 (the matrix reads them: 290 requirements).
+  **Zac's answers:** every approval card offers **Approve Once** or **Approve From Now On** (a standing grant; never
+  money, messages, publishing, deletion outside undo or system changes): DEC-0215 approved as amended, **to build**;
+  what he's working on may shape offers (DEC-0217 approved); no quiet hours. Prompt 09 on his go.
+- **Bench:** Mistral Small 24B done (strong on electrical, textiles, power; weak on crafts; guessed once on
+  embedded). gpt-oss:20b's run had died printing a narrow no-break space to the Windows console; `tools/eng_bench.py`
+  now prints UTF-8; re-running. Commit all of `work/eng_bench/` when it's done.
+
 **New 2026-11-17, later at the PC (Claude on Opus): Prompt 06 answered, the window, Prompt 07.**
 - **Zac answered Q-63 to Q-67:** case and power supply unknown (his brother built it); grow by nodes approved
   (DEC-0202); a bigger drive approved, but the board has **one** M.2 slot, so it replaces the 1 TB; a laptop, tablet

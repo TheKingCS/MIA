@@ -83,6 +83,9 @@ folded in here.*
 | Q-70 | **Answered yes, as recommended (Zac, 2026-11-17)**. Was: Measure whisper.cpp against Vosk on your voice and switch the PC if it's clearly more accurate? Recommended: yes | DEC-0211 | `MIA_OS_INTELLIGENCE_OPEN_QUESTIONS.md` |
 | Q-71 | **Answered yes, as recommended (Zac, 2026-11-17)**. Was: The recall index: every personal store except the private journal and private-mode conversations? Recommended: yes; you can add the journal | DEC-0210 | `MIA_OS_INTELLIGENCE_OPEN_QUESTIONS.md` |
 | Q-72 | **Answered yes, as recommended (Zac, 2026-11-17)**. Was: May MIA train models on your own records? Recommended: not without your yes for each dataset; start with none | DEC-0212 | `MIA_OS_INTELLIGENCE_OPEN_QUESTIONS.md` |
+| Q-73 | **Answered (Zac, 2026-11-17): "MIA should offer an approve for now or Approve going forward option."** Every approval card offers Approve Once or Approve From Now On (never for money, messages, publishing or system changes); DEC-0215 approved as amended. Was: The trust ladder: after several unchanged approvals of the same kind, may MIA offer to just do those, with an Undo (never money, messages, publishing or system changes)? Recommended: yes | DEC-0215 | `MIA_OS_AUTONOMY_OPEN_QUESTIONS.md` |
+| Q-74 | **Answered yes (Zac, 2026-11-17)**; DEC-0217 approved. Was: May what you're working on shape when and which offers MIA makes (never creating one on its own)? Recommended: yes | DEC-0217 | `MIA_OS_AUTONOMY_OPEN_QUESTIONS.md` |
+| Q-75 | **Answered (Zac, 2026-11-17): "I don't need quiet hours."** None; the gate's learned pace stays. Was: Quiet hours: non-urgent messages wait outside hours you set; alarms and urgent ones still come. Recommended: yes, 10 pm to 7 am to start | DEC-0217 | `MIA_OS_AUTONOMY_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 

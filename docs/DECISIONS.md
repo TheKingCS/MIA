@@ -3610,3 +3610,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md §3
 - Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
 
+### DEC-0213: The action contract is the one execution boundary
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: Every change MIA makes, in her apps, the system or a device, is an action kind on `core/actions.py`'s contract (describe, grant check, approval, execute, record, undo); models only propose.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+
+### DEC-0214: One task model
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: Goals become plans of steps with dependencies; every plan is a run; plans, workflows, taught skills, browser routines and teams converge on the step model gradually.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+
+### DEC-0215: Autonomy grows only by grants he gives
+- Status: APPROVED as amended (Zac, 2026-11-17, Q-73: "MIA should offer an approve for now or Approve going forward option."): every approval card offers **Approve Once** and **Approve From Now On**; the second makes a standing grant for that kind (listed with his other grants, taken back there, lapsing after 90 days unused). Never offered for kinds that move money, send messages, publish, delete outside undo or change the system, or any kind tiered never. The evidence-based offer ("you've approved this five times") stays as a reminder.
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: The tiers plus grants (learned skills, published workflows); MIA may offer a standing grant with the evidence of repeated unchanged approvals; money, messages, publishing, deletion outside undo and system changes are never grantable.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+
+### DEC-0216: Risk computed in code sets the least tier
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: From reach, reversibility, money, other people and physical effect; an undeclared kind is treated as needing approval; a test sweeps every kind.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+
+### DEC-0217: Proactive help only through the gate
+- Status: APPROVED (Zac, 2026-11-17, Q-74 yes); no quiet hours (Q-75: "I don't need quiet hours.")
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: Every unprompted message through the communication gate, triggered by records; what he's working on shapes relevance and timing only; quiet hours.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+
+### DEC-0218: Done means read back
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: After executing, code reads the effect back (the store, the page, the device, the system); a model's report of success never marks a step done.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+
+### DEC-0219: Agents propose; the coordinator acts
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-17, Prompt 08
+- Decision: Agents are roles with read-only tools writing to a project's workspace; only the coordinator in code turns their recommendations into proposals on the contract.
+- Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
+

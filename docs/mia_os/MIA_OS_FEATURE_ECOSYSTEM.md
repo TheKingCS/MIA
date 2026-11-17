@@ -165,3 +165,10 @@ The third pattern is partial:
 Which intelligence services each family of features needs is in
 `MIA_OS_INTELLIGENCE_OPEN_QUESTIONS.md` §4. The rule that matters: every feature that doesn't need words or judgement
 works with no model at all (REQ-INT-036), and figures are always computed in code.
+
+## Agent and workflow relationships (Prompt 08, 2026-11-17)
+
+Every feature that changes something does it through an action kind on the one contract (DEC-0213); every feature
+that works in steps (plans, workflows, taught skills, browser routines, teams) is a run that "stop" reaches (DEC-0214);
+every unprompted message goes through the communication gate (DEC-0217). `MIA_OS_AUTONOMY_ARCHITECTURE.md` §2 lists
+which module does which.

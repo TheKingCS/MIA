@@ -45,3 +45,7 @@ report that found it. Rated H, M or L.*
 | R-47 | The recall index leaks a deleted or private record | H | L | Prompt 07 | UI-5 | refs only, re-read from stores; exclusions |
 | R-48 | Reviews look independent but share a model family | M | H | Prompt 07 | relying on review | labelled; non-Qwen reviewers benched |
 | R-49 | Context grows until answers slow and blur | M | M | Prompt 07 | the recall index | budgets; the trace |
+| R-50 | Approval fatigue: too many cards, approved without reading | M | H | Prompt 08 | more autonomy | the trust ladder; plain cards with reach |
+| R-51 | Model-drafted steps look right but do the wrong thing | H | M | Prompt 08 | plans from models | each step checked by its action; read-back verification |
+| R-52 | Step engines diverge and the stop misses one | M | M | Prompt 08 | a new engine | the run record for all; a test |
+| R-53 | Desktop automation acts on the wrong window | H | M | Prompt 08 | automating his apps | portals first; input only while he watches |

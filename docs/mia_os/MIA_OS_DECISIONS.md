@@ -101,3 +101,17 @@ Full records: `MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md` §3.
 | DEC-0212 | Three kinds of learning, each with its own gate | APPROVED (2026-11-17) |
 
 Full records: `MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md` §3.
+
+## Proposed by Prompt 08 (2026-11-17)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0213 | The action contract is the one execution boundary, for apps, the system and devices | PROPOSED |
+| DEC-0214 | One task model: goals, plans of steps with dependencies, every plan a run | PROPOSED |
+| DEC-0215 | Autonomy grows only by grants he gives: Approve Once or Approve From Now On on every card | APPROVED as amended (Q-73) |
+| DEC-0216 | Risk computed in code sets each kind's least tier; unknown is highest | PROPOSED |
+| DEC-0217 | Proactive help only through the communication gate, triggered by records | APPROVED (Q-74); no quiet hours (Q-75) |
+| DEC-0218 | Verification reads effects back; a model's "done" is never evidence | PROPOSED |
+| DEC-0219 | Agents propose; the coordinator in code acts | PROPOSED |
+
+Full records: `MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md` §2.
