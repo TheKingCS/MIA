@@ -60,7 +60,9 @@
   REQ-REL-015 to 037 added.
 - Prompt 14 reviewed by Zac (2026-11-18): as recommended (night updates, an external drive and the laptop for the
   second backup, a UPS when convenient, a monthly drill).
-- **Next:** Prompt 15 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture,
+- **Prompt 15 (development, builds and releases) is done** (Opus, 2026-11-18): `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md`
+  and twenty-five supporting documents; DEC-0262 to 0268 proposed; REQ-DEV-010 to 030 added.
+- **Next:** Zac's review of Prompt 15 (Q-99 to Q-101); Prompt 16 on his go; to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

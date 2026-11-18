@@ -3953,3 +3953,52 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
+### DEC-0262: One repository, its layers enforced
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: One repository (core, apps, web, server, gui, homestead, android-phone, os, deploy, tools, tests, docs, work), its layering checked by tests; nothing personal, secret or describing an unfixed weakness committed; his data folders never in git.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+
+### DEC-0263: A reproducible setup
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: Python dependencies locked with hashes (uv), Python pinned, the setup scripts that exist, a Fedora toolbox matching the image, models recorded by digest; any new machine reaches a passing suite by one written procedure.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+
+### DEC-0264: CI on every push is the gate
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: The full suite on Linux and Windows, the phone build, the image build with a VM boot test, on every push touching their inputs; her own merged changes included; actions pinned by hash with least token permissions; a failure reaches the next session.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+
+### DEC-0265: Releases built, signed and recorded; versions by date
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: The PC and Pi images signed with cosign and published to GHCR, the phone app signed with the key from secrets (DEC-0160), an SBOM and provenance with each; versions like 2026.11.1; next and stable channels; a monthly release he approves, fixes sooner.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+
+### DEC-0266: Tests in layers, AI quality included
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: Unit, contract, integration, rules, AI quality sets (the benchmark, the corpus, the engineering bench, inspections), security, the OS in a VM, failure simulation and his devices; no model replaces another for a role until its sets are no worse.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+
+### DEC-0267: Store formats change additively; otherwise a versioned migration
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: New fields with defaults; anything else gives the store a schema_version, backs up the old file, migrates on load, with a test over every older version; sync keeps unknown fields.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+
+### DEC-0268: Several models build MIA, reviewed independently; Zac approves decisions
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 15
+- Decision: Claude builds the engine with Opus and Fable reviewing each other, ChatGPT and Muse in their roles, MIA through her lab; an unattended batch is reviewed end to end by a model that didn't write it; master's history never rewritten; each commit only its author's changes.
+- Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
+- Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
+

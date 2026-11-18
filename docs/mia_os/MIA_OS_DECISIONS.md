@@ -199,3 +199,17 @@ Full records: `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0261 | Reliability objectives | PROPOSED |
 
 Full records: `MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 15 (2026-11-18)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0262 | One repository, its layers enforced | PROPOSED |
+| DEC-0263 | A reproducible setup | PROPOSED |
+| DEC-0264 | CI on every push is the gate | PROPOSED |
+| DEC-0265 | Releases built, signed and recorded; versions by date | PROPOSED |
+| DEC-0266 | Tests in layers, AI quality included | PROPOSED |
+| DEC-0267 | Store formats change additively; otherwise a versioned migration | PROPOSED |
+| DEC-0268 | Several models build MIA, reviewed independently; Zac approves decisions | PROPOSED |
+
+Full records: `MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md` §2.

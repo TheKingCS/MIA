@@ -18,3 +18,7 @@
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-REL-023 | An update shall be downloaded in the background and applied only at a restart he allows, never during a run or a model job. | Must | MVP | PC | Planned | D | DEC-0257 (Q-95) → 14 |
+
+## Engineering (Prompt 15, 2026-11-18)
+
+Releases and channels: `MIA_OS_RELEASE_ENGINEERING_AND_VERSIONING.md` (DEC-0265).

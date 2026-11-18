@@ -218,3 +218,7 @@ An app's manifest gains `runtime.devices` entries for the household display and 
 ## Security (Prompt 13, 2026-11-18)
 
 Apps write only their manifest's stores; third-party add-ons only once sandboxed (`MIA_OS_APPLICATION_AND_PLUGIN_SECURITY.md`).
+
+## Engineering (Prompt 15, 2026-11-18)
+
+A new app arrives with its manifest, tests, parity decision, loop and documentation, checked by the suite (`MIA_OS_TESTING_AND_VALIDATION_ARCHITECTURE.md`).

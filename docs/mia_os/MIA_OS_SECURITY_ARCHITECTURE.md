@@ -112,3 +112,7 @@ things stay on his devices, encrypted, and never go to a cloud model; a lost dev
 ## Reliability (Prompt 14, 2026-11-18)
 
 Secure Boot, the TPM-bound disk key and signed updates: `MIA_OS_BOOT_INTEGRITY_AND_RECOVERY_SECURITY.md`.
+
+## Engineering (Prompt 15, 2026-11-18)
+
+Supply chain in the build (pinned actions, hashes, signing, SBOMs): `MIA_OS_SOFTWARE_SUPPLY_CHAIN_SECURITY.md`.

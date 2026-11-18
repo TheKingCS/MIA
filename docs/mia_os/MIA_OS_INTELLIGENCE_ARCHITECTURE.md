@@ -169,3 +169,7 @@ The model has no authority; outside content reaches it marked as data; sensitive
 ## Reliability (Prompt 14, 2026-11-18)
 
 The model server's failures and recovery: `MIA_OS_AI_SERVICE_RELIABILITY.md`.
+
+## Engineering (Prompt 15, 2026-11-18)
+
+Model changes are gated by the evaluation sets (`MIA_OS_AI_QUALITY_EVALUATION_INFRASTRUCTURE.md`, DEC-0266).

@@ -43,7 +43,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **12** | **One MIA across many devices** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (the Pi first a TV display; Tailscale only away; the laptop a full engine; lost phones erase; DEC-0241, 0244, 0247 approved)** | `MIA_OS_DISTRIBUTED_ARCHITECTURE.md` and twenty-five more (listed in it) |
 | **13** | **Security, privacy and permissions** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (sensitive never to the cloud; two-step offered; a lockdown; add-ons only ours and all local when built out; DEC-0250, 0251, 0253, 0254 approved)** | `MIA_OS_SECURITY_ARCHITECTURE.md` and twenty-nine more (listed in it) |
 | **14** | **Boot, updates, recovery and reliability** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (all four as recommended; DEC-0257, 0258, 0259 approved)** | `MIA_OS_BOOT_AND_STARTUP_ARCHITECTURE.md` and twenty-five more (listed in it) |
-| 15–17 | (see `prompts/`) | not started | |
+| **15** | **Development, builds and releases** | **done 2026-11-18 (Opus); waiting for Zac's review (Q-99 to Q-101; DEC-0262 to 0268 proposed)** | `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` and twenty-five more (listed in it) |
+| 16–17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -84,6 +85,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3o. Prompt 15 in brief
+
+The architecture is [MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md](MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md), with twenty-five
+supporting documents. Built: one repository, about 6,800 tests before every commit, every definition documented and
+checked, generated maps checked by tests, seven CI workflows, the lab and Night School, knowledge entries, a team
+board. One repository, layers enforced (DEC-0262); a reproducible setup (DEC-0263); CI the gate (DEC-0264); signed
+releases with SBOMs, versions by date (DEC-0265); tests in layers, AI quality gating models (DEC-0266); additive
+formats or versioned migrations (DEC-0267); several models, independent review, Zac decides (DEC-0268).
+REQ-DEV-010 to 030.
 
 ## 3n. Prompt 14 in brief
 

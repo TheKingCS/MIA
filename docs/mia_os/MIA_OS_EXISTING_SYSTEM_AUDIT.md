@@ -214,3 +214,7 @@ These have their own reports:
 - The live model's answer quality.
 
 Each needs a PC session, the phone, or the hardware itself. They are listed in `MIA_OS_OPEN_QUESTIONS.md`.
+
+## Engineering (Prompt 15, 2026-11-18)
+
+The engineering platform's audit (tests, CI, generated docs, the lab) is in `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` §2.

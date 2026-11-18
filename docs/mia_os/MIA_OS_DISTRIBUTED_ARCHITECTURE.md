@@ -119,3 +119,7 @@ Device keys, scopes and the lost-device path are in `MIA_OS_DISTRIBUTED_DEVICE_S
 ## Reliability (Prompt 14, 2026-11-18)
 
 Each device's recovery: `MIA_OS_DISTRIBUTED_DEVICE_RELIABILITY.md`.
+
+## Engineering (Prompt 15, 2026-11-18)
+
+The phone app and the Pi image are built and signed in CI (`MIA_OS_BUILD_SYSTEM_ARCHITECTURE.md`).

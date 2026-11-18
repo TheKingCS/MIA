@@ -73,3 +73,6 @@ report that found it. Rated H, M or L.*
 | R-75 | The only backup is on the disk that fails | H | M | Prompt 14 | backups | the off-PC copy; the phone's sync |
 | R-76 | A restore never tried fails when needed | H | M | Prompt 14 | backups | the monthly drill |
 | R-77 | Windows updates restart the PC overnight until MIA OS | L | H | Prompt 14 | today | active hours; Night School resumes |
+| R-78 | A dependency changes under a pinned version | M | L | Prompt 15 | dependencies | hashes in the lock |
+| R-79 | CI on Windows and in a VM grows slow or costly | L | M | Prompt 15 | CI | jobs only on their inputs; parallel tests |
+| R-80 | Several sessions at once overwrite each other's work | M | M | Prompt 15 | the team | own files only; worktrees; never a broad restore |

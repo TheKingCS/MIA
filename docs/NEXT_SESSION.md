@@ -5,7 +5,15 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 14)*
+*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 15)*
+
+**New 2026-11-18, Prompt 15 (Claude on Opus).**
+- **Zac answered Q-95 to Q-98 as recommended:** updates at night by themselves; the second backup on an external
+  drive and the laptop (to buy: a drive, a UPS); a monthly restore drill (to build).
+- **Prompt 15 (development, builds and releases) is done:** `docs/mia_os/MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` and
+  twenty-five more; DEC-0262 to 0268 proposed; REQ-DEV-010 to 030. **Waiting on Zac:** Q-99 (the repo public or
+  private), Q-100 (push her merged changes), Q-101 (a monthly release he approves); and still his step for the
+  phone's signing key (DEC-0160). Prompt 16 on his go.
 
 **New 2026-11-18, Prompt 14 (Claude on Opus).**
 - **Zac answered Q-91 to Q-94:** sensitive data never to a cloud model; two-step offered, not required; a lockdown

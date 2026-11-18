@@ -109,6 +109,9 @@ folded in here.*
 | Q-96 | **Answered: as recommended (Zac, 2026-11-18: "Go with your recommendations")**; DEC-0259 approved. Was: Where should the second copy of the nightly backup live: an external USB drive left plugged in (about $60 for 2 TB), the laptop, or both? Recommended: An external drive, and the laptop too | DEC-0259 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
 | Q-97 | **Answered: as recommended (Zac, 2026-11-18: "Go with your recommendations")**; DEC-0258 approved. Was: A UPS (battery backup, about $150 to $250) so a power blip doesn't cut off overnight work? Recommended: Yes, when convenient | DEC-0258 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
 | Q-98 | **Answered: as recommended (Zac, 2026-11-18: "Go with your recommendations")**; DEC-0259 approved. Was: A monthly restore drill MIA runs herself (restore into a scratch folder, check every store opens, report, delete)? Recommended: Yes | DEC-0259 | `MIA_OS_RELIABILITY_OPEN_QUESTIONS.md` |
+| Q-99 | **Open (Prompt 15).** Keep MIA's GitHub repository public, or make it private? Public keeps CI free and unlimited; private hides the code but caps CI minutes; nothing personal is in it either way. Recommended: Keep it public for now; revisit when MIA OS ships | DEC-0262 | `MIA_OS_DEVELOPMENT_OPEN_QUESTIONS.md` |
+| Q-100 | **Open (Prompt 15).** Push her own merged changes (Night School's fixes on Claude's pass) to GitHub with the daily summary, so CI tests them too? Recommended: Yes | DEC-0264 | `MIA_OS_DEVELOPMENT_OPEN_QUESTIONS.md` |
+| Q-101 | **Open (Prompt 15).** A monthly MIA OS release you approve (from the tested next builds), with fixes allowed sooner? Recommended: Yes | DEC-0265 | `MIA_OS_DEVELOPMENT_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 
