@@ -76,6 +76,13 @@ def test_the_containerfile_installs_only_from_the_locks_with_hashes_required():
         assert f"--no-binary {name}" in text
 
 
+def test_the_compiled_python_cache_is_removed_after_everything_that_could_write_one():
+    text = (OS / "Containerfile").read_text(encoding="utf-8")
+    run = text[text.index("python3.13 -m venv"):text.index("# Her runtime as a user service")]
+    assert run.index("-name __pycache__") > run.index("pip freeze") > run.index("import core.runtime")
+    assert "/usr/share/rpm/*" in manifest_tool.VOLATILE
+
+
 def test_the_image_sets_the_everyday_model_and_the_bench_measures_that_model():
     text = (OS / "Containerfile").read_text(encoding="utf-8")
     model = re.search(r"model='([^']+)', num_ctx=(\d+)", text)

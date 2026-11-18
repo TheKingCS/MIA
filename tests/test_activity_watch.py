@@ -122,11 +122,16 @@ def test_noting_is_a_personal_store_held_by_stop_everything():
 
 
 def test_the_sidebar_indicator_follows_the_setting(tmp_path, monkeypatch):
+    import sys
+
     from core.web_surfaces import _noting
 
+    monkeypatch.setattr(sys, "platform", "win32")  # the one system a window can be read on, for now
     assert _noting(_context(tmp_path / "a", monkeypatch, on=True))
     assert not _noting(_context(tmp_path / "b", monkeypatch, on=False))
     assert not _noting(SimpleNamespace())
+    monkeypatch.setattr(sys, "platform", "linux")  # where nothing is noted, the indicator doesn't claim it is
+    assert not _noting(_context(tmp_path / "c", monkeypatch, on=True))
 
 
 def _focused(tmp_path, monkeypatch, minutes, last_seen_ago=30, title="chicken coop plans", projects=()):

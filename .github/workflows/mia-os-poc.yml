@@ -125,7 +125,7 @@ jobs:
           mkdir -p /tmp/out
           for tag in poc poc-again; do
             sudo podman --root /mnt/podman run --rm -v /tmp/mia-ctx/os:/x:ro -v /tmp/out:/out mia-os:$tag \
-              /usr/lib/mia/venv/bin/python /x/image_manifest.py make /usr /out/$tag.txt
+              /usr/lib/mia/venv/bin/python -B /x/image_manifest.py make /usr /out/$tag.txt
           done
           for list in IMAGE_RPMS IMAGE_PYTHON; do
             diff <(sudo podman --root /mnt/podman run --rm mia-os:poc cat /usr/lib/mia/$list.txt) \

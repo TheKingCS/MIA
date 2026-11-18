@@ -62,7 +62,11 @@ approves itself.
 
 ### FW-01 A reproducible image build *(recommended first)*
 
-> **State (2026-11-18): built; its CI acceptance runs on the push.** Zac said go (Q-109). Built: the base pinned by
+> **State (2026-11-18): built. The VM test passed on the locked image** (GitHub run 44285161809: installed, booted,
+> the runtime up, updated, rolled back). **The first two-build check** (run 44290637615) found the package lists
+> identical and 199 file differences, all explained and fixed: compiled-Python caches that `pip freeze` wrote again
+> after they'd been removed (the removal is now last) and the RPM database at `/usr/share/rpm` (now listed as
+> volatile). Earlier state: built; its CI acceptance runs on the push. Zac said go (Q-109). Built: the base pinned by
 > digest; `os/requirements.lock` and `os/requirements-build.lock` with hashes, written by `os/lock_requirements.py`;
 > the image installs only from them with `--require-hashes`; the reference PC's model set in the image; the GPU
 > bench measuring qwen2.5:14b (70.2 tokens a second on Windows today, bar 63); a second no-cache build compared

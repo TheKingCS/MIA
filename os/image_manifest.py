@@ -26,6 +26,7 @@ from pathlib import Path
 SEP = "\t"
 VOLATILE = (
     "/usr/lib/sysimage/rpm/*",        # the RPM database: install times
+    "/usr/share/rpm/*",               # the same database where an image-based system keeps it
     "/usr/lib/sysimage/libdnf5/*",    # dnf's own state and history
     "/usr/lib/sysimage/dnf/*",
     "/usr/share/info/dir",            # rebuilt by install scriptlets in install order
