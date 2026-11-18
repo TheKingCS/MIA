@@ -49,7 +49,7 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **16** | **Implementation phases, migration and the roadmap** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (yes, R1 with the PC first; DEC-0269, 0270, 0272 approved)** | `MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` and twenty-one more (listed in it) |
 | **17** | **Final master plan and independent review** | **done 2026-11-18 (Opus), reviewed independently by Codex; reviewed by Zac 2026-11-18 (yes to all; the 53 proposed decisions approved as a batch; FW-01 begins)** | `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` and sixteen more (`MIA_OS_ARCHITECTURE_DOCUMENT_INDEX.md`) |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
-| 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
+| **21** | **Living System completeness** | **done 2026-11-18 (Opus; reviewed independently by Fable and Codex, as Zac scheduled it for Fable); waiting for Zac (Q-111 to Q-113; DEC-0280 to 0286 proposed)** | `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` and four more, with `MIA_LIVING_SYSTEM_REVIEW.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
 | 23 | Universal Intelligence and intent-driven computing (handoff) | **Fable's architectural review done 2026-11-16 (DEC-0188 proposed, Q-43 to Q-46); Opus's independent review next; its steps UI-1 to UI-10 run beside the prompts** | `MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` |
 | 24 | Visual identity, glass, the appearance engine (handoff) | built to phase A7 (DEC-0183, 0186, 0187 approved; DEC-0184 built, still marked proposed) | `MIA_OS_APPEARANCE_ENGINE.md` |
@@ -88,6 +88,17 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3r. Prompt 21 in brief
+
+The answer is [MIA_LIVING_SYSTEM_GAP_ANALYSIS.md](MIA_LIVING_SYSTEM_GAP_ANALYSIS.md), with the principles, the
+cognitive architecture, memory and learning, and the runtime contracts (`MIA_LIVING_SYSTEM_*.md`, `MIA_COGNITIVE_*`,
+`MIA_MEMORY_*`, `MIA_UNIVERSAL_*`). Most of what Prompt 21 asks for has a home and much is built; the gaps are where
+parts meet: a trace id, provenance on the memory stores, sync's approved kept loser, a clock service, one
+model-server address, a retention registry that decides what syncs, a generic read-back. Fable and Codex reviewed
+it independently; the seven heaviest proposals of the first draft were removed or narrowed. Four live bugs found
+and fixed (four device-only files syncing; a run marked stopped by the phone; a failed change that said nothing
+changed). DEC-0280 to 0286; REQ-LS-001 to 012; work packages LS-01 to LS-10.
 
 ## 3q. Prompt 17 in brief
 

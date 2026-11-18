@@ -8,6 +8,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### From Prompt 21 (2026-11-18)
+0z. [ ] **Three questions** (Q-111 to Q-113, `docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` §9): someone you trust
+   able to open MIA's data if something happened to you (a sealed envelope you keep); removing copies on your phone
+   of four files that should have stayed on the PC; building the living system work alongside the OS work.
+
 ### From Fable's review (2026-11-18)
 0x. [x] ~~**Things that now work differently, from the review's fixes.**~~ (Zac, 2026-11-18: "Go with your
    recommendations": all kept.) Say if you want any of them back:

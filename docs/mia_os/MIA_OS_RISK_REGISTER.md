@@ -93,3 +93,5 @@ report that found it. Rated H, M or L.*
 | R-93 | The foundation work takes much longer than estimated | M | M | Prompt 17 | the roadmap | the critical path first |
 | R-94 | Piper's maintenance and licence | L | M | Prompt 17 | voice | Kokoro main; Piper fallback; Q-108 |
 | R-95 | Vosk stagnates | L | M | Prompt 17 | voice | whisper.cpp measured |
+| R-96 | Device-only data syncs to another device by mistake (four files did until 2026-11-18) | M | M | Prompt 21 | sync | the retention registry decides what syncs; a store missing from it fails a test |
+| R-97 | The living-system work grows into frameworks one person can't keep | M | M | Prompt 21 | the plan | P13 and P14; each package sized in sessions; deferred list |

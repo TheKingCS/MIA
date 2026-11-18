@@ -1,5 +1,7 @@
 # MIA OS: autonomy architecture (Prompt 08)
 
+> **Prompt 21 (2026-11-18):** DEC-0213 to 0219 are approved (Q-110's batch, 2026-11-18): `docs/DECISIONS.md` governs their status, not the table here.
+
 *Claude (Opus), 2026-11-17, on Zac's go ("lets continue"). Planning only: no agent, permission, automation or grant
 was changed. The prompt is kept verbatim in `prompts/08_AUTONOMY_AGENTS_INTELLIGENT_SYSTEM_MANAGEMENT.md`. Twenty-three
 documents sit beside this one (section 9).*

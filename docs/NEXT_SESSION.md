@@ -10,6 +10,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, Prompt 21 done** (Opus; Zac scheduled it for Fable, so a fresh Fable reviewer and Codex reviewed
+it independently, `docs/mia_os/MIA_LIVING_SYSTEM_REVIEW.md`). `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` and four more;
+DEC-0280 to 0286 proposed; LS-01 to LS-10. **Fixed in it, with tests:** four device-only files no longer sync
+(`activity.json`, `recall_index.json`, `runs.json`, `turn_traces.jsonl`); a failed change puts back what it had
+written. **Waiting on Zac:** Q-111 to Q-113. **Next:** FW-03 (MIA's session in the VM), or LS-02 (small, at the MVP
+gate).
+
 **New 2026-11-18, FW-02 built** (CI as the gate): actions pinned by commit, least permissions, the glasses test's
 date fixed, and the whole suite inside the booted image (`mia-os-vm.yml`). Check its first runs. Zac answered 0x
 and 0y (keep the review's changes; MIA still restarts Ollama while everything is stopped). His USB stick comes

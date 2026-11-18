@@ -294,6 +294,12 @@ Stops at the first mismatch.
 His main system for a week. The 67 MVP-gate requirements re-verified on his PC; Home within 10 s measured; nothing
 lost. Zac passes the gate (REQ-IMP-004).
 
+## 4b. The living system packages (Prompt 21)
+
+LS-01 to LS-10 (`MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` §6): LS-02 (provenance on his memories and life notes) at the MVP
+gate; LS-01, 03 to 08 in Alpha; LS-09, 10 in Beta. About 14 to 16 sessions, beside the foundation, critical path
+first. Each is specified in full before it starts.
+
 ## 5. Effort, honestly
 
 | Part | Claude's sessions | Uncertainty | Zac's time |

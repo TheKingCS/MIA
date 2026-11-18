@@ -243,3 +243,17 @@ approved), DEC-0168 (MIA OS on the PC and the Pi, approved; its dual boot supers
 | DEC-0279 | A reproducible, signed image build | APPROVED (Q-110) |
 
 Full records: `MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md` §5.
+
+## Proposed by Prompt 21 (2026-11-18)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0280 | A trace id through everything that happened | PROPOSED |
+| DEC-0281 | The existing epistemic contract declared on the memory stores | PROPOSED |
+| DEC-0282 | One learning lifecycle; habits reset one at a time; a list nothing resets | PROPOSED |
+| DEC-0283 | A capability's four descriptions checked as one | PROPOSED |
+| DEC-0284 | One zone-aware clock service | PROPOSED |
+| DEC-0285 | DEC-0243's losing value built | PROPOSED |
+| DEC-0286 | A retention registry for every store | PROPOSED |
+
+Full records: `docs/DECISIONS.md`; the reasoning: `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md`.

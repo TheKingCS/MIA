@@ -1,5 +1,7 @@
 # MIA OS: self-awareness and controlled self-development (Prompt 09)
 
+> **Prompt 21 (2026-11-18):** DEC-0220 to 0226 are approved (Q-110's batch, 2026-11-18): `docs/DECISIONS.md` governs their status, not the table here.
+
 *Claude (Opus), 2026-11-17, on Zac's go ("lets go"). Planning only: no code, registry, permission or safeguard was
 changed. The prompt is kept verbatim in `prompts/09_SELF_AWARENESS_INSPECTION_SELF_DEVELOPMENT.md`. Twenty-one
 documents sit beside this one (section 9).*

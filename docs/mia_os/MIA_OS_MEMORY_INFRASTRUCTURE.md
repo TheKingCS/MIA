@@ -1,5 +1,7 @@
 # MIA OS: memory infrastructure (Prompt 07 §9; DEC-0210)
 
+> **Prompt 21 (2026-11-18):** provenance is declared by seven stores so far, and the memory stores are still exempt (`tests/test_living_system.py`); REQ-INT-015's "Exists" is corrected by LS-02 (`MIA_MEMORY_AND_LEARNING_ARCHITECTURE.md` §2).
+
 > **Prompt 17 (2026-11-18):** the recall index built so far (`core/recall_index.py`) is a first slice built differently (a sealed JSON index refreshed by a job); this design is the R1 target (C-12).
 
 *Claude (Opus), 2026-11-17. Planning only. Storage layout: DEC-0193.*

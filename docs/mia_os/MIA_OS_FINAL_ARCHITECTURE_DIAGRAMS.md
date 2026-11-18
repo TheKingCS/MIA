@@ -218,3 +218,15 @@ flowchart TB
   OSOP -->|yes| HELPER[helper + polkit dialog]
   OSOP -->|no| STORE[store write, undoable]
 ```
+
+## 16. The stages and their joins (Prompt 21)
+
+```mermaid
+flowchart LR
+  A[Asked: he says or presses] --> IN[Intake: trust label, trace id]
+  N[Noticed: a schedule, a reading, a record] --> IN
+  IN --> CL[Classify] --> AT[Attend: the gate] --> AS[Assemble: records with how they're known]
+  AS --> PL[Plan] --> AU[Authorise: tiers, grants, stop] --> EX[Execute: a failure puts back its writes]
+  EX --> VE[Verify: read back] --> RE[Record: history, one trace id] --> LE[Learn: a state and a gate]
+  CTRL[Greenhouse controller: its own loop] -.snapshots.-> N
+```

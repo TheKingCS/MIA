@@ -121,6 +121,9 @@ folded in here.*
 | Q-108 | **Answered (Zac, 2026-11-18: "Yes to all")**: unlicensed for now; Piper not bundled in the image. Was: Choose a licence for the repository (Piper is now GPL-3.0): GPL-3.0, or unlicensed for now with Piper not bundled in the image? Recommended: Unlicensed for now; Piper not bundled | — | `MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md` |
 | Q-109 | **Answered (Zac, 2026-11-18: "Yes to all")**: yes; FW-01 begins. Was: Begin the foundation work in a VM with FW-01, a reproducible image build? Nothing on his PC changes. Recommended: Yes | DEC-0279 | `MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md` |
 | Q-110 | **Answered (Zac, 2026-11-18: "Yes to all")**: yes; the 53 proposed decisions approved as a batch. Was: Approve the 53 proposed decisions as a batch (the decision log §4), except any he names? Recommended: Yes | 53 decisions | `MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md` |
+| Q-111 | **Open (Prompt 21).** If something happened to you, should someone you trust be able to open MIA's data? (A sealed envelope with the recovery key, kept with your important papers; MIA never gives anyone access herself.) Recommended: Yes, an envelope you keep | — | `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` |
+| Q-112 | **Open (Prompt 21).** Four files meant to stay on the PC had been copying to your phone (what MIA noted about your apps, her recall index, her runs, her turn logs); fixed today. Remove the copies already on the phone? Recommended: Yes | DEC-0286 | `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` |
+| Q-113 | **Open (Prompt 21).** Build the living system packages LS-01 to LS-10 alongside the foundation, critical path first (LS-02 at the first version's gate)? Recommended: Yes | DEC-0280 to 0286 | `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` |
 
 ## The original questions (for the record)
 

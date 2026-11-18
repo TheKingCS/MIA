@@ -1,5 +1,7 @@
 # The Living System: how the doctrine maps onto MIA, and what it adds
 
+> **Prompt 21 (2026-11-18):** Prompt 21 checked this doctrine's joins: `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md`. §3's "four registries acceptable" now reads "acceptable while they're checked to agree" (DEC-0283).
+
 *Claude (Opus), 2026-11-15, answering the foundational doctrine "The Living System: Identity, Continuity,
 Awareness, Adaptation & Evolution" (kept verbatim: [`prompts/20_LIVING_SYSTEM_DOCTRINE.md`](prompts/20_LIVING_SYSTEM_DOCTRINE.md)).
 The doctrine asks for an audit with repository evidence before any change. This is that audit and the proposal. It

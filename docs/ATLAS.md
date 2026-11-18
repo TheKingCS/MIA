@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1516 files, 338,669 lines; 1516 files describe themselves; 18,638 of 18,737 classes and functions are documented.
+1516 files, 338,739 lines; 1516 files describe themselves; 18,642 of 18,741 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-591 files, 171,045 lines; 8,820 of 8,906 classes and functions documented
+591 files, 171,072 lines; 8,821 of 8,907 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -836,7 +836,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-45 files, 5,131 lines; 157 of 157 classes and functions documented
+45 files, 5,133 lines; 157 of 157 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -886,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-526 files, 88,374 lines; 7,470 of 7,483 classes and functions documented
+526 files, 88,415 lines; 7,473 of 7,486 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

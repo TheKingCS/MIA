@@ -5,7 +5,7 @@
 ## At a glance
 
 - **Architecture** — 855 Python files across 591 core, 93 modules, 124 gui, 2 server, 45 tools (strict one-way layering; see docs/ARCHITECTURE.md).
-- **Decisions** — 278 logged (docs/DECISIONS.md); the why behind every part.
+- **Decisions** — 285 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
 - **Knowledge she's written** — 300 dev entries (work/knowledge/).
@@ -21,7 +21,7 @@
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (8): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151
+**PROPOSED** (15): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0280, DEC-0281, DEC-0282, DEC-0283, DEC-0284, DEC-0285, DEC-0286
 
 <details><summary>Every decision</summary>
 
@@ -303,6 +303,13 @@
 - **DEC-0277** [APPROVED] — Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key
 - **DEC-0278** [APPROVED] — The PC's login, MIA's session and what greenboot checks
 - **DEC-0279** [APPROVED] — A reproducible, signed image build
+- **DEC-0280** [PROPOSED] — A trace id through everything that happened
+- **DEC-0281** [PROPOSED] — The existing epistemic contract declared on the memory stores
+- **DEC-0282** [PROPOSED] — One learning lifecycle; habits reset one at a time; a list nothing resets
+- **DEC-0283** [PROPOSED] — A capability's four descriptions checked as one
+- **DEC-0284** [PROPOSED] — One zone-aware clock service
+- **DEC-0285** [PROPOSED] — DEC-0243's losing value built
+- **DEC-0286** [PROPOSED] — A retention registry for every store
 
 </details>
 
