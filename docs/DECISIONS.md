@@ -3954,7 +3954,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0262: One repository, its layers enforced
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-99): the repository stays public for now, revisited when MIA OS ships.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: One repository (core, apps, web, server, gui, homestead, android-phone, os, deploy, tools, tests, docs, work), its layering checked by tests; nothing personal, secret or describing an unfixed weakness committed; his data folders never in git.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
@@ -3968,14 +3968,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0264: CI on every push is the gate
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-100): her merged changes are pushed with the daily summary, so CI tests them.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: The full suite on Linux and Windows, the phone build, the image build with a VM boot test, on every push touching their inputs; her own merged changes included; actions pinned by hash with least token permissions; a failure reaches the next session.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0265: Releases built, signed and recorded; versions by date
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-101): a monthly release he approves, fixes sooner.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: The PC and Pi images signed with cosign and published to GHCR, the phone app signed with the key from secrets (DEC-0160), an SBOM and provenance with each; versions like 2026.11.1; next and stable channels; a monthly release he approves, fixes sooner.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2

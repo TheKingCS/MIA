@@ -4,6 +4,8 @@
 
 ## 1. For Zac
 
+**Answered 2026-11-18: "Yes to all".** The repository stays public for now; her merged changes are pushed with the daily summary; a monthly release he approves. DEC-0262, 0264, 0265 approved.
+
 | Q | Question | Recommended |
 |---|---|---|
 | **Q-99** | MIA's repository on GitHub is public. Keep it public, or make it private? Public keeps CI free and unlimited; private hides the code but caps CI minutes (the Windows and VM jobs use them fastest), and nothing personal is in it either way. | Keep it public for now; revisit when MIA OS ships |

@@ -204,10 +204,10 @@ Full records: `MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md` §2.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0262 | One repository, its layers enforced | PROPOSED |
+| DEC-0262 | One repository, its layers enforced | APPROVED (Q-99: public for now) |
 | DEC-0263 | A reproducible setup | PROPOSED |
-| DEC-0264 | CI on every push is the gate | PROPOSED |
-| DEC-0265 | Releases built, signed and recorded; versions by date | PROPOSED |
+| DEC-0264 | CI on every push is the gate | APPROVED (Q-100) |
+| DEC-0265 | Releases built, signed and recorded; versions by date | APPROVED (Q-101) |
 | DEC-0266 | Tests in layers, AI quality included | PROPOSED |
 | DEC-0267 | Store formats change additively; otherwise a versioned migration | PROPOSED |
 | DEC-0268 | Several models build MIA, reviewed independently; Zac approves decisions | PROPOSED |
