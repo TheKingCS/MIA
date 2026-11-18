@@ -4,20 +4,19 @@
 #   - runtime-service: PoC 4's first half, the runtime installed and run as a systemd user service by its own
 #     installer, then stopped the way systemd stops it (deploy/install_runtime.sh)
 #   - suite-linux: the engine's whole test suite on Linux (risk R-07: there was no Linux CI)
-#   - image: PoC 2's build half, the MIA OS image built from os/Containerfile and checked by bootc
+#   - image: PoC 2's build half, the MIA OS image built from os/Containerfile and checked by bootc, then built a
+#     second time with no cache and compared (FW-01: two builds of one commit must match: their packages and every
+#     file under /usr, by os/image_manifest.py)
+# Runs on every push to master (the image copies the whole repository, so any file is one of its inputs; Codex's
+# review of FW-01), and weekly (Mondays), so a changed base or package shows up even when nobody pushes.
 # None of these touches Zac's PC. The graphics card test (PoC 1) needs him at it: os/poc/README.md.
 name: MIA OS proofs of concept
 
 on:
   push:
     branches: [master]
-    paths:
-      - "os/**"
-      - "deploy/install_runtime.sh"
-      - "deploy/mia-runtime.service"
-      - "core/runtime.py"
-      - "core/key_unlock.py"
-      - ".github/workflows/mia-os-poc.yml"
+  schedule:
+    - cron: "17 6 * * 1"
   workflow_dispatch:
 
 concurrency:
@@ -99,7 +98,7 @@ jobs:
 
   image:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - name: Room for a desktop image (the runner's second disk)
@@ -115,3 +114,23 @@ jobs:
           sudo podman --root /mnt/podman images
           sudo podman --root /mnt/podman run --rm mia-os:poc sh -c \
             'rpm -q kernel ollama ollama-rocm cage python3.13; /usr/lib/mia/venv/bin/python --version; ls /usr/lib/systemd/user/mia-runtime.service; bootc --version'
+      - name: The reference PC's model is set in the image
+        run: |
+          sudo podman --root /mnt/podman run --rm mia-os:poc /usr/lib/mia/venv/bin/python -c \
+            "import json; c = json.load(open('/usr/lib/mia/config/default_config.json'))['llm']; print(c); assert c['model'] == 'qwen2.5:14b' and c['num_ctx'] == 32768"
+      - name: Build it again, with no cache (FW-01)
+        run: sudo podman --root /mnt/podman build --no-cache -f /tmp/mia-ctx/os/Containerfile -t mia-os:poc-again /tmp/mia-ctx
+      - name: The two builds match (packages, Python packages, every file under /usr)
+        run: |
+          mkdir -p /tmp/out
+          for tag in poc poc-again; do
+            sudo podman --root /mnt/podman run --rm -v /tmp/mia-ctx/os:/x:ro -v /tmp/out:/out mia-os:$tag \
+              /usr/lib/mia/venv/bin/python /x/image_manifest.py make /usr /out/$tag.txt
+          done
+          for list in IMAGE_RPMS IMAGE_PYTHON; do
+            diff <(sudo podman --root /mnt/podman run --rm mia-os:poc cat /usr/lib/mia/$list.txt) \
+                 <(sudo podman --root /mnt/podman run --rm mia-os:poc-again cat /usr/lib/mia/$list.txt) \
+              || { echo "$list differs between the two builds"; exit 1; }
+            echo "$list: the same"
+          done
+          python3 os/image_manifest.py compare /tmp/out/poc.txt /tmp/out/poc-again.txt

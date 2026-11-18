@@ -10,6 +10,22 @@
 name: MIA OS in a VM
 
 on:
+  # FW-01: on a change to how the image is built or started, and every day, as well as by hand. It takes most of an
+  # hour, so it doesn't run on every push: the image copies the whole repository, and a change anywhere else in it
+  # is tested here within a day (the build check, mia-os-poc.yml, does run on every push).
+  push:
+    branches: [master]
+    paths:
+      - "os/**"
+      - "requirements.txt"
+      - "config/default_config.json"
+      - "core/runtime.py"
+      - "core/config_manager.py"
+      - "core/key_unlock.py"
+      - "deploy/**"
+      - ".github/workflows/mia-os-vm.yml"
+  schedule:
+    - cron: "47 8 * * *"
   workflow_dispatch:
 
 concurrency:

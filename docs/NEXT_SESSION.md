@@ -7,6 +7,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 17)*
 
+**New 2026-11-18, FW-01 built** (the first MIA OS work package): the image's base pinned by digest, her Python
+packages hash-locked (`os/requirements.lock`, `os/requirements-build.lock`, written by `os/lock_requirements.py`;
+**after changing requirements.txt run that script**, it needs uv), the reference PC's model set in the image, the
+GPU bench on qwen2.5:14b (70.2 tokens a second on Windows, bar 63), a second no-cache build compared by
+`os/image_manifest.py`, the build check on every push and the VM test on its inputs and daily (Codex reviewed FW-01:
+two defects, both fixed). Six deviations, each with its reason, are
+on FW-01 in `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md`. **Check the push's CI**: the first run of the
+two-build comparison may name files that differ for harmless reasons; add those to `VOLATILE` with a reason, and
+anything else is a real unpinned input. Next: FW-02 (CI as the gate).
+
 **New 2026-11-18, after Prompt 17.** Zac answered Q-105 to Q-110 **yes to all**: the narrower MVP and the release
 ladder; the TPM plus a PIN; Windows tried from the enclosure first; the repository unlicensed for now (Piper not
 bundled in the image); the 53 proposed decisions approved as a batch; **FW-01 begins** (`docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4).

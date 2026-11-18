@@ -45,7 +45,7 @@ whether Zac must approve it. Resolutions marked **fixed in Prompt 17** were made
 | G-07 | Lost-device erase described as immediate (Codex F-08) | Revocation is immediate on the hub; erase is **best effort on reconnect**; device keys are scoped and the phone's stores are sealed by its Keystore (planned: the phone seals nothing yet, `core/at_rest.py`) |
 | G-08 | The Linux suite runs only when `os/` changes; Windows CI and Linux use different Pythons (3.12 vs 3.13) | FW-02 |
 | G-09 | A date-boundary test (`tests/test_glasses.py`) failed once on GitHub around midnight UTC (run 44203625881) | FW-02 fixes it with a fixed clock |
-| G-10 | PySide6 6.12 (October 2026) moved WebEngine into a separate wheel; `PySide6>=6.6,<7.0` can resolve to 6.12 without it | FW-01 pins `PySide6<6.12` until the WebEngine wheel is released, then adds it |
+| G-10 | PySide6 6.12 (October 2026) moved WebEngine into a separate wheel | **Corrected by FW-01:** 6.12.0 installs that wheel by itself (6.12.0.140, checked on his PC), so no pin; the image's lock holds both and its build imports WebEngine |
 | G-11 | Piper moved to a GPL-3.0 fork that is looking for maintainers; the repository has no licence | Piper is the fallback voice only; Q-108 asks Zac to choose a licence |
 | G-12 | No component dependency graph; 3 of the 14 diagrams asked for | `MIA_OS_FINAL_ARCHITECTURE_DIAGRAMS.md` (15) |
 | G-13 | Workstreams missed intelligence, memory, QA, Android and documentation; the task board has no work package on it | The final roadmap's workstreams (§3); each package goes on the board when it starts (`tools.work`) |

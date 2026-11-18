@@ -8,7 +8,7 @@
 - **Decisions** — 278 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 294 dev entries (work/knowledge/).
+- **Knowledge she's written** — 297 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 55 personal + 42 household stores, 56 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -16,13 +16,12 @@
 ## Decisions — why MIA is built the way she is
 
 **ACCEPTED** (5): DEC-0129, DEC-0130, DEC-0135, DEC-0136, DEC-0140
-**APPROVED** (202): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0123, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0170, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0185, DEC-0186, DEC-0187, DEC-0189, DEC-0191, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0202, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0215, DEC-0217, DEC-0222, DEC-0225, DEC-0227, DEC-0228, DEC-0231, DEC-0235, DEC-0236, DEC-0239, DEC-0240, DEC-0241, DEC-0244, DEC-0247, DEC-0250, DEC-0251, DEC-0253, DEC-0254, DEC-0257, DEC-0258, DEC-0259, DEC-0262, DEC-0264, DEC-0265, DEC-0269, DEC-0270, DEC-0272
+**APPROVED** (255): DEC-0003, DEC-0008, DEC-0010, DEC-0012, DEC-0013, DEC-0014, DEC-0015, DEC-0016, DEC-0017, DEC-0018, DEC-0019, DEC-0020, DEC-0021, DEC-0022, DEC-0023, DEC-0024, DEC-0025, DEC-0026, DEC-0027, DEC-0028, DEC-0029, DEC-0030, DEC-0031, DEC-0032, DEC-0033, DEC-0034, DEC-0035, DEC-0036, DEC-0037, DEC-0038, DEC-0039, DEC-0040, DEC-0041, DEC-0042, DEC-0043, DEC-0045, DEC-0046, DEC-0047, DEC-0048, DEC-0049, DEC-0050, DEC-0051, DEC-0052, DEC-0053, DEC-0054, DEC-0055, DEC-0056, DEC-0057, DEC-0058, DEC-0059, DEC-0060, DEC-0061, DEC-0062, DEC-0063, DEC-0064, DEC-0065, DEC-0066, DEC-0067, DEC-0068, DEC-0069, DEC-0070, DEC-0071, DEC-0072, DEC-0073, DEC-0074, DEC-0075, DEC-0076, DEC-0077, DEC-0078, DEC-0079, DEC-0080, DEC-0081, DEC-0082, DEC-0083, DEC-0084, DEC-0085, DEC-0086, DEC-0087, DEC-0088, DEC-0089, DEC-0090, DEC-0091, DEC-0092, DEC-0093, DEC-0094, DEC-0095, DEC-0096, DEC-0097, DEC-0098, DEC-0099, DEC-0100, DEC-0101, DEC-0104, DEC-0105, DEC-0106, DEC-0107, DEC-0108, DEC-0109, DEC-0110, DEC-0111, DEC-0112, DEC-0113, DEC-0115, DEC-0116, DEC-0117, DEC-0118, DEC-0119, DEC-0120, DEC-0121, DEC-0122, DEC-0123, DEC-0124, DEC-0125, DEC-0126, DEC-0131, DEC-0134, DEC-0138, DEC-0139, DEC-0141, DEC-0142, DEC-0143, DEC-0144, DEC-0145, DEC-0146, DEC-0148, DEC-0149, DEC-0150, DEC-0152, DEC-0153, DEC-0154, DEC-0155, DEC-0156, DEC-0157, DEC-0158, DEC-0159, DEC-0160, DEC-0161, DEC-0162, DEC-0163, DEC-0164, DEC-0165, DEC-0166, DEC-0167, DEC-0168, DEC-0169, DEC-0170, DEC-0171, DEC-0172, DEC-0173, DEC-0174, DEC-0175, DEC-0176, DEC-0177, DEC-0178, DEC-0179, DEC-0180, DEC-0181, DEC-0182, DEC-0183, DEC-0184, DEC-0185, DEC-0186, DEC-0187, DEC-0188, DEC-0189, DEC-0190, DEC-0191, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0196, DEC-0197, DEC-0198, DEC-0199, DEC-0200, DEC-0201, DEC-0202, DEC-0203, DEC-0204, DEC-0205, DEC-0206, DEC-0207, DEC-0208, DEC-0209, DEC-0210, DEC-0211, DEC-0212, DEC-0213, DEC-0214, DEC-0215, DEC-0216, DEC-0217, DEC-0218, DEC-0219, DEC-0220, DEC-0221, DEC-0222, DEC-0223, DEC-0224, DEC-0225, DEC-0226, DEC-0227, DEC-0228, DEC-0229, DEC-0230, DEC-0231, DEC-0232, DEC-0233, DEC-0234, DEC-0235, DEC-0236, DEC-0237, DEC-0238, DEC-0239, DEC-0240, DEC-0241, DEC-0242, DEC-0243, DEC-0244, DEC-0245, DEC-0246, DEC-0247, DEC-0248, DEC-0249, DEC-0250, DEC-0251, DEC-0252, DEC-0253, DEC-0254, DEC-0255, DEC-0256, DEC-0257, DEC-0258, DEC-0259, DEC-0260, DEC-0261, DEC-0262, DEC-0263, DEC-0264, DEC-0265, DEC-0266, DEC-0267, DEC-0268, DEC-0269, DEC-0270, DEC-0271, DEC-0272, DEC-0273, DEC-0274, DEC-0275, DEC-0276, DEC-0277, DEC-0278, DEC-0279
 **Approach** (1): DEC-0137
 **IMPLEMENTED** (7): DEC-0002, DEC-0004, DEC-0005, DEC-0006, DEC-0007, DEC-0009, DEC-0011
 **IMPLEMENTED;** (1): DEC-0001
 **PARTLY** (1): DEC-0044
-**PROPOSED** (59): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151, DEC-0164, DEC-0169, DEC-0184, DEC-0188, DEC-0192, DEC-0193, DEC-0194, DEC-0195, DEC-0201, DEC-0203, DEC-0204, DEC-0213, DEC-0214, DEC-0216, DEC-0218, DEC-0219, DEC-0220, DEC-0221, DEC-0223, DEC-0224, DEC-0226, DEC-0229, DEC-0230, DEC-0232, DEC-0233, DEC-0234, DEC-0237, DEC-0238, DEC-0242, DEC-0243, DEC-0245, DEC-0246, DEC-0248, DEC-0249, DEC-0252, DEC-0255, DEC-0256, DEC-0260, DEC-0261, DEC-0263, DEC-0266, DEC-0267, DEC-0268, DEC-0271, DEC-0273, DEC-0274, DEC-0275, DEC-0276, DEC-0277, DEC-0278, DEC-0279
-**PROPOSED;** (2): DEC-0190, DEC-0205
+**PROPOSED** (8): DEC-0103, DEC-0114, DEC-0127, DEC-0128, DEC-0132, DEC-0133, DEC-0147, DEC-0151
 
 <details><summary>Every decision</summary>
 
@@ -188,12 +187,12 @@
 - **DEC-0161** [APPROVED] — The Life Enrichment Protocol is a major MIA subsystem
 - **DEC-0162** [APPROVED] — Smart Closet
 - **DEC-0163** [APPROVED] — MIA tells who's talking when two people speak to her
-- **DEC-0164** [PROPOSED] — MIA's tools on anything you select, in any app
+- **DEC-0164** [APPROVED] — MIA's tools on anything you select, in any app
 - **DEC-0165** [APPROVED] — The Universal Action Layer is a foundational MIA OS subsystem
 - **DEC-0166** [APPROVED] — Which Claude model does which work
 - **DEC-0167** [APPROVED] — One skills system, for the person and for MIA; "Build a skill" extends it
 - **DEC-0168** [APPROVED] — MIA OS as soon as possible, on two machines: the PC (dual boot) and the Pi 5
-- **DEC-0169** [PROPOSED] — On Linux, the system keeps the key to MIA's sealed files (the TPM where there is one)
+- **DEC-0169** [APPROVED] — On Linux, the system keeps the key to MIA's sealed files (the TPM where there is one)
 - **DEC-0170** [APPROVED] — World Intelligence, a thin subsystem over what MIA already has
 - **DEC-0171** [APPROVED] — Zac's answers on World Intelligence and MIA's own messages
 - **DEC-0172** [APPROVED] — Procurement & Opportunity Intelligence, World Intelligence's listings half
@@ -208,28 +207,28 @@
 - **DEC-0181** [APPROVED] — The autonomy model: five tiers, plus reversibility, reach and one stop
 - **DEC-0182** [APPROVED] — The first MIA OS (the MVP)
 - **DEC-0183** [APPROVED] — Glass is MIA OS's visual identity
-- **DEC-0184** [PROPOSED] — The appearance engine: theme, colour scheme and layout on the existing engine
+- **DEC-0184** [APPROVED] — The appearance engine: theme, colour scheme and layout on the existing engine
 - **DEC-0185** [APPROVED] — MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse
 - **DEC-0186** [APPROVED] — Gold is allowed as an accent; rewards are legendary orange
 - **DEC-0187** [APPROVED] — Each app gets its own atmosphere colour, outside the meaning colours
-- **DEC-0188** [PROPOSED] — Prompt 23 (Universal Intelligence) is built by growing what exists; the run record first
+- **DEC-0188** [APPROVED] — Prompt 23 (Universal Intelligence) is built by growing what exists; the run record first
 - **DEC-0189** [APPROVED] — The Linux foundation: Fedora Atomic (KDE) as a bootc image from the repository; the distribution's kernel
-- **DEC-0190** [PROPOSED;] — MIA on the OS is a modular platform with one coordinator
+- **DEC-0190** [APPROVED] — MIA on the OS is a modular platform with one coordinator
 - **DEC-0191** [APPROVED] — Wayland; two sessions at login; on the PC one compositor technology for both
-- **DEC-0192** [PROPOSED] — Communication: HTTP and SSE for surfaces, D-Bus for the OS, events as "re-read" signals, no broker
-- **DEC-0193** [PROPOSED] — Storage: Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var
-- **DEC-0194** [PROPOSED] — Privilege: a helper only for what Linux would ask an administrator for, confirmed in the OS's own dialog
-- **DEC-0195** [PROPOSED] — Resources and observability from Linux's own mechanisms
+- **DEC-0192** [APPROVED] — Communication: HTTP and SSE for surfaces, D-Bus for the OS, events as "re-read" signals, no broker
+- **DEC-0193** [APPROVED] — Storage: Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var
+- **DEC-0194** [APPROVED] — Privilege: a helper only for what Linux would ask an administrator for, confirmed in the OS's own dialog
+- **DEC-0195** [APPROVED] — Resources and observability from Linux's own mechanisms
 - **DEC-0196** [APPROVED] — One browser: MIA's browser becomes Zac's everyday browser
 - **DEC-0197** [APPROVED] — The specialists run on local models able to do the engineering; MIA knows what he's working on
 - **DEC-0198** [APPROVED] — Teams as recommended (Q-54 to Q-58); growing the specialist roster stays a priority
 - **DEC-0199** [APPROVED] — MIA adds and refines her own specialists, learns online and works offline, and runs agents in parallel
 - **DEC-0200** [APPROVED] — Claude inspects MIA's models and specialists before they're used
-- **DEC-0201** [PROPOSED] — The reference PC as built is MIA OS's first target
+- **DEC-0201** [APPROVED] — The reference PC as built is MIA OS's first target
 - **DEC-0202** [APPROVED] — Grow by nodes, not cards
-- **DEC-0203** [PROPOSED] — A hardware capability registry from Linux's own sources
-- **DEC-0204** [PROPOSED] — Linux schedules; MIA places models and orders the GPU queue
-- **DEC-0205** [PROPOSED;] — The device family's tiers
+- **DEC-0203** [APPROVED] — A hardware capability registry from Linux's own sources
+- **DEC-0204** [APPROVED] — Linux schedules; MIA places models and orders the GPU queue
+- **DEC-0205** [APPROVED] — The device family's tiers
 - **DEC-0206** [APPROVED] — MIA is the program, not the model
 - **DEC-0207** [APPROVED] — One provider interface; local first; cloud only on a per-request yes
 - **DEC-0208** [APPROVED] — Routing in code from measurements
@@ -237,73 +236,73 @@
 - **DEC-0210** [APPROVED] — Memory in her stores, one recall index beside them
 - **DEC-0211** [APPROVED] — Voice stays local; whisper.cpp measured for the PC
 - **DEC-0212** [APPROVED] — Three kinds of learning, each with its own gate
-- **DEC-0213** [PROPOSED] — The action contract is the one execution boundary
-- **DEC-0214** [PROPOSED] — One task model
+- **DEC-0213** [APPROVED] — The action contract is the one execution boundary
+- **DEC-0214** [APPROVED] — One task model
 - **DEC-0215** [APPROVED] — Autonomy grows only by grants he gives
-- **DEC-0216** [PROPOSED] — Risk computed in code sets the least tier
+- **DEC-0216** [APPROVED] — Risk computed in code sets the least tier
 - **DEC-0217** [APPROVED] — Proactive help only through the gate
-- **DEC-0218** [PROPOSED] — Done means read back
-- **DEC-0219** [PROPOSED] — Agents propose; the coordinator acts
-- **DEC-0220** [PROPOSED] — One capability truth registry
-- **DEC-0221** [PROPOSED] — Provenance on every self-statement
+- **DEC-0218** [APPROVED] — Done means read back
+- **DEC-0219** [APPROVED] — Agents propose; the coordinator acts
+- **DEC-0220** [APPROVED] — One capability truth registry
+- **DEC-0221** [APPROVED] — Provenance on every self-statement
 - **DEC-0222** [APPROVED] — Health and performance from Linux and her own counters
-- **DEC-0223** [PROPOSED] — Quality by code checks, corrections and fixed sets
-- **DEC-0224** [PROPOSED] — Investigations end in a reproducing test
+- **DEC-0223** [APPROVED] — Quality by code checks, corrections and fixed sets
+- **DEC-0224** [APPROVED] — Investigations end in a reproducing test
 - **DEC-0225** [APPROVED] — Self-development only through the lab
-- **DEC-0226** [PROPOSED] — New capabilities only through one path
+- **DEC-0226** [APPROVED] — New capabilities only through one path
 - **DEC-0227** [APPROVED] — The shell is MIA's web front end in a full-screen window under KWin
 - **DEC-0228** [APPROVED] — One navigation model
-- **DEC-0229** [PROPOSED] — Unified search that never executes a change
-- **DEC-0230** [PROPOSED] — Context only by explicit share; workspaces restored through KWin
+- **DEC-0229** [APPROVED] — Unified search that never executes a change
+- **DEC-0230** [APPROVED] — Context only by explicit share; workspaces restored through KWin
 - **DEC-0231** [APPROVED] — Ambient, Workspace and Immersive as states of one shell
-- **DEC-0232** [PROPOSED] — One notification pipeline
-- **DEC-0233** [PROPOSED] — Apps stay in the framework that suits them
-- **DEC-0234** [PROPOSED] — One design system for every device
+- **DEC-0232** [APPROVED] — One notification pipeline
+- **DEC-0233** [APPROVED] — Apps stay in the framework that suits them
+- **DEC-0234** [APPROVED] — One design system for every device
 - **DEC-0235** [APPROVED] — The identity holds without colour, transparency or motion
 - **DEC-0236** [APPROVED] — Themes and personalisation are validated data, never code
-- **DEC-0237** [PROPOSED] — The orb: one component, fourteen states
-- **DEC-0238** [PROPOSED] — Motion in three speeds, meaningful apart from decorative
+- **DEC-0237** [APPROVED] — The orb: one component, fourteen states
+- **DEC-0238** [APPROVED] — Motion in three speeds, meaningful apart from decorative
 - **DEC-0239** [APPROVED] — Spatial interfaces are views of the same capabilities
 - **DEC-0240** [APPROVED] — A small local audio identity
 - **DEC-0241** [APPROVED] — One MIA per person: the PC the hub, full engines that work alone
-- **DEC-0242** [PROPOSED] — Trust by pairing: one key per device
-- **DEC-0243** [PROPOSED] — Sync stays the three-way merge by record id
+- **DEC-0242** [APPROVED] — Trust by pairing: one key per device
+- **DEC-0243** [APPROVED] — Sync stays the three-way merge by record id
 - **DEC-0244** [APPROVED] — HTTP and server-sent events over the home network or Tailscale
-- **DEC-0245** [PROPOSED] — Thinking on the most capable reachable machine
-- **DEC-0246** [PROPOSED] — Controllers keep their loops and their safety
+- **DEC-0245** [APPROVED] — Thinking on the most capable reachable machine
+- **DEC-0246** [APPROVED] — Controllers keep their loops and their safety
 - **DEC-0247** [APPROVED] — A lost device is unlinked from anywhere
-- **DEC-0248** [PROPOSED] — Authority comes only from the person
-- **DEC-0249** [PROPOSED] — Everything read from outside is data
+- **DEC-0248** [APPROVED] — Authority comes only from the person
+- **DEC-0249** [APPROVED] — Everything read from outside is data
 - **DEC-0250** [APPROVED] — Identity in layers; approvals bound and used once
 - **DEC-0251** [APPROVED] — Four data classes
-- **DEC-0252** [PROPOSED] — Encryption in three layers
+- **DEC-0252** [APPROVED] — Encryption in three layers
 - **DEC-0253** [APPROVED] — Least privilege
 - **DEC-0254** [APPROVED] — Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten
-- **DEC-0255** [PROPOSED] — The OS boots without MIA; readiness in levels
-- **DEC-0256** [PROPOSED] — Each part its own unit, with restart limits, a watchdog and its own slice
+- **DEC-0255** [APPROVED] — The OS boots without MIA; readiness in levels
+- **DEC-0256** [APPROVED] — Each part its own unit, with restart limits, a watchdog and its own slice
 - **DEC-0257** [APPROVED] — Whole-image updates at a restart he allows, rolled back by themselves
 - **DEC-0258** [APPROVED] — Data reliability in layers
 - **DEC-0259** [APPROVED] — Backups in two places, restored monthly by a drill
-- **DEC-0260** [PROPOSED] — Plasma, safe mode and the previous deployment as the fallbacks
-- **DEC-0261** [PROPOSED] — Reliability objectives
+- **DEC-0260** [APPROVED] — Plasma, safe mode and the previous deployment as the fallbacks
+- **DEC-0261** [APPROVED] — Reliability objectives
 - **DEC-0262** [APPROVED] — One repository, its layers enforced
-- **DEC-0263** [PROPOSED] — A reproducible setup
+- **DEC-0263** [APPROVED] — A reproducible setup
 - **DEC-0264** [APPROVED] — CI on every push is the gate
 - **DEC-0265** [APPROVED] — Releases built, signed and recorded; versions by date
-- **DEC-0266** [PROPOSED] — Tests in layers, AI quality included
-- **DEC-0267** [PROPOSED] — Store formats change additively; otherwise a versioned migration
-- **DEC-0268** [PROPOSED] — Several models build MIA, reviewed independently; Zac approves decisions
+- **DEC-0266** [APPROVED] — Tests in layers, AI quality included
+- **DEC-0267** [APPROVED] — Store formats change additively; otherwise a versioned migration
+- **DEC-0268** [APPROVED] — Several models build MIA, reviewed independently; Zac approves decisions
 - **DEC-0269** [APPROVED] — Build MIA OS in stages, each usable and reversible
 - **DEC-0270** [APPROVED] — The MVP is DEC-0182 plus the approved MVP-tier requirements
-- **DEC-0271** [PROPOSED] — The critical path
+- **DEC-0271** [APPROVED] — The critical path
 - **DEC-0272** [APPROVED] — MIA OS on the new 4 TB drive; the Windows drive kept intact
-- **DEC-0273** [PROPOSED] — Workstreams and work packages on the task board
-- **DEC-0274** [PROPOSED] — Every milestone has a gate Zac passes
-- **DEC-0275** [PROPOSED] — One hierarchy of authority for MIA OS documents
-- **DEC-0276** [PROPOSED] — The release ladder and a narrower MVP gate, with evidence levels
-- **DEC-0277** [PROPOSED] — Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key
-- **DEC-0278** [PROPOSED] — The PC's login, MIA's session and what greenboot checks
-- **DEC-0279** [PROPOSED] — A reproducible, signed image build
+- **DEC-0273** [APPROVED] — Workstreams and work packages on the task board
+- **DEC-0274** [APPROVED] — Every milestone has a gate Zac passes
+- **DEC-0275** [APPROVED] — One hierarchy of authority for MIA OS documents
+- **DEC-0276** [APPROVED] — The release ladder and a narrower MVP gate, with evidence levels
+- **DEC-0277** [APPROVED] — Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key
+- **DEC-0278** [APPROVED] — The PC's login, MIA's session and what greenboot checks
+- **DEC-0279** [APPROVED] — A reproducible, signed image build
 
 </details>
 
@@ -311,7 +310,7 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 294 entries 42 lesson, 19 debugging, 23 decision, 9 method, 8 test-procedure, 4 failed-experiment, 187 implementation, 2 security-finding.
+- **Dev-knowledge** — 297 entries 43 lesson, 19 debugging, 24 decision, 9 method, 8 test-procedure, 4 failed-experiment, 188 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 

@@ -4080,6 +4080,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 ### DEC-0279: A reproducible, signed image build
 - Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED; Q-109: FW-01 begins
 - Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
+- Note: FW-01 (2026-11-18): the PySide6 clause's condition is already met (6.12.0 installs its WebEngine wheel), so no pin; greenboot moves to FW-04 and Tailscale to FW-10 (the roadmap's FW-01 deviations).
 - Decision: The base pinned by digest; Python locked with hashes (uv) and installed with --require-hashes; PySide6 below 6.12 until its WebEngine wheel ships; greenboot-rs and Tailscale's own repository in the image; cosign with a key pair, enforced by bootc's policy; Fedora's Ollama with upstream's build as the fallback.
 - Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
 - Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272

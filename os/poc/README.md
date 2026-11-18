@@ -7,8 +7,8 @@ The six tests that settle what Prompt 05 couldn't decide on paper
 | Test | Where | State |
 |---|---|---|
 | 1. The graphics card under Linux | **Zac at the PC**, from a USB stick (below) | ready to run |
-| 2. The image: build | GitHub's machines (`.github/workflows/mia-os-poc.yml`, job `image`) | runs on every change to `os/` |
-| 2. The image: boot, update, roll back | a virtual machine (`.github/workflows/mia-os-vm.yml`, run by hand) | **passed headless** on 2026-11-16 (run 43872077107): installed to a disk, booted, the runtime up as a user service, updated and rolled back with the user's file kept. Not yet: the graphical session, greenboot, encryption (FW-01 to FW-05) |
+| 2. The image: build | GitHub's machines (`.github/workflows/mia-os-poc.yml`, job `image`) | runs on every push and weekly; built twice and compared (FW-01) |
+| 2. The image: boot, update, roll back | a virtual machine (`.github/workflows/mia-os-vm.yml`, on changes to how the image is built or started, and daily) | **passed headless** on 2026-11-16 (run 43872077107): installed to a disk, booted, the runtime up as a user service, updated and rolled back with the user's file kept. Not yet: the graphical session, greenboot, encryption (FW-01 to FW-05) |
 | 3. MIA's session: KDE's compositor against cage | a virtual machine | not yet |
 | 4. The runtime as a Linux service | GitHub's machines (job `runtime-service`), the suite on Linux (job `suite-linux`) | runs on every change |
 | 5. The system helper | a virtual machine, once a first helper exists | not yet |
@@ -17,7 +17,7 @@ The six tests that settle what Prompt 05 couldn't decide on paper
 ## Test 1: the graphics card under Linux (about an hour, nothing installed)
 
 What it settles: whether Fedora runs MIA's models on the RX 7900 XTX as well as Windows does. The bar is the 14B
-model writing at 65 tokens a second or more (Windows: 73). Nothing is installed on the PC: Fedora runs from the
+model MIA uses every day, qwen2.5:14b, writing at 63 tokens a second or more (90% of Windows' 70). Nothing is installed on the PC: Fedora runs from the
 USB stick, in memory, and is gone when you restart. Windows isn't touched.
 
 **You need:** a USB stick of 8 GB or more (it will be erased), another computer or the PC under Windows to prepare
@@ -39,13 +39,13 @@ it, and the internet.
      `ntfs` partition), then:
      ```
      sudo mkdir -p /mnt/win && sudo mount -o ro /dev/nvme0n1p3 /mnt/win     # use the name lsblk showed
-     OLLAMA_MODELS=/mnt/win/Users/<your Windows user name>/.ollama/models OLLAMA_NOPRUNE=1 ollama serve &
+     OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 OLLAMA_NOPRUNE=1 \n       OLLAMA_MODELS=/mnt/win/Users/<your Windows user name>/.ollama/models ollama serve &
      ```
      If it says the drive is BitLocker-locked or "unclean", use the other way.
-   - *Download the two smaller ones* (about 11 GB, held in memory; the 32B is skipped):
+   - *Download the two that matter* (about 11 GB, held in memory, which the PC's 32 GB allows; the others are skipped):
      ```
-     ollama serve &
-     ollama pull llama3.2:latest && ollama pull qwen3:14b
+     OLLAMA_FLASH_ATTENTION=1 OLLAMA_KV_CACHE_TYPE=q8_0 ollama serve &
+     ollama pull llama3.2:latest && ollama pull qwen2.5:14b
      ```
 7. **Run the test:**
    ```

@@ -7,6 +7,9 @@
 
 PySide6>=6.6,<7.0
 
+# The MIA OS image installs a hash-locked copy of this list (os/requirements.lock). After changing anything here,
+# run `python os/lock_requirements.py` (needs uv); tests/test_os_image.py fails until the lock covers the change.
+
 # Backup/restore encryption (core/secrets_manager.py). Unlike profile
 # password hashing (core/profile_manager.py), which stdlib's hashlib
 # covers with no extra dependency, actual data confidentiality has no

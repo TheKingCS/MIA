@@ -3,13 +3,14 @@ os.poc.gpu_bench
 ==================
 
 Proof of concept 1 for MIA OS (DEC-0189, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 2): how
-fast the RX 7900 XTX runs MIA's three models under Linux, against what the same PC measured on Windows on
-2026-11-15. Run it in a Fedora live session with Ollama serving (steps in `os/poc/README.md`).
+fast the RX 7900 XTX runs MIA's models under Linux, against what the same PC measured on Windows (2026-11-15; the
+two 14B models again on 2026-11-18 with flash attention and the 8-bit cache, his current settings). Run it in a Fedora live session with Ollama serving (steps in `os/poc/README.md`).
 
 Standard library only, so it runs on a fresh live USB with `python3 os/poc/gpu_bench.py` (or `curl ... | python3`).
 For each model it times a cold load and a warm answer through Ollama's own API (the same prompt and settings as the
 Windows measurement), asks Ollama whether the model sat on the GPU, unloads it, and prints a table with the Windows
-figures beside it, then a verdict against the PoC's bar (the 14B at 65 tokens a second or more). It also writes
+figures beside it, then a verdict against the PoC's bar: the everyday model, qwen2.5:14b, at 90% of its Windows speed or more
+(FW-01, HW-01; the bar used to be on qwen3:14b, which MIA doesn't use every day). It also writes
 everything to `mia_gpu_bench.json` in the current folder. Nothing on the computer is changed.
 """
 
@@ -25,9 +26,11 @@ import urllib.request
 
 API = "http://127.0.0.1:11434"
 PROMPT = "In two sentences, what should I check first if my greenhouse fan stopped running?"  # as on Windows
-MODELS = ("llama3.2:latest", "qwen3:14b", "qwen2.5:32b")
-WINDOWS = {"llama3.2:latest": (4.1, 220.0), "qwen3:14b": (11.2, 73.0), "qwen2.5:32b": (37.0, 14.0)}  # load s, tok/s
-BAR = ("qwen3:14b", 65.0)
+MODELS = ("llama3.2:latest", "qwen2.5:14b", "qwen3:14b", "qwen2.5:32b")
+# load s, tok/s on Windows; the 14Bs measured 2026-11-18 (three warm runs each, flash attention, q8_0 cache)
+WINDOWS = {"llama3.2:latest": (4.1, 220.0), "qwen2.5:14b": (15.3, 70.2), "qwen3:14b": (13.7, 70.3),
+           "qwen2.5:32b": (37.0, 14.0)}
+BAR = ("qwen2.5:14b", 63.0)  # 90% of 70.2
 
 
 def _post(path: str, body: dict, timeout: float = 900) -> dict:
@@ -120,7 +123,7 @@ def main() -> int:
     for m in missing:
         print(f"{m:18} not present (pull it, or point OLLAMA_MODELS at the Windows copy)")
     target = next((r for r in results if r["model"] == BAR[0] and "error" not in r), None)
-    verdict = ("not measured: the 14B wasn't present" if target is None else
+    verdict = (f"not measured: {BAR[0]} wasn't present" if target is None else
                f"PASS: the 14B writes {target['write_tok_s']} tokens a second (bar {BAR[1]})" if target["write_tok_s"] >= BAR[1]
                else f"BELOW THE BAR: the 14B writes {target['write_tok_s']} tokens a second (bar {BAR[1]}); try the Vulkan backend next")
     report = {"results": results, "missing": missing, "verdict": verdict, "hardware": hardware()}

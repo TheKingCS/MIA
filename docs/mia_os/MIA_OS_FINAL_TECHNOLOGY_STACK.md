@@ -18,7 +18,7 @@ assumption a proof of concept must settle. Where this document and an older eval
 | Login | **Plasma Login Manager** (Fedora 44 and later's default for KDE, Kinoite included) | SDDM (kept on upgraded systems) | MVP | V | GPL | Replaces "SDDM" throughout (DEC-0278). Custom session entries: A |
 | Desktop | KDE Plasma 6 on Wayland, KWin | — | MVP | V: Plasma is Wayland-only since 6.8, and Fedora has had no Plasma X11 session since F40 | GPL/LGPL | |
 | MIA's session | `kwin_wayland` running her shell full screen | **cage** 0.3.1 (Fedora 45) if PoC 3 fails | MVP | A: KWin has no supported kiosk mode (community practice only) | GPL / MIT | PoC 3 in FW-03 |
-| Her shell | Qt WebEngine host (PySide6) showing her web front end | Chromium in kiosk mode | MVP | V: PySide6 6.12 split WebEngine into its own wheel | LGPL-3.0 | Pin `PySide6<6.12` until `PySide_WebEngine` ships, then add it |
+| Her shell | Qt WebEngine host (PySide6) showing her web front end | Chromium in kiosk mode | MVP | **V by execution** (2026-11-18): PySide6 6.12.0 installs its separate WebEngine wheel (6.12.0.140) by itself; it imports on his PC | LGPL-3.0 | No pin needed; the image's lock holds both and its build imports WebEngine (FW-01) |
 | Filesystem and disk | Btrfs on LUKS2; `/var/home` for his data | ext4 | MVP | V: the VM installs with Btrfs | GPL | Snapshots before updates (REQ-REL-024) |
 | Disk unlock | `systemd-cryptenroll --tpm2-pcrs=7 --tpm2-with-pin=yes`, plus a recovery key | TPM only | MVP | V: the default binds no PCRs; PCRs 4, 8 and 9 change on bootc updates | LGPL | DEC-0277; Q-106 |
 | Privileged operations | polkit and a MIA helper with fixed operations over D-Bus | — | MVP | V (standard) | LGPL | PoC 5 in FW-06 |
@@ -67,7 +67,7 @@ assumption a proof of concept must settle. Where this document and an older eval
 | `OLLAMA_MAX_LOADED_MODELS` "default 1" | default is 3 per GPU | Our 2 is a reduction |
 | ROCm 7.1 | Fedora 45 has 7.2.2 (7.1 was Fedora 44) | Corrected |
 | Piper (MIT) | the maintained fork is GPL-3.0, looking for maintainers | Fallback only; Q-108 |
-| PySide6 `<7.0` is safe | 6.12 split WebEngine into its own wheel | `<6.12` for now |
+| PySide6 `<7.0` is safe | 6.12 split WebEngine into its own wheel, which 6.12.0 installs by itself (checked on his PC by FW-01) | no pin; the lock and an import check |
 | cosign keyless | keyless identities are reportedly not matched by bootc's policy | a key pair |
 
 Sources (all read 2026-11-18): Fedora Magazine on Atomic Desktops in Fedora 45; the bootc and bootc-install-to-disk

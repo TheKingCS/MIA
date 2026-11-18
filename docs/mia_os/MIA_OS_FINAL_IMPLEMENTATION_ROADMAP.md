@@ -62,13 +62,38 @@ approves itself.
 
 ### FW-01 A reproducible image build *(recommended first)*
 
+> **State (2026-11-18): built; its CI acceptance runs on the push.** Zac said go (Q-109). Built: the base pinned by
+> digest; `os/requirements.lock` and `os/requirements-build.lock` with hashes, written by `os/lock_requirements.py`;
+> the image installs only from them with `--require-hashes`; the reference PC's model set in the image; the GPU
+> bench measuring qwen2.5:14b (70.2 tokens a second on Windows today, bar 63); a second no-cache build compared
+> by `os/image_manifest.py`; both image workflows on every change to their inputs and weekly;
+> `tests/test_os_image.py`. **Deviations from the specification below, each with its reason:**
+> 1. *The model is set in the image's copy of the default config, not in `config/default_config.json`*: that file is
+>    shared with the Pi and the general installer, which would then download a 9 GB model the Pi can't run.
+> 2. *No `PySide6<6.12` pin*: on his PC, PySide6 6.12.0 installs its separate WebEngine wheel (6.12.0.140) by
+>    itself and WebEngine imports, so the technology check's "wheel delayed" was out of date. The lock holds 6.12.0
+>    with its WebEngine wheel, and the image build imports `PySide6.QtWebEngineCore`.
+> 3. *greenboot and Tailscale aren't added yet*: greenboot installed without its checks configured could reboot or
+>    roll back the VM test for reasons of its own, so it moves to FW-04 where its checks are built; Tailscale moves
+>    to FW-10 with the devices.
+> 4. *Piper is left out of the image* (Zac's Q-108 answer); MIA already falls back without it.
+> 5. *Three packages publish no wheel* (`plaid-python`, `http-ece`, `srt`; all pure Python): they're built in the
+>    image, with their build tools from their own hash-checked lock, installed first.
+> 7. *Codex reviewed the change* (2026-11-18) and found two defects, both fixed before the commit: a differing
+>    package list could pass the step (bash doesn't stop on the left side of `&&`), and the workflows' path filters
+>    missed most of what the image copies. The build check now runs on every push; the hour-long VM test on changes
+>    to how the image is built or started and every day.
+> 6. *Fedora's packages float within Fedora 45's updates* (security fixes): the list is recorded in the image
+>    (`IMAGE_RPMS.txt`) and compared between the two builds; pinning every RPM would break builds when Fedora
+>    replaces a version.
+
 | Field | Specification |
 |---|---|
 | Objective | Two builds of one commit install the same OS packages and the same Python packages, and the image starts MIA on the right model |
 | Requirements | REQ-DX-003, REQ-IMP-010, REQ-ARC-001, REQ-ARC-011 (partly), REQ-FUN-202; fixes C-08, C-17, G-10 |
 | Affects | `os/Containerfile`; `requirements.txt`; a new lock file (name settled on inspection: `requirements.lock` beside it, generated); `config/default_config.json` (model); `os/poc/gpu_bench.py` (bar on qwen2.5:14b); `.github/workflows/mia-os-poc.yml` and `mia-os-vm.yml` (triggers); `os/poc/README.md` |
 | Prerequisites | none (DEC-0263 and DEC-0279 approved, Q-109) |
-| Tasks | 1. Resolve `kinoite:45` to its digest and pin `FROM …@sha256:`, with a comment naming the tag and date. 2. Generate the lock with `uv pip compile --generate-hashes` for Python 3.13 on Linux; install it with `--require-hashes` (no `pip install --upgrade pip`). 3. Pin `PySide6<6.12` in `requirements.txt` until `PySide_WebEngine` ships. 4. Add `greenboot` (greenboot-rs) to the image's `dnf install`, and Tailscale from its own repository. 5. Move `config/default_config.json` to `qwen2.5:14b`, `num_ctx` 32768, keeping every other key. 6. Give `gpu_bench.py` the everyday model as its bar and record the Windows figure for it. 7. Build twice in CI from the same commit and compare the installed package lists (`rpm -qa` and `pip freeze`) **and a manifest of the image's files** (path, size and hash of everything under `/usr`, excluding documented timestamp-only differences). 8. Run the VM workflow on every push to `os/**` and weekly, not only by hand. 9. Correct the Containerfile's header and the PoC README's table |
+| Tasks | 1. Resolve `kinoite:45` to its digest and pin `FROM …@sha256:`, with a comment naming the tag and date. 2. Generate the lock with `uv pip compile --generate-hashes` for Python 3.13 on Linux; install it with `--require-hashes` (no `pip install --upgrade pip`). 3. ~~Pin `PySide6<6.12`~~ (not needed: deviation 2). 4. ~~Add `greenboot` (greenboot-rs) to the image's `dnf install`, and Tailscale from its own repository~~ (moved: deviation 3). 5. Set `qwen2.5:14b`, `num_ctx` 32768 for the reference PC (in the image: deviation 1). 6. Give `gpu_bench.py` the everyday model as its bar and record the Windows figure for it. 7. Build twice in CI from the same commit and compare the installed package lists (`rpm -qa` and `pip freeze`) **and a manifest of the image's files** (path, size and hash of everything under `/usr`, excluding documented timestamp-only differences). 8. Run the VM workflow on changes to how the image is built or started and daily, not only by hand (deviation 7). 9. Correct the Containerfile's header and the PoC README's table |
 | Deliverables | a pinned, locked image; a CI job that fails when two builds differ; the VM test on a schedule |
 | Security | the lock's hashes stop a changed package; the digest stops a changed base; no secret enters the image |
 | Failure and rollback | each change is a commit; reverting it restores the old build. If the lock breaks the Windows install, Windows keeps `requirements.txt` (the lock is Linux-only) |
@@ -115,6 +140,9 @@ approves itself.
 | Size | **provisional**: two to four sessions, re-estimated after its first session (the least certain package; a graphical VM test doesn't exist yet and is part of it) |
 
 ### FW-04 Health, readiness, updates and rollback
+
+> *Adds from FW-01 (deviation 3): `greenboot` (greenboot-rs) into the image's `dnf install`, configured with this
+> package's checks.*
 
 | Field | Specification |
 |---|---|
@@ -204,6 +232,8 @@ approves itself.
 | A USB stick reaches a desktop and his data without MIA and without the internal OS | REQ-OPS-002 | the image's installer ISO (bootc's `anaconda-iso` or Fedora's live KDE) documented as the recovery stick; unlocking LUKS with the recovery key from it; mounting `/var/home`; a written procedure in his guide | in the VM: boot the ISO, unlock, read a test file | one session |
 
 ### FW-10 Devices against the Linux PC
+
+> *Adds from FW-01 (deviation 3): Tailscale from its own RPM repository in the image.*
 
 | Objective | Requirements | Tasks | Acceptance | Size |
 |---|---|---|---|---|

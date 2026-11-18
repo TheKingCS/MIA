@@ -1,40 +1,57 @@
 # os/Containerfile
 #
-# MIA OS on the PC, as a bootc image (DEC-0189, DEC-0157; docs/mia_os/MIA_OS_LINUX_FOUNDATION.md): Fedora's KDE
-# Atomic desktop, unmodified, with MIA added on top as ordinary files: her code and a locked Python environment in
-# /usr/lib/mia, her runtime as a systemd *user* service, and the model server from Fedora's own packages.
+# MIA OS on the PC, as a bootc image (DEC-0189, DEC-0279; docs/mia_os/MIA_OS_FINAL_TECHNOLOGY_STACK.md): Fedora's KDE
+# Atomic desktop (the ostree-native Kinoite container, run with bootc), unmodified, with MIA added on top as ordinary
+# files: her code and a hash-locked Python environment in /usr/lib/mia, her runtime as a systemd *user* service, and
+# the model server from Fedora's own packages.
 #
-# THIS IS PROOF OF CONCEPT 2's FIRST IMAGE (docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md section 2), not a
-# release. CI builds it (.github/workflows/mia-os-poc.yml) to show the build works and passes `bootc container lint`;
-# booting it, updating and rolling back is the VM half of PoC 2, still to do. Nothing here is installed anywhere.
+# Not yet a release (that's FW-08). CI builds it on every change and twice in a row to check two builds of one commit
+# match (FW-01, .github/workflows/mia-os-poc.yml), and the VM test installs it to a disk, boots it, runs her runtime,
+# updates and rolls back (.github/workflows/mia-os-vm.yml; passed headless on 2026-11-16, GitHub run 43872077107).
+# Nothing here is installed on his PC.
 #
-# Choices, each from Prompt 05:
-# - the distribution's kernel and packages only; nothing out of tree;
+# Choices:
+# - the base pinned by digest (the tag it was on is in BASE's comment); rebuilding on a newer base is a deliberate
+#   commit that changes the digest, never a silent change under the same tag;
+# - the distribution's kernel and packages only; nothing out of tree; Fedora's packages float within Fedora 45's
+#   updates (security fixes), and the package list is recorded in the image and compared between builds;
 # - MIA's own Python (Fedora 45's system Python is 3.15, newer than MIA supports), so the OS can update its
-#   Python without touching MIA;
-# - her runtime runs as the person, never root; it isn't enabled for anyone by default (a person turns it on);
+#   Python without touching MIA; her packages from os/requirements.lock with --require-hashes (os/lock_requirements.py
+#   writes it; Piper is left out, Q-108);
+# - the reference PC's model, qwen2.5:14b at a 32k context (Q-68), set in the image's copy of the default config, since
+#   config/default_config.json is shared with the Pi and the general installer;
+# - her runtime runs as the person, never root; it isn't enabled for anyone by default (first sign-in will, FW-03);
 # - no sealing credential baked in: a credential belongs to one person on one machine (made by
 #   deploy/install_runtime.sh's step, later by first sign-in), so this image's unit keeps files plain until then.
 #
 # Build from a clean export of the repository's TRACKED files, never from a working folder (which may hold his
 # data: git ignores it, a container build wouldn't). .containerignore guards it a second time.
 #   git archive --format=tar HEAD | tar -x -C /tmp/mia-ctx && podman build -f /tmp/mia-ctx/os/Containerfile /tmp/mia-ctx
-ARG BASE=quay.io/fedora-ostree-desktops/kinoite:45
+# quay.io/fedora-ostree-desktops/kinoite:45, resolved 2026-11-18:
+ARG BASE=quay.io/fedora-ostree-desktops/kinoite@sha256:77339ff90b9b52b23efd254140d99ea7c81cf45b609a892f1de2aceb6405b49e
 FROM ${BASE}
 
 # The model server from Fedora (ROCm backend for the RX 7900 XTX), a Python MIA supports, and cage for PoC 3's
-# second session. Kept in one layer, with the package cache removed.
+# fallback session. Kept in one layer, with the package cache removed.
 RUN dnf -y install python3.13 ollama ollama-rocm cage \
  && dnf clean all && rm -rf /var/cache/dnf /var/lib/dnf
 
-# MIA's code (the repository, without its development folders) and a locked environment beside it.
+# MIA's code (the repository, without its development folders) and her locked environment beside it. The build tools
+# go in first, from their own lock, so the three packages that publish no wheel are built without pip fetching an
+# unchecked tool; everything else must be a wheel.
 COPY . /usr/lib/mia/
 RUN rm -rf /usr/lib/mia/.github /usr/lib/mia/android-phone /usr/lib/mia/homestead /usr/lib/mia/relay \
  && python3.13 -m venv /usr/lib/mia/venv \
- && /usr/lib/mia/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel \
- && /usr/lib/mia/venv/bin/pip install --no-cache-dir -r /usr/lib/mia/requirements.txt \
- && cd /usr/lib/mia && /usr/lib/mia/venv/bin/python -c "import core.runtime" \
- && find /usr/lib/mia -name __pycache__ -prune -exec rm -rf {} +
+ && /usr/lib/mia/venv/bin/pip install --no-cache-dir --require-hashes --only-binary :all: \
+      -r /usr/lib/mia/os/requirements-build.lock \
+ && /usr/lib/mia/venv/bin/pip install --no-cache-dir --require-hashes --no-build-isolation \
+      --only-binary :all: --no-binary plaid-python --no-binary http-ece --no-binary srt \
+      -r /usr/lib/mia/os/requirements.lock \
+ && /usr/lib/mia/venv/bin/python -c "import json, pathlib; p = pathlib.Path('/usr/lib/mia/config/default_config.json'); c = json.loads(p.read_text()); c['llm'].update(model='qwen2.5:14b', num_ctx=32768); p.write_text(json.dumps(c, indent=4) + '\n')" \
+ && cd /usr/lib/mia && /usr/lib/mia/venv/bin/python -c "import core.runtime, PySide6.QtWebEngineCore" \
+ && find /usr/lib/mia -name __pycache__ -prune -exec rm -rf {} + \
+ && rpm -qa --qf '%{NAME}-%{EPOCHNUM}:%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort > /usr/lib/mia/IMAGE_RPMS.txt \
+ && /usr/lib/mia/venv/bin/pip freeze --all | sort > /usr/lib/mia/IMAGE_PYTHON.txt
 
 # Her runtime as a user service (the same unit as deploy/mia-runtime.service, with the image's paths filled in).
 COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
