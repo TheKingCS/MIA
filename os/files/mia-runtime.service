@@ -4,8 +4,9 @@
 # service as deploy/mia-runtime.service, with the image's fixed paths instead of placeholders: her code and
 # environment are in /usr/lib/mia (read-only, signed with the image); her data is under the person's own home.
 #
-# Not enabled by default: a person turns it on (`systemctl --user enable --now mia-runtime`), and it then keeps
-# running when they sign out if lingering is on (Zac's answer to Q-51: yes).
+# Not enabled by default: the MIA session turns it on the first time a person uses it (os/files/mia-session), or a
+# person does (`systemctl --user enable --now mia-runtime`); it then keeps running when they sign out if lingering is
+# on (Zac's answer to Q-51: yes).
 #
 # No unlock credential is named yet: a credential belongs to one person on one machine and is made on that machine
 # (tools/data_key protect), so until then her files stay plain, as deploy/install_runtime.sh does where it can't make
@@ -21,6 +22,8 @@ StartLimitBurst=3
 Type=simple
 WorkingDirectory=/usr/lib/mia
 Environment=MIA_HOME=%h/.local/share/mia
+# Where her shell finds her in MIA's own session (core/desktop_session.py; %t is the person's runtime folder).
+Environment=MIA_DESKTOP_SESSION_FILE=%t/mia/desktop.json
 ExecStart=/usr/lib/mia/venv/bin/python -m core.runtime
 KillSignal=SIGTERM
 TimeoutStopSec=45

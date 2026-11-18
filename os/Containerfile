@@ -58,5 +58,10 @@ RUN rm -rf /usr/lib/mia/.github /usr/lib/mia/android-phone /usr/lib/mia/homestea
 # Her runtime as a user service (the same unit as deploy/mia-runtime.service, with the image's paths filled in).
 COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
 
+# MIA's own session at the login screen (FW-03, DEC-0278): KWin running her shell full screen, ordinary windows
+# beside it; Plasma stays the other entry.
+COPY os/files/mia.desktop /usr/share/wayland-sessions/mia.desktop
+RUN chmod 755 /usr/lib/mia/os/files/mia-session /usr/lib/mia/os/files/mia-shell
+
 # The image passes bootc's own checks, or the build fails.
 RUN bootc container lint

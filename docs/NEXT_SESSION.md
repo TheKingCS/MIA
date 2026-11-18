@@ -10,6 +10,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, FW-03 started** (MIA's own session): `core/desktop_session.py`, `gui/os_shell.py`,
+`os/files/mia-session`, `mia-shell`, `mia.desktop`; the VM test's new step runs the session under `kwin_wayland
+--virtual` and uploads two screenshots (artifact `mia-session-screenshots`). **Check that run first**: the KWin flags
+(`--virtual`, `--no-lockscreen`, `--exit-with-session`) and Konsole being in Kinoite are untested assumptions. What's
+left of FW-03 is on its entry in the roadmap.
+
 **New 2026-11-18, Zac answered Q-111 to Q-113 yes** (DEC-0280 to 0286 approved). Built: the phone removes, once, the
 PC's own copies that synced there (`core/sync.remove_pc_only_copies`, called from the phone's start; flag
 `phone.pc_only_removed`), and LS-02's first part (his memories carry source, how, `confirmed_at`, `holds_from`/

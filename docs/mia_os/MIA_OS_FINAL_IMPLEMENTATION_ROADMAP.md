@@ -144,6 +144,18 @@ approves itself.
 
 ### FW-03 MIA's session and the Plasma fallback (PoC 3)
 
+> **State (2026-11-18): first part built; its VM test runs in CI.** Her runtime, started in a desktop session, writes
+> where her shell finds her (`core/desktop_session.py`: the local address and a sign-in token, in the person's own
+> runtime folder, owner-only, removed when it stops). The shell (`gui/os_shell.py`) shows "MIA is starting", then her
+> front end, or after 30 seconds a recovery page (try again, a terminal, her log, sign out to choose Plasma) whose
+> links act only through its own scheme. The "MIA" login entry (`os/files/mia.desktop`) runs `os/files/mia-session`:
+> the runtime turned on the first time, then KWin with her shell as the session's one client. The VM test runs that
+> session under KWin's virtual display, both ways, and keeps the two screenshots. **Checked here first:** the shell
+> drawn off-screen on Windows reaches both states; with GPU drawing a screenshot came out blank, with software
+> drawing it was right, so the VM test uses software drawing. **Still to do in FW-03:** Plasma Login Manager's
+> default set to MIA and a graphical login in the VM; keyboard-driven checks (QEMU `sendkey`); an ordinary window
+> beside her; the shell restarting by itself; Home within 10 s measured.
+
 | Field | Specification |
 |---|---|
 | Objective | At login, "MIA" (default) shows her front end full screen with ordinary windows beside it; "Plasma" is one choice away; if MIA fails, a recovery page and Plasma still work |

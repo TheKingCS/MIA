@@ -358,7 +358,9 @@ class Runtime(BackgroundJobs, AssistantTools):
 
     def start(self, serve: bool = True) -> None:
         """Starts the schedule on its own thread and, with `serve`, the phone server when it's switched on
-        (server.enabled). A phone server that can't start is logged and doesn't stop the rest."""
+        (server.enabled). A phone server that can't start is logged and doesn't stop the rest. In MIA's own desktop
+        session (`MIA_DESKTOP_SESSION_FILE` set), her server starts on 127.0.0.1 and the session file is written for
+        her shell."""
         if self._thread is not None:
             return
         self.started_at = datetime.now().isoformat(timespec="seconds")
@@ -381,12 +383,22 @@ class Runtime(BackgroundJobs, AssistantTools):
                     self.context.phone_server.start()
             except Exception:  # noqa: BLE001 - the schedule runs with or without the phone
                 log.exception("The phone server couldn't start.")
+        if serve:  # in MIA's own desktop session: where her shell finds her (core/desktop_session.py, FW-03)
+            from core import desktop_session
+
+            where = desktop_session.path_from_env()
+            if where is not None:
+                desktop_session.write(self.context, where)
         log.info("The MIA Runtime is up: %d services, %d tools, %d scheduled jobs.", len(self.services()),
                  len(self.context.assistant_actions._actions), len(JOBS))
 
     def stop(self) -> None:
-        """Stops the schedule (waiting for a job in progress, up to 30 seconds) and the phone server."""
+        """Stops the schedule (waiting for a job in progress, up to 30 seconds) and the phone server, and removes the
+        desktop session file (its token ends with the server)."""
         self._stop.set()
+        from core import desktop_session
+
+        desktop_session.clear(desktop_session.path_from_env())
         if self._thread is not None:
             self._thread.join(timeout=30)
             self._thread = None

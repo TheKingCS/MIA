@@ -98,6 +98,45 @@ jobs:
           as_mia 'grep "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
           as_mia 'echo kept-by-him > ~/his-file.txt'
           vm 'ps -o user= -C python | sort -u; id -u mia'
+      - name: MIA's session under KWin (FW-03), her front end and the recovery page
+        run: |
+          . ~/vm.sh
+          # KWin's virtual display: the session's own compositor, with no screen. First with her runtime running
+          # (the shell shows her front end), then with it stopped (the recovery page after 30 seconds).
+          cat > /tmp/session_test.sh <<'EOS'
+          #!/bin/bash
+          set -e
+          export XDG_RUNTIME_DIR=/run/user/$(id -u) DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+          export QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu
+          for i in $(seq 1 30); do test -s "$XDG_RUNTIME_DIR/mia/desktop.json" && break; sleep 2; done
+          ls -l "$XDG_RUNTIME_DIR/mia/desktop.json"
+          run_session() {
+            MIA_SHELL_ARGS="--screenshot /var/tmp/shell-$1.png --after $2" timeout 150 kwin_wayland --virtual \
+              --width 1280 --height 800 --no-lockscreen --exit-with-session=/usr/lib/mia/os/files/mia-shell \
+              > /var/tmp/kwin-$1.log 2>&1 || true
+            grep -E "showing:|saved:" /var/tmp/kwin-$1.log || { tail -n 40 /var/tmp/kwin-$1.log; true; }
+          }
+          run_session front 25
+          grep -q "showing: front end" /var/tmp/kwin-front.log
+          systemctl --user stop mia-runtime
+          run_session recovery 40
+          grep -q "showing: recovery" /var/tmp/kwin-recovery.log
+          systemctl --user start mia-runtime
+          test -s /var/tmp/shell-front.png && test -s /var/tmp/shell-recovery.png
+          EOS
+          vm 'cat > /var/tmp/session_test.sh && chmod 755 /var/tmp/session_test.sh' < /tmp/session_test.sh
+          vm 'runuser -l mia -c /var/tmp/session_test.sh'
+          mkdir -p /tmp/shots
+          vm 'cat /var/tmp/shell-front.png' > /tmp/shots/shell-front.png
+          vm 'cat /var/tmp/shell-recovery.png' > /tmp/shots/shell-recovery.png
+          ls -l /tmp/shots
+      - name: The session's screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: mia-session-screenshots
+          path: /tmp/shots/
+          if-no-files-found: ignore
       - name: The whole suite inside the image, on its own Python and packages (FW-02)
         run: |
           . ~/vm.sh
@@ -106,6 +145,8 @@ jobs:
           cat > /tmp/suite.sh <<'EOS'
           #!/bin/bash
           cd /var/tmp/mia-suite
+          # A repository of its own, as a checkout is (a few tests read the commit they run on)
+          git init -q && git add -A && git -c user.name=suite -c user.email=suite@vm.local commit -qm "the suite's copy"
           export QT_QPA_PLATFORM=offscreen PYTHONDONTWRITEBYTECODE=1
           timeout 3000 /usr/lib/mia/venv/bin/python -m pytest -q -p no:cacheprovider > /var/tmp/suite.log 2>&1
           code=$?

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=MIA
+Comment=MIA full screen, with ordinary windows beside her
+Exec=/usr/lib/mia/os/files/mia-session
+TryExec=/usr/lib/mia/os/files/mia-session
+Type=Application
+DesktopNames=MIA

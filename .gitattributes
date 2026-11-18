@@ -2,3 +2,6 @@
 *.bat text eol=crlf
 *.ps1 text eol=crlf
 *.sh text eol=lf
+# MIA OS's session scripts have no extension, and run on Linux (FW-03).
+os/files/mia-session text eol=lf
+os/files/mia-shell text eol=lf

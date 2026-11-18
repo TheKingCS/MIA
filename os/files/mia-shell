@@ -1,0 +1,8 @@
+#!/bin/sh
+# os/files/mia-shell: her shell window (gui/os_shell.py) on the image's own Python, from her code's folder.
+# MIA_DESKTOP_SESSION_FILE is where her runtime says where she is (core/desktop_session.py).
+export MIA_DESKTOP_SESSION_FILE="${XDG_RUNTIME_DIR}/mia/desktop.json"
+cd /usr/lib/mia || exit 1
+# MIA_SHELL_ARGS: extra arguments for a test (KWin starts the session's program without arguments).
+# shellcheck disable=SC2086
+exec /usr/lib/mia/venv/bin/python -m gui.os_shell $MIA_SHELL_ARGS "$@"

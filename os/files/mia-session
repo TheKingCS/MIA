@@ -1,0 +1,8 @@
+#!/bin/sh
+# os/files/mia-session: MIA's own desktop session (FW-03, DEC-0227, DEC-0278), started by the login screen's "MIA"
+# entry (os/files/mia.desktop). Her runtime is a systemd user service: it's turned on for this person the first time
+# (it then keeps running), started, and KWin runs her shell full screen as the session's one client, with ordinary
+# windows beside it. When the shell closes, the session ends and the login screen is back (choose Plasma there).
+systemctl --user enable mia-runtime >/dev/null 2>&1 || true
+systemctl --user start mia-runtime || true
+exec kwin_wayland --xwayland --exit-with-session=/usr/lib/mia/os/files/mia-shell
