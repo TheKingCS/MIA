@@ -28,6 +28,13 @@ I dropped and why?" (the `recall` question plan).
 The offers themselves are counted, kind and kept-or-not only, never the
 words, so the `notes.offers` loop can tell when the spotting asks about
 things people don't want kept.
+
+How each note is known (DEC-0281): where it came from (`source`, its
+conversation), how (`said`), when he confirmed it (`confirmed_at`: a note
+is only ever kept on his "keep it", so that's when it was kept) and when
+it holds (`holds_from`, `holds_until`). `LifeNote` names every field a
+note is stored with; notes stay plain dicts, and a test checks that
+what `add` writes matches it.
 """
 
 from __future__ import annotations
@@ -41,6 +48,7 @@ import re
 import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from dataclasses import dataclass
 from typing import Optional
 
 from core.at_rest import open_text
@@ -188,8 +196,34 @@ def offer_text(note: dict) -> str:
     return f"(Want me to keep that as {head}? Say “keep it”.)"
 
 
+@dataclass
+class LifeNote:
+    """The fields a note is stored with (notes themselves are plain dicts in `life_notes.json`): its id and kind,
+    what, who it's for, by when and why, its status, when it was kept, its conversation, how it's known (source,
+    how, when he confirmed it, when it holds), and its due day and when it was done where those apply."""
+    id: str
+    kind: str
+    what: str
+    who: str = ""
+    by: str = ""
+    why: str = ""
+    status: str = OPEN
+    at: str = ""
+    conversation_id: str = ""
+    source: str = ""
+    how: str = "said"
+    confirmed_at: str = ""
+    holds_from: str = ""
+    holds_until: str = ""
+    due: str = ""
+    done_at: str = ""
+
+
 class LifeNotes:
-    """One person's commitments, decisions, ideas and goals set aside (context.life_notes)."""
+    """One person's commitments, decisions, ideas and goals set aside (context.life_notes); each says how it's known
+    (`EPISTEMIC`, DEC-0281)."""
+
+    EPISTEMIC = {"record": LifeNote, "source": "source", "at": "at", "how": "how", "checked": "confirmed_at"}
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Load this person's notes from `life_notes.json` in their folder (`data_dir`), or `data/` when none is given."""
@@ -220,7 +254,8 @@ class LifeNotes:
             conversation_id: Optional[str] = None) -> dict:
         """Keep a note of `kind` (one of KINDS), with who it's for, by when and why when said. The same open note is
         kept once (returned again, not duplicated); a promise whose "by" names a day gets its `due` date for reminders().
-        Raises ValueError for an unknown kind or nothing to keep.
+        Raises ValueError for an unknown kind or nothing to keep. It's kept on his "keep it", so it's confirmed when
+        kept (DEC-0281).
         """
         if kind not in KINDS:
             raise ValueError(f"A note is one of {', '.join(KINDS)}.")
@@ -231,9 +266,13 @@ class LifeNotes:
                      and n["status"] == OPEN), None)
         if same is not None:
             return same
+        at = datetime.now().isoformat(timespec="seconds")
         note = {"id": uuid.uuid4().hex[:10], "kind": kind, "what": what[:160], "who": _clean(who)[:40],
                 "by": _clean(by)[:30], "why": _clean(why)[:200], "status": OPEN,
-                "at": datetime.now().isoformat(timespec="seconds"), "conversation_id": conversation_id or ""}
+                "at": at, "conversation_id": conversation_id or "",
+                # how it's known (DEC-0281): kept only on his "keep it", so confirmed when kept
+                "source": f"conversation:{conversation_id}" if conversation_id else "", "how": "said",
+                "confirmed_at": at, "holds_from": "", "holds_until": ""}
         due = due_date(note["by"], date.today()) if note["by"] else None
         if due is not None:
             note["due"] = due.isoformat()  # a promise with a day is mentioned the day before and on it (reminders())

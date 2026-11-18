@@ -62,3 +62,14 @@ def test_the_phone_removes_the_pcs_own_files_once_and_keeps_its_own(tmp_path):
     assert sorted(p.name for p in gone) == sorted(list(PC_ONLY) + [".activity.json.prev"])
     assert (folder / "runs.json").exists() and (folder / "user_memories.json").exists()
     assert remove_pc_only_copies(tmp_path) == [] and remove_pc_only_copies(tmp_path / "missing") == []
+
+
+def test_a_life_note_kept_on_his_yes_says_its_conversation_and_is_confirmed_when_kept(tmp_path):
+    from dataclasses import fields
+
+    from core.life_notes import LifeNote, LifeNotes
+
+    note = LifeNotes(None, tmp_path).add("commitment", "fix the coop door", who="Sam", by="saturday",
+                                         conversation_id="c7")
+    assert note["source"] == "conversation:c7" and note["how"] == "said" and note["confirmed_at"] == note["at"]
+    assert set(note) <= {f.name for f in fields(LifeNote)}  # every stored key is a declared field

@@ -36,7 +36,7 @@ EPISTEMIC_BASELINE = frozenset({
     "closet", "communication", "components", "connections", "conversations", "cooking", "craft_recipes", "creations",
     "data_logger", "direction", "dungeon", "email_drafts", "energy", "expeditions", "failures", "finance", "fitness",
     "flock", "freedom_log", "gps_tracks", "grow_lab", "health", "homestead", "id_wallet", "inbox", "insights",
-    "insurance", "intents", "inventory", "jobs", "journal", "kitchen", "ledger", "life_notes", "lite_captures", "living_worlds", "loop", "maintenance", "materials", "memory_vault", "my_record_sets",
+    "insurance", "intents", "inventory", "jobs", "journal", "kitchen", "ledger", "lite_captures", "living_worlds", "loop", "maintenance", "materials", "memory_vault", "my_record_sets",
     "net_worth", "notifications", "obligations", "online_reminders", "activity", "recall", "operating_journal", "passwords", "paths",
     "places", "plaid", "plans", "private_journal", "products", "projects", "quest_book",
     "ratings", "real_estate", "record_sets", "recreation", "relationships", "response_style", "reward_shop",
