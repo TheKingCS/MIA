@@ -1,7 +1,7 @@
 # MIA OS: the final MVP and release ladder (Prompt 17 §10)
 
 *Claude (Opus), 2026-11-18. Version 1.0. Governs over `MIA_OS_MVP_DEFINITION.md` (DEC-0182) and
-`MIA_OS_MINIMUM_VIABLE_OS_DEFINITION.md` where they differ (DEC-0276, proposed; Q-105).*
+`MIA_OS_MINIMUM_VIABLE_OS_DEFINITION.md` where they differ (DEC-0276, approved by Zac 2026-11-18, Q-105).*
 
 ## 1. The challenge
 

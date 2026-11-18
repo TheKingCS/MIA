@@ -62,29 +62,29 @@ Prompt 01 makes no new decisions; it is an audit. Its findings support DEC-0155 
 DEC-0154 (intelligence independent of the OS), listed for re-examination in Prompt 04: the requirements rest on it
 (REQ-ARC-003); recommended for approval with Prompt 05, which designs the adapters it calls for.
 | DEC-0183 | Glass is MIA OS's visual identity; Aquatic (from Zac's picture) the default | APPROVED as direction (prompt 24, Q-37) |
-| DEC-0184 | The appearance engine: theme, colour scheme, layout | PROPOSED |
+| DEC-0184 | The appearance engine: theme, colour scheme, layout | APPROVED (Q-110) |
 | DEC-0185 | MIA adjusts the greenhouse's controllers; a stop never touches the greenhouse (amends DEC-0150) | APPROVED (Q-40) |
 | DEC-0186 | Gold allowed as an accent; rewards are legendary orange | APPROVED (Q-41) |
 | DEC-0187 | Each app's own atmosphere colour, outside the meaning colours | APPROVED (Q-42) |
-| DEC-0188 | Prompt 23 built by growing what exists, no new service; the run record first | PROPOSED (Q-43 to Q-46) |
+| DEC-0188 | Prompt 23 built by growing what exists, no new service; the run record first | APPROVED (Q-110); (Q-43 to Q-46) |
 | DEC-0189 | The Linux foundation: Fedora Atomic (KDE) as a bootc image from the repository; the distribution's kernel; Ubuntu 26.04 the fallback | APPROVED (Q-47), conditional on PoC 1, 2 |
-| DEC-0190 | MIA on the OS: a modular platform with one coordinator (the runtime the only writer) | PROPOSED; Q-51 answered yes |
+| DEC-0190 | MIA on the OS: a modular platform with one coordinator (the runtime the only writer) | APPROVED (Q-110);; Q-51 answered yes |
 | DEC-0191 | Wayland; two sessions at login; KDE's compositor for both on the PC, cage on the Pi | APPROVED as a direction (Q-48); PoC 3 decides |
-| DEC-0192 | HTTP and SSE for surfaces, D-Bus for the OS, events as re-read signals, no broker | PROPOSED |
-| DEC-0193 | Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var | PROPOSED |
-| DEC-0194 | A fixed-operation helper, each system change confirmed in the OS's own dialog; rules in the image | PROPOSED (Q-50; PoC 5, 6) |
-| DEC-0195 | Resources and observability from systemd, the kernel and the journal | PROPOSED |
+| DEC-0192 | HTTP and SSE for surfaces, D-Bus for the OS, events as re-read signals, no broker | APPROVED (Q-110) |
+| DEC-0193 | Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var | APPROVED (Q-110) |
+| DEC-0194 | A fixed-operation helper, each system change confirmed in the OS's own dialog; rules in the image | APPROVED (Q-110); (Q-50; PoC 5, 6) |
+| DEC-0195 | Resources and observability from systemd, the kernel and the journal | APPROVED (Q-110) |
 | DEC-0196 | One browser: MIA's browser becomes his everyday browser | APPROVED (Q-45, Q-52) |
 
 ## Proposed by Prompt 06 (2026-11-17)
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0201 | The reference PC as built is MIA OS's first target; nothing to buy for the MVP | PROPOSED |
+| DEC-0201 | The reference PC as built is MIA OS's first target; nothing to buy for the MVP | APPROVED (Q-110) |
 | DEC-0202 | Grow by nodes, not cards: the next AI hardware is a model-serving machine, when measured | APPROVED (Q-64) |
-| DEC-0203 | A capability registry read only from Linux's own sources | PROPOSED |
-| DEC-0204 | Linux schedules; MIA places models and orders the GPU queue, conversation first | PROPOSED |
-| DEC-0205 | The device family's tiers; nothing depends on a later device | PROPOSED; laptop, tablet and smart display planned (Q-66) |
+| DEC-0203 | A capability registry read only from Linux's own sources | APPROVED (Q-110) |
+| DEC-0204 | Linux schedules; MIA places models and orders the GPU queue, conversation first | APPROVED (Q-110) |
+| DEC-0205 | The device family's tiers; nothing depends on a later device | APPROVED (Q-110);; laptop, tablet and smart display planned (Q-66) |
 
 Full records: `MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md` §3.
 
@@ -106,13 +106,13 @@ Full records: `MIA_OS_INTELLIGENCE_TECHNOLOGY_EVALUATION.md` §3.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0213 | The action contract is the one execution boundary, for apps, the system and devices | PROPOSED |
-| DEC-0214 | One task model: goals, plans of steps with dependencies, every plan a run | PROPOSED |
+| DEC-0213 | The action contract is the one execution boundary, for apps, the system and devices | APPROVED (Q-110) |
+| DEC-0214 | One task model: goals, plans of steps with dependencies, every plan a run | APPROVED (Q-110) |
 | DEC-0215 | Autonomy grows only by grants he gives: Approve Once or Approve From Now On on every card | APPROVED as amended (Q-73) |
-| DEC-0216 | Risk computed in code sets each kind's least tier; unknown is highest | PROPOSED |
+| DEC-0216 | Risk computed in code sets each kind's least tier; unknown is highest | APPROVED (Q-110) |
 | DEC-0217 | Proactive help only through the communication gate, triggered by records | APPROVED (Q-74); no quiet hours (Q-75) |
-| DEC-0218 | Verification reads effects back; a model's "done" is never evidence | PROPOSED |
-| DEC-0219 | Agents propose; the coordinator in code acts | PROPOSED |
+| DEC-0218 | Verification reads effects back; a model's "done" is never evidence | APPROVED (Q-110) |
+| DEC-0219 | Agents propose; the coordinator in code acts | APPROVED (Q-110) |
 
 Full records: `MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md` §2.
 
@@ -120,13 +120,13 @@ Full records: `MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md` §2.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0220 | One capability truth registry | PROPOSED |
-| DEC-0221 | Provenance on every self-statement | PROPOSED |
+| DEC-0220 | One capability truth registry | APPROVED (Q-110) |
+| DEC-0221 | Provenance on every self-statement | APPROVED (Q-110) |
 | DEC-0222 | Health and performance from Linux and her own counters | APPROVED (Q-77) |
-| DEC-0223 | Quality by code checks, corrections and fixed sets | PROPOSED |
-| DEC-0224 | Investigations end in a reproducing test | PROPOSED |
+| DEC-0223 | Quality by code checks, corrections and fixed sets | APPROVED (Q-110) |
+| DEC-0224 | Investigations end in a reproducing test | APPROVED (Q-110) |
 | DEC-0225 | Self-development only through the lab | APPROVED (Q-76, Q-78) |
-| DEC-0226 | New capabilities only through one path | PROPOSED |
+| DEC-0226 | New capabilities only through one path | APPROVED (Q-110) |
 
 Full records: `MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md` §2.
 
@@ -136,11 +136,11 @@ Full records: `MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md` §2.
 |---|---|---|
 | DEC-0227 | The shell is MIA's web front end in a full-screen window under KWin | APPROVED (Q-79) |
 | DEC-0228 | One navigation model | APPROVED as amended (Q-82: the household display for him and his wife) |
-| DEC-0229 | Unified search that never executes a change | PROPOSED |
-| DEC-0230 | Context only by explicit share; workspaces restored through KWin | PROPOSED |
+| DEC-0229 | Unified search that never executes a change | APPROVED (Q-110) |
+| DEC-0230 | Context only by explicit share; workspaces restored through KWin | APPROVED (Q-110) |
 | DEC-0231 | Ambient, Workspace and Immersive as states of one shell | APPROVED (Q-80; flows to one monitor) |
-| DEC-0232 | One notification pipeline | PROPOSED |
-| DEC-0233 | Apps stay in the framework that suits them | PROPOSED |
+| DEC-0232 | One notification pipeline | APPROVED (Q-110) |
+| DEC-0233 | Apps stay in the framework that suits them | APPROVED (Q-110) |
 
 Full records: `MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md` §2.
 
@@ -148,11 +148,11 @@ Full records: `MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md` §2.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0234 | One design system for every device | PROPOSED |
+| DEC-0234 | One design system for every device | APPROVED (Q-110) |
 | DEC-0235 | The identity holds without colour, transparency or motion | APPROVED (Q-85) |
 | DEC-0236 | Themes and personalisation are validated data, never code | APPROVED (Q-83) |
-| DEC-0237 | The orb: one component, fourteen states | PROPOSED |
-| DEC-0238 | Motion in three speeds, meaningful apart from decorative | PROPOSED |
+| DEC-0237 | The orb: one component, fourteen states | APPROVED (Q-110) |
+| DEC-0238 | Motion in three speeds, meaningful apart from decorative | APPROVED (Q-110) |
 | DEC-0239 | Spatial interfaces are views of the same capabilities | APPROVED as amended (Q-86: an old Android or the Pi 5) |
 | DEC-0240 | A small local audio identity | APPROVED (Q-84) |
 
@@ -163,11 +163,11 @@ Full records: `MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md` §2.
 | DEC | Title | Status |
 |---|---|---|
 | DEC-0241 | One MIA per person: the PC the hub, full engines that work alone | APPROVED (Q-87: the Pi first the TV display; Q-89) |
-| DEC-0242 | Trust by pairing: one key per device | PROPOSED |
-| DEC-0243 | Sync stays the three-way merge by record id | PROPOSED |
+| DEC-0242 | Trust by pairing: one key per device | APPROVED (Q-110) |
+| DEC-0243 | Sync stays the three-way merge by record id | APPROVED (Q-110) |
 | DEC-0244 | HTTP and server-sent events over the home network or Tailscale | APPROVED (Q-88) |
-| DEC-0245 | Thinking on the most capable reachable machine | PROPOSED |
-| DEC-0246 | Controllers keep their loops and their safety | PROPOSED |
+| DEC-0245 | Thinking on the most capable reachable machine | APPROVED (Q-110) |
+| DEC-0246 | Controllers keep their loops and their safety | APPROVED (Q-110) |
 | DEC-0247 | A lost device is unlinked from anywhere | APPROVED (Q-90) |
 
 Full records: `MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md` §2.
@@ -176,11 +176,11 @@ Full records: `MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md` §2.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0248 | Authority comes only from the person | PROPOSED |
-| DEC-0249 | Everything read from outside is data | PROPOSED |
+| DEC-0248 | Authority comes only from the person | APPROVED (Q-110) |
+| DEC-0249 | Everything read from outside is data | APPROVED (Q-110) |
 | DEC-0250 | Identity in layers; approvals bound and used once | APPROVED as amended (Q-92: two-step offered) |
 | DEC-0251 | Four data classes | APPROVED (Q-91) |
-| DEC-0252 | Encryption in three layers | PROPOSED |
+| DEC-0252 | Encryption in three layers | APPROVED (Q-110) |
 | DEC-0253 | Least privilege | APPROVED as amended (Q-94: all local when built out) |
 | DEC-0254 | Fail closed for changes; safety outside MIA; an audit trail that can't be rewritten | APPROVED (Q-93) |
 
@@ -190,13 +190,13 @@ Full records: `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md` §2.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0255 | The OS boots without MIA; readiness in levels | PROPOSED |
-| DEC-0256 | Each part its own unit, with restart limits, a watchdog and its own slice | PROPOSED |
+| DEC-0255 | The OS boots without MIA; readiness in levels | APPROVED (Q-110) |
+| DEC-0256 | Each part its own unit, with restart limits, a watchdog and its own slice | APPROVED (Q-110) |
 | DEC-0257 | Whole-image updates at a restart he allows, rolled back by themselves | APPROVED (Q-95: at night) |
 | DEC-0258 | Data reliability in layers | APPROVED (Q-97) |
 | DEC-0259 | Backups in two places, restored monthly by a drill | APPROVED (Q-96, Q-98) |
-| DEC-0260 | Plasma, safe mode and the previous deployment as the fallbacks | PROPOSED |
-| DEC-0261 | Reliability objectives | PROPOSED |
+| DEC-0260 | Plasma, safe mode and the previous deployment as the fallbacks | APPROVED (Q-110) |
+| DEC-0261 | Reliability objectives | APPROVED (Q-110) |
 
 Full records: `MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md` §2.
 
@@ -205,12 +205,12 @@ Full records: `MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md` §2.
 | DEC | Title | Status |
 |---|---|---|
 | DEC-0262 | One repository, its layers enforced | APPROVED (Q-99: public for now) |
-| DEC-0263 | A reproducible setup | PROPOSED |
+| DEC-0263 | A reproducible setup | APPROVED (Q-110) |
 | DEC-0264 | CI on every push is the gate | APPROVED (Q-100) |
 | DEC-0265 | Releases built, signed and recorded; versions by date | APPROVED (Q-101) |
-| DEC-0266 | Tests in layers, AI quality included | PROPOSED |
-| DEC-0267 | Store formats change additively; otherwise a versioned migration | PROPOSED |
-| DEC-0268 | Several models build MIA, reviewed independently; Zac approves decisions | PROPOSED |
+| DEC-0266 | Tests in layers, AI quality included | APPROVED (Q-110) |
+| DEC-0267 | Store formats change additively; otherwise a versioned migration | APPROVED (Q-110) |
+| DEC-0268 | Several models build MIA, reviewed independently; Zac approves decisions | APPROVED (Q-110) |
 
 Full records: `MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md` §2.
 
@@ -220,10 +220,10 @@ Full records: `MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md` §2.
 |---|---|---|
 | DEC-0269 | Build MIA OS in stages, each usable and reversible | APPROVED (Q-103) |
 | DEC-0270 | The MVP is DEC-0182 plus the approved MVP-tier requirements | APPROVED (Q-104: PC first, display, laptop) |
-| DEC-0271 | The critical path | PROPOSED |
+| DEC-0271 | The critical path | APPROVED (Q-110) |
 | DEC-0272 | MIA OS on the new 4 TB drive; the Windows drive kept intact | APPROVED (Q-102) |
-| DEC-0273 | Workstreams and work packages on the task board | PROPOSED |
-| DEC-0274 | Every milestone has a gate Zac passes | PROPOSED |
+| DEC-0273 | Workstreams and work packages on the task board | APPROVED (Q-110) |
+| DEC-0274 | Every milestone has a gate Zac passes | APPROVED (Q-110) |
 
 Full records: `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` §3.
 
@@ -236,10 +236,10 @@ approved), DEC-0168 (MIA OS on the PC and the Pi, approved; its dual boot supers
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0275 | One hierarchy of authority for MIA OS documents | PROPOSED |
-| DEC-0276 | The release ladder and a narrower MVP gate, with evidence levels | PROPOSED |
-| DEC-0277 | Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key | PROPOSED |
-| DEC-0278 | The PC's login, MIA's session and what greenboot checks | PROPOSED |
-| DEC-0279 | A reproducible, signed image build | PROPOSED |
+| DEC-0275 | One hierarchy of authority for MIA OS documents | APPROVED (Q-110) |
+| DEC-0276 | The release ladder and a narrower MVP gate, with evidence levels | APPROVED (Q-110) |
+| DEC-0277 | Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key | APPROVED (Q-110) |
+| DEC-0278 | The PC's login, MIA's session and what greenboot checks | APPROVED (Q-110) |
+| DEC-0279 | A reproducible, signed image build | APPROVED (Q-110) |
 
 Full records: `MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md` §5.

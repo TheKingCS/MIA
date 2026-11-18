@@ -2857,7 +2857,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - **Priority lowered (Zac, 2026-11-17):** "I am not too concerned about MIA knowing who is talking to her." MIA is for Zac alone (DEC-0119), so speaker recognition is not planned; the requirement stays recorded but nothing is built for it unless he raises it.
 
 ### DEC-0164: MIA's tools on anything you select, in any app
-- Status: PROPOSED (Zac's idea, 2026-11-15: "highlight a section and right click it and be able to assign MIA to
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (Zac's idea, 2026-11-15: "highlight a section and right click it and be able to assign MIA to
 - Note: Absorbed into DEC-0165 (Prompt 17 reconciliation).
   research it, build a skill around it, convert it to another format, draft an email around it")
 - Proposed by: zac
@@ -2954,7 +2954,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 \n
 ### DEC-0169: On Linux, the system keeps the key to MIA's sealed files (the TPM where there is one)
-- Status: PROPOSED (built 2026-11-15 so the dual boot isn't blocked; Zac to approve or change)
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (built 2026-11-15 so the dual boot isn't blocked; Zac to approve or change)
 - Note: Built 2026-11-15 and still proposed (Prompt 17): included in the batch of Q-110.
 - Proposed by: claude, 2026-11-15, from the finding that files sealed on Windows (DEC-0126) can't be opened on
   Linux, which blocks MIA OS using the PC's data (DEC-0168)
@@ -3228,7 +3228,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0023, DEC-0136, DEC-0135, DEC-0140, DEC-0184
 
 ### DEC-0184: The appearance engine: theme, colour scheme and layout on the existing engine
-- Status: PROPOSED (the default preset and Muse's part answered: Q-37, Q-38)
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (the default preset and Muse's part answered: Q-37, Q-38)
 - Proposed by: claude (Opus), 2026-11-15, prompt 24 phase 1 (`docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` C, D)
 - Decision: appearance is three independent person settings composed at render (`display.theme`: the environment and
   surfaces; `display.scheme`: accents, gradients, the chart palette, the orb's colour; `display.layout`: navigation,
@@ -3286,7 +3286,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0023, DEC-0183, DEC-0184, DEC-0186
 
 ### DEC-0188: Prompt 23 (Universal Intelligence) is built by growing what exists; the run record first
-- Status: PROPOSED (Claude on Fable, 2026-11-16; Zac's handoff of 2026-11-15, prompt 23)
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (Claude on Fable, 2026-11-16; Zac's handoff of 2026-11-15, prompt 23)
 - Decision: the handoff's capabilities are extensions of systems MIA has, with no new service: the Universal Action
   Layer (`core/ual.py`) takes the shelf, drag and drop and the PC's front doors; links, history and search take recall
   by meaning and workspaces; taught skills, workflows and browser routines share one run record, on which plans
@@ -3329,7 +3329,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0157, DEC-0168, DEC-0154, DEC-0177
 
 ### DEC-0190: MIA on the OS is a modular platform with one coordinator
-- Status: PROPOSED; its one question to Zac answered (Q-51, 2026-11-16: "yes": MIA keeps running on the PC when he's signed out)
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED; its one question to Zac answered (Q-51, 2026-11-16: "yes": MIA keeps running on the PC when he's signed out)
 - Question: independent services, one central runtime, or a coordinator with separate parts?
 - Requirements: REQ-ARC-002, 004, 009; REQ-REL-003, 010; REQ-FUN-041.
 - Options: independent services; one process doing everything (today); a coordinator with separate processes.
@@ -3366,7 +3366,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0157, DEC-0182, DEC-0183
 
 ### DEC-0192: Communication: HTTP and SSE for surfaces, D-Bus for the OS, events as "re-read" signals, no broker
-- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation; answers T-02 and T-06.
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation; answers T-02 and T-06.
 - Question: how do MIA's parts, the OS and other programs talk?
 - Requirements: REQ-ARC-004, 005; REQ-SEC-004; REQ-FUN-041.
 - Options: HTTP and SSE; a Unix socket; D-Bus; Varlink; gRPC; a message broker; shared memory.
@@ -3382,7 +3382,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0013, DEC-0158, DEC-0165
 
 ### DEC-0193: Storage: Btrfs on LUKS2; XDG layout; her code in the image, his data in his home, models in /var
-- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
 - Question: which filesystem, and where does everything live?
 - Requirements: REQ-SEC-001, 002; REQ-REL-005, 007; REQ-FUN-006, 041; REQ-ARC-011.
 - Options: Btrfs, ext4, XFS, ZFS; a storage service of MIA's own, or the filesystem and the stores.
@@ -3397,7 +3397,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0126, DEC-0155, DEC-0169
 
 ### DEC-0194: Privilege: a helper only for what Linux would ask an administrator for, confirmed in the OS's own dialog
-- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). Refines DEC-0158. **Needs proofs of concept 5 and 6.**
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). Refines DEC-0158. **Needs proofs of concept 5 and 6.**
 - Question: how does MIA change the system without holding administrative power?
 - Requirements: REQ-ARC-005, 010; REQ-SEC-003, 006; REQ-AUT-006, 007; REQ-FUN-006.
 - Options: a root-running MIA; sudo rules; a setuid tool; a general helper; a fixed-operation helper behind polkit.
@@ -3417,7 +3417,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0158, DEC-0156, DEC-0176, DEC-0181
 
 ### DEC-0195: Resources and observability from Linux's own mechanisms
-- Status: PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED (Claude on Fable, 2026-11-16, Prompt 05). New recommendation.
 - Question: how are resources shared and the system observed without building our own managers?
 - Requirements: REQ-PER-008, 009; REQ-REL-003, 004, 011; REQ-OPS-003; REQ-TRU-005, 006.
 - Options: our own supervisor, limits and monitoring; systemd's control groups, the kernel's accounting, the journal.
@@ -3530,7 +3530,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0100 (Night School), DEC-0058 (the lab), DEC-0174 (another model reviews), DEC-0199
 
 ### DEC-0201: The reference PC as built is MIA OS's first target
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 06
 - Decision: Start on the PC as it is (Ryzen 7 9800X3D, RX 7900 XTX 24 GB, 32 GB, 1 TB, Mini-ITX); nothing needs buying for the MVP. Conditional on PoC 1 (the card under Fedora).
 - Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
@@ -3544,21 +3544,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
 
 ### DEC-0203: A hardware capability registry from Linux's own sources
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 06
 - Decision: One record per device, built from sysfs, udev, D-Bus services and read-only helper operations, each field with its source; MIA never probes hardware.
 - Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
 - Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
 
 ### DEC-0204: Linux schedules; MIA places models and orders the GPU queue
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 06
 - Decision: cgroups and the kernel schedule; MIA keeps one model job per GPU at a time, conversation first, then specialists, the Workroom, background work.
 - Record: docs/mia_os/MIA_OS_HARDWARE_TECHNOLOGY_EVALUATION.md §3
 - Related: DEC-0189, DEC-0190, DEC-0195, DEC-0197, DEC-0199
 
 ### DEC-0205: The device family's tiers
-- Status: PROPOSED; amended by Zac's answer to Q-66 ("yes all of the above", 2026-11-17): a laptop, a tablet and a
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED; amended by Zac's answer to Q-66 ("yes all of the above", 2026-11-17): a laptop, a tablet and a
   smart display are **planned** devices, so Prompt 12 designs for them; still nothing depends on them
 - Proposed by: claude (Opus), 2026-11-17, Prompt 06
 - Decision: Current: the PC, the phone (Android with MIA's app), the glasses through the phone, the homestead's Pi node and safety controller. Next: a model node, the Pi running MIA Core. Later: a laptop, a smart display, the truck. Speculative: MIA's own hardware. Nothing depends on a later or speculative device.
@@ -3615,14 +3615,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0197, DEC-0200, DEC-0202, DEC-0204
 
 ### DEC-0213: The action contract is the one execution boundary
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 08
 - Decision: Every change MIA makes, in her apps, the system or a device, is an action kind on `core/actions.py`'s contract (describe, grant check, approval, execute, record, undo); models only propose.
 - Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
 
 ### DEC-0214: One task model
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 08
 - Decision: Goals become plans of steps with dependencies; every plan is a run; plans, workflows, taught skills, browser routines and teams converge on the step model gradually.
 - Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
@@ -3636,7 +3636,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
 
 ### DEC-0216: Risk computed in code sets the least tier
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 08
 - Decision: From reach, reversibility, money, other people and physical effect; an undeclared kind is treated as needing approval; a test sweeps every kind.
 - Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
@@ -3650,28 +3650,28 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
 
 ### DEC-0218: Done means read back
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 08
 - Decision: After executing, code reads the effect back (the store, the page, the device, the system); a model's report of success never marks a step done.
 - Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
 
 ### DEC-0219: Agents propose; the coordinator acts
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 08
 - Decision: Agents are roles with read-only tools writing to a project's workspace; only the coordinator in code turns their recommendations into proposals on the contract.
 - Record: docs/mia_os/MIA_OS_AUTONOMY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0156, DEC-0181, DEC-0188, DEC-0198
 
 ### DEC-0220: One capability truth registry
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: One registry of what MIA can do, derived from the code, tests, runtime and the Fix-It Log, with explicit states (working, partial, degraded, unavailable here, malfunctioning, unverified, planned, retired); never edited by hand or by a model.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
 ### DEC-0221: Provenance on every self-statement
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: Everything MIA says about herself carries its provenance (verified, inferred, documented, planned, unknown) and only the strongest label it can prove; never "I can" from a plan.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
@@ -3685,14 +3685,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
 ### DEC-0223: Quality by code checks, corrections and fixed sets
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: Response quality is judged by rules in code, his corrections and ratings, and fixed evaluation sets; a drop opens a finding with its evidence.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
 ### DEC-0224: Investigations end in a reproducing test
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: A root cause is a hypothesis until a test that fails now reproduces it; every fix she proposes comes with that test.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
@@ -3706,7 +3706,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0173, DEC-0195, DEC-0200
 
 ### DEC-0226: New capabilities only through one path
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 09
 - Decision: Gap, proposal, lab, then the registry, each new capability arriving with its tier, tests, parity decision, loop or reason, and documentation.
 - Record: docs/mia_os/MIA_OS_SELF_AWARENESS_TECHNOLOGY_EVALUATION.md §2
@@ -3727,14 +3727,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
 
 ### DEC-0229: Unified search that never executes a change
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 10
 - Decision: One search over her records, the recall index, the system's file index (Baloo), desktop entries and capabilities; every result typed open, find, ask, start or do; start and do only open an approval card.
 - Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
 
 ### DEC-0230: Context only by explicit share; workspaces restored through KWin
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 10
 - Decision: She reads a window, file or selection only when he shares it through the system's portal, each shown as a removable chip; project workspaces are her records bound to KWin virtual desktops and restored from desktop entries, with no app integration needed.
 - Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
@@ -3748,21 +3748,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
 
 ### DEC-0232: One notification pipeline
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 10
 - Decision: Her own messages through the communication gate; apps' and the OS's through the freedesktop notification service; one history with source and why.
 - Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
 
 ### DEC-0233: Apps stay in the framework that suits them
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 10
 - Decision: MIA's apps on the shared web frame; conventional Linux apps native through Flatpak and their desktop entries; no framework forced on either.
 - Record: docs/mia_os/MIA_OS_DESKTOP_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0124, DEC-0125, DEC-0189, DEC-0191
 
 ### DEC-0234: One design system for every device
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: Visual values live only in tokens (web/tokens.css), set by validated theme data (core/themes.py); the desktop, phone and glasses render MIA's web screens with the full or a reduced token set; conventional apps are offered a matching KDE colour scheme.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
@@ -3783,14 +3783,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0237: The orb: one component, fourteen states
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: Idle, listening, processing, thinking, council, speaking, interrupted, waiting for approval, executing, background, success, warning, error, unavailable, muted; each from a real event, with its label and a distinct shape or colour, and a static glyph in reduced motion.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0136, DEC-0183, DEC-0184, DEC-0186, DEC-0187
 
 ### DEC-0238: Motion in three speeds, meaningful apart from decorative
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-17, Prompt 11
 - Decision: 120, 240 and 480 ms; meaningful motion always shown (a fade in reduced motion); decorative motion off in reduced motion, light or no effects, when hidden and while her models generate; nothing blocks input.
 - Record: docs/mia_os/MIA_OS_VISUAL_TECHNOLOGY_EVALUATION.md §2
@@ -3818,14 +3818,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0242: Trust by pairing: one key per device
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: A device is paired by the person (his password, never an account), holds its own key whose hash alone the hub keeps, is listed in Sign-ins with its kind and last contact, and can be unlinked from any trusted device; keys are scoped to their kind (a person's, a household's, a sensor's one series, a node's snapshots).
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0243: Sync stays the three-way merge by record id
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: Driven by the device that travels, with the hub only answering; one base per device; the history merged by event id; a conflict on the same field keeps the losing value in the history and tells him; derived and device-only data never syncs.
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
@@ -3839,14 +3839,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0245: Thinking on the most capable reachable machine
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: The hub's GPU, then a model node when one exists, then the device's own model, said each time; speech recognised where it was heard; long jobs on the hub, the asking device told when done; a cloud model only on his yes for that request.
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0246: Controllers keep their loops and their safety
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 12
 - Decision: A controller's safety never depends on MIA, the PC or the network; MIA reads, explains and proposes; a change is an approved action sent to the controller's own interface and read back; stop everything never touches the greenhouse.
 - Record: docs/mia_os/MIA_OS_DISTRIBUTED_TECHNOLOGY_EVALUATION.md §2
@@ -3860,14 +3860,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0022, DEC-0126, DEC-0185, DEC-0192, DEC-0202, DEC-0207
 
 ### DEC-0248: Authority comes only from the person
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: Every change goes through the one action contract (tier, grants, card, stop, record, undo); grants come only from his own acts; nothing MIA reads can grant her anything; each trust boundary is enforced in code where it's crossed.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0249: Everything read from outside is data
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: Web pages, email, documents, messages, photos, other agents' notes and model output reach the model marked as data; no proposal they lead to runs without a card or a grant he gave; an injection test set runs with the suite.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
@@ -3888,7 +3888,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0252: Encryption in three layers
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 13
 - Decision: The whole drive (LUKS2 with the TPM on MIA OS), each store sealed (AES-256-GCM, the data key in the TPM, DPAPI or the Android Keystore), each vault under its own key; backups encrypted; the recovery key his, offline.
 - Record: docs/mia_os/MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md §2
@@ -3909,14 +3909,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0126, DEC-0156, DEC-0194, DEC-0207, DEC-0215, DEC-0242
 
 ### DEC-0255: The OS boots without MIA; readiness in levels
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: Nothing of MIA's is in the boot path or required for login; her runtime starts as his user service (lingering), Wanting optional services, never Requiring them; it reports core, voice, models and all ready, and the shell opens at core ready saying what isn't ready yet.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0256: Each part its own unit, with restart limits, a watchdog and its own slice
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: The runtime, the shell, Ollama, the helper and the node link are separate systemd units; the runtime is restarted at most three times in a row then stops and says so; a watchdog catches a hang; each runs in a slice with limits.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
@@ -3945,14 +3945,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0260: Plasma, safe mode and the previous deployment as the fallbacks
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: Plasma at login; MIA safe mode with no jobs, models, grants or custom theme; the previous deployment in the boot menu; a recovery USB with the recovery key.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0261: Reliability objectives
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: No records lost to a crash; at most a day if the PC is destroyed, none if the phone synced; login to Home under 10 seconds; a new PC running his MIA in about two hours; every recovery told in plain words.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
@@ -3966,7 +3966,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0263: A reproducible setup
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: Python dependencies locked with hashes (uv), Python pinned, the setup scripts that exist, a Fedora toolbox matching the image, models recorded by digest; any new machine reaches a passing suite by one written procedure.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
@@ -3987,21 +3987,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0266: Tests in layers, AI quality included
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: Unit, contract, integration, rules, AI quality sets (the benchmark, the corpus, the engineering bench, inspections), security, the OS in a VM, failure simulation and his devices; no model replaces another for a role until its sets are no worse.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0267: Store formats change additively; otherwise a versioned migration
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: New fields with defaults; anything else gives the store a schema_version, backs up the old file, migrates on load, with a test over every older version; sync keeps unknown fields.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0268: Several models build MIA, reviewed independently; Zac approves decisions
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 15
 - Decision: Claude builds the engine with Opus and Fable reviewing each other, ChatGPT and Muse in their roles, MIA through her lab; an unattended batch is reviewed end to end by a model that didn't write it; master's history never rewritten; each commit only its author's changes.
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
@@ -4022,7 +4022,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
 
 ### DEC-0271: The critical path
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 16
 - Decision: The GPU proof from a USB stick, the image booting in a VM with the runtime ready, MIA's session under KWin, updates and rollback with the TPM-unlocked disk, his data moved with counts matched, a week of use.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
@@ -4036,49 +4036,49 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
 
 ### DEC-0273: Workstreams and work packages on the task board
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 16
 - Decision: Eleven workstreams, twenty-two first work packages; each package ends with its tests, documentation and gate; the approved backlog is built on Windows now and carries over.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
 
 ### DEC-0274: Every milestone has a gate Zac passes
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 16
 - Decision: Written acceptance criteria per milestone, checked by tests, a VM run or a demonstration on his devices, recorded with the commit and evidence; Zac passes each one.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
 
 ### DEC-0275: One hierarchy of authority for MIA OS documents
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
 - Decision: The master implementation blueprint governs; then the decision records in docs/DECISIONS.md (status changes there first, only Zac approves); then the requirement register; then the domain documents; then the roadmap; then research; then history. A superseded text gets a note naming what governs. Counts come from code.
 - Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
 - Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
 
 ### DEC-0276: The release ladder and a narrower MVP gate, with evidence levels
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED; Q-105: the narrower MVP gate and the release ladder MVP, Alpha, Beta, Stable
 - Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
 - Decision: Foundation (in a VM), MVP (the first install), Alpha (his only system; signed monthly releases), Beta (R1 in his order), Stable (three monthly releases without a rollback). Of the 97 open Must and MVP requirements, 67 form the MVP gate, 26 Alpha's and 4 Beta's, each with a work package. Evidence is recorded as in code, on Linux, on the image.
 - Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
 - Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
 
 ### DEC-0277: Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED; Q-106: the TPM plus a PIN at each start
 - Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
 - Decision: systemd-cryptenroll with --tpm2-pcrs=7 --tpm2-with-pin=yes (PCRs 4, 8 and 9 change on every bootc update); a printed LUKS recovery key; MIA's own data key keeps the name 'MIA's recovery key'. Corrects DEC-0252's wording.
 - Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
 - Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
 
 ### DEC-0278: The PC's login, MIA's session and what greenboot checks
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED
 - Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
 - Decision: Plasma Login Manager (Fedora 44+'s default) with two entries, MIA (kwin_wayland with her shell; cage if PoC 3 fails) and Plasma; the runtime enabled at first sign-in; a recovery page when it isn't ready in 30 s; greenboot requires only the OS's checks and wants MIA's self-test run as a system one-shot on a throwaway folder; four readiness levels (started, core, models, all).
 - Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
 - Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
 
 ### DEC-0279: A reproducible, signed image build
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18: "Yes to all", Q-110: the batch of proposed decisions); was PROPOSED; Q-109: FW-01 begins
 - Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
 - Decision: The base pinned by digest; Python locked with hashes (uv) and installed with --require-hashes; PySide6 below 6.12 until its WebEngine wheel ships; greenboot-rs and Tailscale's own repository in the image; cosign with a key pair, enforced by bootc's policy; Fedora's Ollama with upstream's build as the fallback.
 - Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5

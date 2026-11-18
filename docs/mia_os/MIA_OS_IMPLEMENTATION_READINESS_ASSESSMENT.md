@@ -39,4 +39,5 @@ WP-01 to WP-04 and WP-09, and Zac's answers to Q-105 to Q-107.
 - it is about one session's work;
 - it can be undone by reverting a commit.
 
-It waits for Zac's go (Q-109). It has **not** been started.
+Zac said go on 2026-11-18 (Q-109), and approved the 53 proposed decisions (Q-110), so the blockers left for the
+foundation are none; those for the install are unchanged.

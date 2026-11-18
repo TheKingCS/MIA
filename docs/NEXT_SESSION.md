@@ -7,6 +7,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 17)*
 
+**New 2026-11-18, after Prompt 17.** Zac answered Q-105 to Q-110 **yes to all**: the narrower MVP and the release
+ladder; the TPM plus a PIN; Windows tried from the enclosure first; the repository unlicensed for now (Piper not
+bundled in the image); the 53 proposed decisions approved as a batch; **FW-01 begins** (`docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4).
+
 **New 2026-11-18, Prompt 17 (Claude on Opus; reviewed independently by Codex).**
 - **Zac answered Q-102 to Q-104:** the Windows drive into a USB enclosure; the approved features built on Windows
   alongside; R1 does every PC piece first, then the household display, then the laptop.

@@ -1,7 +1,7 @@
 # MIA OS: the master implementation blueprint
 
-*Version 1.0, 2026-11-18. Claude (Opus), Prompt 17, after Codex's independent review. **This document is the recommended baseline, and governs once Zac approves DEC-0275**
-(proposed, Q-110); until then nothing in it overrides an approved decision; below it come the decision records, the requirement register, the domain documents and the
+*Version 1.0, 2026-11-18. Claude (Opus), Prompt 17, after Codex's independent review. **This document governs** (DEC-0275, approved by Zac on 2026-11-18 with
+the rest of Q-110's batch); below it come the decision records, the requirement register, the domain documents and the
 roadmap (`MIA_OS_ARCHITECTURE_DOCUMENT_INDEX.md`). It references detail rather than repeating it. Labels:
 **decided** (approved by Zac), **recommended** (awaiting him), **built** (code and tests), **planned**.*
 
@@ -24,7 +24,7 @@ enclosure test at his PC, the install and the move, and a week of use: **the MVP
 signed monthly releases), Beta (R1 in his order: the PC pieces, the household display, the laptop) and Stable.
 
 **Readiness:** ready for the foundation work; not ready for the install (`MIA_OS_IMPLEMENTATION_READINESS_ASSESSMENT.md`).
-**First package:** FW-01, a reproducible image build. It hasn't been started, and waits for his go (Q-109).
+**First package:** FW-01, a reproducible image build; Zac said go on 2026-11-18 (Q-109).
 
 ## 2. The vision
 
@@ -72,8 +72,8 @@ MIA, unprivileged, owns:
 
 ## 7 to 17. The domains
 
-*Designs below that rest on DEC-0275 to 0279 or on another proposed decision are **recommended**, not binding, until
-Zac approves them (`MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md` lists each decision's class).*
+*Every decision these designs rest on is approved (Q-110, 2026-11-18); four are approved pending a test (the GPU,
+the session, whisper.cpp, the sandbox), as `MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md` lists.*
 
 | § | Domain | Authoritative design | Detail |
 |---|---|---|---|

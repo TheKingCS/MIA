@@ -70,7 +70,8 @@
 - **Prompt 17 (the final blueprint and independent review) is done** (Opus, 2026-11-18, reviewed by Codex):
   `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` and sixteen more; DEC-0275 to 0279 proposed; REQ-IMP-007 to
   013. Ready for the foundation work in a VM, not for the install.
-- **Next:** Zac's answers to Q-105 to Q-110; then FW-01 on his go; to build: the Theme Studio from a picture,
+- Prompt 17 reviewed by Zac (2026-11-18): yes to all; the 53 proposed decisions approved (Q-110).
+- **Next:** FW-01, a reproducible image build (Zac's go, Q-109); to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

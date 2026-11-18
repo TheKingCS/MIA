@@ -1,7 +1,7 @@
 # MIA OS: the architecture document index (Prompt 17; DEC-0275)
 
 *Claude (Opus), 2026-11-18. Version 1.0. Where to look, and which document wins when two disagree. The hierarchy is
-proposed (DEC-0275) and binds once Zac approves it; until then an approved decision always wins.*
+approved (DEC-0275, Q-110, 2026-11-18).*
 
 ## 1. The hierarchy of authority
 

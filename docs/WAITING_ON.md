@@ -9,7 +9,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From Prompt 17 (2026-11-18)
-0w. [ ] **Six questions** (Q-105 to Q-110, `docs/mia_os/MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md`): a narrower
+0w. [x] ~~**Six questions**~~ (answered 2026-11-18: "Yes to all") (Q-105 to Q-110, `docs/mia_os/MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md`): a narrower
    first version with later releases checking the rest; a PIN at each start for the encrypted disk; trying Windows
    from the USB enclosure first; a licence for the repository; starting FW-01 (a reproducible image build, in a VM);
    the 53 proposed decisions as a batch.

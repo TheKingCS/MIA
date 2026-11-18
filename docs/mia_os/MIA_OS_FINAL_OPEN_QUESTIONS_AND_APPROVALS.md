@@ -5,6 +5,10 @@ decides in plain words.*
 
 ## 1. For Zac
 
+**Answered 2026-11-18: "Yes to all".** The narrower MVP and the release ladder (DEC-0276); the TPM
+plus a PIN (DEC-0277); Windows tried from the enclosure first; the repository unlicensed for now with Piper not
+bundled; FW-01 begins; the 53 proposed decisions approved as a batch (Q-110).
+
 | Q | Question | Recommended | Decides |
 |---|---|---|---|
 | **Q-105** | The first version of MIA OS (the MVP) is too big to prove as planned. Make its checklist the 67 must-haves that need the OS itself, and move 26 (accessibility polish, two monitors on two graphics chips, cloud models with consent, the capability registry) to the next release, Alpha, and 4 to Beta? Nothing is dropped; they're just checked later. The releases become MVP (first install), Alpha (your only system, signed monthly releases), Beta (R1 in your order) and Stable (three months without a rollback). | Yes | DEC-0276 |

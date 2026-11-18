@@ -14,7 +14,8 @@ session. Last updated: 2026-11-18 (Opus at the PC: MIA OS Prompts 12 to 17), by 
   claims.
 - **Verdict:** ready for the foundation work in a VM (FW-01 to FW-12), not for the install on his PC. First
   package: FW-01, a reproducible image build; **not started**, waiting for his go (Q-109).
-- **Waiting on Zac:** Q-105 to Q-110 (`docs/WAITING_ON.md` 0w), the USB stick, the 4 TB drive and the enclosure.
+- **Zac answered Q-105 to Q-110 yes to all** (the 53 proposed decisions approved; FW-01 begins). Still waiting on
+  him: the USB stick, the 4 TB drive and the enclosure.
 - **Known in code, not yet fixed** (FW-01): the default config's model, the GPU bench's model, the PySide6 pin.
 
 **2026-11-17 into the 18th (Claude on Opus, at the PC, Zac asleep for the second half).**
