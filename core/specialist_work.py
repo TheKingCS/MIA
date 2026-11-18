@@ -129,12 +129,33 @@ def allowed_numbers(question: str, results: list[dict], notes: list[dict]) -> li
     return allowed
 
 
-def untraced(answer: str, allowed: list[float]) -> list[float]:
+def chosen_figures(results: list[dict]) -> list[float]:
+    """Pure logic. The figures the calculators themselves chose or worked out (their choice in words and their
+    values), as against numbers that only appeared in the question."""
+    out: list[float] = []
+    for r in results:
+        out += _numbers(r.get("choice", ""))
+        out += [v.value for v in r["values"].values()]
+    return out
+
+
+def unsaid_choices(answer: str, results: list[dict]) -> list[str]:
+    """Pure logic. The calculators' choices in words (a joist size) that the answer doesn't state: an answer that
+    names a different size has dropped the one that was worked out."""
+    said = "".join(str(answer or "").lower().split())  # "2 x 10" and "2x10" read the same
+    return [r["choice"] for r in results if r.get("choice")
+            and "".join(str(r["choice"]).lower().split()) not in said]
+
+
+def untraced(answer: str, allowed: list[float], chosen: Optional[list[float]] = None) -> list[float]:
     """Pure logic. The numbers in an answer that can't be traced: not a small count, and not within 1% of any
-    allowed number (so "14.4" matches 14.4 and "about 14" doesn't)."""
+    allowed number (so "14.4" matches 14.4 and "about 14" doesn't). When the calculators' own figures
+    (`chosen`) include a small number, small numbers stop being free: "8 AWG" doesn't pass where 10 AWG was
+    worked out."""
+    strict = any(abs(c) <= max(_FREE) for c in (chosen or ()))
     missing = []
     for n in _numbers(answer):
-        if n in _FREE:
+        if n in _FREE and not strict:
             continue
         if not any(abs(n - a) <= max(abs(a) * 0.01, 1e-9) for a in allowed):
             missing.append(n)
@@ -213,12 +234,29 @@ def _done(spec, status: str, answer: str, results: list = (), notes: list = (), 
     }
 
 
+def _inspected(specialist_id: str) -> bool:
+    """Whether Claude's inspection passed the model this specialist uses, on its current bench results
+    (core/model_inspection.cleared); not passed when that can't be read."""
+    try:
+        from core import model_inspection
+
+        return bool(model_inspection.cleared(specialist_id))
+    except Exception:  # noqa: BLE001 - an inspection that can't be read is one that hasn't passed
+        log.exception("Couldn't read the inspection for %s", specialist_id)
+        return False
+
+
 def _reviewed(context, question: str, result: dict, spec, choice, check: bool) -> dict:
     """An answered worksheet checked by a second local model when it's safety-critical or the person asked for a
-    check (core/specialist_review.py): `review` added; a doubt holds it (`held`)."""
+    check (core/specialist_review.py), or when Claude's inspection hasn't passed the model that planned it
+    (`inspected`): `review` added; a doubt holds it (`held`)."""
     from core import specialist_models, specialist_review
 
-    if result["status"] != "answered" or not (check or result["caveat"]):
+    if result["status"] != "answered":
+        return result
+    passed = _inspected(spec.id)
+    result["inspected"] = passed
+    if not (check or result["caveat"] or not passed):
         return result
     reviewer = specialist_review.reviewer_for(spec.id, choice.model)
     ask = specialist_models.asker(context, reviewer) if reviewer is not None else None
@@ -235,7 +273,8 @@ def work(context, question: str, specialist: str = "", folder=None, check: bool 
     that model didn't pass the bench for this work), and for safety-critical work or with `check`, "review" and
     "held" (a second model doubted it)}. `folder` is where the specialists' workbooks are (theirs, unless a test passes one). status is "answered", "need" (a value must be asked for: `need` says which), "no_calculator"
     (the specialist has none that fits: it says so plainly, with what its notes hold), "no_specialist" or
-    "no_model". `checked` says how the answer's numbers were verified."""
+    "no_model". `checked` says how the answer's numbers were verified; `inspected` whether Claude's inspection
+    passed the model."""
     question = " ".join(str(question or "").split())[:1500]
     if not question:
         return _done(None, "no_specialist", "What should I work out?")
@@ -291,7 +330,9 @@ def work(context, question: str, specialist: str = "", folder=None, check: bool 
             flags=re.M).strip()
         if not written:
             break
-        stray = untraced(written, allowed)
+        stray = untraced(written, allowed, chosen_figures(results))
+        if not stray and unsaid_choices(written, results):
+            stray = [n for choice in unsaid_choices(written, results) for n in _numbers(choice)]
         if not stray:
             checked = "Every number in this answer comes from a calculator, your question or a note."
             return _reviewed(context, question, _done(spec, "answered", written, results, notes, checked=checked,
@@ -307,8 +348,14 @@ def work(context, question: str, specialist: str = "", folder=None, check: bool 
 def say(result: dict) -> str:
     """A worksheet's result as MIA says it: the answer, the caveat when there is one, how it was checked, when the
     model that planned it didn't pass the bench for this work, that too, and a second model's review when there was
-    one (a doubt said first in its words)."""
+    one. A held answer leads with the doubt, and gives the figures after it marked unconfirmed."""
     parts = [result["answer"]]
+    if result["status"] == "answered" and result.get("held"):
+        # A doubt holds the answer: the doubt first, the figures after it and marked unconfirmed.
+        parts = [result["review"]["said"], "What the calculators gave, unconfirmed:", result["answer"]]
+        if result["caveat"]:
+            parts.append(result["caveat"])
+        return " ".join(p for p in parts if p)
     if result["status"] == "answered":
         if result["caveat"]:
             parts.append(result["caveat"])
@@ -316,6 +363,8 @@ def say(result: dict) -> str:
         if result.get("model_note"):
             parts.append(f"(The model that planned this: {result['model_note']}. The figures are still the "
                          "calculators' own; check that it picked the right ones.)")
+        if result.get("inspected") is False:
+            parts.append("(Claude hasn't inspected and passed the model that planned this yet.)")
         if result.get("review"):
             parts.append(result["review"]["said"])
     return " ".join(p for p in parts if p)

@@ -37,8 +37,11 @@ FIT_SLACK_IN = 0.25  # two 10 ft pieces still come from a 20 ft stick, a saw cut
 WASTE = 0.10
 SHEET_SQFT = 32  # a 4x8 sheet
 BOARD_WIDTHS = {"2x4": 3.5, "2x6": 5.5, "2x8": 7.25, "2x10": 9.25, "2x12": 11.25}
-# Conservative joist spans (feet) at 16 in on center for a floor: shorter than common span tables on purpose.
-JOIST_SPANS = (("2x6", 9.0), ("2x8", 12.0), ("2x10", 15.0), ("2x12", 18.0))
+# Joist spans (feet) at 16 in on center for a floor at 40 psf live load, kept below the weakest common species in
+# the code's span table (IRC R502.3.1(2): southern pine No. 2 is the shortest, about 11 ft 10 in for a 2x8, 14 ft
+# for a 2x10, 16 ft 6 in for a 2x12). Lowered 2026-11-18 (Fable's review): the old 12, 15 and 18 ft were past that
+# species. Still a rule of thumb: CODE_NOTE says to confirm against the table for the lumber bought.
+JOIST_SPANS = (("2x6", 8.5), ("2x8", 11.5), ("2x10", 13.5), ("2x12", 16.0))
 BAG_80LB_CUFT = 0.6  # premixed concrete yield
 CODE_NOTE = ("Check local building codes and whether you need a permit; joist, rafter and beam sizes here are rules "
              "of thumb, so confirm them against a span table for your lumber.")
@@ -168,8 +171,9 @@ def buy_boards(cuts_in: list[float], stock: tuple[int, ...] = STOCK_LENGTHS) -> 
 
 
 def joist_for(span_ft: float) -> str:
-    """Pure logic. The joist size a span asks for, by a conservative rule of thumb; "" past 18 ft (it needs a beam)."""
-    return next((size for size, span in JOIST_SPANS if span_ft <= span), "")
+    """Pure logic. The joist size a span asks for, by a conservative rule of thumb; "" past the table's longest span
+    (it needs a beam) or for a span that isn't more than 0."""
+    return next((size for size, span in JOIST_SPANS if 0 < span_ft <= span), "")
 
 
 # ------------------------------------------------------------------ calculators

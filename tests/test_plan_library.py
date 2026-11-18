@@ -40,12 +40,14 @@ def test_boards_packed_into_stock():
     assert calcs.buy_boards([200])[1] == 2
     assert calcs.stock_for(7.6) == 8 and calcs.stock_for(30) == 16
     assert calcs.inches(91.5) == "91 1/2 in" and calcs.inches(144) == "12 ft"
-    assert calcs.joist_for(12) == "2x8" and calcs.joist_for(20) == ""
+    # the table sits below the weakest common species' code spans (Fable's review, 2026-11-18)
+    assert calcs.joist_for(11) == "2x8" and calcs.joist_for(12) == "2x10" and calcs.joist_for(16) == "2x12"
+    assert calcs.joist_for(17) == "" and calcs.joist_for(20) == "" and calcs.joist_for(0) == ""
 
 
 def test_the_calculators_by_hand():
     """A 12 ft wall with a 3 ft door: 12 studs (14 with waste) and a 2x6 header; a 100 ft fence with a gate: 15
-    posts, about two bags a post, 241 pickets; a 10 x 12 slab: 1.63 cu yd; a 12 x 16 deck: 2x8 joists, 26 rows of
+    posts, about two bags a post, 241 pickets; a 10 x 12 slab: 1.63 cu yd; a 12 x 16 deck: 2x10 joists, 26 rows of
     boards; a 4 x 8 bed: 6 boards and 1.09 cu yd of soil; every structure says to check the code."""
     wall = calcs.stud_wall(12, 8, openings=(3,))
     assert _qty(wall, "2x4 x 8 ft") == 14 and wall.cuts[0].qty == 12 and _qty(wall, "2x6") == 2
@@ -54,7 +56,7 @@ def test_the_calculators_by_hand():
     slab = calcs.concrete_slab(10, 12)
     assert _qty(slab, "concrete") == 1.63 and _qty(slab, "#4 rebar") == 13
     deck = calcs.floor_frame(12, 16, surface="decking")
-    assert _qty(deck, "2x8 x 12 ft") == 15 and _qty(deck, "5/4x6") == math.ceil(26 * 1.1)
+    assert _qty(deck, "2x10 x 12 ft") == 15 and _qty(deck, "5/4x6") == math.ceil(26 * 1.1)
     bed = calcs.raised_bed(8, 4)
     assert _qty(bed, "2x6 x 8 ft") == 6 and _qty(bed, "soil") == 1.09
     assert calcs.CODE_NOTE in wall.notes and calcs.CODE_NOTE in deck.notes

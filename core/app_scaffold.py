@@ -489,8 +489,8 @@ def plan(spec: AppSpec, root: Path = CODE_ROOT) -> dict:
 def write(spec: AppSpec, root: Path = CODE_ROOT) -> dict:
     """Scaffolds the app in `root` (see the module's opening) and returns the plan that was written. Everything is
     worked out before the first file is touched, so a refusal writes nothing; and it's all or nothing on the disk
-    too: each file it changes is backed up first, and if any write fails (a locked or read-only file) every changed
-    file is put back, every created file and folder removed, and ScaffoldError says which file and why."""
+    too: each file it changes is backed up first, and if any write fails (a locked or read-only file, or text that can't be
+    encoded) every changed file is put back, every created file and folder removed, and ScaffoldError says which file and why."""
     root = Path(root)
     made = plan(spec, root)
     backups: dict[Path, bytes] = {}
@@ -510,7 +510,7 @@ def write(spec: AppSpec, root: Path = CODE_ROOT) -> dict:
             if was is None:
                 created.append(target)
             target.write_text(content, encoding="utf-8", newline="\r\n" if windows else "\n")
-    except OSError as err:
+    except (OSError, ValueError) as err:  # a name that can't be written or encoded: every file goes back
         undone = _undo(backups, created, folders)
         where = getattr(err, "filename", None) or "a file"
         raise ScaffoldError(f"Nothing was scaffolded: {where} couldn't be written ({err.__class__.__name__}), so "

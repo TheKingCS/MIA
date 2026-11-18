@@ -7,6 +7,16 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 17)*
 
+**New 2026-11-18, Fable's review of everything Opus built since 2026-11-17** (three fresh Fable reviewers, read-only,
+one each for what MIA may do on her own, what she notes and recalls, and the specialists; Codex reviewed FW-01).
+Fixed and pushed in three commits, each defect with a test: `tests/test_authority_review.py`,
+`tests/test_observation_review.py`, `tests/test_specialist_review_fixes.py`. The full list with each item's status
+is local only (`audit/FABLE_REVIEW_2026-11-18.md`; the repository is public). **What changed that Zac will
+notice** is in `docs/WAITING_ON.md` 0x. **Still to do from the review** (in the audit file, marked open or
+deferred): the rest of its low items, a Settings switch for a browser's page titles, and a per-kind manifest flag
+to replace the rule in `core/kind_grants.always_asks`. After changing anything in `core/eng_calcs.py`, run
+`tests/test_specialist_review_fixes.py`. The stop's mark for other processes is `core/stop.hold_file()`.
+
 **New 2026-11-18, FW-01 built** (the first MIA OS work package): the image's base pinned by digest, her Python
 packages hash-locked (`os/requirements.lock`, `os/requirements-build.lock`, written by `os/lock_requirements.py`;
 **after changing requirements.txt run that script**, it needs uv), the reference PC's model set in the image, the

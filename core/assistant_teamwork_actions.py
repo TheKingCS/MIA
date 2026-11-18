@@ -61,16 +61,34 @@ def _read(context, arguments: dict) -> str:
     return said(context, project) if project is not None else why
 
 
+ASKS_HIM = frozenset({"team.start", "teamwork.confirm"})  # only his own yes starts a team or makes a finding his
+
+
+def _card_or_run(context, kind: str, params: dict) -> str:
+    """Runs a workspace or team action for a tool; for a kind in `ASKS_HIM` it leaves a card instead, since a
+    tool call is MIA's own and can't stand for his yes (Fable's review, 2026-11-18)."""
+    from core.actions import ActionError, run_as_tool
+
+    if kind not in ASKS_HIM:
+        return run_as_tool(context, kind, params)
+    actions = getattr(context, "actions", None)
+    if actions is None:
+        return "I can't put that to you from here."
+    try:
+        card = actions.propose(context, kind, params)
+    except ActionError as problem:
+        return str(problem)
+    return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
+
+
 def _by_number(kind: str):
-    """A handler that runs `kind` on the numbered entry."""
+    """A handler that runs `kind` on the numbered entry (a card for a kind that asks him)."""
     def handler(context, arguments: dict) -> str:
         """Runs the workspace action on the entry the number names."""
-        from core.actions import run_as_tool
-
         entry, why = _nth(context, arguments)
         if entry is None:
             return why
-        return run_as_tool(context, kind, {"entry_id": entry.entry_id, "why": arguments.get("why") or ""})
+        return _card_or_run(context, kind, {"entry_id": entry.entry_id, "why": arguments.get("why") or ""})
     return handler
 
 
@@ -84,7 +102,7 @@ def _propose(context, arguments: dict) -> str:
 
 
 def _newest_team(kind: str):
-    """A handler that runs `kind` on the project's newest team."""
+    """A handler that runs `kind` on the project's newest team (a card, for a kind that asks him)."""
     def handler(context, arguments: dict) -> str:
         """Runs the team action on the newest team of the project named."""
         from core.actions import run_as_tool
@@ -96,13 +114,13 @@ def _newest_team(kind: str):
         teams = [t for t in book(context).teams_for(project.project_id) if t.status != "stopped"]
         if not teams:
             return f"{project.name} has no team."
-        return run_as_tool(context, kind, {"team_id": teams[0].team_id})
+        return _card_or_run(context, kind, {"team_id": teams[0].team_id})
     return handler
 
 
 def register_teamwork_actions(registry: AssistantActionRegistry) -> None:
     """Registers note_for_project, whats_in_the_workspace, confirm_workspace_entry, withdraw_workspace_entry,
-    propose_team, start_team (destructive) and stop_team."""
+    propose_team, start_team (destructive) and stop_team. Confirming an entry and starting a team only leave a card."""
     project = {"type": "string", "description": "The project's name, as they said it."}
     number = {"type": "string", "description": "The entry's number, as the workspace was read out (1 is the newest)."}
     for name, description, props, required, handler, phrases, destructive in (
@@ -130,7 +148,7 @@ def register_teamwork_actions(registry: AssistantActionRegistry) -> None:
           "specialists": {"type": "string", "description": "The specialists, comma-separated."}},
          ["project", "objective", "specialists"], _propose,
          ("propose a team", "put a team on", "a team for the"), False),
-        ("start_team", "Start the project's proposed team, because the person said yes.", {"project": project},
+        ("start_team", "Put starting the project's proposed team to the person (a card for their yes).", {"project": project},
          ["project"], _newest_team("team.start"), ("start the team", "yes start the team"), True),
         ("stop_team", "Stop the project's team; its entries stay.", {"project": project}, ["project"],
          _newest_team("team.stop"), ("stop the team",), False),

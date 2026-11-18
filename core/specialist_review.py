@@ -88,7 +88,8 @@ def _calculations(result: dict) -> str:
 def review(question: str, result: dict, ask: Optional[Callable[[str], str]], reviewer: str = "",
            author: str = "") -> Review:
     """A second model's check of a worksheet's plan (see the module's opening). Not reviewed when there's no
-    reviewer, no calculation, or no readable reply."""
+    reviewer, no calculation, or a reply that says nothing either way; anything short of a clean agreement is a
+    doubt (`read_reply`)."""
     if ask is None or not reviewer:
         return Review(NOT_REVIEWED, problem="no second model on this PC could check it")
     if not result.get("calculations"):
@@ -99,16 +100,38 @@ def review(question: str, result: dict, ask: Optional[Callable[[str], str]], rev
     except Exception:  # noqa: BLE001 - a reviewer that fails is a review that didn't happen
         reply = ""
     reply = re.sub(r"<think>.*?(</think>|$)", "", reply, flags=re.S | re.I)
-    try:
-        found = json.loads(reply[reply.find("{"): reply.rfind("}") + 1])
-    except ValueError:
-        found = None
-    if not isinstance(found, dict) or not isinstance(found.get("agree"), bool):
-        return Review(NOT_REVIEWED, reviewer, independent, "the second model's reply couldn't be read")
-    if found["agree"]:
-        return Review(AGREED, reviewer, independent)
-    problem = " ".join(str(found.get("problem") or "it didn't say why").split())[:300]
-    return Review(DOUBTED, reviewer, independent, problem)
+    verdict, problem = read_reply(reply)
+    return Review(verdict, reviewer, independent, problem)
+
+
+_DOUBT_WORDS = re.compile(r"\b(disagree|incorrect|wrong|mistake|error|doubt|not right|doesn't match|does not match|"
+                          r"misread|should be|should have)\b", re.I)
+
+
+def read_reply(reply: str) -> tuple[str, str]:
+    """Pure logic. (verdict, problem) from a reviewer's reply. Agreement is only a single JSON object saying exactly
+    `"agree": true` with no problem named. Anything that reads as a doubt is one: `agree` false in any spelling
+    (false, "false", "no", 0), a problem named, two objects that disagree, or prose that says it's wrong. Only a
+    reply that says nothing either way is "not reviewed". Read this way round because a missed doubt on
+    safety-critical work costs far more than a doubt raised in error."""
+    objects = []
+    for text in re.findall(r"\{[^{}]*\}", reply or ""):
+        try:
+            found = json.loads(text)
+        except ValueError:
+            continue
+        if isinstance(found, dict) and "agree" in found:
+            objects.append(found)
+    doubts = [o for o in objects if o.get("agree") is not True or str(o.get("problem") or "").strip()]
+    if doubts:
+        problem = " ".join(str(doubts[0].get("problem") or "it didn't say why").split())[:300]
+        return DOUBTED, problem
+    outside = re.sub(r"\{[^{}]*\}", " ", reply or "")
+    if _DOUBT_WORDS.search(outside):
+        return DOUBTED, " ".join(outside.split())[:300]
+    if len(objects) == 1:
+        return AGREED, ""
+    return NOT_REVIEWED, "the second model's reply couldn't be read"
 
 
 def said(found: Review) -> str:

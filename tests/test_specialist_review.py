@@ -12,7 +12,16 @@ from __future__ import annotations
 
 from core import specialist_review as sr
 from tests.test_specialist_models import RESULTS
+import pytest
+
+from core import specialist_work
 from tests.test_specialist_work import WIRE, WIRE_PLAN, Ctx, Model
+
+
+@pytest.fixture(autouse=True)
+def _models_inspected(monkeypatch):
+    """Here the specialists' models count as passed by Claude's inspection (the other case has its own test)."""
+    monkeypatch.setattr(specialist_work, "_inspected", lambda specialist_id: True)
 
 RESULT = {"status": "answered", "caveat": "x", "calculations": [
     {"calculator": "wire_gauge", "said": "10 AWG copper: it carries 30 A", "basis": "",

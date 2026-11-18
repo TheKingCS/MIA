@@ -96,10 +96,16 @@ def _power(volts: Quantity, amps: Quantity) -> dict:
 
 
 def _voltage_drop(volts: Quantity, amps: Quantity, length: Quantity, gauge: Quantity) -> dict:
-    """The drop over a two-wire copper run: out and back, so twice the one-way length."""
+    """The drop over a two-wire copper run: out and back, so twice the one-way length. Refused when the supply is 0
+    or the run would drop all of it."""
     awg = _gauge(gauge)
     ohms = q(2 * length.number("ft") * _ohms_per_ft(awg), "ohm")
     drop = (amps * ohms).to("V")
+    if volts.si <= 0:
+        raise CalcError("The supply voltage has to be more than 0.")
+    if drop.si >= volts.si:
+        raise CalcError(f"That run would drop {drop}, all of the {volts} supply or more: nothing would reach the load. "
+                        f"It needs a much thicker wire, a shorter run or a higher voltage.")
     percent = q(100 * drop.si / volts.si, "")
     return {"values": {"drop": drop, "percent": percent, "at_load": (volts - drop).to("V")},
             "said": f"{awg} AWG copper, {length} one way at {amps}: a drop of {drop} ({percent.value:.1f}% of {volts}), "
@@ -199,7 +205,10 @@ def _regulator_heat(vin: Quantity, vout: Quantity, current: Quantity, theta: Qua
 
 
 def _adc_step(vref: Quantity, bits: Quantity) -> dict:
-    """The smallest change an analog-to-digital converter can see: the reference divided by its number of steps."""
+    """The smallest change an analog-to-digital converter can see: the reference divided by its number of steps
+    (bits a whole number)."""
+    if bits.value != int(bits.value):
+        raise CalcError("An ADC's bits are a whole number.")
     n = int(round(bits.value))
     if not 1 <= n <= 32:
         raise CalcError("An ADC has between 1 and 32 bits.")
@@ -209,9 +218,11 @@ def _adc_step(vref: Quantity, bits: Quantity) -> dict:
 
 
 def _joist(span: Quantity) -> dict:
-    """The floor joist size for a span, from the builder's table (16 inches on centre)."""
+    """The floor joist size for a span, from the builder's table (16 inches on centre); a span under 2 ft is refused."""
     from core.build_calcs import joist_for
 
+    if span.number("ft") < 2:
+        raise CalcError(f"A {span.to('ft')} span is too short to be a floor joist's: check the span and its unit.")
     size = joist_for(span.number("ft"))
     if not size:
         raise CalcError(f"A {span.to('ft')} span is past my joist table: it needs a beam or an engineered joist, "
@@ -289,13 +300,14 @@ SAP_NAOH = {"olive": 0.135, "coconut": 0.183, "lard": 0.138, "tallow": 0.143, "c
 
 
 def _stair_risers(rise: Quantity) -> dict:
-    """The fewest equal risers that keep each at or under 7 3/4 in, from MIA's stair rule (core/build_calcs.py)."""
+    """The fewest equal risers that keep each at or under 7 3/4 in, from MIA's stair rule (core/build_calcs.py); an
+    exact multiple isn't rounded up by a float's last digit."""
     from core.build_calcs import MAX_RISE_IN
 
     total = rise.number("in")
     if total <= 0:
         raise CalcError("The total rise has to be more than 0.")
-    count = math.ceil(total / MAX_RISE_IN)
+    count = math.ceil(total / MAX_RISE_IN - 1e-9)  # 62 in is 8 risers of 7 3/4, not 9, whatever unit it came in
     riser = q(total / count, "in")
     return {"values": {"risers": q(count), "riser": riser},
             "said": f"A {rise.to('in')} rise takes {count} risers of {riser} each (none over {MAX_RISE_IN} in)."}
@@ -473,14 +485,15 @@ def _delay_samples(delay: Quantity, rate: Quantity) -> dict:
 def _fabric_yardage(count: Quantity, length: Quantity, width: Quantity, fabric: Quantity, seam: Quantity,
                     shrink: Quantity) -> dict:
     """Fabric for pieces laid in rows across its width: each piece with its seam allowance on every edge, as many
-    across as fit, rows down the length, plus the shrinkage when it's washed first."""
+    across as fit (across the washed width, when it shrinks), rows down the length, plus the shrinkage in length."""
     cut_long, cut_wide = length.number("in") + 2 * seam.number("in"), width.number("in") + 2 * seam.number("in")
-    across = math.floor(fabric.number("in") / cut_wide) if cut_wide > 0 else 0
-    if across < 1:
-        raise CalcError(f"A piece cut {cut_wide:g} in wide doesn't fit across {fabric.to('in')} fabric: turn it or "
-                        f"piece it.")
     if shrink.si >= 1:
         raise CalcError("Shrinkage has to be under 100%.")
+    usable = fabric.number("in") * (1 - shrink.si)  # washed first, it's narrower too, not only shorter
+    across = math.floor(usable / cut_wide + 1e-9) if cut_wide > 0 else 0  # 24 in fabric takes two 12 in pieces
+    if across < 1:
+        raise CalcError(f"A piece cut {cut_wide:g} in wide doesn't fit across {fabric.to('in')} fabric"
+                        + (f" once it has shrunk to {usable:g} in" if shrink.si > 0 else "") + ": turn it or piece it.")
     rows = math.ceil(count.value / across)
     inches = rows * cut_long / (1 - shrink.si)
     yards = q(inches, "in").to("yd")
@@ -522,7 +535,10 @@ def _conductive_trace(resistance: Quantity, length: Quantity, volts: Quantity) -
 
 
 def _battery_pack(cell_volts: Quantity, cell_capacity: Quantity, series: Quantity, parallel: Quantity) -> dict:
-    """A pack of identical cells: the voltage adds in series, the capacity in parallel; energy is the two times."""
+    """A pack of identical cells: the voltage adds in series, the capacity in parallel; energy is the two times.
+    Cell counts are whole numbers."""
+    if series.value != int(series.value) or parallel.value != int(parallel.value):
+        raise CalcError("Cells in series and in parallel are whole numbers.")
     s, p = int(round(series.value)), int(round(parallel.value))
     if s < 1 or p < 1:
         raise CalcError("A pack needs at least one cell in series and one in parallel.")
@@ -612,7 +628,8 @@ CALCULATORS: tuple[Calculator, ...] = (
                 "theta": ("degC/W", "the package's junction-to-air thermal resistance", None),
                 "ambient": ("degC", "the temperature around it", "25 degC"),
                 "limit": ("degC", "the most its junction may reach", "125 degC")},
-               _regulator_heat, "P = (Vin - Vout) x I; junction = ambient + P x thermal resistance", True),
+               _regulator_heat, "P = (Vin - Vout) x I; junction = ambient + P x thermal resistance", True,
+               signed=("ambient",)),  # it can be below freezing around it
     Calculator("adc_step", "embedded", "ADC Step Size", "The smallest voltage change an ADC can see.",
                {"vref": ("V", "the reference voltage", None), "bits": ("", "the converter's resolution in bits", None)},
                _adc_step, "step = Vref / 2^bits"),
@@ -699,7 +716,7 @@ CALCULATORS: tuple[Calculator, ...] = (
                _sound_delay, "speed of sound = 331.3 + 0.606 x degC metres a second, in dry air", signed=("air",)),
     Calculator("noise_exposure", "acoustics", "Safe Listening Time", "How long a day a sound level may be heard.",
                {"level": ("dB", "the A-weighted level at the ears", None)},
-               _noise_exposure, "NIOSH's recommended limit: 85 dBA for 8 hours, halved for every 3 dB above"),
+               _noise_exposure, "NIOSH's recommended limit: 85 dBA for 8 hours, halved for every 3 dB above", True),
     # ---- audio DSP
     Calculator("buffer_latency", "audio_dsp", "Buffer Latency", "The time an audio buffer holds.",
                {"buffer": ("", "the buffer's length in samples", None), "rate": ("kHz", "the sample rate", None)},
@@ -766,7 +783,8 @@ def _read(calc: Calculator, name: str, given) -> Quantity:
     """One input as a quantity in the kind of unit the calculator expects: a quantity as it is, text with a unit
     read, a bare number taken in the declared unit. CalcError naming the input when it doesn't fit. An input in degC
     or degF is a temperature (a point on a scale), so one given on another scale is converted as a point: 7 degC is
-    44.6 degF, not the 12.6 a difference would be."""
+    44.6 degF, not the 12.6 a difference would be. A percentage over 100, or a bare fraction under 1 with no % sign
+    (0.8 for 80%), is refused with the question."""
     from core.quantities import temperature
 
     unit, what, _default = calc.inputs[name]
@@ -781,6 +799,13 @@ def _read(calc: Calculator, name: str, given) -> Quantity:
                 value = q(value.value, unit)
         if unit in _POINTS and value.unit in _POINTS and value.unit != unit:
             return q(temperature(value.value, value.unit, unit), unit)
+        if unit == "%":
+            bare = isinstance(given, (int, float)) or "%" not in str(given)
+            if bare and 0 < value.value < 1:  # 0.8 for an efficiency is far likelier 80% than 0.8%
+                raise CalcError(f"{name} ({what}) is a percentage: is {value.value:g} meant as {value.value * 100:g}%? "
+                                f"Give it with a % sign.")
+            if (value.value if value.unit in ("%", "") else value.si * 100) > 100:
+                raise CalcError(f"{name} ({what}) can't be over 100%.")
         return value.to(unit) if unit != "%" or value.unit == "%" else q(value.value, "%")
     except UnitError as problem:
         raise CalcError(f"{name} ({what}) should be in {unit or 'a plain number'}: {problem}") from None
@@ -789,7 +814,8 @@ def _read(calc: Calculator, name: str, given) -> Quantity:
 def calculate(calc_id: str, inputs: dict) -> dict:
     """Runs a calculator: {"calculator", "values" (name -> Quantity), "said", "basis", "caveat" ("" unless it's
     safety-critical), and "choice" when the answer is a size in words}. CalcError for a calculator MIA doesn't
-    have, an input it doesn't take, a missing input (each named with what it is), or values that can't work."""
+    have, an input it doesn't take, a missing input (each named with what it is), or values that can't work (a
+    zero that's divided by, a level far out of range)."""
     calc = BY_ID.get(str(calc_id or ""))
     if calc is None:
         raise CalcError(f"I don't have a calculator called \"{calc_id}\".")
@@ -810,6 +836,8 @@ def calculate(calc_id: str, inputs: dict) -> dict:
         result = calc.run(**values)
     except UnitError as problem:
         raise CalcError(str(problem)) from None
+    except ArithmeticError:  # a zero where something is divided by it, or a level far past any real one
+        raise CalcError(f"{calc.label} can't work with those values: one of them is zero or far out of range.") from None
     return {"calculator": calc.id, "values": result["values"], "said": result["said"], "basis": calc.basis,
             "caveat": CAVEAT if calc.safety else "", **({"choice": result["choice"]} if "choice" in result else {})}
 

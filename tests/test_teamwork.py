@@ -123,7 +123,14 @@ def test_the_projects_page_shows_the_workspace_and_voice_does_the_same(world):
                         by="homesteading", model="qwen2.5:32b", basis="computed")
     read = registry.execute(world, "whats_in_the_workspace", {"project": "greenhouse"})
     assert "1. Finding" in read and "not confirmed yet" in read and "2. Question" in read
-    assert "Confirmed" in registry.execute(world, "confirm_workspace_entry", {"project": "greenhouse", "number": "1"})
+    # Her tool only puts it to him: a specialist's finding becomes his on his own yes, never on her tool call.
+    asked = registry.execute(world, "confirm_workspace_entry", {"project": "greenhouse", "number": "1"})
+    assert "waiting for your yes" in asked
+    from core.actions import _who
+
+    waiting = world.actions.pending(_who(world))
+    assert [p.kind for p in waiting] == ["teamwork.confirm"]
+    assert "Confirmed" in str(world.actions.approve(world, waiting[0].proposal_id).result)
     card = next(c for c in projects_page(world)["projects"] if c["name"] == "Smart greenhouse")
     assert card["workspace"]["open"] == 1 and [e["kind"] for e in card["workspace"]["entries"]] == ["finding", "question"]
     assert card["workspace"]["entries"][0]["status"] == CONFIRMED and card["workspace"]["specialists"]

@@ -8,6 +8,27 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### From Fable's review (2026-11-18)
+0x. [ ] **Things that now work differently, from the review's fixes.** Say if you want any of them back:
+   - **Approve From Now On** is offered only for routine entries in your records (logging, adding, marking done).
+     Changing a setting, anything in her browser, a connection, a skill, the lab, or anything that removes or
+     forgets something always asks.
+   - **Approving by voice:** a card that reaches outside MIA or can't be undone needs your press on the screen.
+     "Approve 2" means the second card she just read to you.
+   - **"Undo my change"** (one of her own code changes) and **starting a team** by voice now leave a card for
+     your yes instead of running.
+   - **Erase** (what she noted about your apps) is for good: no copy is kept, so it can't be undone.
+   - **Web pages are noted as "a web page"**, not by their title, because a private window can't be told from an
+     ordinary one. Tell Claude if you want page titles kept (a switch for it isn't on the Settings screen yet).
+   - **Her own code changes** go in on Claude's pass only for proposals Night School makes from now on; the ones
+     already waiting need your press.
+   - **Floor joists:** the span table is shorter (a 12 ft span now gives 2x10, not 2x8). Check any floor or deck
+     plan made before today against the span table for your lumber before building from it.
+   - **A specialist's answer** leads with the doubt when a second model doubts it, and says when Claude hasn't
+     inspected the model that planned it.
+0y. [ ] **One question:** while you've said "stop everything", should MIA still restart Ollama if it has
+   stopped? Today she does (so your own questions can be answered). Yes keeps that; no makes her wait.
+
 ### From Prompt 17 (2026-11-18)
 0w. [x] ~~**Six questions**~~ (answered 2026-11-18: "Yes to all") (Q-105 to Q-110, `docs/mia_os/MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md`): a narrower
    first version with later releases checking the rest; a PIN at each start for the encrypted disk; trying Windows

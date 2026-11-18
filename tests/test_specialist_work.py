@@ -52,7 +52,7 @@ def test_a_number_the_model_made_up_is_sent_back_once_then_its_words_are_dropped
     got = sw.work(Ctx(model), WIRE)
     assert got["status"] == "answered" and got["answer"].startswith("10 AWG copper: it carries 30 A")
     assert "didn't pass the number check" in got["checked"] and len(model.prompts) == 3
-    assert "used numbers that are not in the results: 55, 1.4" in model.prompts[2]
+    assert "used numbers that are not in the results: 8, 55, 1.4" in model.prompts[2]  # 8 AWG isn't the 10 worked out
     fixed = Model(WIRE_PLAN, made_up, "Use 10 AWG copper on a breaker of 30 A or less; the drop is 2.0%.")
     assert sw.work(Ctx(fixed), WIRE)["answer"].startswith("Use 10 AWG copper on a breaker")
 

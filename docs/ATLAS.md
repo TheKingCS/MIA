@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1514 files, 338,311 lines; 1514 files describe themselves; 18,612 of 18,711 classes and functions are documented.
+1515 files, 338,579 lines; 1515 files describe themselves; 18,631 of 18,730 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-591 files, 170,923 lines; 8,815 of 8,901 classes and functions documented
+591 files, 171,045 lines; 8,820 of 8,906 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -886,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-524 files, 88,138 lines; 7,449 of 7,462 classes and functions documented
+525 files, 88,284 lines; 7,463 of 7,476 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1285,6 +1285,7 @@
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialist_models.py`: Which local model does each specialist's thinking (core/specialist_models.py, DEC-0197): chosen from this PC's bench results in the worksheet's own mode, over the disciplines that specialist uses; a model that guesses a missing input doesn't pass however many it gets right; the best that didn't pass
 - `tests/test_specialist_review.py`: A second local model checks a specialist's work (core/specialist_review.py, S5): it reviews the plan (calculators and inputs), never the arithmetic; the reviewer is the best other model on the bench, independent only from another family, and said so; a doubt holds the answer in MIA's words; an unrea
+- `tests/test_specialist_review_fixes.py`: The defects Fable's review of 2026-11-18 found in the specialists and their calculators, each kept fixed by a test here: a second model's doubt in any wording holds the answer and leads it; a wrong small figure doesn't pass the answer's number check; fabric counts pieces across the washed width; the
 - `tests/test_specialist_roster.py`: The "counts as added" bar in code (the Specialist Forge's F1, core/specialist_roster.py; DEC-0199): a specialist missing its charter, limits, words, starter questions, role or caveat is in progress with each gap named; one whose answers rest on figures needs calculators and enough bench tasks for ev
 - `tests/test_specialist_work.py`: A specialist's worksheet (core/specialist_work.py, DEC-0197): the model chooses calculators, code works out the numbers, and code checks that the answer's numbers all come from somewhere. *(2 undocumented)*
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)

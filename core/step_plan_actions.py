@@ -117,9 +117,9 @@ def _change(context, params) -> str:
 
 
 def _describe_drop(context, params) -> str:
-    """The sentence for `steps.drop`."""
+    """The sentence for `steps.drop` (a waiting step, or one that failed)."""
     plan, step = _step(context, params)
-    if step.status != "waiting":
+    if step.status not in ("waiting", "failed"):  # a step that failed can be left out, as its message offers
         raise ActionError(f"Step {plan.number(step)} isn't waiting.")
     return f"Leave step {plan.number(step)} out of \"{plan.title}\" ({step.summary})"
 

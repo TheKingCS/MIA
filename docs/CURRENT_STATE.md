@@ -16,7 +16,9 @@ session. Last updated: 2026-11-18 (Opus at the PC: MIA OS Prompts 12 to 17), by 
   package: FW-01, a reproducible image build; **not started**, waiting for his go (Q-109).
 - **Zac answered Q-105 to Q-110 yes to all** (the 53 proposed decisions approved; FW-01 begins). Still waiting on
   him: the USB stick, the 4 TB drive and the enclosure.
-- **Known in code, not yet fixed** (FW-01): the default config's model, the GPU bench's model, the PySide6 pin.
+- **FW-01 is built** (a reproducible image build; its CI checks run on GitHub). **Fable reviewed everything Opus
+  built since 2026-11-17** with three independent reviewers and fixed what they found in three commits
+  (authority, observation, specialists); what Zac will notice is in `docs/WAITING_ON.md` 0x. Next: FW-02.
 
 **2026-11-17 into the 18th (Claude on Opus, at the PC, Zac asleep for the second half).**
 - **Planned and reviewed: MIA OS Prompts 09, 10 and 11** (self-awareness, the desktop, the look). Zac answered 09 and
