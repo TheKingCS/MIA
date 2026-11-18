@@ -62,6 +62,10 @@ approves itself.
 
 ### FW-01 A reproducible image build *(recommended first)*
 
+> **Accepted 2026-11-18** (GitHub run 44297829546, commit 8d10713f): two builds of one commit gave identical RPM and
+> Python package lists and no unexplained file difference under `/usr` (four expected ones, the package managers'
+> databases); the Linux suite passed. Zac passes the gate (REQ-IMP-004).
+>
 > **State (2026-11-18): built. The VM test passed on the locked image** (GitHub run 44285161809: installed, booted,
 > the runtime up, updated, rolled back). **The first two-build check** (run 44290637615) found the package lists
 > identical and 199 file differences, all explained and fixed: compiled-Python caches that `pip freeze` wrote again

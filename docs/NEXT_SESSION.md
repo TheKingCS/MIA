@@ -23,9 +23,9 @@ packages hash-locked (`os/requirements.lock`, `os/requirements-build.lock`, writ
 GPU bench on qwen2.5:14b (70.2 tokens a second on Windows, bar 63), a second no-cache build compared by
 `os/image_manifest.py`, the build check on every push and the VM test on its inputs and daily (Codex reviewed FW-01:
 two defects, both fixed). Six deviations, each with its reason, are
-on FW-01 in `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md`. **Check the push's CI**: the first run of the
-two-build comparison may name files that differ for harmless reasons; add those to `VOLATILE` with a reason, and
-anything else is a real unpinned input. Next: FW-02 (CI as the gate).
+on FW-01 in `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md`. **Accepted in CI** (run 44297829546: the two builds matched, the VM test and the Linux suite passed). If the
+two-build check ever names a file, either it's a package manager's own record (add it to `VOLATILE` with a reason) or
+an input isn't pinned. Next: FW-02 (CI as the gate; its first task, the Linux suite on every push, is already on).
 
 **New 2026-11-18, after Prompt 17.** Zac answered Q-105 to Q-110 **yes to all**: the narrower MVP and the release
 ladder; the TPM plus a PIN; Windows tried from the enclosure first; the repository unlicensed for now (Piper not
