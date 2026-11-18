@@ -122,6 +122,7 @@ jobs:
           run_session recovery 40
           grep -q "showing: recovery" /var/tmp/kwin-recovery.log
           systemctl --user start mia-runtime
+          pkill -u "$(id -u)" -x kwin_wayland || true  # nothing of the test left running into the update's reboot
           test -s /var/tmp/shell-front.png && test -s /var/tmp/shell-recovery.png
           EOS
           vm 'cat > /var/tmp/session_test.sh && chmod 755 /var/tmp/session_test.sh' < /tmp/session_test.sh
@@ -158,18 +159,24 @@ jobs:
       - name: 3. An update to version 2, booted
         run: |
           . ~/vm.sh
-          vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:test-v2 && systemctl reboot' || true
-          sleep 20
+          vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:test-v2 && bootc status | grep -A3 staged; systemctl reboot' || true
+          # Down first (a shutdown that takes its time must not be mistaken for the new boot), then up.
+          for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done
           for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done
+          # The previous boot's shutdown: ostree applies a staged update there.
+          vm 'journalctl -b -1 --no-pager -u ostree-finalize-staged | tail -n 20; journalctl -b -1 --no-pager -p warning | tail -n 30' || true
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; bootc status'
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
           test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
       - name: 4. A rollback to version 1, booted, his data untouched
         run: |
           . ~/vm.sh
-          vm 'bootc rollback && systemctl reboot' || true
-          sleep 20
+          vm 'bootc rollback && bootc status | grep -A3 staged; systemctl reboot' || true
+          # Down first (a shutdown that takes its time must not be mistaken for the new boot), then up.
+          for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done
           for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done
+          # The previous boot's shutdown: ostree applies a staged update there.
+          vm 'journalctl -b -1 --no-pager -u ostree-finalize-staged | tail -n 20; journalctl -b -1 --no-pager -p warning | tail -n 30' || true
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; bootc status'
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v1
           test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
