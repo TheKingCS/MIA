@@ -3919,21 +3919,21 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0257: Whole-image updates at a restart he allows, rolled back by themselves
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-95 as recommended): updates install by themselves at night when nothing's running, with a message in the morning.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: The signed image (the OS and MIA's code) is checked, downloaded in the background, verified, staged, his data snapshotted, applied at a restart he allows; greenboot's health checks failing twice boot the previous deployment.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0258: Data reliability in layers
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-97 as recommended): a UPS when convenient.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: Atomic writes and the previous copy (built), Btrfs snapshots hourly and before updates, the append-only history, a start-time integrity check, a damaged settings file never stopping MIA, his data never pruned for space.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0155, DEC-0157, DEC-0189, DEC-0193, DEC-0195, DEC-0222
 
 ### DEC-0259: Backups in two places, restored monthly by a drill
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-96 and Q-98 as recommended): the second copy on an external drive and the laptop; the monthly drill runs by itself.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: The nightly encrypted backup (built) also copied off the PC, 7 nightly, 4 weekly and 6 monthly kept; a monthly drill restores into a scratch folder, opens every store and reports.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2

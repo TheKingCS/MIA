@@ -4,6 +4,8 @@
 
 ## 1. For Zac
 
+**Answered 2026-11-18: "Go with your recommendations".** Updates install at night by themselves with a message in the morning; the second backup copy on an external drive and the laptop; a UPS when convenient; a monthly restore drill. DEC-0257, 0258, 0259 approved.
+
 | Q | Question | Recommended |
 |---|---|---|
 | **Q-95** | On MIA OS, updates download in the background. Should they install at a restart only when you say, or by themselves at night (say 3 am) when nothing's running? Either way a bad one undoes itself. | At night by themselves, with a message in the morning |

@@ -192,9 +192,9 @@ Full records: `MIA_OS_SECURITY_TECHNOLOGY_EVALUATION.md` §2.
 |---|---|---|
 | DEC-0255 | The OS boots without MIA; readiness in levels | PROPOSED |
 | DEC-0256 | Each part its own unit, with restart limits, a watchdog and its own slice | PROPOSED |
-| DEC-0257 | Whole-image updates at a restart he allows, rolled back by themselves | PROPOSED |
-| DEC-0258 | Data reliability in layers | PROPOSED |
-| DEC-0259 | Backups in two places, restored monthly by a drill | PROPOSED |
+| DEC-0257 | Whole-image updates at a restart he allows, rolled back by themselves | APPROVED (Q-95: at night) |
+| DEC-0258 | Data reliability in layers | APPROVED (Q-97) |
+| DEC-0259 | Backups in two places, restored monthly by a drill | APPROVED (Q-96, Q-98) |
 | DEC-0260 | Plasma, safe mode and the previous deployment as the fallbacks | PROPOSED |
 | DEC-0261 | Reliability objectives | PROPOSED |
 
