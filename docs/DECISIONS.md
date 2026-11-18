@@ -4003,14 +4003,14 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
 ### DEC-0269: Build MIA OS in stages, each usable and reversible
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-103): the approved features are built on Windows alongside the OS work.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 16
 - Decision: Six stages: MIA on Windows keeps growing, the proofs, the image in a VM, the MVP on his PC, R1, beyond; Windows stays his everyday system until the MVP passes on his PC, and no stage removes the way back to the one before.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
 
 ### DEC-0270: The MVP is DEC-0182 plus the approved MVP-tier requirements
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-104, changed): R1 does every PC piece first, then the household display, then the laptop.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 16
 - Decision: Done only when every Must and MVP requirement in the matrix passes on his PC, the MVP scenarios pass and he has used it for a week with nothing lost; R1 is the R1-tier rest.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
@@ -4024,7 +4024,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
 
 ### DEC-0272: MIA OS on the new 4 TB drive; the Windows drive kept intact
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-102): the Windows drive goes untouched into a USB enclosure.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 16
 - Decision: His board has one M.2 slot, so DEC-0157's dual boot becomes a swap: MIA OS on the 4 TB, the 1 TB Windows drive untouched as the fallback for at least a month; a migration report compares every store's counts; the phone re-pairs and resets its sync base.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3

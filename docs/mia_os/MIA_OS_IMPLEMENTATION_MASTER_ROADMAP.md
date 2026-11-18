@@ -29,7 +29,7 @@ beside this one (section 9).*
 | **1. Proofs** | the six proofs of concept settled | PoC 1 on his GPU; PoC 2, 3, 5 in a VM; 4 and 6 pass (they do) | a USB stick (PoC 1) |
 | **2. The image** | MIA OS boots in a VM: SDDM, MIA's session, the runtime at core ready, updates and rollback, the helper | M3 below | nothing |
 | **3. The MVP on his PC** | DEC-0182's MVP on the 4 TB drive, Windows kept | a week as his main system, nothing lost | the 4 TB drive; a USB enclosure; the phone's signing key; an hour at the PC |
-| **4. R1** | the first daily-use release: recall, workspaces, the UAL, cross-app plans, the household display on the TV, the laptop | R1's Must requirements pass | the Pi on the TV; the laptop |
+| **4. R1** | the first daily-use release, in Zac's order: every PC piece first (recall, workspaces, the UAL, cross-app plans), then the household display on the TV, then the laptop | R1's Must requirements pass | the Pi on the TV; the laptop |
 | **5. Beyond** | Zeta Astralis, a model node, spatial, more homestead | each its own gate | hardware as decided |
 
 ## 3. Decisions (records in `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` §3)

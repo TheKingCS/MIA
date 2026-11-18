@@ -24,6 +24,7 @@ build on Windows now and carry over.*
 | WP-17 | Secure Boot and the TPM-unlocked disk | W-OS | 2 | M4 | M |
 | WP-18 | Signed images, SBOMs, releases; the phone app from secrets | W-DEV | 2 | M5 | M |
 | WP-19 | The migration report and the move | W-MIG | 3 | M6 | M |
+| WP-22a | *Order (Zac, Q-104): WP-22 first, then WP-20, then WP-21* | — | 4 | M8 | — |
 | WP-20 | The household display on the TV (the Pi, cage, the household key) | W-DEVICES | 4 | M8 | M |
 | WP-21 | The laptop as a full engine | W-DEVICES | 4 | M8 | M |
 | WP-22 | Recall over conversations; workspaces; the UAL on any selection; cross-app plans | W-SELF, W-SHELL | 4 | M8 | L |

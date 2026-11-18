@@ -66,7 +66,8 @@
 - **Prompt 16 (implementation phases, migration and the roadmap) is done** (Opus, 2026-11-18):
   `MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` and twenty-one supporting documents; DEC-0269 to 0274 proposed;
   REQ-IMP-001 to 006 added.
-- **Next:** Zac's review of Prompt 16 (Q-102 to Q-104); Prompt 17 on his go; to build: the Theme Studio from a picture,
+- Prompt 16 reviewed by Zac (2026-11-18): yes, with R1 doing every PC piece first, then the display, then the laptop.
+- **Next:** Prompt 17 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

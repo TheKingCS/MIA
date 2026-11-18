@@ -218,10 +218,10 @@ Full records: `MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md` §2.
 
 | DEC | Title | Status |
 |---|---|---|
-| DEC-0269 | Build MIA OS in stages, each usable and reversible | PROPOSED |
-| DEC-0270 | The MVP is DEC-0182 plus the approved MVP-tier requirements | PROPOSED |
+| DEC-0269 | Build MIA OS in stages, each usable and reversible | APPROVED (Q-103) |
+| DEC-0270 | The MVP is DEC-0182 plus the approved MVP-tier requirements | APPROVED (Q-104: PC first, display, laptop) |
 | DEC-0271 | The critical path | PROPOSED |
-| DEC-0272 | MIA OS on the new 4 TB drive; the Windows drive kept intact | PROPOSED |
+| DEC-0272 | MIA OS on the new 4 TB drive; the Windows drive kept intact | APPROVED (Q-102) |
 | DEC-0273 | Workstreams and work packages on the task board | PROPOSED |
 | DEC-0274 | Every milestone has a gate Zac passes | PROPOSED |
 

@@ -4,6 +4,8 @@
 
 ## 1. For Zac
 
+**Answered 2026-11-18:** "All work on PC is first, then the display and then laptop otherwise yes to all." The Windows drive goes in a USB enclosure; the approved features are built on Windows alongside; R1 is every PC piece first, then the household display, then the laptop. DEC-0269, 0270, 0272 approved.
+
 | Q | Question | Recommended |
 |---|---|---|
 | **Q-102** | Your board has one M.2 slot. When the 4 TB drive comes, MIA OS goes on it, and your current Windows drive goes untouched into a USB enclosure (about $25) as the fallback for at least a month, bootable if you need Windows. OK? | Yes |
