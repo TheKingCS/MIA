@@ -9,7 +9,7 @@ import pytest
 
 import core.dev_lab as lab
 from core import mia_coder, work_activity, work_tasks
-from tests.test_dev_lab import repo, suite  # noqa: F401  (the fixture)
+from tests.test_dev_lab import proven, repo, suite  # noqa: F401  (the fixture)
 
 
 def reply(edits, said="Fixed it."):
@@ -45,7 +45,7 @@ def test_a_shadow_attempt_is_graded_recorded_and_never_merged(repo, tmp_path):
     work_tasks.save(work_tasks.Task(id="T-0001", title="Make VALUE 2", files=["core/thing.py"], body="VALUE should be 2"),
                     folder)
     result = mia_coder.shadow("T-0001", ask=reply({"core/thing.py": ("VALUE = 1", "VALUE = 2")}),
-                              suite=suite({"*": ["tests/test_a.py::old"], "__lab__": []}), folder=folder, log=log)
+                              suite=proven, folder=folder, log=log)
     assert result["outcome"] == "pass", result
     assert (repo / "core" / "thing.py").read_text() == "VALUE = 1\n"  # the running copy untouched
     assert lab.get(result["proposal"]).status == lab.REJECTED  # graded, then put away

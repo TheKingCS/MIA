@@ -107,9 +107,12 @@ def night_schools_own() -> set:
 
 
 def prompt(p, diff: str) -> str:
-    """Pure logic. What the reviewer is asked (see `_ASK`)."""
+    """Pure logic. What the reviewer is asked (see `_ASK`), with the tests that fail before the change and pass
+    after it (LS-06)."""
     tests = p.tests or {}
     said = f"{tests.get('summary', '')}; at the start: {tests.get('base_summary', '')}"
+    if tests.get("shown_by"):
+        said += "; fails before and passes after: " + ", ".join(tests["shown_by"][:10])
     if len(diff) > MAX_DIFF:
         diff = diff[:MAX_DIFF] + "\n(the rest was cut)"
     return _ASK.format(title=p.title, problem=p.problem[:3000], tests=said, diff=diff or "(no change)")

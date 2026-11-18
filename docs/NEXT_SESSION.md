@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-06 built** (DEC-0224 in the lab): a lab change to code isn't ready without a test that
+fails on the starting code and passes after; the merge's message names it ("Shown by: ..."). Night School and
+the coder's shadow attempts now fail without one, as they should.
+
 **New 2026-11-18, LS-08 built** (one model-server address): **code that talks to the model server asks
 `core.llm_manager.local_server_url(context)`, never writes the address**; embeddings and vision go through
 `OllamaBackend.embed` / `see`. A test fails on the port written outside `core/llm_manager.py`.

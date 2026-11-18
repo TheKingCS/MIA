@@ -178,6 +178,18 @@ def removed_tests(status_lines: list[str]) -> list[str]:
     return out
 
 
+def needs_proof(files: list[str]) -> bool:
+    """Pure logic. Whether a change must come with a test that fails before it (DEC-0224): any change to code
+    outside tests/ does; a change to tests, docs or data alone doesn't."""
+    return any(f.replace("\\", "/").endswith(".py") and not f.replace("\\", "/").lower().startswith("tests/")
+               for f in files)
+
+
+def test_files(files: list[str]) -> list[str]:
+    """Pure logic. The files a change adds or changes under tests/."""
+    return [f for f in files if f.replace("\\", "/").lower().startswith("tests/")]
+
+
 def passed_count(summary: str) -> Optional[int]:
     """Pure logic. How many tests pytest's summary line says passed; None when it doesn't say."""
     found = re.search(r"(\d+) passed", summary or "")
@@ -205,7 +217,7 @@ def new_failures(lab: dict, base: dict) -> list[str]:
 
 
 def coder_task(p: Proposal, python: str) -> str:
-    """What Claude Code is asked to do, with the lab's rules."""
+    """What Claude Code is asked to do, with the lab's rules (among them DEC-0224's proving test)."""
     return f"""You are working in MIA's development lab: a separate copy of MIA's repository (this folder), on its own branch.
 Nothing here is the running MIA; your change reaches it only if the owner approves it.
 
@@ -221,6 +233,7 @@ Rules:
 - Read CLAUDE.md first and follow its conventions.
 - Change only files in this folder. Never change any of these (the change is refused if you do): {", ".join(PROTECTED)}.
 - Write a test that fails before your change and passes after it (or fix the test when the test is what's wrong).
+  A change to code with no test that fails on the old code isn't ready: the lab runs your tests against it.
 - Run the tests you touched with: {python} -m pytest -q -p no:cacheprovider <test files>
 - Keep the change as small as the problem needs. Don't commit; the lab commits.
 - End with two or three sentences: what you changed and why."""
@@ -461,9 +474,42 @@ def run_suite(cwd: Path, once: Callable[[Path], dict] = _suite_once) -> dict:
     return result
 
 
-def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
+def _tests_once(cwd: Path, files: list[str]) -> dict:
+    """Runs only the given test files once in a folder (offscreen Qt, no cache, with a timeout) and reads the result."""
+    out = subprocess.run([_python(), "-m", "pytest", "-q", "-p", "no:cacheprovider", *files], cwd=str(cwd),
+                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=SUITE_TIMEOUT,
+                         env={**__import__("os").environ, "QT_QPA_PLATFORM": "offscreen"},
+                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return suite_result((out.stdout or "") + "\n" + (out.stderr or ""))
+
+
+def _before_the_change(p: Proposal, run: Callable[[Path, list], dict]) -> dict:
+    """The change's own tests run against the code it started from (DEC-0224): a copy of the start with the lab's
+    added and changed test files laid over it, removed afterwards. What fails there and passes in the lab shows
+    the problem was real and is fixed. {"failed": []} when the change touches no test file."""
+    tests = [f for f in test_files(p.files) if f.endswith(".py")]
+    if not tests:
+        return {"failed": []}
+    where = LAB_ROOT / f"_proof-{p.proposal_id}"
+    if where.exists():
+        _git("worktree", "remove", "--force", str(where), check=False)
+    _git("worktree", "add", "--detach", str(where), p.base)
+    try:
+        for name in test_files(p.files):
+            _git("checkout", p.branch, "--", name, cwd=where)
+        return run(where, tests)
+    finally:
+        _git("worktree", "remove", "--force", str(where), check=False)
+
+
+def check(proposal_id: str, suite: Optional[Callable] = None,
+          proof: Optional[Callable[[Path, list], dict]] = None) -> Proposal:
     """The rules (a protected file, counted by both names when renamed, or a deleted test file, refuses it), then
-    the suite in the lab against the suite at the start: no new failure or error, and no fewer tests passing."""
+    the suite in the lab against the suite at the start: no new failure or error, and no fewer tests passing.
+    Then the proof (DEC-0224: a fix comes with a test that fails before it): a test failing at the start that
+    passes in the lab, or one of the change's own test files that fails on the starting code (`proof`, by default
+    pytest on those files) and passes in the lab. A change to code with no such test isn't ready; the proving
+    tests are kept as `shown_by`, and its merge names them."""
     p = get(proposal_id)
     lab = folder(p)
     p.files = [f for f in _git("diff", "--name-only", "--no-renames", f"{p.base}...{p.branch}").splitlines() if f]
@@ -482,6 +528,7 @@ def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     if not base_dir.exists():
         _git("worktree", "add", "--detach", str(base_dir), p.base)
     base_result = run(base_dir)
+    before = _before_the_change(p, proof or _tests_once)
     fresh = new_failures(lab_result, base_result)
     p.tests = {"summary": lab_result["summary"], "base_summary": base_result["summary"], "new_failures": fresh,
                "fixed": sorted(set(base_result["failed"]) - set(lab_result["failed"])),
@@ -489,16 +536,31 @@ def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     finished = lab_result.get("finished", True) and base_result.get("finished", True)
     had, has = passed_count(base_result.get("summary", "")), passed_count(lab_result.get("summary", ""))
     fewer = had is not None and has is not None and has < had  # tests taken out, however the files were changed
-    p.status = READY if (not fresh and finished and not fewer) else NOT_READY
+    shown = sorted((set(p.tests["fixed"]) | set(before.get("failed", []))) - set(lab_result["failed"]))
+    shown = [t for t in shown if not t.startswith("(")]  # a named test, not "the suite had errors"
+    p.tests["shown_by"] = shown
+    unproven = needs_proof(p.files) and not shown
+    p.status = READY if (not fresh and finished and not fewer and not unproven) else NOT_READY
     p.note = "" if p.status == READY else (
         "New failures: " + ", ".join(fresh) if fresh else
-        f"Fewer tests pass than at the start ({has} against {had})." if fewer else "The suite didn't finish.")
+        f"Fewer tests pass than at the start ({has} against {had})." if fewer else
+        "The suite didn't finish." if not finished else
+        "No test shows the problem: a change to code needs a test that fails before it and passes after (DEC-0224).")
     return _put(p)
+
+
+def merge_message(p: Proposal) -> str:
+    """Pure logic. A lab merge's commit message: its title and id, then the tests that show it helped (LS-06)."""
+    shown = (p.tests or {}).get("shown_by") or []
+    out = f"From the lab: {p.title} ({p.proposal_id})"
+    if shown:
+        out += "\n\nShown by: " + ", ".join(shown[:10]) + (" and more" if len(shown) > 10 else "")
+    return out
 
 
 def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     """Zac's approval (or Claude's pass, core/self_merges.py): the protected list checked again as it is now, then
-    merged into the running copy (a merge that conflicts is aborted, never left half-way), the suite again, reverted by
+    merged into the running copy with a message naming the tests that show it helped (a merge that conflicts is aborted, never left half-way), the suite again, reverted by
     itself on a new failure. Refused while everything is stopped, or when it deletes tests. The proposal is recorded
     as in, with its commit, before the suite runs, so a crash from there on leaves it listed and undoable; a suite
     that can't run counts as one that didn't pass."""
@@ -523,8 +585,7 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     # never saw (2026-11-03: Zac's uncommitted Plaid work failed a Plaid test,
     # and the merge was reverted for a failure that was already there).
     before = (suite or run_suite)(ROOT)
-    _git("merge", "--no-ff", "--no-edit", p.branch, "-m", f"From the lab: {p.title} ({p.proposal_id})", author=OWNER,
-         undo=("merge", "--abort"))
+    _git("merge", "--no-ff", "--no-edit", p.branch, "-m", merge_message(p), author=OWNER, undo=("merge", "--abort"))
     p.merged_as = _git("rev-parse", "HEAD")
     # Kept before the suite runs: if this process dies or the suite times out from here on, the record already
     # says it's in, with its commit, so it's listed and can be undone (it used to stay "ready" with the merge in).
@@ -604,7 +665,7 @@ def reject(proposal_id: str, why: str = "") -> Proposal:
 
 
 def describe(p: Proposal) -> str:
-    """One proposal in a few plain sentences."""
+    """One proposal in a few plain sentences, with the tests that show it helped."""
     out = f"{p.title} ({p.status})."
     if p.files:
         out += f" Changes {len(p.files)} file{'s' if len(p.files) != 1 else ''}: {', '.join(p.files[:5])}."
@@ -612,6 +673,8 @@ def describe(p: Proposal) -> str:
         out += f" Lab suite: {p.tests.get('summary')}; at the start: {p.tests.get('base_summary')}."
         if p.tests.get("fixed"):
             out += f" It fixes {len(p.tests['fixed'])} failing test{'s' if len(p.tests['fixed']) != 1 else ''}."
+        if p.tests.get("shown_by"):
+            out += " Shown by: " + ", ".join(p.tests["shown_by"][:3]) + (" ..." if len(p.tests["shown_by"]) > 3 else "") + "."
     if p.note:
         out += " " + p.note
     return out

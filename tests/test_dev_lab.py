@@ -2,7 +2,8 @@
 in an isolated worktree, checked against rules the lab can't touch and
 against the suite at the start, and reaches the running copy only on
 approval, reverting itself if it breaks something there. A coder's steps
-are kept as its method trace: tools and targets only."""
+are kept as its method trace: tools and targets only. A change to code needs a
+test that fails before it and passes after (DEC-0224), and its merge names it."""
 
 import subprocess
 from pathlib import Path
@@ -33,6 +34,12 @@ def repo(tmp_path, monkeypatch):
     monkeypatch.setattr(lab, "LAB_ROOT", tmp_path / "MIA-lab")
     monkeypatch.setattr(lab, "_STORE", root / "data" / "lab" / "proposals.json")
     return root
+
+
+def proven(cwd: Path) -> dict:
+    """A stand-in suite where the start fails the test the change fixes and the lab passes it (DEC-0224)."""
+    failed = ["tests/test_thing.py::value"] if cwd.name.startswith("_base-") else []
+    return {"summary": f"{len(failed)} failed, 10 passed in 1.0s", "failed": failed, "finished": True}
 
 
 def suite(failed_in: dict):
@@ -81,7 +88,7 @@ def test_a_new_failure_isnt_ready(repo):
 def test_breaking_the_running_copy_reverts_itself(repo):
     p = lab.create("Looks fine", "x")
     lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 4\n"))
-    lab.check(p.proposal_id, suite=suite({"*": []}))
+    lab.check(p.proposal_id, suite=proven)
     runs = iter([[], ["tests/test_c.py::only_here"]])  # fine before the merge, broken after
     p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": next(runs), "finished": True})
     assert p.status == lab.REVERTED and (repo / "core" / "thing.py").read_text() == "VALUE = 1\n"
@@ -111,7 +118,7 @@ def test_a_failure_already_in_the_running_copy_doesnt_revert(repo):
     """Work in progress here the lab never saw: failing before and after the merge isn't the merge's doing."""
     p = lab.create("Fine", "x")
     lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 5\n"))
-    lab.check(p.proposal_id, suite=suite({"*": []}))
+    lab.check(p.proposal_id, suite=proven)
     already = ["tests/test_plaid.py::work_in_progress"]
     p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": list(already), "finished": True})
     assert p.status == lab.MERGED and (repo / "core" / "thing.py").read_text() == "VALUE = 5\n"
@@ -120,12 +127,12 @@ def test_a_failure_already_in_the_running_copy_doesnt_revert(repo):
 def test_a_reverted_proposal_can_be_retried_on_the_running_copy(repo):
     p = lab.create("Try again", "x")
     lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 6\n"))
-    lab.check(p.proposal_id, suite=suite({"*": []}))
+    lab.check(p.proposal_id, suite=proven)
     runs = iter([[], ["tests/test_c.py::flaky_here"]])
     assert lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": next(runs), "finished": True}).status == lab.REVERTED
     p = lab.retry(p.proposal_id)
     assert p.status == lab.WRITTEN and "-again-" in p.branch
-    p = lab.check(p.proposal_id, suite=suite({"*": []}))
+    p = lab.check(p.proposal_id, suite=proven)
     assert p.status == lab.READY and p.files == ["core/thing.py"]
     p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": [], "finished": True})
     assert p.status == lab.MERGED and (repo / "core" / "thing.py").read_text() == "VALUE = 6\n"
@@ -208,3 +215,58 @@ def test_a_coders_steps_are_kept_beside_its_proposal_and_summed_up(repo):
     lab.write(q.proposal_id, coder=lambda t, cwd, py: "I looked.")
     assert lab.trace(q.proposal_id) == [] and lab.trace_summary(q.proposal_id) == ""
     assert lab.trace("../../etc") == []
+
+
+def test_a_code_change_with_no_test_showing_the_problem_isnt_ready(repo):
+    """DEC-0224: nothing fails at the start and passes after, so the change shows nothing and stays out."""
+    p = lab.create("Tidy", "x")
+    lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "core" / "thing.py").write_text("VALUE = 7\n"))
+    p = lab.check(p.proposal_id, suite=suite({"*": []}))
+    assert p.status == lab.NOT_READY and "DEC-0224" in p.note and p.tests["shown_by"] == []
+
+
+def test_a_change_to_docs_alone_needs_no_proving_test(repo):
+    """Only a change to code needs the proof; notes and data don't."""
+    p = lab.create("A note", "x")
+    lab.write(p.proposal_id, coder=lambda t, cwd, py: (Path(cwd) / "NOTES.md").write_text("a note\n"))
+    assert lab.check(p.proposal_id, suite=suite({"*": []})).status == lab.READY
+
+
+def test_the_changes_own_test_failing_on_the_starting_code_is_its_proof(repo):
+    """A new test file is run against the start with the lab's tests laid over it; failing there and passing in the
+    lab makes it the proof, and the merge's message names it."""
+    def coder(task, cwd, python):
+        """Fixes VALUE and adds the test that shows it."""
+        (Path(cwd) / "core" / "thing.py").write_text("VALUE = 2\n")
+        (Path(cwd) / "tests").mkdir(exist_ok=True)
+        (Path(cwd) / "tests" / "test_thing.py").write_text("def test_value():\n    assert True\n")
+        return "Fixed VALUE, with its test."
+
+    p = lab.create("Make VALUE 2", "x")
+    lab.write(p.proposal_id, coder=coder)
+    seen = []
+
+    def proof(cwd, files):
+        """Records where and what was run, and fails the new test there."""
+        seen.append((cwd.name, files, (cwd / "tests" / "test_thing.py").exists(),
+                     (cwd / "core" / "thing.py").read_text()))
+        return {"summary": "1 failed", "failed": ["tests/test_thing.py::test_value"], "finished": True}
+
+    p = lab.check(p.proposal_id, suite=suite({"*": []}), proof=proof)
+    assert seen == [(f"_proof-{p.proposal_id}", ["tests/test_thing.py"], True, "VALUE = 1\n")]  # the old code, new test
+    assert not (repo.parent / "MIA-lab" / f"_proof-{p.proposal_id}").exists()  # put away afterwards
+    assert p.status == lab.READY and p.tests["shown_by"] == ["tests/test_thing.py::test_value"]
+    assert "Shown by: tests/test_thing.py::test_value" in lab.describe(p)
+    p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": [], "finished": True})
+    body = subprocess.run(["git", "log", "-1", "--format=%B", p.merged_as], cwd=str(repo), capture_output=True,
+                          text=True).stdout
+    assert p.status == lab.MERGED and "Shown by: tests/test_thing.py::test_value" in body
+
+
+def test_the_merge_message_names_what_shows_it_helped():
+    """Pure logic: the title and id, then up to ten proving tests."""
+    p = lab.Proposal("p1", "Fix it", "x", tests={"shown_by": [f"tests/t.py::{i}" for i in range(12)]})
+    message = lab.merge_message(p)
+    assert message.startswith("From the lab: Fix it (p1)\n\nShown by: tests/t.py::0") and message.endswith("and more")
+    assert lab.merge_message(lab.Proposal("p2", "Docs", "x")) == "From the lab: Docs (p2)"
+    assert lab.needs_proof(["core/a.py"]) and not lab.needs_proof(["tests/test_a.py", "docs/A.md"])
