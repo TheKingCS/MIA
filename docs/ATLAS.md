@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1522 files, 339,526 lines; 1522 files describe themselves; 18,689 of 18,788 classes and functions are documented.
+1524 files, 339,755 lines; 1524 files describe themselves; 18,705 of 18,804 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-593 files, 171,409 lines; 8,835 of 8,921 classes and functions documented
+594 files, 171,577 lines; 8,845 of 8,931 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -139,6 +139,7 @@
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`).
 - `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson's notes written (lesson.notes, as "add to my notes for..." does by voice), the skill a lesson trains and its XP (lesso
 - `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for 
+- `core/clock.py`: One clock for MIA (LS-07, DEC-0284; `docs/mia_os/MIA_COGNITIVE_ARCHITECTURE.md` §6). Before it, 168 files in `core/` each asked the machine for a naive local time. New code asks here instead: `now()`: the time in his zone, aware of it; `today()`: the day as he means it; `week_of(day)`: Monday to Sun
 - `core/closet_actions.py`: Smart Closet's actions (DEC-0162, core/smart_closet.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/code_atlas.py`: Documentation for everything MIA is made of (DEC-0104, Zac 2026-11-06: "every line of code ... should have documentation that explains what it is and what it does and how it does it, so that if MIA ever needed to redo this entire process herself, she could. And this should be an ongoing thing").
 - `core/communication_gate.py`: "Know when to speak", slice C of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the one path every proactive (unprompted) message from MIA goes through, so a context-aware assistant never turns into a nag.
@@ -889,7 +890,7 @@
 
 ## tests/: the test suite: what each part must do
 
-529 files, 88,683 lines; 7,499 of 7,512 classes and functions documented
+530 files, 88,744 lines; 7,505 of 7,518 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -969,6 +970,7 @@
 - `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py.
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).
+- `tests/test_clock.py`: LS-07 (DEC-0284): one clock. Now is aware of his zone (his setting, else the computer's), tests can freeze it, the week runs Monday to Sunday, and the day a phrase means is worked out in code: the words life notes already knew, "in N days/weeks/months", month-name and ISO dates, and "the first Satur
 - `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, a scripted day, and the learned pace per kind of message that replaced the fixed daily cap (DEC-0171).
 - `tests/test_component_manager.py`: Unit tests for core.component_manager. Isolates _DATA_DIR/_COMPONENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_config_manager.py`: Unit tests for core.config_manager.ConfigManager.

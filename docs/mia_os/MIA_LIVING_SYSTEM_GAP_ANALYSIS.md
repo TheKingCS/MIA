@@ -236,7 +236,7 @@ history). Partial:
 | LS-04 | The four capability descriptions checked as one; deadlines and cancel checks for device and outside work; four error kinds (DEC-0283) | Alpha | 2 |
 | LS-05 | The generic read-back after a change (DEC-0218); the record-type registry | Alpha | 2 |
 | LS-06 | DEC-0224 enforced in the lab; each merge names what shows it helped | Alpha | 1 |
-| LS-07 | The clock service for new code; tests freeze it (DEC-0284) | Alpha | 1 |
+| LS-07 | The clock service for new code; tests freeze it (DEC-0284). **Built 2026-11-18** (`core/clock.py`): now and today in his zone (`region.timezone`, else the computer's), `frozen()` for tests, the week, and `parse_day` for the day a phrase means; recurrences later | Alpha | 1 |
 | LS-08 | One model-server address; the runtime's calls on the provider's `embed` and `see` | Alpha | 1 |
 | LS-09 | A replayed week across the subsystems (after LS-07) | Beta | 2 |
 | LS-10 | A daily compute budget for her own initiative; each habit's evidence and reset in "What I've learned" | Beta | 1 to 2 |
@@ -280,7 +280,7 @@ confirmed by both reviewers, and they're told to Zac as such.
 | REQ-LS-004 | Every inferred habit shall be shown with its evidence and its own reset, and no reset shall touch his grants, his standing yeses, a pause he asked for, the stop, or anything he set himself. | Must | R1 | All | Partial | T | DEC-0282 → 21 |
 | REQ-LS-005 | The tool, the action kind, the manifest and the effects table of every capability shall agree, checked by a test; device and outside work shall have deadlines and honour cancellation. | Must | R1 | All | New | T | DEC-0283 → 21 |
 | REQ-LS-006 | A change that fails part way shall leave every store it wrote as it was before, and say so truthfully. | Must | MVP | All | Exists (2026-11-18) | T | DEC-0283 → 21 |
-| REQ-LS-007 | New code shall get the time from one zone-aware clock service, and tests shall freeze it. | Must | R1 | All | New | T | DEC-0284 → 21 |
+| REQ-LS-007 | New code shall get the time from one zone-aware clock service, and tests shall freeze it. | Must | R1 | All | Exists (2026-11-18, LS-07) | T | DEC-0284 → 21 |
 | REQ-LS-008 | A field changed on two devices shall keep the losing value in the change history and tell him once, without quoting a sensitive value. | Must | R1 | All | New | T | DEC-0285, DEC-0243 → 21 |
 | REQ-LS-009 | Every store shall be listed with its class, retention, end of life and whether it syncs, sync shall read that list, and a store missing from it shall fail a test. | Must | R1 | All | Partial (NEVER_SYNC) | T | DEC-0286 → 21 |
 | REQ-LS-010 | The model server's address shall come from one setting, and MIA's runtime shall call models only through the provider interface. | Must | R1 | All | Partial | T | DEC-0206, DEC-0207 → 21 |

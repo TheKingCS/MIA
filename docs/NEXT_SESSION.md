@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-07 built** (`core/clock.py`): **new code asks `clock.now()` / `clock.today()`, never
+`datetime.now()`**, and tests hold time with `clock.frozen(moment)`. `clock.parse_day(text, said)` gives the day a
+phrase means. Existing modules move to it as they're touched.
+
 **New 2026-11-18, LS-01 built** (trace ids, `core/trace.py`): a turn, each scheduled job run and each press on a
 screen start a cause; proposals (and their approval, even later), life events, changes kept for undo and in the
 history, runs and the security log carry its id; the turn trace keeps it and `template` (the prompt code's version).
