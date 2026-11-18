@@ -86,14 +86,24 @@ def _key(p) -> str:
     return f"{p.proposal_id}:{p.branch}"
 
 
-def candidates(proposals: Optional[list] = None, entries: Optional[list] = None) -> list:
-    """The ready proposals Night School kept that haven't been reviewed on their current branch, oldest first."""
+def candidates(proposals: Optional[list] = None, entries: Optional[list] = None, kept: Optional[set] = None) -> list:
+    """The ready proposals Night School itself made (`kept`, by default its own list) that haven't been reviewed on
+    their current branch, oldest first."""
     from core import dev_lab
 
     proposals = dev_lab.all_proposals() if proposals is None else proposals
     seen = {e.get("key") for e in (load() if entries is None else entries)}
+    own = night_schools_own() if kept is None else set(kept)
     return [p for p in proposals if getattr(p, "status", "") == dev_lab.READY and getattr(p, "evidence", "") == SOURCE
-            and not getattr(p, "refused", None) and _key(p) not in seen]
+            and p.proposal_id in own and not getattr(p, "refused", None) and _key(p) not in seen]
+
+
+def night_schools_own() -> set:
+    """The proposal ids Night School itself made (it keeps the list in its own protected records). The proposal's
+    evidence text alone isn't enough: anyone who proposes a lab change writes that text."""
+    from core.night_school import own_proposals
+
+    return own_proposals()
 
 
 def prompt(p, diff: str) -> str:
@@ -129,7 +139,9 @@ def verdict_from(reply: str, reviewer: str, ready: bool) -> tuple[str, list[str]
 def review_and_merge(ask: Callable[[str], str], reviewer: str, lab=None, diff: Optional[Callable] = None,
                      limit: int = 1, now: Optional[datetime] = None, path: Optional[Path] = None) -> list[dict]:
     """Reviews up to `limit` candidates and merges each one Claude passes, through the lab's own approve (which reverts
-    by itself on a new failure). Returns the entries kept."""
+    by itself on a new failure). A change too large to show the reviewer whole is held without asking. A merge that
+    went in but couldn't be checked afterwards is recorded as merged, so it's summarized and can be undone. Returns
+    the entries kept."""
     if lab is None:
         from core import dev_lab as lab
     if diff is None:
@@ -143,11 +155,15 @@ def review_and_merge(ask: Callable[[str], str], reviewer: str, lab=None, diff: O
                  "at": (now or datetime.now()).isoformat(timespec="seconds"), "status": "held", "merged_as": "",
                  "summarized": ""}
         try:
-            reply = ask(prompt(p, diff(p.proposal_id)))
+            whole = diff(p.proposal_id)
+            cut = len(whole) > MAX_DIFF  # a reviewer who saw part of a change can't pass the rest of it
+            reply = "" if cut else ask(prompt(p, whole))
         except Exception as problem:  # noqa: BLE001 - a review that didn't come back holds it
-            reply = ""
+            reply, cut = "", False
             entry["error"] = str(problem)[:200]
         verdict, findings, why = verdict_from(reply, reviewer, p.status == lab.READY)
+        if cut:
+            verdict, findings = HOLD, [f"the change is too large to review whole ({len(whole):,} characters), so it waits for Zac"]
         entry.update(verdict=verdict, findings=findings, why=why or p.title)
         if verdict == PASS:
             try:
@@ -157,6 +173,13 @@ def review_and_merge(ask: Callable[[str], str], reviewer: str, lab=None, diff: O
                 entry["note"] = q.note[:300]
             except Exception as problem:  # noqa: BLE001 - a merge that couldn't happen stays in the lab
                 entry["status"], entry["note"] = "held", f"it couldn't go in: {str(problem)[:200]}"
+                try:  # the merge may be in all the same (the suite or the revert failed after it): say so, so it's
+                    q = lab.get(p.proposal_id)  # listed in the summary and can be undone
+                    if q.status == lab.MERGED and q.merged_as:
+                        entry["status"], entry["merged_as"] = "merged", q.merged_as
+                        entry["note"] = f"it went in, but checking it afterwards failed: {str(problem)[:160]}"
+                except Exception:  # noqa: BLE001 - the record as read above stands
+                    pass
         entries.append(entry)
         done.append(entry)
     if done:

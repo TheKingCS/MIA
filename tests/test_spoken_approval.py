@@ -71,6 +71,7 @@ def _context(monkeypatch, cards):
 
 def test_one_waiting_card_is_approved_from_now_on_and_he_is_told_how_to_take_it_back(monkeypatch):
     ctx = _context(monkeypatch, [_card("p1", "Add milk to the list")])
+    monkeypatch.setattr(sa, "_kept", lambda context, kind, done: True)  # the change ran and the yes was kept
     said = sa.reply(ctx, "approve it from now on")
     assert ctx.actions.calls == [("approve", "p1", True)] and "take that back in your grants" in said
 
@@ -95,6 +96,7 @@ def test_a_number_picks_the_card_in_the_order_listed(monkeypatch):
 
 def test_a_number_past_the_list_approves_nothing(monkeypatch):
     ctx = _context(monkeypatch, [_card("p1", "A")])
+    sa.reply(ctx, "what's waiting for me?")  # numbers are only his to use once they've been read to him
     assert "only 1" in sa.reply(ctx, "approve 3") and ctx.actions.calls == []
 
 

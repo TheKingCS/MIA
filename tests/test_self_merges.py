@@ -8,6 +8,12 @@ import pytest
 from core import dev_lab, self_merges
 
 
+@pytest.fixture(autouse=True)
+def _night_schools_own(monkeypatch):
+    """Every stand-in proposal here counts as one Night School made (tests/test_authority_review.py checks the rule)."""
+    monkeypatch.setattr(self_merges, "night_schools_own", lambda: {"a", "b", "c", "d", "p1", "p2", "p3"})
+
+
 def _proposal(pid="p1", status=dev_lab.READY, evidence=self_merges.SOURCE, refused=()):
     """A stand-in lab proposal."""
     return SimpleNamespace(proposal_id=pid, branch=f"lab/{pid}", status=status, evidence=evidence,

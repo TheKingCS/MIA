@@ -21,10 +21,17 @@ theirs to undo. Undo can't reach outside MIA's files: a sent email (only
 ever by pressing Send) stays sent. A log of what happened written during a
 change (the Fix-It Log's stumbles) is written inside `outside_undo()`, so
 undo never takes it back.
+
+Two settings are never put back by an undo of another change (`STICKY_KEYS`): a
+stop-everything in force and the standing yeses. They live in the config file
+beside ordinary settings, so when an undo restores that file, `keep_sticky`
+carries today's values of those two into the restored copy: undoing a theme
+change can't lift a stop or bring back a yes he took back.
 """
 
 from __future__ import annotations
 
+import json
 import threading
 from collections import deque
 from contextlib import contextmanager
@@ -39,6 +46,9 @@ log = get_logger(__name__)
 
 KEEP = 20
 _local = threading.local()
+# Never put back by an undo of another change: the stop (core/stop.py) and the standing yeses (core/kind_grants.py).
+STICKY_KEYS = ("mia.stop_everything", "grants.kinds")
+_ABSENT = object()
 
 
 @dataclass
@@ -138,11 +148,78 @@ class UndoLog:
             return changes.pop() if changes else None
 
 
+def _dig(data: dict, dotted: str):
+    """Pure logic. The value at a dotted path in a nested dict, or `_ABSENT`."""
+    for part in dotted.split("."):
+        if not isinstance(data, dict) or part not in data:
+            return _ABSENT
+        data = data[part]
+    return data
+
+
+def _put(data: dict, dotted: str, value) -> None:
+    """Pure logic. Sets (or, for `_ABSENT`, removes) the value at a dotted path in a nested dict."""
+    parts = dotted.split(".")
+    for part in parts[:-1]:
+        inner = data.get(part)
+        if not isinstance(inner, dict):
+            if value is _ABSENT:
+                return
+            inner = data[part] = {}
+        data = inner
+    if value is _ABSENT:
+        data.pop(parts[-1], None)
+    else:
+        data[parts[-1]] = value
+
+
+def _carry_sticky(now: dict, old: dict) -> dict:
+    """Pure logic. `old` (a config about to be restored) with today's `STICKY_KEYS` from `now`: the device's own,
+    and each person's in their record's settings. A person who exists only in `old` keeps none: no stop, no yes."""
+    for key in STICKY_KEYS:
+        _put(old, key, _dig(now, key))
+    for profile_id, record in (old.get("profiles") or {}).items():
+        if not isinstance(record, dict):
+            continue
+        current = ((now.get("profiles") or {}).get(profile_id) or {}).get("settings") or {}
+        settings = dict(record.get("settings") or {})
+        for key in STICKY_KEYS:
+            if key in current:
+                settings[key] = current[key]
+            else:
+                settings.pop(key, None)
+        if settings or "settings" in record:
+            record["settings"] = settings
+    return old
+
+
+def keep_sticky(path: Path, old: Optional[bytes]) -> Optional[bytes]:
+    """What to write when an undo puts `path` back: `old`, except that the config file keeps today's stop and
+    standing yeses (`STICKY_KEYS`). If the config can't be read as it is now, the file is left as it is (returned
+    unchanged from disk) rather than restored without them: a stop is never lifted by a failure."""
+    from core.config_manager import _CONFIG_FILE
+
+    if Path(path) != _CONFIG_FILE or not Path(path).exists():
+        return old
+    current_bytes = Path(path).read_bytes()
+    try:
+        now = json.loads(current_bytes.decode("utf-8"))
+        restored = json.loads(old.decode("utf-8")) if old is not None else {}
+        if not isinstance(now, dict) or not isinstance(restored, dict):
+            raise ValueError("the config isn't a JSON object")
+    except (ValueError, UnicodeDecodeError):
+        log.exception("Undo left the config as it is: it couldn't carry the stop and the standing yeses over")
+        return current_bytes
+    return json.dumps(_carry_sticky(now, restored), indent=4).encode("utf-8")
+
+
 def _restore(change: Change) -> list[Path]:
     """Puts each file back as it was before a change (a file the change made is deleted), through a temporary file
-    so a restore is never half-written; returns the files touched.
+    so a restore is never half-written; returns the files touched. The config file keeps today's stop and standing
+    yeses (`keep_sticky`).
     """
     for path, old in change.files.items():
+        old = keep_sticky(path, old)
         if old is None:
             path.unlink(missing_ok=True)
         else:

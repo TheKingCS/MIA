@@ -213,8 +213,8 @@ def register_capability_actions(registry: AssistantActionRegistry) -> None:
 
 
 def _action_undo_my_change(context, arguments: dict) -> str:
-    """Tool undo_my_change: names the change first; with confirm, after he said yes, the lab takes it back out
-    (`lab.revert`, approved by his yes)."""
+    """Tool undo_my_change: names the change and leaves a card for `lab.revert`; the lab takes it back out only on
+    his press or his spoken "approve it" (matched in code), never on an argument the model passes."""
     from core.actions import ActionError
     from core.lab_actions import _describe_revert
 
@@ -227,13 +227,13 @@ def _action_undo_my_change(context, arguments: dict) -> str:
         card = _describe_revert(context, params)
     except ActionError as problem:
         return str(problem)
-    if str(arguments.get("confirm", "")).lower() not in ("true", "yes", "1"):
-        return card + ". Shall I? Say yes and I'll undo it."
     actions = getattr(context, "actions", None)
     if actions is None:
         return "I can't undo from here."
-    done = actions.approve(context, actions.propose(context, "lab.revert", params).proposal_id)
-    return str(done.result)
+    # A card, never run on my own say-so: taking code out of myself always asks (the tier's rule), and whether he
+    # said yes is decided by his press or his spoken "approve it" (matched in code), not by what I pass here.
+    actions.propose(context, "lab.revert", params)
+    return card + ". It's waiting for your yes: press Approve, or say \"approve it\"."
 
 
 def register_self_care_actions(registry: AssistantActionRegistry) -> None:

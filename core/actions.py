@@ -485,6 +485,18 @@ def _who(context) -> Optional[str]:
     return person_id(context)
 
 
+def _may_run_now(kind: str) -> bool:
+    """Whether MIA may run a kind she holds a standing yes for right now: the same check as anything she starts
+    herself (core/grants.require), so a stop-everything holds it. Held, it stays a card."""
+    from core import grants
+
+    try:
+        grants.require(kind, grants.MIA, granted=True)
+        return True
+    except ActionError:
+        return False
+
+
 def _granted_ahead(context, kind: str) -> bool:
     """Whether he approved this kind from now on (core/kind_grants.py); never true when it can't be read."""
     try:
@@ -514,7 +526,8 @@ class ActionCenter:
     def propose(self, context, kind: str, params: Optional[dict] = None, proposed_by: str = "person") -> Proposal:
         """Step 1. Checks it and says what would happen (that it can't be undone, for an irreversible kind:
         core/action_effects.py); changes nothing. Except: when MIA herself proposes a kind he approved from now on
-        (core/kind_grants.py, DEC-0215), it's approved at once and comes back executed, marked `auto`."""
+        (core/kind_grants.py, DEC-0215), it's approved at once and comes back executed (or failed), marked `auto`;
+        unless the grants check holds it (a stop-everything), when it stays a card like any other."""
         from core.child_accounts import is_child
 
         action = ACTION_TYPES.get(kind)
@@ -536,10 +549,10 @@ class ActionCenter:
         with self._lock:
             self._expire()
             self._proposals[proposal.proposal_id] = proposal
-        if proposal.proposed_by == "mia" and _granted_ahead(context, kind):
+        if proposal.proposed_by == "mia" and _granted_ahead(context, kind) and _may_run_now(kind):
             # He approved this kind from now on (DEC-0215): done at once, with an Undo, never waiting on a card.
-            self.approve(context, proposal.proposal_id)
-            proposal.auto = True
+            proposal.auto = True  # set first, so a caller that then approves gets this result back, done or failed
+            self.approve(context, proposal.proposal_id, _auto=True)
             if proposal.status == EXECUTED:
                 from core import kind_grants
 
@@ -561,7 +574,7 @@ class ActionCenter:
             self._expire()
             return [p for p in self._proposals.values() if p.profile_id == profile_id and p.status == PROPOSED]
 
-    def approve(self, context, proposal_id: str, from_now_on: bool = False) -> Proposal:
+    def approve(self, context, proposal_id: str, from_now_on: bool = False, _auto: bool = False) -> Proposal:
         """Steps 2 to 5: the person said yes. Executes through the store,
         which records the history; the change is kept for undo, with the
         approved sentence as its description in the lasting history
@@ -573,15 +586,18 @@ class ActionCenter:
         for the kind is kept once it has run; a kind that always asks is
         refused that, before anything runs.
         Her orb shows "working" while it runs, then success or a warning
-        (core/orb_state.py)."""
+        (core/orb_state.py). One decision per card: a second approval
+        arriving while the first runs is refused. `_auto` is propose's own
+        call for a standing yes; any later caller gets that result back.
+        Something removed leaves the recall index at once."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
         from core.undo_log import recording
 
         proposal = self.get(proposal_id, _who(context))
-        if proposal.status == EXECUTED and getattr(proposal, "auto", False):
-            return proposal  # already done on his standing yes (a caller that proposes then approves gets it back)
+        if getattr(proposal, "auto", False) and not _auto and proposal.status in (EXECUTED, FAILED):
+            return proposal  # already run on his standing yes: the caller gets what happened, done or failed
         if proposal.status != PROPOSED:
             raise ActionError(f"That was already {proposal.status}.")
         if from_now_on:
@@ -592,6 +608,10 @@ class ActionCenter:
         from core.taught_skills import guard
 
         guard(proposal.kind)  # a tool inside a taught skill can't approve a payment or a delete for the person
+        with self._lock:  # one decision per card: a press and a spoken yes together can't both run it
+            if proposal.status != PROPOSED or getattr(proposal, "_deciding", False):
+                raise ActionError("That one is already being done.")
+            proposal._deciding = True
         action = ACTION_TYPES[proposal.kind]
         source = "assistant" if proposal.proposed_by == "mia" else "manual"
         before = _moment(context, proposal)

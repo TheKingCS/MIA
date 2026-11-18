@@ -254,3 +254,23 @@ def pytest_sessionfinish(session, exitstatus):
             if os.environ.get("GITHUB_ACTIONS"):  # shown on the run's page, whose log needs a sign-in
                 reporter.write_line("::error title=Tests wrote outside their folders::" + message[:900])
         session.exitstatus = 1
+
+
+# 2026-11-18 (Fable's review): two records other processes read must never be the PC's in a test. Night School's
+# list of its own lab proposals goes to a temp file; and the stop's mark on disk (core/stop.hold_file, beside the
+# test config) is cleared around every test, so one test's "stop everything" can't hold another test's merge.
+import pytest  # noqa: E402
+
+import core.night_school as night_school_module  # noqa: E402
+
+night_school_module.OWN_FILE = Path(tempfile.mkdtemp(prefix="mia_test_night_")) / "own_proposals.json"
+
+
+@pytest.fixture(autouse=True)
+def _no_stop_left_on():
+    """Clears the stop's mark before and after each test."""
+    from core import stop
+
+    stop.hold_file().unlink(missing_ok=True)
+    yield
+    stop.hold_file().unlink(missing_ok=True)

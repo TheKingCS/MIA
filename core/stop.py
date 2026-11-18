@@ -31,6 +31,10 @@ changes, homeostasis's watching, and everything he asks or presses himself. **Th
 that reaches it. A device's state is left as it is.
 
 **Afterwards she says, from records** (`report`): what was running and where each thing stopped, and how to resume.
+
+**Other processes** (a Night School run already going, a lab merge) have no settings to ask, so the hold also keeps
+a small mark on disk (`hold_file`, `held_on_disk`); Night School asks it before each step and the lab before a
+merge. An end time that can't be read never lifts a stop by itself.
 """
 
 from __future__ import annotations
@@ -220,7 +224,7 @@ def _read(context) -> Optional[dict]:
 
 def state(context, now: Optional[datetime] = None) -> Optional[dict]:
     """The stop-everything in force for this person ({"since", "until"}), or None; one whose time has passed is
-    lifted here. Keeps this process's copy current for `held_now`."""
+    lifted here. Keeps this process's copy current for `held_now`; an end time that can't be read holds."""
     global _held_until, _held_known
     now = now or datetime.now()
     value = _read(context)
@@ -232,7 +236,10 @@ def state(context, now: Optional[datetime] = None) -> Optional[dict]:
         except ValueError:
             pass
     _held_known = True
-    _held_until = None if not value else (datetime.fromisoformat(value["until"]) if value.get("until") else datetime.max)
+    try:
+        _held_until = None if not value else (datetime.fromisoformat(value["until"]) if value.get("until") else datetime.max)
+    except ValueError:  # an end time that can't be read holds until he says carry on, never lifts by itself
+        _held_until = datetime.max
     return value
 
 
@@ -249,12 +256,50 @@ def held_now(now: Optional[datetime] = None) -> bool:
 
 def _write(context, value: Optional[dict]) -> None:
     """Keeps (or clears) the hold in the person's settings, outside "undo that": a stop isn't something an undo of
-    another change may lift."""
+    another change may lift. The mark other processes read follows it (`_mark_on_disk`)."""
     from core import person_settings
     from core.undo_log import outside_undo
 
     with outside_undo():
         person_settings.put(context, KEY, value)
+    _mark_on_disk(value)
+
+
+def hold_file():
+    """Where the stop's mark for other processes is kept: beside the person's config file."""
+    from core import config_manager
+
+    return config_manager._CONFIG_FILE.with_name("stop_everything.hold")
+
+
+def _mark_on_disk(value: Optional[dict]) -> None:
+    """Keeps the mark (`hold_file`) in step with the hold: there while a stop is on (holding its end time, or nothing for
+    "until he says"), gone when it's lifted. Work in another process reads it (`held_on_disk`): Night School and the
+    lab's merges have no settings of their own to ask."""
+    try:
+        mark = hold_file()
+        if value:
+            mark.parent.mkdir(parents=True, exist_ok=True)
+            mark.write_text(str(value.get("until") or ""), encoding="utf-8")
+        else:
+            mark.unlink(missing_ok=True)
+    except OSError:
+        log.exception("Couldn't keep the stop's mark for other processes")
+
+
+def held_on_disk(now: Optional[datetime] = None) -> bool:
+    """Whether a stop-everything is in force, for a process with no context (Night School, a lab merge): the mark
+    is there and its end time, if it has one, hasn't passed. A mark that can't be read counts as held."""
+    try:
+        until = hold_file().read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+    try:
+        return not until or datetime.fromisoformat(until) > (now or datetime.now())
+    except ValueError:
+        return True
 
 
 # ------------------------------------------------------------------ the commands

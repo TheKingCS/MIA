@@ -87,6 +87,14 @@ PROTECTED = (
     "core/grants.py", "core/kind_grants.py", "core/stop.py", "core/browser_safety.py", "core/action_effects.py",
     "core/model_inspection.py", "core/lab_actions.py", "core/self_merges.py", "core/self_repair.py",
     "core/protected_list.py",
+    # What those rest on (Fable's review, 2026-11-18): every kind's tier (the app manifests) and the registry that
+    # reads them; taught skills' guard; the words that approve by voice and the turn they run in; what runs on a
+    # schedule; whose settings are whose; the grants' own actions; the approval card's code; and the suite's own
+    # settings, since the suite is what gates a merge.
+    "apps/*/manifest.json", "core/app_registry.py", "core/taught_skills.py", "core/spoken_approval.py",
+    "core/quick_commands.py", "core/assistant_turn.py", "core/background_jobs.py", "core/scheduler.py",
+    "core/person_settings.py", "core/grant_actions.py", "web/mia.js", "web/shell.js", "pytest.ini",
+    "tests/conftest.py",
 )
 DRAFTED, WRITTEN, READY, NOT_READY, MERGED, REVERTED, REJECTED = (
     "drafted", "written", "ready", "not ready", "merged", "reverted", "rejected")
@@ -144,17 +152,49 @@ def _git(*args: str, cwd: Optional[Path] = None, author: Optional[tuple] = None,
 
 
 def touches_protected(files: list[str], protected: tuple = PROTECTED) -> list[str]:
-    """Pure logic. The changed files the lab may never change."""
-    return [f for f in files if any(f == p or (p.endswith("/") and f.startswith(p)) for p in protected)]
+    """Pure logic. The changed files the lab may never change: a path by its name, a folder (ending "/") by
+    everything under it, a pattern with "*" by a match; compared without regard to case or slash direction, since
+    the PC's file names don't tell case apart."""
+    from fnmatch import fnmatchcase
+
+    def hit(name: str, rule: str) -> bool:
+        """Whether one changed file falls under one protected entry."""
+        name, rule = name.replace("\\", "/").lower(), rule.lower()
+        if "*" in rule:
+            return fnmatchcase(name, rule)
+        return name == rule or (rule.endswith("/") and name.startswith(rule))
+
+    return [f for f in files if any(hit(f, p) for p in protected)]
 
 
-_FAILED = re.compile(r"^FAILED (\S+)", re.MULTILINE)
+def removed_tests(status_lines: list[str]) -> list[str]:
+    """Pure logic. Test files a change deletes, from `git diff --name-status --no-renames` lines: the suite gates a
+    merge, so a change may add tests but never take a test file away."""
+    out = []
+    for line in status_lines:
+        status, _tab, name = line.partition("\t")
+        if status.strip().upper().startswith("D") and name.replace("\\", "/").lower().startswith("tests/"):
+            out.append(name)
+    return out
+
+
+def passed_count(summary: str) -> Optional[int]:
+    """Pure logic. How many tests pytest's summary line says passed; None when it doesn't say."""
+    found = re.search(r"(\d+) passed", summary or "")
+    return int(found.group(1)) if found else None
+
+
+_FAILED = re.compile(r"^(?:FAILED|ERROR) (\S+)", re.MULTILINE)  # an error (a broken fixture, a failed import) fails too
 
 
 def suite_result(output: str) -> dict:
-    """Pure logic. pytest's output -> {"summary", "failed": [test ids]}."""
+    """Pure logic. pytest's output -> {"summary", "failed": [test ids], "finished"}; a test that errored counts as
+    failed, and errors with no test id count as one failure."""
     failed = sorted(set(m.split(" - ")[0] for m in _FAILED.findall(output or "")))
-    lines = [ln.strip("= ").strip() for ln in (output or "").splitlines() if re.search(r"\d+ (passed|failed)", ln)]
+    lines = [ln.strip("= ").strip() for ln in (output or "").splitlines()
+             if re.search(r"\d+ (passed|failed|errors?)\b", ln)]
+    if lines and re.search(r"\d+ errors?\b", lines[-1]) and not failed:
+        failed = ["(the suite reported errors)"]  # errors with no test id still count
     return {"summary": lines[-1] if lines else "no summary (the suite didn't finish)", "failed": failed,
             "finished": bool(lines)}
 
@@ -422,14 +462,19 @@ def run_suite(cwd: Path, once: Callable[[Path], dict] = _suite_once) -> dict:
 
 
 def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
-    """The rules (a protected file, counted by both names when renamed, refuses it), then the suite in the lab
-    against the suite at the start."""
+    """The rules (a protected file, counted by both names when renamed, or a deleted test file, refuses it), then
+    the suite in the lab against the suite at the start: no new failure or error, and no fewer tests passing."""
     p = get(proposal_id)
     lab = folder(p)
     p.files = [f for f in _git("diff", "--name-only", "--no-renames", f"{p.base}...{p.branch}").splitlines() if f]
     p.refused = touches_protected(p.files)
     if p.refused:
         p.status, p.note = NOT_READY, "It changes files the lab may never change: " + ", ".join(p.refused)
+        return _put(p)
+    gone = removed_tests(_git("diff", "--name-status", "--no-renames", f"{p.base}...{p.branch}").splitlines())
+    if gone:
+        p.refused = gone
+        p.status, p.note = NOT_READY, "It deletes tests, which a lab change may never do: " + ", ".join(gone)
         return _put(p)
     run = suite or run_suite
     lab_result = run(lab)
@@ -442,18 +487,30 @@ def check(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
                "fixed": sorted(set(base_result["failed"]) - set(lab_result["failed"])),
                "lab_failed": lab_result["failed"], "base_failed": base_result["failed"]}
     finished = lab_result.get("finished", True) and base_result.get("finished", True)
-    p.status = READY if (not fresh and finished) else NOT_READY
-    p.note = "" if p.status == READY else ("New failures: " + ", ".join(fresh) if fresh else "The suite didn't finish.")
+    had, has = passed_count(base_result.get("summary", "")), passed_count(lab_result.get("summary", ""))
+    fewer = had is not None and has is not None and has < had  # tests taken out, however the files were changed
+    p.status = READY if (not fresh and finished and not fewer) else NOT_READY
+    p.note = "" if p.status == READY else (
+        "New failures: " + ", ".join(fresh) if fresh else
+        f"Fewer tests pass than at the start ({has} against {had})." if fewer else "The suite didn't finish.")
     return _put(p)
 
 
 def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     """Zac's approval (or Claude's pass, core/self_merges.py): the protected list checked again as it is now, then
     merged into the running copy (a merge that conflicts is aborted, never left half-way), the suite again, reverted by
-    itself on a new failure."""
+    itself on a new failure. Refused while everything is stopped, or when it deletes tests. The proposal is recorded
+    as in, with its commit, before the suite runs, so a crash from there on leaves it listed and undoable; a suite
+    that can't run counts as one that didn't pass."""
     p = get(proposal_id)
     if p.status != READY:
         raise ValueError(f"Only a ready proposal can go in; this one is {p.status}.")
+    from core import stop
+
+    if stop.held_on_disk():  # "stop everything" holds a merge too, in whatever process asks (a night in flight)
+        raise ValueError("Everything is stopped, so nothing goes in until he says carry on.")
+    if removed_tests(_git("diff", "--name-status", "--no-renames", f"{p.base}...{p.branch}").splitlines()):
+        raise ValueError("It deletes tests, which a lab change may never do.")
     # The protected list as it is now, not as it was when the proposal was checked; a rename counts by both names.
     files = [f for f in _git("diff", "--name-only", "--no-renames", f"{p.base}...{p.branch}").splitlines() if f]
     refused = touches_protected(files)
@@ -469,7 +526,14 @@ def approve(proposal_id: str, suite: Optional[Callable] = None) -> Proposal:
     _git("merge", "--no-ff", "--no-edit", p.branch, "-m", f"From the lab: {p.title} ({p.proposal_id})", author=OWNER,
          undo=("merge", "--abort"))
     p.merged_as = _git("rev-parse", "HEAD")
-    after = (suite or run_suite)(ROOT)  # the running copy
+    # Kept before the suite runs: if this process dies or the suite times out from here on, the record already
+    # says it's in, with its commit, so it's listed and can be undone (it used to stay "ready" with the merge in).
+    p.status, p.note = MERGED, "In, with the suite still to pass here. Restart MIA to load it."
+    _put(p)
+    try:
+        after = (suite or run_suite)(ROOT)  # the running copy
+    except Exception as problem:  # noqa: BLE001 - a suite that couldn't run is a suite that didn't pass
+        after = {"failed": [], "finished": False, "summary": f"the suite couldn't run: {str(problem)[:120]}"}
     known = set(before.get("failed", [])) | set(p.tests.get("lab_failed", []))
     fresh = new_failures(after, {"failed": sorted(known)})  # only what the merge added here
     if not after.get("finished", True):

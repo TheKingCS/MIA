@@ -265,7 +265,8 @@ def find(profile_id: Optional[str], start: datetime, end: datetime, about: str =
 
 def undo(context, profile_id: Optional[str], picked: list[Entry]) -> dict:
     """Undoes the picked changes, newest first, each whole or not at all, and only where nothing changed its files
-    since (see the module's opening). Returns {"undone": [Entry], "left": [(Entry, why)]}."""
+    since (see the module's opening). The config file keeps today's stop and standing yeses
+    (core/undo_log.keep_sticky). Returns {"undone": [Entry], "left": [(Entry, why)]}."""
     from core import live
     from core.undo_log import reload_stores
 
@@ -287,6 +288,9 @@ def undo(context, profile_id: Optional[str], picked: list[Entry]) -> dict:
                 continue
             for f in e.files:  # all checked: now put every file back
                 path, old = _abs(f["path"]), olds[f["path"]]
+                from core.undo_log import keep_sticky
+
+                old = keep_sticky(path, old)  # an undo by time never lifts a stop or revives a standing yes
                 if old is None:
                     path.unlink(missing_ok=True)
                 else:

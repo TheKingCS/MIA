@@ -47,6 +47,43 @@ def parse(text: str) -> Optional[tuple[str, Optional[int], bool]]:
     return None
 
 
+NUMBERS_LAST = 120  # seconds the numbers he was read stay his to use
+_read_out: dict = {}  # person -> (when, [proposal ids in the order read])
+_NEEDS_PRESS = frozenset({"lab.approve", "browser.commit"})
+
+
+def needs_press(kind: str) -> bool:
+    """Pure logic. Whether a card can only be approved on screen: one that reaches outside MIA, can't be undone, or
+    puts code or a purchase through. A voice in the room isn't enough for those."""
+    from core.action_effects import effect_of
+
+    reach, undo = effect_of(kind)
+    return kind in _NEEDS_PRESS or reach == "outside" or undo == "irreversible"
+
+
+def _remember(context, cards: list) -> None:
+    """Keeps the order the cards were just read in, so "approve 2" means the second one he heard."""
+    import time
+
+    from core.actions import _who
+
+    _read_out[_who(context)] = (time.monotonic(), [c.proposal_id for c in cards])
+
+
+def _as_read(context, cards: list) -> Optional[list]:
+    """The waiting cards in the order last read to him, or None when nothing was read recently or the list has
+    changed since (then the numbers are read again rather than guessed)."""
+    import time
+
+    from core.actions import _who
+
+    when, ids = _read_out.get(_who(context), (0.0, []))
+    by_id = {c.proposal_id: c for c in cards}
+    if time.monotonic() - when > NUMBERS_LAST or set(ids) != set(by_id):
+        return None
+    return [by_id[i] for i in ids]
+
+
 def _waiting(context) -> list:
     """This person's waiting cards, oldest first."""
     from core.actions import _who
@@ -68,8 +105,18 @@ def listed(cards: list) -> str:
             f"on\" to stop being asked for that kind.")
 
 
+def _kept(context, kind: str, done) -> bool:
+    """Whether his standing yes was really kept: the change ran and the grant is there."""
+    from core import kind_grants
+    from core.actions import EXECUTED
+
+    return getattr(done, "status", "") == EXECUTED and kind_grants.has(context, kind)
+
+
 def reply(context, text: str) -> Optional[str]:
-    """Does what he said to a waiting card and says what happened; None when the words aren't for this."""
+    """Does what he said to a waiting card and says what happened; None when the words aren't for this. A number
+    means the card read to him under that number in the last two minutes; a card that reaches outside or can't be
+    undone needs his press; "from now on" is only confirmed when the yes was really kept."""
     from core.actions import ActionError
 
     found = parse(text)
@@ -78,14 +125,24 @@ def reply(context, text: str) -> Optional[str]:
     what, which, always = found
     cards = _waiting(context)
     if what == "list":
+        _remember(context, cards)
         return listed(cards)
     if not cards:
         return "Nothing's waiting for you to approve."
     if which is None and len(cards) > 1:
+        _remember(context, cards)
         return listed(cards)
+    if which is not None:
+        heard = _as_read(context, cards)
+        if heard is None:  # no numbers read lately, or the list changed since: read them, don't guess
+            _remember(context, cards)
+            return "The list has changed since I read it. " + listed(cards)
+        cards = heard
     if which is not None and not 1 <= which <= len(cards):
         return f"There {'is' if len(cards) == 1 else 'are'} only {len(cards)}. " + listed(cards)
     card = cards[(which or 1) - 1]
+    if what == "approve" and needs_press(card.kind):
+        return f"That one needs your press on the screen, not just a voice: {card.summary}."
     try:
         if what == "reject":
             context.actions.reject(context, card.proposal_id)
@@ -94,7 +151,7 @@ def reply(context, text: str) -> Optional[str]:
     except (ActionError, KeyError) as problem:
         return str(problem).strip("'") or "That one can't be approved now."
     said = done.result or f"Done: {card.summary}."
-    if always:
+    if always and _kept(context, card.kind, done):
         said += (" From now on I'll just do that kind of change, with an Undo each time; you can take that back in "
                  "your grants.")
     return said

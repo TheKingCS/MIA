@@ -83,6 +83,31 @@ from core.dev_store import DEV_DATA, DevStore
 ROOT = Path(__file__).resolve().parent.parent
 SETTINGS = work_path("night_school.json")
 STOP_FILE = WORK_DIR / "STOP"
+OWN_FILE = DEV_DATA / "night_school" / "own_proposals.json"  # the lab proposals Night School itself made
+
+
+def stopped() -> bool:
+    """Whether the night must stop: its own stop file, or his "stop everything" (core/stop.py's mark on disk)."""
+    from core import stop
+
+    return STOP_FILE.exists() or stop.held_on_disk()
+
+
+def own_proposals() -> set:
+    """The ids of the lab proposals Night School made (only these can go in on Claude's pass, core/self_merges.py);
+    none when the list can't be read."""
+    try:
+        found = json.loads(OWN_FILE.read_text(encoding="utf-8"))
+        return {str(i) for i in found} if isinstance(found, list) else set()
+    except (OSError, ValueError):
+        return set()
+
+
+def _note_own(proposal_id: str) -> None:
+    """Adds one to the list (its last 2,000)."""
+    ids = sorted(own_proposals() | {str(proposal_id)})[-2000:]
+    OWN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(OWN_FILE, json.dumps(ids))
 PLAN = ROOT / "docs" / "BUILD_PLAN.md"
 WHO = "MIA (night school)"
 DEFAULTS = {"enabled": True, "start": "01:30", "hours": 4.0, "mode": "plan", "lessons": 3, "shadow": 1,
@@ -382,7 +407,7 @@ def lesson(ex: dict, *, lab=None, coder_ask=None, suite=None, one_test=_one_test
     """One exercise: the test is shown failing, she works it, code grades it. Returns the lesson's record
     (with her change under "_diff", for her teacher, read before the lab throws practice away). When her first
     try doesn't pass its own test, she gets one more with what pytest said (as anyone would read the error and
-    fix it); the lab's full suite grades whatever she ends with."""
+    fix it); the lab's full suite grades whatever she ends with. The proposal is noted as Night School's own."""
     if test_run is None and one_test is _one_test:
         test_run = _test_run
     if lab is None:
@@ -399,6 +424,7 @@ def lesson(ex: dict, *, lab=None, coder_ask=None, suite=None, one_test=_one_test
         plan += "\n\nWhat your teacher taught you last time:\n" + "\n".join(f"- {n}" for n in notes)
     p = lab.create(f"Night School: {ex['title'][:80]}", ex["task"], evidence="Night School exercise", plan=plan)
     out["proposal"] = p.proposal_id
+    _note_own(p.proposal_id)
     where = Path(lab.folder(p))
     test = where / ex["test_name"]
     test.parent.mkdir(parents=True, exist_ok=True)
@@ -524,7 +550,7 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     attempt at real work, an inspection of one specialist's chosen model (DEC-0200), one of her kept changes reviewed and
     put in on Claude's pass (core/self_merges.py, DEC-0225), study hall for one specialist (DEC-0109), loops drafted, the weekly benchmarks, the
     weekly self-audit (DEC-0108) and the shared development history brought up to date (core/dev_history.py,
-    T-0021). Returns the night's record."""
+    T-0021). Her own merges wait while everything is stopped (`stopped`). Returns the night's record."""
     from core import dev_ledger, loop_coverage, loops
     from core import work_tasks
     from core.dev_lab import PROTECTED
@@ -705,7 +731,7 @@ def night(now: Optional[datetime] = None, *, ask: Optional[Callable[[str, str], 
     # 7a1b. Her own changes, on Claude's pass (core/self_merges.py, DEC-0225): one kept exercise reviewed; a pass
     # merges through the lab (suite before and after, reverted by itself on a new failure), told in tomorrow's summary
     teacher_now = _teacher(list(cfg["teachers"]), calls, int(cfg["teacher_calls"]))
-    if cfg.get("self_merges", True) and teacher_now and not STOP_FILE.exists() and left() > 30:
+    if cfg.get("self_merges", True) and teacher_now and not stopped() and left() > 30:
         from core import self_merges
 
         try:

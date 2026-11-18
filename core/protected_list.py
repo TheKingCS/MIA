@@ -22,7 +22,14 @@ GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
      ("core/safety_floor.py", "core/safety_escalation.py", "core/child_accounts.py")),
     ("What I may do on my own", "every change goes through one contract, with its tier and your grants, and can be "
      "undone; how far each kind of change reaches",
-     ("core/actions.py", "core/undo_log.py", "core/grants.py", "core/kind_grants.py", "core/action_effects.py")),
+     ("core/actions.py", "core/undo_log.py", "core/grants.py", "core/kind_grants.py", "core/action_effects.py",
+      "apps/*/manifest.json", "core/app_registry.py", "core/taught_skills.py", "core/grant_actions.py",
+      "core/person_settings.py")),
+    ("How you say yes", "the approval card, the words that approve by voice, and the turn they're heard in",
+     ("core/spoken_approval.py", "core/quick_commands.py", "core/assistant_turn.py", "web/mia.js", "web/shell.js")),
+    ("What runs by itself", "my scheduled jobs and their timing", ("core/background_jobs.py", "core/scheduler.py")),
+    ("The tests that judge a change", "the suite's own settings; and a change of mine may add tests but never "
+     "delete one", ("pytest.ini", "tests/conftest.py")),
     ("Your stop", "\"stop everything\" and what it holds", ("core/stop.py",)),
     ("My browser's safety", "what I may press on a site, and that secret fields are never typed",
      ("core/browser_safety.py",)),

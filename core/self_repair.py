@@ -149,7 +149,8 @@ def _repair_ollama(llm, jobs: dict, clock, at: str, warm, path: Optional[Path]) 
 def check(context, scheduler=None, now: Optional[datetime] = None, path: Optional[Path] = None,
           warm=None, start=None) -> list[dict]:
     """One round of checks and the repairs they call for (see the module's opening); returns what she did now (a
-    start of Ollama runs on its own thread, `start`, and is kept when it's done, so the window never waits for it)."""
+    start of Ollama runs on its own thread, `start`, and is kept when it's done, so the window never waits for it;
+    a start that can't begin clears its flag). A job that kept failing is set to run again, and she says that."""
     from core.homeostasis import BACKOFF_AFTER
 
     now = now or datetime.now()
@@ -164,10 +165,14 @@ def check(context, scheduler=None, now: Optional[datetime] = None, path: Optiona
             and not llm.backend.is_available(timeout=2.0):
         _running.set()
         work = lambda: _repair_ollama(llm, jobs, clock, at, warm, path)  # noqa: E731
-        if start is None:
-            threading.Thread(target=work, name="mia-self-repair", daemon=True).start()
-        else:
-            start(work)
+        try:
+            if start is None:
+                threading.Thread(target=work, name="mia-self-repair", daemon=True).start()
+            else:
+                start(work)
+        except Exception:  # noqa: BLE001 - a start that never happened mustn't block every later one
+            _running.clear()
+            log.exception("Couldn't start the repair")
     for name, job in jobs.items():
         if name == "self_repair" or job.failures_in_a_row < BACKOFF_AFTER or clock is None:
             continue
@@ -176,7 +181,7 @@ def check(context, scheduler=None, now: Optional[datetime] = None, path: Optiona
         job.due = clock()
         done.append({"what": f"job:{name}", "at": at, "ok": True,
                      "said": f"The {name.replace('_', ' ')} job had failed {job.failures_in_a_row} times in a row "
-                             f"({job.last_error[:120]}); I ran it again."})
+                             f"({job.last_error[:120]}); I've set it to run again."})
     _keep(done, path)
     return done
 

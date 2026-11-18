@@ -94,6 +94,8 @@ DEFER = "defer"
 DROP = "drop"
 
 _BUSY_DEFER = timedelta(minutes=30)
+# Never paused by dismissals: the two reports his standing yes rests on (her own merged changes, her own repairs).
+NEVER_PAUSED = frozenset({"self_changes", "self_repair"})
 _BUSY_WINDOW = timedelta(minutes=30)
 _KEEP_LOG_DAYS = 30
 
@@ -267,7 +269,7 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
     everything but the urgent waits; focused on one thing in front of him (`state.focus`, DEC-0217), a nice-to-know
     that isn't about it waits once (a candidate already deferred isn't held for focus again). Each
     kind's learned pace a day (`state.allowances`) holds back what's past it; a fixed cap applies only when the person
-    set one (`daily_budget` above 0)."""
+    set one (`daily_budget` above 0). A topic in `NEVER_PAUSED` isn't dropped for his dismissals."""
     budget = int(settings.get("daily_budget", DEFAULT_SETTINGS["daily_budget"]) or 0)
     spacing = timedelta(minutes=int(settings.get("min_spacing_minutes", DEFAULT_SETTINGS["min_spacing_minutes"])))
     repeat_window = timedelta(days=int(settings.get("repeat_days", DEFAULT_SETTINGS["repeat_days"])))
@@ -286,7 +288,7 @@ def decide_batch(candidates: list[Candidate], now: datetime, state: GateState, s
             decisions.append(Decision(candidate, ACT, "urgent", "alone"))
             continue
         until = state.paused.get(candidate.topic)
-        if until is not None:
+        if until is not None and candidate.topic not in NEVER_PAUSED:
             decisions.append(Decision(candidate, DROP, f"you dismissed the last few, so I'm taking a break from these until {until:%b %d}"))
             continue
         sent_at = recent_keys.get(candidate.key())

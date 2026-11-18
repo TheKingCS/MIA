@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1512 files, 337,512 lines; 1512 files describe themselves; 18,560 of 18,659 classes and functions are documented.
+1513 files, 338,074 lines; 1513 files describe themselves; 18,597 of 18,696 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-591 files, 170,454 lines; 8,791 of 8,877 classes and functions documented
+591 files, 170,816 lines; 8,810 of 8,896 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -886,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-522 files, 87,813 lines; 7,421 of 7,434 classes and functions documented
+523 files, 88,013 lines; 7,439 of 7,452 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -929,6 +929,7 @@
 - `tests/test_assistant_screen_tools.py`: tests/test_assistant_screen_tools.py — voice for screens that had none (core/assistant_screen_tools.py, DEC-0125): looking something up online through the person's own engine (and saying why not when it can't), what isn't working, past conversations listed and searched, and the sensors listed with t
 - `tests/test_at_rest.py`: MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a file that won't open is copied aside before the error, so a store starti
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.
+- `tests/test_authority_review.py`: The defects Fable's review of 2026-11-18 found in what MIA may do on her own, each kept fixed by a test here: an undo can't lift a stop or revive a standing yes; a standing yes covers only routine entries; her own merges can't be passed half-read, by someone else's proposal, with tests deleted or er
 - `tests/test_auto_backup.py`: The nightly backup (core/auto_backup.py): when it is due, which automatic backups the rotation keeps (and that a hand-made one is never touched), and a real round trip: stores written, backed up at night, changed, then restored to what the backup held.
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
 - `tests/test_background_jobs.py`: MIA's scheduled jobs without the window (core/background_jobs.py, DEC-0155): the ten jobs and 43 daily checks are pinned so none is lost on the way to MIA OS; they run with no Qt; and the desktop app runs the very same ones.
