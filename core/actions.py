@@ -81,7 +81,8 @@ class Proposal:
     """One proposed change waiting for, or past, its decision: the kind and params, the summary the person approves
     (made in code, never by the model), whose it is, who proposed it (the person or MIA), its status (proposed,
     executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
-    whether it ran at once on his standing yes (`auto`, DEC-0215), and the undo record (kept server-side, never sent).
+    whether it ran at once on his standing yes (`auto`, DEC-0215), the trace id of what proposed it (DEC-0280), and the
+    undo record (kept server-side, never sent).
     """
     proposal_id: str
     kind: str
@@ -97,6 +98,7 @@ class Proposal:
     # "Objective Complete +30 XP", Zac 2026-10-16): see reward_for().
     reward: Optional[dict] = None
     auto: bool = False  # done at once on his standing yes for the kind (Approve From Now On, DEC-0215)
+    trace: str = ""  # the trace id of what proposed it (core/trace.py, DEC-0280); approving it runs under the same
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
@@ -544,7 +546,8 @@ class ActionCenter:
         """Step 1. Checks it and says what would happen (that it can't be undone, for an irreversible kind:
         core/action_effects.py); changes nothing. Except: when MIA herself proposes a kind he approved from now on
         (core/kind_grants.py, DEC-0215), it's approved at once and comes back executed (or failed), marked `auto`;
-        unless the grants check holds it (a stop-everything), when it stays a card like any other."""
+        unless the grants check holds it (a stop-everything), when it stays a card like any other. It carries the
+        trace id of what proposed it, or a new one for a press on a screen (core/trace.py)."""
         from core.child_accounts import is_child
 
         action = ACTION_TYPES.get(kind)
@@ -560,9 +563,12 @@ class ActionCenter:
 
         if effect_of(kind)[1] == "irreversible":  # said before it's approved (REQ-AUT-006)
             summary = says_irreversible(summary)
+        from core import trace
+
         proposal = Proposal(uuid.uuid4().hex[:12], kind, params, summary, _who(context),
                             "mia" if proposed_by == "mia" else "person",
-                            created_at=datetime.now().isoformat(timespec="seconds"))
+                            created_at=datetime.now().isoformat(timespec="seconds"),
+                            trace=trace.current() or trace.new_id())  # a press on a screen starts its own
         with self._lock:
             self._expire()
             self._proposals[proposal.proposal_id] = proposal
@@ -608,7 +614,9 @@ class ActionCenter:
         call for a standing yes; any later caller gets that result back.
         After a kind that removes something, the recall index drops
         what's gone at once (core/recall_index.drop_gone). A change that
-        fails part way puts back every file it had written (`_put_back`)."""
+        fails part way puts back every file it had written (`_put_back`).
+        It runs under the proposal's trace id, so what it changes and
+        records names the same cause (DEC-0280)."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
@@ -636,8 +644,11 @@ class ActionCenter:
         before = _moment(context, proposal)
         from core import orb_state
 
+        from core import trace
+
         try:
-            with recording(f"action_{proposal.kind}", proposal.profile_id) as change, \
+            with trace.tracing(proposal.trace), \
+                    recording(f"action_{proposal.kind}", proposal.profile_id) as change, \
                     life_events.acting(source, proposal.profile_id), crediting(context, proposal.profile_id), \
                     orb_state.active("working"):  # her orb shows it (core/orb_state.py)
                 proposal.result = action.execute(context, proposal.params)

@@ -145,7 +145,8 @@ _local = threading.local()
 class LifeEvent:
     """One thing that happened, in the history: when, what kind, a summary in words, references to the things it's
     about ("kind:id"), a payload of numbers, where it came from, whose it is, and its environment — real (actual
-    life, the default), fictional (a Living Worlds campaign) or simulated (DEC-0137), so real-life views filter to real.
+    life, the default), fictional (a Living Worlds campaign) or simulated (DEC-0137), so real-life views filter to real;
+    and the trace id of what caused it (DEC-0280).
     """
     event_id: str
     at: str
@@ -158,15 +159,17 @@ class LifeEvent:
     # Real-vs-fictional boundary (DEC-0137): "real" (actual life), "fictional" (a Living Worlds campaign) or
     # "simulated" (a what-if). Real-life views and the real XP ledger keep to environment == "real".
     environment: str = REAL
+    trace: str = ""  # what caused it (core/trace.py, DEC-0280)
 
     @staticmethod
     def from_dict(data: dict) -> "LifeEvent":
-        """An event from one saved line; missing fields take their defaults."""
+        """An event from one saved line; missing fields take their defaults (no trace for an older one)."""
         return LifeEvent(
             event_id=str(data.get("event_id", "")), at=str(data.get("at", "")), type=str(data.get("type", "")),
             summary=str(data.get("summary", "")), refs=list(data.get("refs") or []),
             payload=dict(data.get("payload") or {}), source=str(data.get("source", "manual")),
             profile_id=data.get("profile_id"), environment=normalize(data.get("environment")),
+            trace=str(data.get("trace") or ""),
         )
 
     @property
@@ -232,19 +235,27 @@ def folder_of(where) -> Path:
     return Path(module_dir) if module_dir is not None else _DATA_DIR
 
 
+def _trace_now() -> str:
+    """The trace id of the work recording this event (core/trace.py)."""
+    from core import trace
+
+    return trace.current()
+
+
 def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Optional[dict] = None,
            profile_id: Optional[str] = None, source: Optional[str] = None, environment: str = REAL) -> Optional[LifeEvent]:
     """Called by a store right after a meaningful change. Never raises:
     a history that can't be written must not undo the change itself. `environment` tags the event real (default),
     fictional or simulated (DEC-0137) so a fictional campaign's events never read as real life. The line is sealed
-    on its own as it's appended (core/at_rest.py LINE_SEALED, DEC-0126): appended, never rewritten."""
+    on its own as it's appended (core/at_rest.py LINE_SEALED, DEC-0126): appended, never rewritten. It carries the
+    trace id of the work recording it (core/trace.py)."""
     if where is None or getattr(_local, "quiet", 0):
         return None
     event = LifeEvent(
         event_id=uuid.uuid4().hex[:12], at=datetime.now().isoformat(timespec="seconds"), type=type,
         summary=summary, refs=[r for r in refs if r], payload=dict(payload or {}),
         source=source or getattr(_local, "source", None) or "manual", profile_id=profile_id or _who(where),
-        environment=normalize(environment),
+        environment=normalize(environment), trace=_trace_now(),
     )
     try:
         folder = folder_of(where)

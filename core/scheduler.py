@@ -126,7 +126,8 @@ class Scheduler:
     def _run(self, job: Job) -> bool:
         """Runs one due job under the store lock; False when the stores were busy (it stays due) or it was asked to
         wait (due again one interval on). A failure is logged and recorded, and the job is due again one interval on,
-        like a run that worked, or later once it keeps failing (backoff)."""
+        like a run that worked, or later once it keeps failing (backoff). Each run is a cause of its own, with its own
+        trace id (core/trace.py)."""
         why = self._defer_reason(job.name)
         if why:
             job.deferrals += 1
@@ -138,8 +139,11 @@ class Scheduler:
             log.debug("Skipped %s for now: the stores are busy.", job.name)
             return False
         started = self._clock()
+        from core import trace
+
         try:
-            job.run()
+            with trace.tracing(trace.new_id()):  # each run its own cause (DEC-0280)
+                job.run()
             job.last_error = ""
             job.failures_in_a_row = 0
         except Exception as problem:  # noqa: BLE001 - one job's failure never stops the schedule

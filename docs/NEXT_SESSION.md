@@ -10,6 +10,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-01 built** (trace ids, `core/trace.py`): a turn, each scheduled job run and each press on a
+screen start a cause; proposals (and their approval, even later), life events, changes kept for undo and in the
+history, runs and the security log carry its id; the turn trace keeps it and `template` (the prompt code's version).
+To see what one cause did, search those records for its `trace`. A tool that shows it is still to build.
+
 **New 2026-11-18, FW-03 started** (MIA's own session): `core/desktop_session.py`, `gui/os_shell.py`,
 `os/files/mia-session`, `mia-shell`, `mia.desktop`; the VM test's new step runs the session under `kwin_wayland
 --virtual` and uploads two screenshots (artifact `mia-session-screenshots`). **Check that run first**: the KWin flags

@@ -193,7 +193,16 @@ def _personal(conversation) -> bool:
 def run_assistant_turn(context: AppContext, conversation: Conversation, prompt: str, surface: str = "") -> AssistantTurn:
     """One turn, traced (core/turn_trace.py): how it was answered, how long it took, and on which device
     ("glasses", "phone"; "" for the PC), for the glasses.voice loop. After the reply, one offer: a note to keep
-    (core/life_notes.py), else a way to track what they said they did (core/did_it.py)."""
+    (core/life_notes.py), else a way to track what they said they did (core/did_it.py). The whole turn runs under
+    one trace id (core/trace.py, DEC-0280), so what it proposed, changed and recorded can be found from it."""
+    from core import trace
+
+    with trace.tracing():
+        return _traced_turn(context, conversation, prompt, surface)
+
+
+def _traced_turn(context: AppContext, conversation: Conversation, prompt: str, surface: str) -> AssistantTurn:
+    """run_assistant_turn's work, under its trace id."""
     from core.turn_trace import record
 
     started = time.monotonic()

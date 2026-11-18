@@ -85,10 +85,12 @@ class SecurityLog:
         self._lock = threading.Lock()
 
     def record(self, kind: str, profile_id: Optional[str], device: str = "", detail: str = "") -> dict:
-        """Appends one event and returns it; the log is cut back to its newest KEEP lines when it grows past twice
-        that."""
+        """Appends one event, with the trace id of what caused it, and returns it; the log is cut back to its newest
+        KEEP lines when it grows past twice that."""
+        from core import trace
+
         entry = {"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "profile_id": profile_id or "",
-                 "device": (device or "")[:80], "detail": (detail or "")[:120]}
+                 "device": (device or "")[:80], "detail": (detail or "")[:120], "trace": trace.current()}
         with self._lock:
             try:
                 self.path.parent.mkdir(parents=True, exist_ok=True)

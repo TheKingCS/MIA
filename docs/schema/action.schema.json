@@ -85,6 +85,10 @@
       "type": "boolean",
       "description": "Done at once on his standing yes for the kind (Approve From Now On), not on this card."
     },
+    "trace": {
+      "type": "string",
+      "description": "The trace id of what proposed it (core/trace.py, DEC-0280): the same id is on what it changed and recorded."
+    },
     "reward": {
       "type": [
         "object",

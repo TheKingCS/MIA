@@ -83,9 +83,35 @@ class TurnTraces:
         return self.traces[-count:]
 
 
+_TEMPLATE: list = []
+
+
+def template_version() -> str:
+    """The version of the code that builds MIA's prompts (core/assistant_chat.py): the first 8 characters of its
+    hash, so a change in her answers can be tied to a change in her prompts, not only a model's."""
+    if not _TEMPLATE:
+        import hashlib
+
+        from core import assistant_chat
+
+        try:
+            _TEMPLATE.append(hashlib.sha256(Path(assistant_chat.__file__).read_bytes()).hexdigest()[:8])
+        except OSError:
+            _TEMPLATE.append("")
+    return _TEMPLATE[0]
+
+
+def _trace_id() -> str:
+    """The trace id of the turn being recorded (core/trace.py)."""
+    from core import trace
+
+    return trace.current()
+
+
 def record(context, conversation, prompt: str, turn, seconds: float, surface: str = "") -> None:
-    """Trace one finished turn, with her own router's picks in the shadow (tool names only) and the message's kind
-    (core/message_kind.py). Never raises, and never traces a private one."""
+    """Trace one finished turn, with her own router's picks in the shadow (tool names only), the message's kind
+    (core/message_kind.py), its trace id and the prompt code's version. Never raises, and never traces a private
+    one."""
     try:
         traces = getattr(context, "traces", None)
         if traces is None:
@@ -119,6 +145,8 @@ def record(context, conversation, prompt: str, turn, seconds: float, surface: st
             "model_answered": bool(getattr(turn, "llm_available", True)),
             "seconds": round(seconds, 2),
             "kind": message_kind.sort(prompt or ""),  # what kind of message, watched before it steers (T-0009)
+            "trace": _trace_id(),  # the same id is on what this turn proposed and changed (DEC-0280)
+            "template": template_version(),  # which prompt code answered, to tie a regression to a prompt change
             **({"shadow": shadow} if shadow else {}),
         })
     except Exception:  # a trace is never in the way of an answer

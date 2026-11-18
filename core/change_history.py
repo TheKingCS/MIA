@@ -153,8 +153,9 @@ def _append(folder: Path, record: dict) -> None:
 
 def keep(change) -> Optional[str]:
     """Keeps a finished change (core/undo_log.Change) in its person's history: its files' hashes before and after
-    and the bytes before. Append-only logs are left out. Never raises: a history that can't be written leaves the
-    change itself standing. Returns the change's id, or None when nothing was kept."""
+    and the bytes before, with the trace id of what caused it. Append-only logs are left out. Never raises: a history
+    that can't be written leaves the change itself standing. Returns the change's id, or None when nothing was
+    kept."""
     try:
         folder = folder_for(change.profile_id)
         files = []
@@ -169,7 +170,7 @@ def keep(change) -> Optional[str]:
                 return None
             _append(folder, {"change_id": change.change_id, "label": change.label, "summary": change.summary[:200],
                              "profile_id": change.profile_id, "at": change.at, "by": change.by, "files": files,
-                             "events": list(change.events)})
+                             "events": list(change.events), "trace": getattr(change, "trace", "")})
             if folder not in _pruned:
                 _pruned.add(folder)
                 prune(folder)

@@ -62,7 +62,7 @@ def _now() -> str:
 
 @dataclass
 class RunRecord:
-    """One run (see the module's opening)."""
+    """One run (see the module's opening), with the trace id of what started it (DEC-0280)."""
     run_id: str
     source: str  # the engine: browser_routines, taught_skills, workflows, plans
     ref: str  # what it runs, by kind:id
@@ -76,6 +76,7 @@ class RunRecord:
     why: str = ""  # why it ended, for stopped and failed
     state: dict = field(default_factory=dict)  # the engine's own
     how: str = "observed"  # the engine wrote what it did (DEC-0173)
+    trace: str = ""  # what started it (core/trace.py, DEC-0280)
 
     @property
     def is_open(self) -> bool:
@@ -134,13 +135,16 @@ class RunBook:
     # ------------------------------------------------------------------ what engines write
 
     def start(self, source: str, ref: str, title: str, at: str = "1", state: Optional[dict] = None) -> RunRecord:
-        """A new run, running from its first step (or `at`). ValueError for an engine it doesn't know."""
+        """A new run, running from its first step (or `at`), with the trace id of what started it. ValueError for an
+        engine it doesn't know."""
         if source not in SOURCES:
             raise ValueError(f"{source} isn't an engine that runs steps.")
         with self._lock:
             now = _now()
+            from core import trace
+
             run = RunRecord(uuid.uuid4().hex[:12], source, ref, " ".join(str(title).split())[:120] or ref, now, now,
-                            at=str(at), state=dict(state or {}))
+                            at=str(at), state=dict(state or {}), trace=trace.current())
             self.runs[run.run_id] = run
             self._save()
             return run

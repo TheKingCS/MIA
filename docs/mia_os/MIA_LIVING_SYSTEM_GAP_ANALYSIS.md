@@ -230,7 +230,7 @@ history). Partial:
 
 | ID | Package | Release | Sessions |
 |---|---|---|---|
-| LS-01 | The trace id through the turn, proposals, the history and change history; the template version (DEC-0280) | Alpha | 1 to 2 |
+| LS-01 | The trace id through the turn, proposals, the history and change history; the template version (DEC-0280). **Built 2026-11-18** (`core/trace.py`): a turn, each scheduled job run and each screen press start one; proposals, their approval later, life events, changes, runs and the security log carry it; the turn trace keeps it and the prompt code's version | Alpha | 1 to 2 |
 | LS-02 | The epistemic declaration and `confirmed_at`, `holds` on `user_memories` and `life_notes`; declarations on `life_events` and `links` (DEC-0281). **Built 2026-11-18:** his memories and life notes carry source, how, `confirmed_at`, `holds_from`/`holds_until`; the history and links declare it; all five off the baseline | **MVP gate** (REQ-INT-015) | 1 |
 | LS-03 | Sync's loser kept in the change history with one note (DEC-0285, implementing DEC-0243); the retention registry deciding what syncs (DEC-0286) | Alpha | 2 |
 | LS-04 | The four capability descriptions checked as one; deadlines and cancel checks for device and outside work; four error kinds (DEC-0283) | Alpha | 2 |
@@ -274,7 +274,7 @@ confirmed by both reviewers, and they're told to Zac as such.
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-LS-001 | A turn, a job and a change shall carry one trace id from intake into the turn trace, proposals, the history and the change history; a private turn is never traced. | Must | R1 | All | New | T | DEC-0280 → 21 |
+| REQ-LS-001 | A turn, a job and a change shall carry one trace id from intake into the turn trace, proposals, the history and the change history; a private turn is never traced. | Must | R1 | All | Exists (2026-11-18, LS-01) | T | DEC-0280 → 21 |
 | REQ-LS-002 | The memory stores shall declare the epistemic contract (source, when, how, checked), and his memories and life notes shall carry when he confirmed them and when they hold. | Must | MVP | All | Exists (2026-11-18: user_memories, life_notes, life_events, links; intents next) | T: the baseline loses those stores | DEC-0281, REQ-INT-015 → 21 |
 | REQ-LS-003 | When a memory he's keeping seems to contradict one held, she shall say so and he shall decide; nothing is overwritten. | Should | R1 | All | New | T | DEC-0281 → 21 |
 | REQ-LS-004 | Every inferred habit shall be shown with its evidence and its own reset, and no reset shall touch his grants, his standing yeses, a pause he asked for, the stop, or anything he set himself. | Must | R1 | All | Partial | T | DEC-0282 → 21 |
