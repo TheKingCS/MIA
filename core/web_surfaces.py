@@ -233,11 +233,18 @@ def shell(context, today: Optional[date] = None) -> dict:
 
 def _noting(context) -> bool:
     """Whether MIA is noting which app is in front of him on this PC (core/activity_watch.py), for the sidebar's
-    indicator; False where nothing can be noted."""
+    indicator; False where nothing can be noted (not Windows) or while a stop holds it."""
     try:
         from core import activity_watch
 
-        return getattr(context, "activity", None) is not None and activity_watch.noting(context)
+        import sys
+
+        from core import stop
+
+        # Only where a window can really be read (Windows for now) and while nothing holds it: the indicator
+        # says what is happening, not what the setting is.
+        return (sys.platform == "win32" and getattr(context, "activity", None) is not None
+                and activity_watch.noting(context) and not stop.holding(context))
     except Exception:  # noqa: BLE001 - an indicator that can't be read shows nothing
         return False
 

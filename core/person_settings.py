@@ -65,6 +65,7 @@ PERSONAL_SETTINGS = (
     "sound.voice",
     "places.watch",
     "activity.on",  # DEC-0197: noting which app is in front of him
+    "activity.browser_titles", "activity.skip_words",  # a browser's page titles kept (off), his own words to skip
     "vault.on",
     "vault.wifi_only",
     "vault.keep_days",

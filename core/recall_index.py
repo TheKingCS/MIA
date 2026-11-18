@@ -131,7 +131,7 @@ class RecallIndex:
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads the index from a person's folder (or data/), sealed at rest; an unreadable one starts empty (it's
-        rebuilt). A lock for a refresh on its own thread, and whether one is running."""
+        rebuilt). A lock for a refresh on its own thread, kept for the index's whole life, and whether one is running."""
         from core.at_rest import open_text
 
         self.context = context
@@ -141,6 +141,13 @@ class RecallIndex:
         self.items: dict[str, dict] = {}
         self._lock = threading.Lock()  # a refresh on its own thread and a search may meet
         self._refreshing = threading.Event()
+        self._read()
+
+    def _read(self) -> None:
+        """Reads the file into `model` and `items`; an unreadable one leaves them empty."""
+        from core.at_rest import open_text
+
+        self.model, self.items = "", {}
         if self._file.exists():
             try:
                 data = json.loads(open_text(self._file))
@@ -149,8 +156,10 @@ class RecallIndex:
                 log.exception("recall_index.json unreadable, starting empty (it's rebuilt).")
 
     def _load(self) -> None:
-        """Reads the file again (after an undo restored the stores it follows)."""
-        self.__init__(self.context, self.data_dir)
+        """Reads the file again (after an undo restored the stores it follows), under the same lock: a refresh on
+        its own thread keeps the lock it took, so it can't write over what was just restored."""
+        with self._lock:
+            self._read()
 
     def _save(self) -> None:
         """Writes the index atomically, sealed (core/at_rest.py), without telling open screens to re-read."""
@@ -183,37 +192,48 @@ class RecallIndex:
 
     def refresh(self, context, embed=None, now: Optional[datetime] = None, found: Optional[dict] = None) -> dict:
         """Drops what's gone, embeds up to BATCH new or changed records; {added, dropped, waiting}. A different
-        embedding model starts the index over. `found` is the records when already read (refresh_later)."""
+        embedding model starts the index over. `found` is the records when already read (refresh_later). The embedding
+        runs with the lock free; a record removed meanwhile isn't kept; nothing is saved by an index an undo has
+        replaced."""
         embed = embed if embed is not None else embedder(context)
         found = records(context) if found is None else found
-        with self._lock:
-            return self._refresh(found, embed, now)
-
-    def _refresh(self, found: dict, embed, now: Optional[datetime]) -> dict:
-        """refresh's work, under the lock."""
-        dropped = [ref for ref in self.items if ref not in found]
-        for ref in dropped:
-            del self.items[ref]
-        if embed is None:
-            if dropped:
+        with self._lock:  # what's gone is dropped, and what's new is listed, under the lock
+            dropped = [ref for ref in self.items if ref not in found]
+            for ref in dropped:
+                del self.items[ref]
+            model = getattr(embed, "model", "") if embed is not None else ""
+            if model and model != self.model:
+                self.items, self.model = {}, model
+            todo = [] if embed is None else [(ref, text) for ref, text in found.items()
+                                             if self.items.get(ref, {}).get("h") != _hash(text)][:BATCH]
+            if dropped and not todo:
                 self._save()
-            return {"added": 0, "dropped": len(dropped), "waiting": len(found) - len(self.items)}
-        model = getattr(embed, "model", "")
-        if model and model != self.model:
-            self.items, self.model = {}, model
-        todo = [(ref, text) for ref, text in found.items()
-                if self.items.get(ref, {}).get("h") != _hash(text)][:BATCH]
+        # The embedding (up to a minute) runs with the lock free, so a search or a forget never waits on it.
+        vectors = embed([t for _r, t in todo], "document") if todo else None
         added = 0
-        if todo:
-            vectors = embed([t for _r, t in todo], "document")
+        with self._lock:
             if vectors:
                 at = (now or datetime.now()).isoformat(timespec="seconds")
                 for (ref, text), vector in zip(todo, vectors):
+                    if _reread(context, ref) is None:
+                        continue  # deleted while it was being embedded: nothing of it is kept
                     self.items[ref] = {"h": _hash(text), "v": [round(x, 5) for x in vector], "at": at}
-                added = len(todo)
-        if added or dropped:
-            self._save()
-        return {"added": added, "dropped": len(dropped), "waiting": len(found) - len(self.items)}
+                    added += 1
+            if (added or (dropped and todo)) and getattr(context, "recall", self) is self:
+                self._save()  # not when an undo has put a fresh index in this one's place
+            return {"added": added, "dropped": len(dropped), "waiting": len(found) - len(self.items)}
+
+    def drop_gone(self, context) -> int:
+        """Takes out every indexed record that's no longer in its store, at once (called after something was
+        removed, core/actions.py); nothing is embedded. How many went."""
+        found = records(context)
+        with self._lock:
+            gone = [ref for ref in self.items if ref not in found]
+            for ref in gone:
+                del self.items[ref]
+            if gone:
+                self._save()
+        return len(gone)
 
     def forget(self, ref: str) -> None:
         """Takes one record out of the index at once (a deleted memory, an erased note), under the lock."""

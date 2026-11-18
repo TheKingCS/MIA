@@ -50,7 +50,12 @@ def test_spans_older_than_seven_days_are_dropped(tmp_path):
 def test_titles_are_cut_and_kept_only_on_this_pc_in_his_folder(tmp_path):
     log = aw.ActivityLog(None, tmp_path)
     log.note("Code", "x" * 500, T0)
-    assert len(log.spans()[0]["title"]) == aw.TITLE_CHARS and (tmp_path / "activity.json").exists()
+    assert len(log.spans()[0]["title"]) == aw.TITLE_CHARS
+    from core import at_rest, personal_data
+
+    assert [p.name for p in tmp_path.iterdir()] == ["activity.json"]  # one file, in his folder, no second copy
+    assert "activity.json" in at_rest.SEALED  # sealed at rest wherever a key is set up
+    assert any(cls is aw.ActivityLog for _name, cls in personal_data.PERSONAL_STORES)  # his own, never shared
 
 
 def test_erase_forgets_everything_and_survives_a_reload(tmp_path):

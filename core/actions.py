@@ -589,7 +589,8 @@ class ActionCenter:
         (core/orb_state.py). One decision per card: a second approval
         arriving while the first runs is refused. `_auto` is propose's own
         call for a standing yes; any later caller gets that result back.
-        Something removed leaves the recall index at once."""
+        After a kind that removes something, the recall index drops
+        what's gone at once (core/recall_index.drop_gone)."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
@@ -645,6 +646,14 @@ class ActionCenter:
             except Exception:  # the record never breaks the change
                 log.exception("Couldn't keep the correction record for %s.", proposal.kind)
             publish(context, "records.changed", action=f"action_{proposal.kind}")
+            try:  # something removed leaves the recall index at once, not at its next refresh (core/recall_index.py)
+                from core.kind_grants import _ASKS_WORDS
+
+                index = getattr(context, "recall", None)
+                if index is not None and any(w in proposal.kind.replace(".", "_").split("_") for w in _ASKS_WORDS):
+                    index.drop_gone(context)
+            except Exception:  # the index never breaks the change
+                log.exception("Couldn't drop removed records from the recall index after %s.", proposal.kind)
             try:  # "watch me" (DEC-0123): a change approved while she's watching is a step of that skill
                 from core.taught_skills import observe_action
 

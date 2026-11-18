@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1513 files, 338,074 lines; 1513 files describe themselves; 18,597 of 18,696 classes and functions are documented.
+1514 files, 338,311 lines; 1514 files describe themselves; 18,612 of 18,711 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-591 files, 170,816 lines; 8,810 of 8,896 classes and functions documented
+591 files, 170,923 lines; 8,815 of 8,901 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -609,7 +609,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-124 files, 22,135 lines; 1,109 of 1,109 classes and functions documented
+124 files, 22,140 lines; 1,109 of 1,109 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -886,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-523 files, 88,013 lines; 7,439 of 7,452 classes and functions documented
+524 files, 88,138 lines; 7,449 of 7,462 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1172,6 +1172,7 @@
 - `tests/test_notes_module.py`: Unit test for modules.notes.module.format_entry_row — pure formatting logic, no Qt event loop needed (importing the module only defines widget classes; nothing here instantiates one).
 - `tests/test_notification_manager.py`: Unit tests for core.notification_manager — previously untested (a real, pre-existing gap, not something this file tries to backfill in full). Added now specifically to cover notify()'s new "notifications.enabled" gate (2026-07-15 "ForMIA" design handoff's Quick Bus widget) — the first real, non-cosm
 - `tests/test_obligations.py`: Tax and compliance obligations (DEC-0040): deadlines moved off weekends and holidays, an extension to file never moving the money's date, reminders once each, unverified never shown as confirmed, repeats, and the one next step each Compliance row offers (DEC-0113).
+- `tests/test_observation_review.py`: The defects Fable's review of 2026-11-18 found in what MIA notes and recalls, each kept fixed by a test here: private windows that used to be noted, a browser's titles kept only on his say-so, an erase that leaves no copy, the seven days holding while noting is off, and a recall index that keeps not
 - `tests/test_observations_module.py`: Unit tests for modules.observations.module's pure functions, same style as tests/test_memories_module.py (no Qt event loop, no fixtures).
 - `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source, each with its card (kind, the apps it used, where to settle it: DEC-0113).
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.

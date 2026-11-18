@@ -110,11 +110,10 @@ def test_another_embedding_model_starts_the_index_over(tmp_path):
     assert ctx.recall.model == "other-embed" and list(ctx.recall.items) == ["memory:m1"]
 
 
-def test_without_an_embedding_model_it_matches_words_and_says_so(tmp_path):
+def test_without_an_embedding_model_it_matches_words_and_says_so(tmp_path, monkeypatch):
     ctx = _context(tmp_path, {"m1": "the chicken coop needs a roof", "m2": "budget for March"})
+    monkeypatch.setattr(ri, "embedder", lambda context: None)  # no model, whatever this machine has running
     found = ri.search(ctx, "coop roof", embed=None)
-    if found["how"] == "meaning":  # an embedding model answered on this machine
-        return
     assert found["how"] == "words" and [h["ref"] for h in found["hits"]] == ["memory:m1"]
 
 

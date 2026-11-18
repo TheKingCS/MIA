@@ -61,6 +61,7 @@ EFFECTS: dict[str, tuple[str, str, str]] = {
     # records, but not through the undo log alone
     "inbox.file": ("records", "compensable", "moves a document into place; unfiling it reverses it"),
     "inbox.unfile": ("records", "compensable", "moves a document back to the inbox; filing it reverses it"),
+    "activity.erase": ("records", "irreversible", "erases what she noted about his apps, with no copy kept"),
     "undo.last": ("records", "irreversible", "an undo isn't itself undone"),
     "history.undo": ("records", "irreversible", "an undo isn't itself undone"),
 }

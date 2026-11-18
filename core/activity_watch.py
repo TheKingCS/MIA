@@ -11,8 +11,12 @@ him**, so she can tie work to a project and answer "where was I?".
   keystrokes or contents;
 - **skipped**: password managers and private browser windows (`SKIP_APPS`, `SKIP_WORDS`), and MIA's own window;
 - **an indicator while it's on**: the sidebar says so (`/api/shell` carries `noting`), and Settings shows it;
-- **an erase button**: `activity.erase` (Settings, or "erase what you noted about my apps"), undoable like any
-  change for a few minutes, then gone;
+- **an erase button**: `activity.erase` (Settings, or "erase what you noted about my apps"): gone at once and for
+  good. No copy is kept (not the writer's safety copy, not the undo history), so it can't be undone, and its card
+  says so;
+- **web pages by the browser's name only**, unless he turns page titles on (`activity.browser_titles`): a private
+  window's title looks like any other, so a browser's titles aren't kept by default;
+- **his own words to skip** (`activity.skip_words`), besides the built-in ones;
 - **his own, kept 7 days** (`KEEP_DAYS`): `activity.json` in his folder (a personal store), sealed at rest
   (`core/at_rest.SEALED`); never sent anywhere; written without reloading open screens, and a span only growing
   longer at most every `SAVE_EVERY` seconds;
@@ -57,19 +61,41 @@ FOCUS_WINDOW = 15  # minutes looked at for focus
 FOCUS_MIN = 10  # minutes on one app and title in that window that count as focused
 FOCUS_FRESH = 120  # seconds: the last look must be this recent (he's still there)
 SKIP_APPS = ("keepass", "1password", "bitwarden", "lastpass", "dashlane", "keeper", "credentialuibroker",
-             "lockapp", "logonui")
-SKIP_WORDS = ("inprivate", "incognito", "private browsing", "password", "sign in", "log in")
+             "lockapp", "logonui", "protonpass", "proton pass", "nordpass", "enpass", "roboform", "authy",
+             "authenticator", "keychain", "consent", "winlogon")
+SKIP_WORDS = ("inprivate", "incognito", "private browsing", "private window", "password", "passcode", "sign in",
+              "sign-in", "signin", "log in", "log-in", "login", "logon", "vault", "verification code", "two-factor",
+              "2fa", "bank", "credit card", "paypal", "account number", "routing number", "social security",
+              "tax return", "patient", "mychart", "medical record", "lab result", "prescription")
+BROWSERS = ("chrome", "msedge", "firefox", "brave", "opera", "vivaldi", "arc", "iexplore", "safari", "chromium",
+            "librewolf", "waterfox", "tor browser", "duckduckgo")
+BROWSER_TITLES = "activity.browser_titles"  # his setting: keep a browser's page titles (off unless he turns it on)
+OWN_SKIP_WORDS = "activity.skip_words"  # his setting: more words whose windows are never noted
+A_WEB_PAGE = "a web page"
 OWN_TITLES = ("MIA ", "MIA —", "MIA ·")  # her own window
 
 
-def keep_this(app: str, title: str) -> bool:
-    """Pure logic. Whether a window may be noted: not a password manager, a private window, a sign-in, or MIA."""
+def keep_this(app: str, title: str, own_words: tuple = ()) -> bool:
+    """Pure logic. Whether a window may be noted: not a password manager, a private window, a sign-in, money or
+    health, one of his own words to skip, or MIA."""
     a, t = (app or "").lower(), (title or "").lower()
     if not a and not t:
         return False
-    if any(s in a for s in SKIP_APPS) or any(w in t for w in SKIP_WORDS):
+    words = SKIP_WORDS + tuple(str(w).lower().strip() for w in (own_words or ()) if str(w).strip())
+    if any(s in a or s in t for s in SKIP_APPS) or any(w in t for w in words):
         return False
     return not any((title or "").startswith(o) for o in OWN_TITLES)
+
+
+def is_browser(app: str) -> bool:
+    """Pure logic. Whether a program is a web browser."""
+    return (app or "").lower().strip() in BROWSERS
+
+
+def title_kept(app: str, title: str, browser_titles: bool) -> str:
+    """Pure logic. The title that's kept: the window's own, except a browser's, which is kept only as "a web page"
+    unless he turned page titles on (a private window can't be told from an ordinary one by its title)."""
+    return A_WEB_PAGE if is_browser(app) and not browser_titles else title
 
 
 def foreground() -> Optional[tuple[str, str]]:
@@ -104,7 +130,7 @@ class ActivityLog:
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """Loads the spans from a person's folder (or data/), sealed at rest; an unreadable file starts empty. Nothing
-        written yet this run (`_saved_at`)."""
+        written yet this run (`_saved_at`). Spans past KEEP_DAYS are dropped as it loads."""
         from core.at_rest import open_text
 
         self.context = context
@@ -117,6 +143,7 @@ class ActivityLog:
                 self._spans = [s for s in json.loads(open_text(self._file)).get("spans", []) if isinstance(s, dict)]
             except (OSError, ValueError, TypeError, AttributeError):
                 log.exception("activity.json unreadable, starting empty.")
+        self.prune()  # the 7 days hold whether or not noting is on
 
     def _load(self) -> None:
         """Reads the file again (after an undo restored it)."""
@@ -124,15 +151,43 @@ class ActivityLog:
 
     def _save(self) -> None:
         """Writes the spans atomically, sealed (core/at_rest.py), without telling open screens to re-read (no screen
-        shows them, and a write every 30 seconds would reload every page)."""
+        shows them, and a write every 30 seconds would reload every page), and removes the writer's safety copy."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._file, json.dumps({"spans": self._spans}, indent=1, ensure_ascii=False), live=False)
+        self._drop_copy()
 
-    def note(self, app: str, title: str, now: Optional[datetime] = None) -> bool:
-        """Notes the window in front of him, if it may be noted; True when something was kept. A new span is written
-        at once; a span only growing longer at most every SAVE_EVERY seconds. Spans older than KEEP_DAYS go."""
-        if not keep_this(app, title):
+    def _drop_copy(self) -> None:
+        """Removes the writer's safety copy of this file (core/atomic_write.prev_path): what he's worked on has no
+        second copy that outlives a prune or an erase."""
+        from core.atomic_write import prev_path
+
+        try:
+            prev_path(self._file).unlink(missing_ok=True)
+        except OSError:
+            log.exception("Couldn't remove the old copy of what was noted")
+
+    def prune(self, now: Optional[datetime] = None) -> int:
+        """Drops spans older than KEEP_DAYS and writes if any went; how many. Called on loading and by the
+        background job even while noting is off, so the limit doesn't depend on something new being noted."""
+        cutoff = ((now or datetime.now()) - timedelta(days=KEEP_DAYS)).isoformat(timespec="seconds")
+        kept = [s for s in self._spans if s.get("end", "") >= cutoff]
+        gone = len(self._spans) - len(kept)
+        if gone:
+            self._spans = kept
+            from core.undo_log import outside_undo
+
+            with outside_undo():
+                self._save()
+        return gone
+
+    def note(self, app: str, title: str, now: Optional[datetime] = None, own_words: tuple = (),
+             browser_titles: bool = False) -> bool:
+        """Notes the window in front of him, if it may be noted; True when something was kept. A browser's title is
+        kept only when he turned that on. A new span is written at once; a span only growing longer at most every
+        SAVE_EVERY seconds. Spans older than KEEP_DAYS go."""
+        if not keep_this(app, title, own_words):
             return False
+        title = title_kept(app, title, browser_titles)
         now = now or datetime.now()
         at = now.isoformat(timespec="seconds")
         title = " ".join((title or "").split())[:TITLE_CHARS]
@@ -156,10 +211,14 @@ class ActivityLog:
         return [dict(s) for s in self._spans if s["end"] >= cut]
 
     def erase(self) -> int:
-        """Forgets everything noted; returns how many spans went."""
+        """Forgets everything noted, for good; returns how many spans went. Written outside the undo history (which
+        would keep the erased file for 30 days) and with the writer's safety copy removed, so no copy remains."""
+        from core.undo_log import outside_undo
+
         gone = len(self._spans)
         self._spans = []
-        self._save()
+        with outside_undo():
+            self._save()
         return gone
 
 
@@ -171,12 +230,22 @@ def noting(context) -> bool:
 
 
 def sample(context, now: Optional[datetime] = None, read: Callable[[], Optional[tuple[str, str]]] = foreground) -> bool:
-    """One look at the window in front of him, kept when noting is on; the background job calls this."""
+    """One look at the window in front of him, kept when noting is on, with his own words to skip and his choice
+    about browsers' titles; with noting off, what's kept still ages out. The background job calls this."""
     store = getattr(context, "activity", None)
-    if store is None or not noting(context):
+    if store is None:
+        return False
+    if not noting(context):
+        store.prune(now)  # what's kept still ages out while noting is off
         return False
     found = read()
-    return store.note(found[0], found[1], now) if found else False
+    if not found:
+        return False
+    from core import person_settings
+
+    words = person_settings.get(context, OWN_SKIP_WORDS, ()) or ()
+    return store.note(found[0], found[1], now, own_words=tuple(words) if isinstance(words, (list, tuple)) else (),
+                      browser_titles=bool(person_settings.get(context, BROWSER_TITLES, False)))
 
 
 def _seconds(span: dict) -> float:
@@ -276,14 +345,14 @@ def _set_noting(context, params) -> str:
 
 
 def _describe_erase(context, params) -> str:
-    """The card's sentence for `activity.erase`; ActionError with nothing to erase."""
+    """The card's sentence for `activity.erase` (it says "for good"); ActionError with nothing to erase."""
     store = getattr(context, "activity", None)
     if store is None:
         raise ActionError("There's nothing noted on this MIA.")
     count = len(store.spans())
     if not count:
         raise ActionError("There's nothing noted to erase.")
-    return f"Erase what I noted about your apps ({count} stretch{'es' if count != 1 else ''} of the last 7 days)"
+    return f"Erase what I noted about your apps for good ({count} stretch{'es' if count != 1 else ''} of the last 7 days)"
 
 
 def _erase(context, params) -> str:

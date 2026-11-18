@@ -129,7 +129,8 @@ class AmbientScreens:
             log.exception("Couldn't place the ambient view")
 
     def _show_on(self, screen) -> None:
-        """Opens the view (made the first time) full screen on that screen."""
+        """Opens the view (made the first time) full screen on that screen, without taking the keyboard; already
+        there, it's left alone."""
         from PySide6.QtCore import Qt, QUrl
 
         if self._view is None:
@@ -140,13 +141,17 @@ class AmbientScreens:
 
             self._view = QWebEngineView()
             self._view.setWindowTitle("MIA · Ambient")
-            self._view.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
+            self._view.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool
+                                      | Qt.WindowType.WindowDoesNotAcceptFocus)
+            self._view.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)  # it's only looked at
             self._view.setUrl(QUrl(url))
         if self._on != screen.name():
             self._view.hide()
             self._view.setScreen(screen)
             self._view.setGeometry(screen.geometry())
             self._on = screen.name()
+        if self._view.isVisible() and self._on == screen.name():
+            return  # already there: showing it again would only steal a moment from what he's doing
         self._view.showFullScreen()
         log.info("Ambient view on %s", screen.name())
 
