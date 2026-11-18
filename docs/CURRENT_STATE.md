@@ -2,7 +2,23 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-18 (Opus at the PC: MIA OS Prompts 12 to 17), by claude.*
+session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system packages), by claude.*
+
+**2026-11-18, later (Claude on Opus, at the PC). Foundation and living-system work, one package at a time.**
+- **Foundation:** FW-01 accepted (the image builds the same twice), FW-02 (CI pinned, the suite inside the image).
+  FW-03 under way: her own desktop session (KWin running her shell, a recovery page when she's down). The first
+  VM run got as far as KWin starting her shell, which died writing its log inside the read-only image; fixed
+  (fb0b9329), re-running.
+- **Prompt 21, the living system:** five documents and a review; Zac approved its decisions (DEC-0280 to 0286).
+  Built since, each with its tests: **LS-01** one trace id for everything one cause did; **LS-02** his memories
+  and notes say how they're known and when they hold; **LS-07** one clock in his time zone; **LS-08** one
+  model-server address; **LS-06** a lab change to code needs a test that fails before it (DEC-0224), named in
+  its merge; **LS-05** every approved change is read back (DEC-0218) through one record-type registry, which
+  found two mixed references on its first run (fixed).
+- **Next:** the VM result for FW-03, then its remaining steps (the login screen's default, keyboard checks, an
+  ordinary window beside her); LS-03, LS-04, LS-09, LS-10.
+- **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
+  recovery-key envelope (`docs/WAITING_ON.md`).
 
 **2026-11-18 (Claude on Opus, at the PC). MIA OS planning is complete through Prompt 17.**
 - **Prompts 12 to 16** (devices, security, reliability, development, the roadmap): written, and Zac answered each
