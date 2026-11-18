@@ -47,7 +47,7 @@ New integrations still arrive as manifests and descriptions, and the runtime isn
 ## 3. The record-type registry
 
 Links, the history, recall, parity and loops each keep their own list of `kind:` names for `kind:id` references. One
-registry (`core/record_types.py`, to be written) lists every record type with:
+registry (`core/record_types.py`, built 2026-11-18, LS-05) lists every record type with:
 - its store;
 - how to read one by id;
 - its title and page;

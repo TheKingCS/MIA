@@ -248,7 +248,8 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
     a history that can't be written must not undo the change itself. `environment` tags the event real (default),
     fictional or simulated (DEC-0137) so a fictional campaign's events never read as real life. The line is sealed
     on its own as it's appended (core/at_rest.py LINE_SEALED, DEC-0126): appended, never rewritten. It carries the
-    trace id of the work recording it (core/trace.py)."""
+    trace id of the work recording it (core/trace.py), and the change being recorded keeps its type and refs for
+    the read-back (core/read_back.py)."""
     if where is None or getattr(_local, "quiet", 0):
         return None
     event = LifeEvent(
@@ -268,7 +269,7 @@ def record(where, type: str, summary: str, refs: Iterable[str] = (), payload: Op
         return None
     from core import live, undo_log
 
-    undo_log.note_event(event.event_id)
+    undo_log.note_event(event.event_id, event.refs, event.type)
     live.bump()
     return event
 

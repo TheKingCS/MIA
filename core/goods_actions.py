@@ -175,7 +175,8 @@ def _toss(context, params) -> str:
 
 def add_to_stock(context, recipe, quantity: float, cost_each: float = 0.0, made: str = "", source: str = ""):
     """A finished batch of `recipe` that didn't come from Materials: the
-    product made (created the first time), its date and its cost each.
+    product made (created the first time), its date and its cost each,
+    and a goods_stocked event naming the job and its craft_recipe.
     Returns the batch (a Job)."""
     from datetime import datetime
 
@@ -195,7 +196,7 @@ def add_to_stock(context, recipe, quantity: float, cost_each: float = 0.0, made:
     jobs.update_job(job.job_id, status="Complete", cost_each=round(max(0.0, cost_each), 4),
                     finished_at=stamp if when == stamp[:10] else when + "T12:00:00")
     life_events.record(jobs, "goods_stocked", f"{_units(recipe, quantity)} of {recipe.name} into stock",
-                       [f"job:{job.job_id}", f"recipe:{recipe.recipe_id}"], {"source": source})
+                       [f"job:{job.job_id}", f"craft_recipe:{recipe.recipe_id}"], {"source": source})
     return job
 
 

@@ -108,7 +108,9 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8", live: bool
     its own `_DATA_DIR.mkdir(parents=True, exist_ok=True)` before
     calling this). `live=False` skips telling open screens to re-read
     (core/live.py), for a file no screen shows: the window noted every
-    30 seconds, the recall index's vectors.
+    30 seconds, the recall index's vectors. Once in place, a change being
+    recorded keeps the hash of what it left, for the read-back
+    (core/read_back.py).
     """
     path = Path(path)
     from core.at_rest import seal_text
@@ -131,6 +133,9 @@ def atomic_write_text(path: Path, text: str, encoding: str = "utf-8", live: bool
     except BaseException:
         tmp_path.unlink(missing_ok=True)
         raise
+    from core.undo_log import after_write
+
+    after_write(path)  # what it left, for the read-back after a change (core/read_back.py)
     # Live updates (core/live.py): open screens re-read the state.
     if live:
         from core import live

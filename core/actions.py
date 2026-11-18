@@ -81,8 +81,8 @@ class Proposal:
     """One proposed change waiting for, or past, its decision: the kind and params, the summary the person approves
     (made in code, never by the model), whose it is, who proposed it (the person or MIA), its status (proposed,
     executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
-    whether it ran at once on his standing yes (`auto`, DEC-0215), the trace id of what proposed it (DEC-0280), and the
-    undo record (kept server-side, never sent).
+    whether it ran at once on his standing yes (`auto`, DEC-0215), the trace id of what proposed it (DEC-0280), whether
+    its effect read back after it ran (DEC-0218), and the undo record (kept server-side, never sent).
     """
     proposal_id: str
     kind: str
@@ -99,6 +99,7 @@ class Proposal:
     reward: Optional[dict] = None
     auto: bool = False  # done at once on his standing yes for the kind (Approve From Now On, DEC-0215)
     trace: str = ""  # the trace id of what proposed it (core/trace.py, DEC-0280); approving it runs under the same
+    read_back: str = ""  # "ok" when its effect read back after it ran, else what didn't (DEC-0218, LS-05)
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
@@ -487,6 +488,23 @@ def _who(context) -> Optional[str]:
     return person_id(context)
 
 
+def _read_back(context, proposal: Proposal, change) -> None:
+    """Reads a change's effect back once it ran (DEC-0218, core/read_back.py): "ok", or what didn't read back,
+    said in its result line and logged. It stays done and undoable: what's there is his to see or undo."""
+    from core import read_back
+
+    try:
+        problems = read_back.check(context, change)
+    except Exception:  # noqa: BLE001 - a read-back that can't run says so, never breaks the change
+        log.exception("Couldn't read back %s.", proposal.kind)
+        problems = ["the read-back couldn't run"]
+    proposal.read_back = "ok" if not problems else "; ".join(problems[:5])
+    if problems:
+        log.warning("%s didn't read back: %s", proposal.kind, proposal.read_back)
+        proposal.result = (f"{proposal.result} " if proposal.result else "") + \
+            f"But reading it back: {proposal.read_back}."
+
+
 def _put_back(context, change) -> bool:
     """After a change failed part way: every file it had written is put back as it was, and the stores that read them
     re-read (Prompt 21's review, 2026-11-18: a failure used to say "nothing was changed" while its first writes
@@ -609,7 +627,8 @@ class ActionCenter:
         for the kind is kept once it has run; a kind that always asks is
         refused that, before anything runs.
         Her orb shows "working" while it runs, then success or a warning
-        (core/orb_state.py). One decision per card: a second approval
+        (core/orb_state.py). Once it has run, its effect is read back
+        (`_read_back`, DEC-0218) and the result says what didn't. One decision per card: a second approval
         arriving while the first runs is refused. `_auto` is propose's own
         call for a standing yes; any later caller gets that result back.
         After a kind that removes something, the recall index drops
@@ -662,6 +681,7 @@ class ActionCenter:
                                                        "Something went wrong, and what it had changed couldn't all be put back.")
         else:
             proposal.status = EXECUTED
+            _read_back(context, proposal, change)
             undo = getattr(context, "undo", None)
             if undo is not None and change.files:
                 change.by = "mia" if proposal.proposed_by == "mia" else "person"

@@ -34,7 +34,8 @@ the same refs core/life_events.py uses). Two sources:
   waiting words (REQUIRES, DEPENDS_ON, BLOCKED_BY): those are the
   person's own "what waits on what" in the Life State. Status: DERIVED.
 
-What a link can point at is KINDS: each kind's store, the list or
+What a link can point at is KINDS, the record-type registry's table
+(core/record_types.py, LS-05): each kind's store, the list or
 method that holds its records, and their id and name fields. A store
 may keep objects or dicts (a plan, a creation, a note, a GPS track:
 2026-11-09); `field_of` reads either.
@@ -106,79 +107,10 @@ def relation_from(text: str) -> Optional[str]:
 # ------------------------------------------------------------------ what can be linked
 
 
-@dataclass(frozen=True)
-class Kind:
-    """One kind of thing a link can point at (an asset, a mission, a person...): its name and label, the store and method
-    that list them, and which attributes are its id and its name.
-    """
-    kind: str
-    label: str
-    store: str  # AppContext attribute
-    lister: str  # method returning the records
-    id_attr: str
-    name_attr: str = "name"
-
-
-KINDS: dict[str, Kind] = {k.kind: k for k in (
-    Kind("property", "property", "real_estate", "all_properties", "property_id"),
-    Kind("asset", "vehicle, tool or appliance", "maintenance", "all_assets", "asset_id"),
-    Kind("maintenance_task", "maintenance task", "maintenance", "all_tasks", "task_id", "title"),
-    Kind("bill", "bill", "budget", "all_bills", "bill_id"),
-    Kind("debt", "debt", "budget", "all_debts", "debt_id"),
-    Kind("income_source", "income source", "budget", "all_income_sources", "source_id"),
-    Kind("business", "business", "budget", "all_business_entities", "entity_id"),
-    Kind("project", "project", "projects", "all_projects", "project_id"),
-    Kind("task", "task", "tasks", "all_tasks", "task_id", "title"),
-    Kind("intent", "goal", "intents", "all_intents", "intent_id"),
-    Kind("mission", "mission", "missions", "all_missions", "mission_id"),
-    Kind("skill", "skill", "skills", "all_skills", "skill_id"),
-    Kind("person", "person", "relationships", "all_people", "person_id"),
-    Kind("pet", "pet", "relationships", "all_pets", "pet_id"),
-    Kind("recipe", "recipe", "kitchen", "all_recipes", "recipe_id"),
-    Kind("profile", "account", "profiles", "list_profiles", "profile_id"),
-    # 2026-11-07 (DEC-0108's interconnection audit): the rest of the records a life is made of, so they can depend
-    # on, serve, block or belong to each other. The kind names match the refs their stores' life events carry.
-    Kind("calendar_event", "event", "calendar", "all_events", "event_id", "title"),
-    Kind("inventory_item", "item", "inventory", "all_items", "item_id"),
-    Kind("component", "part", "components", "all_components", "component_id"),
-    Kind("material", "material", "materials", "all_materials", "material_id"),
-    Kind("product", "product", "products", "all_products", "product_id"),
-    Kind("job", "job", "jobs", "all_jobs", "job_id"),
-    Kind("craft_recipe", "workshop recipe", "craft_recipes", "all_recipes", "recipe_id"),
-    Kind("waypoint", "waypoint", "waypoints", "all_waypoints", "waypoint_id"),
-    Kind("trip", "trip", "trips", "all_trips", "trip_id"),
-    Kind("expedition", "expedition", "expeditions", "all_expeditions", "expedition_id"),
-    Kind("textbook", "book", "textbooks", "all_books", "book_id", "title"),
-    Kind("energy_source", "energy source", "energy", "all_energy_sources", "source_id"),
-    Kind("journal_entry", "journal entry", "journal", "all_entries", "entry_id", "title"),
-    Kind("reward", "reward", "reward_shop", "all_rewards", "reward_id"),
-    Kind("script", "script", "scripts", "all_scripts", "script_id"),
-    Kind("place", "place", "places", "places", "place_id"),
-    Kind("obligation", "obligation", "obligations", "obligations", "obligation_id", "title"),
-    Kind("policy", "insurance policy", "insurance", "policies", "policy_id", "insurer"),
-    Kind("customer", "customer", "business", "customers", "customer_id"),
-    Kind("flock", "flock", "flock", "flocks", "flock_id"),
-    # 2026-11-09, the self-audit's links column: what a person may want to tie to a goal, project or debt.
-    Kind("subject", "class subject", "classroom", "all_subjects", "subject_id"),
-    Kind("workout_template", "workout", "workout", "all_templates", "template_id"),
-    Kind("grow_batch", "grow-lab batch", "grow_lab", "batches", "batch_id", "crop"),
-    Kind("questline", "questline", "quest_book", "quests", "quest_id"),
-    Kind("workplace", "workplace", "dungeon", "dungeons", "dungeon_id"),
-    Kind("direction", "direction", "direction", "directions", "direction_id", "title"),
-    Kind("campaign", "campaign", "living_worlds", "campaigns", "campaign_id"),
-    Kind("inbox_item", "letter or document", "inbox", "all_items", "item_id", "subject"),
-    Kind("plan", "build plan", "plans", "plans", "id", "title"),  # these four keep dicts
-    Kind("creation", "creation", "creations", "items", "id", "title"),
-    Kind("note", "note", "life_notes", "notes", "id", "what"),  # the refs their history already uses
-    Kind("track", "GPS track", "gps_tracks", "tracks", "id"),
-    Kind("shop_expense", "shop expense", "ledger", "all_expenses", "entry_id", "description"),  # history's refs
-    Kind("shop_revenue", "shop sale or income", "ledger", "all_revenue", "entry_id", "description"),
-    Kind("rhythm", "rhythm of the week", "loop", "rhythms", "rhythm_id"),
-    Kind("record_set", "household record set", "record_sets", "sets", "id"),
-    Kind("my_record_set", "record set", "my_record_sets", "sets", "id"),
-    Kind("play", "game or sport played", "recreation", "entries", "id", "what"),
-    Kind("picture", "picture MIA painted", "art", "items", "id", "description"),
-)}
+# The kinds a link can point at are the record-type registry's (core/record_types.py, LS-05): one table for
+# links, the history's refs and the read-back after a change.
+from core.record_types import TYPES as KINDS  # noqa: E402
+from core.record_types import RecordType as Kind  # noqa: E402,F401
 
 
 def field_of(record, attr: str, default=""):
@@ -187,18 +119,11 @@ def field_of(record, attr: str, default=""):
 
 
 def _records(context, kind: Kind) -> list:
-    """Every record of a kind, from its store (a method that lists them, or a list or dict the store keeps: a dict
-    gives its values); [] (logged) when the store is missing or fails."""
-    store = getattr(context, kind.store, None)
-    lister: Optional[Callable] = getattr(store, kind.lister, None)
-    if lister is None:
-        return []
-    try:
-        found = lister() if callable(lister) else lister
-        return list(found.values() if isinstance(found, dict) else found)
-    except Exception:
-        log.exception("Couldn't list %s for links.", kind.kind)
-        return []
+    """Every record of a kind, from its store (the registry's `records_of`); [] (logged) when the store is
+    missing or fails."""
+    from core.record_types import records_of
+
+    return records_of(context, kind)
 
 
 def records(context, kind: str) -> list:

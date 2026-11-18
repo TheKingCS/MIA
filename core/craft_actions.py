@@ -284,8 +284,8 @@ def _finish_describe(context, params) -> str:
 
 def _finish(context, params) -> str:
     """Does `craft.finish` once approved, and says what happened. Materials are used up, the product made (created and tied to the recipe the first
-    time), the build marked complete with its hours, and a build_finished life event recorded; a batch also grants
-    XP.
+    time), the build marked complete with its hours, and a build_finished life event recorded (naming the job and its
+    craft_recipe); a batch also grants XP.
     """
     from datetime import datetime
 
@@ -305,7 +305,7 @@ def _finish(context, params) -> str:
     jobs.produce_product(job.job_id, product.product_id, makes_count(recipe, job.times))
     jobs.update_job(job.job_id, status="Complete", labor_hours=hours or job.labor_hours,
                     finished_at=datetime.now().isoformat(timespec="seconds"))
-    life_events.record(jobs, "build_finished", f"Built {job.name}", [f"job:{job.job_id}", f"recipe:{recipe.recipe_id}"],
+    life_events.record(jobs, "build_finished", f"Built {job.name}", [f"job:{job.job_id}", f"craft_recipe:{recipe.recipe_id}"],
                        {"hours": hours, "recipe": recipe.name})
     made = makes_text(recipe, job.times)
     if _is_batch(recipe):

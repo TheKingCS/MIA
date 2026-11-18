@@ -10,6 +10,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-05 built** (done means read back, DEC-0218): every approved change is read back
+(`core/read_back.py`): its files still hold what it wrote, the records its history names resolve. A new `kind:`
+in a life event's refs goes in `core/record_types.py` (`TYPES`, readable) or `HISTORY_ONLY` (why not yet), or
+`tests/test_record_types.py` fails. Still to do: titles and pages per type, and the other lists (recall, parity,
+loops) reading the registry.
+
 **New 2026-11-18, LS-06 built** (DEC-0224 in the lab): a lab change to code isn't ready without a test that
 fails on the starting code and passes after; the merge's message names it ("Shown by: ..."). Night School and
 the coder's shadow attempts now fail without one, as they should.

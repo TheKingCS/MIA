@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1525 files, 340,040 lines; 1525 files describe themselves; 18,729 of 18,828 classes and functions are documented.
+1529 files, 340,376 lines; 1529 files describe themselves; 18,750 of 18,849 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-594 files, 171,690 lines; 8,853 of 8,939 classes and functions documented
+596 files, 171,897 lines; 8,862 of 8,948 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -405,6 +405,7 @@
 - `core/quick_capture.py`: Quick capture (2026-10-01): one box, reachable from anywhere (the "+" in the header, or Ctrl+Shift+Space), for whatever is on your mind: "milk and eggs", "changed the truck's oil today", "dentist Tuesday at 2", "Pat's email is pat@example.com", "idea: a rain barrel by the shed". MIA files it where i
 - `core/quick_commands.py`: Things a person says that need no AI model (DEC-0020): "workout complete", "step one of today's workout complete", "finished my pull-ups", "today's lunch complete", "meal prep done", "this week's meal plans complete", "I weigh 182", "had 40 g of protein", "handstand 45 seconds", "undo that". MIA's o
 - `core/rarity.py`: Shared Borderlands-style five-tier rarity vocabulary, from the user's 2026-09-14 "Prestige, Rarity & Character Progression" design handoff (see the [[project_mia_prestige_rarity_vision]] memory) — Common through Legendary, the same white/green/blue/purple/orange scale `core.leveling.PRESTIGE_COLORS`
+- `core/read_back.py`: Done means read back (DEC-0218, LS-05): after a change runs, code reads its effect back instead of trusting the report that it worked. One generic check for every change (docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2):
 - `core/real_estate_manager.py`: Property records for a real estate portfolio — values, mortgage balance/equity, and links to the existing systems that already own the rest of what a property needs tracked, rather than duplicating them:
 - `core/recall_index.py`: Recall by meaning (DEC-0210; Prompt 07's memory infrastructure, `docs/mia_os/MIA_OS_MEMORY_INFRASTRUCTURE.md` §2; Zac's yes to Q-71: every personal store except the private journal and private-mode conversations). One index per person, beside the stores and never instead of them.
 - `core/receipt_effects.py`: What a receipt means beyond its total (Zac, 2026-11-07: "she should be able to see my receipt and know I got my oil changed or bought groceries and stock my pantry with what's on the receipt, and same for Lowe's receipts and materials"). When the inbox reads a receipt (core/inbox_manager.py), `propo
@@ -413,6 +414,7 @@
 - `core/record_actions.py`: The shared machinery behind the web's "add, edit, delete anything" (2026-10-06, DEC-0017). A screen's records are described once, as a `Record` with its `Field`s and the store methods that add, update and delete it; from that come its action kinds on the contract in core/actions.py (Propose → Approv
 - `core/record_import.py`: A file nobody planned for becomes a record set and a screen (ACAF step 4, DEC-0088/0089; `docs/ACAF_REVIEW.md` section 6: "an import with no store becomes a record set and a screen"). A spec, not code: a CSV's columns are read by code, each given a type from what's in it (a date, money, a number, a 
 - `core/record_sets.py`: A home for information MIA has no store for (DEC-0089; ACAF, `docs/ACAF_REVIEW.md` section 3.4). Every other store is made for one thing: bills, the flock, workouts. A *record set* is a typed list a person or MIA defines: its fields (text, number, money, date, choice, yes/no) and whose it is. "The s
+- `core/record_types.py`: The record-type registry (LS-05, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 3): one table of every kind of record MIA keeps that a `kind:id` reference can name, with its store, how to list it, and its id and name fields. Links (core/links.py) point at these, the history's refs name them,
 - `core/recreation.py`: Recreation in the health cluster (DEC-0098, build plan step 12; Zac, 2026-11-06: "Playing sports for recreation should somehow be tracked in an activity log that may connect with workouts or as part of the health apps cluster").
 - `core/recurring_mission_manager.py`: Recurring Missions (2026-09-13), at the user's explicit request: a real daily goal (their first one — push-ups) that keeps generating itself, tracks a real streak, shows up on the Calendar, and rewards a bigger weekly bonus Mission when every day that week was done, with the daily target itself esca
 - `core/reference_library_manager.py`: The ZIM engine behind the Reference Library — docs/ROADMAP.md milestone 4.1, the "Reference Library" row of the shared core services table (indexed/searchable document + PDF + Kiwix ZIM viewer). This milestone is the engine only: pack discovery, reading, and search. The `knowledge` module's UI (mile
@@ -890,7 +892,7 @@
 
 ## tests/: the test suite: what each part must do
 
-531 files, 88,906 lines; 7,521 of 7,534 classes and functions documented
+533 files, 89,035 lines; 7,533 of 7,546 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1239,11 +1241,13 @@
 - `tests/test_questlines.py`: Questlines and seasons (DEC-0028): linked chapters, each one a mission; finishing a chapter opens the next with MIA's line for it; seasons follow the date and the hemisphere; and the same by voice (core/assistant_game_actions.py).
 - `tests/test_quick_capture.py`: Quick capture (core/quick_capture.py, gui/quick_capture_dialog.py), 2026-10-01: type anything, MIA files it; nothing is ever lost.
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
+- `tests/test_read_back.py`: Tests for the generic read-back after a change (DEC-0218, LS-05, core/read_back.py): the files a change wrote still hold what it left, and the records its history names still resolve, unless it removed them.
 - `tests/test_real_estate_manager.py`: Unit tests for core.real_estate_manager. Isolates _DATA_DIR _PROPERTIES_FILE (and core.budget_manager's own data files, since rental income/expenses are real Budget entries this manager filters) into a tmp_path scratch area, same monkeypatch pattern as test_budget_manager.py's isolated_paths.
 - `tests/test_real_estate_module.py`: Unit tests for modules.real_estate.module's pure formatters — no Qt event loop needed, same shape as tests/test_property_module.py.
 - `tests/test_recall_index.py`: Recall by meaning: refs and vectors only, every hit re-read from its store (core/recall_index.py, DEC-0210).
 - `tests/test_receipt_effects.py`: Receipts that do things (core/receipt_effects.py) and the everyday mailbox they come from (core/inbox_mail.fetch_receipts): a grocery receipt stocks the pantry and ticks the grocery list, an oil change is marked done on the truck at the receipt's mileage, a Lowe's receipt adds to the materials at th
 - `tests/test_receipt_match.py`: A scanned receipt fills in a recipe's Bought It: store-receipt names matched to recipe materials, each line used once, nothing guessed, and the money never counted twice (it's already in the Budget).
+- `tests/test_record_types.py`: Tests for the record-type registry (LS-05, core/record_types.py): one table links and the history share, and a kind the history names is either readable or listed with why it isn't.
 - `tests/test_recreation.py`: Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen, counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the Operating Journal and the Chronicle; never mistaking a song for a game;
 - `tests/test_recurring_mission_manager.py`: Unit tests for core.recurring_mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE/_TEMPLATES_FILE plus core.calendar_manager's own file constants (ensure_current_missions() creates a real CalendarEvent) into a tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py.
 - `tests/test_reference_library_manager.py`: Unit tests for core.reference_library_manager. Isolates the library root into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths), and builds tiny real .zim fixtures on the fly with libzim.writer rather than bundling a binary fixture in the repo or dependin

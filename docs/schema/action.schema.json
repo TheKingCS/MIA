@@ -85,6 +85,10 @@
       "type": "boolean",
       "description": "Done at once on his standing yes for the kind (Approve From Now On), not on this card."
     },
+    "read_back": {
+      "type": "string",
+      "description": "After it ran: ok when its effect read back (DEC-0218, core/read_back.py), else what didn't; empty before."
+    },
     "trace": {
       "type": "string",
       "description": "The trace id of what proposed it (core/trace.py, DEC-0280): the same id is on what it changed and recorded."

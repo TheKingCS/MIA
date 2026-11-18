@@ -22,6 +22,10 @@ ever by pressing Send) stays sent. A log of what happened written during a
 change (the Fix-It Log's stumbles) is written inside `outside_undo()`, so
 undo never takes it back.
 
+A change also keeps what the read-back after it needs (DEC-0218,
+core/read_back.py): the hash of each file it left (`after_write`) and the
+type and refs of each life event it recorded.
+
 Two settings are never put back by an undo of another change (`STICKY_KEYS`): a
 stop-everything in force and the standing yeses. They live in the config file
 beside ordinary settings, so when an undo restores that file, `keep_sticky`
@@ -55,7 +59,8 @@ _ABSENT = object()
 class Change:
     """One undoable change: what MIA did, whose it was, when, each file's bytes before it (None for a file it made),
     the life events it recorded, who made it (the person, or MIA herself), its description for the lasting history
-    (the approved sentence, or a tool's name and arguments), its id there, and the trace id of what caused it.
+    (the approved sentence, or a tool's name and arguments), its id there, the trace id of what caused it, and for
+    the read-back (core/read_back.py) the hash of each file it left and what each of its life events named.
     """
     label: str  # what MIA did, e.g. "add_expense"
     profile_id: Optional[str]
@@ -66,6 +71,8 @@ class Change:
     summary: str = ""  # the sentence that was approved, for an action (the lasting history shows it)
     change_id: str = field(default_factory=lambda: __import__("uuid").uuid4().hex[:12])
     trace: str = field(default_factory=lambda: __import__("core.trace", fromlist=["current"]).current())  # DEC-0280
+    wrote: dict = field(default_factory=dict)  # Path -> sha256 of the bytes it left there (the read-back, LS-05)
+    touched: list = field(default_factory=list)  # (event type, refs) of each life event it recorded
 
 
 @contextmanager
@@ -92,12 +99,28 @@ def outside_undo():
         _local.change = previous
 
 
-def note_event(event_id: str) -> None:
+def note_event(event_id: str, refs=(), type: str = "") -> None:
     """Called by core/life_events.record: this event belongs to the change
-    being recorded, so undoing it can mark the event reversed."""
+    being recorded, so undoing it can mark the event reversed; its type and
+    refs are kept for the read-back (LS-05)."""
     change = getattr(_local, "change", None)
     if change is not None:
         change.events.append(event_id)
+        change.touched.append((type, list(refs or ())))
+
+
+def after_write(path: Path) -> None:
+    """Called by atomic_write_text once a file is in place: the hash of what it left, for the read-back. Only
+    while a change is being recorded."""
+    change = getattr(_local, "change", None)
+    if change is None:
+        return
+    import hashlib
+
+    try:
+        change.wrote[Path(path)] = hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        change.wrote[Path(path)] = ""
 
 
 def before_write(path: Path) -> None:
