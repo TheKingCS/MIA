@@ -347,3 +347,20 @@ def test_an_edit_made_while_the_computer_answers_is_merged_not_written_over(phon
     sync.sync_now(phone, call=pc_while_the_phone_edits)
     ids = [m["mission_id"] for m in json.loads(missions.read_text())]
     assert "phone3" in ids and "pc2" in ids
+
+
+def test_what_is_noted_on_this_pc_and_the_recall_index_never_leave_it():
+    """REQ-DST-011: the window titles noted on the PC and the index derived from his records here stay on that device
+    (Prompt 21's review found both syncing, 2026-11-18)."""
+    from core.sync import syncable
+
+    assert not syncable("activity.json") and not syncable("recall_index.json")
+    assert syncable("user_memories.json")  # his records themselves still sync
+
+
+def test_a_run_and_its_turn_traces_stay_on_the_device_that_ran_them():
+    """A run synced to the phone was marked stopped by the phone's start-up recovery while it still ran on the PC
+    (Prompt 21's Fable review, 2026-11-18)."""
+    from core.sync import syncable
+
+    assert not syncable("runs.json") and not syncable("turn_traces.jsonl")

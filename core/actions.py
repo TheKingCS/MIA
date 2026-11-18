@@ -485,6 +485,23 @@ def _who(context) -> Optional[str]:
     return person_id(context)
 
 
+def _put_back(context, change) -> bool:
+    """After a change failed part way: every file it had written is put back as it was, and the stores that read them
+    re-read (Prompt 21's review, 2026-11-18: a failure used to say "nothing was changed" while its first writes
+    stayed). Whether everything went back."""
+    files = getattr(change, "files", None)
+    if not files:
+        return True
+    from core.undo_log import _restore, reload_stores
+
+    try:
+        reload_stores(context, _restore(change))
+        return True
+    except Exception:  # noqa: BLE001 - said to him plainly by the caller
+        log.exception("Couldn't put back what a failed change had written")
+        return False
+
+
 def _may_run_now(kind: str) -> bool:
     """Whether MIA may run a kind she holds a standing yes for right now: the same check as anything she starts
     herself (core/grants.require), so a stop-everything holds it. Held, it stays a card."""
@@ -590,7 +607,8 @@ class ActionCenter:
         arriving while the first runs is refused. `_auto` is propose's own
         call for a standing yes; any later caller gets that result back.
         After a kind that removes something, the recall index drops
-        what's gone at once (core/recall_index.drop_gone)."""
+        what's gone at once (core/recall_index.drop_gone). A change that
+        fails part way puts back every file it had written (`_put_back`)."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
@@ -625,9 +643,12 @@ class ActionCenter:
                 proposal.result = action.execute(context, proposal.params)
         except ActionError as problem:
             proposal.status, proposal.result = FAILED, str(problem)
+            _put_back(context, change)  # anything it wrote before it refused goes back
         except Exception:
             log.exception("Action %s failed.", proposal.kind)
-            proposal.status, proposal.result = FAILED, "Something went wrong; nothing was changed."
+            put_back = _put_back(context, change)
+            proposal.status, proposal.result = FAILED, ("Something went wrong; nothing was changed." if put_back else
+                                                       "Something went wrong, and what it had changed couldn't all be put back.")
         else:
             proposal.status = EXECUTED
             undo = getattr(context, "undo", None)

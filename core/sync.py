@@ -71,6 +71,12 @@ NEVER_SYNC = frozenset({
     "activity_log.json", "communication_log.json",  # what this device did
     "model_bench_cases.json", "push_subscriptions.json",  # per device / shipped
     "memory_vault.json",  # what's on this phone's camera roll (core/memory_vault.py has its own transfer)
+    # Kept on the device that made them (REQ-DST-011; Prompt 21's review, 2026-11-18): the window titles noted on this
+    # PC (core/activity_watch.py) and the recall index derived from his records here (core/recall_index.py).
+    "activity.json", "recall_index.json",
+    # Work that runs on one device (core/runs.py) and the traces of its turns (core/turn_trace.py): a run synced to
+    # another device was marked stopped by that device's start-up recovery while it was still going here.
+    "runs.json", "turn_traces.jsonl",
 })
 JOURNAL_KEYS, JOURNAL_ENTRIES = "private_journal_keys.json", "private_journal.json"
 PASSWORD_VAULT = "password_vault.json"  # core/password_vault.py: encrypted login by login

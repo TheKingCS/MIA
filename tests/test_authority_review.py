@@ -170,3 +170,27 @@ def test_a_card_that_reaches_outside_or_cant_be_undone_needs_his_press(monkeypat
 
 def test_the_reports_his_yes_rests_on_are_never_paused_away():
     assert {self_merges.TOPIC, "self_repair"} <= gate.NEVER_PAUSED
+
+
+def test_a_change_that_fails_part_way_puts_back_what_it_had_written(tmp_path):
+    """Prompt 21's Fable review (2026-11-18): a failure said "nothing was changed" while its first writes stayed."""
+    from core import actions
+    from core.atomic_write import atomic_write_text
+
+    first, second = tmp_path / "first.json", tmp_path / "second.json"
+    first.write_text('{"v": 1}', encoding="utf-8")
+
+    def execute(context, params):
+        """Writes one store, then breaks before the second."""
+        atomic_write_text(first, '{"v": 2}')
+        raise RuntimeError("the second store broke")
+
+    actions.ACTION_TYPES["test.half_write"] = actions.ActionType("test.half_write", "Half", {}, lambda c, p: "Half", execute)
+    try:
+        center = actions.ActionCenter()
+        ctx = SimpleNamespace(config=None)
+        done = center.approve(ctx, center.propose(ctx, "test.half_write", {}).proposal_id)
+        assert done.status == actions.FAILED and "nothing was changed" in done.result
+        assert first.read_text(encoding="utf-8") == '{"v": 1}' and not second.exists()
+    finally:
+        actions.ACTION_TYPES.pop("test.half_write", None)
