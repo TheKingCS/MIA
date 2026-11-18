@@ -7,7 +7,9 @@ The Assistant's LLM backend core service — docs/ROADMAP.md milestone
 concrete implementation, `OllamaBackend`, talking to a local Ollama
 server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md),
 and a second, `OpenAIBackend` (2026-10-07), for llama.cpp's server on
-the phone (`llm.backend: "openai"`).
+the phone (`llm.backend: "openai"`). The server's address is written once
+(`DEFAULT_SERVER`) and every module asks `local_server_url()` for it; embeddings
+and vision go through `OllamaBackend.embed` and `see` (LS-08).
 
 Built on stdlib `urllib.request` rather than the `requests` package —
 this is a single local JSON endpoint, and requirements.txt stays light
@@ -105,7 +107,8 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-_DEFAULT_BASE_URL = "http://localhost:11434"
+DEFAULT_SERVER = "http://127.0.0.1:11434"  # the one place the model server's address is written (LS-08)
+_DEFAULT_BASE_URL = DEFAULT_SERVER
 _DEFAULT_MODEL = "llama3.2"
 _DEFAULT_TIMEOUT_SECONDS = 60.0
 _DEFAULT_KEEP_ALIVE = "-1"
@@ -146,8 +149,28 @@ class LLMBackend(Protocol):
         ...
 
 
+def local_server_url(context=None) -> str:
+    """The model server's address: the `llm.base_url` setting (the context's, else the device's config), else the
+    default; localhost becomes 127.0.0.1 (Windows tries IPv6 first). Every module that talks to the server asks
+    here, so moving it is one setting (LS-08, REQ-LS-010)."""
+    config = getattr(context, "config", None) if context is not None else None
+    if config is None:
+        try:
+            from core.config_manager import ConfigManager
+
+            config = ConfigManager()
+        except Exception:  # noqa: BLE001 - no config: the default
+            config = None
+    try:
+        url = (config.get("llm.base_url", DEFAULT_SERVER) if config is not None else DEFAULT_SERVER) or DEFAULT_SERVER
+    except Exception:  # noqa: BLE001 - a setting that can't be read is the default
+        url = DEFAULT_SERVER
+    return str(url).rstrip("/").replace("://localhost", "://127.0.0.1")
+
+
 class OllamaBackend:
-    """LLMBackend implementation for a local Ollama server."""
+    """LLMBackend implementation for a local Ollama server: generate and chat with its configured model, and
+    `embed` and `see` with a model named for the call (embeddings and vision go through here too, LS-08)."""
 
     def __init__(self, base_url: str, model: str, keep_alive: str, temperature: float = _DEFAULT_TEMPERATURE,
                  num_ctx: int = 0, think: Optional[bool] = None, num_predict: int = 0) -> None:
@@ -189,6 +212,32 @@ class OllamaBackend:
         if self._num_predict > 0:
             options["num_predict"] = self._num_predict
         return options
+
+    def embed(self, model: str, texts: list[str], timeout: float) -> Optional[list]:
+        """Vectors for `texts` from an embedding model (/api/embed); None when the server doesn't answer, answers
+        wrongly, or returns a different count."""
+        body = json.dumps({"model": model, "input": list(texts)}).encode("utf-8")
+        request = urllib.request.Request(f"{self._base_url}/api/embed", data=body,
+                                         headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                vectors = json.loads(response.read().decode("utf-8")).get("embeddings") or []
+        except (urllib.error.URLError, OSError, ValueError) as problem:
+            log.info("No embedding model at %s (%s)", self._base_url, problem)
+            return None
+        return vectors if len(vectors) == len(texts) else None
+
+    def see(self, model: str, prompt: str, image: bytes, timeout: float = 300) -> str:
+        """A vision model's answer about one image (/api/generate with the image as base64, temperature 0.2).
+        Errors from the server are raised to the caller."""
+        import base64
+
+        body = json.dumps({"model": model, "prompt": prompt, "images": [base64.b64encode(image).decode("ascii")],
+                           "stream": False, "options": {"temperature": 0.2}}).encode("utf-8")
+        request = urllib.request.Request(f"{self._base_url}/api/generate", data=body,
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(request, timeout=timeout) as answer:
+            return str(json.loads(answer.read()).get("response", "")).strip()
 
     def generate(self, prompt: str, timeout: float) -> str:
         """One completion from a prompt (/api/generate, not streamed). LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable."""

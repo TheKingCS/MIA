@@ -53,7 +53,7 @@ class Provider:
     model: str = ""
 
     def available(self) -> bool:
-        """Installed and reachable here: a CLI on the path, or Ollama answering."""
+        """Installed and reachable here: a CLI on the path, or Ollama answering at the configured address."""
         if self.kind == "cli":
             return bool(self.command) and shutil.which(self.command) is not None
         if self.kind == "local":  # Ollama answering, with this provider's model pulled
@@ -61,7 +61,7 @@ class Provider:
             import urllib.request
 
             try:
-                with urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=2) as answer:
+                with urllib.request.urlopen(__import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url() + "/api/tags", timeout=2) as answer:
                     models = {m.get("name", "") for m in json.loads(answer.read()).get("models", [])}
             except (OSError, ValueError):
                 return False

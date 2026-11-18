@@ -114,13 +114,12 @@ def refuses(question: str) -> bool:
     return bool(_WHO.search(question or ""))
 
 
-def _ollama(model: str, prompt: str, image: bytes, url: str = "http://127.0.0.1:11434") -> str:
-    """Asks the local vision model about one photo (sent as base64, temperature 0.2); returns its answer."""
-    body = json.dumps({"model": model, "prompt": prompt, "images": [base64.b64encode(image).decode("ascii")],
-                       "stream": False, "options": {"temperature": 0.2}}).encode("utf-8")
-    request = urllib.request.Request(f"{url}/api/generate", data=body, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=300) as answer:
-        return str(json.loads(answer.read()).get("response", "")).strip()
+def _ollama(model: str, prompt: str, image: bytes, url: str = "") -> str:
+    """Asks the local vision model about one photo through the model backend (`see`, LS-08), at the configured
+    server's address unless one is given; returns its answer."""
+    from core.llm_manager import OllamaBackend, local_server_url
+
+    return OllamaBackend(url or local_server_url(), model, "5m").see(model, prompt, image, 300)
 
 
 def _tesseract(context, image: bytes) -> str:

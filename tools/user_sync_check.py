@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 from core.user_sync import NOTHING, SKIP, TOPICS  # noqa: E402
 
 CASES = ROOT / "data" / "user_sync_cases.json"
-BASE = "http://localhost:11434"
+BASE = __import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url()
 
 
 class Ollama:

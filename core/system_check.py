@@ -62,11 +62,15 @@ def _has_package(name: str) -> bool:
 
 
 def check_model(config, models: Optional[Callable[[str], Optional[list[str]]]] = None) -> Check:
-    """Whether the Assistant's model is ready: Ollama answering, and the configured model pulled; how to fix it
-    when not.
+    """Whether the Assistant's model is ready: Ollama answering at the configured address (`local_server_url`),
+    and the configured model pulled; how to fix it when not.
     """
     models = models or _ollama_models
-    base_url = config.get("llm.base_url", "http://localhost:11434")
+    from types import SimpleNamespace
+
+    from core.llm_manager import local_server_url
+
+    base_url = local_server_url(SimpleNamespace(config=config))
     model = config.get("llm.model", "llama3.2:3b")
     found = models(base_url)
     if found is None:

@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-08 built** (one model-server address): **code that talks to the model server asks
+`core.llm_manager.local_server_url(context)`, never writes the address**; embeddings and vision go through
+`OllamaBackend.embed` / `see`. A test fails on the port written outside `core/llm_manager.py`.
+
 **New 2026-11-18, LS-07 built** (`core/clock.py`): **new code asks `clock.now()` / `clock.today()`, never
 `datetime.now()`**, and tests hold time with `clock.frozen(moment)`. `clock.parse_day(text, said)` gives the day a
 phrase means. Existing modules move to it as they're touched.

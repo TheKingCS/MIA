@@ -322,7 +322,8 @@ def lab_diff(proposal_id: str) -> str:
 def _ask(provider: str, prompt: str) -> str:
     """Run a review on a provider, read-only: a local model through Ollama, or
     a coding CLI (Claude Code, Codex, Copilot) that may read but never edit,
-    run commands or reach the web. Each signs in with Zac's own account."""
+    run commands or reach the web. Each signs in with Zac's own account. The
+    local model is reached at the configured server (LS-08)."""
     import shutil
     import subprocess
 
@@ -336,7 +337,7 @@ def _ask(provider: str, prompt: str) -> str:
         import urllib.request
 
         body = json.dumps({"model": spec.model, "prompt": prompt, "stream": False, "options": {"temperature": 0.2}})
-        request = urllib.request.Request("http://127.0.0.1:11434/api/generate", data=body.encode("utf-8"),
+        request = urllib.request.Request(__import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url() + "/api/generate", data=body.encode("utf-8"),
                                          headers={"Content-Type": "application/json"})
         try:
             with urllib.request.urlopen(request, timeout=900) as answer:

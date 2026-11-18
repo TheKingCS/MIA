@@ -237,7 +237,7 @@ history). Partial:
 | LS-05 | The generic read-back after a change (DEC-0218); the record-type registry | Alpha | 2 |
 | LS-06 | DEC-0224 enforced in the lab; each merge names what shows it helped | Alpha | 1 |
 | LS-07 | The clock service for new code; tests freeze it (DEC-0284). **Built 2026-11-18** (`core/clock.py`): now and today in his zone (`region.timezone`, else the computer's), `frozen()` for tests, the week, and `parse_day` for the day a phrase means; recurrences later | Alpha | 1 |
-| LS-08 | One model-server address; the runtime's calls on the provider's `embed` and `see` | Alpha | 1 |
+| LS-08 | One model-server address; the runtime's calls on the provider's `embed` and `see`. **Built 2026-11-18**: the address is written once (`core/llm_manager.DEFAULT_SERVER`) and every module and tool asks `local_server_url()`, which reads `llm.base_url`; embeddings (`meaning`, `recall_index`) and vision (`sight`) go through `OllamaBackend.embed` and `see`. Six background writers (Chronicle issues, creations, knowledge, the coder, paths, work review) still post their own JSON-format requests to that address; they move onto the backend when it takes their options. `tests/test_model_server_address.py` fails on the port written anywhere else | Alpha | 1 |
 | LS-09 | A replayed week across the subsystems (after LS-07) | Beta | 2 |
 | LS-10 | A daily compute budget for her own initiative; each habit's evidence and reset in "What I've learned" | Beta | 1 to 2 |
 
@@ -283,7 +283,7 @@ confirmed by both reviewers, and they're told to Zac as such.
 | REQ-LS-007 | New code shall get the time from one zone-aware clock service, and tests shall freeze it. | Must | R1 | All | Exists (2026-11-18, LS-07) | T | DEC-0284 → 21 |
 | REQ-LS-008 | A field changed on two devices shall keep the losing value in the change history and tell him once, without quoting a sensitive value. | Must | R1 | All | New | T | DEC-0285, DEC-0243 → 21 |
 | REQ-LS-009 | Every store shall be listed with its class, retention, end of life and whether it syncs, sync shall read that list, and a store missing from it shall fail a test. | Must | R1 | All | Partial (NEVER_SYNC) | T | DEC-0286 → 21 |
-| REQ-LS-010 | The model server's address shall come from one setting, and MIA's runtime shall call models only through the provider interface. | Must | R1 | All | Partial | T | DEC-0206, DEC-0207 → 21 |
+| REQ-LS-010 | The model server's address shall come from one setting, and MIA's runtime shall call models only through the provider interface. | Must | R1 | All | Partial (2026-11-18, LS-08: the address is one setting; six JSON-format writers still post directly) | T | DEC-0206, DEC-0207 → 21 |
 | REQ-LS-011 | Retiring a capability shall be a recorded state, made through the lab, never a silent removal. | Should | R1 | All | Partial (`retired` state) | R | DEC-0283 → 21 |
 | REQ-LS-012 | Everything of his shall be exportable in open formats in one step, and an export shall restore on a fresh MIA. | Must | R1 | All | Partial (account export) | T | DEC-0251 → 21 |
 

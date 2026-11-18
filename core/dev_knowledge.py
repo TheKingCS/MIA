@@ -259,12 +259,13 @@ def _record(task, events: list[dict]) -> tuple[str, list[str]]:
 
 
 def _ollama(prompt: str, schema: dict) -> str:
-    """Asks the local model (qwen2.5:14b, through Ollama) with a JSON schema for its reply; returns what it said."""
+    """Asks the local model (qwen2.5:14b, through Ollama) with a JSON schema for its reply, at the configured server (`local_server_url()`, LS-08); returns
+    what it said."""
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,
                        "options": {"temperature": 0.2}}).encode("utf-8")
-    request = urllib.request.Request("http://127.0.0.1:11434/api/generate", data=body,
+    request = urllib.request.Request(__import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url() + "/api/generate", data=body,
                                      headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(request, timeout=600) as answer:
         return json.loads(answer.read()).get("response", "")

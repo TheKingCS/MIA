@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1524 files, 339,755 lines; 1524 files describe themselves; 18,705 of 18,804 classes and functions are documented.
+1525 files, 339,912 lines; 1525 files describe themselves; 18,719 of 18,818 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-594 files, 171,577 lines; 8,845 of 8,931 classes and functions documented
+594 files, 171,624 lines; 8,848 of 8,934 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -840,7 +840,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-45 files, 5,133 lines; 157 of 157 classes and functions documented
+45 files, 5,143 lines; 157 of 157 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -890,7 +890,7 @@
 
 ## tests/: the test suite: what each part must do
 
-530 files, 88,744 lines; 7,505 of 7,518 classes and functions documented
+531 files, 88,844 lines; 7,516 of 7,529 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1163,6 +1163,7 @@
 - `tests/test_model_forge.py`: MIA's model forge (core/model_forge.py, DEC-0106): the features, a router that learns from its tools' own words and is scored honestly on requests it never saw, its card, and saving and loading it.
 - `tests/test_model_inspection.py`: Claude inspects MIA's models (DEC-0200, core/model_inspection.py): every specialist's chosen model is pending until a verdict on its current bench results; a re-run of the bench makes it pending again; the inspector is shown the bench counts and the problems it got wrong, never asked to change anyth
 - `tests/test_model_registry.py`: MIA about herself (core/model_registry.py): "What AI model are you using?" answered from the runtime, saying where each fact came from, never from the model's guess.
+- `tests/test_model_server_address.py`: Tests for LS-08: the model server's address is written in one place (core/llm_manager.py), every module asks local_server_url() for it, and embeddings and vision go through the backend.
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager.
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder.
 - `tests/test_momentum.py`: Natural Momentum (core/momentum.py, DEC-0148): runs of things done found in the history, what they have in common said as counts once there are enough, what tends to follow what, whether the person is in flow (and the gate holding her non-urgent messages then), one easy start in their usual hour, an

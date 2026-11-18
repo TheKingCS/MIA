@@ -87,7 +87,8 @@ def _save_cache() -> None:
 def embed(context, texts: list[str], kind: str = "query") -> Optional[list[list[float]]]:
     """Vectors for `texts`, or None when there's no embedding model.
     `kind` is "query" for what someone said and "example" for the
-    examples (the model is told which, as it expects)."""
+    examples (the model is told which, as it expects). The request goes
+    through the model backend (`OllamaBackend.embed`, LS-08)."""
     import time
 
     global _down_until
@@ -100,16 +101,12 @@ def embed(context, texts: list[str], kind: str = "query") -> Optional[list[list[
     keys = [_key(model, "q", t) for t in texts]  # both kinds are embedded as queries: question to question
     todo = [t for t, k in zip(texts, keys) if k not in _memory]
     if todo:
-        body = json.dumps({"model": model, "input": [prefix + t for t in todo]}).encode("utf-8")
-        request = urllib.request.Request(f"{url}/api/embed", data=body, headers={"Content-Type": "application/json"})
-        try:
-            with urllib.request.urlopen(request, timeout=_TIMEOUT) as response:
-                vectors = json.loads(response.read().decode("utf-8")).get("embeddings") or []
-        except (urllib.error.URLError, OSError, ValueError) as exc:
-            log.info("No embedding model (%s); matching by words instead.", exc)
+        from core.llm_manager import OllamaBackend
+
+        vectors = OllamaBackend(url, model, "5m").embed(model, [prefix + t for t in todo], _TIMEOUT)
+        if vectors is None:  # no embedding model answering: words instead, for a minute
+            log.info("No embedding model; matching by words instead.")
             _down_until = time.monotonic() + 60
-            return None
-        if len(vectors) != len(todo):
             return None
         for t, v in zip(todo, vectors):
             _memory[_key(model, "q", t)] = v

@@ -72,9 +72,13 @@ def startup_shortcut() -> Path | None:
 
 
 def checks(config) -> list[tuple[str, str, str, str]]:
-    """(name, status, what's there, what to do)."""
+    """(name, status, what's there, what to do), with the model server at the configured address."""
     out = []
-    base = str(config.get("llm.base_url", "http://localhost:11434")).rstrip("/")
+    from types import SimpleNamespace
+
+    from core.llm_manager import local_server_url
+
+    base = local_server_url(SimpleNamespace(config=config))
     model = str(config.get("llm.model", ""))
     try:
         names = {m["name"] for m in _get(base + "/api/tags").get("models", [])}

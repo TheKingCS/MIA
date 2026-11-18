@@ -67,12 +67,12 @@ def files_of(task_text: str) -> list[str]:
 
 
 def _ollama(prompt: str, schema: dict) -> str:
-    """One request to the local coder model: the prompt, its answer held to a JSON schema, near-zero temperature and a 32k context; up to 20 minutes. Returns the response text."""
+    """One request to the local coder model: the prompt, its answer held to a JSON schema, near-zero temperature and a 32k context; up to 20 minutes, at the configured server (`local_server_url()`, LS-08). Returns the response text."""
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,
                        "options": {"temperature": 0.1, "num_ctx": 32768}}).encode("utf-8")
-    request = urllib.request.Request("http://127.0.0.1:11434/api/generate", data=body,
+    request = urllib.request.Request(__import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url() + "/api/generate", data=body,
                                      headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(request, timeout=1200) as answer:
         return json.loads(answer.read()).get("response", "")

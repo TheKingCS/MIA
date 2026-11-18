@@ -101,7 +101,8 @@ def records(context) -> dict[str, str]:
 
 def embedder(context) -> Optional[Callable[[list[str], str], Optional[list]]]:
     """A function (texts, "document" or "query") -> vectors, on this computer's embedding model, or None when there's
-    none configured. Called directly (not core/meaning.py's cache), so his vectors stay in his folder."""
+    none configured. Called directly (not core/meaning.py's cache), so his vectors stay in his folder; the request goes through
+    `OllamaBackend.embed` (LS-08)."""
     from core import meaning
 
     url = meaning._base_url(context)
@@ -112,15 +113,9 @@ def embedder(context) -> Optional[Callable[[list[str], str], Optional[list]]]:
     def run(texts: list[str], kind: str) -> Optional[list]:
         """The vectors, or None when the model doesn't answer."""
         prefix = ("search_query: " if kind == "query" else "search_document: ") if model.startswith("nomic") else ""
-        body = json.dumps({"model": model, "input": [prefix + t for t in texts]}).encode("utf-8")
-        request = urllib.request.Request(f"{url}/api/embed", data=body, headers={"Content-Type": "application/json"})
-        try:
-            with urllib.request.urlopen(request, timeout=60) as response:
-                vectors = json.loads(response.read().decode("utf-8")).get("embeddings") or []
-        except (urllib.error.URLError, OSError, ValueError) as problem:
-            log.info("Recall: no embedding model (%s)", problem)
-            return None
-        return vectors if len(vectors) == len(texts) else None
+        from core.llm_manager import OllamaBackend
+
+        return OllamaBackend(url, model, "5m").embed(model, [prefix + t for t in texts], 60)
 
     run.model = model
     return run

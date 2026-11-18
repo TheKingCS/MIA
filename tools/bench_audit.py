@@ -23,7 +23,7 @@ ROUTES = ("plan", "code", "tools", "model only")
 
 
 def _context(embeddings: bool):
-    """The demo context the routing tests use; with embeddings, a model client on this computer's Ollama so plans that match by meaning can run."""
+    """The demo context the routing tests use; with embeddings, a model client on this computer's Ollama (at `local_server_url()`) so plans that match by meaning can run."""
     from types import SimpleNamespace
 
     from tests.assistant_registry import demo_context
@@ -33,7 +33,9 @@ def _context(embeddings: bool):
         from core.config_manager import ConfigManager
         from core.llm_manager import OllamaBackend
 
-        url = ConfigManager().get("llm.base_url", "http://localhost:11434")
+        from core.llm_manager import local_server_url
+
+        url = local_server_url(SimpleNamespace(config=ConfigManager()))
         context.llm = SimpleNamespace(_backend=OllamaBackend(url, "", "-1"), home=None)
     return context
 

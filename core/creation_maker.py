@@ -82,14 +82,14 @@ class MakerError(RuntimeError):
 
 
 def _ollama(prompt: str, schema: dict) -> str:
-    """Asks the local model with a JSON schema for its reply (temperature 0.2); MakerError, said plainly, when it
-    isn't answering.
+    """Asks the local model with a JSON schema for its reply (temperature 0.2) at the configured server (`local_server_url()`, LS-08); MakerError, said plainly,
+    when it isn't answering.
     """
     import urllib.request
 
     body = json.dumps({"model": MODEL, "prompt": prompt, "stream": False, "format": schema,
                        "options": {"temperature": 0.2}}).encode("utf-8")
-    request = urllib.request.Request("http://127.0.0.1:11434/api/generate", data=body,
+    request = urllib.request.Request(__import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url() + "/api/generate", data=body,
                                      headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(request, timeout=300) as answer:

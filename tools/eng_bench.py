@@ -25,7 +25,7 @@ from typing import Optional
 from core import eng_bench
 from core.data_root import WORK_DIR
 
-URL = "http://127.0.0.1:11434/api/generate"
+URL = __import__("core.llm_manager", fromlist=["local_server_url"]).local_server_url() + "/api/generate"
 
 
 # The most a model may write for one task. A thinking model (qwen3) otherwise thinks without end: on the PC's first

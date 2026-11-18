@@ -72,7 +72,7 @@ def _plain_console() -> None:
 
 
 def main(argv: list[str]) -> int:
-    """Runs the model benchmark on each local model named (or the defaults) that Ollama has, optionally only the first N cases, and prints how each did; returns 1 when Ollama isn't answering."""
+    """Runs the model benchmark on each local model named (or the defaults) that Ollama has, optionally only the first N cases, and prints how each did; returns 1 when Ollama isn't answering at the configured address."""
     _plain_console()
     from core import model_bench
     from core.config_manager import ConfigManager
@@ -81,7 +81,11 @@ def main(argv: list[str]) -> int:
     models = [a for a in argv if not a.isdigit()] or list(DEFAULT_MODELS)
     count = next((int(a) for a in argv if a.isdigit()), None)
     config = ConfigManager()
-    base = str(config.get("llm.base_url", "http://localhost:11434")).rstrip("/")
+    from types import SimpleNamespace
+
+    from core.llm_manager import local_server_url
+
+    base = local_server_url(SimpleNamespace(config=config))
     try:
         have = {m["name"] for m in _ollama(base, "/api/tags").get("models", [])}
     except OSError:
