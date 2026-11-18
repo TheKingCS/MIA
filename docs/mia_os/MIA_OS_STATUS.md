@@ -73,7 +73,8 @@
 - Prompt 17 reviewed by Zac (2026-11-18): yes to all; the 53 proposed decisions approved (Q-110).
 - **FW-01 accepted, FW-02 built** (2026-11-18). **Prompt 21 done** (Opus, reviewed by Fable and Codex): DEC-0280 to
   0286 proposed; REQ-LS-001 to 012; LS-01 to LS-10.
-- **Next:** Zac's answers to Q-111 to Q-113; FW-03 (MIA's session in the VM); to build: the Theme Studio from a picture,
+- Prompt 21 reviewed by Zac (2026-11-18): yes to all; DEC-0280 to 0286 approved. LS-02's first part built.
+- **Next:** FW-03 (MIA's session in the VM); LS-02's second part (life notes); to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

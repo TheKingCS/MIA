@@ -9,7 +9,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From Prompt 21 (2026-11-18)
-0z. [ ] **Three questions** (Q-111 to Q-113, `docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` §9): someone you trust
+0za. [ ] **The envelope** (your yes to Q-111): write MIA's recovery key on paper (run `python -m tools.data_key recovery` yourself in a terminal in
+   the MIA folder; never paste it into a chat, not even to Claude), seal it in an envelope with your important papers, and tell the person you trust where it is. When MIA
+   OS is installed, its disk's printed recovery key goes in the same envelope.
+0z. [x] ~~**Three questions**~~ (answered 2026-11-18: yes to all) (Q-111 to Q-113, `docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` §9): someone you trust
    able to open MIA's data if something happened to you (a sealed envelope you keep); removing copies on your phone
    of four files that should have stayed on the PC; building the living system work alongside the OS work.
 

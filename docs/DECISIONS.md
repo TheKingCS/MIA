@@ -4086,49 +4086,49 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
 
 ### DEC-0280: A trace id through everything that happened
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: A trace id made at intake and carried on the existing thread-local context into the turn trace, proposals, the history, the change history, the security log and runs; in memory only for a private turn; the prompt template's version in the turn trace. Stages are a shared vocabulary with shared joins, not one engine: controllers keep their own loops (DEC-0246).
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
 ### DEC-0281: The existing epistemic contract declared on the memory stores
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: user_memories, life_notes, life_events and links declare source, when, how (said, observed, inferred, computed) and checked; his memories and life notes add confirmed_at and holds; an outside source can't be checked by itself. No separate confidence number. user_memories and life_notes at the MVP gate (REQ-INT-015).
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
 ### DEC-0282: One learning lifecycle; habits reset one at a time; a list nothing resets
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: States temporary, inferred, proposed, verified, procedure, each moved only by its gate (DEC-0212). Each inferred habit shown with its evidence and its own reset. No reset touches his grants, standing yeses, a pause he asked for, the stop, or anything he set. A dated restore deferred.
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
 ### DEC-0283: A capability's four descriptions checked as one
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: The tool, the action kind, the manifest and the effects table checked to agree by a test; deadlines and cancellation only for device and outside work; four error kinds; a generic read-back after a change (DEC-0218) through a record-type registry. Outputs stay text unless another step reads them.
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
 ### DEC-0284: One zone-aware clock service
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: core/clock.py gives now in his zone, his today and week, relative times and recurrences, worked out in code; new code uses it, existing modules as they're touched; tests freeze it.
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
 ### DEC-0285: DEC-0243's losing value built
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: When a field changed on two devices, the losing value is kept in the change history (30 days, reached by forgetting) and one note names the record and field without quoting a sensitive value. No new clock: the three-way merge in a star topology finds every conflict. A third engine's topology researched before the laptop.
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
 ### DEC-0286: A retention registry for every store
-- Status: PROPOSED
+- Status: APPROVED (Zac, 2026-11-18, Q-113: \"yes to all\")
 - Proposed by: claude (Opus), 2026-11-18, Prompt 21, revised after Fable's and Codex's reviews
 - Decision: One table in code: each store's class, how long it's kept, what happens at the end, and whether it syncs; sync reads it; a store missing from it fails a test.
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9

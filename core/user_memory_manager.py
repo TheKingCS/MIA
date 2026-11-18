@@ -92,33 +92,52 @@ MEMORY_CATEGORIES = [
 @dataclass
 class UserMemory:
     """One thing MIA remembers about the person: the text, when, the conversation it came from, and its category
-    (MEMORY_CATEGORIES).
+    (MEMORY_CATEGORIES). How it's known (DEC-0281): `source` (where it came from: "conversation:<id>", "card" for an
+    approved card, "" for a memory kept before this), `how` (said, observed, inferred or computed), `confirmed_at`
+    (when he said yes to it), and `holds_from` / `holds_until` (when it's true: "I used to live in…" isn't a
+    contradiction).
     """
     memory_id: str
     text: str
     created_at: str = ""
     source_conversation_id: Optional[str] = None
     category: str = "Other"  # one of MEMORY_CATEGORIES — "Other" for pre-Memory-Palace records too
+    source: str = ""
+    how: str = "said"
+    confirmed_at: str = ""
+    holds_from: str = ""
+    holds_until: str = ""
 
     def to_dict(self) -> dict:
-        """The memory as saved in user_memories.json."""
+        """The memory as saved in user_memories.json, with how it's known."""
         return {
             "memory_id": self.memory_id,
             "text": self.text,
             "created_at": self.created_at,
             "source_conversation_id": self.source_conversation_id,
             "category": self.category,
+            "source": self.source,
+            "how": self.how,
+            "confirmed_at": self.confirmed_at,
+            "holds_from": self.holds_from,
+            "holds_until": self.holds_until,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "UserMemory":
-        """A memory from its saved dict; missing fields take their defaults (Other for older ones)."""
+        """A memory from its saved dict; missing fields take their defaults (Other for older ones; an older memory's
+        source reads as unknown and its how as said, never guessed)."""
         return UserMemory(
             memory_id=data.get("memory_id", uuid.uuid4().hex[:10]),
             text=data.get("text", ""),
             created_at=data.get("created_at", ""),
             source_conversation_id=data.get("source_conversation_id"),
             category=data.get("category", "Other"),
+            source=str(data.get("source") or ""),
+            how=str(data.get("how") or "said"),
+            confirmed_at=str(data.get("confirmed_at") or ""),
+            holds_from=str(data.get("holds_from") or ""),
+            holds_until=str(data.get("holds_until") or ""),
         )
 
 
@@ -338,11 +357,17 @@ def memory_relationship_trees(all_memories: list["UserMemory"]) -> list["MemoryT
     return trees
 
 
+HOW = ("said", "observed", "inferred", "computed")  # how a belief is known (DEC-0173, DEC-0281)
+
+
 class UserMemoryManager:
     """What MIA remembers about the person (user_memories.json in their folder, written through atomic_write_text so
     undo can restore it). The model suggests memories; this only keeps and serves them, and every correction the
-    person makes is noted for MIA's memory-quality loop.
+    person makes is noted for MIA's memory-quality loop. Each memory says how it's known (`EPISTEMIC`, DEC-0281).
     """
+    # How each memory is known (DEC-0173 G3, DEC-0281): its source, when, how, and when he confirmed it.
+    EPISTEMIC = {"record": UserMemory, "source": "source", "at": "created_at", "how": "how", "checked": "confirmed_at"}
+
     def __init__(self, context: AppContext, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
@@ -390,9 +415,11 @@ class UserMemoryManager:
     @life_events.on_change("memory_added", "a memory", "memory", named=False)
     def add_memory(
         self, text: str, category: str = "Other", source_conversation_id: Optional[str] = None,
+        source: str = "", how: str = "said", confirmed: bool = False,
     ) -> Optional[UserMemory]:
         """Keeps a new memory (an unknown category becomes Other); None for empty text or a near-duplicate of one already
-        kept.
+        kept. `source` and `how` say how it's known (a conversation's memory defaults to its id); `confirmed` when he
+        said yes to keeping it.
         """
         text = text.strip()
         if not text:
@@ -405,6 +432,9 @@ class UserMemoryManager:
             created_at=datetime.now().isoformat(timespec="seconds"),
             source_conversation_id=source_conversation_id,
             category=category if category in MEMORY_CATEGORIES else "Other",
+            source=source or (f"conversation:{source_conversation_id}" if source_conversation_id else ""),
+            how=how if how in HOW else "said",
+            confirmed_at=datetime.now().isoformat(timespec="seconds") if confirmed else "",
         )
         self._memories.append(memory)
         self._save()

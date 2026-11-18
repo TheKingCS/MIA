@@ -10,6 +10,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, Zac answered Q-111 to Q-113 yes** (DEC-0280 to 0286 approved). Built: the phone removes, once, the
+PC's own copies that synced there (`core/sync.remove_pc_only_copies`, called from the phone's start; flag
+`phone.pc_only_removed`), and LS-02's first part (his memories carry source, how, `confirmed_at`, `holds_from`/
+`holds_until`; the history and links declare the epistemic contract; `tests/test_memory_provenance.py`). Next in
+LS-02: life notes, which are plain dicts and need a record class first. Then FW-03.
+
 **New 2026-11-18, Prompt 21 done** (Opus; Zac scheduled it for Fable, so a fresh Fable reviewer and Codex reviewed
 it independently, `docs/mia_os/MIA_LIVING_SYSTEM_REVIEW.md`). `MIA_LIVING_SYSTEM_GAP_ANALYSIS.md` and four more;
 DEC-0280 to 0286 proposed; LS-01 to LS-10. **Fixed in it, with tests:** four device-only files no longer sync

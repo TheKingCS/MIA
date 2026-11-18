@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1516 files, 338,739 lines; 1516 files describe themselves; 18,642 of 18,741 classes and functions are documented.
+1517 files, 338,865 lines; 1517 files describe themselves; 18,650 of 18,749 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-591 files, 171,072 lines; 8,821 of 8,907 classes and functions documented
+591 files, 171,135 lines; 8,822 of 8,908 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -886,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-526 files, 88,415 lines; 7,473 of 7,486 classes and functions documented
+527 files, 88,478 lines; 7,480 of 7,493 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1144,6 +1144,7 @@
 - `tests/test_memories_web.py`: Memories' web screen (core/memories_web.py): a recap per expedition, on this day, and a recap's route map.
 - `tests/test_memory_callbacks.py`: Remembering at the right moment (DEC-0029, ALICE pick 3): a birthday, a plan or due upkeep brings back what you told MIA, only when there's something remembered to add.
 - `tests/test_memory_manager.py`: Unit tests for core.memory_manager.MemoryManager — docs/ROADMAP.md milestone v0.17, Memories. Isolates every underlying manager's data dir into a tmp_path scratch area, same monkeypatch pattern as test_trip_manager.py's isolated_paths, since MemoryManager aggregates across Expedition/Trip/Waypoint/J
+- `tests/test_memory_provenance.py`: LS-02 (DEC-0281, Prompt 21): his memories say how they're known (where they came from, how, when he confirmed them, when they hold), older ones read as unknown rather than guessed, and the history and links declare the same contract; and Q-112's one-time removal on the phone of the PC's own files th
 - `tests/test_memory_vault.py`: The memory vault (core/memory_vault.py): the phone's camera roll read by fingerprint, sent to the home computer in pieces that resume, checked there, and only ever offered for removal once the computer confirms it holds each file.
 - `tests/test_message_kind.py`: Intent before action, watched first: what kind of message it is, sorted in code (core/message_kind.py, T-0009).
 - `tests/test_mia_coder.py`: MIA's own coder and her shadow attempts (DEC-0074, core/mia_coder.py): no tools, only the files the task lists, never a protected one, graded by the lab's own check, never merged.

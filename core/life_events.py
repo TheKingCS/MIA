@@ -317,7 +317,11 @@ def on_change(type: str, noun: str, ref: str = "", named: bool = True):
 
 class LifeEventLog:
     """One folder's log, as a store (a household's, or a person's own).
-    Reads the file on each query: it's append-only and small."""
+    Reads the file on each query: it's append-only and small. Declares how its events are known (`EPISTEMIC`)."""
+
+    # How each event is known (DEC-0281): what recorded it (`source`: manual, assistant, a job...), when; the history
+    # is what was observed to happen.
+    EPISTEMIC = {"record": LifeEvent, "source": "source", "at": "at", "how": "observed"}
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """The history beside the stores (life_events.jsonl in the person's or household's folder): append-only, one

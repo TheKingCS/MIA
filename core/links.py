@@ -272,7 +272,11 @@ class Link:
 
 
 class LinkStore:
-    """A household's stated links (`links.json`)."""
+    """A household's stated links (`links.json`); declares how each is known (`EPISTEMIC`)."""
+
+    # How each stated link is known (DEC-0281): who stated it, when; stated links are said (a derived one is
+    # computed from the stores and never kept here).
+    EPISTEMIC = {"record": Link, "source": "by", "at": "created_at", "how": "said"}
 
     def __init__(self, context=None, data_dir: Optional[Path] = None) -> None:
         """The stated links (links.json in the household's folder, data/ by default); derived ones are worked out when asked."""

@@ -112,7 +112,7 @@
 | REQ-IMP-009 | The move shall verify each store's record count and content hash, and a sample of his files by hash, on both sides before it counts as done. | New | 17 |
 | REQ-IMP-012 | No work package shall start without its full specification (objective, requirements, files, tasks, tests, rollback, done, approval). | New | 17 |
 | REQ-IMP-013 | The MVP's gate shall be the 67 requirements assigned to it in `MIA_OS_FINAL_REQUIREMENTS_TRACEABILITY.md`, each verified on the image, plus the full suite passing inside the image. | New | 17 |
-| REQ-LS-002 | The memory stores shall declare the epistemic contract (source, when, how, checked), and his memories and life notes shall carry when he confirmed them and when they hold. | Partial (7 stores) | 21 |
+| REQ-LS-002 | The memory stores shall declare the epistemic contract (source, when, how, checked), and his memories and life notes shall carry when he confirmed them and when they hold. | Partial (11 stores; user_memories, life_events, links since 2026-11-18; life_notes next) | 21 |
 
 ## Every requirement
 

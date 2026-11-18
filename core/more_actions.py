@@ -878,8 +878,11 @@ def _memory_add_describe(context, params) -> str:
 
 
 def _memory_add(context, params) -> str:
-    """Does adding the memory (one MIA already has is said so, not repeated) once it's approved, and says what happened."""
-    made = _need(context, "user_memories").add_memory(str(params["text"]), str(params.get("category") or "Other"))
+    """Does adding the memory (one MIA already has is said so, not repeated) once it's approved, and says what happened;
+    kept as confirmed by his yes on the card."""
+    # Kept on an approved card: his yes is the confirmation (DEC-0281).
+    made = _need(context, "user_memories").add_memory(str(params["text"]), str(params.get("category") or "Other"),
+                                                     source="card", how="said", confirmed=True)
     return "I'll remember that." if made is not None else "I already remember that."
 
 

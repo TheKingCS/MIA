@@ -66,6 +66,17 @@ def _start(root: str, port: int, native_dir: str, last_exit: str) -> None:
     if me is not None:
         context.profiles.set_active_profile(me.profile_id)
         context.personal_data.activate_current()
+    # Once: copies of the PC's own files that synced here before 2026-11-18 (what MIA noted on the PC, its recall
+    # index) are removed (Zac, Q-112; core/sync.py PC_ONLY).
+    if not context.config.get("phone.pc_only_removed"):
+        try:
+            from core.personal_data import _profiles_dir
+            from core.sync import remove_pc_only_copies
+            remove_pc_only_copies(_profiles_dir())
+            context.config.set("phone.pc_only_removed", True)
+            context.config.save()
+        except Exception:
+            log.exception("Couldn't remove the PC's copies.")
 
     # The songs already on this phone, once Android lets MIA read them.
     if not context.config.get("music.extra_folders"):

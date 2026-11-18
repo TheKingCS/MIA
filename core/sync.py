@@ -78,6 +78,10 @@ NEVER_SYNC = frozenset({
     # another device was marked stopped by that device's start-up recovery while it was still going here.
     "runs.json", "turn_traces.jsonl",
 })
+# Of those, the ones that were only ever the PC's (a phone notes no windows and rebuilds its own index): copies that
+# synced to the phone before 2026-11-18 are removed there once (Zac, Q-112). Runs and turn traces hold the phone's
+# own records too, so they stay and age out.
+PC_ONLY = ("activity.json", "recall_index.json")
 JOURNAL_KEYS, JOURNAL_ENTRIES = "private_journal_keys.json", "private_journal.json"
 PASSWORD_VAULT = "password_vault.json"  # core/password_vault.py: encrypted login by login
 WHOLE_FILE = frozenset({JOURNAL_KEYS})  # never merged field by field: the newer one, whole
@@ -291,6 +295,24 @@ def merge_game(base: dict, local: dict, remote: dict) -> dict:
 
 
 # ------------------------------------------------------------------ this device's folders
+
+
+def remove_pc_only_copies(profiles_dir: Path) -> list[Path]:
+    """On the phone: removes the PC-only files (`PC_ONLY`) that synced there before they stopped syncing, and the
+    writer's safety copies of them, from every profile's folder. Returns what it removed."""
+    from core.atomic_write import prev_path
+
+    gone = []
+    for folder in sorted(Path(profiles_dir).glob("*")) if Path(profiles_dir).is_dir() else []:
+        for name in PC_ONLY:
+            for path in (folder / name, prev_path(folder / name)):
+                if path.is_file():
+                    try:
+                        path.unlink()
+                        gone.append(path)
+                    except OSError:
+                        log.exception("Couldn't remove %s", path.name)
+    return gone
 
 
 def syncable(name: str) -> bool:
