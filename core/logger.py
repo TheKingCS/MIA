@@ -36,12 +36,11 @@ _CONFIGURED = False
 
 
 def _configure_root_logger() -> None:
-    """Set up the root 'mia' logger once, with both file and console output, and thread exceptions logged."""
+    """Set up the root 'mia' logger once, with file and console output (console only when the log folder can't be
+    written), and thread exceptions logged."""
     global _CONFIGURED
     if _CONFIGURED:
         return
-
-    _LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     root = logging.getLogger("mia")
     root.setLevel(logging.DEBUG)
@@ -53,17 +52,24 @@ def _configure_root_logger() -> None:
 
     # Rotating file handler: keeps logs from growing unbounded over the
     # lifetime of a long-running field deployment.
-    file_handler = logging.handlers.RotatingFileHandler(
-        _LOG_FILE, maxBytes=2_000_000, backupCount=5, encoding="utf-8"
-    )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
+    # A folder that can't be written (a read-only system image, FW-03's first run in the VM) leaves the console
+    # only: logging never stops her from starting.
+    try:
+        _LOG_DIR.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.handlers.RotatingFileHandler(
+            _LOG_FILE, maxBytes=2_000_000, backupCount=5, encoding="utf-8"
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+    except OSError:
+        file_handler = None
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
 
-    root.addHandler(file_handler)
+    if file_handler is not None:
+        root.addHandler(file_handler)
     root.addHandler(console_handler)
     _log_thread_exceptions()
 

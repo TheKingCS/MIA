@@ -104,5 +104,8 @@ def test_the_image_carries_the_session_entry_its_scripts_and_the_runtimes_settin
     assert "kwin_wayland" in session and "--exit-with-session=/usr/lib/mia/os/files/mia-shell" in session
     unit = (ROOT / "os" / "files" / "mia-runtime.service").read_text(encoding="utf-8")
     assert "Environment=MIA_DESKTOP_SESSION_FILE=%t/mia/desktop.json" in unit
+    shell = (ROOT / "os" / "files" / "mia-shell").read_text(encoding="utf-8")
+    assert "Environment=MIA_HOME=%h/.local/share/mia" in unit  # the shell's home is the runtime's (the image is read-only)
+    assert 'export MIA_HOME="${MIA_HOME:-$HOME/.local/share/mia}"' in shell
     vm = (ROOT / ".github" / "workflows" / "mia-os-vm.yml").read_text(encoding="utf-8")
     assert "kwin_wayland --virtual" in vm and "showing: front end" in vm and "showing: recovery" in vm

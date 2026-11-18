@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1529 files, 340,376 lines; 1529 files describe themselves; 18,750 of 18,849 classes and functions are documented.
+1530 files, 340,408 lines; 1530 files describe themselves; 18,751 of 18,850 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-596 files, 171,897 lines; 8,862 of 8,948 classes and functions documented
+596 files, 171,903 lines; 8,862 of 8,948 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -892,7 +892,7 @@
 
 ## tests/: the test suite: what each part must do
 
-533 files, 89,035 lines; 7,533 of 7,546 classes and functions documented
+534 files, 89,061 lines; 7,534 of 7,547 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1131,6 +1131,7 @@
 - `tests/test_llm_manager.py`: Unit tests for core.llm_manager. No real Ollama server involved — urllib.request.urlopen is monkeypatched to a fake so these exercise the manager/backend's success and graceful-degradation paths in isolation, same fake-dependency approach as test_reference_library_manager.py's _FakeConfig. And (T-00
 - `tests/test_local_model.py`: The phone's own model (core/local_model.py, 2026-10-07, DEC-0019): downloading (and carrying on after a break), starting llama.cpp's server and pointing Talk at it, running the test, and starting the same model again after MIA restarts. A small Python script stands in for llama-server, and a local H
 - `tests/test_logger.py`: core/logger.py: an exception that ends a background thread reaches MIA's log with its traceback (2026-11-10), and is still handed on to the hook that was there before. pytest swaps in its own thread hook per test, so the test installs MIA's over a stand-in and calls it directly.
+- `tests/test_logger_fallback.py`: Tests for the logger's fallback (core/logger.py): a log folder that can't be written leaves console logging, so her shell still starts on a read-only image (FW-03's first VM run).
 - `tests/test_look_by_voice.py`: Look asked out loud (DEC-0125, core/sight.py `wants_look`): "look at this" opens Look with the question and the camera, since no tool can take the photo; ordinary talk about looking at something doesn't.
 - `tests/test_loop_catalog.py`: docs/LOOPS.md is the code's own list of MIA's loops (core/loop_catalog.py): generated, kept current by this test.
 - `tests/test_loop_coverage.py`: Every process MIA has is watched by a loop or has a reason not to be (DEC-0101, core/loop_coverage.py). When this fails, something new joined MIA without anyone deciding how it will be watched: give it a loop in core/loops.py (its `covers`) or a line in work/loop_coverage.json (status todo, or none 

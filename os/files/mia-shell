@@ -2,6 +2,8 @@
 # os/files/mia-shell: her shell window (gui/os_shell.py) on the image's own Python, from her code's folder.
 # MIA_DESKTOP_SESSION_FILE is where her runtime says where she is (core/desktop_session.py).
 export MIA_DESKTOP_SESSION_FILE="${XDG_RUNTIME_DIR}/mia/desktop.json"
+# Her home, as her runtime's service has it (os/files/mia-runtime.service): the image's own folder is read-only.
+export MIA_HOME="${MIA_HOME:-$HOME/.local/share/mia}"
 cd /usr/lib/mia || exit 1
 # MIA_SHELL_ARGS: extra arguments for a test (KWin starts the session's program without arguments).
 # shellcheck disable=SC2086
