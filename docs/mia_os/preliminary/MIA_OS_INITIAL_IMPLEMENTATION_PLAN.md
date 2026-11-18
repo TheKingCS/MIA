@@ -1,5 +1,7 @@
 # MIA OS: initial implementation plan (stage 1, for approval)
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. Nothing here is started. Stage 1 of
 `MIA_MIGRATION_ROADMAP.md` in concrete steps, sized so each is one
 commit with tests. Waiting for Zac's architectural approval.*

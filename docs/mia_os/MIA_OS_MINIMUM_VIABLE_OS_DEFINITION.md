@@ -1,5 +1,7 @@
 # MIA OS: the minimum viable OS (Prompt 16; DEC-0270)
 
+> **Prompt 17 (2026-11-18):** `MIA_OS_FINAL_MVP_AND_RELEASE_DEFINITION.md` governs the MVP and the releases where this differs (it restores DEC-0182's USB recovery path and keeps the MVP free of cloud models).
+
 *Claude (Opus), 2026-11-18. The MVP is DEC-0182's (`MIA_OS_MVP_DEFINITION.md`), refined by Prompts 06 to 15.*
 
 | Area | In the MVP | From |

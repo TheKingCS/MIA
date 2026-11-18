@@ -1,5 +1,7 @@
 # MIA OS: application framework, open questions (Prompt 03)
 
+> **Prompt 17 (2026-11-18):** the answers to this document's questions are in `MIA_OS_OPEN_QUESTIONS.md`, which governs; the decisions' statuses are in `docs/DECISIONS.md`.
+
 *Claude (Opus), 2026-11-15. Questions for Zac are also in MIA_OS_OPEN_QUESTIONS.md (Q-27 to Q-29); questions for later
 prompts are listed with the prompt that owns them.*
 

@@ -1,5 +1,7 @@
 # MIA OS: the minimum viable MIA OS (Prompt 04, deliverable 12, with §25 to §27)
 
+> **Prompt 17 (2026-11-18):** `MIA_OS_FINAL_MVP_AND_RELEASE_DEFINITION.md` governs the MVP and the releases where this differs; the dual boot in §3 is superseded by DEC-0272 (the drive swap).
+
 *Claude (Opus), 2026-11-15. Planning only. DEC-0182, approved 2026-11-15. The requirements tagged `MVP` in the
 specification are this release; `R1` is the first Zac could use as his only PC system every day.*
 

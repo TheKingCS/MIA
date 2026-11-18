@@ -1,5 +1,7 @@
 # MIA OS security model
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. Builds on `docs/SECURITY.md` (what's in place
 today); this covers what changes when MIA can act on the system.*
 

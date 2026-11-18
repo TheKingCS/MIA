@@ -1,5 +1,7 @@
 # MIA OS: functional requirements (Prompt 04, deliverable 4, with §7 to §12)
 
+> **Prompt 17 (2026-11-18):** REQ-FUN-004's "cage session" reads as MIA's session under KWin, cage the fallback (DEC-0191, DEC-0227).
+
 *Claude (Opus), 2026-11-15. Planning only. Row format and fields: [SYSTEM_REQUIREMENTS](MIA_OS_SYSTEM_REQUIREMENTS.md)
 §1. Status is as of 2026-11-15, with evidence. The application framework is Prompt 03's and isn't redesigned here
 (section C only states what the OS must provide it).*

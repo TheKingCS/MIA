@@ -1,5 +1,7 @@
 # MIA OS central risk register
 
+> **Prompt 17 (2026-11-18):** `MIA_OS_FINAL_RISK_REGISTER.md` governs the open risks (duplicates merged, R-02 closed, R-34 and R-40 merged into R-81). This register keeps every entry for history.
+
 *Central register. Each risk's detail and evidence are in the prompt
 report that found it. Rated H, M or L.*
 
@@ -81,3 +83,13 @@ report that found it. Rated H, M or L.*
 | R-83 | The move loses or garbles data | H | L | Prompt 16 | migration | the migration report must match; Windows kept intact; the backup |
 | R-84 | The Windows backlog crowds out the OS work | M | M | Prompt 16 | planning | the critical path first in each session |
 | R-85 | His hands-on steps wait | M | H | Prompt 16 | planning | WAITING_ON; the VM work continues meanwhile |
+| R-86 | Windows won't boot from the USB enclosure | M | M | Prompt 17 | the move | HW-02 first; the drive back in the slot |
+| R-87 | A forgotten disk PIN and a lost recovery key lock him out | H | L | Prompt 17 | encryption | the recovery key printed; the off-PC backup |
+| R-88 | Fedora's packages lag upstream (Ollama) | M | M | Prompt 17 | models | upstream Ollama's build as a fallback |
+| R-89 | A dependency's release changes the shell (PySide6 6.12) | M | M | Prompt 17 | the image | hash locks; the pin |
+| R-90 | Documentation drifts from the code | M | H | Prompt 17 | every session | DEC-0275; counts from code |
+| R-91 | Many decisions sit proposed | M | M | Prompt 17 | the plan | Q-110 |
+| R-92 | A user-unit watchdog can't reboot a hung machine | L | L | Prompt 17 | reliability | greenboot and the hardware watchdog |
+| R-93 | The foundation work takes much longer than estimated | M | M | Prompt 17 | the roadmap | the critical path first |
+| R-94 | Piper's maintenance and licence | L | M | Prompt 17 | voice | Kokoro main; Piper fallback; Q-108 |
+| R-95 | Vosk stagnates | L | M | Prompt 17 | voice | whisper.cpp measured |

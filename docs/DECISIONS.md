@@ -2786,6 +2786,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 ### DEC-0157: The PC image — Fedora Atomic (bootc), a cage MIA session plus KDE, dual boot first
 - Status: APPROVED (Zac, 2026-11-16, answering Q-47: "yes"), with its MIA session's compositor amended by DEC-0191 (test both, lean to KDE's; Q-48)
+- Note: Superseded in part (Prompt 17): the cage session by DEC-0191 and DEC-0227 (KWin); dual boot by DEC-0272 (one M.2 slot: a drive swap); SDDM by DEC-0278 (Plasma Login Manager). Fedora Atomic stands (DEC-0189).
 - Proposed by: claude, 2026-11-13
 - Decision: MIA OS on the PC is a Fedora bootc image built from `os/Containerfile` in the repo, signed, with atomic
   updates and rollback. Two sessions: MIA (cage + Chromium on the local MIA shell) and KDE Plasma. Ollama on ROCm,
@@ -2857,6 +2858,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 ### DEC-0164: MIA's tools on anything you select, in any app
 - Status: PROPOSED (Zac's idea, 2026-11-15: "highlight a section and right click it and be able to assign MIA to
+- Note: Absorbed into DEC-0165 (Prompt 17 reconciliation).
   research it, build a skill around it, convert it to another format, draft an email around it")
 - Proposed by: zac
 - Decision: a "Send to MIA" action on selected text (and later files and images) everywhere: on Android through the
@@ -2931,6 +2933,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 ### DEC-0168: MIA OS as soon as possible, on two machines: the PC (dual boot) and the Pi 5
 - Status: APPROVED
+- Note: Superseded in part (Prompt 17): the PC's dual boot by DEC-0272.
 - Decided by: zac, 2026-11-15 ("I want MIA OS asap. I intend to dual boot in on my pc and also I am going to connect a
   claude code session on my pi5 with AI HAT and some other connected devices and we are going to boot MIA OS on it")
 - Decision: MIA OS is now the objective. Its first two homes: the PC, dual booted beside Windows, and a Raspberry Pi 5
@@ -2952,6 +2955,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 \n
 ### DEC-0169: On Linux, the system keeps the key to MIA's sealed files (the TPM where there is one)
 - Status: PROPOSED (built 2026-11-15 so the dual boot isn't blocked; Zac to approve or change)
+- Note: Built 2026-11-15 and still proposed (Prompt 17): included in the batch of Q-110.
 - Proposed by: claude, 2026-11-15, from the finding that files sealed on Windows (DEC-0126) can't be opened on
   Linux, which blocks MIA OS using the PC's data (DEC-0168)
 - Proposal: on Linux the data key is wrapped under an unlock secret that systemd keeps encrypted for the person's
@@ -3920,6 +3924,7 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 
 ### DEC-0257: Whole-image updates at a restart he allows, rolled back by themselves
 - Status: APPROVED (Zac, 2026-11-18, Q-95 as recommended): updates install by themselves at night when nothing's running, with a message in the morning.
+- Note: Text corrected (Prompt 17): Zac's Q-95 answer governs: updates install by themselves at night when nothing is running, roll back by themselves when they fail, and the previous deployment stays one choice away; REQ-OPS-001 and REQ-REL-023 follow it.
 - Proposed by: claude (Opus), 2026-11-18, Prompt 14
 - Decision: The signed image (the OS and MIA's code) is checked, downloaded in the background, verified, staged, his data snapshotted, applied at a restart he allows; greenboot's health checks failing twice boot the previous deployment.
 - Record: docs/mia_os/MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md §2
@@ -4043,4 +4048,39 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Decision: Written acceptance criteria per milestone, checked by tests, a VM run or a demonstration on his devices, recorded with the commit and evidence; Zac passes each one.
 - Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
 - Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+
+### DEC-0275: One hierarchy of authority for MIA OS documents
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
+- Decision: The master implementation blueprint governs; then the decision records in docs/DECISIONS.md (status changes there first, only Zac approves); then the requirement register; then the domain documents; then the roadmap; then research; then history. A superseded text gets a note naming what governs. Counts come from code.
+- Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
+- Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
+
+### DEC-0276: The release ladder and a narrower MVP gate, with evidence levels
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
+- Decision: Foundation (in a VM), MVP (the first install), Alpha (his only system; signed monthly releases), Beta (R1 in his order), Stable (three monthly releases without a rollback). Of the 97 open Must and MVP requirements, 67 form the MVP gate, 26 Alpha's and 4 Beta's, each with a work package. Evidence is recorded as in code, on Linux, on the image.
+- Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
+- Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
+
+### DEC-0277: Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
+- Decision: systemd-cryptenroll with --tpm2-pcrs=7 --tpm2-with-pin=yes (PCRs 4, 8 and 9 change on every bootc update); a printed LUKS recovery key; MIA's own data key keeps the name 'MIA's recovery key'. Corrects DEC-0252's wording.
+- Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
+- Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
+
+### DEC-0278: The PC's login, MIA's session and what greenboot checks
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
+- Decision: Plasma Login Manager (Fedora 44+'s default) with two entries, MIA (kwin_wayland with her shell; cage if PoC 3 fails) and Plasma; the runtime enabled at first sign-in; a recovery page when it isn't ready in 30 s; greenboot requires only the OS's checks and wants MIA's self-test run as a system one-shot on a throwaway folder; four readiness levels (started, core, models, all).
+- Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
+- Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
+
+### DEC-0279: A reproducible, signed image build
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 17, after Codex's review
+- Decision: The base pinned by digest; Python locked with hashes (uv) and installed with --require-hashes; PySide6 below 6.12 until its WebEngine wheel ships; greenboot-rs and Tailscale's own repository in the image; cosign with a key pair, enforced by bootc's policy; Fedora's Ollama with upstream's build as the fallback.
+- Record: docs/mia_os/MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md §5
+- Related: DEC-0182, DEC-0189, DEC-0191, DEC-0252, DEC-0257, DEC-0263, DEC-0272
 

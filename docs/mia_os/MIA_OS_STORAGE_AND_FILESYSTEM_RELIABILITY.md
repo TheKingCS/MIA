@@ -1,5 +1,7 @@
 # MIA OS: storage reliability (Prompt 14)
 
+> **Prompt 17 (2026-11-18):** the move is DEC-0272's drive swap, rehearsed and verified by content hash (`MIA_OS_FINAL_MIGRATION_AND_DATA_CONTINUITY_PLAN.md`).
+
 *Claude (Opus), 2026-11-18. Planning only. Layout: Prompt 05 (DEC-0193).*
 
 | Concern | How |

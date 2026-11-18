@@ -1,5 +1,7 @@
 # MIA OS: the Linux foundation (Prompt 05, deliverable 2)
 
+> **Prompt 17 (2026-11-18):** dual boot is superseded by DEC-0272 (one M.2 slot: MIA OS on the 4 TB drive, Windows kept in an enclosure); the login manager is Plasma Login Manager (DEC-0278); the disk unlock is TPM PCR 7 with a PIN (DEC-0277); Fedora's ROCm comes from Fedora's packaging, not AMD's support matrix (`MIA_OS_FINAL_TECHNOLOGY_STACK.md`).
+
 *Claude (Fable), 2026-11-16. Planning only. The distribution, the kernel, the boot foundation, hardware
 compatibility and what it costs to keep. Evidence and the full comparison are in
 [MIA_OS_CORE_TECHNOLOGY_EVALUATION.md](MIA_OS_CORE_TECHNOLOGY_EVALUATION.md) (sources [S1]…). Decision: DEC-0189

@@ -1,5 +1,7 @@
 # MIA OS: system acceptance criteria (Prompt 04, deliverable 13, with §24)
 
+> **Prompt 17 (2026-11-18):** the safety net is the Windows drive kept untouched (DEC-0272), not dual boot; the MVP's gate is in `MIA_OS_FINAL_MVP_AND_RELEASE_DEFINITION.md`.
+
 *Claude (Opus), 2026-11-15. Planning only. How MIA OS is judged at each stage. A feature is accepted only when its
 behaviour works, its permission is enforced, its failure is handled and its result can be checked; a screen alone
 proves nothing.*

@@ -1,5 +1,7 @@
 # MIA OS: visual identity, the glass design system and the appearance engine (prompt 24, phase 1)
 
+> **Prompt 17 (2026-11-18):** DEC-0183 is approved and the default theme is Aquatic (`core/themes.py`), not Stark; DEC-0184's status is in `docs/DECISIONS.md`.
+
 *Claude (Opus), 2026-11-15, answering Zac's handoff (kept verbatim:
 [`prompts/24_VISUAL_IDENTITY_GLASSMORPHISM_APPEARANCE_ENGINE.md`](prompts/24_VISUAL_IDENTITY_GLASSMORPHISM_APPEARANCE_ENGINE.md)).
 The handoff's own phase 1: the audit, where the design system belongs, the schemas and contracts, the plan. Nothing is

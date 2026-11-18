@@ -84,7 +84,7 @@ matters, where and how it's measured.
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-OPS-001 | Updates shall be offered, not forced; applied atomically; and reversible by choosing the previous deployment at boot. | Must | MVP | PC | Planned (bootc) | D | DEC-0157 → 14 |
+| REQ-OPS-001 | Updates shall install by themselves at night when nothing is running (Zac, Q-95), applied atomically, rolled back by themselves when they fail, and reversible by choosing the previous deployment at boot. | Must | MVP | PC | Planned (bootc) | D | DEC-0157, DEC-0257 → 14, 17 |
 | REQ-OPS-002 | A documented recovery path shall reach a working desktop and his data from a USB stick, without MIA and without the network. | Must | MVP | PC | New | D: rehearsed once a release | E5 → 14 |
 | REQ-OPS-003 | Every deferred or failing job shall be visible in the runtime's health with its last error. | Must | MVP | All | Exists (`scheduler.status`, app statuses) | T | DEC-0173 → 14 |
 

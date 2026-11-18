@@ -1,5 +1,7 @@
 # MIA OS: core architecture (Prompt 05, deliverable 1)
 
+> **Prompt 17 (2026-11-18):** the login manager is Plasma Login Manager, not SDDM, and the base is "the ostree-native Kinoite container run with bootc" (DEC-0278, `MIA_OS_FINAL_TECHNOLOGY_STACK.md`). Proof of concept 2's headless boot, update and rollback passed on 2026-11-16 (GitHub run 43872077107).
+
 *Claude (Fable), 2026-11-16. Planning only: nothing was installed, built, migrated or changed outside `docs/` to
 write this, and no proof of concept was run. The recommended construction of MIA OS as a Linux-based operating
 environment: its layers, where Linux ends and MIA begins, the components, how they talk, what fails alone, and the

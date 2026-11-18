@@ -1,5 +1,7 @@
 # MIA OS: health checks and readiness (Prompt 14)
 
+> **Prompt 17 (2026-11-18):** the readiness levels are four (started, core, models, all; C-07), and greenboot never needs his session (DEC-0278).
+
 *Claude (Opus), 2026-11-18. Planning only. Health in depth: Prompt 09 (DEC-0222).*
 
 | Level | Means | Signalled by |

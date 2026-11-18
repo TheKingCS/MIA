@@ -1,5 +1,7 @@
 # MIA OS: core architecture open questions (Prompt 05, deliverable 15)
 
+> **Prompt 17 (2026-11-18):** the answers to this document's questions are in `MIA_OS_OPEN_QUESTIONS.md`, which governs; the decisions' statuses are in `docs/DECISIONS.md`.
+
 *Claude (Fable), 2026-11-16. Planning only. What the core architecture leaves unresolved: Zac's decisions, the
 proofs of concept that would settle technical uncertainty (described, **not run**: Prompt 05 authorises none), the
 earlier technical questions this prompt answers, and what later prompts inherit. The central list is

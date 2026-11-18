@@ -1,5 +1,7 @@
 # MIA OS: requirements open questions (Prompt 04, deliverable 14, with §29)
 
+> **Prompt 17 (2026-11-18):** DEC-0157 and DEC-0189 are approved (Q-47), and the household display is planned (Q-82); answers in `MIA_OS_OPEN_QUESTIONS.md`.
+
 *Claude (Opus), 2026-11-15. Planning only. Questions for Zac are also in the central register
 (`MIA_OS_OPEN_QUESTIONS.md`), each with its decision stated in plain words.*
 

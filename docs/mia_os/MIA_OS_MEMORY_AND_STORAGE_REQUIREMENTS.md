@@ -1,5 +1,7 @@
 # MIA OS: memory and storage (Prompt 06 §6)
 
+> **Prompt 17 (2026-11-18):** Windows is not cloned onto the new drive and there is no dual boot: DEC-0272 governs (MIA OS on the 4 TB, the 1 TB untouched).
+
 *Claude (Opus), 2026-11-17. Planning only. The filesystem layout is Prompt 05's (DEC-0193); this sets the budgets.*
 
 ## 1. Memory on the PC (32 GB, verified)

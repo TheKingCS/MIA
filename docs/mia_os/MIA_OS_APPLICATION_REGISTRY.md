@@ -1,5 +1,7 @@
 # MIA OS: the runtime-owned application ecosystem and the canonical manifest (prompt 22)
 
+> **Prompt 17 (2026-11-18):** "the cage MIA session" reads as MIA's session under KWin (DEC-0227).
+
 *Claude (Opus), 2026-11-15, answering Zac's handoff (kept verbatim:
 [`prompts/22_RUNTIME_OWNED_APPLICATION_ECOSYSTEM.md`](prompts/22_RUNTIME_OWNED_APPLICATION_ECOSYSTEM.md)), his reply to
 DEC-0175. DEC-0175 is approved as this handoff's direction; the format and folder choices below are DEC-0178

@@ -2,7 +2,20 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-18 (Opus, overnight: Prompts 09 to 11, and building what Zac approved), by claude.*
+session. Last updated: 2026-11-18 (Opus at the PC: MIA OS Prompts 12 to 17), by claude.*
+
+**2026-11-18 (Claude on Opus, at the PC). MIA OS planning is complete through Prompt 17.**
+- **Prompts 12 to 16** (devices, security, reliability, development, the roadmap): written, and Zac answered each
+  one's questions the same day (Q-87 to Q-104).
+- **Prompt 17, the final blueprint:** `docs/mia_os/MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` now governs MIA
+  OS (DEC-0275, proposed), with sixteen final documents. **Codex reviewed it independently** (a read-only copy of
+  the repository, the real documents and code): 8 findings, 6 High, all accepted, and it checked the corrections.
+  A sweep of all 355 documents found 18 conflicts and 17 gaps; a primary-source check corrected ten technology
+  claims.
+- **Verdict:** ready for the foundation work in a VM (FW-01 to FW-12), not for the install on his PC. First
+  package: FW-01, a reproducible image build; **not started**, waiting for his go (Q-109).
+- **Waiting on Zac:** Q-105 to Q-110 (`docs/WAITING_ON.md` 0w), the USB stick, the 4 TB drive and the enclosure.
+- **Known in code, not yet fixed** (FW-01): the default config's model, the GPU bench's model, the PySide6 pin.
 
 **2026-11-17 into the 18th (Claude on Opus, at the PC, Zac asleep for the second half).**
 - **Planned and reviewed: MIA OS Prompts 09, 10 and 11** (self-awareness, the desktop, the look). Zac answered 09 and

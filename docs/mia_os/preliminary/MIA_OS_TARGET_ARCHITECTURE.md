@@ -1,5 +1,7 @@
 # MIA OS target architecture
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. A proposal for Zac's review; nothing here is built or
 approved. ADRs: DEC-0154 to DEC-0158 in `docs/DECISIONS.md` (proposed).*
 

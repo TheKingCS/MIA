@@ -1,5 +1,7 @@
 # MIA OS: application technologies evaluated (Prompt 03 §18)
 
+> **Prompt 17 (2026-11-18):** "the cage MIA session" reads as MIA's session under KWin (DEC-0227); no dual boot (DEC-0272).
+
 *Claude (Opus), 2026-11-15. Research from current documentation (sources at the end), checked against MIA's code.
 Planning; nothing built or installed.*
 

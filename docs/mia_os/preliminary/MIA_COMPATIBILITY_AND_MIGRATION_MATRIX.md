@@ -1,5 +1,7 @@
 # MIA OS compatibility and migration matrix
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. For each part of MIA:*
 - *does it work on each host today;*
 - *what happens to it in the migration;*

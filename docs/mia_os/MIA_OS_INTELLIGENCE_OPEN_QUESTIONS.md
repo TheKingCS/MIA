@@ -1,5 +1,7 @@
 # MIA OS: intelligence open questions, risks and measurements (Prompt 07)
 
+> **Prompt 17 (2026-11-18):** the answers to this document's questions are in `MIA_OS_OPEN_QUESTIONS.md`, which governs; the decisions' statuses are in `docs/DECISIONS.md`.
+
 *Claude (Opus), 2026-11-17. Questions for Zac also appear in `MIA_OS_OPEN_QUESTIONS.md`.*
 
 ## 1. For Zac

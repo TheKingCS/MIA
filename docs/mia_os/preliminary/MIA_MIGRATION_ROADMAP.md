@@ -1,5 +1,7 @@
 # MIA OS migration roadmap
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. Seven stages. Each leaves MIA fully working on
 Windows, the phone and the glasses; each ends on a gate Zac approves.
 Timing depends on Zac's pace; the order is what matters.*

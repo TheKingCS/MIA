@@ -1,5 +1,7 @@
 # MIA OS: security open questions (Prompt 13)
 
+> **Prompt 17 (2026-11-18):** the answers to this document's questions are in `MIA_OS_OPEN_QUESTIONS.md`, which governs; the decisions' statuses are in `docs/DECISIONS.md`.
+
 *Claude (Opus), 2026-11-18. Questions for Zac also appear in `MIA_OS_OPEN_QUESTIONS.md`.*
 
 **Answered 2026-11-18.** Q-91 yes. Q-92: "no but it should offer it" (two-step offered, not required). Q-93 yes.

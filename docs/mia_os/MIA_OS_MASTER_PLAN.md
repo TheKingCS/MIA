@@ -3,16 +3,18 @@
 *The authoritative consolidated description of the MIA OS initiative
 (Master Directive §13). Claude maintains it; Zac approves.*
 
-*Version 0.3, 2026-11-15, after Prompt 02. Status: planning. Nothing is
-built and no MIA OS decision is approved.*
+*Version 1.0, 2026-11-18, after Prompt 17. Since Prompt 17 this is the progress log: **the blueprint governs**
+([MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md](MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md), DEC-0275), and
+decision statuses live in `docs/DECISIONS.md`. Many decisions are approved; parts are built (the runtime, the image
+build, three proofs of concept); MIA OS itself is not installed anywhere.*
 
 ## 1. What we're doing
 
 Zac's prompt library is in [`prompts/`](prompts/), kept verbatim. It has
-19 files:
+28 files:
 - the Master Directive;
-- Prompts 01–17;
-- a supplemental directive for 17.
+- Prompts 01–26;
+- a supplemental directive for 17 (17b).
 
 It turns MIA from an application family into a Linux-based, AI-native operating environment. Claude works through it **one prompt at a time and stops for Zac's review after each one**.
 
@@ -30,11 +32,11 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | 00 | Master Directive | received | `prompts/00_MASTER_DIRECTIVE.md` |
 | first pass | 10-document plan (2026-11-13, before the library) | done; **superseded**, kept in `preliminary/` | `preliminary/*` |
 | 01 | Existing system audit | done; reviewed by Zac on 2026-11-15 | listed below |
-| **02** | **Feature ecosystem** | **done; waiting for Zac's review** | listed below |
+| **02** | **Feature ecosystem** | **done; its questions answered (`MIA_OS_OPEN_QUESTIONS.md`); no review of the whole recorded** | listed below |
 | **03** | **Application framework** | **done; reviewed by Zac 2026-11-15 (DEC-0175 to 0177; prompt 22 follows)** | `MIA_OS_APPLICATION_FRAMEWORK.md` and sixteen more (listed in it) |
 | **04** | **Requirements and system philosophy** | **done 2026-11-15 (Opus); reviewed by Zac (Q-32 to Q-36 answered, DEC-0179 to 0182 approved) and by Fable (2026-11-16)** | `MIA_OS_SYSTEM_PHILOSOPHY.md`, `MIA_OS_SYSTEM_REQUIREMENTS.md` and fourteen more (listed in it) |
-| **05** | **Core operating system architecture** | **done 2026-11-16 (Fable); waiting for Zac's review (Q-47 to Q-51; DEC-0189 to 0195 proposed; six proofs of concept described, none run)** | `MIA_OS_CORE_ARCHITECTURE.md` and fourteen more (listed below) |
-| **06** | **Hardware and platform** | **done 2026-11-17 (Opus); waiting for Zac's review (Q-63 to Q-67; DEC-0201 to 0205 proposed)** | `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty more (listed in it) |
+| **05** | **Core operating system architecture** | **done 2026-11-16 (Fable); reviewed by Zac (Q-47 to Q-51 answered; DEC-0189 and 0191 approved, others in Q-110's batch); proofs of concept 2 (headless boot, update, rollback), 4 and 6 have passed** | `MIA_OS_CORE_ARCHITECTURE.md` and fourteen more (listed below) |
+| **06** | **Hardware and platform** | **done 2026-11-17 (Opus); reviewed by Zac (Q-63 to Q-67 answered; DEC-0202 approved, others in Q-110's batch)** | `MIA_OS_HARDWARE_AND_PLATFORM_STRATEGY.md` and twenty more (listed in it) |
 | **07** | **Intelligence infrastructure** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-68 to Q-72 yes; DEC-0206 to 0212 approved)** | `MIA_OS_INTELLIGENCE_ARCHITECTURE.md` and twenty more (listed in it) |
 | **08** | **Autonomy, agents and execution** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Approve Once / From Now On; Q-74 yes; no quiet hours)** | `MIA_OS_AUTONOMY_ARCHITECTURE.md` and twenty-three more (listed in it) |
 | **09** | **Self-awareness, inspection and self-development** | **done 2026-11-17 (Opus); reviewed by Zac the same day (Q-76 to Q-78 yes; DEC-0222 and 0225 approved)** | `MIA_OS_SELF_AWARENESS_ARCHITECTURE.md` and twenty-one more (listed in it) |
@@ -45,7 +47,7 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **14** | **Boot, updates, recovery and reliability** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (all four as recommended; DEC-0257, 0258, 0259 approved)** | `MIA_OS_BOOT_AND_STARTUP_ARCHITECTURE.md` and twenty-five more (listed in it) |
 | **15** | **Development, builds and releases** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (yes to all; DEC-0262, 0264, 0265 approved)** | `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` and twenty-five more (listed in it) |
 | **16** | **Implementation phases, migration and the roadmap** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (yes, R1 with the PC first; DEC-0269, 0270, 0272 approved)** | `MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` and twenty-one more (listed in it) |
-| 17 | (see `prompts/`) | not started | |
+| **17** | **Final master plan and independent review** | **done 2026-11-18 (Opus), reviewed independently by Codex; waiting for Zac (Q-105 to Q-110; DEC-0275 to 0279 proposed)** | `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` and sixteen more (`MIA_OS_ARCHITECTURE_DOCUMENT_INDEX.md`) |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -86,6 +88,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3q. Prompt 17 in brief
+
+The blueprint is [MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md](MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md),
+with sixteen final documents. Codex reviewed the real library and code independently: 8 findings (6 High), all
+accepted. A sweep of all 355 documents found 18 conflicts and 17 gaps; a check against primary sources corrected ten
+technology claims (the TPM binding, ROCm on Fedora, the login manager, PySide6 6.12, greenboot, Piper's licence,
+cosign). A Foundation stage (FW-01 to FW-12, in a VM) now comes before the install; the MVP's gate is 67
+requirements; the release ladder is MVP, Alpha, Beta, Stable. Readiness: ready for the foundation, not for the
+install. First package: FW-01, a reproducible image build (not started). DEC-0275 to 0279; REQ-IMP-007 to 013.
 
 ## 3p. Prompt 16 in brief
 

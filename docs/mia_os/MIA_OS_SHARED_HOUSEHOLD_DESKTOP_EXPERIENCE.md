@@ -1,5 +1,7 @@
 # MIA OS: shared and personal (Prompt 10 §19)
 
+> **Prompt 17 (2026-11-18):** the household display shows only what Zac marks shared; workouts are personal and are not on its default list (C-11).
+
 *Claude (Opus), 2026-11-17. Planning only. DEC-0119 says MIA is for Zac alone; Zac's answer to Q-82 makes the
 household display the exception: it is for him and his wife.*
 

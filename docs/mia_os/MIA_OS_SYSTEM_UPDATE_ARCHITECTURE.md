@@ -1,5 +1,7 @@
 # MIA OS: system updates (Prompt 14; DEC-0257)
 
+> **Prompt 17 (2026-11-18):** greenboot isn't in Kinoite by default and is added to the image; its required checks are the OS's own, with MIA's self-test as a system one-shot (DEC-0278). Updates install by themselves at night (Zac, Q-95).
+
 *Claude (Opus), 2026-11-18. Planning only. Building and signing: Prompt 15.*
 
 | Step | How |
@@ -17,7 +19,7 @@
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-REL-023 | An update shall be downloaded in the background and applied only at a restart he allows, never during a run or a model job. | Must | MVP | PC | Planned | D | DEC-0257 (Q-95) → 14 |
+| REQ-REL-023 | An update shall be downloaded in the background and applied at a night restart when nothing is running (Zac, Q-95), never during a run or a model job. | Must | MVP | PC | Planned | D | DEC-0257 (Q-95) → 14 |
 
 ## Engineering (Prompt 15, 2026-11-18)
 

@@ -8,6 +8,15 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### From Prompt 17 (2026-11-18)
+0w. [ ] **Six questions** (Q-105 to Q-110, `docs/mia_os/MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md`): a narrower
+   first version with later releases checking the rest; a PIN at each start for the encrypted disk; trying Windows
+   from the USB enclosure first; a licence for the repository; starting FW-01 (a reproducible image build, in a VM);
+   the 53 proposed decisions as a batch.
+0v. [ ] **When the 4 TB drive and the enclosure come** (HW-02, before anything is installed): put the old drive in
+   the enclosure and try starting Windows from it (about 15 minutes). If it won't start, that's fine: the fallback is
+   the drive back in the slot.
+
 ### From the Opus night (2026-11-17 into the 18th)
 0u. [ ] **Buy when convenient** (Q-96, Q-97): an external USB drive for the second backup copy (about $60 for 2 TB) and a UPS (about $150 to $250).
 0t. [ ] **The laptop's model name** (Q-89): tell Claude its make and model (or open MIA on it and say "check this computer"), so the plan knows how much it can do itself.
@@ -24,7 +33,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
    "what did you change in yourself?", "what can't you change?".
 
 ### From the Fable run (2026-11-16)
-0n. [ ] **MIA OS architecture: five questions** (Q-47 to Q-51, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 1). In short: is the PC's base Fedora's KDE desktop as an image built from the repository (Ubuntu the fallback)? Should MIA's own screen run on KDE's window manager so ordinary programs can open beside her? May the tests be run? Should system changes always ask your password? Should MIA keep running when you're signed out?
+0n. [x] ~~**MIA OS architecture: five questions**~~ (answered 2026-11-16) (Q-47 to Q-51, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 1). In short: is the PC's base Fedora's KDE desktop as an image built from the repository (Ubuntu the fallback)? Should MIA's own screen run on KDE's window manager so ordinary programs can open beside her? May the tests be run? Should system changes always ask your password? Should MIA keep running when you're signed out?
 0m. [ ] **The graphics card test** (part of Q-49): start the PC from a Fedora 45 KDE USB stick, install nothing, and run MIA's three models to measure their speed. About an hour; a Claude session can talk you through it. It decides Fedora or Ubuntu.
 0l. [ ] **Prompt 23, Universal Intelligence: four questions** (Q-43 to Q-46, `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` section 13): what the shelf may keep; whether MIA may note which program is in front of you (recommended: not yet); whose browsing Recall may search; when the work runs.
 

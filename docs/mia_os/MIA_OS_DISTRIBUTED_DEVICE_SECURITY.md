@@ -1,5 +1,7 @@
 # MIA OS: device security (Prompt 13 §13)
 
+> **Prompt 17 (2026-11-18):** a lost device's key is refused at once on the hub; erasing the device happens only when it reconnects, so it's best effort (Codex F-08).
+
 *Claude (Opus), 2026-11-18. Planning only. Devices: Prompt 12 (DEC-0241 to 0247).*
 
 | Control | State |

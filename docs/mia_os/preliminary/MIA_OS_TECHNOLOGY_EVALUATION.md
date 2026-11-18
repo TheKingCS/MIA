@@ -1,5 +1,7 @@
 # MIA OS technology evaluation
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. Options weighed for each layer against Zac's
 principles: preserve, no needless rewrites, local-first, security
 central, reproducible. Versions and support change; verify before

@@ -5,7 +5,21 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 16)*
+*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 17)*
+
+**New 2026-11-18, Prompt 17 (Claude on Opus; reviewed independently by Codex).**
+- **Zac answered Q-102 to Q-104:** the Windows drive into a USB enclosure; the approved features built on Windows
+  alongside; R1 does every PC piece first, then the household display, then the laptop.
+- **Prompt 17 is done:** `docs/mia_os/MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs now, with sixteen
+  final documents (index: `MIA_OS_ARCHITECTURE_DOCUMENT_INDEX.md`). Codex found 8 issues (6 High), all accepted.
+  Verdict: ready for the foundation work in a VM, not for the install. **Waiting on Zac:** Q-105 (the narrower MVP
+  and the release ladder), Q-106 (a PIN at each start), Q-107 (try Windows from the enclosure first), Q-108 (a
+  licence), Q-109 (start FW-01), Q-110 (53 proposed decisions as a batch).
+- **Found and not yet fixed in code (FW-01's tasks):** `config/default_config.json` still names llama3.2 at 16k, so
+  a fresh image starts on the wrong model; `os/poc/gpu_bench.py` measures qwen3:14b, not the everyday qwen2.5:14b;
+  the Containerfile's header still says the VM half hasn't run; `PySide6<7.0` can resolve to 6.12 without WebEngine.
+- **A flaky test:** `tests/test_glasses.py` failed once on GitHub around midnight UTC (run 44203625881): FW-02.
+- **Codex on Windows** needs `-s read-only -c windows.sandbox="unelevated"`, or it can't run any command.
 
 **New 2026-11-18, Prompt 16 (Claude on Opus).**
 - **Zac answered Q-99 to Q-101 yes:** the repository stays public for now; her merged changes pushed; a monthly

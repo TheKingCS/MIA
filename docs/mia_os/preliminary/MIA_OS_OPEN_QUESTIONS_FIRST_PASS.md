@@ -1,5 +1,7 @@
 # MIA OS: open questions for Zac
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. Each needs Zac's answer before the stage it blocks.
 My recommendation is given, but the choice is his.*
 

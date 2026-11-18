@@ -1,5 +1,7 @@
 # MIA OS: memory infrastructure (Prompt 07 §9; DEC-0210)
 
+> **Prompt 17 (2026-11-18):** the recall index built so far (`core/recall_index.py`) is a first slice built differently (a sealed JSON index refreshed by a job); this design is the R1 target (C-12).
+
 *Claude (Opus), 2026-11-17. Planning only. Storage layout: DEC-0193.*
 
 ## 1. Kinds of memory, in the stores that already hold them

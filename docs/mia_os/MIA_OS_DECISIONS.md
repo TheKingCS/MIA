@@ -20,11 +20,11 @@ Logged as **DEC-0159** (2026-11-15), with who MIA OS is for: Zac, perhaps close 
 
 | DEC | Title | Status | Re-examined in |
 |---|---|---|---|
-| DEC-0154 | Intelligence stays independent of the OS | PROPOSED | 04, 05 |
-| DEC-0155 | MIA Runtime: a long-running service, extracted first, on Windows | PROPOSED | 05, 14, 16 |
+| DEC-0154 | Intelligence stays independent of the OS | APPROVED (Q-47) | 04, 05 |
+| DEC-0155 | MIA Runtime: a long-running service, extracted first, on Windows | APPROVED (2026-11-15); built | 05, 14, 16 |
 | DEC-0156 | Capabilities and grants for every tool and action | APPROVED (Q-31, 2026-11-15); M4 built | 08, 13 |
-| DEC-0157 | PC image: Fedora Atomic (bootc), a cage session plus KDE, dual boot | PROPOSED | 05, 06, 14 |
-| DEC-0158 | System management only through a narrow privileged helper | PROPOSED | 05, 13 |
+| DEC-0157 | PC image: Fedora Atomic (bootc), a cage session plus KDE, dual boot | APPROVED (Q-47); **superseded in part** by DEC-0191, 0227, 0272, 0278 | 05, 06, 14 |
+| DEC-0158 | System management only through a narrow privileged helper | APPROVED (Q-47); refined by DEC-0194 | 05, 13 |
 
 ## Decided on 2026-11-15 (Zac's answers to Prompt 01)
 
@@ -226,3 +226,20 @@ Full records: `MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0274 | Every milestone has a gate Zac passes | PROPOSED |
 
 Full records: `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` §3.
+
+## Reconciled by Prompt 17 (2026-11-18)
+
+`docs/DECISIONS.md` governs a decision's status (DEC-0275); every MIA OS decision is classified in
+`MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md`. Missing from this index until now: DEC-0167 (one skills system,
+approved), DEC-0168 (MIA OS on the PC and the Pi, approved; its dual boot superseded by DEC-0272), DEC-0169
+(the system keeps the sealing key on Linux, proposed, built), DEC-0197 to DEC-0200 (specialists, approved).
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0275 | One hierarchy of authority for MIA OS documents | PROPOSED |
+| DEC-0276 | The release ladder and a narrower MVP gate, with evidence levels | PROPOSED |
+| DEC-0277 | Disk unlock: LUKS2, the TPM bound to PCR 7 with a PIN, and a recovery key | PROPOSED |
+| DEC-0278 | The PC's login, MIA's session and what greenboot checks | PROPOSED |
+| DEC-0279 | A reproducible, signed image build | PROPOSED |
+
+Full records: `MIA_OS_FINAL_ARCHITECTURE_DECISION_LOG.md` §5.

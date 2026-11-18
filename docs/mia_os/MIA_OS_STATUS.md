@@ -1,6 +1,6 @@
 # MIA OS status
 
-*Updated 2026-11-17 by Claude (Opus).*
+*Updated 2026-11-18 by Claude (Opus), after Prompt 17.*
 
 **Phase:** planning.
 
@@ -67,7 +67,10 @@
   `MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` and twenty-one supporting documents; DEC-0269 to 0274 proposed;
   REQ-IMP-001 to 006 added.
 - Prompt 16 reviewed by Zac (2026-11-18): yes, with R1 doing every PC piece first, then the display, then the laptop.
-- **Next:** Prompt 17 (Zac's go, 2026-11-18); to build: the Theme Studio from a picture,
+- **Prompt 17 (the final blueprint and independent review) is done** (Opus, 2026-11-18, reviewed by Codex):
+  `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` and sixteen more; DEC-0275 to 0279 proposed; REQ-IMP-007 to
+  013. Ready for the foundation work in a VM, not for the install.
+- **Next:** Zac's answers to Q-105 to Q-110; then FW-01 on his go; to build: the Theme Studio from a picture,
   interface sounds, a Light theme.
 - Prompts 18–20 (World Intelligence, Procurement, the Living System) are approved and being built; Prompt 21 waits for 17.
 

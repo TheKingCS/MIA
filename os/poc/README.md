@@ -8,7 +8,7 @@ The six tests that settle what Prompt 05 couldn't decide on paper
 |---|---|---|
 | 1. The graphics card under Linux | **Zac at the PC**, from a USB stick (below) | ready to run |
 | 2. The image: build | GitHub's machines (`.github/workflows/mia-os-poc.yml`, job `image`) | runs on every change to `os/` |
-| 2. The image: boot, update, roll back | a virtual machine | not yet |
+| 2. The image: boot, update, roll back | a virtual machine (`.github/workflows/mia-os-vm.yml`, run by hand) | **passed headless** on 2026-11-16 (run 43872077107): installed to a disk, booted, the runtime up as a user service, updated and rolled back with the user's file kept. Not yet: the graphical session, greenboot, encryption (FW-01 to FW-05) |
 | 3. MIA's session: KDE's compositor against cage | a virtual machine | not yet |
 | 4. The runtime as a Linux service | GitHub's machines (job `runtime-service`), the suite on Linux (job `suite-linux`) | runs on every change |
 | 5. The system helper | a virtual machine, once a first helper exists | not yet |
@@ -39,7 +39,7 @@ it, and the internet.
      `ntfs` partition), then:
      ```
      sudo mkdir -p /mnt/win && sudo mount -o ro /dev/nvme0n1p3 /mnt/win     # use the name lsblk showed
-     OLLAMA_MODELS=/mnt/win/Users/zacrh/.ollama/models OLLAMA_NOPRUNE=1 ollama serve &
+     OLLAMA_MODELS=/mnt/win/Users/<your Windows user name>/.ollama/models OLLAMA_NOPRUNE=1 ollama serve &
      ```
      If it says the drive is BitLocker-locked or "unclean", use the other way.
    - *Download the two smaller ones* (about 11 GB, held in memory; the 32B is skipped):

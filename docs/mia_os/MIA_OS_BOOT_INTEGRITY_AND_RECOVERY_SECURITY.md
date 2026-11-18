@@ -1,5 +1,7 @@
 # MIA OS: boot integrity and safe recovery (Prompt 14)
 
+> **Prompt 17 (2026-11-18):** systemd-cryptenroll binds no PCRs by default and the boot-chain PCRs change on every bootc update, so the binding is PCR 7 with a PIN (DEC-0277), not "a changed boot chain asks for the recovery key".
+
 *Claude (Opus), 2026-11-18. Planning only. Security: Prompt 13.*
 
 | Control | How |

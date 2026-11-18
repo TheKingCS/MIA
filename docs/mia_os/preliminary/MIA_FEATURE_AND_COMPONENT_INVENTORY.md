@@ -1,5 +1,7 @@
 # MIA feature and component inventory, classified for MIA OS
 
+> **Prompt 17 (2026-11-18):** superseded by Prompts 01 to 17 and kept for history only; `MIA_OS_FINAL_MASTER_IMPLEMENTATION_BLUEPRINT.md` governs.
+
 *Claude, 2026-11-13. Built from the code (`docs/ATLAS.md`, `docs/MIA_MAP.md`,
 `docs/CAPABILITY_CHECKLIST.md`), not from the feature list. The list isn't
 exhaustive: MIA has ~378 tools and ~90 stores. This groups them into

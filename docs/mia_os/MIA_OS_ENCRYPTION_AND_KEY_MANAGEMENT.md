@@ -1,5 +1,7 @@
 # MIA OS: encryption and keys (Prompt 13 §16; DEC-0252)
 
+> **Prompt 17 (2026-11-18):** the disk unlock is LUKS2 with the TPM bound to PCR 7 plus a PIN and a printed LUKS recovery key (DEC-0277); "MIA's recovery key" means only the data key's backup. The phone seals nothing at rest yet (`core/at_rest.py`): its Keystore step is planned (WP-10), not built.
+
 *Claude (Opus), 2026-11-18. Planning only.*
 
 | Layer | What | Key held by | State |
