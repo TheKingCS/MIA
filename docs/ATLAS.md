@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1515 files, 338,591 lines; 1515 files describe themselves; 18,632 of 18,731 classes and functions are documented.
+1516 files, 338,669 lines; 1516 files describe themselves; 18,638 of 18,737 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -842,7 +842,7 @@
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
 - `tools/bench_audit.py`: What MIA's routing does today with each Intelligence Benchmark question (tests/intelligence_bench.py, docs/INTELLIGENCE_BENCHMARK.md): a question plan (core/question_plans.py: lookups by code, one answer), answered by code (a direct lookup), offered which tools, or left to the model with no tools at
 - `tools/chronicle_issue.py`: The Chronicles' weekly issue (core/chronicle_issue.py, build plan step 17).
-- `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`C:\Users\zacrh\DevTools\imagegen\.venv`), so it imports nothing from MIA:
+- `tools/chronicle_panels.py`: Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX on the GPU through DirectML). It runs in the image model's own environment, kept apart from MIA's (`%USERPROFILE%\DevTools\imagegen\.venv`), so it imports nothing from MIA:
 - `tools/ci_failures.py`: Says which tests failed in CI where anyone reading the run can see it (2026-11-10). The Actions job log needs a sign-in, but a check run's annotations don't, so this reads pytest's JUnit report and prints one GitHub `::error` annotation per failed test (name and the first lines of why), up to LIMIT 
 - `tools/cloud_tests.py`: Runs the test suite in a place without the PC's libraries (a cloud session: no PySide6, pyserial, mutagen, libzim...). Each library on STUBBED that can't be imported is replaced by an empty stand-in before pytest starts, so tests that only import a Qt module on the way (the parity checks, the voice 
 - `tools/conversation_check.py`: The golden conversation corpus, asked for real (DEC-0067; P5 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md): greetings, jokes, frustration, disagreement and the rest, through the same steps a turn takes, on this computer's model, for each device she answers on. Read-only like tools/intelligence_check.p
@@ -886,7 +886,7 @@
 
 ## tests/: the test suite: what each part must do
 
-525 files, 88,296 lines; 7,464 of 7,477 classes and functions documented
+526 files, 88,374 lines; 7,470 of 7,483 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -962,6 +962,7 @@
 - `tests/test_child_accounts.py`: Child accounts (core/child_accounts.py), 2026-10-01: a parent looks after a child's MIA; grown-up apps and tools say "ask a parent", the Assistant is told it's talking with a child, and the safety floor also asks the child to tell an adult.
 - `tests/test_chronicle.py`: The Chronicle (DEC-0028): each week (and year) told as a story from what really happened. Never made up, never a failure.
 - `tests/test_chronicle_issue.py`: The Chronicles' weekly issue (build plan step 17, core/chronicle_issue.py): told from approved series events, oldest first; captions in code with the event named; lines from the model in the characters' voices; the Story Bible's five rules checked in code; Zac's approval marks the events as told and
+- `tests/test_ci_workflows.py`: FW-02, CI as the gate (DEC-0264; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): every action a workflow uses is pinned to a commit, not a tag that could be moved; every workflow says what its token may do; the Linux suite runs on every push; the image's own Python runs the whole suite ins
 - `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py.
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).

@@ -9,7 +9,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From Fable's review (2026-11-18)
-0x. [ ] **Things that now work differently, from the review's fixes.** Say if you want any of them back:
+0x. [x] ~~**Things that now work differently, from the review's fixes.**~~ (Zac, 2026-11-18: "Go with your
+   recommendations": all kept.) Say if you want any of them back:
    - **Approve From Now On** is offered only for routine entries in your records (logging, adding, marking done).
      Changing a setting, anything in her browser, a connection, a skill, the lab, or anything that removes or
      forgets something always asks.
@@ -26,8 +27,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
      plan made before today against the span table for your lumber before building from it.
    - **A specialist's answer** leads with the doubt when a second model doubts it, and says when Claude hasn't
      inspected the model that planned it.
-0y. [ ] **One question:** while you've said "stop everything", should MIA still restart Ollama if it has
-   stopped? Today she does (so your own questions can be answered). Yes keeps that; no makes her wait.
+0y. [x] ~~**One question:**~~ (answered 2026-11-18, as recommended: yes) while you've said "stop everything", MIA
+   still restarts Ollama if it has stopped, so your own questions can be answered.
 
 ### From Prompt 17 (2026-11-18)
 0w. [x] ~~**Six questions**~~ (answered 2026-11-18: "Yes to all") (Q-105 to Q-110, `docs/mia_os/MIA_OS_FINAL_OPEN_QUESTIONS_AND_APPROVALS.md`): a narrower
@@ -55,7 +56,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ### From the Fable run (2026-11-16)
 0n. [x] ~~**MIA OS architecture: five questions**~~ (answered 2026-11-16) (Q-47 to Q-51, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 1). In short: is the PC's base Fedora's KDE desktop as an image built from the repository (Ubuntu the fallback)? Should MIA's own screen run on KDE's window manager so ordinary programs can open beside her? May the tests be run? Should system changes always ask your password? Should MIA keep running when you're signed out?
-0m. [ ] **The graphics card test** (part of Q-49): start the PC from a Fedora 45 KDE USB stick, install nothing, and run MIA's three models to measure their speed. About an hour; a Claude session can talk you through it. It decides Fedora or Ubuntu.
+0m. [ ] **The graphics card test** (the USB stick comes next week, Zac 2026-11-18) (part of Q-49): start the PC from a Fedora 45 KDE USB stick, install nothing, and run MIA's three models to measure their speed. About an hour; a Claude session can talk you through it. It decides Fedora or Ubuntu.
 0l. [ ] **Prompt 23, Universal Intelligence: four questions** (Q-43 to Q-46, `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` section 13): what the shelf may keep; whether MIA may note which program is in front of you (recommended: not yet); whose browsing Recall may search; when the work runs.
 
 ### Start here (2026-11-08 evening: the short list, in order; everything else is below)

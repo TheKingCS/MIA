@@ -23,6 +23,14 @@ from tests.engine_world import build_world
 TODAY = date.today()
 
 
+@pytest.fixture(autouse=True)
+def _today_now():
+    """TODAY as each test starts (the changes it checks use the date when they run, so a suite that crossed
+    midnight after this file loaded failed: GitHub run 44203625881)."""
+    global TODAY
+    TODAY = date.today()
+
+
 @pytest.fixture
 def world(tmp_path, monkeypatch):
     """A world with a late bill, an overdue oil check and eggs on the grocery list."""

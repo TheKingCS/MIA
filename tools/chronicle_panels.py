@@ -4,7 +4,7 @@ tools.chronicle_panels
 
 Draws an issue's panels with the local image model (T-0036: SD-Turbo as ONNX
 on the GPU through DirectML). It runs in the image model's own environment,
-kept apart from MIA's (`C:\\Users\\zacrh\\DevTools\\imagegen\\.venv`), so it
+kept apart from MIA's (`%USERPROFILE%\\DevTools\\imagegen\\.venv`), so it
 imports nothing from MIA:
 
     <imagegen python> tools/chronicle_panels.py <prompts.json> <out folder> <model folder> [<reference.png>]

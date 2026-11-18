@@ -115,6 +115,18 @@ approves itself.
 
 ### FW-02 CI as the gate
 
+> **State (2026-11-18): built; its acceptance (three green pushes, the suite green inside the image) runs in CI.**
+> Built: the Linux suite on every push (since FW-01); every action pinned to the commit its tag named on 2026-11-18,
+> the tag kept as a comment; `permissions: contents: read` on every workflow that didn't say (the phone's and the
+> food table's keep their own `write`, which they use); the glasses test reads today when each test runs; the whole
+> suite runs inside the booted image on the image's own Python and packages, against the repository's tracked files
+> (the tests read folders the image leaves out); `tests/test_ci_workflows.py` keeps all of it, and keeps any
+> Windows user folder out of code and settings. **Deviations:** 1. *Windows CI stays on Python 3.12*: that's what MIA
+> runs on today on his PC, and 3.13 is the image's; each is tested where it runs. 2. *A failure reaches the next
+> session by its first step* (`gh run list` at the start, `docs/NEXT_SESSION.md`), not by CI writing into the
+> repository, which would need a write token. 3. *Docs and records keep the user folder they were written with*
+> (they're history, and some are Zac's own prompts); the test covers code and settings.
+
 | Field | Specification |
 |---|---|
 | Objective | The full suite on Linux and Windows on every push, the same Python on both, and the suite inside the image |

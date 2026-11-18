@@ -7,6 +7,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 17)*
 
+**At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
+--log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
+
+**New 2026-11-18, FW-02 built** (CI as the gate): actions pinned by commit, least permissions, the glasses test's
+date fixed, and the whole suite inside the booted image (`mia-os-vm.yml`). Check its first runs. Zac answered 0x
+and 0y (keep the review's changes; MIA still restarts Ollama while everything is stopped). His USB stick comes
+next week, so HW-01 waits; FW-03 (MIA's session in the VM) is next.
+
 **New 2026-11-18, Fable's review of everything Opus built since 2026-11-17** (three fresh Fable reviewers, read-only,
 one each for what MIA may do on her own, what she notes and recalls, and the specialists; Codex reviewed FW-01).
 Fixed and pushed in three commits, each defect with a test: `tests/test_authority_review.py`,

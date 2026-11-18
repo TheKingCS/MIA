@@ -28,6 +28,9 @@ on:
     - cron: "47 8 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read  # FW-02: read the code, nothing more (a job that needs more says so itself)
+
 concurrency:
   group: mia-os-vm
   cancel-in-progress: true
@@ -37,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 150
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
       - name: Room (the runner's preinstalled toolchains aren't needed here)
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
@@ -95,6 +98,22 @@ jobs:
           as_mia 'grep "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
           as_mia 'echo kept-by-him > ~/his-file.txt'
           vm 'ps -o user= -C python | sort -u; id -u mia'
+      - name: The whole suite inside the image, on its own Python and packages (FW-02)
+        run: |
+          . ~/vm.sh
+          # The repository's tracked files (the tests read folders the image leaves out), run with the image's venv.
+          git archive --format=tar HEAD | vm 'rm -rf /var/tmp/mia-suite && mkdir -p /var/tmp/mia-suite && tar -x -C /var/tmp/mia-suite && chown -R mia /var/tmp/mia-suite'
+          cat > /tmp/suite.sh <<'EOS'
+          #!/bin/bash
+          cd /var/tmp/mia-suite
+          export QT_QPA_PLATFORM=offscreen PYTHONDONTWRITEBYTECODE=1
+          timeout 3000 /usr/lib/mia/venv/bin/python -m pytest -q -p no:cacheprovider > /var/tmp/suite.log 2>&1
+          code=$?
+          tail -n 40 /var/tmp/suite.log
+          exit $code
+          EOS
+          vm 'cat > /var/tmp/suite.sh && chmod 755 /var/tmp/suite.sh' < /tmp/suite.sh
+          vm 'runuser -l mia -c /var/tmp/suite.sh'
       - name: 3. An update to version 2, booted
         run: |
           . ~/vm.sh
