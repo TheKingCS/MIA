@@ -213,3 +213,16 @@ Full records: `MIA_OS_RELIABILITY_TECHNOLOGY_EVALUATION.md` §2.
 | DEC-0268 | Several models build MIA, reviewed independently; Zac approves decisions | PROPOSED |
 
 Full records: `MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md` §2.
+
+## Proposed by Prompt 16 (2026-11-18)
+
+| DEC | Title | Status |
+|---|---|---|
+| DEC-0269 | Build MIA OS in stages, each usable and reversible | PROPOSED |
+| DEC-0270 | The MVP is DEC-0182 plus the approved MVP-tier requirements | PROPOSED |
+| DEC-0271 | The critical path | PROPOSED |
+| DEC-0272 | MIA OS on the new 4 TB drive; the Windows drive kept intact | PROPOSED |
+| DEC-0273 | Workstreams and work packages on the task board | PROPOSED |
+| DEC-0274 | Every milestone has a gate Zac passes | PROPOSED |
+
+Full records: `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` §3.

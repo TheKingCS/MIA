@@ -4002,3 +4002,45 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_OS_DEVELOPMENT_TECHNOLOGY_EVALUATION.md §2
 - Related: DEC-0058, DEC-0069, DEC-0104, DEC-0160, DEC-0174, DEC-0189, DEC-0200
 
+### DEC-0269: Build MIA OS in stages, each usable and reversible
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 16
+- Decision: Six stages: MIA on Windows keeps growing, the proofs, the image in a VM, the MVP on his PC, R1, beyond; Windows stays his everyday system until the MVP passes on his PC, and no stage removes the way back to the one before.
+- Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
+- Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+
+### DEC-0270: The MVP is DEC-0182 plus the approved MVP-tier requirements
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 16
+- Decision: Done only when every Must and MVP requirement in the matrix passes on his PC, the MVP scenarios pass and he has used it for a week with nothing lost; R1 is the R1-tier rest.
+- Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
+- Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+
+### DEC-0271: The critical path
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 16
+- Decision: The GPU proof from a USB stick, the image booting in a VM with the runtime ready, MIA's session under KWin, updates and rollback with the TPM-unlocked disk, his data moved with counts matched, a week of use.
+- Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
+- Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+
+### DEC-0272: MIA OS on the new 4 TB drive; the Windows drive kept intact
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 16
+- Decision: His board has one M.2 slot, so DEC-0157's dual boot becomes a swap: MIA OS on the 4 TB, the 1 TB Windows drive untouched as the fallback for at least a month; a migration report compares every store's counts; the phone re-pairs and resets its sync base.
+- Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
+- Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+
+### DEC-0273: Workstreams and work packages on the task board
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 16
+- Decision: Eleven workstreams, twenty-two first work packages; each package ends with its tests, documentation and gate; the approved backlog is built on Windows now and carries over.
+- Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
+- Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+
+### DEC-0274: Every milestone has a gate Zac passes
+- Status: PROPOSED
+- Proposed by: claude (Opus), 2026-11-18, Prompt 16
+- Decision: Written acceptance criteria per milestone, checked by tests, a VM run or a demonstration on his devices, recorded with the commit and evidence; Zac passes each one.
+- Record: docs/mia_os/MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md §3
+- Related: DEC-0157, DEC-0182, DEC-0189, DEC-0243, DEC-0258
+

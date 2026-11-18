@@ -22,3 +22,7 @@
 ## Engineering (Prompt 15, 2026-11-18)
 
 Releases and channels: `MIA_OS_RELEASE_ENGINEERING_AND_VERSIONING.md` (DEC-0265).
+
+## Implementation (Prompt 16, 2026-11-18)
+
+Updates and rollback are milestone M4 (`MIA_OS_IMPLEMENTATION_MILESTONES.md`).

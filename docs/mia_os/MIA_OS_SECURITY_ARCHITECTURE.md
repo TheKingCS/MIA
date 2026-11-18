@@ -116,3 +116,7 @@ Secure Boot, the TPM-bound disk key and signed updates: `MIA_OS_BOOT_INTEGRITY_A
 ## Engineering (Prompt 15, 2026-11-18)
 
 Supply chain in the build (pinned actions, hashes, signing, SBOMs): `MIA_OS_SOFTWARE_SUPPLY_CHAIN_SECURITY.md`.
+
+## Implementation (Prompt 16, 2026-11-18)
+
+The approved security builds are work packages WP-01 to 05 (`MIA_OS_IMPLEMENTATION_WORK_PACKAGES.md`).

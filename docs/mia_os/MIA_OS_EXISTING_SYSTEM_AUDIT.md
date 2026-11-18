@@ -218,3 +218,7 @@ Each needs a PC session, the phone, or the hardware itself. They are listed in `
 ## Engineering (Prompt 15, 2026-11-18)
 
 The engineering platform's audit (tests, CI, generated docs, the lab) is in `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` §2.
+
+## Implementation (Prompt 16, 2026-11-18)
+
+Where everything stands before the build: `MIA_OS_CURRENT_IMPLEMENTATION_BASELINE.md`.

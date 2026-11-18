@@ -76,3 +76,8 @@ report that found it. Rated H, M or L.*
 | R-78 | A dependency changes under a pinned version | M | L | Prompt 15 | dependencies | hashes in the lock |
 | R-79 | CI on Windows and in a VM grows slow or costly | L | M | Prompt 15 | CI | jobs only on their inputs; parallel tests |
 | R-80 | Several sessions at once overwrite each other's work | M | M | Prompt 15 | the team | own files only; worktrees; never a broad restore |
+| R-81 | The GPU runs worse under Linux | H | L | Prompt 16 | the OS | PoC 1 first; the Vulkan backend; Ubuntu as the base fallback |
+| R-82 | KWin as MIA's session doesn't hold up | M | M | Prompt 16 | the shell | cage for the MVP; Plasma with MIA full screen |
+| R-83 | The move loses or garbles data | H | L | Prompt 16 | migration | the migration report must match; Windows kept intact; the backup |
+| R-84 | The Windows backlog crowds out the OS work | M | M | Prompt 16 | planning | the critical path first in each session |
+| R-85 | His hands-on steps wait | M | H | Prompt 16 | planning | WAITING_ON; the VM work continues meanwhile |

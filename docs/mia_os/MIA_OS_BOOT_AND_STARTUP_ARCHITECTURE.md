@@ -98,3 +98,7 @@ the next start. His things are never lost to a crash, and a broken PC is a two-h
 ## Engineering (Prompt 15, 2026-11-18)
 
 Images are booted in a VM before they're published (`MIA_OS_LINUX_IMAGE_BUILD_INFRASTRUCTURE.md`).
+
+## Implementation (Prompt 16, 2026-11-18)
+
+Booting the image in a VM is milestone M2, the first on the critical path after the GPU proof (`MIA_OS_IMPLEMENTATION_CRITICAL_PATH.md`).

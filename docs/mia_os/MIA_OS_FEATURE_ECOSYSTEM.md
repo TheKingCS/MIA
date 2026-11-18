@@ -187,3 +187,7 @@ Every feature is reached the same way: its area, the area's dashboard, the app; 
 
 Every feature's screen uses the one design system (DEC-0234) and its app's own atmosphere colour (DEC-0187);
 a feature never needs its own visual system.
+
+## Implementation (Prompt 16, 2026-11-18)
+
+Which features land in the MVP, R1 and later: `MIA_OS_MINIMUM_VIABLE_OS_DEFINITION.md` and `MIA_OS_LONG_TERM_EXPANSION_ROADMAP.md`.

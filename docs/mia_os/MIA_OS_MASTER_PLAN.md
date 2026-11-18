@@ -44,7 +44,8 @@ Five decisions are established by Zac (Master Directive §3) and are requirement
 | **13** | **Security, privacy and permissions** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (sensitive never to the cloud; two-step offered; a lockdown; add-ons only ours and all local when built out; DEC-0250, 0251, 0253, 0254 approved)** | `MIA_OS_SECURITY_ARCHITECTURE.md` and twenty-nine more (listed in it) |
 | **14** | **Boot, updates, recovery and reliability** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (all four as recommended; DEC-0257, 0258, 0259 approved)** | `MIA_OS_BOOT_AND_STARTUP_ARCHITECTURE.md` and twenty-five more (listed in it) |
 | **15** | **Development, builds and releases** | **done 2026-11-18 (Opus); reviewed by Zac 2026-11-18 (yes to all; DEC-0262, 0264, 0265 approved)** | `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` and twenty-five more (listed in it) |
-| 16–17 | (see `prompts/`) | not started | |
+| **16** | **Implementation phases, migration and the roadmap** | **done 2026-11-18 (Opus); waiting for Zac's review (Q-102 to Q-104; DEC-0269 to 0274 proposed)** | `MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` and twenty-one more (listed in it) |
+| 17 | (see `prompts/`) | not started | |
 | 18–20 | World Intelligence, Procurement, the Living System doctrine (handoffs, 2026-11-15) | proposals done; 18–20 approved (DEC-0170, 0172, 0173) | `MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md`, `MIA_OS_PROCUREMENT_PROPOSAL.md`, `MIA_OS_LIVING_SYSTEM.md` |
 | 21 | Living System completeness (supplemental directive) | **scheduled after Prompt 17** (Zac, 2026-11-15), on **Fable**; it assumes 03–17 are done | `prompts/21_LIVING_SYSTEM_COMPLETENESS.md` |
 | 22 | Runtime-owned application ecosystem (handoff) | approved (DEC-0175, DEC-0178); registry phases M1 to M5 built | `MIA_OS_APPLICATION_REGISTRY.md` |
@@ -85,6 +86,16 @@ The full audit is [MIA_OS_EXISTING_SYSTEM_AUDIT.md](MIA_OS_EXISTING_SYSTEM_AUDIT
   - phase 1 only: Living Worlds;
   - not built: Smart Closet, Life Enrichment Protocol, Shared Conversation, the Convergence.
 - **Could not be checked here:** the PC, the phone, the glasses, the Pi, the model's answer quality.
+
+## 3p. Prompt 16 in brief
+
+The roadmap is [MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md](MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md), with twenty-one
+supporting documents. Most of MIA exists and already runs on Linux, so MIA OS is mostly packaging, sessions, updates
+and moving his data. Six stages, each reversible, Windows his everyday system until the MVP passes on his PC
+(DEC-0269); the MVP is DEC-0182 plus the MVP-tier requirements (DEC-0270); the critical path is the GPU proof, the
+image in a VM, MIA's session, updates and the TPM disk, the move, a week of use (DEC-0271); MIA OS on the 4 TB drive
+with Windows kept intact (DEC-0272); workstreams and work packages (DEC-0273); gates Zac passes (DEC-0274).
+REQ-IMP-001 to 006.
 
 ## 3o. Prompt 15 in brief
 

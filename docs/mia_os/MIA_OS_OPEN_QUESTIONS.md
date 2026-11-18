@@ -112,6 +112,9 @@ folded in here.*
 | Q-99 | **Answered yes, as recommended (Zac, 2026-11-18: "Yes to all")**; DEC-0262 approved. Was: Keep MIA's GitHub repository public, or make it private? Public keeps CI free and unlimited; private hides the code but caps CI minutes; nothing personal is in it either way. Recommended: Keep it public for now; revisit when MIA OS ships | DEC-0262 | `MIA_OS_DEVELOPMENT_OPEN_QUESTIONS.md` |
 | Q-100 | **Answered yes, as recommended (Zac, 2026-11-18: "Yes to all")**; DEC-0264 approved. Was: Push her own merged changes (Night School's fixes on Claude's pass) to GitHub with the daily summary, so CI tests them too? Recommended: Yes | DEC-0264 | `MIA_OS_DEVELOPMENT_OPEN_QUESTIONS.md` |
 | Q-101 | **Answered yes, as recommended (Zac, 2026-11-18: "Yes to all")**; DEC-0265 approved. Was: A monthly MIA OS release you approve (from the tested next builds), with fixes allowed sooner? Recommended: Yes | DEC-0265 | `MIA_OS_DEVELOPMENT_OPEN_QUESTIONS.md` |
+| Q-102 | **Open (Prompt 16).** Your board has one M.2 slot. When the 4 TB drive comes, MIA OS goes on it, and the current Windows drive goes untouched into a USB enclosure (about $25) as the fallback for at least a month, bootable if you need Windows. OK? Recommended: Yes | DEC-0272 | `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` |
+| Q-103 | **Open (Prompt 16).** Keep building MIA's approved features on Windows (the lockdown, the Light theme, sounds, the restore drill and the rest) while the OS work goes on, since they carry over? Recommended: Yes, both at once | DEC-0269 | `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` |
+| Q-104 | **Open (Prompt 16).** R1's order after the MVP: the household display on the TV first, then recall and workspaces on the PC, then the laptop? Recommended: Yes | DEC-0270 | `MIA_OS_IMPLEMENTATION_OPEN_QUESTIONS.md` |
 
 ## The original questions (for the record)
 

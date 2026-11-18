@@ -291,3 +291,7 @@ Boot order, readiness, units, updates and recovery: `MIA_OS_BOOT_AND_STARTUP_ARC
 ## Engineering (Prompt 15, 2026-11-18)
 
 How the image and its parts are built, tested and released: `MIA_OS_DEVELOPMENT_INFRASTRUCTURE.md` (DEC-0262 to 0268).
+
+## Implementation (Prompt 16, 2026-11-18)
+
+The order it's built in: `MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` (stages, DEC-0269) and `MIA_OS_IMPLEMENTATION_WORK_PACKAGES.md`.

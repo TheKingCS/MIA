@@ -123,3 +123,7 @@ Each device's recovery: `MIA_OS_DISTRIBUTED_DEVICE_RELIABILITY.md`.
 ## Engineering (Prompt 15, 2026-11-18)
 
 The phone app and the Pi image are built and signed in CI (`MIA_OS_BUILD_SYSTEM_ARCHITECTURE.md`).
+
+## Implementation (Prompt 16, 2026-11-18)
+
+After the move the phone re-pairs and resets its sync base (`MIA_OS_USER_DATA_AND_MIGRATION_CONTINUITY.md`, REQ-IMP-005).

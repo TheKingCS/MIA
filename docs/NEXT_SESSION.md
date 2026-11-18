@@ -5,7 +5,16 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 15)*
+*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 16)*
+
+**New 2026-11-18, Prompt 16 (Claude on Opus).**
+- **Zac answered Q-99 to Q-101 yes:** the repository stays public for now; her merged changes pushed; a monthly
+  release he approves.
+- **Prompt 16 (implementation phases, migration, the roadmap) is done:**
+  `docs/mia_os/MIA_OS_IMPLEMENTATION_MASTER_ROADMAP.md` and twenty-one more; DEC-0269 to 0274 proposed;
+  REQ-IMP-001 to 006; work packages WP-01 to 22 (WP-01 to 12 build on Windows now). **Waiting on Zac:** Q-102 (the
+  Windows drive kept in a USB enclosure), Q-103 (build on Windows alongside), Q-104 (R1's order). Prompt 17 (the
+  independent review of the whole plan) on his go.
 
 **New 2026-11-18, Prompt 15 (Claude on Opus).**
 - **Zac answered Q-95 to Q-98 as recommended:** updates at night by themselves; the second backup on an external
