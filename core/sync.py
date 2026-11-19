@@ -17,7 +17,8 @@ phone's account and the PC's have different ids):
 - `mine`: the person's own folder (data/profiles/<id>/);
 - `home`: their household's folder (data/ for the device's first one).
 In each, the JSON data files directly in it (SYNC_SUFFIXES), minus what
-belongs to one device only (NEVER_SYNC: camera logins, logs...); the
+belongs to one device, to MIA's own work or to settings (NEVER_SYNC,
+from the retention registry, core/retention.py, DEC-0286); the
 photos and files MIA keeps (FILE_FOLDERS: My Files, recipe photos, build
 photos, documents on things, trip and expedition photos); and the
 account's game numbers (XP, credits, prestige, unlocked rewards).
@@ -60,13 +61,16 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from contextlib import contextmanager
+
+from core import retention as _retention
 from core.at_rest import open_bytes
 from core.logger import get_logger
 
 log = get_logger(__name__)
 
 SYNC_SUFFIXES = (".json", ".jsonl")
-NEVER_SYNC = frozenset({
+_OLD_NEVER_SYNC = frozenset({  # kept for the record; the registry decides now (DEC-0286)
     "security_cameras.json", "security_logins.json",  # the cameras belong to the computer they're on
     "activity_log.json", "communication_log.json",  # what this device did
     "model_bench_cases.json", "push_subscriptions.json",  # per device / shipped
@@ -82,6 +86,9 @@ NEVER_SYNC = frozenset({
 # synced to the phone before 2026-11-18 are removed there once (Zac, Q-112). Runs and turn traces hold the phone's
 # own records too, so they stay and age out.
 PC_ONLY = ("activity.json", "recall_index.json")
+# What never syncs is the retention registry's (core/retention.py, DEC-0286): every file it says belongs to one
+# device, to MIA's own work, or to settings.
+NEVER_SYNC = frozenset(name for name, kept in _retention.REGISTRY.items() if not kept.syncs)
 JOURNAL_KEYS, JOURNAL_ENTRIES = "private_journal_keys.json", "private_journal.json"
 PASSWORD_VAULT = "password_vault.json"  # core/password_vault.py: encrypted login by login
 WHOLE_FILE = frozenset({JOURNAL_KEYS})  # never merged field by field: the newer one, whole
@@ -125,10 +132,26 @@ def _id_key(items: list) -> Optional[str]:
     return None
 
 
-def merge_json(base: Any, local: Any, remote: Any, prefer_local: bool) -> Any:
+_found = threading.local()
+
+
+@contextmanager
+def conflicts():
+    """Collects, for the merges inside it (this thread only), each field both sides changed to different values
+    since their base: a list of paths, each a tuple of keys and `id=...` steps (DEC-0285)."""
+    previous = getattr(_found, "paths", None)
+    _found.paths = []
+    try:
+        yield _found.paths
+    finally:
+        _found.paths = previous
+
+
+def merge_json(base: Any, local: Any, remote: Any, prefer_local: bool, path: tuple = ()) -> Any:
     """Pure logic. A three-way merge: what changed on each side since
     `base` is kept; when both changed the same thing, `prefer_local` says
-    which side wins. `base` is _MISSING when the file is new to sync."""
+    which side wins, and inside `conflicts()` the field's `path` is noted.
+    `base` is _MISSING when the file is new to sync."""
     if local == remote:
         return local
     if base is not _MISSING and local == base:
@@ -150,17 +173,20 @@ def merge_json(base: Any, local: Any, remote: Any, prefer_local: bool) -> Any:
                     continue  # deleted there, untouched here
                 out[key] = lv
             else:
-                out[key] = merge_json(bv, lv, rv, prefer_local)
+                out[key] = merge_json(bv, lv, rv, prefer_local, path + (str(key),))
         return out
     if isinstance(local, list) and isinstance(remote, list):
-        return _merge_list(base if isinstance(base, list) else _MISSING, local, remote, prefer_local)
+        return _merge_list(base if isinstance(base, list) else _MISSING, local, remote, prefer_local, path)
+    if base is not _MISSING and getattr(_found, "paths", None) is not None:
+        _found.paths.append(path)  # both sides changed it since the base: one of them loses
     return local if prefer_local else remote
 
 
-def _merge_list(base, local: list, remote: list, prefer_local: bool) -> list:
+def _merge_list(base, local: list, remote: list, prefer_local: bool, path: tuple = ()) -> list:
     """Pure logic. The three-way merge of a list. Records with ids are matched by id: one removed on a side where the
     other left it as it was stays removed, one added on either side stays, and one on both is merged field by field
-    (merge_json). Without ids: when both only added to the end (a log), both additions are kept in time order; a list
+    (merge_json, its `path` growing by `id=...`). Without ids: when both only added to the end (a log), both
+    additions are kept in time order; a list
     of plain values or of timestamped messages (a conversation) is the union; anything else takes the preferred side.
     """
     key = _id_key(local) or _id_key(remote) or (_id_key(base) if base is not _MISSING else None)
@@ -180,7 +206,7 @@ def _merge_list(base, local: list, remote: list, prefer_local: bool) -> list:
                     continue  # removed there
                 out.append(lv)
             else:
-                out.append(merge_json(bv, lv, rv, prefer_local))
+                out.append(merge_json(bv, lv, rv, prefer_local, path + (f"{key}={ident}",)))
         return out
     # No ids: both only added to the end (a log), keep both additions.
     if base is not _MISSING and local[:len(base)] == base and remote[:len(base)] == base:
@@ -297,6 +323,32 @@ def merge_game(base: dict, local: dict, remote: dict) -> dict:
 # ------------------------------------------------------------------ this device's folders
 
 
+def conflict_note(name: str, lost: list, local_won: bool) -> str:
+    """Pure logic. The one note about a sync conflict (DEC-0285): which file and fields both devices changed, and
+    which side was kept; never a value, so nothing sensitive is quoted."""
+    fields = sorted({" / ".join(p for p in path if p) or "the whole file" for path in lost})
+    shown = ", ".join(fields[:3]) + (f" and {len(fields) - 3} more" if len(fields) > 3 else "")
+    side = "this device's" if local_won else "the other device's"
+    return (f"{Path(name).stem.replace('_', ' ')}: {shown} changed on both devices; {side} was kept, and the "
+            f"other is in your change history for 30 days.")
+
+
+def keep_loser(profile_id: str, path: Path, losing: Optional[bytes], lost: list, local_won: bool) -> str:
+    """Keeps the losing side's copy of a file in the person's change history after a conflicting merge, so \"undo\"
+    within 30 days brings it back (DEC-0285), and returns the one note to say. Never raises."""
+    try:
+        from core import change_history
+        from core.undo_log import Change
+
+        note = conflict_note(Path(path).name, lost, local_won)
+        change = Change("sync_conflict", profile_id, files={Path(path): losing}, by="sync", summary=note)
+        change_history.keep(change)
+        return note
+    except Exception:  # noqa: BLE001 - keeping the loser never breaks the sync
+        log.exception("Couldn't keep the losing side of %s.", Path(path).name)
+        return ""
+
+
 def remove_pc_only_copies(profiles_dir: Path) -> list[Path]:
     """On the phone: removes the PC-only files (`PC_ONLY`) that synced there before they stopped syncing, and the
     writer's safety copies of them, from every profile's folder. Returns what it removed."""
@@ -316,10 +368,12 @@ def remove_pc_only_copies(profiles_dir: Path) -> list[Path]:
 
 
 def syncable(name: str) -> bool:
-    """Whether a data file syncs: a synced kind of file (SYNC_SUFFIXES), not one that belongs to one device
-    (NEVER_SYNC), not hidden.
+    """Whether a data file syncs: a synced kind of file (SYNC_SUFFIXES), not hidden, and one the retention
+    registry says sync carries (core/retention.py, DEC-0286).
     """
-    return name.endswith(SYNC_SUFFIXES) and name not in NEVER_SYNC and not name.startswith(".")
+    from core import retention
+
+    return name.endswith(SYNC_SUFFIXES) and not name.startswith(".") and retention.syncs(name)
 
 
 def folders(context, profile_id: str) -> dict[str, Path]:
@@ -645,7 +699,9 @@ def sync_now(context, call=None, lock=None) -> dict:
     Local files are compared and sent by their content (a sealed one is
     opened, DEC-0126); each side seals its own copy when it writes. A file
     is read again under `lock` once the computer has answered, so an edit
-    made here meanwhile is merged with theirs, never written over."""
+    made here meanwhile is merged with theirs, never written over. A field
+    both changed keeps the losing copy in the change history and adds one
+    note (`keep_loser`, DEC-0285)."""
     from core.home_link import home_call
 
     call = call or home_call
@@ -708,9 +764,14 @@ def sync_now(context, call=None, lock=None) -> dict:
                     write_file(context, path, got)
                     merged = None
                 else:
-                    merged = merge_file(name, base, local, got, prefer_local)
+                    with conflicts() as lost:
+                        merged = merge_file(name, base, local, got, prefer_local)
                     if merged != local:
                         write_file(context, path, merged)
+                    if lost:
+                        note = keep_loser(pid, path, local if not prefer_local else got, lost, prefer_local)
+                        if note:
+                            notes.append(note)
             if merged is None:
                 state.set_base(scope, name, got)
                 done["pulled"] += 1

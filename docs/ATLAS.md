@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1533 files, 340,715 lines; 1533 files describe themselves; 18,772 of 18,871 classes and functions are documented.
+1535 files, 340,966 lines; 1535 files describe themselves; 18,783 of 18,882 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-598 files, 172,102 lines; 8,875 of 8,961 classes and functions documented
+599 files, 172,296 lines; 8,882 of 8,968 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -427,6 +427,7 @@
 - `core/requirements.py`: What each project needs (Procurement P1, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 6): one line per thing a project needs, with how many, what it has to be, the most it should cost, and how far along it is.
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces:
 - `core/response_style.py`: Learning how the person likes MIA to answer (DEC-0138): now and then she offers the *same* answer two ways — "do you prefer this response, or this one?" — differing on one dimension of style (how long, how it's laid out, its tone, whether it leads with the answer). The person picks; MIA records it a
+- `core/retention.py`: The retention registry (DEC-0286, LS-03): one table of every data file MIA keeps, with its class, how long it's kept, what happens at its end, and whether sync carries it. Sync reads it (`core/sync.syncable`), and `tests/test_retention.py` fails on a `.json` or `.jsonl` file named in core/ or module
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo
 - `core/routine_actions.py`: The Household's routines changed from the screen (DEC-0113 canvas Household, DEC-0125: routines could only be added by voice). `routine.add` sets one up (core/household_routines.add_routine, the same as the add_household_routine voice tool); `routine.pause` stops it making new missions while keeping
@@ -894,7 +895,7 @@
 
 ## tests/: the test suite: what each part must do
 
-535 files, 89,147 lines; 7,540 of 7,553 classes and functions documented
+536 files, 89,204 lines; 7,544 of 7,557 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1264,6 +1265,7 @@
 - `tests/test_requirements_spec.py`: MIA OS's requirements specification (Prompt 04; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md`, `tools/requirements_matrix.py`): every requirement row is well formed, defined once, with a known priority, tier and status and an owner prompt; the scenarios name only requirements that exist; the generated
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half.
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
+- `tests/test_retention.py`: Tests for LS-03: the retention registry (DEC-0286, core/retention.py) decides what syncs, and a field changed on two devices keeps its losing value in the change history with one note that quotes no value (DEC-0285, core/sync.py).
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths.
 - `tests/test_runs.py`: The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record for anything MIA runs in steps. A run moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off run looking alive or calls it done (shown with a real process killed m

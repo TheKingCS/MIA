@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-03 built** (DEC-0285, DEC-0286): a new data file goes in `core/retention.py` (its class,
+how long it's kept, what happens at the end, whether it syncs) or `tests/test_retention.py` fails; sync reads
+that table. A sync conflict keeps the losing copy in the change history and says one note.
+
 **New 2026-11-18, LS-04 built** (DEC-0283): `tests/test_capability_check.py` reads each capability's tool, kind,
 tier and effect as one. A failure is one of four kinds: raise `Refused` or `Unavailable` (core/actions.py) where
 that's what it is, plain `ActionError` stays "invalid". A loop that waits on something outside MIA asks
