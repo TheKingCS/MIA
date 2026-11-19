@@ -221,6 +221,7 @@ jobs:
       - name: 3. An update to version 2, booted
         run: |
           . ~/vm.sh
+          vm 'findmnt -o TARGET,FSTYPE,OPTIONS /boot; systemctl cat boot.automount ostree-finalize-staged.service | grep -E "TimeoutIdle|RequiresMounts"' || true
           vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:test-v2 && bootc status | grep -A3 staged; systemctl reboot' || true
           # Down first (a shutdown that takes its time must not be mistaken for the new boot), then up.
           for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done

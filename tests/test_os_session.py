@@ -8,6 +8,7 @@ end when she answers and a recovery page when she doesn't, whose links act only 
 carries the session entry, its scripts and the runtime's setting, tested in a VM under KWin's virtual display.
 The shell says what it shows with the time, comes back by itself when it dies, and the login screen defaults to
 her session.
+The image keeps /boot mounted, so an update staged in the VM applies at shutdown.
 """
 
 from __future__ import annotations
@@ -133,3 +134,13 @@ def test_the_shell_comes_back_by_itself_and_the_login_screen_defaults_to_her():
     assert "/etc/plasmalogin.conf.d/mia.conf" in containerfile and "/etc/sddm.conf.d/mia.conf" in containerfile
     vm = (ROOT / ".github" / "workflows" / "mia-os-vm.yml").read_text(encoding="utf-8")
     assert "systemctl restart display-manager" in vm and "sendkey" in vm and "plasmashell" in vm
+
+
+def test_the_image_keeps_boot_mounted_so_an_update_applies_at_shutdown():
+    """/boot as an automount let go when idle, and ostree couldn't apply a staged update at shutdown (FW-03's VM runs):
+    the image keeps it mounted once it is, and the finalizing waits for it."""
+    containerfile = (ROOT / "os" / "Containerfile").read_text(encoding="utf-8")
+    assert "/usr/lib/systemd/system/boot.automount.d/mia.conf" in containerfile
+    assert "/usr/lib/systemd/system/ostree-finalize-staged.service.d/mia.conf" in containerfile
+    assert "TimeoutIdleSec=0" in (ROOT / "os" / "files" / "boot-stays-mounted.conf").read_text(encoding="utf-8")
+    assert "RequiresMountsFor=/boot" in (ROOT / "os" / "files" / "finalize-needs-boot.conf").read_text(encoding="utf-8")

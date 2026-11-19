@@ -57,6 +57,9 @@ RUN rm -rf /usr/lib/mia/.github /usr/lib/mia/android-phone /usr/lib/mia/homestea
 
 # Her runtime as a user service (the same unit as deploy/mia-runtime.service, with the image's paths filled in).
 COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
+# Updates apply at shutdown only with /boot mounted: it stays mounted once it is, and the finalizing waits for it.
+COPY os/files/boot-stays-mounted.conf /usr/lib/systemd/system/boot.automount.d/mia.conf
+COPY os/files/finalize-needs-boot.conf /usr/lib/systemd/system/ostree-finalize-staged.service.d/mia.conf
 
 # MIA's own session at the login screen (FW-03, DEC-0278): KWin running her shell full screen, ordinary windows
 # beside it; Plasma stays the other entry.
