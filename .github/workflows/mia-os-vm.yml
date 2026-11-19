@@ -38,7 +38,7 @@ concurrency:
 jobs:
   vm:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
       - name: Room (the runner's preinstalled toolchains aren't needed here)
@@ -56,6 +56,9 @@ jobs:
           sudo podman build -f /tmp/mia-ctx/os/Containerfile -t localhost/mia-os:poc /tmp/mia-ctx
           sudo podman build -f os/poc/vm/Containerfile.test --build-arg MARK=v1 -t localhost/mia-os:test-v1 os/poc/vm
           sudo podman build -f os/poc/vm/Containerfile.test --build-arg MARK=v2 -t localhost/mia-os:test-v2 os/poc/vm
+          # FW-04: two deliberately broken versions, for the rollback by itself.
+          sudo podman build -f os/poc/vm/Containerfile.test --build-arg MARK=v3 --build-arg BREAK=selftest -t localhost/mia-os:test-v3 os/poc/vm
+          sudo podman build -f os/poc/vm/Containerfile.test --build-arg MARK=v4 --build-arg BREAK=login -t localhost/mia-os:test-v4 os/poc/vm
       - name: A throwaway registry on the host holding version 2 (the VM reaches the host as 10.0.2.2)
         run: |
           sudo podman run -d --name reg -p 5000:5000 docker.io/library/registry:2
@@ -108,7 +111,7 @@ jobs:
           as_mia 'systemctl --user show mia-runtime -p Type -p WatchdogUSec -p StatusText -p ActiveState'
           as_mia 'systemctl --user show mia-runtime -p StatusText' | grep -E "MIA is up \((core|models|all)\)"
           # The self-test as greenboot runs it: a dynamic user on an empty folder.
-          vm '/etc/greenboot/check/wanted.d/52-mia-self-test.sh'
+          vm '/etc/greenboot/check/required.d/43-mia-self-test.sh'
       - name: MIA's session under KWin (FW-03), her front end and the recovery page
         run: |
           . ~/vm.sh
@@ -198,7 +201,9 @@ jobs:
           for i in $(seq 1 120); do as_mia 'pgrep -x ksplashqml' > /dev/null 2>&1 || break; sleep 1; done
           echo "login to Plasma's desktop, splash gone: $(( $(date +%s) - start )) s"
           sleep 3; shot 5-plasma
-          as_mia 'pgrep -x plasmashell'; as_mia 'systemctl --user is-active mia-runtime'
+          as_mia 'pgrep -x plasmashell'
+          for i in $(seq 1 90); do [ "$(as_mia 'systemctl --user is-active mia-runtime')" = active ] && break; sleep 2; done
+          as_mia 'systemctl --user is-active mia-runtime'
           # Back as it was for the steps after: no automatic login.
           vm 'rm -f /etc/sddm.conf.d/zz-test-autologin.conf /etc/plasmalogin.conf.d/zz-test-autologin.conf; loginctl terminate-user mia || true; systemctl restart display-manager'
           sleep 5; as_mia 'systemctl --user start mia-runtime' || true
@@ -256,6 +261,45 @@ jobs:
           test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
           sleep 30
           as_mia 'grep -c "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
+      - name: FW-04 the automatic path, the night's update staged and applied at an idle restart
+        run: |
+          . ~/vm.sh
+          up_again() { for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done; for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done; }
+          vm 'systemctl list-timers mia-update-stage.timer mia-update-apply.timer --no-pager'
+          # Where updates come from, as an install sets it once (the release registry; here the host's test one).
+          sudo podman push --tls-verify=false localhost/mia-os:test-v1 localhost:5000/mia-os:auto
+          vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:auto'
+          # A new version is published; the night's staging service (what the 03:00 timer runs) stages it.
+          sudo podman push --tls-verify=false localhost/mia-os:test-v2 localhost:5000/mia-os:auto
+          vm 'systemctl start mia-update-stage.service && bootc status | grep -A4 staged'
+          # The apply service (what the timer runs every 15 minutes until 06:00): idle, snapshot, restart. The test's own
+          # SSH session isn't idle, so it's told to treat the computer as idle.
+          vm 'systemd-run --wait --pipe -E MIA_UPDATE_FORCE_IDLE=1 /usr/lib/mia/os/files/mia-update-apply' || true
+          up_again
+          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; ls /var/mia-snapshots; journalctl -b -1 --no-pager | grep -iE "snapshot|subvolume|Applying" | tail -n 5' || true
+          test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
+          test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
+      - name: FW-04 two broken updates roll back by themselves, his data untouched
+        run: |
+          . ~/vm.sh
+          up_again() { for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done; for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done; }
+          for broken in v3 v4; do
+            echo "== $broken: published, staged and applied the usual way; greenboot must bring v2 back"
+            sudo podman push --tls-verify=false localhost/mia-os:test-$broken localhost:5000/mia-os:auto
+            vm 'systemctl start mia-update-stage.service' || true
+            vm 'systemd-run --wait --pipe -E MIA_UPDATE_FORCE_IDLE=1 /usr/lib/mia/os/files/mia-update-apply' || true
+            up_again
+            seen=""
+            for i in $(seq 1 120); do
+              mark=$(vm cat /usr/lib/mia/POC_IMAGE_MARK 2>/dev/null || true)
+              [ -n "$mark" ] && [ "$mark" != "${seen##* }" ] && seen="$seen $mark" && echo "booted: $mark"
+              if [ "$mark" = v2 ] && vm 'systemctl is-active --quiet greenboot-healthcheck.service' 2>/dev/null; then break; fi
+              sleep 10
+            done
+            vm 'cat /usr/lib/mia/POC_IMAGE_MARK; grub2-editenv list; journalctl --no-pager -u greenboot-healthcheck.service -b -1 | grep -E "ERROR|failed|rollback|reboot" | tail -n 8' || true
+            test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
+            test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
+          done
       - name: The VM's console, for the record
         if: always()
         run: tail -n 80 /tmp/serial.log || true

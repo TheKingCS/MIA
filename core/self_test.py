@@ -8,8 +8,8 @@ to `--home`, which must be empty), so the stores it opens are new ones and his a
 starts her schedule, makes one change through the action contract (a grocery item), reads it back (DEC-0218), and
 stops. Exit 0 when every step passed, 1 when one failed (each step is printed), 2 when the folder isn't empty.
 
-The image runs it after each boot as one of greenboot's checks (`os/files/greenboot/`), under a dynamic user that
-can't read anyone's home.
+The image runs it after each boot as one of greenboot's required checks (`os/files/greenboot/required.d/`), as
+`nobody`, who can't read anyone's home: an update whose MIA fails it is rolled back.
 """
 
 from __future__ import annotations

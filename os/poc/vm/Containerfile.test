@@ -8,8 +8,15 @@
 ARG BASE=localhost/mia-os:poc
 FROM ${BASE}
 ARG MARK=v1
+# FW-04's rollback test: BREAK=selftest makes MIA's self-test fail, BREAK=login stops the login screen starting;
+# greenboot must roll either back with no hand on the keyboard.
+ARG BREAK=
 RUN systemctl enable sshd \
  && mkdir -p /etc/containers/registries.conf.d \
  && printf '[[registry]]\nlocation = "10.0.2.2:5000"\ninsecure = true\n' > /etc/containers/registries.conf.d/90-poc-test.conf \
- && echo "${MARK}" > /usr/lib/mia/POC_IMAGE_MARK
+ && echo "${MARK}" > /usr/lib/mia/POC_IMAGE_MARK \
+ && if [ "${BREAK}" = selftest ]; then printf 'import sys\nprint("FAIL broken on purpose")\nsys.exit(1)\n' \
+        > /usr/lib/mia/core/self_test.py; fi \
+ && if [ "${BREAK}" = login ]; then mkdir -p /usr/lib/systemd/system/plasmalogin.service.d \
+        && printf '[Service]\nExecStart=\nExecStart=/bin/false\n' > /usr/lib/systemd/system/plasmalogin.service.d/broken.conf; fi
 RUN bootc container lint

@@ -73,14 +73,18 @@ def test_the_self_test_refuses_a_folder_with_anything_in_it(tmp_path):
 
 
 def test_the_image_checks_health_after_boot_and_updates_at_night():
-    """Required checks (login screen, homes, disk) roll back; wanted ones (network, model server, self-test) are logged;
+    """Required checks (login screen, homes, disk, the self-test) roll back; wanted ones (network, model server) are
+    logged;
     updates stage at night and apply at an idle restart after a snapshot; the runtime is a notify service."""
     files = ROOT / "os" / "files"
     required = sorted(p.name for p in (files / "greenboot" / "required.d").iterdir())
     wanted = sorted(p.name for p in (files / "greenboot" / "wanted.d").iterdir())
-    assert required == ["40-mia-login-manager.sh", "41-mia-home.sh", "42-mia-disk-space.sh"]
-    assert wanted == ["50-mia-network.sh", "51-mia-model-server.sh", "52-mia-self-test.sh"]
-    assert "DynamicUser=yes" in (files / "greenboot" / "wanted.d" / "52-mia-self-test.sh").read_text(encoding="utf-8")
+    assert required == ["40-mia-login-manager.sh", "41-mia-home.sh", "42-mia-disk-space.sh", "43-mia-self-test.sh"]
+    assert wanted == ["50-mia-network.sh", "51-mia-model-server.sh"]
+    selftest = (files / "greenboot" / "required.d" / "43-mia-self-test.sh").read_text(encoding="utf-8")
+    assert "--reuid=65534" in selftest and "--home" in selftest  # as nobody, on a fresh folder
+    vm = (ROOT / ".github" / "workflows" / "mia-os-vm.yml").read_text(encoding="utf-8")
+    assert "BREAK=selftest" in vm and "BREAK=login" in vm and "mia-update-stage.service" in vm
     apply = (files / "mia-update-apply").read_text(encoding="utf-8")
     assert apply.index("btrfs subvolume snapshot") < apply.index("systemctl reboot") and "IdleHint" in apply
     containerfile = (ROOT / "os" / "Containerfile").read_text(encoding="utf-8")
