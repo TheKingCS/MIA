@@ -14,6 +14,7 @@ from core.event_bus import EventBus
 from core.notification_manager import NotificationManager
 
 MONDAY = datetime(2026, 11, 23, 9, 0)
+CHECKS = frozenset({"birthday", "calendar_digest"})  # only checks that stay inside the test's own folder
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ def _days_saying(week_said, words):
 
 def test_each_event_is_said_on_its_day_and_nothing_twice(week):
     """Tuesday's and Thursday's and Saturday's events each come once, on their own day."""
-    said = replay.replay(week, BackgroundJobs(week), MONDAY)
+    said = replay.replay(week, BackgroundJobs(week), MONDAY, CHECKS)
     assert [d["day"] for d in said] == [f"2026-11-{n}" for n in range(23, 30)]
     assert _days_saying(said, "Dentist") == ["2026-11-24"]
     assert _days_saying(said, "Feed store order") == ["2026-11-26"]
@@ -59,7 +60,7 @@ def test_a_stop_holds_her_own_suggestions_but_never_his_reminders(week):
             week.communication.offer(Candidate("smart_suggestion", "An idea", "Sort the seed packets by month"),
                                      now=datetime(2026, 11, 25, 8, 30))
 
-    said = replay.replay(week, BackgroundJobs(week), MONDAY, before_each=before)
+    said = replay.replay(week, BackgroundJobs(week), MONDAY, CHECKS, before_each=before)
     held = _days_saying(said, "Sort the seed packets")
     assert held and held[0] >= "2026-11-27" and len(held) == 1  # after the stop, once
     assert _days_saying(said, "Feed store order") == ["2026-11-26"]  # his reminder, never held

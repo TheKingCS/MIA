@@ -7,7 +7,7 @@ day of a week with the one clock (core/clock.py) held at that day's hour, and wh
 her communication gate's log. A test seeds a week of things (events, bills, a stop) and checks that every due item is
 said on its day, nothing twice, and the stop holds what it should.
 
-`replay(context, jobs, start, days, hour)` returns one entry per day, {day, said: [titles and messages]}. It never
+`replay(context, jobs, start, checks, days, hour)` returns one entry per day, {day, said: [titles and messages]}. It never
 reaches outside: the checks offer through the gate as they always do, and the gate's log is what's read.
 """
 
@@ -15,14 +15,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-# Left out of a replay: her own background work, which launches programs or reaches outside (core/homeostasis.py's
-# deferrable checks), and the nightly backup. A replay is about what she says and when.
-SKIPPED = frozenset(__import__("core.homeostasis", fromlist=["DEFERRABLE_CHECKS"]).DEFERRABLE_CHECKS) | {"auto_backup"}
+# A replay runs only the checks it names: many daily checks write outside MIA's records (the repository's task list,
+# the backups folder) or launch programs, and a replay must leave nothing behind but what the test reads.
 
 
-def replay(context, jobs, start: datetime, days: int = 7, hour: int = 9, before_each=None) -> list[dict]:
+def replay(context, jobs, start: datetime, checks: frozenset, days: int = 7, hour: int = 9,
+           before_each=None) -> list[dict]:
     """Runs `jobs._check_daily_occasions()` once on each of `days` days from `start`, at `hour`, with the clock held
-    there, leaving out `SKIPPED`; `before_each(day)` runs first on each day (a test's events: a stop said, a carry
+    there, running only `checks` (DAILY_CHECKS names); `before_each(day)` runs first on each day (a test's events: a stop said, a carry
     on). Returns
     [{day, said: [str]}], what her gate sent that day."""
     from core import clock
@@ -34,7 +34,7 @@ def replay(context, jobs, start: datetime, days: int = 7, hour: int = 9, before_
         with clock.frozen(moment):
             if before_each is not None:
                 before_each(moment.date())
-            jobs._check_daily_occasions(skip=SKIPPED)
+            jobs._check_daily_occasions(only=frozenset(checks))
         day = moment.date().isoformat()
         said = []
         if gate is not None:
