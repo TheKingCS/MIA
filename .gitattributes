@@ -10,3 +10,6 @@ os/files/boot-stays-mounted.conf text eol=lf
 os/files/finalize-needs-boot.conf text eol=lf
 os/files/greenboot/** text eol=lf
 os/files/mia-update-* text eol=lf
+os/files/mia-disk-enrol text eol=lf
+os/files/dracut-mia-tpm.conf text eol=lf
+os/poc/vm/*.sh text eol=lf

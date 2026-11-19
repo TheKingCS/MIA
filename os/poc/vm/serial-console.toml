@@ -1,0 +1,3 @@
+# os/poc/vm/serial-console.toml: the VM test's kernel arguments (test image only): the console on the serial line as well,
+# so a disk prompt shows in the serial log and the test knows when to type (FW-05).
+kargs = ["console=tty0", "console=ttyS0,115200"]

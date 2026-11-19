@@ -19,4 +19,5 @@ RUN systemctl enable sshd \
         > /usr/lib/mia/core/self_test.py; fi \
  && if [ "${BREAK}" = login ]; then mkdir -p /usr/lib/systemd/system/plasmalogin.service.d \
         && printf '[Service]\nExecStart=\nExecStart=/bin/false\n' > /usr/lib/systemd/system/plasmalogin.service.d/broken.conf; fi
+COPY serial-console.toml /usr/lib/bootc/kargs.d/90-poc-serial.toml
 RUN bootc container lint

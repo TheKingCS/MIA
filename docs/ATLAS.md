@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1542 files, 341,707 lines; 1542 files describe themselves; 18,827 of 18,926 classes and functions are documented.
+1543 files, 341,740 lines; 1543 files describe themselves; 18,830 of 18,929 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -899,7 +899,7 @@
 
 ## tests/: the test suite: what each part must do
 
-539 files, 89,462 lines; 7,562 of 7,575 classes and functions documented
+540 files, 89,495 lines; 7,565 of 7,578 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1035,6 +1035,7 @@
 - `tests/test_disagreements.py`: Disagreements over a decision or a design (core/disagreements.py, T-0022, DEC-0071 point 3): an objection names a real decision or doc, is answered, goes to Zac when raised again after an answer, closes only when Zac settles it at the keyboard, and shows in the dashboard's list with the tasks whose 
 - `tests/test_discovery_manager.py`: Unit tests for core.discovery_manager. Isolates _DATA_DIR/file constants for discovery_manager, skill_manager, mission_manager, project_manager, and intent_manager into a shared tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py.
 - `tests/test_discovery_tool.py`: Unit tests for modules.toolbox.tools.discovery_tool's pure format_proposal_card_text(), same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).
+- `tests/test_disk_encryption.py`: Tests for FW-05's disk encryption pieces (os/files/mia-disk-enrol, the boot image's TPM support, the VM workflow): the recovery key is made and shown once, the TPM is bound to PCR 7 with a PIN, the install's passphrase is removed, and the VM checks the three outcomes.
 - `tests/test_display_style.py`: Display styles (DEC-0135, core/display_style.py): each person picks the spatial look (the Nexus and rooms), the cards look (the Dashboard and cards), or spatial on the computer and cards on the phone; in Settings, by voice, and handed to every page through the shell.
 - `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.

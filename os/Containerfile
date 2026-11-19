@@ -60,6 +60,11 @@ COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
 # Updates apply at shutdown only with /boot mounted: it stays mounted once it is, and the finalizing waits for it.
 COPY os/files/boot-stays-mounted.conf /usr/lib/systemd/system/boot.automount.d/mia.conf
 COPY os/files/finalize-needs-boot.conf /usr/lib/systemd/system/ostree-finalize-staged.service.d/mia.conf
+# The encrypted disk opens with the TPM and a PIN, or the recovery key (FW-05): the boot image is built again with
+# the TPM's support in it, the same way for every build (--reproducible).
+COPY os/files/dracut-mia-tpm.conf /usr/lib/dracut/dracut.conf.d/50-mia-tpm.conf
+RUN kver="$(ls /usr/lib/modules)" && dracut --no-hostonly --reproducible --zstd --add ostree --kver "$kver" -f \
+        "/usr/lib/modules/$kver/initramfs.img"
 # Health after each boot (greenboot, FW-04): required checks roll a bad update back; wanted ones are only logged.
 COPY os/files/greenboot/required.d/ /etc/greenboot/check/required.d/
 COPY os/files/greenboot/wanted.d/ /etc/greenboot/check/wanted.d/
@@ -77,7 +82,7 @@ COPY os/files/mia.desktop /usr/share/wayland-sessions/mia.desktop
 # The login screen's default session is MIA's (Plasma Login Manager, or SDDM before it: same keys).
 COPY os/files/mia-login.conf /etc/plasmalogin.conf.d/mia.conf
 COPY os/files/mia-login.conf /etc/sddm.conf.d/mia.conf
-RUN chmod 755 /usr/lib/mia/os/files/mia-session /usr/lib/mia/os/files/mia-shell
+RUN chmod 755 /usr/lib/mia/os/files/mia-session /usr/lib/mia/os/files/mia-shell /usr/lib/mia/os/files/mia-disk-enrol
 
 # The image passes bootc's own checks, or the build fails.
 RUN bootc container lint

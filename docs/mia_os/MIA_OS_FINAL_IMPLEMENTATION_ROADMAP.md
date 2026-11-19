@@ -210,6 +210,14 @@ approves itself.
 
 ### FW-05 Disk encryption, Secure Boot and recovery keys
 
+> **State (2026-11-19): built; its VM run (`.github/workflows/mia-os-encryption.yml`) is the acceptance.** The boot image
+> is rebuilt with cryptsetup and the TPM's support (`os/files/dracut-mia-tpm.conf`). The install uses a temporary
+> passphrase; `os/files/mia-disk-enrol`, run once as root, makes the recovery key (shown once, for the envelope),
+> enrols the TPM bound to PCR 7 with a PIN, and wipes the temporary passphrase. The VM boots OVMF with Secure Boot
+> (Microsoft's keys) and a software TPM, types at the disk prompts through QEMU's monitor, and checks the three
+> outcomes: the PIN opens it; after an update the PIN still does, no recovery key; Secure Boot off, the recovery key.
+> /boot is its own ext4 partition (FW-04's finding). MIA's data key stays on the system credential (DEC-0169).
+
 | Field | Specification |
 |---|---|
 | Objective | The disk is LUKS2, unlocked by the TPM (PCR 7) with a PIN, opened by a recovery key, under Secure Boot, and an update never asks for the recovery key |
