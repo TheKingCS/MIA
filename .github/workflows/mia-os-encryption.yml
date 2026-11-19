@@ -118,7 +118,7 @@ jobs:
           up
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; journalctl -b --no-pager | grep -iE "cryptsetup|tpm2" | tail -n 8'
           # Only the PIN was asked for: no passphrase prompt in this boot (the log began with this QEMU).
-          ! grep -q "assphrase for" /tmp/serial.log
+          ! grep -qE "(recovery key|assphrase) for" /tmp/serial.log
       - name: 2. After an update the PIN still opens it, never the recovery key
         run: |
           . ~/vm.sh
@@ -128,17 +128,17 @@ jobs:
           SINCE=$pins os/poc/vm/type_at_prompt.sh "enter .*PIN" 271828
           up
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
-          # A recovery key is typed at the passphrase prompt, so "never the recovery key" means: no passphrase
-          # prompt since this QEMU started, across the update's restart.
-          ! grep -q "assphrase for" /tmp/serial.log
+          # "Never the recovery key": neither a recovery-key prompt nor a passphrase one since this QEMU started,
+          # across the update's restart (with no passphrase left on the disk, systemd names the recovery key).
+          ! grep -qE "(recovery key|assphrase) for" /tmp/serial.log
       - name: 3. With Secure Boot off the TPM refuses, and the recovery key opens it
         run: |
           . ~/vm.sh
           down; boot insecure
-          # systemd may ask for the PIN before it finds the TPM won't release the key (it can't know until it tries);
-          # then it must fall back to the passphrase prompt, where the recovery key goes.
+          # systemd asks for the PIN before it finds the TPM won't release the key (it can't know until it tries; seen
+          # in the first run); then it falls back to "Please enter recovery key for disk root".
           SINCE=0 os/poc/vm/type_at_prompt.sh "enter .*PIN" 271828 180 || echo "No PIN prompt with Secure Boot off."
-          SINCE=0 os/poc/vm/type_at_prompt.sh "assphrase for" "$(cat /tmp/recovery.txt)" 600
+          SINCE=0 os/poc/vm/type_at_prompt.sh "(recovery key|assphrase) for" "$(cat /tmp/recovery.txt)" 600
           up
           vm 'mokutil --sb-state; journalctl -b --no-pager | grep -iE "tpm2|cryptsetup" | tail -n 10'
           vm 'mokutil --sb-state' | grep -q "SecureBoot disabled"

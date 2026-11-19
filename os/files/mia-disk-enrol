@@ -4,7 +4,8 @@
 #   1. a recovery key is made and shown ONCE: write it down for the sealed envelope; it is never kept anywhere else
 #      (not in MIA, not in a chat);
 #   2. the TPM is enrolled, bound to PCR 7 (Secure Boot's state) and a PIN asked at each boot: an update keeps PCR 7
-#      the same, so it never asks for the recovery key; Secure Boot turned off changes it, and the TPM refuses;
+#      the same, so it never asks for the recovery key; Secure Boot turned off changes it: the PIN is asked, the TPM
+#      refuses, and the boot then asks for the recovery key (seen in the VM, 2026-11-19);
 #   3. the install's temporary passphrase is removed, so only the PIN (with this TPM) or the recovery key open it.
 # The device is the one holding the root filesystem, or the first argument. At a keyboard it asks for the install's
 # passphrase and the new PIN. For the VM test only, with no terminal: PASSWORD gives the install's passphrase

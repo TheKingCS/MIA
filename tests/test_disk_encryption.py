@@ -32,7 +32,8 @@ def test_the_vm_checks_the_pin_an_update_without_the_recovery_key_and_secure_boo
     assert "1. A boot asks only for the PIN" in wf and "2. After an update the PIN still opens it" in wf
     assert "3. With Secure Boot off the TPM refuses" in wf
     assert "PASSWORD=install-temporary" in wf  # enrolment has no terminal to ask at
-    assert wf.count('! grep -q "assphrase for" /tmp/serial.log') == 2  # the PIN alone, before and after the update
+    # the PIN alone, before and after the update: neither a recovery-key prompt nor a passphrase one
+    assert wf.count('! grep -qE "(recovery key|assphrase) for" /tmp/serial.log') == 2
     typing = (ROOT / "os" / "poc" / "vm" / "type_at_prompt.sh").read_text(encoding="utf-8")
     assert "/tmp/serial.sock" in typing and "sendkey" not in typing  # typed where the boot's prompt listens
     assert "permissions:\n  contents: read" in wf
