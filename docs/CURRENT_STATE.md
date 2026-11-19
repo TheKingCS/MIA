@@ -27,9 +27,11 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   only the checks it names (`docs/WAITING_ON.md` 0zb).
 - **FW-04 is accepted** (2026-11-19): she tells systemd when she's ready and is restarted if her schedule
   freezes; health checks run after each boot; updates stage at night and apply at an idle restart; two
-  deliberately broken updates rolled back by themselves in the VM. **FW-05 is built** (the disk opens with the
-  TPM and a PIN, a recovery key for the envelope); its own VM run under Secure Boot is its acceptance.
-- **Next:** read FW-05's first VM run and fix what it shows; then FW-06 (the system helper).
+  deliberately broken updates rolled back by themselves in the VM, and a snapshot of the homes is taken before
+  each update. **FW-05 is accepted** too: under Secure Boot with a TPM, the encrypted disk opens with the PIN
+  alone (before and after an update); with Secure Boot off the TPM refuses and the recovery key opens it.
+  Fable reviewed FW-05 before its first run and fixed five things that would each have cost a run.
+- **Next:** FW-06 (the system helper); pruning old update snapshots.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

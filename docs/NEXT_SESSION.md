@@ -10,6 +10,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-19, FW-04 and FW-05 done.** FW-05 (CI run 44602462298): the PIN alone opens the encrypted disk, before
+and after an update; Secure Boot off, the TPM refuses and the recovery key opens it. FW-04's snapshot before an
+update was taken and held his file (run 44579393224). **Loose end:** prune `/var/mia-snapshots` (nothing does yet).
+**Next: FW-06** (the system helper), per the roadmap. The VM workflows take 1.5 to 3 hours; a push touching `os/`
+cancels the main one in progress, and so does the daily scheduled run.
+
 **New 2026-11-19, FW-04 accepted in the VM** (CI run 44529591174): night update staged and applied by itself; two
 broken updates rolled back by themselves. An install of MIA OS needs /boot as its own ext4 partition (GRUB can't
 count boots on Btrfs). Still to see: the snapshot before an update (the VM's homes are a subvolume from the next

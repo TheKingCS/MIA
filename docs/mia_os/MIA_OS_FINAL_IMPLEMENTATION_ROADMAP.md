@@ -177,7 +177,8 @@ approves itself.
 > *Adds from FW-01 (deviation 3): `greenboot` (greenboot-rs) into the image's `dnf install`, configured with this
 > package's checks.*
 >
-> **State (2026-11-19): accepted by the VM run of dce4f674 (CI run 44529591174)**, the snapshot excepted (below). The runtime
+> **State (2026-11-19): done.** Accepted by the VM run of dce4f674 (CI run 44529591174); the snapshot by run
+> 44579393224 (f07ab33c). The runtime
 > is a `Type=notify` service with `WatchdogSec=120`: `READY=1` once her core is up, `WATCHDOG=1` from the main loop
 > only while her schedule runs (`core/sd_notify.py`, `Runtime.readiness`: started, core, models, all, also in
 > `/api/runtime/health`). `python -m core.self_test` reruns itself on an empty folder and checks build, tools, the
@@ -198,8 +199,9 @@ approves itself.
 > failed, and greenboot called `bootc rollback` ("Boot counter exhausted ... initiating rollback"); version 2
 > came back and his file was there. The self-test is a **required** check (the spec's task 4 said wanted, its
 > task 7 needs a rollback; it reads no one's data and needs no network), run as `nobody` on a fresh folder.
-> **Not yet shown:** the snapshot before an update, because the VM's `/var/home` wasn't a subvolume; the VM now
-> makes it one and the next run checks the snapshot holds his file.
+> **The snapshot** (run 44579393224): with `/var/home` its own subvolume, as a Fedora install has it, a read-only
+> snapshot was taken before each of the three restarts and held his file. **Loose end:** nothing prunes
+> `/var/mia-snapshots` yet (keep the newest few; do it the next time `os/` is touched).
 
 | Field | Specification |
 |---|---|
@@ -218,14 +220,19 @@ approves itself.
 
 ### FW-05 Disk encryption, Secure Boot and recovery keys
 
-> **State (2026-11-19): built; its VM run (`.github/workflows/mia-os-encryption.yml`) is the acceptance.** The boot image
-> is checked for cryptsetup and the TPM's library and built again only when they're missing
-> (`os/files/dracut-mia-tpm.conf`). The install uses a temporary
+> **State (2026-11-19): done; accepted by CI run 44602462298 (0c9b8cda).** Fedora's own boot image already holds
+> cryptsetup and the TPM's library (the build checks, and would build it again only if they were missing:
+> `os/files/dracut-mia-tpm.conf`), so the image still builds the same twice. The install uses a temporary
 > passphrase; `os/files/mia-disk-enrol`, run once as root, makes the recovery key (shown once, for the envelope),
 > enrols the TPM bound to PCR 7 with a PIN, and wipes the temporary passphrase. The VM boots OVMF with Secure Boot
 > (Microsoft's keys) and a software TPM, types at the disk prompts on its serial line, and checks the three
 > outcomes: the PIN opens it; after an update the PIN still does, no recovery key; Secure Boot off, the recovery key.
 > /boot is its own ext4 partition (FW-04's finding). MIA's data key stays on the system credential (DEC-0169).
+> **Seen in the VM:** Ubuntu's OVMF with Microsoft's keys boots Fedora 45's shim with Secure Boot enabled. Enrolment
+> leaves two ways in (slot 1 recovery, slot 2 TPM) and wipes the install's passphrase. With Secure Boot on, a boot
+> asks "Please enter LUKS2 token PIN" and nothing else, before and after an update. With it off, the PIN is still
+> asked first (systemd can't know the TPM will refuse until it tries), the TPM refuses, and the boot asks "Please
+> enter recovery key for disk root"; the recovery key opens it. His install guide (MV-01) should say exactly that.
 
 | Field | Specification |
 |---|---|
