@@ -25,7 +25,11 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   Nov 23 to 29 landed in "MIA Backups" (moved out; the rotation may have removed Nov 16/17 backups), a task
   went into the repository, and the main copy's uncommitted work log lost its newest lines. A replay now runs
   only the checks it names (`docs/WAITING_ON.md` 0zb).
-- **Next:** FW-04 (greenboot, readiness, sd_notify), then FW-05 (the disk, TPM and a PIN).
+- **FW-04 is accepted** (2026-11-19): she tells systemd when she's ready and is restarted if her schedule
+  freezes; health checks run after each boot; updates stage at night and apply at an idle restart; two
+  deliberately broken updates rolled back by themselves in the VM. **FW-05 is built** (the disk opens with the
+  TPM and a PIN, a recovery key for the envelope); its own VM run under Secure Boot is its acceptance.
+- **Next:** read FW-05's first VM run and fix what it shows; then FW-06 (the system helper).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

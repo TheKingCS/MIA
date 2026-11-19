@@ -10,6 +10,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-19, FW-04 accepted in the VM** (CI run 44529591174): night update staged and applied by itself; two
+broken updates rolled back by themselves. An install of MIA OS needs /boot as its own ext4 partition (GRUB can't
+count boots on Btrfs). Still to see: the snapshot before an update (the VM's homes are a subvolume from the next
+run). **FW-05 built and pushed**: `.github/workflows/mia-os-encryption.yml` is its acceptance; read its first run.
+
 **New 2026-11-19, FW-04 part A built**: `core/sd_notify.py` (ready, status, watchdog), `core/self_test.py` (only ever
 on an empty folder), greenboot checks in `os/files/greenboot/`, night updates (`os/files/mia-update-*`). Next: the
 VM's automatic path and the two broken images that must roll back by themselves (task 7).

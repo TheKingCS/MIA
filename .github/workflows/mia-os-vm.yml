@@ -108,6 +108,9 @@ jobs:
       - name: 2. MIA's runtime runs as a person's service, from the image
         run: |
           . ~/vm.sh
+          # The homes as a Fedora install has them: their own Btrfs subvolume, so the snapshot before an update
+          # (os/files/mia-update-apply) has something to take. Made while it's still empty.
+          vm '[ -z "$(ls -A /var/home)" ] && rmdir /var/home && btrfs subvolume create /var/home && restorecon -v /var/home; btrfs subvolume show /var/home | head -n 2'
           vm 'useradd -m mia && loginctl enable-linger mia && sleep 5'
           as_mia 'systemctl --user daemon-reload; systemctl --user enable --now mia-runtime'
           for i in $(seq 1 60); do as_mia 'grep -q "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log' 2>/dev/null && break; sleep 5; done
@@ -292,6 +295,8 @@ jobs:
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; ls /var/mia-snapshots; journalctl -b -1 --no-pager | grep -iE "snapshot|subvolume|Applying" | tail -n 5' || true
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
           test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
+          # The snapshot taken before the restart holds his file as it was.
+          vm 'ls /var/mia-snapshots | grep -q "^home-" && cat /var/mia-snapshots/home-*/mia/his-file.txt' | grep -q kept-by-him
       - name: FW-04 two broken updates roll back by themselves, his data untouched
         run: |
           . ~/vm.sh

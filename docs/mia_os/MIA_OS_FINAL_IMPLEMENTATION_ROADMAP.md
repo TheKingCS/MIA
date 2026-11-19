@@ -177,7 +177,7 @@ approves itself.
 > *Adds from FW-01 (deviation 3): `greenboot` (greenboot-rs) into the image's `dnf install`, configured with this
 > package's checks.*
 >
-> **State (2026-11-19): first part built** (tasks 1 to 6 in code; the VM's automatic path, task 7, next). The runtime
+> **State (2026-11-19): accepted by the VM run of dce4f674 (CI run 44529591174)**, the snapshot excepted (below). The runtime
 > is a `Type=notify` service with `WatchdogSec=120`: `READY=1` once her core is up, `WATCHDOG=1` from the main loop
 > only while her schedule runs (`core/sd_notify.py`, `Runtime.readiness`: started, core, models, all, also in
 > `/api/runtime/health`). `python -m core.self_test` reruns itself on an empty folder and checks build, tools, the
@@ -192,6 +192,14 @@ approves itself.
 > allowed"), so the boot count never fell back and it rebooted into itself for 25 minutes. **An install of MIA OS
 > must have /boot as its own ext4 partition** (FW-05's layout, and Anaconda's default); the VM's disk now has that
 > layout, installed with `bootc install to-filesystem`.
+>
+> **Accepted (2026-11-19):** with that layout both broken updates rolled back with no hand on the keyboard: the one
+> whose self-test fails (required check 43) and the one whose login screen can't start (check 40) each booted once,
+> failed, and greenboot called `bootc rollback` ("Boot counter exhausted ... initiating rollback"); version 2
+> came back and his file was there. The self-test is a **required** check (the spec's task 4 said wanted, its
+> task 7 needs a rollback; it reads no one's data and needs no network), run as `nobody` on a fresh folder.
+> **Not yet shown:** the snapshot before an update, because the VM's `/var/home` wasn't a subvolume; the VM now
+> makes it one and the next run checks the snapshot holds his file.
 
 | Field | Specification |
 |---|---|
