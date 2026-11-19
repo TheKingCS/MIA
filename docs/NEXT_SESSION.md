@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-19, FW-04 part A built**: `core/sd_notify.py` (ready, status, watchdog), `core/self_test.py` (only ever
+on an empty folder), greenboot checks in `os/files/greenboot/`, night updates (`os/files/mia-update-*`). Next: the
+VM's automatic path and the two broken images that must roll back by themselves (task 7).
+
 **New 2026-11-19, FW-03 done** (MIA's own session, accepted in the VM: login to her front end 3 to 4 s, Plasma 7 to
 8 s, keyboard-only recovery, update and rollback). **Next: FW-04** (greenboot, readiness, sd_notify), per the
 roadmap. Screenshots are the `mia-login-screenshots` artifact of CI run 44460432338.

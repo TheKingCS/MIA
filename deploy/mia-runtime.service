@@ -28,7 +28,12 @@ StartLimitIntervalSec=120
 StartLimitBurst=10
 
 [Service]
-Type=simple
+# She says when she's ready and pings a watchdog from her main loop (core/sd_notify.py, FW-04): a MIA
+# whose schedule has stopped stops pinging, and systemd restarts her.
+Type=notify
+NotifyAccess=main
+TimeoutStartSec=180
+WatchdogSec=120
 WorkingDirectory=__MIA_INSTALL_DIR__
 # Where the person's MIA lives (core/data_root.py): her data, config and logs, apart from the code.
 Environment=MIA_HOME=__MIA_HOME__

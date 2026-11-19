@@ -31,6 +31,10 @@ What it doesn't do yet: no desktop window attaches to a running runtime
 builds its own MIA in its own process, and the one-MIA lock keeps the two
 from running on the same data folder at once.
 
+Under systemd (MIA OS's `Type=notify` service, FW-04) she says when she's
+ready, shows her readiness (started, core, models, all) as the service's
+status, and pings the watchdog while her schedule runs (core/sd_notify.py).
+
 Nothing here imports Qt, `gui/` or `modules/`.
 """
 
@@ -360,7 +364,7 @@ class Runtime(BackgroundJobs, AssistantTools):
         """Starts the schedule on its own thread and, with `serve`, the phone server when it's switched on
         (server.enabled). A phone server that can't start is logged and doesn't stop the rest. In MIA's own desktop
         session (`MIA_DESKTOP_SESSION_FILE` set), her server starts on 127.0.0.1 and the session file is written for
-        her shell."""
+        her shell. Once up, she tells systemd she's ready (`READY=1`, core/sd_notify.py)."""
         if self._thread is not None:
             return
         self.started_at = datetime.now().isoformat(timespec="seconds")
@@ -391,6 +395,9 @@ class Runtime(BackgroundJobs, AssistantTools):
                 desktop_session.write(self.context, where)
         log.info("The MIA Runtime is up: %d services, %d tools, %d scheduled jobs.", len(self.services()),
                  len(self.context.assistant_actions._actions), len(JOBS))
+        from core import sd_notify
+
+        sd_notify.notify("READY=1", f"STATUS=MIA is up ({self.readiness()})")  # systemd: Type=notify (FW-04)
 
     def stop(self) -> None:
         """Stops the schedule (waiting for a job in progress, up to 30 seconds) and the phone server, and removes the
@@ -419,7 +426,7 @@ class Runtime(BackgroundJobs, AssistantTools):
         """How this MIA is doing: whether the schedule is running, since when and for how long, each job's record
         (core.scheduler.Scheduler.status), how many jobs have failed or never run, whether the model answers, and
         whether the phone server is up, where her files are (core/data_root.describe), and what she's easing off and why
-        (core/homeostasis.py). For /api/runtime/health and Diagnostics."""
+        (core/homeostasis.py), and how far up she is (`readiness`). For /api/runtime/health and Diagnostics."""
         jobs = self.scheduler.status()
         running = self._thread is not None and self._thread.is_alive()
         llm = getattr(self.context, "llm", None)
@@ -436,10 +443,41 @@ class Runtime(BackgroundJobs, AssistantTools):
             "model_available": model, "phone_server": bool(server is not None and getattr(server, "running", False)),
             "window": False, "home": data_root.describe(),
             "homeostasis": self.homeostasis.report(),  # what isn't clear and what's waiting (DEC-0173)
+            "readiness": self.readiness(),  # started, core, models or all (core/sd_notify.py, FW-04)
         }
 
+    def readiness(self) -> str:
+        """How far up she is (core/sd_notify.READINESS): started, core (stores and schedule), models (the model
+        server answers), all (and the phone server, where it's switched on)."""
+        from core import sd_notify
+
+        running = self._thread is not None and self._thread.is_alive()
+        llm = getattr(self.context, "llm", None)
+        try:
+            models = bool(llm is not None and llm.is_available())
+        except Exception:  # noqa: BLE001 - a model that can't be asked isn't up
+            models = False
+        server = getattr(self.context, "phone_server", None)
+        wanted = bool(server is not None and getattr(server, "enabled", False))
+        return sd_notify.level(running, models, wanted, bool(server is not None and getattr(server, "running", False)))
+
+    def _tell_systemd(self, now: float, state: dict) -> None:
+        """From the main loop: the watchdog's ping while her schedule is alive (a stuck MIA stops pinging and is
+        restarted), and her readiness as the service's status every 30 seconds."""
+        from core import sd_notify
+
+        every = state.setdefault("every", sd_notify.watchdog_seconds())
+        alive = self._thread is not None and self._thread.is_alive()
+        if every and alive and now - state.get("pinged", 0.0) >= every:
+            sd_notify.notify("WATCHDOG=1")
+            state["pinged"] = now
+        if now - state.get("said", 0.0) >= 30:
+            sd_notify.notify(f"STATUS=MIA is up ({self.readiness()})")
+            state["said"] = now
+
     def run_until_stopped(self) -> None:
-        """Starts, then waits for Ctrl+C or a stop signal (SIGTERM, what a service manager sends), and stops."""
+        """Starts, then waits for Ctrl+C or a stop signal (SIGTERM, what a service manager sends), telling systemd
+        each second what it should hear (`_tell_systemd`), and stops."""
         import signal
 
         def asked(*_args) -> None:
@@ -451,9 +489,10 @@ class Runtime(BackgroundJobs, AssistantTools):
             except (ValueError, OSError, AttributeError):  # not the main thread, or not on this system
                 pass
         self.start()
+        told: dict = {"said": time.monotonic()}
         try:
             while not self._stop.wait(1.0):
-                pass
+                self._tell_systemd(time.monotonic(), told)
         finally:
             self.stop()
             log.info("The MIA Runtime has stopped.")

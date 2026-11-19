@@ -8,3 +8,5 @@ os/files/mia-shell text eol=lf
 os/files/mia-login.conf text eol=lf
 os/files/boot-stays-mounted.conf text eol=lf
 os/files/finalize-needs-boot.conf text eol=lf
+os/files/greenboot/** text eol=lf
+os/files/mia-update-* text eol=lf

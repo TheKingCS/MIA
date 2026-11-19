@@ -176,6 +176,16 @@ approves itself.
 
 > *Adds from FW-01 (deviation 3): `greenboot` (greenboot-rs) into the image's `dnf install`, configured with this
 > package's checks.*
+>
+> **State (2026-11-19): first part built** (tasks 1 to 6 in code; the VM's automatic path, task 7, next). The runtime
+> is a `Type=notify` service with `WatchdogSec=120`: `READY=1` once her core is up, `WATCHDOG=1` from the main loop
+> only while her schedule runs (`core/sd_notify.py`, `Runtime.readiness`: started, core, models, all, also in
+> `/api/runtime/health`). `python -m core.self_test` reruns itself on an empty folder and checks build, tools, the
+> schedule, a change and its read-back. Greenboot: required checks (the login screen, `/var/home` writable, 2 GB
+> free), wanted ones (network, the model server, the self-test as a dynamic user). Updates: `mia-update-stage.timer`
+> stages at 03:00; `mia-update-apply.timer` looks every 15 minutes until 06:00 for every session idle, snapshots
+> `/var/home` when it's a Btrfs subvolume (else says so: FW-05's layout makes it one) and restarts. bootc's own
+> fetch-and-apply timer is turned off.
 
 | Field | Specification |
 |---|---|

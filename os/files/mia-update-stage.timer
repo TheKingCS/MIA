@@ -1,0 +1,11 @@
+# os/files/mia-update-stage.timer: stages an update each night (FW-04).
+[Unit]
+Description=MIA OS: stage an update each night
+
+[Timer]
+OnCalendar=*-*-* 03:00
+RandomizedDelaySec=20min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

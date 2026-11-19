@@ -1,0 +1,7 @@
+# os/files/mia-update-apply.service: applies a staged update at an idle moment (FW-04): see mia-update-apply.
+[Unit]
+Description=MIA OS: apply a staged update when the computer is idle
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/mia/os/files/mia-update-apply

@@ -1,0 +1,10 @@
+# os/files/mia-update-apply.timer: looks for an idle moment to apply a staged update, through the night (FW-04).
+[Unit]
+Description=MIA OS: look for an idle moment to apply a staged update
+
+[Timer]
+OnCalendar=*-*-* 03:30..05:59/15:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

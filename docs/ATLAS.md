@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1539 files, 341,428 lines; 1539 files describe themselves; 18,812 of 18,911 classes and functions are documented.
+1542 files, 341,703 lines; 1542 files describe themselves; 18,827 of 18,926 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-601 files, 172,588 lines; 8,900 of 8,986 classes and functions documented
+603 files, 172,773 lines; 8,908 of 8,994 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -443,6 +443,7 @@
 - `core/schema_check.py`: A small JSON Schema checker (2026-10-05, Engine Phase 1), standard library only, for the parts of draft 2020-12 MIA's published schemas use (docs/schema/): type, enum, required, properties, additionalProperties, items, pattern and local $ref. Other surfaces can validate the same schema with any full
 - `core/script_library_manager.py`: Backs Field Kit's "Useful Scripts" tab (docs/ROADMAP.md milestone 11.4) — a categorized library of user-authored shell/Python scripts. Same persisted-JSON pattern as core.journal_manager.JournalManager: data/scripts.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save/CRUD/se
 - `core/script_runner.py`: Executes a Field Kit script (docs/ROADMAP.md milestone 11.4) — writes its content to a fresh temp file and starts it running as a real subprocess. No sandboxing: these are the user's own trusted scripts on their own offline device, same "single-user offline tool" stance this project already takes fo
+- `core/sd_notify.py`: Telling systemd how MIA is doing (FW-04, REQ-ARC-002, REQ-REL-004): the `sd_notify` protocol, written here with the standard library. Under a service with `Type=notify`, systemd sets `NOTIFY_SOCKET`; MIA sends `READY=1` once her core is up, `STATUS=...` lines it shows in `systemctl status`, and, whe
 - `core/search_manager.py`: A system-wide search service — the "don't make me know where to look for each thing" feature. Any module or core service can register a search provider; SearchManager just fans a query out to all of them and collects the results.
 - `core/seasons.py`: Seasons of memory (build plan step 10, DEC-0094; the gap: "long-term memory is lists, not understanding"). What changed this month and this year, worked out in code from the person's history (core/life_events.py) and their memories (core/user_memory_manager.py), against the period before:
 - `core/secrets_manager.py`: Passphrase-based symmetric encryption for anything MIA needs to keep confidential at rest — introduced for encrypted Backup/Restore (core/backup_manager.py), but deliberately generic rather than backup-specific, so a future module with a real secret to protect (wifi credentials, radio configs, an AP
@@ -455,6 +456,7 @@
 - `core/self_merges.py`: MIA's own changes going in on Claude's pass, and the daily summary that tells Zac (DEC-0225; Zac, 2026-11-17, Q-76: yes to "her own fixes merge on Claude's pass when the suite passes, with a daily summary and an Undo each, rather than approving each").
 - `core/self_repair.py`: MIA puts her own services right when a check fails, and tells Zac after (DEC-0222; Zac, 2026-11-17, Q-77: yes to "restart her own services, reload a model or re-run a failed job on her own when a check fails, no code or settings change"). A background job every five minutes (core/background_jobs.py,
 - `core/self_report.py`: MIA's weekly self-report (build plan step 6, DEC-0094): once a week, to the PC's owner, through the communication gate: what got better, what's slipping, what she's working on, and how Night School went. Assembled in code from her own records (the loops' history, Night School, the benchmarks, the ta
+- `core/self_test.py`: MIA's self-test (FW-04): whether this install of MIA works, checked without his data. `python -m core.self_test` always runs the check in a new, empty folder: it starts itself again with `MIA_HOME` set to a temporary folder (or to `--home`, which must be empty), so the stores it opens are new ones a
 - `core/sensors.py`: Sensors that send their own readings (claude, 2026-11-09; DEC-0019: the computer adds sensors; DEC-0125: the Greenhouse, Power and the Lab had readings by hand only). A sensor is anything on the home network that can make an HTTP request (an ESP32, a Raspberry Pi, a smart plug's script): it sends on
 - `core/service_map.py`: What MIA runs on, and what depends on what (T-0007; the personality and ecosystem plan's phase 3, docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md section C; beside core/self_knowledge.py, which says what she is, this says what she runs on), so she can answer "if Ollama stops, what breaks?", "what does the b
 - `core/shelf.py`: The shelf (UI-4; prompt 23's review, G1; Zac's answer to Q-43, 2026-11-16: "only what is sent"): a short-lived place for things the person captured and chose to keep, to look at together, combine and send on. The "universal clipboard", without watching the clipboard: something goes on the shelf only
@@ -897,7 +899,7 @@
 
 ## tests/: the test suite: what each part must do
 
-538 files, 89,368 lines; 7,555 of 7,568 classes and functions documented
+539 files, 89,458 lines; 7,562 of 7,575 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1250,6 +1252,7 @@
 - `tests/test_quick_capture.py`: Quick capture (core/quick_capture.py, gui/quick_capture_dialog.py), 2026-10-01: type anything, MIA files it; nothing is ever lost.
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
 - `tests/test_read_back.py`: Tests for the generic read-back after a change (DEC-0218, LS-05, core/read_back.py): the files a change wrote still hold what it left, and the records its history names still resolve, unless it removed them.
+- `tests/test_readiness.py`: Tests for FW-04's readiness and watchdog (core/sd_notify.py, core/runtime.py), the self-test's refusal of a folder with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/).
 - `tests/test_real_estate_manager.py`: Unit tests for core.real_estate_manager. Isolates _DATA_DIR _PROPERTIES_FILE (and core.budget_manager's own data files, since rental income/expenses are real Budget entries this manager filters) into a tmp_path scratch area, same monkeypatch pattern as test_budget_manager.py's isolated_paths.
 - `tests/test_real_estate_module.py`: Unit tests for modules.real_estate.module's pure formatters — no Qt event loop needed, same shape as tests/test_property_module.py.
 - `tests/test_recall_index.py`: Recall by meaning: refs and vectors only, every hit re-read from its store (core/recall_index.py, DEC-0210).

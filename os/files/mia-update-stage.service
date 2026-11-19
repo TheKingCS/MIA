@@ -1,0 +1,9 @@
+# os/files/mia-update-stage.service: fetches and stages an update (FW-04); it applies at the next restart.
+[Unit]
+Description=MIA OS: stage an update for the next restart
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bootc upgrade
