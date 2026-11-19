@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1537 files, 341,291 lines; 1537 files describe themselves; 18,805 of 18,904 classes and functions are documented.
+1539 files, 341,416 lines; 1539 files describe themselves; 18,811 of 18,910 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-600 files, 172,529 lines; 8,898 of 8,984 classes and functions documented
+601 files, 172,588 lines; 8,900 of 8,986 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -424,6 +424,7 @@
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US.
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/relevance.py`: The Personal Relevance Engine (World Intelligence W2, DEC-0170; the proposal's section 4): how much a find matters to this person, worked out in code from their own records, never guessed by a model. Every point comes with a reason that names the record it came from, so "why is this here?" always ha
+- `core/replay.py`: A replayed week (LS-09, docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md section 5): MIA's once-a-day checks run on each day of a week with the one clock (core/clock.py) held at that day's hour, and what she said each day is read back from her communication gate's log. A test seeds a week of things (ev
 - `core/requirement_actions.py`: What each project needs, on the action contract (Procurement P1, DEC-0172; core/requirements.py): proposed in plain words, approved, run, undoable (requirements.json writes through the atomic write).
 - `core/requirements.py`: What each project needs (Procurement P1, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 6): one line per thing a project needs, with how many, what it has to be, the most it should cost, and how far along it is.
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces:
@@ -896,7 +897,7 @@
 
 ## tests/: the test suite: what each part must do
 
-537 files, 89,290 lines; 7,550 of 7,563 classes and functions documented
+538 files, 89,356 lines; 7,554 of 7,567 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1263,6 +1264,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
+- `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
 - `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang
 - `tests/test_requirements_spec.py`: MIA OS's requirements specification (Prompt 04; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md`, `tools/requirements_matrix.py`): every requirement row is well formed, defined once, with a known priority, tier and status and an owner prompt; the scenarios name only requirements that exist; the generated
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half.

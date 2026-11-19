@@ -300,12 +300,13 @@ class BackgroundJobs:
 
         return tick
 
-    def _check_daily_occasions(self) -> None:
+    def _check_daily_occasions(self, skip: frozenset = frozenset()) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
         DEC-0148, the greenhouse node, DEC-0150, and the nightly backup, core/auto_backup.py). A deferrable check
         waits for the next clear tick while MIA eases off (core/homeostasis.py, DEC-0173) or her day's budget for her
         own work is used (each check's time is counted, LS-10), and a check that is her own
-        work waits while the person has said "stop everything" (core/stop.py, DEC-0181).
+        work waits while the person has said "stop everything" (core/stop.py, DEC-0181). The time comes from the one
+        clock (core/clock.py), so a replayed week holds it; `skip` names checks a replay leaves out (core/replay.py).
 
         Stabilization (2026-09-14) — this used to be one long function
         with 14 sequential `if should_run_once_daily(...):` blocks and
@@ -327,7 +328,9 @@ class BackgroundJobs:
         core.event_bus.EventBus.publish() already established for the
         same reason — one broken check should never be able to starve
         the rest."""
-        now = datetime.now()
+        from core import clock
+
+        now = clock.now(self.context).replace(tzinfo=None)  # his time, or a replayed day's (LS-07, LS-09)
         today_iso = now.date().isoformat()
 
         checks: list[tuple[str, Callable[[datetime, str], None]]] = [
@@ -342,6 +345,8 @@ class BackgroundJobs:
         self._offers = []
         self._offer_day = today_iso
         for name, check in checks:
+            if name in skip:
+                continue  # a replayed week leaves out work that launches or reaches outside (core/replay.py)
             if self._defer_reason(name):
                 continue  # stopped by him, or easing off: it waits for the next tick that's clear (DEC-0181, DEC-0173)
             began = time.monotonic()
