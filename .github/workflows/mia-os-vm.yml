@@ -48,7 +48,7 @@ jobs:
           df -h /
       - name: KVM and QEMU
         run: |
-          sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf
+          sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf socat
           ls -l /dev/kvm && sudo chmod 666 /dev/kvm
       - name: Build the image (tracked files only), then the two test versions
         run: |
@@ -80,7 +80,7 @@ jobs:
             -bios /usr/share/ovmf/OVMF.fd \
             -drive file=/tmp/out/disk.raw,format=raw,if=virtio \
             -netdev user,id=n0,hostfwd=tcp::2222-:22 -device virtio-net-pci,netdev=n0 \
-            -display none -serial file:/tmp/serial.log -daemonize
+            -display none -serial file:/tmp/serial.log -monitor unix:/tmp/mon.sock,server,nowait -daemonize
           echo 'vm() { ssh -i ~/.ssh/poc -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 root@localhost "$@"; }' > ~/vm.sh
           echo 'as_mia() { vm "runuser -l mia -c '"'"'export XDG_RUNTIME_DIR=/run/user/\$(id -u); $1'"'"'"; }' >> ~/vm.sh
       - name: 1. It boots, and bootc reports the deployment
@@ -127,15 +127,70 @@ jobs:
           EOS
           vm 'cat > /var/tmp/session_test.sh && chmod 755 /var/tmp/session_test.sh' < /tmp/session_test.sh
           vm 'runuser -l mia -c /var/tmp/session_test.sh'
-          mkdir -p /tmp/shots
-          vm 'cat /var/tmp/shell-front.png' > /tmp/shots/shell-front.png
-          vm 'cat /var/tmp/shell-recovery.png' > /tmp/shots/shell-recovery.png
-          ls -l /tmp/shots
+          mkdir -p /tmp/shots-session
+          vm 'cat /var/tmp/shell-front.png' > /tmp/shots-session/shell-front.png
+          vm 'cat /var/tmp/shell-recovery.png' > /tmp/shots-session/shell-recovery.png
+          ls -l /tmp/shots-session
       - name: The session's screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: mia-session-screenshots
+          path: /tmp/shots-session/
+          if-no-files-found: ignore
+      - name: FW-03 at the login screen, by keyboard, Plasma one choice away
+        run: |
+          . ~/vm.sh
+          mkdir -p /tmp/shots
+          mon() { printf '%s\n' "$1" | socat - UNIX-CONNECT:/tmp/mon.sock > /dev/null; sleep 1; }
+          shot() { mon "screendump /tmp/shots/$1.png -f png"; ls -l "/tmp/shots/$1.png" || true; }
+          keys() { for k in "$@"; do mon "sendkey $k"; done; }
+          state() { as_mia 'cat $XDG_RUNTIME_DIR/mia/shell-state 2>/dev/null' || true; }
+          # What runs the login screen here, and its settings (the session's name on inspection).
+          vm 'rpm -qa | grep -iE "sddm|plasmalogin|plasma-login" ; systemctl status display-manager --no-pager | head -n 4; ls /usr/share/wayland-sessions /etc/sddm.conf.d /etc/plasmalogin.conf.d 2>&1; cat /etc/sddm.conf.d/*mia* /etc/plasmalogin.conf.d/*mia* 2>&1' || true
+          # Log in at the login screen as the test person, into MIA's session.
+          vm 'for d in /etc/sddm.conf.d /etc/plasmalogin.conf.d; do mkdir -p $d; printf "[Autologin]\nUser=mia\nSession=mia.desktop\nRelogin=true\n" > $d/zz-test-autologin.conf; done'
+          as_mia 'rm -f $XDG_RUNTIME_DIR/mia/shell-state'
+          start=$(date +%s.%N)
+          vm 'systemctl restart display-manager'
+          for i in $(seq 1 90); do state | grep -q "front end loaded" && break; sleep 1; done
+          echo "login to her front end loaded: $(state | awk -v s=$start '{printf "%.1f s (%s)\n", $NF - s, $0}' | tail -n 1)"
+          shot 1-mia-session
+          state | grep -q "front end"
+          # An ordinary window beside her: a terminal in her session.
+          as_mia 'WAYLAND_DISPLAY=wayland-0 nohup konsole > /dev/null 2>&1 &'; sleep 8
+          shot 2-konsole-beside-her
+          as_mia 'pgrep -x konsole' && as_mia 'pkill -x konsole' || echo "konsole didn't open"
+          # The shell dies and comes back by itself.
+          as_mia 'pkill -f "gui.os_shell"'; as_mia 'rm -f $XDG_RUNTIME_DIR/mia/shell-state'
+          for i in $(seq 1 60); do state | grep -q "front end" && break; sleep 1; done
+          echo "after the shell was killed: $(state)"
+          state | grep -q "front end"
+          # Her runtime stopped: the recovery page, then the keyboard alone opens a terminal from it.
+          as_mia 'systemctl --user stop mia-runtime; pkill -f "gui.os_shell"'
+          for i in $(seq 1 90); do state | grep -q recovery && break; sleep 1; done
+          echo "with her runtime stopped: $(state)"
+          shot 3-recovery
+          keys tab tab ret; sleep 8
+          shot 4-terminal-by-keyboard
+          as_mia 'pgrep -x konsole' && echo "a terminal opened by keyboard alone" || echo "the keyboard didn't open a terminal"
+          as_mia 'pkill -x konsole; systemctl --user start mia-runtime' || true
+          # Plasma, one choice away: the same login into Plasma, timed to its shell.
+          vm 'for d in /etc/sddm.conf.d /etc/plasmalogin.conf.d; do sed -i "s/^Session=.*/Session=plasma.desktop/" $d/zz-test-autologin.conf; done; loginctl terminate-user mia || true'
+          start=$(date +%s)
+          vm 'systemctl restart display-manager'
+          for i in $(seq 1 120); do as_mia 'pgrep -x plasmashell' > /dev/null 2>&1 && break; sleep 1; done
+          echo "login to Plasma's shell: $(( $(date +%s) - start )) s"
+          sleep 10; shot 5-plasma
+          as_mia 'pgrep -x plasmashell'; as_mia 'systemctl --user is-active mia-runtime'
+          # Back as it was for the steps after: no automatic login.
+          vm 'rm -f /etc/sddm.conf.d/zz-test-autologin.conf /etc/plasmalogin.conf.d/zz-test-autologin.conf; loginctl terminate-user mia || true; systemctl restart display-manager'
+          sleep 5; as_mia 'systemctl --user start mia-runtime' || true
+      - name: The login screen's screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: mia-login-screenshots
           path: /tmp/shots/
           if-no-files-found: ignore
       - name: The whole suite inside the image, on its own Python and packages (FW-02)

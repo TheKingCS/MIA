@@ -5,3 +5,4 @@
 # MIA OS's session scripts have no extension, and run on Linux (FW-03).
 os/files/mia-session text eol=lf
 os/files/mia-shell text eol=lf
+os/files/mia-login.conf text eol=lf

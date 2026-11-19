@@ -6,6 +6,8 @@ FW-03, MIA's own desktop session on MIA OS (DEC-0227, DEC-0278): her runtime wri
 (`core/desktop_session.py`), owner-only, and removes it when it stops; the shell (`gui/os_shell.py`) opens her front
 end when she answers and a recovery page when she doesn't, whose links act only through its own scheme; and the image
 carries the session entry, its scripts and the runtime's setting, tested in a VM under KWin's virtual display.
+The shell says what it shows with the time, comes back by itself when it dies, and the login screen defaults to
+her session.
 """
 
 from __future__ import annotations
@@ -109,3 +111,25 @@ def test_the_image_carries_the_session_entry_its_scripts_and_the_runtimes_settin
     assert 'export MIA_HOME="${MIA_HOME:-$HOME/.local/share/mia}"' in shell
     vm = (ROOT / ".github" / "workflows" / "mia-os-vm.yml").read_text(encoding="utf-8")
     assert "kwin_wayland --virtual" in vm and "showing: front end" in vm and "showing: recovery" in vm
+
+
+def test_the_shell_says_what_it_shows_beside_the_session_file_with_the_time(tmp_path):
+    """The VM test and the session read `shell-state` to know she's up and how fast; nothing without a session file."""
+    assert os_shell.state_file(None) is None
+    where = os_shell.state_file(tmp_path / "desktop.json")
+    os_shell.announce("front end loaded", where, now=12.5)
+    assert where.read_text(encoding="utf-8") == "front end loaded\t12.50\n"
+    os_shell.announce("recovery", None)  # printed only, never raises
+
+
+def test_the_shell_comes_back_by_itself_and_the_login_screen_defaults_to_her():
+    """mia-shell restarts the shell when it dies (not on a clean exit or a test's one run); the image ships the login
+    screen's default session as MIA's, for Plasma Login Manager and SDDM alike."""
+    shell = (ROOT / "os" / "files" / "mia-shell").read_text(encoding="utf-8")
+    assert "while :; do" in shell and "&& exit 0" in shell and '[ -n "$MIA_SHELL_ARGS" ] && exit 1' in shell
+    conf = (ROOT / "os" / "files" / "mia-login.conf").read_text(encoding="utf-8")
+    assert "[General]\nDefaultSession=mia.desktop" in conf
+    containerfile = (ROOT / "os" / "Containerfile").read_text(encoding="utf-8")
+    assert "/etc/plasmalogin.conf.d/mia.conf" in containerfile and "/etc/sddm.conf.d/mia.conf" in containerfile
+    vm = (ROOT / ".github" / "workflows" / "mia-os-vm.yml").read_text(encoding="utf-8")
+    assert "systemctl restart display-manager" in vm and "sendkey" in vm and "plasmashell" in vm

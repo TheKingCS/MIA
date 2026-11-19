@@ -21,8 +21,9 @@ appears within `WAIT_SECONDS` (30, REQ-UX-022), or her server doesn't answer, it
 
 Those four are links with this window's own scheme (`mia-shell:`), handled here and never by a page from the network.
 
-**What it says.** It prints one line when it settles, "showing: front end" or "showing: recovery", so the VM test can
-tell which.
+**What it says.** It prints one line when it settles, "showing: front end" or "showing: recovery", and writes it
+with the time to `shell-state` beside the session file (also "front end loaded" once the page is in), so the VM
+test can tell which and how fast. `os/files/mia-shell` starts it again if it dies.
 
 Qt is imported only inside `main`, so the pure parts (`step`, `waiting_page`, `recovery_page`, `action_for`)
 test without a display.
@@ -90,6 +91,23 @@ def action_for(url: str) -> Optional[str]:
     return rest if scheme == SCHEME and rest in ACTIONS else None
 
 
+def state_file(session_path: Optional[Path]) -> Optional[Path]:
+    """Pure logic. Where the shell says what it shows, beside the session file (`shell-state`); None without one."""
+    return Path(session_path).parent / "shell-state" if session_path else None
+
+
+def announce(what: str, where: Optional[Path], now: Optional[float] = None) -> None:
+    """Says what the shell shows: printed, and written with the time (seconds since the epoch) to `where`, so a
+    test or the session can see it reached her front end and how fast. Never raises."""
+    print(f"showing: {what}", flush=True)
+    if where is None:
+        return
+    try:
+        where.write_text(f"{what}\t{time.time() if now is None else now:.2f}\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
 def run_action(action: str) -> None:
     """Does one recovery action outside the window (a terminal, the log, signing out); `retry` is the window's own."""
     commands = {
@@ -111,7 +129,8 @@ def run_action(action: str) -> None:
 
 
 def main(argv: Optional[list] = None) -> int:
-    """Opens the shell full screen; with `--screenshot PATH --after SECONDS`, saves what it shows and quits."""
+    """Opens the shell full screen; with `--screenshot PATH --after SECONDS`, saves what it shows and quits. Each
+    state it reaches (front end, front end loaded, recovery) is announced beside the session file."""
     args = list(sys.argv[1:] if argv is None else argv)
     shot = args[args.index("--screenshot") + 1] if "--screenshot" in args else ""
     after = float(args[args.index("--after") + 1]) if "--after" in args else 20.0
@@ -144,6 +163,9 @@ def main(argv: Optional[list] = None) -> int:
     view.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
     state = {"deadline": 0.0}
+    said = state_file(path)
+    view.loadFinished.connect(lambda ok: announce("front end loaded", said) if ok and
+                              view.url().scheme().startswith("http") else None)
 
     def show() -> None:
         """Starts looking for her: the waiting page now, then a look each second (the window never freezes)."""
@@ -157,12 +179,12 @@ def main(argv: Optional[list] = None) -> int:
         what, url = step(session, answers, time.monotonic(), state["deadline"] if path else 0.0)
         if what == "open":
             view.setUrl(QUrl(url))
-            print("showing: front end", flush=True)
+            announce("front end", said)
         elif what == "recover":
             why = ("Her runtime didn't start within 30 seconds." if path else
                    "This session doesn't know where to find her (no session file is set).")
             view.setHtml(recovery_page(why))
-            print("showing: recovery", flush=True)
+            announce("recovery", said)
         else:
             QTimer.singleShot(1000, look)
 

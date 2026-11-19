@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1530 files, 340,408 lines; 1530 files describe themselves; 18,751 of 18,850 classes and functions are documented.
+1530 files, 340,454 lines; 1530 files describe themselves; 18,755 of 18,854 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -614,7 +614,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-125 files, 22,322 lines; 1,116 of 1,116 classes and functions documented
+125 files, 22,344 lines; 1,118 of 1,118 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -892,7 +892,7 @@
 
 ## tests/: the test suite: what each part must do
 
-534 files, 89,061 lines; 7,534 of 7,547 classes and functions documented
+534 files, 89,085 lines; 7,536 of 7,549 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

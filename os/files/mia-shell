@@ -6,5 +6,10 @@ export MIA_DESKTOP_SESSION_FILE="${XDG_RUNTIME_DIR}/mia/desktop.json"
 export MIA_HOME="${MIA_HOME:-$HOME/.local/share/mia}"
 cd /usr/lib/mia || exit 1
 # MIA_SHELL_ARGS: extra arguments for a test (KWin starts the session's program without arguments).
-# shellcheck disable=SC2086
-exec /usr/lib/mia/venv/bin/python -m gui.os_shell $MIA_SHELL_ARGS "$@"
+# The shell comes back by itself if it dies; closing it cleanly (exit 0) ends the session (FW-03).
+while :; do
+  # shellcheck disable=SC2086
+  /usr/lib/mia/venv/bin/python -m gui.os_shell $MIA_SHELL_ARGS "$@" && exit 0
+  [ -n "$MIA_SHELL_ARGS" ] && exit 1  # a test's one run
+  sleep 1
+done

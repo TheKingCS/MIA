@@ -61,6 +61,9 @@ COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
 # MIA's own session at the login screen (FW-03, DEC-0278): KWin running her shell full screen, ordinary windows
 # beside it; Plasma stays the other entry.
 COPY os/files/mia.desktop /usr/share/wayland-sessions/mia.desktop
+# The login screen's default session is MIA's (Plasma Login Manager, or SDDM before it: same keys).
+COPY os/files/mia-login.conf /etc/plasmalogin.conf.d/mia.conf
+COPY os/files/mia-login.conf /etc/sddm.conf.d/mia.conf
 RUN chmod 755 /usr/lib/mia/os/files/mia-session /usr/lib/mia/os/files/mia-shell
 
 # The image passes bootc's own checks, or the build fails.
