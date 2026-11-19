@@ -37,7 +37,7 @@ import urllib.request
 from typing import Callable, Optional
 
 from core import person_settings
-from core.actions import ACTION_TYPES, ActionError, ActionType
+from core.actions import ACTION_TYPES, ActionError, ActionType, Unavailable
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -199,12 +199,13 @@ def _describe(context, params) -> str:
 
 
 def _do(context, params, fetch: Callable[[str], dict] = _fetch_json) -> str:
-    """Does `weather.place`: finds the town online and keeps it as the person's own."""
+    """Does `weather.place`: finds the town online and keeps it as the person's own; Unavailable when the
+    weather service can't be reached."""
     _describe(context, params)
     try:
         found = find_place(str(params["place"]), fetch)
     except Exception:  # noqa: BLE001 - offline
-        raise ActionError("I couldn't reach the weather service to find that town. Try again when you're online.") from None
+        raise Unavailable("I couldn't reach the weather service to find that town. Try again when you're online.") from None
     if found is None:
         raise ActionError("I couldn't find a town by that name. Try adding the state or country.")
     person_settings.put(context, KEY, found)

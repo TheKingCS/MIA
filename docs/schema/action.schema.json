@@ -85,6 +85,10 @@
       "type": "boolean",
       "description": "Done at once on his standing yes for the kind (Approve From Now On), not on this card."
     },
+    "error": {
+      "type": "string",
+      "description": "When it failed, what kind (DEC-0283): refused, invalid, unavailable or failed; empty otherwise."
+    },
     "read_back": {
       "type": "string",
       "description": "After it ran: ok when its effect read back (DEC-0218, core/read_back.py), else what didn't; empty before."

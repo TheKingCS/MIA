@@ -20,6 +20,11 @@ something in a person's life. Always in five steps:
 5. **Undo**: the change is recorded for "undo that" (core/undo_log.py);
    `undo()` puts it back while it's still the person's latest change.
 
+Once it has run, its effect is read back (DEC-0218, core/read_back.py). A
+failure is one of four kinds (DEC-0283, `ERROR_KINDS`): `Refused` (a tier,
+a grant, the stop), invalid (a plain `ActionError`), `Unavailable` (a
+service or device away), or failed (anything else); the proposal keeps it.
+
 The front end holds no business logic: it shows Life State's
 `due[].action` suggestions and the proposals, and calls these. A child
 account can only take the actions marked `child_ok`. Proposals live in
@@ -46,8 +51,29 @@ PROPOSED, EXECUTED, FAILED, REJECTED, UNDONE, EXPIRED = "proposed", "executed", 
 KEEP_FOR = timedelta(days=1)
 
 
+ERROR_KINDS = ("refused", "invalid", "unavailable", "failed")  # DEC-0283: what kind of no it was
+
+
 class ActionError(ValueError):
-    """Why an action can't be proposed (said back to the person)."""
+    """Why an action can't be proposed or done (said back to the person). Its `kind` is one of four (DEC-0283):
+    `invalid` by default (it can't be done as asked), or `Refused` and `Unavailable` below; anything else that goes
+    wrong is `failed`."""
+    kind = "invalid"
+
+
+class Refused(ActionError):
+    """Held back on purpose: a tier, a grant, the stop."""
+    kind = "refused"
+
+
+class Unavailable(ActionError):
+    """Something it needs is away: a service, a device, the network, or it ran out of time."""
+    kind = "unavailable"
+
+
+def error_kind(problem: BaseException) -> str:
+    """Pure logic. Which of the four kinds a problem is: an ActionError's own, else `failed`."""
+    return getattr(problem, "kind", "failed") if isinstance(problem, ActionError) else "failed"
 
 
 @dataclass(frozen=True)
@@ -82,7 +108,8 @@ class Proposal:
     (made in code, never by the model), whose it is, who proposed it (the person or MIA), its status (proposed,
     executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
     whether it ran at once on his standing yes (`auto`, DEC-0215), the trace id of what proposed it (DEC-0280), whether
-    its effect read back after it ran (DEC-0218), and the undo record (kept server-side, never sent).
+    its effect read back after it ran (DEC-0218), what kind of failure it was if it failed (DEC-0283), and the undo
+    record (kept server-side, never sent).
     """
     proposal_id: str
     kind: str
@@ -100,6 +127,7 @@ class Proposal:
     auto: bool = False  # done at once on his standing yes for the kind (Approve From Now On, DEC-0215)
     trace: str = ""  # the trace id of what proposed it (core/trace.py, DEC-0280); approving it runs under the same
     read_back: str = ""  # "ok" when its effect read back after it ran, else what didn't (DEC-0218, LS-05)
+    error: str = ""  # when it failed: refused, invalid, unavailable or failed (DEC-0283)
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
     def as_dict(self) -> dict:
@@ -628,7 +656,8 @@ class ActionCenter:
         refused that, before anything runs.
         Her orb shows "working" while it runs, then success or a warning
         (core/orb_state.py). Once it has run, its effect is read back
-        (`_read_back`, DEC-0218) and the result says what didn't. One decision per card: a second approval
+        (`_read_back`, DEC-0218) and the result says what didn't; a failure keeps its kind (`error`, DEC-0283). One
+        decision per card: a second approval
         arriving while the first runs is refused. `_auto` is propose's own
         call for a standing yes; any later caller gets that result back.
         After a kind that removes something, the recall index drops
@@ -650,7 +679,7 @@ class ActionCenter:
             from core.kind_grants import grantable
 
             if not grantable(proposal.kind):
-                raise ActionError("That kind of change always asks first, so it can't be approved from now on.")
+                raise Refused("That kind of change always asks first, so it can't be approved from now on.")
         from core.taught_skills import guard
 
         guard(proposal.kind)  # a tool inside a taught skill can't approve a payment or a delete for the person
@@ -673,9 +702,11 @@ class ActionCenter:
                 proposal.result = action.execute(context, proposal.params)
         except ActionError as problem:
             proposal.status, proposal.result = FAILED, str(problem)
+            proposal.error = error_kind(problem)
             _put_back(context, change)  # anything it wrote before it refused goes back
         except Exception:
             log.exception("Action %s failed.", proposal.kind)
+            proposal.error = "failed"
             put_back = _put_back(context, change)
             proposal.status, proposal.result = FAILED, ("Something went wrong; nothing was changed." if put_back else
                                                        "Something went wrong, and what it had changed couldn't all be put back.")

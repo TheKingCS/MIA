@@ -276,16 +276,26 @@ class _Record:
             self.runs.finish(self.run_id, status, why)
 
 
+TASK_SECONDS = 600  # one run of a taught task, between its waits for the person
+
+
 def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0, run_id: str = "") -> str:
     """Runs a routine from a step: ordinary steps done, a commit or a sign-in waits for the person (the run carries
     on after they approve), a step not found or a page that doesn't match stops it. Every step, wait and end is kept
     in the person's run book (core/runs.py), so "what's running?" and a restart both know where it is; `run_id`
-    continues a run that was waiting. Returns what happened."""
+    continues a run that was waiting. Between steps it ends when everything is stopped or the run passes
+    `TASK_SECONDS` (core/deadline.py). Returns what happened."""
     lines = []
     steps = routine["steps"]
     record = _Record(context, routine, start, run_id)
+    from core.deadline import Deadline
+
+    limit = Deadline(TASK_SECONDS, "the task")  # outside work: a deadline and the stop between steps (DEC-0283)
     for index in range(start, len(steps)):
         step = steps[index]
+        why = limit.why_not()
+        if why:
+            return _stopped(store, routine, index, lines, why, record)
         where = {"id": routine["id"], "next": index + 1, "run": record.run_id}
         try:
             if step["kind"] == "open":

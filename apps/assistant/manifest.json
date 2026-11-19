@@ -233,7 +233,7 @@
       "records.add": "act_within_grant",
       "records.remove": "act_within_grant",
       "history.undo": "act_with_approval",
-      "undo.last": "act_within_grant",
+      "undo.last": "act_with_approval",
       "wallet.delete": "act_with_approval",
       "shelf.keep": "act_within_grant",
       "shelf.remove": "act_within_grant",

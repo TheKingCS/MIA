@@ -12,7 +12,7 @@ child's action, and it happens only when approved, each time.
 
 from __future__ import annotations
 
-from core.actions import ACTION_TYPES, ActionError, ActionType
+from core.actions import ACTION_TYPES, ActionError, ActionType, Unavailable
 
 
 def _places(context) -> list:
@@ -32,14 +32,14 @@ def _describe(context, params) -> str:
 
 
 def _share(context, params) -> str:
-    """Sends every waypoint as a CoT event to TAK apps on the local network (core.tak); ActionError when the network refuses it. Says how many were sent."""
+    """Sends every waypoint as a CoT event to TAK apps on the local network (core.tak); Unavailable when the network refuses it. Says how many were sent."""
     from core import tak
 
     places = _places(context)
     try:
         sent = tak.send([tak.cot_event(w) for w in places])
     except OSError as problem:
-        raise ActionError(f"The network wouldn't take it: {problem}") from problem
+        raise Unavailable(f"The network wouldn't take it: {problem}") from problem
     return f"Sent {sent} place{'s' if sent != 1 else ''} to TAK apps on this network. They stay for a year in the app."
 
 

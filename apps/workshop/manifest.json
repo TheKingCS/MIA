@@ -133,7 +133,7 @@
       "component.edit": "act_within_grant",
       "craft.cost": "act_within_grant",
       "craft.finish": "act_within_grant",
-      "craft.photo_delete": "act_within_grant",
+      "craft.photo_delete": "act_with_approval",
       "craft.receive": "act_within_grant",
       "craft.sell": "act_within_grant",
       "craft.start": "act_within_grant",

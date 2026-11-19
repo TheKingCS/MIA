@@ -47,7 +47,7 @@
       "list_cameras": "observe",
       "save_camera_picture": "act_within_grant",
       "camera.remove": "act_within_grant",
-      "security.picture_delete": "act_within_grant",
+      "security.picture_delete": "act_with_approval",
       "security.save_picture": "act_within_grant"
     },
     "outside": []

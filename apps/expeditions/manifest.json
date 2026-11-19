@@ -85,7 +85,7 @@
       "expedition.add": "act_within_grant",
       "expedition.delete": "act_with_approval",
       "expedition.edit": "act_within_grant",
-      "expedition.media_delete": "act_within_grant",
+      "expedition.media_delete": "act_with_approval",
       "gear.add": "act_within_grant",
       "gear.remove": "act_within_grant",
       "gear.toggle": "act_within_grant",

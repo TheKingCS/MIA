@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1530 files, 340,454 lines; 1530 files describe themselves; 18,755 of 18,854 classes and functions are documented.
+1533 files, 340,715 lines; 1533 files describe themselves; 18,772 of 18,871 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-596 files, 171,903 lines; 8,862 of 8,948 classes and functions documented
+598 files, 172,102 lines; 8,875 of 8,961 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -128,6 +128,7 @@
 - `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses."
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
+- `core/capability_check.py`: A capability's four descriptions read as one (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A capability is described in four places that each work on their own:
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
 - `core/capability_reminders.py`: Now and then, MIA reminds the person of what they're already capable of doing right now — "did you know you could go do X?" (Zac, 2026-11-08). It isn't a new task and it isn't a value to live up to: it's a subtle redirect that meets him where he is — the gentle reminder that the ability is already i
 - `core/carpentry.py`: Carpentry, the first of Trade Master's apprentice programs (DEC-0149; Zac, 2026-11-08: "She should become a Trade master and be able to teach an entry level Apprentice"). A learning path on core/paths.py's method, the same as guitar (core/guitar.py): stages of lessons, each with steps, why and what 
@@ -175,6 +176,7 @@
 - `core/data_logger_manager.py`: The Data Logger + Charts shared service — docs/ROADMAP.md milestone 8.1, the "Data Logger + Charts" row of the shared core services table (used by Multimeter logging, soil moisture, power usage, Lab experiments/calibration, sensor testing, vehicle diagnostics).
 - `core/data_recovery.py`: One shared helper for the visible half of data-corruption recovery. Every core/*_manager.py's own `_load()` already falls back to an empty state on a malformed JSON file (correct — the app must never fail to boot or fail to open a screen over one bad file) and logs the failure. But a log line nobody
 - `core/data_root.py`: Where MIA keeps a person's files, as one setting (the MIA Runtime's next step, DEC-0155; needed for MIA OS and the Pi, DEC-0168).
+- `core/deadline.py`: A deadline and the stop, for device and outside work only (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A long loop that waits on something outside MIA (a browser task, a download) asks `why_not()` between its steps, never in the middle of a write: it says why the loop
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic.
 - `core/dependency_audit.py`: The weekly check for known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). The check itself is tools/dependency_audit.py (it asks OSV over the internet, a few seconds' work); this is the part MIA's daily checks use: whether a check is `due` (none in the last CHECK_DAYS), `laun
 - `core/desktop_session.py`: How MIA's own desktop session finds her (FW-03, DEC-0278; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4). On MIA OS her runtime is a systemd user service, separate from the window that shows her, so the window can't be handed a sign-in token in-process the way the Windows desktop app does 
@@ -892,7 +894,7 @@
 
 ## tests/: the test suite: what each part must do
 
-534 files, 89,085 lines; 7,536 of 7,549 classes and functions documented
+535 files, 89,147 lines; 7,540 of 7,553 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -958,6 +960,7 @@
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions.
 - `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, a missing 
+- `tests/test_capability_check.py`: Tests for a capability's four descriptions read as one (DEC-0283, LS-04, core/capability_check.py): the tool, the action kind, the manifest's tier and the effects table must agree.
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
