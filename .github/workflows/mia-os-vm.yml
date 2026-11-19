@@ -146,6 +146,8 @@ jobs:
           shot() { mon "screendump /tmp/shots/$1.png -f png"; ls -l "/tmp/shots/$1.png" || true; }
           keys() { for k in "$@"; do mon "sendkey $k"; done; }
           state() { as_mia 'cat $XDG_RUNTIME_DIR/mia/shell-state 2>/dev/null' || true; }
+          # How /boot is mounted before any login (ostree must remount it read-write at shutdown to apply an update).
+          vm 'findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS /boot /boot/efi; systemctl is-active boot.automount boot-efi.automount' || true
           # What runs the login screen here, and its settings (the session's name on inspection).
           vm 'rpm -qa | grep -iE "sddm|plasmalogin|plasma-login" ; systemctl status display-manager --no-pager | head -n 4; ls /usr/share/wayland-sessions /etc/sddm.conf.d /etc/plasmalogin.conf.d 2>&1; cat /etc/sddm.conf.d/*mia* /etc/plasmalogin.conf.d/*mia* 2>&1' || true
           # Log in at the login screen as the test person, into MIA's session.
@@ -180,12 +182,17 @@ jobs:
           start=$(date +%s)
           vm 'systemctl restart display-manager'
           for i in $(seq 1 120); do as_mia 'pgrep -x plasmashell' > /dev/null 2>&1 && break; sleep 1; done
-          echo "login to Plasma's shell: $(( $(date +%s) - start )) s"
-          sleep 10; shot 5-plasma
+          echo "login to Plasma's shell started: $(( $(date +%s) - start )) s"
+          # Usable when the splash screen has gone.
+          for i in $(seq 1 120); do as_mia 'pgrep -x ksplashqml' > /dev/null 2>&1 || break; sleep 1; done
+          echo "login to Plasma's desktop, splash gone: $(( $(date +%s) - start )) s"
+          sleep 3; shot 5-plasma
           as_mia 'pgrep -x plasmashell'; as_mia 'systemctl --user is-active mia-runtime'
           # Back as it was for the steps after: no automatic login.
           vm 'rm -f /etc/sddm.conf.d/zz-test-autologin.conf /etc/plasmalogin.conf.d/zz-test-autologin.conf; loginctl terminate-user mia || true; systemctl restart display-manager'
           sleep 5; as_mia 'systemctl --user start mia-runtime' || true
+          # How /boot is mounted after a desktop session (the update after this needs it remountable).
+          vm 'findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS /boot /boot/efi; systemctl is-active boot.automount boot-efi.automount' || true
       - name: The login screen's screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
