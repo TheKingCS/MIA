@@ -9,6 +9,10 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From Prompt 21 (2026-11-18)
+0zb. [ ] **Look at your backups folder** ("MIA Backups" in your home folder): Claude's test runs on 2026-11-18 wrote seven
+   backups dated Nov 23 to 29 there (now moved out). Backup rotation counted them as newest, so a backup from Nov 16 or
+   17, if there was one, may be gone; Nov 15 and Nov 18 are there. Tonight's backup runs as usual. Nothing to do unless
+   you wanted those two days.
 0za. [ ] **The envelope** (your yes to Q-111): write MIA's recovery key on paper (run `python -m tools.data_key recovery` yourself in a terminal in
    the MIA folder; never paste it into a chat, not even to Claude), seal it in an envelope with your important papers, and tell the person you trust where it is. When MIA
    OS is installed, its disk's printed recovery key goes in the same envelope.

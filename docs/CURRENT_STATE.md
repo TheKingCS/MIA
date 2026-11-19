@@ -7,16 +7,25 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
 **2026-11-18, later (Claude on Opus, at the PC). Foundation and living-system work, one package at a time.**
 - **Foundation:** FW-01 accepted (the image builds the same twice), FW-02 (CI pinned, the suite inside the image).
   FW-03 under way: her own desktop session (KWin running her shell, a recovery page when she's down). The first
-  VM run got as far as KWin starting her shell, which died writing its log inside the read-only image; fixed
-  (fb0b9329), re-running.
+  VM run got as far as KWin starting her shell, which died writing its log inside the read-only image; fixed,
+  and the next run passed every step (her front end, the recovery page, update and rollback). The login screen
+  now defaults to MIA, the shell comes back by itself, and the VM test logs in at the real login screen, drives
+  the recovery page by keyboard and times Plasma (3b2f2ec1; its run is the next thing to read).
 - **Prompt 21, the living system:** five documents and a review; Zac approved its decisions (DEC-0280 to 0286).
   Built since, each with its tests: **LS-01** one trace id for everything one cause did; **LS-02** his memories
   and notes say how they're known and when they hold; **LS-07** one clock in his time zone; **LS-08** one
   model-server address; **LS-06** a lab change to code needs a test that fails before it (DEC-0224), named in
   its merge; **LS-05** every approved change is read back (DEC-0218) through one record-type registry, which
-  found two mixed references on its first run (fixed).
-- **Next:** the VM result for FW-03, then its remaining steps (the login screen's default, keyboard checks, an
-  ordinary window beside her); LS-03, LS-04, LS-09, LS-10.
+  found two mixed references on its first run (fixed); **LS-04** a capability's four descriptions checked as
+  one (it found four deletions MIA could have done within a grant), four error kinds, deadlines for outside
+  work; **LS-03** a retention registry that decides what syncs, and a sync conflict's losing copy kept in the
+  change history; **LS-10** what she learned on her own, each with its evidence and a Forget button, and a
+  daily budget for her own work; **LS-09** a replayed week on a held clock. All ten LS packages are built.
+- **A mistake, fixed:** the replayed week's first test runs ran every daily check for real: seven backups dated
+  Nov 23 to 29 landed in "MIA Backups" (moved out; the rotation may have removed Nov 16/17 backups), a task
+  went into the repository, and the main copy's uncommitted work log lost its newest lines. A replay now runs
+  only the checks it names (`docs/WAITING_ON.md` 0zb).
+- **Next:** the FW-03 VM run's login-screen step and its screenshots; then FW-04 (greenboot, readiness).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 
