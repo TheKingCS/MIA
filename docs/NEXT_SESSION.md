@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-19, FW-03 done** (MIA's own session, accepted in the VM: login to her front end 3 to 4 s, Plasma 7 to
+8 s, keyboard-only recovery, update and rollback). **Next: FW-04** (greenboot, readiness, sd_notify), per the
+roadmap. Screenshots are the `mia-login-screenshots` artifact of CI run 44460432338.
+
 **New 2026-11-18, LS-09 built** (`core/replay.py`): `replay(context, jobs, start)` runs a week of daily checks on
 a held clock and returns what she said each day; the daily checks and the gate now read `core.clock`.
 

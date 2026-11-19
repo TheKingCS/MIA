@@ -7,10 +7,10 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
 **2026-11-18, later (Claude on Opus, at the PC). Foundation and living-system work, one package at a time.**
 - **Foundation:** FW-01 accepted (the image builds the same twice), FW-02 (CI pinned, the suite inside the image).
   FW-03 under way: her own desktop session (KWin running her shell, a recovery page when she's down). The first
-  VM run got as far as KWin starting her shell, which died writing its log inside the read-only image; fixed,
-  and the next run passed every step (her front end, the recovery page, update and rollback). The login screen
-  now defaults to MIA, the shell comes back by itself, and the VM test logs in at the real login screen, drives
-  the recovery page by keyboard and times Plasma (3b2f2ec1; its run is the next thing to read).
+  VM run got as far as KWin starting her shell, which died writing its log inside the read-only image; fixed.
+  **FW-03 is done** (2026-11-19): in the VM, at the real login screen, her front end loads 3 to 4 s after login,
+  Plasma's desktop 7 to 8 s, the recovery page works by keyboard alone, and an update and rollback apply (once
+  /boot was kept mounted; it had been an automount that let go when idle).
 - **Prompt 21, the living system:** five documents and a review; Zac approved its decisions (DEC-0280 to 0286).
   Built since, each with its tests: **LS-01** one trace id for everything one cause did; **LS-02** his memories
   and notes say how they're known and when they hold; **LS-07** one clock in his time zone; **LS-08** one
@@ -25,7 +25,7 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   Nov 23 to 29 landed in "MIA Backups" (moved out; the rotation may have removed Nov 16/17 backups), a task
   went into the repository, and the main copy's uncommitted work log lost its newest lines. A replay now runs
   only the checks it names (`docs/WAITING_ON.md` 0zb).
-- **Next:** the FW-03 VM run's login-screen step and its screenshots; then FW-04 (greenboot, readiness).
+- **Next:** FW-04 (greenboot, readiness, sd_notify), then FW-05 (the disk, TPM and a PIN).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

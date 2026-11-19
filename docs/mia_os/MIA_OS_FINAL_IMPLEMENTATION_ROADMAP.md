@@ -144,17 +144,18 @@ approves itself.
 
 ### FW-03 MIA's session and the Plasma fallback (PoC 3)
 
-> **State (2026-11-18): first part built; its VM test runs in CI.** Her runtime, started in a desktop session, writes
-> where her shell finds her (`core/desktop_session.py`: the local address and a sign-in token, in the person's own
-> runtime folder, owner-only, removed when it stops). The shell (`gui/os_shell.py`) shows "MIA is starting", then her
-> front end, or after 30 seconds a recovery page (try again, a terminal, her log, sign out to choose Plasma) whose
-> links act only through its own scheme. The "MIA" login entry (`os/files/mia.desktop`) runs `os/files/mia-session`:
-> the runtime turned on the first time, then KWin with her shell as the session's one client. The VM test runs that
-> session under KWin's virtual display, both ways, and keeps the two screenshots. **Checked here first:** the shell
-> drawn off-screen on Windows reaches both states; with GPU drawing a screenshot came out blank, with software
-> drawing it was right, so the VM test uses software drawing. **Still to do in FW-03:** Plasma Login Manager's
-> default set to MIA and a graphical login in the VM; keyboard-driven checks (QEMU `sendkey`); an ordinary window
-> beside her; the shell restarting by itself; Home within 10 s measured.
+> **State (2026-11-19): done; accepted by the VM run of e1af2147 (CI run 44460432338).** The image's login screen
+> (Plasma Login Manager 6.8) defaults to the "MIA" session (`os/files/mia-login.conf`); it runs KWin with her shell
+> (`gui/os_shell.py`) as its client, which comes back by itself if it dies (`os/files/mia-shell`) and says what it
+> shows with the time (`shell-state`). In the VM, logged in at the real login screen: her front end loaded 2.8 to
+> 4.2 s after login; a terminal opened beside her; the shell killed and back; her runtime stopped, the recovery page
+> shown and a terminal opened from it by keyboard alone (QEMU `sendkey`); Plasma's desktop, splash gone, 7 to 8 s
+> after login; then the update to version 2 and the rollback, his data kept. **Found and fixed on the way:** her
+> shell writing its log inside the read-only image (it now uses `MIA_HOME`, and the logger falls back to the
+> console); a test reading the VM before its shutdown had finished; and /boot as an automount that let go when
+> idle, so ostree couldn't apply an update at shutdown (`os/files/boot-stays-mounted.conf`,
+> `finalize-needs-boot.conf`). On his PC the installer writes /boot into fstab; the drop-ins stay as a guard.
+> Measured on GitHub's VM, not his PC (MV-02 measures that); Orca is FW-11's.
 
 | Field | Specification |
 |---|---|
