@@ -141,7 +141,8 @@ jobs:
           SINCE=0 os/poc/vm/type_at_prompt.sh "(recovery key|assphrase) for" "$(cat /tmp/recovery.txt)" 600
           up
           vm 'mokutil --sb-state; journalctl -b --no-pager | grep -iE "tpm2|cryptsetup" | tail -n 10'
-          vm 'mokutil --sb-state' | grep -q "SecureBoot disabled"
+          # Firmware with no Secure Boot at all answers "This system doesn't support Secure Boot" (seen in the second run).
+          vm 'mokutil --sb-state 2>&1' | grep -qE "SecureBoot disabled|doesn't support Secure Boot"
       - name: The VM's serial log, for the record
         if: always()
         run: tail -n 120 /tmp/serial.log || true
