@@ -40,6 +40,7 @@ be lost on the way to MIA OS.
 
 from __future__ import annotations
 
+import time
 from datetime import date, datetime, timedelta
 from typing import Callable, Optional
 
@@ -156,7 +157,8 @@ class BackgroundJobs:
     def schedule(self, scheduler, first_after: Optional[float] = None) -> None:
         """Puts every job in JOBS on the scheduler with its interval (the scheduler runs each under the store
         lock), and gives the scheduler the say on which jobs wait (a "stop everything" first, core/stop.py, then
-        homeostasis's easing off) and who hears of a backoff, and keeps it for her self-repair (core/self_repair.py). Asks core/stop.py once first, so a "stop everything"
+        homeostasis's easing off), who hears of a backoff, and the time each run took (her own work's daily
+        budget, LS-10), and keeps it for her self-repair (core/self_repair.py). Asks core/stop.py once first, so a "stop everything"
         kept from before a restart is known to `grants.require` from the start (both the PC and the server boot here).
         `first_after` is passed on for each job's first run (None: one interval from now, as the timers did)."""
         try:
@@ -170,6 +172,7 @@ class BackgroundJobs:
         scheduler.defer = self._defer_reason  # a stop-everything first, then easing off (DEC-0181, DEC-0173)
         self._scheduler = scheduler  # her self-repair re-runs a job that keeps failing (core/self_repair.py)
         scheduler.on_backoff = self.homeostasis.backing_off
+        scheduler.on_ran = self.homeostasis.spend  # her own work's daily budget (LS-10)
 
     def _defer_reason(self, name: str) -> str:
         """Why a job or daily check waits now ("" to run it): he said "stop everything" and it's one that changes
@@ -300,7 +303,8 @@ class BackgroundJobs:
     def _check_daily_occasions(self) -> None:
         """See core/daily_occasions.py's docstring for the full reasoning behind each check (the newest: momentum,
         DEC-0148, the greenhouse node, DEC-0150, and the nightly backup, core/auto_backup.py). A deferrable check
-        waits for the next clear tick while MIA eases off (core/homeostasis.py, DEC-0173), and a check that is her own
+        waits for the next clear tick while MIA eases off (core/homeostasis.py, DEC-0173) or her day's budget for her
+        own work is used (each check's time is counted, LS-10), and a check that is her own
         work waits while the person has said "stop everything" (core/stop.py, DEC-0181).
 
         Stabilization (2026-09-14) — this used to be one long function
@@ -340,10 +344,12 @@ class BackgroundJobs:
         for name, check in checks:
             if self._defer_reason(name):
                 continue  # stopped by him, or easing off: it waits for the next tick that's clear (DEC-0181, DEC-0173)
+            began = time.monotonic()
             try:
                 check(now, today_iso)
             except Exception:
                 log.exception("Daily occasion check '%s' failed — other checks still ran.", name)
+            self.homeostasis.spend(name, time.monotonic() - began)  # her own work's daily budget (LS-10)
         offers, self._offers = self._offers, []
         if self.context.communication is not None:
             self.context.communication.offer_batch(offers, now)

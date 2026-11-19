@@ -25,6 +25,10 @@ choices about her own work, logged and shown in the runtime's health (`/api/runt
 
 **The pages** (`easing_now`, appearance A7): while the last reading (within ten minutes) found the computer busy or the
 battery low, the look sent to pages says so, and an ambient backdrop stays still.
+
+**A daily budget** (LS-10): the time her deferrable work ran today is counted (`spend`, from the scheduler and the
+daily checks); past `homeostasis.daily_budget_minutes` (120 by default) that work waits for tomorrow. The health
+report shows the budget and what's used. The count is kept in memory: a restart starts the day's count again.
 """
 
 from __future__ import annotations
@@ -58,6 +62,7 @@ BACKOFF_MOST = 6 * 3600.0
 
 
 EASING_FRESH = 600.0  # seconds a "busy or on battery" reading counts for the pages
+DAILY_BUDGET_MINUTES = 120  # her own deferrable work a day, unless `homeostasis.daily_budget_minutes` says (LS-10)
 _EASED_AT: Optional[float] = None  # when this process last read the machine as busy or on low battery
 
 
@@ -115,7 +120,7 @@ class Homeostasis:
 
     def __init__(self, context, read: Optional[Callable[[], dict]] = None, clock: Callable[[], float] = time.monotonic):
         """`read` returns {cpu, memory_free, battery, online, disk_free} (the real machine by default; tests pass
-        their own)."""
+        their own). Today's time spent on her own work starts at nothing."""
         self.context = context
         self._read = read or self._read_machine
         self._clock = clock
@@ -124,6 +129,7 @@ class Homeostasis:
         self.found: dict = {}
         self.waiting: dict = {}  # job or check -> why, this episode
         self.deferrals = 0
+        self.spent_today, self._spent_day = 0.0, ""  # her own deferrable work today (LS-10)
         self._noticed = False  # said so for this episode already
 
     def _read_machine(self) -> dict:
@@ -180,10 +186,38 @@ class Homeostasis:
                 self.waiting, self._noticed = {}, False
         return self.found
 
+    def budget_seconds(self) -> float:
+        """Her own deferrable work allowed a day, in seconds (the setting `homeostasis.daily_budget_minutes`)."""
+        minutes = DAILY_BUDGET_MINUTES
+        try:
+            minutes = float(self.context.config.get("homeostasis.daily_budget_minutes", minutes))
+        except Exception:  # noqa: BLE001 - no context or setting: the default
+            pass
+        return max(0.0, minutes) * 60
+
+    def spend(self, name: str, seconds: float) -> None:
+        """Counts time a deferrable job or check of hers ran today (the scheduler and the daily checks call it)."""
+        if name not in DEFERRABLE_JOBS and name not in DEFERRABLE_CHECKS:
+            return
+        today = time.strftime("%Y-%m-%d")
+        if self._spent_day != today:
+            self._spent_day, self.spent_today = today, 0.0
+        self.spent_today += max(0.0, float(seconds or 0))
+
+    def _over_budget(self, name: str) -> str:
+        """Why a deferrable job waits for tomorrow: today's time for her own work is used up; else \"\"."""
+        if name not in DEFERRABLE_JOBS and name not in DEFERRABLE_CHECKS:
+            return ""
+        if self._spent_day != time.strftime("%Y-%m-%d"):
+            return ""
+        budget = self.budget_seconds()
+        return "today's time for my own work is used up" if self.spent_today >= budget else ""
+
     def defer_reason(self, name: str) -> str:
-        """Why this job or daily check waits now, or "" to run it. A wait is counted, remembered for the notice and
-        the health report, and the first of an episode is said once."""
-        why = reason_for(name, self.refresh())
+        """Why this job or daily check waits now, or "" to run it: the computer's state first, then today's budget
+        for her own work (LS-10). A wait is counted, remembered for the notice and the health report, and the first
+        of an episode is said once."""
+        why = reason_for(name, self.refresh()) or self._over_budget(name)
         if why:
             self.deferrals += 1
             self.waiting[name] = why
@@ -226,5 +260,9 @@ class Homeostasis:
             log.exception("Couldn't offer the homeostasis notice")
 
     def report(self) -> dict:
-        """For the runtime's health: what isn't clear, what's waiting and why, and how many waits so far."""
-        return {"conditions": dict(self.found), "waiting": dict(self.waiting), "deferrals": self.deferrals}
+        """For the runtime's health: what isn't clear, what's waiting and why, how many waits so far, and today's
+        budget for her own work (minutes a day, minutes used)."""
+        return {"conditions": dict(self.found), "waiting": dict(self.waiting), "deferrals": self.deferrals,
+                "budget": {"minutes_a_day": round(self.budget_seconds() / 60, 1),
+                           "used_today": round((self.spent_today if self._spent_day == time.strftime("%Y-%m-%d")
+                                                 else 0.0) / 60, 1)}}

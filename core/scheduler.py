@@ -78,8 +78,8 @@ class Scheduler:
     def __init__(self, clock: Callable[[], float] = time.monotonic, lock=None,
                  wall: Optional[Callable[[], str]] = None) -> None:
         """`clock` counts seconds (monotonic by default; a fake one in tests). `lock` is the store lock jobs run
-        under, or None. `wall` gives the time written in a job's record. `defer` and `on_backoff` start empty;
-        core/background_jobs.py gives them homeostasis's (core/homeostasis.py)."""
+        under, or None. `wall` gives the time written in a job's record. `defer`, `on_backoff` and `on_ran` (told
+        each run's time) start empty; core/background_jobs.py gives them homeostasis's (core/homeostasis.py)."""
         from datetime import datetime
 
         self._clock = clock
@@ -89,6 +89,7 @@ class Scheduler:
         self._running = threading.Lock()  # held while run_due is running jobs
         self.defer: Optional[Callable[[str], str]] = None  # name -> why it should wait now, or ""
         self.on_backoff: Optional[Callable[[str, int, float, str], None]] = None  # (name, failures, wait, error)
+        self.on_ran: Optional[Callable[[str, float], None]] = None  # (name, seconds) after each run (LS-10)
 
     def add(self, name: str, seconds: float, run: Callable[[], None], first_after: Optional[float] = None) -> Job:
         """Adds a job run every `seconds`. Its first run is one interval from now, as a timer's would be, unless
@@ -127,7 +128,7 @@ class Scheduler:
         """Runs one due job under the store lock; False when the stores were busy (it stays due) or it was asked to
         wait (due again one interval on). A failure is logged and recorded, and the job is due again one interval on,
         like a run that worked, or later once it keeps failing (backoff). Each run is a cause of its own, with its own
-        trace id (core/trace.py)."""
+        trace id (core/trace.py), and its time is told to `on_ran`."""
         why = self._defer_reason(job.name)
         if why:
             job.deferrals += 1
@@ -160,6 +161,11 @@ class Scheduler:
         job.runs += 1
         job.last_run = self._wall()
         job.last_seconds = round(finished - started, 3)
+        if self.on_ran is not None:
+            try:
+                self.on_ran(job.name, job.last_seconds)  # her own work's time, for its daily budget (LS-10)
+            except Exception:  # noqa: BLE001 - counting never stops the schedule
+                log.exception("Couldn't count %s's time", job.name)
         wait = backoff_seconds(job.seconds, job.failures_in_a_row)
         job.due = finished + wait  # from when it finished: no catching up after a sleep or a long run
         if job.failures_in_a_row == BACKOFF_AFTER and self.on_backoff is not None:

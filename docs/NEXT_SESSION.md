@@ -10,6 +10,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-18, LS-10 built**: a habit MIA learns on her own goes in `core/learned.py`'s `habits()` with its
+evidence and its own reset (never one that touches what he set). Her deferrable work has a daily time budget
+(`homeostasis.daily_budget_minutes`, shown in the runtime's health).
+
 **New 2026-11-18, LS-03 built** (DEC-0285, DEC-0286): a new data file goes in `core/retention.py` (its class,
 how long it's kept, what happens at the end, whether it syncs) or `tests/test_retention.py` fails; sync reads
 that table. A sync conflict keeps the losing copy in the change history and says one note.

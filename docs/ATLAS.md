@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1535 files, 340,966 lines; 1535 files describe themselves; 18,783 of 18,882 classes and functions are documented.
+1537 files, 341,291 lines; 1537 files describe themselves; 18,805 of 18,904 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-599 files, 172,296 lines; 8,882 of 8,968 classes and functions documented
+600 files, 172,529 lines; 8,898 of 8,984 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -290,6 +290,7 @@
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
 - `core/lab_reading_actions.py`: The Lab's changes on the web (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). `lab_reading.add` logs a reading to a series in the Data Logger (core/data_logger_manager.py), joining an existing series whatever its case and starting a new one with its first reading; `lab_reading.delete` t
+- `core/learned.py`: What MIA has learned about him on her own, each habit with its evidence and its own reset (DEC-0282, LS-10, REQ-LS-004). Three kinds today:
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
 - `core/life_areas.py`: The rest of a life, at a glance: the life state's `areas` section (DEC-0108's interconnection audit, 2026-11-07). `core/context_assembler.py` has full sections for money, property, assets, the kitchen, workouts, projects, goals and missions; the other stores were missing from her picture of a life e
@@ -895,7 +896,7 @@
 
 ## tests/: the test suite: what each part must do
 
-536 files, 89,204 lines; 7,544 of 7,557 classes and functions documented
+537 files, 89,290 lines; 7,550 of 7,563 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1120,6 +1121,7 @@
 - `tests/test_knowledge_pack_delete.py`: Deleting a Knowledge pack from the web (core/reference_library_manager.delete_confirmed): only once its name is typed, as the desktop asks, because the file is gone for good.
 - `tests/test_knowledge_pictures.py`: Pictures in Knowledge articles (core/reference_library_manager.article_images): which <img> tags become pictures fetched from the pack, resolved against the article's own path.
 - `tests/test_lab_module.py`: Unit test for modules.lab.module.format_reading_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test.
+- `tests/test_learned.py`: Tests for what MIA learned on her own (DEC-0282, LS-10, core/learned.py): each habit with its evidence and its own reset, which never touches what he set himself or a break he asked for; and the daily budget for her own work.
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
@@ -1436,7 +1438,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,425 lines
+116 files, 21,431 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

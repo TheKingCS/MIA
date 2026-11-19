@@ -182,6 +182,12 @@
                 el("button", { type: "button", class: "btn btn-ghost", onclick: () => act({ kind: "grant.take_back", params: { grant_id: g.id } }) }, "Take back"))))
             : el("p", { class: "dim" }, "Nothing yet: she asks before every change, until a skill you teach her runs cleanly with you or you publish a workflow."),
           el("p", { class: "dim" }, r.asks_each_time + " things she can do always need your yes, whatever she's learned: paying, buying, sending, publishing, deleting, sharing.")),
+        el("div", {}, el("p", { class: "pw-label" }, "What I've learned"),
+          (r.learned || []).length
+            ? el("ul", {}, r.learned.map((h) => el("li", {}, el("strong", {}, h.what), " · " + h.evidence + " ",
+                el("button", { type: "button", class: "btn btn-ghost", onclick: () => act({ kind: "learned.reset", params: { habit_id: h.habit_id } }) }, "Forget this"))))
+            : el("p", { class: "dim" }, "Nothing yet: I learn how often you want each kind of message and how you like answers, and list it here."),
+          el("p", { class: "dim" }, "Forgetting one never touches what you set yourself, a break you asked for, the stop, or what I may do on my own.")),
         el("div", { class: "row-buttons" }, ask("What can you do on your own?"), ask("What apps do I have?"), ask("Which app can watch for deals?"), ask("Is anything wrong with my apps?"))));
   }
 

@@ -14,7 +14,8 @@ are the surface's job; this decides *what* to compare and *what was learned*.
 
 A personal store (`response_styles.json`), sealed at rest (DEC-0126). `style_for(context)` feeds the current
 instruction into the chat phrasing layer (empty until there's a pick, so the default turn is unchanged). Nothing here
-is fiction, so events are real.
+is fiction, so events are real. One dimension learned only from picks can be forgotten on its own (`relearn`,
+LS-10, core/learned.py); one he chose outright (`choose`) never is.
 """
 
 from __future__ import annotations
@@ -136,6 +137,17 @@ class StyleBook:
             raise ValueError(f"Values for {dimension} are {DIMENSIONS.get(dimension, ())}.")
         self.picks = [p for p in self.picks if p.dimension != dimension]
         return self.record_pick(dimension, value)
+
+    def learned_only(self, dimension: str) -> bool:
+        """Whether a dimension's preference is only learned from his A/B picks (none chosen outright, which
+        `choose` records with nothing rejected)."""
+        mine = [p for p in self.picks if p.dimension == dimension]
+        return bool(mine) and all(p.rejected for p in mine)
+
+    def relearn(self, dimension: str) -> None:
+        """Forget the A/B picks of one dimension (LS-10); one he chose outright is never touched."""
+        self.picks = [p for p in self.picks if p.dimension != dimension or not p.rejected]
+        self._save()
 
     def reset(self) -> None:
         """Forget every pick: MIA answers in her normal style again (undo restores the file)."""

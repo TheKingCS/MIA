@@ -1080,6 +1080,14 @@
         "how": "you taught it, and it ran cleanly 2 times with you watching"
       }
     ],
-    "asks_each_time": 132
+    "asks_each_time": 132,
+    "learned": [
+      {
+        "habit_id": "pace:good_news",
+        "what": "I offer Good News up to 2 a day",
+        "evidence": "You've opened or used most of these lately.",
+        "reset_does": "I go back to its usual pace and learn again."
+      }
+    ]
   }
 }

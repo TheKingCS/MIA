@@ -62,7 +62,10 @@ you tell me today?" has a real answer.
 
 `decide_batch()` is pure (takes the clock, settings and history as
 arguments) so every rule is testable with a fake clock; the
-CommunicationGate class wraps it with persistence and delivery.
+CommunicationGate class wraps it with persistence and delivery. A kind's
+learned pace can be relearned on its own (`relearn`, LS-10), and the
+breaks she took herself are told apart from ones he asked for
+(`inferred_breaks`), for core/learned.py.
 """
 
 from __future__ import annotations
@@ -383,7 +386,8 @@ class CommunicationGate:
     def __init__(self, context, data_dir: Optional[Path] = None) -> None:
         # Whose data: a person's own folder (core/personal_data.py), or the
         # shared data/ folder by default.
-        """The person's gate: its decision log, what's waiting, breaks they've taken from a topic (and ended), from
+        """The person's gate: its decision log, what's waiting, breaks they've taken from a topic (and ended), the
+        kinds whose pace was reset (`relearned`, LS-10), from
         communication_log.json in their folder; listens for notification.dismissed and notification.opened, which
         shape each kind's learned pace (DEC-0171). `clock` can be replaced in tests.
         """
@@ -393,6 +397,7 @@ class CommunicationGate:
         self._log: list[dict] = []
         self._pending: list[dict] = []
         self._resumed: dict = {}  # topic -> ISO time the owner ended a break
+        self._relearned: dict = {}  # topic -> ISO time its learned pace was reset (LS-10): earlier sends don't count
         self._muted: dict = {}  # topic -> ISO time a break the person asked for ends
         self.clock = datetime.now  # replaceable in tests
         self._load()
@@ -406,7 +411,7 @@ class CommunicationGate:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the log, what's waiting and the breaks; an unreadable file is logged and starts fresh. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
+        """Reads the log, what's waiting, the breaks and the paces reset; an unreadable file is logged and starts fresh. Sealed on disk (DEC-0126): open_text reads it sealed or plain, and one that won't open is copied aside and counts as damaged."""
         if not self._log_file.exists():
             return
         try:
@@ -414,16 +419,18 @@ class CommunicationGate:
             self._log = list(data.get("log", []))
             self._pending = list(data.get("pending", []))
             self._resumed = dict(data.get("resumed", {}))
+            self._relearned = dict(data.get("relearned", {}))
             self._muted = dict(data.get("muted", {}))
         except (ValueError, OSError, AttributeError):  # ValueError: bad JSON, or a sealed file that won't open
             log.exception("communication_log.json unreadable — starting fresh.")
 
     def _save(self, now: datetime) -> None:
-        """Writes everything atomically, keeping only the last _KEEP_LOG_DAYS of decisions."""
+        """Writes everything atomically (with the paces reset), keeping only the last _KEEP_LOG_DAYS of decisions."""
         cutoff = (now - timedelta(days=_KEEP_LOG_DAYS)).isoformat()
         self._log = [e for e in self._log if e.get("at", "") >= cutoff]
         self.data_dir.mkdir(parents=True, exist_ok=True)
         atomic_write_text(self._log_file, json.dumps({"log": self._log, "pending": self._pending, "resumed": self._resumed,
+                                                 "relearned": self._relearned,
                                                  "muted": self._muted},
                                                 indent=2))
 
@@ -494,14 +501,16 @@ class CommunicationGate:
 
     def _state(self, now: datetime, topics=()) -> GateState:
         """What the decision needs now: what's been sent, whether the person is busy, in flow or focused, whether
-        they've said "stop everything", what's paused, and the learned pace of each kind among `topics`."""
+        they've said "stop everything", what's paused, and the learned pace of each kind among `topics` (from
+        its sends since any reset of that pace)."""
         sent = [e for e in self._log if e.get("action") == ACT]
         return GateState(sent=sent, user_busy=self._user_busy(now), paused=self._all_paused(now),
                          in_flow=self._in_flow(now), focus=self._focus(now), stopped=self._stopped(now),
-                         allowances={t: learned_allowance(self._log, t, now) for t in set(topics) if t})
+                         allowances={t: learned_allowance(self._learning_log(t), t, now) for t in set(topics) if t})
 
     def pace(self, now: Optional[datetime] = None) -> list[dict]:
-        """Her learned pace for each kind of message she's sent lately: [{topic, label, a_day, why}], busiest first."""
+        """Her learned pace for each kind of message she's sent lately (since any reset of it): [{topic, label, a_day,
+        why}], busiest first."""
         now = now or self.clock()
         labels = {}
         for e in self._log:
@@ -509,9 +518,32 @@ class CommunicationGate:
                 labels[e["topic"]] = e.get("title", "") or e["topic"].replace("_", " ")
         rows = []
         for topic, label in labels.items():
-            a_day, why = learned_allowance(self._log, topic, now)
+            a_day, why = learned_allowance(self._learning_log(topic), topic, now)
             rows.append({"topic": topic, "label": label, "a_day": a_day, "why": why})
         return sorted(rows, key=lambda r: (-r["a_day"], r["label"]))
+
+    def _learning_log(self, topic: str) -> list[dict]:
+        """The log a kind's pace is learned from: its sends before a reset of that pace no longer count."""
+        since = self._relearned.get(topic, "")
+        if not since:
+            return self._log
+        return [e for e in self._log if e.get("topic") != topic or e.get("at", "") > since]
+
+    def relearn(self, topic: str, now: Optional[datetime] = None) -> None:
+        """Forget the pace learned for one kind of message (LS-10): it starts again from its usual pace. A break
+        he asked for, and every other kind, stay as they are."""
+        now = now or self.clock()
+        self._relearned[topic] = now.isoformat(timespec="seconds")
+        self._save(now)
+
+    def inferred_breaks(self, now: Optional[datetime] = None) -> list[dict]:
+        """Breaks she took herself because he kept dismissing a kind (not ones he asked for): [{topic, label,
+        until}]."""
+        now = now or self.clock()
+        asked = {t for t, until in self._muted.items() if (_parse(until) or now) > now}
+        labels = {e["topic"]: e.get("title", "") for e in self._log if e.get("topic")}
+        return [{"topic": t, "label": labels.get(t) or t.replace("_", " "), "until": until}
+                for t, until in sorted(paused_topics(self._log, now, self._resumed).items()) if t not in asked]
 
     def _all_paused(self, now: datetime) -> dict:
         """Breaks from dismissing a kind of message, and ones asked for."""

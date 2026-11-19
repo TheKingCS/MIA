@@ -400,6 +400,10 @@
   "action:team": {
    "status": "none",
    "why": "team.propose, start and stop are records of a team he says yes to (Q-54); nothing runs in a team until T3, whose run gets its loop"
+  },
+  "action:learned": {
+   "status": "none",
+   "why": "forgetting a habit she learned is the person's own decision about what she learned; the habits themselves are loops already (the gate's pace, answer style)"
   }
  }
 }

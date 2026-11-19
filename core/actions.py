@@ -479,6 +479,7 @@ import core.world_intel_actions  # noqa: E402,F401  (World Intelligence: watches
 import core.requirement_actions  # noqa: E402,F401  (what each project needs, DEC-0172)
 import core.price_actions  # noqa: E402,F401  (prices seen and trip cost, DEC-0172)
 import core.grant_actions  # noqa: E402,F401  (taking back what MIA may do on her own, DEC-0156)
+import core.learned  # noqa: E402,F401  (forgetting one habit she learned, LS-10)
 import core.taught_skill_actions  # noqa: E402,F401  (taught skills: teach, change, forget, watch, DEC-0123)
 import core.path_actions  # noqa: E402,F401  (learning paths: draft one for an interest, DEC-0112)
 import core.loop_actions  # noqa: E402,F401  (the loop: days, times, reminders, DEC-0047)

@@ -111,10 +111,47 @@ def _action_set_message_limit(context: AppContext, arguments: dict) -> str:
     )
 
 
+def _learned(context, arguments: dict) -> str:
+    """Tool list_learned_habits: what she has learned on her own, each with its evidence (core/learned.py)."""
+    from core.learned import habits
+
+    found = habits(context)
+    if not found:
+        return "Nothing yet: I learn how often you want each kind of message and how you like answers."
+    return "What I've learned: " + "; ".join(f"{h.what} ({h.evidence.rstrip('.')})" for h in found) + "."
+
+
+def _forget_learned(context, arguments: dict) -> str:
+    """Tool reset_learned_habit: forgets one habit she learned, through the action `learned.reset`."""
+    from core.actions import run_as_tool
+
+    return run_as_tool(context, "learned.reset", {"habit": arguments.get("habit") or ""})
+
+
 def register_communication_actions(registry: AssistantActionRegistry) -> None:
     """Registers the gate's tools: resume_message_topic, get_held_back_messages and
-    set_message_limit.
+    set_message_limit; and list_learned_habits and reset_learned_habit (core/learned.py, LS-10).
     """
+    registry.register(AssistantAction(
+        name="list_learned_habits", domain="communication",
+        description=("What MIA has learned about the person on her own (how often to offer each kind of message, "
+                     "breaks from kinds he dismissed, how he likes answers), each with its evidence."),
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_learned,
+        trigger_phrases=("what have you learned about me", "what have you learned", "what habits have you learned",
+                         "what did you learn about me"),
+        subjects=("habits", "learned"),
+    ))
+    registry.register(AssistantAction(
+        name="reset_learned_habit", domain="communication",
+        description=("Forget one thing MIA learned on her own, by what it is (a kind of message's pace, a break, an "
+                     "answer style). Never touches what the person set himself."),
+        parameters={"type": "object", "properties": {
+            "habit": {"type": "string", "description": "What she learned, in words."}}, "required": ["habit"]},
+        handler=_forget_learned, prompt_arg="habit",
+        trigger_phrases=("forget what you learned", "unlearn", "stop doing that habit", "reset what you learned"),
+        subjects=("habit",),
+    ))
     registry.register(AssistantAction(
         name="resume_message_topic", domain="communication",
         description="Bring back a kind of message MIA stopped sending because the user kept dismissing it.",
