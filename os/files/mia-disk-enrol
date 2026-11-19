@@ -6,8 +6,9 @@
 #   2. the TPM is enrolled, bound to PCR 7 (Secure Boot's state) and a PIN asked at each boot: an update keeps PCR 7
 #      the same, so it never asks for the recovery key; Secure Boot turned off changes it, and the TPM refuses;
 #   3. the install's temporary passphrase is removed, so only the PIN (with this TPM) or the recovery key open it.
-# The device is the one holding the root filesystem, or the first argument. MIA_DISK_PIN gives the PIN without asking
-# (the VM test only); otherwise systemd-cryptenroll asks for it twice.
+# The device is the one holding the root filesystem, or the first argument. At a keyboard it asks for the install's
+# passphrase and the new PIN. For the VM test only, with no terminal: PASSWORD gives the install's passphrase
+# (systemd-cryptenroll reads it) and MIA_DISK_PIN the new PIN.
 set -euo pipefail
 dev="${1:-}"
 if [ -z "$dev" ]; then

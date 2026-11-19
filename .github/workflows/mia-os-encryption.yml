@@ -4,8 +4,9 @@
 #   1. a boot asks only for the PIN, and opens with it;
 #   2. after an update, the PIN still opens it: no recovery key asked for;
 #   3. with Secure Boot turned off, the TPM refuses and the recovery key opens it.
-# The test types at the boot prompts through QEMU's monitor (os/poc/vm/type_at_prompt.sh), knowing when from the serial
-# log. The recovery key here belongs to a throwaway VM and is printed in this log; a real one is never printed or kept.
+# The test types at the boot prompts on the VM's serial line (os/poc/vm/type_at_prompt.sh), knowing when from the
+# serial log. The recovery key here belongs to a throwaway VM and is printed in this log; a real one is never printed
+# or kept.
 name: MIA OS encrypted disk in a VM
 
 on:
@@ -89,7 +90,8 @@ jobs:
               -chardev socket,id=chrtpm,path=/tmp/tpm/sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-tis,tpmdev=tpm0 \
               -drive file=/tmp/out/disk.raw,format=raw,if=virtio \
               -netdev user,id=n0,hostfwd=tcp::2222-:22 -device virtio-net-pci,netdev=n0 \
-              -display none -serial file:/tmp/serial.log -monitor unix:/tmp/mon.sock,server,nowait -daemonize
+              -display none -chardev socket,id=ser0,path=/tmp/serial.sock,server=on,wait=off,logfile=/tmp/serial.log \
+              -serial chardev:ser0 -monitor unix:/tmp/mon.sock,server,nowait -daemonize
           }
           up() { for i in $(seq 1 90); do vm true 2>/dev/null && return 0; sleep 10; done; return 1; }
           down() { vm 'systemctl poweroff' || true; for i in $(seq 1 60); do pgrep -f qemu-system-x86_64 > /dev/null || return 0; sleep 3; done; }
@@ -98,38 +100,45 @@ jobs:
           chmod +x os/poc/vm/type_at_prompt.sh
           : > /tmp/serial.log
           boot secure
-          os/poc/vm/type_at_prompt.sh "assphrase" install-temporary
+          SINCE=0 os/poc/vm/type_at_prompt.sh "assphrase for" install-temporary
           up
           vm 'mokutil --sb-state; cat /usr/lib/mia/POC_IMAGE_MARK; lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS; cat /proc/cmdline'
           vm 'mokutil --sb-state' | grep -q "SecureBoot enabled"
       - name: Enrol the TPM with a PIN and make the recovery key; the temporary passphrase removed
         run: |
           . ~/vm.sh
-          vm 'MIA_DISK_PIN=271828 /usr/lib/mia/os/files/mia-disk-enrol' | tee /tmp/enrol.txt
+          vm 'PASSWORD=install-temporary MIA_DISK_PIN=271828 /usr/lib/mia/os/files/mia-disk-enrol' | tee /tmp/enrol.txt
           grep -oE "([cbdefghijklnrtuv]{8}-){7}[cbdefghijklnrtuv]{8}" /tmp/enrol.txt | head -n 1 > /tmp/recovery.txt
           test -s /tmp/recovery.txt
       - name: 1. A boot asks only for the PIN, and opens with it
         run: |
           . ~/vm.sh
           down; boot secure
-          os/poc/vm/type_at_prompt.sh "PIN" 271828
+          SINCE=0 os/poc/vm/type_at_prompt.sh "enter .*PIN" 271828
           up
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; journalctl -b --no-pager | grep -iE "cryptsetup|tpm2" | tail -n 8'
+          # Only the PIN was asked for: no passphrase prompt in this boot (the log began with this QEMU).
+          ! grep -q "assphrase for" /tmp/serial.log
       - name: 2. After an update the PIN still opens it, never the recovery key
         run: |
           . ~/vm.sh
           vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:test-v2'
+          pins=$(grep -c "enter .*PIN" /tmp/serial.log || true)
           vm 'systemctl reboot' || true
-          for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done
-          os/poc/vm/type_at_prompt.sh "PIN" 271828
+          SINCE=$pins os/poc/vm/type_at_prompt.sh "enter .*PIN" 271828
           up
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
-          ! grep -qi "recovery key" /tmp/serial.log
+          # A recovery key is typed at the passphrase prompt, so "never the recovery key" means: no passphrase
+          # prompt since this QEMU started, across the update's restart.
+          ! grep -q "assphrase for" /tmp/serial.log
       - name: 3. With Secure Boot off the TPM refuses, and the recovery key opens it
         run: |
           . ~/vm.sh
           down; boot insecure
-          os/poc/vm/type_at_prompt.sh "assphrase\|recovery" "$(cat /tmp/recovery.txt)" 600
+          # systemd may ask for the PIN before it finds the TPM won't release the key (it can't know until it tries);
+          # then it must fall back to the passphrase prompt, where the recovery key goes.
+          SINCE=0 os/poc/vm/type_at_prompt.sh "enter .*PIN" 271828 180 || echo "No PIN prompt with Secure Boot off."
+          SINCE=0 os/poc/vm/type_at_prompt.sh "assphrase for" "$(cat /tmp/recovery.txt)" 600
           up
           vm 'mokutil --sb-state; journalctl -b --no-pager | grep -iE "tpm2|cryptsetup" | tail -n 10'
           vm 'mokutil --sb-state' | grep -q "SecureBoot disabled"

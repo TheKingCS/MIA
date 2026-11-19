@@ -60,11 +60,16 @@ COPY os/files/mia-runtime.service /usr/lib/systemd/user/mia-runtime.service
 # Updates apply at shutdown only with /boot mounted: it stays mounted once it is, and the finalizing waits for it.
 COPY os/files/boot-stays-mounted.conf /usr/lib/systemd/system/boot.automount.d/mia.conf
 COPY os/files/finalize-needs-boot.conf /usr/lib/systemd/system/ostree-finalize-staged.service.d/mia.conf
-# The encrypted disk opens with the TPM and a PIN, or the recovery key (FW-05): the boot image is built again with
-# the TPM's support in it, the same way for every build (--reproducible).
+# The encrypted disk opens with the TPM and a PIN, or the recovery key (FW-05): the boot image must hold cryptsetup
+# and the TPM's library. Fedora's own usually does; it's built again (the same way every time) only when it doesn't,
+# and the build says which.
 COPY os/files/dracut-mia-tpm.conf /usr/lib/dracut/dracut.conf.d/50-mia-tpm.conf
-RUN kver="$(ls /usr/lib/modules)" && dracut --no-hostonly --reproducible --zstd --add ostree --kver "$kver" -f \
-        "/usr/lib/modules/$kver/initramfs.img"
+RUN kver="$(ls /usr/lib/modules)" && img="/usr/lib/modules/$kver/initramfs.img" \
+ && has() { lsinitrd "$img" | grep -q "$1"; } \
+ && if has systemd-cryptsetup && has libtss2-esys; then echo "initramfs: cryptsetup and the TPM are in Fedora's own"; \
+    else echo "initramfs: built again with cryptsetup and the TPM" \
+      && dracut --no-hostonly --reproducible --zstd --add ostree --kver "$kver" -f "$img" \
+      && has systemd-cryptsetup && has libtss2-esys; fi
 # Health after each boot (greenboot, FW-04): required checks roll a bad update back; wanted ones are only logged.
 COPY os/files/greenboot/required.d/ /etc/greenboot/check/required.d/
 COPY os/files/greenboot/wanted.d/ /etc/greenboot/check/wanted.d/
