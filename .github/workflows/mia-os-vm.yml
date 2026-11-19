@@ -74,7 +74,8 @@ jobs:
           # falls back: a broken update rebooted into itself for 25 minutes. bootc installs into the mounted layout.
           LOOP=$(sudo losetup -Pf --show /tmp/out/disk.raw)
           # A 1 MB BIOS boot partition too, as Fedora makes: bootupd installs GRUB for BIOS as well as EFI.
-          sudo sgdisk -n1:0:+1M -t1:ef02 -c1:BIOS -n2:0:+600M -t2:ef00 -c2:EFI -n3:0:+1G -t3:8300 -c3:boot \n            -n4:0:0 -t4:8304 -c4:root "$LOOP"
+          sudo sgdisk -n1:0:+1M -t1:ef02 -c1:BIOS -n2:0:+600M -t2:ef00 -c2:EFI -n3:0:+1G -t3:8300 -c3:boot \
+            -n4:0:0 -t4:8304 -c4:root "$LOOP"
           sudo partprobe "$LOOP"; sleep 2
           sudo mkfs.vfat -F 32 -n EFI "${LOOP}p2" && sudo mkfs.ext4 -q -L boot "${LOOP}p3" && sudo mkfs.btrfs -q -L root "${LOOP}p4"
           sudo mkdir -p /mnt/target && sudo mount "${LOOP}p4" /mnt/target
