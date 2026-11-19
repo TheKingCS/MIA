@@ -186,6 +186,12 @@ approves itself.
 > stages at 03:00; `mia-update-apply.timer` looks every 15 minutes until 06:00 for every session idle, snapshots
 > `/var/home` when it's a Btrfs subvolume (else says so: FW-05's layout makes it one) and restarts. bootc's own
 > fetch-and-apply timer is turned off.
+>
+> **Found in the VM (2026-11-19):** the automatic path works (staged at night, applied at an idle restart). A broken
+> update was caught by greenboot, but with /boot on the Btrfs root GRUB can't write its environment ("sparse file not
+> allowed"), so the boot count never fell back and it rebooted into itself for 25 minutes. **An install of MIA OS
+> must have /boot as its own ext4 partition** (FW-05's layout, and Anaconda's default); the VM's disk now has that
+> layout, installed with `bootc install to-filesystem`.
 
 | Field | Specification |
 |---|---|

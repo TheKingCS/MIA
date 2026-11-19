@@ -48,7 +48,7 @@ jobs:
           df -h /
       - name: KVM and QEMU
         run: |
-          sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf socat
+          sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf socat gdisk dosfstools btrfs-progs parted
           ls -l /dev/kvm && sudo chmod 666 /dev/kvm
       - name: Build the image (tracked files only), then the two test versions
         run: |
@@ -69,13 +69,23 @@ jobs:
           ssh-keygen -t ed25519 -N "" -f ~/.ssh/poc
           mkdir -p /tmp/out && cp ~/.ssh/poc.pub /tmp/out/poc.pub
           truncate -s 40G /tmp/out/disk.raw
-          # bootc's own documented way to make a disk from an image; bootc-image-builder couldn't mount its storage
-          # on GitHub's Ubuntu machines (two runs, 2026-11-16).
+          # The layout a real install has (FW-04, 2026-11-19): EFI, a separate ext4 /boot, a Btrfs root. With /boot on
+          # Btrfs, GRUB can't write its environment ("sparse file not allowed"), so greenboot's boot counting never
+          # falls back: a broken update rebooted into itself for 25 minutes. bootc installs into the mounted layout.
+          LOOP=$(sudo losetup -Pf --show /tmp/out/disk.raw)
+          sudo sgdisk -n1:0:+600M -t1:ef00 -c1:EFI -n2:0:+1G -t2:8300 -c2:boot -n3:0:0 -t3:8304 -c3:root "$LOOP"
+          sudo partprobe "$LOOP"; sleep 2
+          sudo mkfs.vfat -F 32 -n EFI "${LOOP}p1" && sudo mkfs.ext4 -q -L boot "${LOOP}p2" && sudo mkfs.btrfs -q -L root "${LOOP}p3"
+          sudo mkdir -p /mnt/target && sudo mount "${LOOP}p3" /mnt/target
+          sudo mkdir -p /mnt/target/boot && sudo mount "${LOOP}p2" /mnt/target/boot
+          sudo mkdir -p /mnt/target/boot/efi && sudo mount "${LOOP}p1" /mnt/target/boot/efi
+          BOOT_UUID=$(sudo blkid -s UUID -o value "${LOOP}p2")
           sudo podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
-            -v /dev:/dev -v /var/lib/containers:/var/lib/containers -v /tmp/out:/output \
+            -v /dev:/dev -v /var/lib/containers:/var/lib/containers -v /mnt/target:/target -v /tmp/out:/output \
             localhost/mia-os:test-v1 \
-            bootc install to-disk --generic-image --via-loopback --filesystem btrfs \
-            --root-ssh-authorized-keys /output/poc.pub /output/disk.raw
+            bootc install to-filesystem --generic-image --boot-mount-spec "UUID=$BOOT_UUID" \
+            --root-ssh-authorized-keys /output/poc.pub /target
+          sudo umount -R /mnt/target && sudo losetup -d "$LOOP"
           sudo chown "$(id -u)" /tmp/out/disk.raw && ls -lh /tmp/out/
       - name: Boot it
         run: |
@@ -91,6 +101,7 @@ jobs:
           . ~/vm.sh
           for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; bootc status; systemctl is-system-running || true; rpm -q ollama ollama-rocm cage; findmnt -no FSTYPE /sysroot'
+          vm 'findmnt -o TARGET,SOURCE,FSTYPE /boot /boot/efi /sysroot; grub2-editenv list'  # /boot its own ext4, writable by GRUB
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v1
       - name: 2. MIA's runtime runs as a person's service, from the image
         run: |
