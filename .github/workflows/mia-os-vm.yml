@@ -98,6 +98,17 @@ jobs:
           as_mia 'grep "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
           as_mia 'echo kept-by-him > ~/his-file.txt'
           vm 'ps -o user= -C python | sort -u; id -u mia'
+      - name: FW-04 health after boot, readiness and the watchdog
+        run: |
+          . ~/vm.sh
+          vm 'rpm -q greenboot; systemctl list-unit-files "greenboot*" --no-legend; systemctl is-enabled mia-update-stage.timer mia-update-apply.timer bootc-fetch-apply-updates.timer || true'
+          vm 'systemctl status greenboot-healthcheck.service --no-pager | head -n 12; journalctl -b --no-pager -u greenboot-healthcheck.service | tail -n 40' || true
+          vm 'grub2-editenv list 2>/dev/null || true; ls /etc/greenboot/check/required.d /etc/greenboot/check/wanted.d'
+          # Her runtime as a notify service: its type, watchdog and the status she reports.
+          as_mia 'systemctl --user show mia-runtime -p Type -p WatchdogUSec -p StatusText -p ActiveState'
+          as_mia 'systemctl --user show mia-runtime -p StatusText' | grep -E "MIA is up \((core|models|all)\)"
+          # The self-test as greenboot runs it: a dynamic user on an empty folder.
+          vm '/etc/greenboot/check/wanted.d/52-mia-self-test.sh'
       - name: MIA's session under KWin (FW-03), her front end and the recovery page
         run: |
           . ~/vm.sh
