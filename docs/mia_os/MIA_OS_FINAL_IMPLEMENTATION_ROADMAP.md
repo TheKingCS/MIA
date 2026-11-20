@@ -158,8 +158,10 @@ approves itself.
 > Measured on GitHub's VM, not his PC (MV-02 measures that); Orca is FW-11's.
 >
 > **Fable's review, 2026-11-20, what the VM run does and doesn't show:** the test logs in automatically into a
-> *named* session, so the login screen's own default (`mia-login.conf`'s `DefaultSession`) is **not yet shown** to
-> be a setting Plasma Login Manager reads; check it at the first real login (MV-01). Her shell's drawing on the real
+> *named* session, so the login screen's own default (`mia-login.conf`'s `DefaultSession`) is **not shown** to be
+> a setting Plasma Login Manager reads, and probably isn't one: the run of 74509e62 found no such word in its
+> program. Check at the first real login (MV-01) which session the login screen offers first, and set it there if
+> it isn't MIA's. Her shell's drawing on the real
 > GPU is untested (the VM draws in software). Fixed in the review: the session no longer waits on her runtime
 > before KWin starts (`--no-block`); the shell stops relaunching after three quick deaths and opens a terminal
 > saying so; it notices when her runtime was restarted and looks for her again; its own links act only from its
@@ -185,8 +187,10 @@ approves itself.
 > *Adds from FW-01 (deviation 3): `greenboot` (greenboot-rs) into the image's `dnf install`, configured with this
 > package's checks.*
 >
-> **State (2026-11-20): changed by Fable's review; its VM run is the acceptance again.** Accepted before by the VM
-> run of dce4f674 (CI run 44529591174) and, for the snapshot, run 44579393224.
+> **State (2026-11-20): done; the review's changes accepted by the VM run of 74509e62 (CI run 44699128590).** An
+> update staged by the night's service applied at a restart, with its snapshot taken at that shutdown; both broken
+> versions booted, failed their check and were rolled back (the test now requires that each did boot); bootc's own
+> timer is masked. Accepted before by the VM run of dce4f674 (CI run 44529591174).
 >
 > **What the review changed (2026-11-20).** MIA OS **never restarts by itself.** The night timer still stages an
 > update; it applies when *he* next restarts or shuts down. Why: the apply timer's schedule line was invalid and
@@ -240,7 +244,10 @@ approves itself.
 
 ### FW-05 Disk encryption, Secure Boot and recovery keys
 
-> **State (2026-11-20): changed by Fable's review; its VM run is the acceptance again.** Enrolment is now two steps:
+> **State (2026-11-20): done; the review's changes accepted by CI run 44699128448 (74509e62):** the first step kept
+> the install's passphrase; a wrong recovery key was refused and removed nothing; the right one was accepted and
+> the passphrase removed; the PIN alone opened the disk before and after an update; with Secure Boot off the
+> recovery key opened it and `again` left one TPM enrolment and the recovery key. Enrolment is now two steps:
 > `mia-disk-enrol` makes the recovery key and enrols the TPM and its PIN and **removes nothing**; after a restart
 > opened by the PIN, `mia-disk-enrol finish` asks for the recovery key as written down, checks it opens the disk,
 > and only then removes the install's passphrase (before, it was removed in the first run, before the PIN had

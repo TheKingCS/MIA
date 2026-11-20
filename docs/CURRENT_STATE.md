@@ -36,7 +36,8 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   restarts; Q-114 asks if he wants otherwise); setting up the encrypted disk is two steps, and nothing is removed
   until his PIN has opened a start and the recovery key has been typed back; seven tools she could have used on
   her own now need his yes or a grant; an old phone can sync with the updated PC again.
-- **Next:** the two VM runs of the review's fixes; then FW-06 (the system helper).
+  Both VM runs of those fixes passed, and two builds of the image still match.
+- **Next:** Zac's answer to Q-114; FW-06 (the system helper); his install guide for MV-01.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

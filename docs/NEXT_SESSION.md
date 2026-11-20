@@ -14,7 +14,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each
 one's status is in `audit/FABLE_REVIEW_2026-11-20.md` (not in the repository). **MIA OS no longer restarts by
 itself** (Q-114 asks Zac), and disk enrolment is two steps (`mia-disk-enrol`, restart with the PIN,
-`mia-disk-enrol finish`). **Read the two VM runs of the review's last commit first.** In a workflow step a bare
+`mia-disk-enrol finish`). Both VM runs of the review's last commit passed (74509e62: CI runs 44699128590 and
+44699128448), and two builds of the image still match. **Next: FW-06** (the system helper); before building FW-06 to
+FW-12, read their specs against each other (the worst finding was two packages that each passed alone). GitHub's
+image builds took 40 minutes to 2.5 hours on the same commit: a watcher needs restarting. In a workflow step a bare
 `! command` never fails the step (bash -e ignores it): use `if command; then exit 1; fi` or the `absent` helper.
 
 **New 2026-11-19, FW-04 and FW-05 done.** FW-05 (CI run 44602462298): the PIN alone opens the encrypted disk, before
