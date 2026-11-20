@@ -249,11 +249,16 @@ _STOP = {"the", "a", "an", "my", "to", "in", "on", "of", "and", "what", "you", "
 
 def find(profile_id: Optional[str], start: datetime, end: datetime, about: str = "") -> list[Entry]:
     """The changes not yet undone between start and end whose description, tool or files mention every meaningful
-    word of `about` (all of them when it's empty), newest first."""
+    word of `about` (all of them when it's empty), newest first. A sync conflict's kept copy is found only when
+    `about` names the sync or the conflict."""
     want = {w for w in re.findall(r"[a-z0-9]+", (about or "").lower()) if w not in _STOP and len(w) > 2}
     out = []
     for e in entries(profile_id):
         if e.undone or not (start.isoformat(timespec="seconds") <= e.at <= end.isoformat(timespec="seconds")):
+            continue
+        # A sync conflict's kept copy is another device's whole file, not something MIA did: taken only when he
+        # names it ("undo the sync conflict"), never swept in with "undo what you did this afternoon".
+        if e.label == "sync_conflict" and not ({"sync", "conflict"} & want):
             continue
         said = " ".join([e.label, e.summary] + [f["path"] for f in e.files]).lower().replace("_", " ")
         if all(w in said or w.rstrip("s") in said for w in want):

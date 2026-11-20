@@ -66,13 +66,17 @@ def habits(context) -> list[Habit]:
 
 
 def _find(context, params) -> Habit:
-    """The habit the params name (`habit_id`, or `habit` in words matched against what she does); ActionError when
-    none."""
+    """The habit the params name (`habit_id`, or `habit` in words that fit exactly one of what she does);
+    ActionError when none, or when the words fit several."""
     wanted = str(params.get("habit_id") or "").strip()
     words = str(params.get("habit") or "").strip().lower()
-    for habit in habits(context):
-        if habit.habit_id == wanted or (words and words in habit.what.lower()):
+    found = habits(context)
+    for habit in found:
+        if habit.habit_id == wanted:
             return habit
+    named = [h for h in found if words and words in h.what.lower()]
+    if len(named) == 1:  # words that fit several ("offer", "answer") name none of them
+        return named[0]
     raise ActionError("Which one? Say it as \"What I've learned\" on the Apps page lists it.")
 
 

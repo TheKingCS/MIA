@@ -3419,13 +3419,20 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.post("/api/sync/file")
     def sync_put(body: SyncFileRequest, profile_id: str = Depends(require_profile_id)) -> dict:
-        """Take a file from the phone, only if it's still the version the phone saw."""
+        """Take a file from the phone, only if it's still the version the phone saw. A file the retention registry
+        keeps on one device is answered as done and ignored (an older phone still offers them)."""
         import base64
         import binascii
 
         from core.at_rest import open_bytes
+        from core import retention
         from core.sync import digest, path_for, write_file
 
+        # A phone on an older MIA still offers files that stay on one device now (core/retention.py). Answering
+        # with an error ended its whole sync at that file; it's told "done" and the file is left alone.
+        kept = retention.of(body.name)
+        if kept is not None and not kept.syncs:
+            return {"ok": True, "ignored": True}
         try:
             path = path_for(context, _sync_person(profile_id), body.scope, body.name)
             data = base64.b64decode(body.data.encode("ascii"), validate=True)

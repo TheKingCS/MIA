@@ -72,7 +72,7 @@ REGISTRY: dict[str, Retention] = {
         vocab.json waypoints.json why_checkpoints.json work_dungeon.json workout_exercises.json
         workout_sessions.json workout_templates.json world_map.json game.json good_news_following.json
         data_logger_readings.json mission_proposals.json capture_proposals.json decided.json
-        requirements.json""",
+        requirements.json homestead_snapshots.json""",
             "record", _RECORD, True),
     **_many("""life_events.jsonl inbox_reading.jsonl corrections.jsonl memory_corrections.jsonl sureness.jsonl
         skill_xp_log.json component_usage_log.json inventory_usage_log.json material_usage_log.json
@@ -85,7 +85,7 @@ REGISTRY: dict[str, Retention] = {
     **_many("""security_cameras.json security_logins.json activity_log.json communication_log.json
         model_bench_cases.json push_subscriptions.json memory_vault.json activity.json recall_index.json runs.json
         turn_traces.jsonl phone_link.json module_usage.json page_usage.json vapid_keys.json update_manifest.json
-        auth.json data_key.json greenhouse_link.json dashboard_state.json homestead_snapshots.json status.json
+        auth.json data_key.json greenhouse_link.json dashboard_state.json status.json
         files.json manifest.json index.json card.json conversation_cases.json engineering_bench.json
         user_sync_cases.json changes.jsonl""",
             "device", _DEVICE, False),

@@ -427,14 +427,16 @@ def plan_followup(context: AppContext, conversation: Conversation, user_message:
 
 
 def apply_followup(context: AppContext, conversation: Conversation, followup: Followup, raw: Optional[str]) -> None:
-    """Applies the background job's result: memories go into what MIA remembers (with their category and source), or
+    """Applies the background job's result: memories go into what MIA remembers (with their category and source,
+    marked inferred: the model drew them out, he didn't say them), or
     the journal session's title, mood, themes and summary update its encrypted entry.
     """
     if followup.kind == "memories":
         if context.user_memories is None:
             return
         for category, fact in parse_extracted_memories(raw):
-            context.user_memories.add_memory(fact, category=category, source_conversation_id=followup.conversation_id)
+            context.user_memories.add_memory(fact, category=category, source_conversation_id=followup.conversation_id,
+                                             how="inferred")  # the model drew it out; he didn't say "remember"
         return
     organization = parse_journal_organization(raw)
     if organization is not None and conversation.journal:

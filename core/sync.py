@@ -187,7 +187,8 @@ def _merge_list(base, local: list, remote: list, prefer_local: bool, path: tuple
     other left it as it was stays removed, one added on either side stays, and one on both is merged field by field
     (merge_json, its `path` growing by `id=...`). Without ids: when both only added to the end (a log), both
     additions are kept in time order; a list
-    of plain values or of timestamped messages (a conversation) is the union; anything else takes the preferred side.
+    of plain values or of timestamped messages (a conversation) is the union; anything else takes the preferred side,
+    and inside `conflicts()` that is noted (one side's list loses whole).
     """
     key = _id_key(local) or _id_key(remote) or (_id_key(base) if base is not _MISSING else None)
     every = [i for i in local + remote + (base if base is not _MISSING else [])]
@@ -215,6 +216,8 @@ def _merge_list(base, local: list, remote: list, prefer_local: bool, path: tuple
         return local + [i for i in remote if i not in local]
     if base is _MISSING and all(isinstance(i, dict) and i.get("timestamp") for i in local + remote):
         return _in_time_order(local + [i for i in remote if i not in local])  # a conversation's messages
+    if base is not _MISSING and getattr(_found, "paths", None) is not None:
+        _found.paths.append(path)  # a list without ids both sides changed: one side's list loses whole
     return local if prefer_local else remote
 
 
@@ -323,25 +326,35 @@ def merge_game(base: dict, local: dict, remote: dict) -> dict:
 # ------------------------------------------------------------------ this device's folders
 
 
+SYNC_CONFLICT = "sync_conflict"  # the change-history label of a kept losing copy
+
+
 def conflict_note(name: str, lost: list, local_won: bool) -> str:
-    """Pure logic. The one note about a sync conflict (DEC-0285): which file and fields both devices changed, and
-    which side was kept; never a value, so nothing sensitive is quoted."""
-    fields = sorted({" / ".join(p for p in path if p) or "the whole file" for path in lost})
-    shown = ", ".join(fields[:3]) + (f" and {len(fields) - 3} more" if len(fields) > 3 else "")
+    """Pure logic. The one note about a sync conflict (DEC-0285): which file, how many things both devices changed,
+    and which side was kept. Never a value, and never a field's path either: a path can hold his own words (a
+    person's name used as a key)."""
+    count = len({tuple(path) for path in lost})
+    things = "1 thing" if count == 1 else f"{count} things"
     side = "this device's" if local_won else "the other device's"
-    return (f"{Path(name).stem.replace('_', ' ')}: {shown} changed on both devices; {side} was kept, and the "
-            f"other is in your change history for 30 days.")
+    return (f"{Path(name).stem.replace('_', ' ')}: {things} changed on both devices; {side} was kept. The other "
+            f"device's copy of that file is kept for 30 days: say \"undo the sync conflict\" to take it instead.")
 
 
 def keep_loser(profile_id: str, path: Path, losing: Optional[bytes], lost: list, local_won: bool) -> str:
-    """Keeps the losing side's copy of a file in the person's change history after a conflicting merge, so \"undo\"
-    within 30 days brings it back (DEC-0285), and returns the one note to say. Never raises."""
+    """Keeps the losing side's copy of a file in the person's change history after a conflicting merge, for 30
+    days (DEC-0285), and returns the one note to say. The copy is kept as the file itself is kept on disk (sealed
+    when its store is: `at_rest.seal_text`), so taking it back never leaves a sealed store in plain text. It is
+    that device's whole copy of the file; only an undo that names the sync conflict takes it
+    (`change_history.find` leaves it out of any other). Never raises."""
     try:
         from core import change_history
+        from core.at_rest import seal_text
         from core.undo_log import Change
 
         note = conflict_note(Path(path).name, lost, local_won)
-        change = Change("sync_conflict", profile_id, files={Path(path): losing}, by="sync", summary=note)
+        if losing is not None:
+            losing = seal_text(Path(path), losing.decode("utf-8")).encode("utf-8")
+        change = Change(SYNC_CONFLICT, profile_id, files={Path(path): losing}, by="sync", summary=note)
         change_history.keep(change)
         return note
     except Exception:  # noqa: BLE001 - keeping the loser never breaks the sync
@@ -701,12 +714,13 @@ def sync_now(context, call=None, lock=None) -> dict:
     is read again under `lock` once the computer has answered, so an edit
     made here meanwhile is merged with theirs, never written over. A field
     both changed keeps the losing copy in the change history and adds one
-    note (`keep_loser`, DEC-0285)."""
+    note (`keep_loser`, DEC-0285), which is also said to him (`_tell_conflicts`)."""
     from core.home_link import home_call
 
     call = call or home_call
     lock = lock or threading.Lock()
     pid = owner(context)
+    told: list = []  # each conflict's note, said to him once the files are done
     if pid is None:
         raise ValueError("No account on this device to sync.")
     state = state_for(context)
@@ -772,6 +786,7 @@ def sync_now(context, call=None, lock=None) -> dict:
                         note = keep_loser(pid, path, local if not prefer_local else got, lost, prefer_local)
                         if note:
                             notes.append(note)
+                            told.append(note)
             if merged is None:
                 state.set_base(scope, name, got)
                 done["pulled"] += 1
@@ -795,11 +810,32 @@ def sync_now(context, call=None, lock=None) -> dict:
         state.set_game(merged)
     if "files" in remote:  # an older MIA on the computer doesn't sync photos yet
         _sync_files(context, call, pid, state, remote.get("files") or {}, done, notes, lock)
+    _tell_conflicts(context, told, lock)
     done["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     done["note"] = " ".join(notes)
     state.set_status(last=done["at"], **{k: done[k] for k in ("pushed", "pulled", "merged", "files")},
                      problem="", note=done["note"])
     return done
+
+
+def _tell_conflicts(context, told: list, lock) -> None:
+    """Says each conflict's note where he'll see it (through the communication gate, else a notification): the
+    sync status alone is written over by the next sync two minutes later. Never raises."""
+    if not told:
+        return
+    try:
+        with lock:
+            gate = getattr(context, "communication", None)
+            for note in told:
+                if gate is not None:
+                    from core.communication_gate import TIMELY, Candidate
+
+                    gate.offer(Candidate("sync_conflict", "Changed on both devices", note, urgency=TIMELY))
+                elif getattr(context, "notifications", None) is not None:
+                    context.notifications.notify(title="Changed on both devices", message=note, level="info",
+                                                 source="sync")
+    except Exception:  # noqa: BLE001 - telling him never breaks the sync
+        log.exception("Couldn't say a sync conflict's note.")
 
 
 def _sync_files(context, call, pid: str, state: SyncState, theirs_all: dict, done: dict, notes: list,

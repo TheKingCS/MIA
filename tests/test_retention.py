@@ -50,8 +50,7 @@ def test_the_losing_copy_goes_to_the_change_history_and_the_note_quotes_no_value
     data.write_text(json.dumps({"bills": [{"id": "b1", "amount": 60}]}), encoding="utf-8")
     losing = json.dumps({"bills": [{"id": "b1", "amount": 70}]}).encode("utf-8")
     note = sync.keep_loser("p1", data, losing, [("bills", "id=b1", "amount")], local_won=True)
-    assert note == ("bills: bills / id=b1 / amount changed on both devices; this device's was kept, and the other is in "
-                    "your change history for 30 days.")
+    assert note.startswith("bills: 1 thing changed on both devices; this device's was kept.")
     assert "70" not in note and "60" not in note
     kept = change_history.entries("p1")
-    assert len(kept) == 1 and kept[0].label == "sync_conflict"
+    assert len(kept) == 1 and kept[0].label == sync.SYNC_CONFLICT

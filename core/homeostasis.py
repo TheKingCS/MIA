@@ -28,7 +28,9 @@ battery low, the look sent to pages says so, and an ambient backdrop stays still
 
 **A daily budget** (LS-10): the time her deferrable work ran today is counted (`spend`, from the scheduler and the
 daily checks); past `homeostasis.daily_budget_minutes` (120 by default) that work waits for tomorrow. The health
-report shows the budget and what's used. The count is kept in memory: a restart starts the day's count again.
+report shows the budget and what's used, and it's said once a day when it's reached. The count is kept in memory:
+a restart starts the day's count again. It counts time spent in this process: work a check hands to another
+program (Night School, the Chronicle's issue) counts only its launch, so the budget bounds her in-process work.
 """
 
 from __future__ import annotations
@@ -120,7 +122,8 @@ class Homeostasis:
 
     def __init__(self, context, read: Optional[Callable[[], dict]] = None, clock: Callable[[], float] = time.monotonic):
         """`read` returns {cpu, memory_free, battery, online, disk_free} (the real machine by default; tests pass
-        their own). Today's time spent on her own work starts at nothing."""
+        their own). Today's time spent on her own work starts at nothing, and nothing has been said about
+        its budget."""
         self.context = context
         self._read = read or self._read_machine
         self._clock = clock
@@ -130,6 +133,7 @@ class Homeostasis:
         self.waiting: dict = {}  # job or check -> why, this episode
         self.deferrals = 0
         self.spent_today, self._spent_day = 0.0, ""  # her own deferrable work today (LS-10)
+        self._budget_said = ""  # the day the budget's notice was last said
         self._noticed = False  # said so for this episode already
 
     def _read_machine(self) -> dict:
@@ -214,10 +218,21 @@ class Homeostasis:
         return "today's time for my own work is used up" if self.spent_today >= budget else ""
 
     def defer_reason(self, name: str) -> str:
-        """Why this job or daily check waits now, or "" to run it: the computer's state first, then today's budget
-        for her own work (LS-10). A wait is counted, remembered for the notice and the health report, and the first
-        of an episode is said once."""
-        why = reason_for(name, self.refresh()) or self._over_budget(name)
+        """Why this job or daily check waits now, or "" to run it: the computer's state first (a wait is counted,
+        remembered for the notice and the health report, and the first of an episode is said once), then today's
+        budget for her own work (LS-10), counted and said once a day in its own words."""
+        why = reason_for(name, self.refresh())
+        if not why:
+            spent = self._over_budget(name)
+            if spent:  # not the machine's state: counted and said once a day, in its own words
+                self.deferrals += 1
+                if self._budget_said != self._spent_day:
+                    self._budget_said = self._spent_day
+                    self._offer("budget_spent", "My own work waits for tomorrow",
+                                f"I've used today's {int(self.budget_seconds() // 60)} minutes for my own background "
+                                f"work, so {NAMES.get(name, name.replace('_', ' '))} and the like wait until "
+                                "tomorrow. Nothing is lost.")
+                return spent
         if why:
             self.deferrals += 1
             self.waiting[name] = why

@@ -170,11 +170,12 @@ class GateState:
     allowances: dict = field(default_factory=dict)  # topic -> (a day, why), from learned_allowance()
 
 
-def _local_now() -> datetime:
-    """The time now in his zone, as the gate's naive local time (core/clock.py, so a replayed day holds it too)."""
+def _local_now(context=None) -> datetime:
+    """The time now in the person's zone, as the gate's naive local time (core/clock.py, so a replayed day holds
+    it too, and the daily checks, which pass their context, read the same time)."""
     from core import clock
 
-    return clock.now().replace(tzinfo=None)
+    return clock.now(context).replace(tzinfo=None)
 
 
 def _parse(iso: str) -> Optional[datetime]:
@@ -407,7 +408,7 @@ class CommunicationGate:
         self._resumed: dict = {}  # topic -> ISO time the owner ended a break
         self._relearned: dict = {}  # topic -> ISO time its learned pace was reset (LS-10): earlier sends don't count
         self._muted: dict = {}  # topic -> ISO time a break the person asked for ends
-        self.clock = _local_now  # his time from the one clock (core/clock.py); replaceable in tests
+        self.clock = lambda: _local_now(context)  # his time from the one clock; replaceable in tests
         self._load()
         events = getattr(context, "events", None)
         if events is not None:

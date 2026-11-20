@@ -222,7 +222,13 @@ def test_the_pcs_endpoints(tmp_path, monkeypatch):
     ok = client.post("/api/sync/file", json={"scope": "home", "name": "missions.json",
                                               "expect": digest(_missions("a")), "data": new})
     assert ok.status_code == 200 and (home / "missions.json").read_bytes() == _missions("a", "b")
-    assert client.post("/api/sync/file", json={"scope": "home", "name": "security_logins.json", "expect": "",
+    # A file that stays on one device is never written here; an older phone that still offers it is told "done"
+    # (not an error, which ended its whole sync: Fable's review, 2026-11-20). A name that isn't a data file is refused.
+    kept_out = client.post("/api/sync/file", json={"scope": "home", "name": "security_logins.json", "expect": "",
+                                                    "data": new})
+    assert kept_out.status_code == 200 and kept_out.json().get("ignored") is True
+    assert not (home / "security_logins.json").exists()
+    assert client.post("/api/sync/file", json={"scope": "home", "name": "../x.json", "expect": "",
                                                 "data": new}).status_code == 400
     assert client.get("/api/sync/status").json()["linked"] is False
 
