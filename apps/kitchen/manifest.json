@@ -108,7 +108,7 @@
       "list_pantry": "observe",
       "list_recipes": "observe",
       "log_meal": "act_within_grant",
-      "plan_meal": "suggest",
+      "plan_meal": "act_within_grant",
       "rate_recipe": "act_within_grant",
       "remove_grocery_item": "act_with_approval",
       "remove_pantry_item": "act_with_approval",

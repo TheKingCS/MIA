@@ -196,6 +196,7 @@ def passed_count(summary: str) -> Optional[int]:
     return int(found.group(1)) if found else None
 
 
+_PASSED = re.compile(r"^PASSED (\S+)", re.MULTILINE)  # pytest -rp names each test that passed
 _FAILED = re.compile(r"^(?:FAILED|ERROR) (\S+)", re.MULTILINE)  # an error (a broken fixture, a failed import) fails too
 
 
@@ -486,13 +487,14 @@ def _tests_once(cwd: Path, files: list[str]) -> dict:
 def _before_the_change(p: Proposal, run: Callable[[Path, list], dict]) -> dict:
     """The change's own tests run against the code it started from (DEC-0224): a copy of the start with the lab's
     added and changed test files laid over it, removed afterwards. What fails there and passes in the lab shows
-    the problem was real and is fixed. {"failed": []} when the change touches no test file."""
-    tests = [f for f in test_files(p.files) if f.endswith(".py")]
+    the problem was real and is fixed. Only files pytest collects by itself (test_*.py) count, and the copy
+    gets its own folder each time. {"failed": []} when the change touches no such file."""
+    # Only files pytest collects by itself (test_*.py): one it wouldn't could fail before and after and still count.
+    tests = [f for f in test_files(p.files) if Path(f).name.startswith("test_") and f.endswith(".py")]
     if not tests:
         return {"failed": []}
-    where = LAB_ROOT / f"_proof-{p.proposal_id}"
-    if where.exists():
-        _git("worktree", "remove", "--force", str(where), check=False)
+    # Its own folder each time: one Windows couldn't delete never blocks the next check.
+    where = LAB_ROOT / f"_proof-{p.proposal_id}-{__import__('uuid').uuid4().hex[:6]}"
     _git("worktree", "add", "--detach", str(where), p.base)
     try:
         for name in test_files(p.files):
@@ -502,14 +504,32 @@ def _before_the_change(p: Proposal, run: Callable[[Path, list], dict]) -> dict:
         _git("worktree", "remove", "--force", str(where), check=False)
 
 
+def _passing(cwd: Path, tests: list[str]) -> set[str]:
+    """Which of these test ids pytest reports as PASSED when their files are run in a folder (`-rp`). A test that
+    was deleted, renamed, skipped or never collected is in no PASSED line, so it proves nothing."""
+    files = sorted({t.split("::")[0] for t in tests})
+    if not files:
+        return set()
+    out = subprocess.run([_python(), "-m", "pytest", "-q", "-rp", "-p", "no:cacheprovider", *files], cwd=str(cwd),
+                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=SUITE_TIMEOUT,
+                         env={**__import__("os").environ, "QT_QPA_PLATFORM": "offscreen"},
+                         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return set(_PASSED.findall((out.stdout or "") + "\n" + (out.stderr or ""))) & set(tests)
+
+
 def check(proposal_id: str, suite: Optional[Callable] = None,
-          proof: Optional[Callable[[Path, list], dict]] = None) -> Proposal:
+          proof: Optional[Callable[[Path, list], dict]] = None, require_proof: bool = True,
+          passing: Optional[Callable[[Path, list], set]] = None) -> Proposal:
     """The rules (a protected file, counted by both names when renamed, or a deleted test file, refuses it), then
     the suite in the lab against the suite at the start: no new failure or error, and no fewer tests passing.
     Then the proof (DEC-0224: a fix comes with a test that fails before it): a test failing at the start that
     passes in the lab, or one of the change's own test files that fails on the starting code (`proof`, by default
-    pytest on those files) and passes in the lab. A change to code with no such test isn't ready; the proving
-    tests are kept as `shown_by`, and its merge names them."""
+    pytest on those files). Either way the test must then be seen to PASS in the lab (`passing`, by default
+    pytest -rp on its file there): a test that only errored at import on the old code, or that was deleted,
+    renamed or skipped, is in no PASSED line and proves nothing (Fable's review, 2026-11-20). With a stand-in
+    `suite` and no `passing`, the stand-in's word is taken. A change to code with no such test isn't ready
+    unless `require_proof` is off (her coder's graded practice, never merged); the proving tests are kept as
+    `shown_by`, and its merge names them."""
     p = get(proposal_id)
     lab = folder(p)
     p.files = [f for f in _git("diff", "--name-only", "--no-renames", f"{p.base}...{p.branch}").splitlines() if f]
@@ -536,10 +556,17 @@ def check(proposal_id: str, suite: Optional[Callable] = None,
     finished = lab_result.get("finished", True) and base_result.get("finished", True)
     had, has = passed_count(base_result.get("summary", "")), passed_count(lab_result.get("summary", ""))
     fewer = had is not None and has is not None and has < had  # tests taken out, however the files were changed
-    shown = sorted((set(p.tests["fixed"]) | set(before.get("failed", []))) - set(lab_result["failed"]))
-    shown = [t for t in shown if not t.startswith("(")]  # a named test, not "the suite had errors"
+    # A named test function (file::test), not a file that errored at import nor "the suite had errors".
+    failing_before = sorted(t for t in (set(p.tests["fixed"]) | set(before.get("failed", []))) if "::" in t)
+    if passing is not None:
+        passes = set(passing(lab, failing_before))
+    elif suite is None:
+        passes = _passing(lab, failing_before)
+    else:  # a stand-in suite (tests): what it doesn't report failing counts as passing
+        passes = set(failing_before) - set(lab_result["failed"])
+    shown = sorted(set(failing_before) & passes)
     p.tests["shown_by"] = shown
-    unproven = needs_proof(p.files) and not shown
+    unproven = require_proof and needs_proof(p.files) and not shown
     p.status = READY if (not fresh and finished and not fewer and not unproven) else NOT_READY
     p.note = "" if p.status == READY else (
         "New failures: " + ", ".join(fresh) if fresh else

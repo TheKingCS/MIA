@@ -253,8 +253,9 @@ def test_the_changes_own_test_failing_on_the_starting_code_is_its_proof(repo):
         return {"summary": "1 failed", "failed": ["tests/test_thing.py::test_value"], "finished": True}
 
     p = lab.check(p.proposal_id, suite=suite({"*": []}), proof=proof)
-    assert seen == [(f"_proof-{p.proposal_id}", ["tests/test_thing.py"], True, "VALUE = 1\n")]  # the old code, new test
-    assert not (repo.parent / "MIA-lab" / f"_proof-{p.proposal_id}").exists()  # put away afterwards
+    assert len(seen) == 1 and seen[0][0].startswith(f"_proof-{p.proposal_id}-")
+    assert seen[0][1:] == (["tests/test_thing.py"], True, "VALUE = 1\n")  # the old code, new test
+    assert not list((repo.parent / "MIA-lab").glob("_proof-*"))  # put away afterwards
     assert p.status == lab.READY and p.tests["shown_by"] == ["tests/test_thing.py::test_value"]
     assert "Shown by: tests/test_thing.py::test_value" in lab.describe(p)
     p = lab.approve(p.proposal_id, suite=lambda cwd: {"summary": "", "failed": [], "finished": True})

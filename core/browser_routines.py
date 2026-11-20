@@ -284,7 +284,7 @@ def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0,
     on after they approve), a step not found or a page that doesn't match stops it. Every step, wait and end is kept
     in the person's run book (core/runs.py), so "what's running?" and a restart both know where it is; `run_id`
     continues a run that was waiting. Between steps it ends when everything is stopped or the run passes
-    `TASK_SECONDS` (core/deadline.py). Returns what happened."""
+    `TASK_SECONDS` (core/deadline.py); neither is held against the task. Returns what happened."""
     lines = []
     steps = routine["steps"]
     record = _Record(context, routine, start, run_id)
@@ -295,7 +295,7 @@ def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0,
         step = steps[index]
         why = limit.why_not()
         if why:
-            return _stopped(store, routine, index, lines, why, record)
+            return _stopped(store, routine, index, lines, why, record, counts=False)
         where = {"id": routine["id"], "next": index + 1, "run": record.run_id}
         try:
             if step["kind"] == "open":
@@ -334,14 +334,16 @@ def run(context, browser, store: BrowserRoutines, routine: dict, start: int = 0,
 
 
 def _stopped(store: BrowserRoutines, routine: dict, index: int, lines: list, why: str,
-             record: Optional[_Record] = None) -> str:
+             record: Optional[_Record] = None, counts: bool = True) -> str:
     """Stops a run at a step, keeps it as a run that stopped (in the routine and in the run book), and says where and
-    why."""
-    store.record_run(routine["id"], clean=False, stopped_at=index + 1, note=why)
+    why. With `counts` off (he said stop, or the run passed its time) it isn't held against the task: a learned task
+    stays learned."""
+    if counts:
+        store.record_run(routine["id"], clean=False, stopped_at=index + 1, note=why)
     if record is not None:
         record.finish("stopped", f"at step {index + 1}: {why}")
-    lines.append(f"Stopped at step {index + 1} ({step_words(routine['steps'][index])}): {why}. "
-                 "Show me again if the site has changed.")
+    lines.append(f"Stopped at step {index + 1} ({step_words(routine['steps'][index])}): {why}."
+                 + (" Show me again if the site has changed." if counts else ""))
     return "\n".join(lines)
 
 

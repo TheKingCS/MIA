@@ -6,8 +6,9 @@ Done means read back (DEC-0218, LS-05): after a change runs, code reads its effe
 that it worked. One generic check for every change (docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2):
 
 - each file it wrote still holds the bytes it left there (core/undo_log.py keeps their hash as it writes);
-- each record its history names (a `kind:id` ref on its life events) still resolves through the record-type registry
-  (core/record_types.py), unless the change removed it.
+- the record each of its history lines is about (the first `kind:id` ref on a life event) still resolves through
+  the record-type registry (core/record_types.py), unless the change removed it. A line's other refs name what
+  the record relates to, and aren't checked: they may rightly point at something gone.
 
 A kind that can't be read by id yet (`record_types.HISTORY_ONLY`), or whose store isn't on this view, is skipped, so
 the read-back never claims more than it can see. A capability-specific check (a device's state, a page committed)
@@ -21,7 +22,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-REMOVING = ("_removed", "_deleted", "_cancelled", "_archived", "_merged", "_discarded", "_undone")
+REMOVING = ("_removed", "_deleted", "_cancelled", "_archived", "_merged", "_discarded", "_undone", "_dropped",
+            "_retired")
 
 
 def _removes(event_type: str) -> bool:
@@ -30,7 +32,8 @@ def _removes(event_type: str) -> bool:
 
 
 def check(context, change) -> list[str]:
-    """What didn't read back after a change, in plain words; [] when everything it says it did is there."""
+    """What didn't read back after a change, in plain words; [] when its files hold what it left and the record
+    each of its history lines is about is there (or was removed by it)."""
     from core import record_types
 
     problems = []
@@ -46,7 +49,9 @@ def check(context, change) -> list[str]:
     touched = list(getattr(change, "touched", None) or [])
     gone = {ref for kind, refs in touched if _removes(kind) for ref in refs}
     for _type, refs in touched:
-        for ref in refs:
+        # Only the record the line is about (its first ref). The others say what it relates to (a task's asset, a
+        # mission's skills) and may rightly point at something gone or never made.
+        for ref in list(refs)[:1]:
             kind = str(ref).partition(":")[0]
             if ref in gone or not record_types.readable(context, kind):
                 continue

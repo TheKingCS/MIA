@@ -110,8 +110,9 @@ def note_event(event_id: str, refs=(), type: str = "") -> None:
 
 
 def after_write(path: Path) -> None:
-    """Called by atomic_write_text once a file is in place: the hash of what it left, for the read-back. Only
-    while a change is being recorded."""
+    """Called by atomic_write_text once a file is in place: the hash of what is on disk then, for the read-back,
+    which can so tell that something else wrote the file before the change finished (not that the write itself
+    went wrong: a failed replace raises). Only while a change is being recorded."""
     change = getattr(_local, "change", None)
     if change is None:
         return

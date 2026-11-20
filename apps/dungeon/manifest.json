@@ -64,7 +64,7 @@
       "get_loop": "observe",
       "get_weekly_checkin": "observe",
       "log_shift": "act_within_grant",
-      "plan_shift": "suggest",
+      "plan_shift": "act_within_grant",
       "set_schedule": "act_within_grant",
       "start_quest": "act_within_grant",
       "dungeon.add": "act_within_grant",

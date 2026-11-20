@@ -150,23 +150,24 @@ def decide(tier: Optional[str], initiator: str, granted: bool = False) -> Decisi
 
 
 def require(capability: str, initiator: str, granted: bool = False) -> Decision:
-    """The check, enforced: the decision when it's allowed; ActionError (counted and logged) when it isn't. A
+    """The check, enforced: the decision when it's allowed; `Refused` (an ActionError, counted and logged) when it
+    isn't. A
     capability no manifest gives a tier is treated as needing the person's yes. While he has said "stop everything"
     (core/stop.py), nothing she starts herself that changes anything is allowed, grant or not."""
     if initiator == MIA:
         from core import stop
 
         if stop.held_now() and tier_of(capability) not in (OBSERVE, SUGGEST):  # "stop everything" (DEC-0181)
-            from core.actions import ActionError
+            from core.actions import Refused
 
             note_held(capability, initiator, "he said stop everything")
-            raise ActionError("You asked me to stop everything, so I haven't. Say \"carry on\" when you want me to.")
+            raise Refused("You asked me to stop everything, so I haven't. Say \"carry on\" when you want me to.")
     decision = decide(tier_of(capability), initiator, granted)
     if not decision.allowed:
-        from core.actions import ActionError
+        from core.actions import Refused
 
         note_held(capability, initiator, decision.why)
-        raise ActionError(NEEDS_YES if decision.tier != NEVER else "That's only ever done by you, never by me.")
+        raise Refused(NEEDS_YES if decision.tier != NEVER else "That's only ever done by you, never by me.")
     return decision
 
 

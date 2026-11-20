@@ -157,7 +157,8 @@ def coder(ask: Optional[Callable[[str, dict], str]] = None) -> Callable[[str, Pa
 
 
 def shadow(task_id: str, lab=None, ask=None, suite=None, folder=None, log=None) -> dict:
-    """MIA's attempt at a task, graded and recorded, never merged. Returns {"outcome", "summary", ...}."""
+    """MIA's attempt at a task, graded on the suite and recorded, never merged; the summary says whether a
+    proving test was there (a merge would need one). Returns {"outcome", "summary", ...}."""
     from core import work_activity, work_tasks
 
     if lab is None:
@@ -181,10 +182,13 @@ def shadow(task_id: str, lab=None, ask=None, suite=None, folder=None, log=None) 
         lab.reject(p.proposal_id, "shadow: nothing changed")
         record(f"fail: {p.note or 'changed nothing'}")
         return {"outcome": "fail", "summary": p.note, "proposal": p.proposal_id}
-    p = lab.check(p.proposal_id, suite=suite)
+    # Practice, never merged: graded on the suite. Her coder may only edit the task's listed files, so it often can't
+    # add the proving test a merge needs (DEC-0224); the grade says whether one was there.
+    p = lab.check(p.proposal_id, suite=suite, require_proof=False)
     tests = getattr(p, "tests", {}) or {}
     outcome = "pass" if p.status == lab.READY else "fail"
-    summary = (f"{tests.get('summary', '')}; fixed {len(tests.get('fixed') or [])}, "
+    summary = (f"{tests.get('summary', '')}; {'proved by a test' if tests.get('shown_by') else 'no proving test'}; "
+               f"fixed {len(tests.get('fixed') or [])}, "
                f"new failures {len(tests.get('new_failures') or [])}; files {', '.join(p.files or [])}")
     record(f"{outcome}: {summary}" + ("" if outcome == "pass" else f" ({p.note})"[:300]))
     lab.reject(p.proposal_id, "shadow attempt: graded, never merged")

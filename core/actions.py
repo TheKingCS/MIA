@@ -537,18 +537,38 @@ def _read_back(context, proposal: Proposal, change) -> None:
 def _put_back(context, change) -> bool:
     """After a change failed part way: every file it had written is put back as it was, and the stores that read them
     re-read (Prompt 21's review, 2026-11-18: a failure used to say "nothing was changed" while its first writes
-    stayed). Whether everything went back."""
+    stayed), and the history lines it had recorded are taken back by one "undone" line, as an undo does (Fable's
+    review, 2026-11-20: a bill marked paid by a change that then failed stayed in the history and its sums). The
+    screens are told. Whether every file went back."""
     files = getattr(change, "files", None)
-    if not files:
+    events = list(getattr(change, "events", None) or [])
+    if not files and not events:
         return True
     from core.undo_log import _restore, reload_stores
 
+    done = True
     try:
-        reload_stores(context, _restore(change))
-        return True
+        if files:
+            reload_stores(context, _restore(change))
     except Exception:  # noqa: BLE001 - said to him plainly by the caller
         log.exception("Couldn't put back what a failed change had written")
-        return False
+        done = False
+    try:  # the history lines it had written are appended, never rewritten: one more line takes them back
+        if events:
+            from core import life_events
+
+            life_events.record(getattr(context, "life_events", None), "undone",
+                               f"Didn't happen: {str(getattr(change, 'label', '')).replace('_', ' ')}", [],
+                               {"label": getattr(change, "label", ""), "reverses": events, "failed": True},
+                               profile_id=getattr(change, "profile_id", None))
+        from core import live
+        from core.main_thread import publish
+
+        live.bump()
+        publish(context, "records.changed", action="put_back")
+    except Exception:  # noqa: BLE001 - the files are what matters; the history line is best effort
+        log.exception("Couldn't take back the history of a failed change")
+    return done
 
 
 def _may_run_now(kind: str) -> bool:
@@ -663,7 +683,8 @@ class ActionCenter:
         call for a standing yes; any later caller gets that result back.
         After a kind that removes something, the recall index drops
         what's gone at once (core/recall_index.drop_gone). A change that
-        fails part way puts back every file it had written (`_put_back`).
+        fails part way puts back every file it had written and takes back its
+        history lines (`_put_back`), and says so when it couldn't.
         It runs under the proposal's trace id, so what it changes and
         records names the same cause (DEC-0280)."""
         from core import life_events
@@ -704,7 +725,8 @@ class ActionCenter:
         except ActionError as problem:
             proposal.status, proposal.result = FAILED, str(problem)
             proposal.error = error_kind(problem)
-            _put_back(context, change)  # anything it wrote before it refused goes back
+            if not _put_back(context, change):  # anything it wrote before it refused goes back
+                proposal.result += " And what it had already changed couldn't all be put back."
         except Exception:
             log.exception("Action %s failed.", proposal.kind)
             proposal.error = "failed"

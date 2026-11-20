@@ -13,7 +13,9 @@ section 2). A capability is described in four places that each work on their own
 `describe()` assembles one record per capability from them, rewriting none, and `disagreements()` lists where they
 contradict each other:
 
-- a tool that proposes an action kind is tiered looser than that kind, so the tool would get round the kind's tier;
+- a tool that runs an action kind is tiered looser than that kind, so the tool would get round the kind's tier
+  (found by reading the handler's own code for `propose`, `_run` or `run_as_tool` with the kind's name written
+  out; a kind reached through a variable or another function isn't seen, so this is a floor, not a proof);
 - an irreversible kind is tiered below `act_with_approval`, so MIA could do something that can't be put back within a
   grant (REQ-AUT-007 already holds this for kinds reaching the system or outside);
 - a destructive tool is tiered only to observe or suggest, though it changes things;
@@ -28,7 +30,9 @@ import inspect
 import re
 from typing import Optional
 
-_PROPOSES = re.compile(r"propose\(\s*context,\s*\"([a-z_]+\.[a-z_.]+)\"")
+# How a tool's handler reaches an action kind by name: `propose(context, "kind"`, the tool modules' own
+# `_run(context, "kind"` helpers, and `run_as_tool(context, "kind"` (core/actions.py).
+_PROPOSES = re.compile(r"(?:propose|_run|run_as_tool)\(\s*context,\s*\"([a-z_]+\.[a-z_.]+)\"")
 
 
 def _rank(tier: Optional[str]) -> int:
@@ -39,7 +43,8 @@ def _rank(tier: Optional[str]) -> int:
 
 
 def proposed_kinds(handler) -> list[str]:
-    """The action kinds a tool's handler proposes by name (`propose(context, "kind", ...)`), read from its code."""
+    """The action kinds a tool's handler runs by name (`propose`, `_run` or `run_as_tool` with the kind written
+    out), read from its code."""
     try:
         source = inspect.getsource(handler)
     except (OSError, TypeError):
