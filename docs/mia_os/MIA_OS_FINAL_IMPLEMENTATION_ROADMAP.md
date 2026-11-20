@@ -156,6 +156,14 @@ approves itself.
 > idle, so ostree couldn't apply an update at shutdown (`os/files/boot-stays-mounted.conf`,
 > `finalize-needs-boot.conf`). On his PC the installer writes /boot into fstab; the drop-ins stay as a guard.
 > Measured on GitHub's VM, not his PC (MV-02 measures that); Orca is FW-11's.
+>
+> **Fable's review, 2026-11-20, what the VM run does and doesn't show:** the test logs in automatically into a
+> *named* session, so the login screen's own default (`mia-login.conf`'s `DefaultSession`) is **not yet shown** to
+> be a setting Plasma Login Manager reads; check it at the first real login (MV-01). Her shell's drawing on the real
+> GPU is untested (the VM draws in software). Fixed in the review: the session no longer waits on her runtime
+> before KWin starts (`--no-block`); the shell stops relaunching after three quick deaths and opens a terminal
+> saying so; it notices when her runtime was restarted and looks for her again; its own links act only from its
+> recovery page; the recovery page and the keyboard-opened terminal are now asserted, not only printed.
 
 | Field | Specification |
 |---|---|
@@ -177,16 +185,28 @@ approves itself.
 > *Adds from FW-01 (deviation 3): `greenboot` (greenboot-rs) into the image's `dnf install`, configured with this
 > package's checks.*
 >
-> **State (2026-11-19): done.** Accepted by the VM run of dce4f674 (CI run 44529591174); the snapshot by run
-> 44579393224 (f07ab33c). The runtime
+> **State (2026-11-20): changed by Fable's review; its VM run is the acceptance again.** Accepted before by the VM
+> run of dce4f674 (CI run 44529591174) and, for the snapshot, run 44579393224.
+>
+> **What the review changed (2026-11-20).** MIA OS **never restarts by itself.** The night timer still stages an
+> update; it applies when *he* next restarts or shuts down. Why: the apply timer's schedule line was invalid and
+> never fired; its idle test couldn't pass in her session; and with the disk's PIN asked at every start (FW-05), a
+> restart at night would have left the computer at that prompt with MIA down. The snapshot of the homes is now
+> taken at the shutdown that applies an update, whoever started it (`mia-update-snapshot.service`, newest three
+> kept). bootc's own fetch-and-restart timer is masked, and the build fails if enabling anything fails. Free disk
+> space is an advisory check now (a full disk is not a bad update). The watchdog's ping stops when her schedule
+> hasn't come round for half an hour, and nothing on her main loop waits on the network. **For Zac (Q-114):**
+> whether he ever wants unattended restarts, knowing each stops at the PIN prompt. **Known and kept:** on an
+> encrypted disk a rollback's restarts each ask for his PIN, so "no hand on the keyboard" holds only for an
+> unencrypted VM; after a rollback the same broken version is staged again the next night until a fixed one is
+> published (it rolls back again each time he restarts). The runtime
 > is a `Type=notify` service with `WatchdogSec=120`: `READY=1` once her core is up, `WATCHDOG=1` from the main loop
 > only while her schedule runs (`core/sd_notify.py`, `Runtime.readiness`: started, core, models, all, also in
 > `/api/runtime/health`). `python -m core.self_test` reruns itself on an empty folder and checks build, tools, the
 > schedule, a change and its read-back. Greenboot: required checks (the login screen, `/var/home` writable, 2 GB
-> free), wanted ones (network, the model server, the self-test as a dynamic user). Updates: `mia-update-stage.timer`
-> stages at 03:00; `mia-update-apply.timer` looks every 15 minutes until 06:00 for every session idle, snapshots
-> `/var/home` when it's a Btrfs subvolume (else says so: FW-05's layout makes it one) and restarts. bootc's own
-> fetch-and-apply timer is turned off.
+> free, since made advisory), wanted ones (network, the model server); the self-test became a required check in
+> part B. Updates: `mia-update-stage.timer` stages at 03:00. (The first design also restarted the computer at an
+> idle moment; the review of 2026-11-20 removed that: see the State above.)
 >
 > **Found in the VM (2026-11-19):** the automatic path works (staged at night, applied at an idle restart). A broken
 > update was caught by greenboot, but with /boot on the Btrfs root GRUB can't write its environment ("sparse file not
@@ -220,7 +240,16 @@ approves itself.
 
 ### FW-05 Disk encryption, Secure Boot and recovery keys
 
-> **State (2026-11-19): done; accepted by CI run 44602462298 (0c9b8cda).** Fedora's own boot image already holds
+> **State (2026-11-20): changed by Fable's review; its VM run is the acceptance again.** Enrolment is now two steps:
+> `mia-disk-enrol` makes the recovery key and enrols the TPM and its PIN and **removes nothing**; after a restart
+> opened by the PIN, `mia-disk-enrol finish` asks for the recovery key as written down, checks it opens the disk,
+> and only then removes the install's passphrase (before, it was removed in the first run, before the PIN had
+> opened a real start: a miscopied key and a TPM that behaved differently on real hardware would have lost the
+> disk). It refuses an install that doesn't tell the start to use the TPM. `mia-disk-enrol again` enrols the TPM
+> afresh after a firmware or Secure Boot list (dbx) update, which change PCR 7 like turning Secure Boot off does:
+> **his install guide must say that such an update means one start with the recovery key, then `again`.** The VM
+> uses a software TPM on the TIS interface; his PC's firmware TPM (CRB) is first tried at MV-01, with the install's
+> passphrase still in place. Earlier state: accepted by CI run 44602462298 (0c9b8cda). Fedora's own boot image already holds
 > cryptsetup and the TPM's library (the build checks, and would build it again only if they were missing:
 > `os/files/dracut-mia-tpm.conf`), so the image still builds the same twice. The install uses a temporary
 > passphrase; `os/files/mia-disk-enrol`, run once as root, makes the recovery key (shown once, for the envelope),

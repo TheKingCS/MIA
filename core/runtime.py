@@ -329,6 +329,9 @@ def build_services(context: AppContext) -> AppContext:
     return context
 
 
+STUCK_SECONDS = 1800  # a schedule that hasn't come round for this long is stuck: the watchdog's ping stops
+
+
 class Runtime(BackgroundJobs, AssistantTools):
     """A whole MIA with no window: every service, the full tool registry, the background schedule and the phone
     server (see the module's opening)."""
@@ -446,33 +449,41 @@ class Runtime(BackgroundJobs, AssistantTools):
             "readiness": self.readiness(),  # started, core, models or all (core/sd_notify.py, FW-04)
         }
 
-    def readiness(self) -> str:
+    def readiness(self, quick: bool = False) -> str:
         """How far up she is (core/sd_notify.READINESS): started, core (stores and schedule), models (the model
-        server answers), all (and the phone server, where it's switched on)."""
+        server answers), all (and the phone server, where it's switched on). `quick` asks nothing of the model
+        server: it uses what the last full look found."""
         from core import sd_notify
 
         running = self._thread is not None and self._thread.is_alive()
-        llm = getattr(self.context, "llm", None)
-        try:
-            models = bool(llm is not None and llm.is_available())
-        except Exception:  # noqa: BLE001 - a model that can't be asked isn't up
-            models = False
+        if quick:  # the main loop's status line: never a network call there (it would delay the watchdog's ping)
+            models = bool(getattr(self, "_models_up", False))
+        else:
+            llm = getattr(self.context, "llm", None)
+            try:
+                models = bool(llm is not None and llm.is_available())
+            except Exception:  # noqa: BLE001 - a model that can't be asked isn't up
+                models = False
+            self._models_up = models
         server = getattr(self.context, "phone_server", None)
         wanted = bool(server is not None and getattr(server, "enabled", False))
         return sd_notify.level(running, models, wanted, bool(server is not None and getattr(server, "running", False)))
 
     def _tell_systemd(self, now: float, state: dict) -> None:
-        """From the main loop: the watchdog's ping while her schedule is alive (a stuck MIA stops pinging and is
-        restarted), and her readiness as the service's status every 30 seconds."""
+        """From the main loop: the watchdog's ping while her schedule is turning, and her readiness as the service's
+        status every 30 seconds. The ping stops when the schedule's thread has died or hasn't come round for
+        `STUCK_SECONDS` (a job that never returns), so systemd restarts her; and when this loop itself hangs.
+        Nothing here waits on the network."""
         from core import sd_notify
 
         every = state.setdefault("every", sd_notify.watchdog_seconds())
-        alive = self._thread is not None and self._thread.is_alive()
+        alive = (self._thread is not None and self._thread.is_alive()
+                 and now - getattr(getattr(self, "scheduler", None), "beat", now) < STUCK_SECONDS)
         if every and alive and now - state.get("pinged", 0.0) >= every:
             sd_notify.notify("WATCHDOG=1")
             state["pinged"] = now
         if now - state.get("said", 0.0) >= 30:
-            sd_notify.notify(f"STATUS=MIA is up ({self.readiness()})")
+            sd_notify.notify(f"STATUS=MIA is up ({self.readiness(quick=True)})")
             state["said"] = now
 
     def run_until_stopped(self) -> None:

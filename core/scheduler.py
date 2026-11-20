@@ -79,7 +79,8 @@ class Scheduler:
                  wall: Optional[Callable[[], str]] = None) -> None:
         """`clock` counts seconds (monotonic by default; a fake one in tests). `lock` is the store lock jobs run
         under, or None. `wall` gives the time written in a job's record. `defer`, `on_backoff` and `on_ran` (told
-        each run's time) start empty; core/background_jobs.py gives them homeostasis's (core/homeostasis.py)."""
+        each run's time) start empty; core/background_jobs.py gives them homeostasis's (core/homeostasis.py). `beat`
+        is when `run_forever` last came round (the runtime's watchdog reads it)."""
         from datetime import datetime
 
         self._clock = clock
@@ -90,6 +91,7 @@ class Scheduler:
         self.defer: Optional[Callable[[str], str]] = None  # name -> why it should wait now, or ""
         self.on_backoff: Optional[Callable[[str, int, float, str], None]] = None  # (name, failures, wait, error)
         self.on_ran: Optional[Callable[[str, float], None]] = None  # (name, seconds) after each run (LS-10)
+        self.beat = self._clock()  # when run_forever last came round; a job that never returns stops it moving
 
     def add(self, name: str, seconds: float, run: Callable[[], None], first_after: Optional[float] = None) -> Job:
         """Adds a job run every `seconds`. Its first run is one interval from now, as a timer's would be, unless
@@ -193,8 +195,10 @@ class Scheduler:
 
     def run_forever(self, stop: threading.Event, most: float = 5.0) -> None:
         """Runs due jobs until `stop` is set, sleeping until the next is due (at most `most` seconds, so a stop or
-        a job that was skipped is picked up soon). For a headless runtime's thread."""
+        a job that was skipped is picked up soon), noting each time it comes round (`beat`). For a headless
+        runtime's thread."""
         while not stop.is_set():
+            self.beat = self._clock()  # still turning (the runtime's watchdog reads this)
             self.run_due()
             stop.wait(max(0.2, self.next_wait(most)))
 

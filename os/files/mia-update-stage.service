@@ -1,4 +1,6 @@
-# os/files/mia-update-stage.service: fetches and stages an update (FW-04); it applies at the next restart.
+# os/files/mia-update-stage.service: fetches and stages an update (FW-04). It applies the next time HE restarts or
+# shuts down: MIA OS never restarts by itself (the disk asks for his PIN at every start, so a restart at night
+# would leave it waiting at that prompt with MIA down; Fable's review, 2026-11-20).
 [Unit]
 Description=MIA OS: stage an update for the next restart
 Wants=network-online.target

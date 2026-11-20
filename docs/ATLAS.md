@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1545 files, 342,074 lines; 1545 files describe themselves; 18,847 of 18,946 classes and functions are documented.
+1545 files, 342,179 lines; 1545 files describe themselves; 18,852 of 18,951 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-603 files, 172,903 lines; 8,910 of 8,996 classes and functions documented
+603 files, 172,918 lines; 8,910 of 8,996 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -621,7 +621,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-125 files, 22,344 lines; 1,118 of 1,118 classes and functions documented
+125 files, 22,376 lines; 1,119 of 1,119 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -899,7 +899,7 @@
 
 ## tests/: the test suite: what each part must do
 
-542 files, 89,692 lines; 7,580 of 7,593 classes and functions documented
+542 files, 89,750 lines; 7,584 of 7,597 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1253,7 +1253,7 @@
 - `tests/test_quick_capture.py`: Quick capture (core/quick_capture.py, gui/quick_capture_dialog.py), 2026-10-01: type anything, MIA files it; nothing is ever lost.
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
 - `tests/test_read_back.py`: Tests for the generic read-back after a change (DEC-0218, LS-05, core/read_back.py): the files a change wrote still hold what it left, and the records its history names still resolve, unless it removed them.
-- `tests/test_readiness.py`: Tests for FW-04's readiness and watchdog (core/sd_notify.py, core/runtime.py), the self-test's refusal of a folder with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/).
+- `tests/test_readiness.py`: Tests for FW-04's readiness and watchdog (core/sd_notify.py, core/runtime.py), the self-test's refusal of a folder with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/): staged at night, applied when he restarts, never by a restart of her own.
 - `tests/test_real_estate_manager.py`: Unit tests for core.real_estate_manager. Isolates _DATA_DIR _PROPERTIES_FILE (and core.budget_manager's own data files, since rental income/expenses are real Budget entries this manager filters) into a tmp_path scratch area, same monkeypatch pattern as test_budget_manager.py's isolated_paths.
 - `tests/test_real_estate_module.py`: Unit tests for modules.real_estate.module's pure formatters — no Qt event loop needed, same shape as tests/test_property_module.py.
 - `tests/test_recall_index.py`: Recall by meaning: refs and vectors only, every hit re-read from its store (core/recall_index.py, DEC-0210).

@@ -33,7 +33,8 @@ permissions:
 
 concurrency:
   group: mia-os-vm
-  cancel-in-progress: true
+  # A new push replaces a run in progress; the daily scheduled run waits its turn instead of cancelling one.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   vm:
@@ -120,7 +121,12 @@ jobs:
       - name: FW-04 health after boot, readiness and the watchdog
         run: |
           . ~/vm.sh
-          vm 'rpm -q greenboot; systemctl list-unit-files "greenboot*" --no-legend; systemctl is-enabled mia-update-stage.timer mia-update-apply.timer bootc-fetch-apply-updates.timer || true'
+          vm 'rpm -q greenboot; systemctl list-unit-files "greenboot*" --no-legend'
+          # What the image turns on, and bootc's own fetch-and-restart timer masked: checked, not only printed.
+          test "$(vm 'systemctl is-enabled greenboot-healthcheck.service')" = enabled
+          test "$(vm 'systemctl is-enabled mia-update-stage.timer')" = enabled
+          test "$(vm 'systemctl is-enabled mia-update-snapshot.service')" = enabled
+          test "$(vm 'systemctl is-enabled bootc-fetch-apply-updates.timer' || true)" = masked
           vm 'systemctl status greenboot-healthcheck.service --no-pager | head -n 12; journalctl -b --no-pager -u greenboot-healthcheck.service | tail -n 40' || true
           vm 'grub2-editenv list 2>/dev/null || true; ls /etc/greenboot/check/required.d /etc/greenboot/check/wanted.d'
           # Her runtime as a notify service: its type, watchdog and the status she reports.
@@ -178,7 +184,9 @@ jobs:
           state() { as_mia 'cat $XDG_RUNTIME_DIR/mia/shell-state 2>/dev/null' || true; }
           # How /boot is mounted before any login (ostree must remount it read-write at shutdown to apply an update).
           vm 'findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS /boot /boot/efi; systemctl is-active boot.automount boot-efi.automount' || true
-          # What runs the login screen here, and its settings (the session's name on inspection).
+          # What runs the login screen here, and its settings (the session's name on inspection). Whether it knows a
+          # default-session setting at all isn't proved by this test, which logs in automatically into a named one.
+          vm 'strings /usr/bin/plasmalogin 2>/dev/null | grep -i -m 5 "DefaultSession\|LastSession" || echo "no DefaultSession setting found in plasmalogin"' || true
           vm 'rpm -qa | grep -iE "sddm|plasmalogin|plasma-login" ; systemctl status display-manager --no-pager | head -n 4; ls /usr/share/wayland-sessions /etc/sddm.conf.d /etc/plasmalogin.conf.d 2>&1; cat /etc/sddm.conf.d/*mia* /etc/plasmalogin.conf.d/*mia* 2>&1' || true
           # Log in at the login screen as the test person, into MIA's session.
           vm 'for d in /etc/sddm.conf.d /etc/plasmalogin.conf.d; do mkdir -p $d; printf "[Autologin]\nUser=mia\nSession=mia.desktop\nRelogin=true\n" > $d/zz-test-autologin.conf; done'
@@ -202,10 +210,11 @@ jobs:
           as_mia 'systemctl --user stop mia-runtime; pkill -f "gui.os_shell"'
           for i in $(seq 1 90); do state | grep -q recovery && break; sleep 1; done
           echo "with her runtime stopped: $(state)"
+          state | grep -q recovery
           shot 3-recovery
           keys tab tab ret; sleep 8
           shot 4-terminal-by-keyboard
-          as_mia 'pgrep -x konsole' && echo "a terminal opened by keyboard alone" || echo "the keyboard didn't open a terminal"
+          as_mia 'pgrep -x konsole' && echo "a terminal opened by keyboard alone"
           as_mia 'pkill -x konsole; systemctl --user start mia-runtime' || true
           # Plasma, one choice away: the same login into Plasma, timed to its shell.
           vm 'for d in /etc/sddm.conf.d /etc/plasmalogin.conf.d; do sed -i "s/^Session=.*/Session=plasma.desktop/" $d/zz-test-autologin.conf; done; loginctl terminate-user mia || true'
@@ -277,22 +286,22 @@ jobs:
           test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
           sleep 30
           as_mia 'grep -c "The MIA Runtime is up" ~/.local/share/mia/logs/mia.log; systemctl --user is-active mia-runtime'
-      - name: FW-04 the automatic path, the night's update staged and applied at an idle restart
+      - name: FW-04 the night's update staged by itself, applied when he restarts, with its snapshot
         run: |
           . ~/vm.sh
           up_again() { for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done; for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done; }
-          vm 'systemctl list-timers mia-update-stage.timer mia-update-apply.timer --no-pager'
+          vm 'systemctl list-timers mia-update-stage.timer --no-pager'
           # Where updates come from, as an install sets it once (the release registry; here the host's test one).
           sudo podman push --tls-verify=false localhost/mia-os:test-v1 localhost:5000/mia-os:auto
           vm 'bootc switch --transport registry 10.0.2.2:5000/mia-os:auto'
           # A new version is published; the night's staging service (what the 03:00 timer runs) stages it.
           sudo podman push --tls-verify=false localhost/mia-os:test-v2 localhost:5000/mia-os:auto
           vm 'systemctl start mia-update-stage.service && bootc status | grep -A4 staged'
-          # The apply service (what the timer runs every 15 minutes until 06:00): idle, snapshot, restart. The test's own
-          # SSH session isn't idle, so it's told to treat the computer as idle.
-          vm 'systemd-run --wait --pipe -E MIA_UPDATE_FORCE_IDLE=1 /usr/lib/mia/os/files/mia-update-apply' || true
+          # She never restarts the computer herself. He does (here, the test): at that shutdown the snapshot is taken
+          # (mia-update-snapshot.service), then ostree applies the update.
+          vm 'systemctl reboot' || true
           up_again
-          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; ls /var/mia-snapshots; journalctl -b -1 --no-pager | grep -iE "snapshot|subvolume|Applying" | tail -n 5' || true
+          vm 'cat /usr/lib/mia/POC_IMAGE_MARK; ls /var/mia-snapshots; journalctl -b -1 --no-pager -u mia-update-snapshot.service | tail -n 5' || true
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
           test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
           # The snapshot taken before the restart holds his file as it was.
@@ -302,10 +311,12 @@ jobs:
           . ~/vm.sh
           up_again() { for i in $(seq 1 60); do vm true 2>/dev/null || break; sleep 5; done; for i in $(seq 1 90); do vm true 2>/dev/null && break; sleep 10; done; }
           for broken in v3 v4; do
-            echo "== $broken: published, staged and applied the usual way; greenboot must bring v2 back"
+            echo "== $broken: published, staged, and applied at a restart; greenboot must bring v2 back"
             sudo podman push --tls-verify=false localhost/mia-os:test-$broken localhost:5000/mia-os:auto
-            vm 'systemctl start mia-update-stage.service' || true
-            vm 'systemd-run --wait --pipe -E MIA_UPDATE_FORCE_IDLE=1 /usr/lib/mia/os/files/mia-update-apply' || true
+            vm 'systemctl start mia-update-stage.service'
+            # the broken version really is staged
+            vm 'bootc status --format json' | python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin)["status"].get("staged") else 1)'
+            vm 'systemctl reboot' || true
             up_again
             seen=""
             for i in $(seq 1 120); do
@@ -315,6 +326,7 @@ jobs:
               sleep 10
             done
             vm 'cat /usr/lib/mia/POC_IMAGE_MARK; grub2-editenv list; journalctl --no-pager -u greenboot-healthcheck.service -b -1 | grep -E "ERROR|failed|rollback|reboot" | tail -n 8' || true
+            echo "$seen" | grep -q "$broken"  # the broken version did boot; v2 came back after it, not instead of it
             test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
             test "$(as_mia 'cat ~/his-file.txt')" = kept-by-him
           done

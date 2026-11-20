@@ -1,0 +1,17 @@
+# os/files/mia-update-snapshot.service: the snapshot of the homes before a staged update applies (FW-04).
+# It does its work when it STOPS, at shutdown. Ordered after ostree's finalizing service, so at shutdown it stops
+# first: the snapshot is taken, then ostree applies the update.
+[Unit]
+Description=MIA OS: a snapshot of the homes before a staged update applies
+After=ostree-finalize-staged.service local-fs.target
+RequiresMountsFor=/var/home
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/true
+ExecStop=/usr/lib/mia/os/files/mia-update-snapshot
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

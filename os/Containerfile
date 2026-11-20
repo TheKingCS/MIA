@@ -73,13 +73,15 @@ RUN kver="$(ls /usr/lib/modules)" && img="/usr/lib/modules/$kver/initramfs.img" 
 # Health after each boot (greenboot, FW-04): required checks roll a bad update back; wanted ones are only logged.
 COPY os/files/greenboot/required.d/ /etc/greenboot/check/required.d/
 COPY os/files/greenboot/wanted.d/ /etc/greenboot/check/wanted.d/
-# Night updates (FW-04): staged at night, applied at an idle restart after a snapshot of the homes.
-COPY os/files/mia-update-stage.service os/files/mia-update-stage.timer os/files/mia-update-apply.service \
-     os/files/mia-update-apply.timer /usr/lib/systemd/system/
+# Updates (FW-04): staged at night; applied when he next restarts, after a snapshot of the homes taken at that
+# shutdown. She never restarts the computer herself. Each line fails the build if it fails.
+COPY os/files/mia-update-stage.service os/files/mia-update-stage.timer os/files/mia-update-snapshot.service \
+     /usr/lib/systemd/system/
 RUN chmod 755 /etc/greenboot/check/required.d/*.sh /etc/greenboot/check/wanted.d/*.sh \
-        /usr/lib/mia/os/files/mia-update-apply && \
-    systemctl enable greenboot-healthcheck.service mia-update-stage.timer mia-update-apply.timer && \
-    systemctl disable bootc-fetch-apply-updates.timer || true
+        /usr/lib/mia/os/files/mia-update-snapshot
+RUN systemctl enable greenboot-healthcheck.service mia-update-stage.timer mia-update-snapshot.service
+# bootc's own timer fetches AND restarts to apply; masked, so no preset or update can turn it back on.
+RUN systemctl mask bootc-fetch-apply-updates.timer
 
 # MIA's own session at the login screen (FW-03, DEC-0278): KWin running her shell full screen, ordinary windows
 # beside it; Plasma stays the other entry.

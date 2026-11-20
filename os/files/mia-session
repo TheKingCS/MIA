@@ -4,5 +4,7 @@
 # (it then keeps running), started, and KWin runs her shell full screen as the session's one client, with ordinary
 # windows beside it. When the shell closes, the session ends and the login screen is back (choose Plasma there).
 systemctl --user enable mia-runtime >/dev/null 2>&1 || true
-systemctl --user start mia-runtime || true
+# --no-block: her runtime tells systemd when it's ready (Type=notify), so a plain start would hold this session on a
+# black screen until then; her shell shows "MIA is starting", and the recovery page if she doesn't come.
+systemctl --user start --no-block mia-runtime || true
 exec kwin_wayland --xwayland --exit-with-session=/usr/lib/mia/os/files/mia-shell

@@ -8,6 +8,16 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### From Fable's review of 2026-11-20
+0zc. [ ] **Q-114: should MIA OS ever restart your PC by itself to finish an update?** As built now it never does: an
+   update is downloaded at night and goes in the next time *you* restart or shut down (a snapshot of your files is
+   taken first). The other choice is a restart at night when the PC is idle; but your disk asks for its PIN at every
+   start, so the PC would sit at that prompt, with MIA off, until you typed it. Claude's recommendation: keep it as
+   built (never by itself), and have MIA tell you when an update is waiting for a restart.
+0zd. [ ] **At install day (MV-01), two things to check that the VM couldn't:** the login screen offers MIA first
+   without you choosing it, and MIA's window draws properly on your graphics card. Both are on the roadmap's FW-03
+   note. And run `mia-disk-enrol finish` only after a restart you opened with your PIN.
+
 ### From Prompt 21 (2026-11-18)
 0zb. [ ] **Look at your backups folder** ("MIA Backups" in your home folder): Claude's test runs on 2026-11-18 wrote seven
    backups dated Nov 23 to 29 there (now moved out). Backup rotation counted them as newest, so a backup from Nov 16 or

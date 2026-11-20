@@ -3,7 +3,9 @@
 # makes a recovery key and enrols the TPM (PCR 7) with a PIN. Checked:
 #   1. a boot asks only for the PIN, and opens with it;
 #   2. after an update, the PIN still opens it: no recovery key asked for;
-#   3. with Secure Boot turned off, the TPM refuses and the recovery key opens it.
+#   3. with Secure Boot turned off, the TPM refuses and the recovery key opens it; `mia-disk-enrol again` then
+#      enrols the TPM afresh.
+# The install's passphrase is removed only after the PIN has opened a start and the recovery key has been typed back.
 # The test types at the boot prompts on the VM's serial line (os/poc/vm/type_at_prompt.sh), knowing when from the
 # serial log. The recovery key here belongs to a throwaway VM and is printed in this log; a real one is never printed
 # or kept.
@@ -26,7 +28,7 @@ permissions:
 
 concurrency:
   group: mia-os-encryption
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   encrypted:
@@ -95,6 +97,8 @@ jobs:
           }
           up() { for i in $(seq 1 90); do vm true 2>/dev/null && return 0; sleep 10; done; return 1; }
           down() { vm 'systemctl poweroff' || true; for i in $(seq 1 60); do pgrep -f qemu-system-x86_64 > /dev/null || return 0; sleep 3; done; }
+          # absent PATTERN FILE: fails when the pattern is there (a bare `! grep` never fails a step under bash -e).
+          absent() { if grep -qE "$1" "$2"; then echo "Found what shouldn't be there: $1"; return 1; fi; }
           EOS
           . ~/vm.sh
           chmod +x os/poc/vm/type_at_prompt.sh
@@ -104,12 +108,14 @@ jobs:
           up
           vm 'mokutil --sb-state; cat /usr/lib/mia/POC_IMAGE_MARK; lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS; cat /proc/cmdline'
           vm 'mokutil --sb-state' | grep -q "SecureBoot enabled"
-      - name: Enrol the TPM with a PIN and make the recovery key; the temporary passphrase removed
+      - name: Enrol the TPM with a PIN and make the recovery key; the install's passphrase kept for now
         run: |
           . ~/vm.sh
           vm 'PASSWORD=install-temporary MIA_DISK_PIN=271828 /usr/lib/mia/os/files/mia-disk-enrol' | tee /tmp/enrol.txt
           grep -oE "([cbdefghijklnrtuv]{8}-){7}[cbdefghijklnrtuv]{8}" /tmp/enrol.txt | head -n 1 > /tmp/recovery.txt
           test -s /tmp/recovery.txt
+          # Its slot list: the install's passphrase is still there. Nothing is removed before the PIN has opened a start.
+          sed -n '/SLOT/,$p' /tmp/enrol.txt | grep -q password
       - name: 1. A boot asks only for the PIN, and opens with it
         run: |
           . ~/vm.sh
@@ -118,7 +124,13 @@ jobs:
           up
           vm 'cat /usr/lib/mia/POC_IMAGE_MARK; journalctl -b --no-pager | grep -iE "cryptsetup|tpm2" | tail -n 8'
           # Only the PIN was asked for: no passphrase prompt in this boot (the log began with this QEMU).
-          ! grep -qE "(recovery key|assphrase) for" /tmp/serial.log
+          absent "(recovery key|assphrase) for" /tmp/serial.log
+          # A wrong recovery key removes nothing: it fails before the wipe, and the passphrase slot is still listed.
+          if vm 'MIA_DISK_RECOVERY=cccccccc-cccccccc-cccccccc-cccccccc-cccccccc-cccccccc-cccccccc-cccccccc /usr/lib/mia/os/files/mia-disk-enrol finish'; then echo "A wrong recovery key was accepted"; exit 1; fi
+          # Now, and only now: the recovery key is checked as written down, and the install's passphrase removed.
+          vm "MIA_DISK_RECOVERY=$(cat /tmp/recovery.txt) /usr/lib/mia/os/files/mia-disk-enrol finish" | tee /tmp/finish.txt
+          sed -n '/SLOT/,$p' /tmp/finish.txt > /tmp/finish-slots.txt && grep -q recovery /tmp/finish-slots.txt
+          absent password /tmp/finish-slots.txt
       - name: 2. After an update the PIN still opens it, never the recovery key
         run: |
           . ~/vm.sh
@@ -130,7 +142,7 @@ jobs:
           test "$(vm cat /usr/lib/mia/POC_IMAGE_MARK)" = v2
           # "Never the recovery key": neither a recovery-key prompt nor a passphrase one since this QEMU started,
           # across the update's restart (with no passphrase left on the disk, systemd names the recovery key).
-          ! grep -qE "(recovery key|assphrase) for" /tmp/serial.log
+          absent "(recovery key|assphrase) for" /tmp/serial.log
       - name: 3. With Secure Boot off the TPM refuses, and the recovery key opens it
         run: |
           . ~/vm.sh
@@ -143,6 +155,9 @@ jobs:
           vm 'mokutil --sb-state; journalctl -b --no-pager | grep -iE "tpm2|cryptsetup" | tail -n 10'
           # Firmware with no Secure Boot at all answers "This system doesn't support Secure Boot" (seen in the second run).
           vm 'mokutil --sb-state 2>&1' | grep -qE "SecureBoot disabled|doesn't support Secure Boot"
+          # After such a change he enrols the TPM again, opened by the recovery key: one tpm2 slot, and the recovery one.
+          vm "PASSWORD=$(cat /tmp/recovery.txt) MIA_DISK_PIN=271828 /usr/lib/mia/os/files/mia-disk-enrol again" | tee /tmp/again.txt
+          test "$(grep -c tpm2 <(sed -n '/SLOT/,$p' /tmp/again.txt))" = 1 && grep -q recovery /tmp/again.txt
       - name: The VM's serial log, for the record
         if: always()
         run: tail -n 120 /tmp/serial.log || true

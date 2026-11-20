@@ -10,6 +10,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-20, Fable reviewed Opus's work since 2026-11-18** (LS-01 to LS-10, FW-02 to FW-05) with three
+independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each
+one's status is in `audit/FABLE_REVIEW_2026-11-20.md` (not in the repository). **MIA OS no longer restarts by
+itself** (Q-114 asks Zac), and disk enrolment is two steps (`mia-disk-enrol`, restart with the PIN,
+`mia-disk-enrol finish`). **Read the two VM runs of the review's last commit first.** In a workflow step a bare
+`! command` never fails the step (bash -e ignores it): use `if command; then exit 1; fi` or the `absent` helper.
+
 **New 2026-11-19, FW-04 and FW-05 done.** FW-05 (CI run 44602462298): the PIN alone opens the encrypted disk, before
 and after an update; Secure Boot off, the TPM refuses and the recovery key opens it. FW-04's snapshot before an
 update was taken and held his file (run 44579393224). **Loose end:** prune `/var/mia-snapshots` (nothing does yet).

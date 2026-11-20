@@ -1,0 +1,16 @@
+#!/bin/bash
+# os/files/mia-update-snapshot: a read-only snapshot of the homes just before a staged update applies (FW-04).
+# Run at shutdown by mia-update-snapshot.service, before ostree applies the staged deployment, whoever started the
+# shutdown. Nothing staged: nothing done. The newest KEEP snapshots are kept; older ones are deleted.
+KEEP=3
+[ -e /run/ostree/staged-deployment ] || exit 0
+if ! btrfs subvolume show /var/home > /dev/null 2>&1; then
+  echo "/var/home isn't its own Btrfs subvolume here: no snapshot before this update."
+  exit 0
+fi
+mkdir -p /var/mia-snapshots
+btrfs subvolume snapshot -r /var/home "/var/mia-snapshots/home-$(date +%Y%m%d-%H%M%S)" && echo "Snapshot taken."
+ls -1d /var/mia-snapshots/home-* 2>/dev/null | sort | head -n -"$KEEP" | while read -r old; do
+  btrfs subvolume delete "$old" > /dev/null && echo "Older snapshot removed: $old"
+done
+exit 0

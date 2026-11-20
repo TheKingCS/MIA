@@ -1,30 +1,84 @@
 #!/bin/bash
 # os/files/mia-disk-enrol: makes the encrypted disk open with the TPM and a PIN, with a recovery key for the envelope
-# (FW-05, DEC-0277, Q-106). Run once as root after the install, which used a temporary passphrase:
-#   1. a recovery key is made and shown ONCE: write it down for the sealed envelope; it is never kept anywhere else
-#      (not in MIA, not in a chat);
-#   2. the TPM is enrolled, bound to PCR 7 (Secure Boot's state) and a PIN asked at each boot: an update keeps PCR 7
-#      the same, so it never asks for the recovery key; Secure Boot turned off changes it: the PIN is asked, the TPM
-#      refuses, and the boot then asks for the recovery key (seen in the VM, 2026-11-19);
-#   3. the install's temporary passphrase is removed, so only the PIN (with this TPM) or the recovery key open it.
-# The device is the one holding the root filesystem, or the first argument. At a keyboard it asks for the install's
-# passphrase and the new PIN. For the VM test only, with no terminal: PASSWORD gives the install's passphrase
-# (systemd-cryptenroll reads it) and MIA_DISK_PIN the new PIN.
+# (FW-05, DEC-0277, Q-106). Run as root after the install, which used a temporary passphrase. Three uses:
+#
+#   mia-disk-enrol            1. A recovery key is made and shown ONCE: write it down for the sealed envelope; it is
+#                                never kept anywhere else (not in MIA, not in a chat).
+#                             2. The TPM is enrolled, bound to PCR 7 (Secure Boot's state), with a PIN asked at each
+#                                start. The install's passphrase is KEPT for now.
+#   (restart, and open the disk with the PIN)
+#   mia-disk-enrol finish     3. Asks for the recovery key as you wrote it down and checks it opens the disk; only
+#                                then is the install's passphrase removed. From here only the PIN (with this TPM) or
+#                                the recovery key open it.
+#   mia-disk-enrol again      After a firmware or Secure Boot update the TPM may refuse (see below): opened with the
+#                                recovery key, this enrols the TPM and PIN afresh.
+#
+# What changes PCR 7: turning Secure Boot off, and also updates to the firmware or to Secure Boot's own lists (the
+# "dbx", which arrives through firmware updates). After one of those the start asks for the PIN, the TPM refuses, and
+# it asks for the recovery key: that is the design working, not a fault. Open it with the recovery key and run
+# `mia-disk-enrol again`. An update of MIA OS itself doesn't change PCR 7.
+#
+# The device is the one holding the root filesystem, or the last argument when it starts with /dev/. At a keyboard
+# every secret is asked for. For the VM test only, with no terminal: PASSWORD gives the current passphrase or
+# recovery key (systemd-cryptenroll reads it), MIA_DISK_PIN the new PIN, MIA_DISK_RECOVERY the recovery key to check.
 set -euo pipefail
-dev="${1:-}"
+mode="start"; dev=""
+for arg in "$@"; do
+  case "$arg" in finish|again) mode="$arg" ;; /dev/*) dev="$arg" ;; esac
+done
 if [ -z "$dev" ]; then
   mapper=$(findmnt -no SOURCE /sysroot 2>/dev/null || findmnt -no SOURCE /)
-  dev=$(cryptsetup status "${mapper%%[*}" | awk '/device:/ {print $2}')
+  dev=$(cryptsetup status "${mapper%%[*}" 2>/dev/null | awk '/device:/ {print $2}') || true
 fi
-cryptsetup isLuks "$dev" || { echo "$dev isn't an encrypted (LUKS) disk." >&2; exit 1; }
-echo "== The recovery key for $dev (write it down now; it isn't kept anywhere):"
-systemd-cryptenroll --recovery-key "$dev"
-echo "== The TPM, with a PIN at each boot:"
-if [ -n "${MIA_DISK_PIN:-}" ]; then
-  NEWPIN="$MIA_DISK_PIN" systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 --tpm2-with-pin=yes "$dev"
-else
-  systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 --tpm2-with-pin=yes "$dev"
+if [ -z "$dev" ] || ! cryptsetup isLuks "$dev"; then
+  echo "Couldn't find the encrypted (LUKS) disk under the root filesystem. Give it: mia-disk-enrol [finish|again] /dev/..." >&2
+  exit 1
 fi
-echo "== The install's temporary passphrase removed:"
-systemd-cryptenroll --wipe-slot=password "$dev"
-systemd-cryptenroll "$dev"
+enrol_tpm() {  # extra arguments go to systemd-cryptenroll (again: --wipe-slot=tpm2, the old one goes once the new is in)
+  if [ -n "${MIA_DISK_PIN:-}" ]; then
+    NEWPIN="$MIA_DISK_PIN" systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 --tpm2-with-pin=yes "$@" "$dev"
+  else
+    systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 --tpm2-with-pin=yes "$@" "$dev"
+  fi
+}
+slots() { systemd-cryptenroll "$dev"; }
+
+case "$mode" in
+start)
+  # The start only asks for the PIN when it was told to look for the TPM: say so now, before anything is enrolled.
+  if ! grep -q "tpm2-device=auto" /proc/cmdline /etc/crypttab 2>/dev/null; then
+    echo "This install doesn't tell the start to use the TPM (no tpm2-device=auto in the kernel arguments or" >&2
+    echo "/etc/crypttab). Add it, restart, and run this again:" >&2
+    echo "  rpm-ostree kargs --append-if-missing=rd.luks.options=tpm2-device=auto" >&2
+    exit 1
+  fi
+  if slots | grep -q "recovery"; then
+    echo "A recovery key is already enrolled on $dev. To enrol the TPM again use: mia-disk-enrol again" >&2
+    exit 1
+  fi
+  echo "== The recovery key for $dev (write it down now; it isn't kept anywhere):"
+  systemd-cryptenroll --recovery-key "$dev"
+  echo "== The TPM, with a PIN at each start:"
+  enrol_tpm
+  slots
+  echo "== Next: restart and open the disk with your PIN. Then run: mia-disk-enrol finish"
+  echo "   (The install's passphrase still works until then.)"
+  ;;
+finish)
+  slots | grep -q "tpm2" || { echo "The TPM isn't enrolled yet. Run mia-disk-enrol first." >&2; exit 1; }
+  echo "== Type the recovery key as you wrote it down (it is checked, not kept):"
+  if [ -n "${MIA_DISK_RECOVERY:-}" ]; then
+    printf '%s' "$MIA_DISK_RECOVERY" | cryptsetup open --test-passphrase --key-file - "$dev"
+  else
+    cryptsetup open --test-passphrase "$dev"
+  fi
+  echo "== The recovery key opens the disk. The install's temporary passphrase is removed:"
+  systemd-cryptenroll --wipe-slot=password "$dev"
+  slots
+  ;;
+again)
+  echo "== The TPM enrolled afresh (the old enrolment is removed), with a PIN at each start:"
+  enrol_tpm --wipe-slot=tpm2
+  slots
+  ;;
+esac

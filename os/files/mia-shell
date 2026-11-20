@@ -6,10 +6,19 @@ export MIA_DESKTOP_SESSION_FILE="${XDG_RUNTIME_DIR}/mia/desktop.json"
 export MIA_HOME="${MIA_HOME:-$HOME/.local/share/mia}"
 cd /usr/lib/mia || exit 1
 # MIA_SHELL_ARGS: extra arguments for a test (KWin starts the session's program without arguments).
-# The shell comes back by itself if it dies; closing it cleanly (exit 0) ends the session (FW-03).
+# The shell comes back by itself if it dies; closing it cleanly (exit 0) ends the session (FW-03). If it dies three
+# times within 20 seconds of starting (it can't run on this machine), it stops trying: a terminal opens saying so,
+# and closing that ends the session, back to the login screen where Plasma is one choice away.
+quick=0
 while :; do
+  began=$(date +%s)
   # shellcheck disable=SC2086
   /usr/lib/mia/venv/bin/python -m gui.os_shell $MIA_SHELL_ARGS "$@" && exit 0
   [ -n "$MIA_SHELL_ARGS" ] && exit 1  # a test's one run
-  sleep 1
+  if [ $(( $(date +%s) - began )) -lt 20 ]; then quick=$((quick + 1)); else quick=0; fi
+  if [ "$quick" -ge 3 ]; then
+    konsole -e sh -c 'echo "Her window keeps closing as soon as it opens."; echo "Her log: journalctl --user -b | tail -n 50"; echo "Close this window to go back to the login screen (choose Plasma there)."; exec sh'
+    exit 1
+  fi
+  sleep $((quick * 2 + 1))
 done

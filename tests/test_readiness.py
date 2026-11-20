@@ -1,5 +1,6 @@
 """Tests for FW-04's readiness and watchdog (core/sd_notify.py, core/runtime.py), the self-test's refusal of a folder
-with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/)."""
+with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/): staged at
+night, applied when he restarts, never by a restart of her own."""
 import os
 import socket
 from pathlib import Path
@@ -55,7 +56,7 @@ def test_the_runtime_pings_only_while_its_schedule_is_alive(monkeypatch):
     monkeypatch.setattr(sd_notify, "notify", lambda *lines: sent.extend(lines) or True)
     monkeypatch.setattr(sd_notify, "watchdog_seconds", lambda: 60.0)
     fake = Runtime.__new__(Runtime)
-    fake.readiness = lambda: "core"
+    fake.readiness = lambda quick=False: "core"
     fake._thread = type("T", (), {"is_alive": lambda self: True})()
     state = {"said": 0.0}
     Runtime._tell_systemd(fake, 100.0, state)
@@ -73,22 +74,57 @@ def test_the_self_test_refuses_a_folder_with_anything_in_it(tmp_path):
 
 
 def test_the_image_checks_health_after_boot_and_updates_at_night():
-    """Required checks (login screen, homes, disk, the self-test) roll back; wanted ones (network, model server) are
-    logged;
+    """Required checks (login screen, homes, the self-test) roll back; wanted ones (network, model server, disk
+    space) are logged;
     updates stage at night and apply at an idle restart after a snapshot; the runtime is a notify service."""
     files = ROOT / "os" / "files"
     required = sorted(p.name for p in (files / "greenboot" / "required.d").iterdir())
     wanted = sorted(p.name for p in (files / "greenboot" / "wanted.d").iterdir())
-    assert required == ["40-mia-login-manager.sh", "41-mia-home.sh", "42-mia-disk-space.sh", "43-mia-self-test.sh"]
-    assert wanted == ["50-mia-network.sh", "51-mia-model-server.sh"]
+    assert required == ["40-mia-login-manager.sh", "41-mia-home.sh", "43-mia-self-test.sh"]
+    assert wanted == ["50-mia-network.sh", "51-mia-model-server.sh", "52-mia-disk-space.sh"]  # a full disk: said
     selftest = (files / "greenboot" / "required.d" / "43-mia-self-test.sh").read_text(encoding="utf-8")
     assert "--reuid=65534" in selftest and "--home" in selftest  # as nobody, on a fresh folder
     vm = (ROOT / ".github" / "workflows" / "mia-os-vm.yml").read_text(encoding="utf-8")
     assert "BREAK=selftest" in vm and "BREAK=login" in vm and "mia-update-stage.service" in vm
-    apply = (files / "mia-update-apply").read_text(encoding="utf-8")
-    assert apply.index("btrfs subvolume snapshot") < apply.index("systemctl reboot") and "IdleHint" in apply
+    # She never restarts the computer herself: nothing in the image's own files calls for a restart.
+    assert not (files / "mia-update-apply").exists()
+    assert not [p.name for p in files.iterdir() if p.is_file() and "systemctl reboot" in p.read_text(encoding="utf-8")]
+    snapshot = (files / "mia-update-snapshot").read_text(encoding="utf-8")
+    assert "/run/ostree/staged-deployment" in snapshot and "btrfs subvolume snapshot -r /var/home" in snapshot
+    assert "head -n -\"$KEEP\"" in snapshot  # older ones are removed
+    unit = (files / "mia-update-snapshot.service").read_text(encoding="utf-8")
+    assert "After=ostree-finalize-staged.service" in unit and "ExecStop=/usr/lib/mia/os/files/mia-update-snapshot" in unit
     containerfile = (ROOT / "os" / "Containerfile").read_text(encoding="utf-8")
-    assert "greenboot" in containerfile and "mia-update-stage.timer mia-update-apply.timer" in containerfile
+    assert "RUN systemctl mask bootc-fetch-apply-updates.timer" in containerfile and "|| true" not in containerfile
+    assert "systemctl enable greenboot-healthcheck.service mia-update-stage.timer mia-update-snapshot.service" in containerfile
     for unit in (files / "mia-runtime.service", ROOT / "deploy" / "mia-runtime.service"):
         text = unit.read_text(encoding="utf-8")
         assert "Type=notify" in text and "WatchdogSec=" in text
+
+
+def test_the_watchdog_ping_stops_when_the_schedule_hasnt_come_round(monkeypatch):
+    """A job that never returns keeps the thread alive but stops the schedule's beat: the ping stops, and the status
+    line asks nothing of the model server."""
+    from core import runtime
+    from core.runtime import Runtime
+
+    sent = []
+    monkeypatch.setattr(sd_notify, "notify", lambda *lines: sent.extend(lines) or True)
+    monkeypatch.setattr(sd_notify, "watchdog_seconds", lambda: 60.0)
+    asked = []
+    fake = Runtime.__new__(Runtime)
+    fake.readiness = lambda quick=False: asked.append(quick) or "core"
+    fake._thread = type("T", (), {"is_alive": lambda self: True})()
+    fake.scheduler = type("S", (), {"beat": 100.0})()
+    Runtime._tell_systemd(fake, 100.0 + runtime.STUCK_SECONDS + 1, {"said": 0.0})
+    assert "WATCHDOG=1" not in sent and asked == [True]
+    Runtime._tell_systemd(fake, 160.0, {"said": 160.0})
+    assert "WATCHDOG=1" in sent
+
+
+def test_the_session_never_waits_on_her_runtime_and_the_shell_stops_trying_after_three_quick_deaths():
+    """A blocked start would hold the login on a black screen; a shell that can't run here ends in a terminal."""
+    files = ROOT / "os" / "files"
+    assert "systemctl --user start --no-block mia-runtime" in (files / "mia-session").read_text(encoding="utf-8")
+    shell = (files / "mia-shell").read_text(encoding="utf-8")
+    assert '[ "$quick" -ge 3 ]' in shell and "konsole -e" in shell and "sleep $((quick * 2 + 1))" in shell

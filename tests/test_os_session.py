@@ -8,7 +8,8 @@ end when she answers and a recovery page when she doesn't, whose links act only 
 carries the session entry, its scripts and the runtime's setting, tested in a VM under KWin's virtual display.
 The shell says what it shows with the time, comes back by itself when it dies, and the login screen defaults to
 her session.
-The image keeps /boot mounted, so an update staged in the VM applies at shutdown.
+The image keeps /boot mounted, so an update staged in the VM applies at shutdown. The shell notices a restarted
+runtime, and its own links act only from its recovery page.
 """
 
 from __future__ import annotations
@@ -144,3 +145,18 @@ def test_the_image_keeps_boot_mounted_so_an_update_applies_at_shutdown():
     assert "/usr/lib/systemd/system/ostree-finalize-staged.service.d/mia.conf" in containerfile
     assert "TimeoutIdleSec=0" in (ROOT / "os" / "files" / "boot-stays-mounted.conf").read_text(encoding="utf-8")
     assert "RequiresMountsFor=/boot" in (ROOT / "os" / "files" / "finalize-needs-boot.conf").read_text(encoding="utf-8")
+
+
+def test_the_shell_knows_when_her_runtime_was_restarted():
+    """The front end it loaded holds the old runtime's sign-in: a session file gone or changed means look again."""
+    loaded = {"url": "http://127.0.0.1:8765", "token": "a"}
+    assert not os_shell.restarted(loaded, dict(loaded)) and not os_shell.restarted(None, None)
+    assert os_shell.restarted(loaded, None) and os_shell.restarted(loaded, {"url": "http://127.0.0.1:8765", "token": "b"})
+
+
+def test_the_shells_own_links_act_only_from_its_recovery_page():
+    """A `mia-shell:` link on any other page is refused (the page handler checks the recovery flag first)."""
+    source = (ROOT / "gui" / "os_shell.py").read_text(encoding="utf-8")
+    handler = source[source.index("def acceptNavigationRequest"):source.index("view = QWebEngineView()")]
+    assert handler.index('if not state.get("recovery")') < handler.index("run_action(action)")
+    assert 'state["recovery"] = True' in source and 'state["recovery"], state["loaded"] = False, None' in source

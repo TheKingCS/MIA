@@ -31,7 +31,12 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   each update. **FW-05 is accepted** too: under Secure Boot with a TPM, the encrypted disk opens with the PIN
   alone (before and after an update); with Secure Boot off the TPM refuses and the recovery key opens it.
   Fable reviewed FW-05 before its first run and fixed five things that would each have cost a run.
-- **Next:** FW-06 (the system helper); pruning old update snapshots.
+- **2026-11-20, Fable reviewed all of Opus's work above** (three independent reviewers, 38 findings) and fixed it
+  in three commits. What Zac will notice: MIA OS never restarts the PC by itself now (an update goes in when he
+  restarts; Q-114 asks if he wants otherwise); setting up the encrypted disk is two steps, and nothing is removed
+  until his PIN has opened a start and the recovery key has been typed back; seven tools she could have used on
+  her own now need his yes or a grant; an old phone can sync with the updated PC again.
+- **Next:** the two VM runs of the review's fixes; then FW-06 (the system helper).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

@@ -19,7 +19,11 @@ appears within `WAIT_SECONDS` (30, REQ-UX-022), or her server doesn't answer, it
 - her log;
 - signing out to choose the Plasma session.
 
-Those four are links with this window's own scheme (`mia-shell:`), handled here and never by a page from the network.
+Those four are links with this window's own scheme (`mia-shell:`), handled here, only while the recovery page is
+showing: such a link on any other page does nothing.
+
+**When her runtime is restarted.** The front end it loaded holds a sign-in that ended with the old runtime. Every
+few seconds the shell reads the session file again; when it's gone or names a new sign-in, it looks for her afresh.
 
 **What it says.** It prints one line when it settles, "showing: front end" or "showing: recovery", and writes it
 with the time to `shell-state` beside the session file (also "front end loaded" once the page is in), so the VM
@@ -45,6 +49,7 @@ from core import desktop_session
 WAIT_SECONDS = 30
 SCHEME = "mia-shell"
 ACTIONS = ("retry", "terminal", "log", "signout")
+WATCH_SECONDS = 5  # how often the shell checks her runtime is still the one whose front end it loaded
 
 
 def answers(url: str, timeout: float = 2.0) -> bool:
@@ -64,6 +69,12 @@ def step(session: Optional[dict], reachable: Callable[[str], bool], now: float, 
         if reachable(url):
             return "open", url
     return ("recover", None) if now >= deadline else ("wait", None)
+
+
+def restarted(loaded: Optional[dict], now: Optional[dict]) -> bool:
+    """Pure logic. Whether her runtime was restarted since the front end was loaded: the session file is gone, or
+    it names another address or sign-in."""
+    return loaded is not None and (now is None or now != loaded)
 
 
 def waiting_page() -> str:
@@ -130,7 +141,8 @@ def run_action(action: str) -> None:
 
 def main(argv: Optional[list] = None) -> int:
     """Opens the shell full screen; with `--screenshot PATH --after SECONDS`, saves what it shows and quits. Each
-    state it reaches (front end, front end loaded, recovery) is announced beside the session file."""
+    state it reaches (front end, front end loaded, recovery) is announced beside the session file. While her front
+    end shows, it checks every few seconds that her runtime is still the one it loaded from (`watch`)."""
     args = list(sys.argv[1:] if argv is None else argv)
     shot = args[args.index("--screenshot") + 1] if "--screenshot" in args else ""
     after = float(args[args.index("--after") + 1]) if "--after" in args else 20.0
@@ -147,10 +159,13 @@ def main(argv: Optional[list] = None) -> int:
         """Keeps the recovery page's own links (`mia-shell:`) in this window."""
 
         def acceptNavigationRequest(self, url, kind, main_frame):  # noqa: N802 - Qt's name
-            """Handles a `mia-shell:` link here; every other address loads as usual."""
+            """Handles a `mia-shell:` link here, and only while this window's own recovery page is showing: a page
+            from anywhere else that carries such a link is refused. Every other address loads as usual."""
             action = action_for(url.toString())
             if action is None:
                 return super().acceptNavigationRequest(url, kind, main_frame)
+            if not state.get("recovery"):
+                return False
             if action == "retry":
                 QTimer.singleShot(0, show)
             else:
@@ -170,6 +185,7 @@ def main(argv: Optional[list] = None) -> int:
     def show() -> None:
         """Starts looking for her: the waiting page now, then a look each second (the window never freezes)."""
         state["deadline"] = time.monotonic() + WAIT_SECONDS
+        state["recovery"], state["loaded"] = False, None
         view.setHtml(waiting_page())
         look()
 
@@ -178,15 +194,31 @@ def main(argv: Optional[list] = None) -> int:
         session = desktop_session.read(path) if path else None
         what, url = step(session, answers, time.monotonic(), state["deadline"] if path else 0.0)
         if what == "open":
+            state["loaded"] = session
             view.setUrl(QUrl(url))
             announce("front end", said)
+            QTimer.singleShot(WATCH_SECONDS * 1000, watch)
         elif what == "recover":
             why = ("Her runtime didn't start within 30 seconds." if path else
                    "This session doesn't know where to find her (no session file is set).")
+            state["recovery"] = True
             view.setHtml(recovery_page(why))
             announce("recovery", said)
         else:
             QTimer.singleShot(1000, look)
+
+    def watch() -> None:
+        """While her front end is showing: when her runtime was restarted (its session file is gone or names a new
+        sign-in), the page it loaded holds a sign-in that no longer works, so the shell looks for her again."""
+        if state.get("loaded") is None:
+            return
+        gone = not answers(desktop_session.front_end_url(state["loaded"]))  # a runtime killed outright leaves its file
+        state["misses"] = state.get("misses", 0) + 1 if gone else 0
+        if restarted(state["loaded"], desktop_session.read(path) if path else None) or state["misses"] >= 2:
+            state["misses"] = 0
+            show()
+        else:
+            QTimer.singleShot(WATCH_SECONDS * 1000, watch)
 
     view.showFullScreen()
     show()
