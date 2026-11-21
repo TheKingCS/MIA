@@ -45,6 +45,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -348,17 +349,17 @@ class ObligationBook:
     def _load(self) -> None:
         """Reads the obligations and the reminders given (the last 500), keeping only fields an obligation knows; an
         unreadable file is logged, reported and starts empty.
-        """
+        . Sealed at rest: read through open_text (WP-04)."""
         self.obligations: list[Obligation] = []
         self.noted: list[str] = []
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             known = Obligation.__dataclass_fields__
             self.obligations = [Obligation(**{k: v for k, v in d.items() if k in known}) for d in raw.get("obligations", [])]
             self.noted = [str(x) for x in raw.get("noted", [])][-500:]
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
+        except (ValueError, OSError, TypeError, AttributeError):
             log.exception("obligations.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
 

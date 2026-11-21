@@ -54,6 +54,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -212,14 +213,14 @@ class LinkStore:
         self._load()
 
     def _load(self) -> None:
-        """Reads the stated links; an unreadable file is logged, reported and starts with none."""
+        """Reads the stated links; an unreadable file is logged, reported and starts with none. Sealed at rest: read through open_text (WP-04)."""
         self._links = []
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             self._links = [Link(**{k: v for k, v in d.items() if k in Link.__dataclass_fields__}) for d in raw]
-        except (json.JSONDecodeError, OSError, TypeError):
+        except (ValueError, OSError, TypeError):
             log.exception("Couldn't read %s; starting with no stated links.", self._file)
             from core.data_recovery import notify_data_corruption
 

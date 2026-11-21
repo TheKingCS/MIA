@@ -33,6 +33,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -144,17 +145,17 @@ class FlockBook:
     def _load(self) -> None:
         """Reads the flocks and the log, keeping only fields each knows; an unreadable file is logged, reported and starts
         empty.
-        """
+        . Sealed at rest: read through open_text (WP-04)."""
         self.flocks: list[Flock] = []
         self.entries: list[Entry] = []
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             pick = lambda cls, d: cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})  # noqa: E731
             self.flocks = [pick(Flock, d) for d in raw.get("flocks", [])]
             self.entries = [pick(Entry, d) for d in raw.get("entries", [])]
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
+        except (ValueError, OSError, TypeError, AttributeError):
             log.exception("flock.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
 

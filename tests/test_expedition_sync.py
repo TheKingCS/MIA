@@ -277,7 +277,9 @@ def test_import_still_merges_other_files_when_one_is_corrupted(isolated_paths, t
     assert result.counts["expeditions.json"] == 0  # skipped — corrupted
     assert result.counts["trips.json"] == 1  # merged fine — unaffected by the other file's corruption
 
-    merged_trips = json.loads((data_dir / "trips.json").read_text(encoding="utf-8"))
+    from core.at_rest import open_text
+
+    merged_trips = json.loads(open_text(data_dir / "trips.json"))  # sealed at rest (WP-04)
     trip_ids = {record["trip_id"] for record in merged_trips}
     assert trip_ids == {"home-trip", "pi-trip"}
 

@@ -45,6 +45,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.waypoint_manager import haversine_distance_km
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -224,14 +225,14 @@ class TripManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads trips.json; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads trips.json; a damaged file is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._trips_file.exists():
             self._trips = []
             return
         try:
-            raw = json.loads(self._trips_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._trips_file))
             self._trips = [Trip.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load trips.json — starting with an empty list.")
             notify_data_corruption(self.context, "trips.json")
             self._trips = []

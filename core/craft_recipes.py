@@ -53,6 +53,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -180,13 +181,13 @@ class CraftRecipeBook:
         self._load()
 
     def _load(self) -> None:
-        """Reads the recipes; an unreadable file is logged, reported and starts empty."""
+        """Reads the recipes; an unreadable file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         self._recipes = []
         if not self._file.exists():
             return
         try:
-            self._recipes = [CraftRecipe.from_dict(d) for d in json.loads(self._file.read_text(encoding="utf-8"))]
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
+            self._recipes = [CraftRecipe.from_dict(d) for d in json.loads(open_text(self._file))]
+        except (ValueError, OSError, TypeError, AttributeError):
             log.exception("craft_recipes.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
 

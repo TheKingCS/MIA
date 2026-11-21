@@ -234,6 +234,20 @@ SEALED_STORES = [
     ("core.shelf", "Shelf", "shelf.json"),
     ("core.step_plans", "StepPlanBook", "step_plans.json"),
     ("core.teamwork", "TeamworkBook", "teamwork.json"),
+    ("core.alarm_manager", "AlarmManager", "alarms.json"),
+    ("core.business_book", "BusinessBook", "business.json"),
+    ("core.craft_recipes", "CraftRecipeBook", "craft_recipes.json"),
+    ("core.energy_manager", "EnergyManager", "energy_sources.json"),
+    ("core.flock", "FlockBook", "flock.json"),
+    ("core.grow_lab", "GrowLab", "grow_lab.json"),
+    ("core.job_manager", "JobManager", "jobs.json"),
+    ("core.links", "LinkStore", "links.json"),
+    ("core.maintenance_manager", "MaintenanceManager", "maintenance.json"),
+    ("core.obligations", "ObligationBook", "obligations.json"),
+    ("core.project_manager", "ProjectManager", "projects.json"),
+    ("core.task_manager", "TaskManager", "tasks.json"),
+    ("core.trip_manager", "TripManager", "trips.json"),
+    ("core.waypoint_manager", "WaypointManager", "waypoints.json"),
 ]
 
 

@@ -38,6 +38,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -150,7 +151,7 @@ class BusinessBook:
     def _load(self) -> None:
         """Reads everything, keeping only fields each record knows (so a newer file loads); an unreadable file is logged,
         reported (notify_data_corruption) and starts empty.
-        """
+        . Sealed at rest: read through open_text (WP-04)."""
         self.customers: list[Customer] = []
         self.quotes: list[Quote] = []
         self.orders: list[Order] = []
@@ -160,7 +161,7 @@ class BusinessBook:
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             pick = lambda cls, d: cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})  # noqa: E731
             self.customers = [pick(Customer, d) for d in raw.get("customers", [])]
             self.quotes = [pick(Quote, d) for d in raw.get("quotes", [])]
@@ -168,7 +169,7 @@ class BusinessBook:
             self.featured = [str(j) for j in raw.get("featured", [])]
             self.markets = [pick(MarketDay, d) for d in raw.get("markets", [])]
             self.label = {k: str(v) for k, v in (raw.get("label") or {}).items() if k in LABEL_FIELDS}
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError):
+        except (ValueError, OSError, TypeError, AttributeError):
             log.exception("business.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
 

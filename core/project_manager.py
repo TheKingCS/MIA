@@ -32,6 +32,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight, grant_xp
 from core import life_events
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -139,14 +140,14 @@ class ProjectManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the projects; a damaged file is logged, reported and starts empty."""
+        """Reads the projects; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._projects_file.exists():
             self._projects = []
             return
         try:
-            raw = json.loads(self._projects_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._projects_file))
             self._projects = [Project.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load projects.json — starting with an empty list.")
             notify_data_corruption(self.context, "projects.json")
             self._projects = []

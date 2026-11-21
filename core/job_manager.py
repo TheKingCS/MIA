@@ -62,6 +62,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.material_manager import Material
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -250,14 +251,14 @@ class JobManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the jobs; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads the jobs; a damaged file is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._jobs_file.exists():
             self._jobs = []
             return
         try:
-            raw = json.loads(self._jobs_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._jobs_file))
             self._jobs = [Job.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load jobs.json — starting with an empty list.")
             notify_data_corruption(self.context, "jobs.json")
             self._jobs = []

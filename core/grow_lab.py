@@ -42,6 +42,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -171,7 +172,7 @@ class GrowLab:
     def _load(self) -> None:
         """Reads everything, keeping only fields each record knows; an unreadable file is logged, reported and starts
         empty.
-        """
+        . Sealed at rest: read through open_text (WP-04)."""
         self.batches: list[Batch] = []
         self.experiments: list[Experiment] = []
         self.systems: list[str] = []
@@ -179,13 +180,13 @@ class GrowLab:
         if not self._file.exists():
             return
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._file))
             pick = lambda cls, d: cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})  # noqa: E731
             self.batches = [pick(Batch, d) for d in raw.get("batches", [])]
             self.experiments = [pick(Experiment, d) for d in raw.get("experiments", [])]
             self.systems = [str(s) for s in raw.get("systems", [])]
             self.ranges = {str(k): dict(v) for k, v in (raw.get("ranges") or {}).items()}
-        except (json.JSONDecodeError, OSError, TypeError, AttributeError, ValueError):
+        except (ValueError, OSError, TypeError, AttributeError):
             log.exception("grow_lab.json unreadable — starting empty.")
             notify_data_corruption(self.context, _FILE)
 

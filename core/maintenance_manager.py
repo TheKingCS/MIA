@@ -70,6 +70,7 @@ from core.data_logger_manager import Reading
 from core.gamification import SkillWeight, grant_xp
 from core import life_events
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -608,15 +609,15 @@ class MaintenanceManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads assets and tasks; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads assets and tasks; a damaged file is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._maintenance_file.exists():
             self._assets, self._tasks = [], []
             return
         try:
-            raw = json.loads(self._maintenance_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._maintenance_file))
             self._assets = [MaintenanceAsset.from_dict(d) for d in raw.get("assets", [])]
             self._tasks = [MaintenanceTask.from_dict(d) for d in raw.get("tasks", [])]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load maintenance.json — starting with an empty list.")
             notify_data_corruption(self.context, "maintenance.json")
             self._assets, self._tasks = [], []
