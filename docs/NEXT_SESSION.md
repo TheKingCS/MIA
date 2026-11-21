@@ -14,7 +14,10 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 and Security, ends every session of his (this one too), unlinks his phones, locks the vaults and stops everything
 of hers; only signing in with his password lifts it ("carry on" can't). **WP-02 built too**: each card carries a
 binding (its kind, params and sentence); approve refuses a card changed since it was shown or another card's
-binding, and execute gets a copy. Next on the Windows backlog: WP-03, WP-04 (the MVP gate's last two).
+binding, and execute gets a copy. **WP-03 built**: every lookup that brings outside text (mail, feeds,
+a scanned receipt, a team's workspace) is framed like a web page before the model reads it; `tests/test_injection.py`
+puts 20 poisoned inputs through each and checks a change asked for after them is held. A new tool that returns outside
+text goes in `tool_loop.OUTSIDE_WHAT` and its manifest's `outside`. Next: WP-04 (every personal store sealed).
 
 **New 2026-11-20, Fable reviewed Opus's work since 2026-11-18** (LS-01 to LS-10, FW-02 to FW-05) with three
 independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each

@@ -172,7 +172,9 @@
       "team.start": "act_with_approval",
       "team.stop": "act_within_grant"
     },
-    "outside": []
+    "outside": [
+      "whats_in_the_workspace"
+    ]
   },
   "uses": [],
   "permissions": [

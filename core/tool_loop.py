@@ -72,9 +72,12 @@ def _lookups_only(context, calls: list[ToolCall]) -> bool:
     return bool(calls) and all(c.name in known and not changes_records(c.name) for c in calls)
 
 
-# Lookups whose results carry outside text without untrusted()'s framing: mail senders and subjects, and World
-# Intelligence's finds (titles as feeds and search results gave them).
-OUTSIDE_TOOLS = frozenset({"list_inbox", "world_finds"})
+# Lookups whose results carry outside text, and what that text is (WP-03): mail senders and subjects, World
+# Intelligence's finds (titles as feeds and search results gave them), a receipt's lines as read from a scan, and a
+# team's workspace (notes written from what they read). Their results are framed before the model sees them.
+OUTSIDE_WHAT = {"list_inbox": "Mail and letters in the inbox", "world_finds": "Finds from feeds and searches",
+                "get_receipt": "A receipt read from a scan", "whats_in_the_workspace": "A project's workspace notes"}
+OUTSIDE_TOOLS = frozenset(OUTSIDE_WHAT)
 
 
 def _brought_outside_text(results: list[tuple[str, str]]) -> bool:
@@ -176,7 +179,9 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         budget: Optional[float] = None) -> Optional[ChatReply]:
     """One turn with the loop: the model's reply when it isn't only
     lookups (unchanged, for the caller's usual path); else one answer
-    built from what it looked up. Only lookups offered in `tools` run,
+    built from what it looked up. A lookup that brings outside text
+    (OUTSIDE_WHAT) is framed as information before the model reads it
+    (WP-03). Only lookups offered in `tools` run,
     and a change asked for after a lookup that brought in outside text
     is held and said back (held_after_outside_text)."""
     from core.assistant_chat import settle_on_named_tool
@@ -221,7 +226,12 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                 log.exception("Lookup %s failed in the tool loop", call.name)
                 text = f"(The {call.name} lookup failed.)"
             results.append((call.name, text))
-            talk.append({"role": "tool", "content": _short(text), "tool_name": call.name})
+            shown = _short(text)
+            if call.name in OUTSIDE_WHAT:  # outside text, marked as information before the model reads it (WP-03)
+                from core.browser_safety import outside
+
+                shown = outside(shown, OUTSIDE_WHAT[call.name])
+            talk.append({"role": "tool", "content": shown, "tool_name": call.name})
         step += 1
         last = step >= MAX_STEPS or time.monotonic() - started > budget
         reply = llm.chat_with_tools(talk + [{"role": "system", "content": LAST_WORD if last else FOLLOW_UP}],

@@ -39,11 +39,17 @@ _READ_ONLY_PREFIXES = ("get_", "list_", "search_", "check_", "what_", "find_", "
 # Tools whose name reads like a lookup but that change records (2026-11-10, found by scanning every lookup-named
 # tool's handler): they record an undo and refresh screens like any change. tests/test_tool_gate.py keeps this right.
 CHANGES_DESPITE_NAME = frozenset({"check_off_grocery_item"})
+# And the other way: lookups whose names don't start like one (WP-03): they only read, so the tool loop treats them
+# as lookups (their outside text is framed, and a change asked for after them is held).
+READ_ONLY_DESPITE_NAME = frozenset({"world_finds", "whats_in_the_workspace"})
 
 
 def changes_records(action_name: str) -> bool:
     """Pure logic. Whether a tool may change records: every tool except the read-only ones (get_, list_, search_,
-    show_...), and those that only look like one (CHANGES_DESPITE_NAME) do."""
+    show_...) and those named as read-only (READ_ONLY_DESPITE_NAME); those that only look like a lookup
+    (CHANGES_DESPITE_NAME) do."""
+    if action_name in READ_ONLY_DESPITE_NAME:
+        return False
     return action_name in CHANGES_DESPITE_NAME or not action_name.startswith(_READ_ONLY_PREFIXES)
 
 

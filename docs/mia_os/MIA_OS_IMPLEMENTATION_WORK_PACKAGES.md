@@ -9,7 +9,7 @@ build on Windows now and carry over.*
 |---|---|---|---|---|---|
 | WP-01 | The lockdown phrase (Q-93). **Built 2026-11-20** (`core/lockdown.py`) | W-SEC | 0 | M0 | S |
 | WP-02 | Approvals bound to their parameters (REQ-SEC-016). **Built 2026-11-20** (`binding_of`, core/actions.py) | W-SEC | 0 | M0 | S |
-| WP-03 | Outside content marked at every entry; the injection test set | W-SEC | 0 | M0 | M |
+| WP-03 | Outside content marked at every entry; the injection test set. **Built 2026-11-20** (`browser_safety.outside`, `tool_loop.OUTSIDE_WHAT`, `tests/test_injection.py`) | W-SEC | 0 | M0 | M |
 | WP-04 | Every personal store sealed; a test over the classes | W-SEC | 0 | M0 | M |
 | WP-05 | Hash-chained security log | W-SEC | 0 | M0 | S |
 | WP-06 | Light theme; interface sounds; the Theme Studio from a picture | W-LOOK | 0 | M0 | M |

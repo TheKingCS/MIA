@@ -154,7 +154,9 @@
       "income_source.delete": "act_with_approval",
       "income_source.edit": "act_within_grant"
     },
-    "outside": []
+    "outside": [
+      "get_receipt"
+    ]
   },
   "uses": [],
   "permissions": [

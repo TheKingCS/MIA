@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1549 files, 342,746 lines; 1549 files describe themselves; 18,884 of 18,983 classes and functions are documented.
+1550 files, 342,847 lines; 1550 files describe themselves; 18,891 of 18,990 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-604 files, 173,180 lines; 8,924 of 9,010 classes and functions documented
+604 files, 173,209 lines; 8,925 of 9,011 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -900,7 +900,7 @@
 
 ## tests/: the test suite: what each part must do
 
-545 files, 89,992 lines; 7,601 of 7,614 classes and functions documented
+546 files, 90,064 lines; 7,607 of 7,620 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1104,6 +1104,7 @@
 - `tests/test_imports.py`: Imports from other apps (core/imports.py), 2026-10-01: calendars (.ics), contacts (.vcf) and bank statements (.csv).
 - `tests/test_inbox.py`: Document inbox: classification (core/inbox_classify.py), intake and filing (core/inbox_manager.py), email checking (core/inbox_mail.py), the voice tools, the phone upload endpoint and the Inbox screen.
 - `tests/test_inbox_goes_to.py`: Inbox (DEC-0113): each item says in one line where filing it would put it (core/web_inbox.goes_to). Pure logic, so it runs without Qt.
+- `tests/test_injection.py`: The injection test set (WP-03, REQ-SEC-026): twenty poisoned inputs (tests/data/injection_cases.json), each put through every way outside text reaches the model: a web page, the person's selection, and each lookup that brings outside text (mail, feeds, a scanned receipt, a team's workspace). Each ar
 - `tests/test_insight_manager.py`: Unit tests for core.insight_manager. Isolates _DATA_DIR/_INSIGHTS_FILE _RECOMMENDATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file.
 - `tests/test_inspection.py`: Universal Inspection (DEC-0056, core/inspection.py): every finding with its source, time and confidence; agreement confirms, disagreement is kept; what couldn't be determined says why; only passive methods run unasked; the repository subject finds where her docs disagree with her repository.
 - `tests/test_installer.py`: MIA's installer (2026-10-01): install.sh (Linux, Raspberry Pi), install.ps1 / install.bat (Windows), and the shared finishing step deploy/finish_install.py.
