@@ -50,6 +50,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -197,14 +198,14 @@ class PasswordVault:
 
     def _load(self) -> None:
         """Reads the header (the two sealed copies of the key) and the sealed logins; a file it can't read is logged and
-        left unchanged on disk.
+        left unchanged on disk. Sealed at rest besides its own encryption: read through open_text (WP-04); one that won't open is copied aside first.
         """
         self.header: dict = {}
         self.records: list[dict] = []
         if not self._file.exists():
             return
         try:
-            data = json.loads(self._file.read_text(encoding="utf-8"))
+            data = json.loads(open_text(self._file))  # sealed at rest (WP-04)
             self.header = dict(data.get("header") or {})
             self.records = list(data.get("entries") or [])
         except (OSError, ValueError, AttributeError):

@@ -52,6 +52,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from core.app_context import AppContext
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -175,11 +176,11 @@ class PrivateJournalManager:
 
     def _load(self) -> None:
         """Reads the public key (without it, nothing can be written: logged and reported) and the sealed entries (an
-        unreadable file is logged, reported and starts empty).
+        unreadable file is logged, reported and starts empty). Both files are sealed at rest besides the journal's own encryption (WP-04).
         """
         if self._keys_file.exists():
             try:
-                keys = json.loads(self._keys_file.read_text(encoding="utf-8"))
+                keys = json.loads(open_text(self._keys_file))  # sealed at rest (WP-04)
                 self._public_key = serialization.load_pem_public_key(keys["public_key"].encode("ascii"))
             except (json.JSONDecodeError, OSError, KeyError, ValueError):
                 log.exception("Failed to load private_journal_keys.json — the private journal can't be written.")
@@ -187,8 +188,8 @@ class PrivateJournalManager:
                 self._public_key = None
         if self._entries_file.exists():
             try:
-                self._records = list(json.loads(self._entries_file.read_text(encoding="utf-8")).get("entries", []))
-            except (json.JSONDecodeError, OSError, AttributeError):
+                self._records = list(json.loads(open_text(self._entries_file)).get("entries", []))  # sealed at rest (WP-04)
+            except (ValueError, OSError, AttributeError):
                 log.exception("Failed to load private_journal.json — starting with an empty list.")
                 notify_data_corruption(self.context, "private_journal.json")
                 self._records = []
@@ -252,12 +253,12 @@ class PrivateJournalManager:
 
     def _decrypt_private_key(self, passphrase: str):
         """The private key opened with the passphrase (core/secrets_manager.decrypt_bytes); SecretsError when the
-        journal isn't set up, the key file can't be read, or the passphrase is wrong.
+        journal isn't set up, the key file can't be read, or the passphrase is wrong. Sealed at rest: read through open_text (WP-04).
         """
         if not self._keys_file.exists():
             raise SecretsError("The private journal hasn't been set up yet.")
         try:
-            keys = json.loads(self._keys_file.read_text(encoding="utf-8"))
+            keys = json.loads(open_text(self._keys_file))
             blob = _unb64(keys["private_key"])
         except (json.JSONDecodeError, OSError, KeyError, ValueError) as exc:
             raise SecretsError("The private journal's key file is unreadable.") from exc

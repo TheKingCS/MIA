@@ -45,6 +45,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 from core.region import money
@@ -179,14 +180,15 @@ def _checkpoints_file(context=None) -> Path:
 
 
 def load_checkpoints(context=None) -> list[dict]:
-    """The monthly checkpoints (why_checkpoints.json); a missing or damaged file gives none (logged)."""
+    """The monthly checkpoints (why_checkpoints.json, sealed at rest: WP-04); a missing, damaged or unopenable file
+    gives none (logged; one that won't open is copied aside first)."""
     path = _checkpoints_file(context)
     if not path.exists():
         return []
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(open_text(path))  # sealed at rest (WP-04)
         return [c for c in data if isinstance(c, dict) and "month" in c]
-    except (json.JSONDecodeError, OSError):
+    except (ValueError, OSError):
         log.exception("why_checkpoints.json unreadable — ignoring it.")
         return []
 

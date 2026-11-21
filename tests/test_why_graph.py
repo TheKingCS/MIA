@@ -4,6 +4,7 @@ builder (core/why_graph.py), the tools (core/assistant_why_actions.py),
 and the Perspective path. Checks facts and structure, never wording.
 """
 
+from core.at_rest import open_text  # sealed at rest (WP-04)
 import json
 import re
 from datetime import date
@@ -158,7 +159,7 @@ def test_monthly_checkpoint_and_what_changed(ctx):
     ctx.real_estate.add_property("Oak St house", property_type="Rental")
 
     sheet = build_why_sheet(ctx, TODAY)
-    months = [c["month"] for c in json.loads(why_module._CHECKPOINTS_FILE.read_text())]
+    months = [c["month"] for c in json.loads(open_text(why_module._CHECKPOINTS_FILE))]
     assert months == ["2026-06", "2026-09"]
     assert "Debt is down $3,000 since June 2026 ($15,000 then, $12,000 now)." in sheet.changes
     assert "1 more rental since June 2026 (1 then, 2 now)." in sheet.changes

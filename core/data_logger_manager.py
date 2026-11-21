@@ -35,6 +35,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -110,14 +111,14 @@ class DataLoggerManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the readings; a damaged file is logged, reported and starts empty."""
+        """Reads the readings; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._readings_file.exists():
             self._readings = []
             return
         try:
-            raw = json.loads(self._readings_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._readings_file))  # sealed at rest (WP-04)
             self._readings = [Reading.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load data_logger_readings.json — starting with an empty list.")
             notify_data_corruption(self.context, "data_logger_readings.json")
             self._readings = []

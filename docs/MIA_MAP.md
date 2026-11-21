@@ -8,9 +8,9 @@
 - **Decisions** — 285 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 322 dev entries (work/knowledge/).
+- **Knowledge she's written** — 323 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
-- **What she keeps** — 55 personal + 42 household stores, 117 sealed at rest.
+- **What she keeps** — 55 personal + 42 household stores, 123 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
 
 ## Decisions — why MIA is built the way she is
@@ -317,12 +317,12 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 322 entries 47 lesson, 22 debugging, 24 decision, 12 method, 10 test-procedure, 4 failed-experiment, 201 implementation, 2 security-finding.
+- **Dev-knowledge** — 323 entries 47 lesson, 22 debugging, 24 decision, 13 method, 10 test-procedure, 4 failed-experiment, 201 implementation, 2 security-finding.
 
 ## What she keeps, and how it's protected
 
 - 55 personal stores (each person's own) and 42 household stores.
-- 117 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
+- 123 of them are **sealed at rest** (DEC-0126) — encrypted on disk, the real/fictional boundary kept separate (DEC-0137).
 
 ## How you shape her
 

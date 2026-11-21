@@ -10,7 +10,7 @@ build on Windows now and carry over.*
 | WP-01 | The lockdown phrase (Q-93). **Built 2026-11-20** (`core/lockdown.py`) | W-SEC | 0 | M0 | S |
 | WP-02 | Approvals bound to their parameters (REQ-SEC-016). **Built 2026-11-20** (`binding_of`, core/actions.py) | W-SEC | 0 | M0 | S |
 | WP-03 | Outside content marked at every entry; the injection test set. **Built 2026-11-20** (`browser_safety.outside`, `tool_loop.OUTSIDE_WHAT`, `tests/test_injection.py`) | W-SEC | 0 | M0 | M |
-| WP-04 | Every personal store sealed; a test over the classes. **Begun 2026-11-20**: every personal file is sealed, public or on `at_rest.NOT_SEALED_YET` with why (`tests/test_sealed_stores.py`, a list that only shrinks: 46 left); 42 more sealed (98 in all) | W-SEC | 0 | M0 | M |
+| WP-04 | Every personal store sealed; a test over the classes. **Begun 2026-11-20, all but the budget 2026-11-21**: every personal file is sealed (123 whole, 9 a line at a time), public (5), named but never kept as a file (`NO_FILE`, 4) or on `at_rest.NOT_SEALED_YET` with why (`tests/test_sealed_stores.py`, a list that only shrinks: 7 left, the budget's, waiting on the Plaid work); sync's last-synced copies are sealed with their files | W-SEC | 0 | M0 | M |
 | WP-05 | Hash-chained security log | W-SEC | 0 | M0 | S |
 | WP-06 | Light theme; interface sounds; the Theme Studio from a picture | W-LOOK | 0 | M0 | M |
 | WP-07 | The orb's states driven by events | W-SELF | 0 | M0 | S |

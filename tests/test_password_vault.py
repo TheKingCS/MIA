@@ -6,6 +6,7 @@ PC sync it still encrypted, only when they hold the same vault; and a
 password never shows up anywhere it shouldn't. Placeholder logins only.
 """
 
+from core.at_rest import open_bytes  # the vault is sealed at rest (WP-04)
 import json
 
 import pytest
@@ -124,15 +125,15 @@ def test_sync_moves_it_encrypted_and_only_between_the_same_vault(tmp_path, monke
     a = phone.save("Example A", "robin", "aaa-Placeholder")
     pc_dir.mkdir()
     (pc_dir / "password_vault.json").write_bytes((phone_dir / "password_vault.json").read_bytes())  # synced once
-    base = (phone_dir / "password_vault.json").read_bytes()
+    base = open_bytes(phone_dir / "password_vault.json")  # what sync reads: the content, not the seal
     pc = PasswordVault(None, data_dir=pc_dir)
     pv._open.clear()
     pc.unlock(MASTER)  # the same vault opens on the PC with the same master password
     pc.save("Example B", "robin", "bbb-Placeholder")
     phone.unlock(MASTER)
     phone.save("Example A", "robin", "aaa-changed-Placeholder", entry_id=a.entry_id)
-    merged = sync.merge_file("password_vault.json", base, (phone_dir / "password_vault.json").read_bytes(),
-                             (pc_dir / "password_vault.json").read_bytes(), True)
+    merged = sync.merge_file("password_vault.json", base, open_bytes(phone_dir / "password_vault.json"),
+                             open_bytes(pc_dir / "password_vault.json"), True)
     assert b"Placeholder" not in merged
     (phone_dir / "password_vault.json").write_bytes(merged)
     phone._load()

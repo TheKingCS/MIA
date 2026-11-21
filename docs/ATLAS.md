@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1551 files, 343,190 lines; 1551 files describe themselves; 18,898 of 18,997 classes and functions are documented.
+1551 files, 343,249 lines; 1551 files describe themselves; 18,900 of 18,999 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-604 files, 173,366 lines; 8,925 of 9,011 classes and functions documented
+604 files, 173,387 lines; 8,925 of 9,011 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -900,7 +900,7 @@
 
 ## tests/: the test suite: what each part must do
 
-547 files, 90,250 lines; 7,614 of 7,627 classes and functions documented
+547 files, 90,288 lines; 7,616 of 7,629 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1292,7 +1292,7 @@
 - `tests/test_scheduler.py`: The plain-Python scheduler (core/scheduler.py, DEC-0155): jobs on intervals by a clock that's passed in, under the store lock or not now, one failure never stopping the rest, and no catching up after a sleep.
 - `tests/test_script_library_manager.py`: Unit tests for core.script_library_manager. Isolates _DATA_DIR/_SCRIPTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths) — same shape throughout, since ScriptLibraryManager is deliberately the same persisted-JSON CRUD pattern as JournalManager,
 - `tests/test_script_runner.py`: Unit tests for core.script_runner — genuine subprocess runs, not mocks. Unlike this project's flashing-engine/serial-monitor work (blocked on real hardware this dev sandbox doesn't have), a script's execution needs nothing special: real `bash`/the real Python interpreter are both right here, so thes
-- `tests/test_sealed_stores.py`: Every personal store sealed (WP-04, DEC-0126): each record, log or derived file in the retention registry is sealed whole (SEALED), sealed a line at a time (LINE_SEALED), not anyone's (PUBLIC, with why), or listed as not sealed yet with why (NOT_SEALED_YET), a list that may only shrink. A sealed sto
+- `tests/test_sealed_stores.py`: Every personal store sealed (WP-04, DEC-0126): each record, log or derived file in the retention registry is sealed whole (SEALED), sealed a line at a time (LINE_SEALED), not anyone's (PUBLIC, with why), or listed as not sealed yet with why (NOT_SEALED_YET), a list that may only shrink, or kept as n
 - `tests/test_search_manager.py`: Unit tests for core.search_manager — no persisted file at all, so no isolation fixture is needed here (unlike most core/ managers).
 - `tests/test_seasons.py`: Seasons of memory (build plan step 10, core/seasons.py): a month or a year against the one before, worked out in code from the person's history and memories, phrased by the model from the sheet; each closed month and year kept once in their folder; no money lines for a child.
 - `tests/test_secrets_manager.py`: Unit tests for core.secrets_manager.encrypt_bytes / decrypt_bytes.

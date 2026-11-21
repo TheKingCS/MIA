@@ -64,7 +64,7 @@ from typing import Any, Callable, Optional
 from contextlib import contextmanager
 
 from core import retention as _retention
-from core.at_rest import open_bytes
+from core.at_rest import open_bytes, open_text, seal_text
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -431,18 +431,18 @@ def manifest(context, profile_id: str) -> dict:
 
 
 def vault_id(folder: Optional[Path]) -> str:
-    """Which password vault a device holds ("" for none)."""
+    """Which password vault a device holds ("" for none). The vault is sealed at rest: read through open_text."""
     try:
-        return str(json.loads((folder / PASSWORD_VAULT).read_text(encoding="utf-8"))["header"]["vault_id"])
+        return str(json.loads(open_text(folder / PASSWORD_VAULT))["header"]["vault_id"])
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return ""
 
 
 def journal_key(folder: Optional[Path]) -> str:
     """Which private journal a device holds: a fingerprint of its public
-    key ("" for none). A new passphrase on one device keeps the same key."""
+    key ("" for none). A new passphrase on one device keeps the same key. The key file is sealed at rest: read through open_text."""
     try:
-        keys = json.loads((folder / JOURNAL_KEYS).read_text(encoding="utf-8"))
+        keys = json.loads(open_text(folder / JOURNAL_KEYS))
         return hashlib.sha256(str(keys["public_key"]).strip().encode("utf-8")).hexdigest()
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return ""
@@ -645,15 +645,24 @@ class SyncState:
         self.root = root
 
     def base(self, scope: str, name: str) -> Optional[bytes]:
-        """A data file as it was at the last sync, or None when it has never synced."""
+        """A data file as it was at the last sync, or None when it has never synced (or its copy won't open). A
+        sealed file's copy is sealed too (WP-04), and opened here."""
         path = self.root / scope / name
-        return path.read_bytes() if path.is_file() else None
+        try:
+            return open_bytes(path) if path.is_file() else None
+        except ValueError:
+            return None
 
     def set_base(self, scope: str, name: str, data: bytes) -> None:
-        """Saves a data file's base copy (written to a temporary file and moved into place)."""
+        """Saves a data file's base copy (written to a temporary file and moved into place), sealed when the file
+        itself is (WP-04: the copy holds the same records)."""
         path = self.root / scope / name
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_name(path.name + ".tmp")
+        try:
+            data = seal_text(path, data.decode("utf-8")).encode("utf-8")
+        except UnicodeDecodeError:
+            pass  # not text: kept as it is
         tmp.write_bytes(data)
         tmp.replace(path)
 
@@ -672,16 +681,19 @@ class SyncState:
         tmp.replace(self.root / "files.json")
 
     def game(self) -> dict:
-        """The game numbers as of the last sync ({} when unreadable)."""
+        """The game numbers as of the last sync ({} when unreadable). Sealed at rest (WP-04)."""
         try:
-            return json.loads((self.root / "game.json").read_text(encoding="utf-8"))
+            return json.loads(open_text(self.root / "game.json"))
         except (OSError, ValueError):
             return {}
 
     def set_game(self, values: dict) -> None:
-        """Saves the game numbers as of this sync."""
+        """Saves the game numbers as of this sync, sealed (WP-04), written to a temporary file and moved into place."""
         self.root.mkdir(parents=True, exist_ok=True)
-        (self.root / "game.json").write_text(json.dumps(values), encoding="utf-8")
+        path = self.root / "game.json"
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(seal_text(path, json.dumps(values)), encoding="utf-8")
+        tmp.replace(path)
 
     def status(self) -> dict:
         """The last sync's status: when, how much went each way, any problem."""

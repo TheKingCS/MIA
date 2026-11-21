@@ -277,6 +277,10 @@ SEALED_STORES = [
     ("core.homestead_manager", "HomesteadManager", "homestead_snapshots.json"),
     ("core.inbox_manager", "InboxManager", "inbox.json"),
     ("core.textbook_manager", "TextbookManager", "textbooks.json"),
+    ("core.data_logger_manager", "DataLoggerManager", "data_logger_readings.json"),
+    ("core.password_vault", "PasswordVault", "password_vault.json"),
+    ("core.private_journal", "PrivateJournalManager", "private_journal.json"),
+    ("core.private_journal", "PrivateJournalManager", "private_journal_keys.json"),
     ("core.calendar_manager", "CalendarManager", "calendar_events.json"),
 ]
 
@@ -323,6 +327,8 @@ SEALED_READERS = [
     ("core.good_news", "following", "good_news_following.json", "context"),
     ("core.inbox_mail", "load_state", "inbox_mail_state.json", "path"),
     ("core.seasons", "kept", "seasons.json", "context"),
+    ("core.why_graph", "load_checkpoints", "why_checkpoints.json", "context"),
+    ("core.sync", "SyncState.game", "game.json", "folder"),
 ]
 
 
@@ -336,7 +342,7 @@ def test_every_sealed_name_has_its_store_here():
 @pytest.mark.parametrize("module, reader, name, takes", SEALED_READERS)
 def test_a_sealed_file_kept_by_functions_reads_as_none_and_keeps_a_copy(tmp_path, module, reader, name, takes):
     """Sealed under a key that's gone: the reader gives nothing back rather than failing, and the file's copy is
-    set aside."""
+    set aside. A reader written "Class.method" is a method of the class made with what it takes."""
     import importlib
     from types import SimpleNamespace
 
@@ -344,8 +350,11 @@ def test_a_sealed_file_kept_by_functions_reads_as_none_and_keeps_a_copy(tmp_path
     atomic_write_text(tmp_path / name, "{}")
     before = (tmp_path / name).read_bytes()
     at_rest.use_key(KEY)
-    read = getattr(importlib.import_module(module), reader)
-    given = {"context": SimpleNamespace(failures=SimpleNamespace(data_dir=tmp_path)), "folder": tmp_path,
+    found = importlib.import_module(module)
+    owner, _, method = reader.rpartition(".")  # "Class.method": a method of the class made with what it takes
+    read = (lambda given: getattr(getattr(found, owner)(given), method)()) if owner else getattr(found, reader)
+    mine = SimpleNamespace(data_dir=tmp_path)  # the person's folder, wherever a reader looks for it
+    given = {"context": SimpleNamespace(failures=mine, intents=mine), "folder": tmp_path,
              "path": tmp_path / name}[takes]
     assert not read(given)
     [aside] = tmp_path.glob(name + ".unreadable-*")

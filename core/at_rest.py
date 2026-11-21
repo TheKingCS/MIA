@@ -193,6 +193,13 @@ SEALED = frozenset({
     "music_tracks.json",
     "music_playlists.json",
     "recurring_mission_templates.json",
+    # 2026-11-21 (WP-04): the vault, the private journal, the data logger, the why checkpoints, sync's game
+    "data_logger_readings.json",
+    "why_checkpoints.json",
+    "password_vault.json",
+    "private_journal.json",
+    "private_journal_keys.json",
+    "game.json",
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
@@ -209,22 +216,19 @@ LINE_SEALED = frozenset({"life_events.jsonl", "corrections.jsonl", "inbox_readin
 # (catching ValueError and OSError) and writes through atomic_write_text; then its name moves to SEALED.
 NOT_SEALED_YET: dict[str, str] = {
     "bills.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "boss_book.json": "its store reads the file directly: move its reader to open_text first",
     "budget_expenses.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "budget_targets.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "business_entities.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "data_logger_readings.json": "its store reads the file directly: move its reader to open_text first",
     "debts.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "failure_log.json": "its store reads the file directly: move its reader to open_text first",
-    "game.json": "its store reads the file directly: move its reader to open_text first",
     "income.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "income_sources.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "kitchen.json": "its store reads the file directly: move its reader to open_text first",
-    "password_vault.json": "its store reads the file directly: move its reader to open_text first",
-    "private_journal.json": "its store reads the file directly: move its reader to open_text first",
-    "private_journal_keys.json": "its store reads the file directly: move its reader to open_text first",
-    "profile.json": "its store reads the file directly: move its reader to open_text first",
-    "why_checkpoints.json": "its store reads the file directly: move its reader to open_text first",
+}
+# Names in the retention registry that no store keeps as a file (WP-04, 2026-11-21): nothing on disk to seal.
+NO_FILE: dict[str, str] = {
+    "boss_book.json": "no store writes it: the boss book is kept in boss_battles.json (sealed)",
+    "kitchen.json": "no store writes it: the kitchen is kept in its kitchen_*.json files (sealed)",
+    "profile.json": "never kept on disk: only the name of the account in a data export's archive",
+    "failure_log.json": "no store writes it: the Fix-It Log is failures.jsonl and failure_state.json (sealed)",
 }
 # Records that aren't anyone's: nothing personal to seal.
 PUBLIC: dict[str, str] = {

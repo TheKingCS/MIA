@@ -17,11 +17,12 @@ binding (its kind, params and sentence); approve refuses a card changed since it
 binding, and execute gets a copy. **WP-03 built**: every lookup that brings outside text (mail, feeds,
 a scanned receipt, a team's workspace) is framed like a web page before the model reads it; `tests/test_injection.py`
 puts 20 poisoned inputs through each and checks a change asked for after them is held. A new tool that returns outside
-text goes in `tool_loop.OUTSIDE_WHAT` and its manifest's `outside`. **WP-04 begun**: `tests/test_sealed_stores.py` holds every personal
-file to sealed, public, or `at_rest.NOT_SEALED_YET` with why (46 left, a ceiling that only goes down; 98 sealed). Sealing one: move
-its store's reader to `open_text` (catching ValueError and OSError), add its name to SEALED and its class to
-`tests/test_at_rest.py`'s SEALED_STORES, take it off the list and lower `NOT_SEALED_YET_MOST`. The budget's seven wait
-on the Plaid work; the eight appended logs need line sealing.
+text goes in `tool_loop.OUTSIDE_WHAT` and its manifest's `outside`. **WP-04 done but the budget (2026-11-21)**: `tests/test_sealed_stores.py` holds every personal
+file to sealed (123), line-sealed (9), public, `NO_FILE`, or `at_rest.NOT_SEALED_YET` with why (7 left, the budget's,
+waiting on the Plaid work; a ceiling that only goes down). Sealing one: move its store's reader to `open_text` (catching
+ValueError and OSError), add its name to SEALED and to one of `tests/test_at_rest.py`'s three lists (SEALED_STORES for
+a class with a data folder, SEALED_FIXED for a module-constant file, SEALED_READERS for a function), take it off the
+list and lower `NOT_SEALED_YET_MOST`. Next: WP-05, the security log hash-chained.
 
 **New 2026-11-20, Fable reviewed Opus's work since 2026-11-18** (LS-01 to LS-10, FW-02 to FW-05) with three
 independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each

@@ -40,10 +40,13 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
 - **2026-11-20, Opus: the review's low findings and the Windows backlog's MVP four.** Eight low findings fixed.
   WP-01 the lockdown phrase ("lockdown", or the button: everything signed out, vaults locked, MIA stopped,
   until his password); WP-02 an approval holds only for the card as shown; WP-03 outside text framed at every
-  entry, with 20 poisoned inputs tested; WP-04 under way: 98 files sealed at rest, 46 on a list that only
-  shrinks (the budget's seven wait on the Plaid work).
-- **Next:** WP-04's remaining stores; Zac's answer to Q-114; FW-06 (the system helper, for Fable); his install
-  guide for MV-01.
+  entry, with 20 poisoned inputs tested.
+- **2026-11-21, Opus: WP-04 done but the budget.** 123 files sealed whole and 9 appended logs a line at a time
+  (the security log among them); the vault and private journal sealed besides their own encryption; sync's
+  last-synced copies sealed like their files. Only the budget's seven wait, on the Plaid work. Sealing the
+  security log deadlocked the key's lock (now re-entrant), which the suite caught.
+- **Next:** WP-05 (the security log hash-chained); Zac's answer to Q-114; FW-06 (the system helper, for Fable);
+  his install guide for MV-01.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 
