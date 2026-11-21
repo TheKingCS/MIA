@@ -18,7 +18,7 @@ binding, and execute gets a copy. **WP-03 built**: every lookup that brings outs
 a scanned receipt, a team's workspace) is framed like a web page before the model reads it; `tests/test_injection.py`
 puts 20 poisoned inputs through each and checks a change asked for after them is held. A new tool that returns outside
 text goes in `tool_loop.OUTSIDE_WHAT` and its manifest's `outside`. **WP-04 begun**: `tests/test_sealed_stores.py` holds every personal
-file to sealed, public, or `at_rest.NOT_SEALED_YET` with why (70 left, a ceiling that only goes down; 74 sealed). Sealing one: move
+file to sealed, public, or `at_rest.NOT_SEALED_YET` with why (56 left, a ceiling that only goes down; 88 sealed). Sealing one: move
 its store's reader to `open_text` (catching ValueError and OSError), add its name to SEALED and its class to
 `tests/test_at_rest.py`'s SEALED_STORES, take it off the list and lower `NOT_SEALED_YET_MOST`. The budget's seven wait
 on the Plaid work; the eight appended logs need line sealing.

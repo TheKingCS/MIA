@@ -45,6 +45,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -218,27 +219,27 @@ class ProductManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the products; a damaged file is logged, reported and starts empty."""
+        """Reads the products; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._products_file.exists():
             self._products = []
             return
         try:
-            raw = json.loads(self._products_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._products_file))
             self._products = [Product.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load products.json — starting with an empty list.")
             notify_data_corruption(self.context, "products.json")
             self._products = []
 
     def _load_usage_log(self) -> None:
-        """Reads the stock-change log; a damaged file is logged, reported and starts empty."""
+        """Reads the stock-change log; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._usage_log_file.exists():
             self._usage_log = []
             return
         try:
-            raw = json.loads(self._usage_log_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._usage_log_file))
             self._usage_log = [ProductUsageEntry.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load product_usage_log.json — starting with an empty list.")
             notify_data_corruption(self.context, "product_usage_log.json")
             self._usage_log = []

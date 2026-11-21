@@ -35,6 +35,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -156,27 +157,27 @@ class InventoryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the inventory; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads the inventory; a damaged file is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._items_file.exists():
             self._items = []
             return
         try:
-            raw = json.loads(self._items_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._items_file))
             self._items = [InventoryItem.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load inventory_items.json — starting with an empty list.")
             notify_data_corruption(self.context, "inventory_items.json")
             self._items = []
 
     def _load_usage_log(self) -> None:
-        """Reads the usage log; a damaged file is logged, reported and starts empty."""
+        """Reads the usage log; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._usage_log_file.exists():
             self._usage_log = []
             return
         try:
-            raw = json.loads(self._usage_log_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._usage_log_file))
             self._usage_log = [InventoryUsageEntry.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load inventory_usage_log.json — starting with an empty list.")
             notify_data_corruption(self.context, "inventory_usage_log.json")
             self._usage_log = []

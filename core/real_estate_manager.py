@@ -54,6 +54,7 @@ from core.app_context import AppContext
 from core import life_events
 from core.region import money
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -407,14 +408,14 @@ class RealEstateManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the properties; a damaged file is logged, reported and starts empty."""
+        """Reads the properties; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._properties_file.exists():
             self._properties = []
             return
         try:
-            raw = json.loads(self._properties_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._properties_file))
             self._properties = [Property.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load properties.json — starting with an empty list.")
             notify_data_corruption(self.context, "properties.json")
             self._properties = []

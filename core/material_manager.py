@@ -53,6 +53,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -192,27 +193,27 @@ class MaterialManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the materials; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads the materials; a damaged file is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._materials_file.exists():
             self._materials = []
             return
         try:
-            raw = json.loads(self._materials_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._materials_file))
             self._materials = [Material.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load materials.json — starting with an empty list.")
             notify_data_corruption(self.context, "materials.json")
             self._materials = []
 
     def _load_usage_log(self) -> None:
-        """Reads the usage log; a damaged file is logged, reported and starts empty."""
+        """Reads the usage log; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._usage_log_file.exists():
             self._usage_log = []
             return
         try:
-            raw = json.loads(self._usage_log_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._usage_log_file))
             self._usage_log = [MaterialUsageEntry.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load material_usage_log.json — starting with an empty list.")
             notify_data_corruption(self.context, "material_usage_log.json")
             self._usage_log = []

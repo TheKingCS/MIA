@@ -248,6 +248,20 @@ SEALED_STORES = [
     ("core.task_manager", "TaskManager", "tasks.json"),
     ("core.trip_manager", "TripManager", "trips.json"),
     ("core.waypoint_manager", "WaypointManager", "waypoints.json"),
+    ("core.business_use", "BusinessUseManager", "business_use.json"),
+    ("core.component_manager", "ComponentManager", "component_usage_log.json"),
+    ("core.component_manager", "ComponentManager", "components.json"),
+    ("core.insight_manager", "InsightManager", "insights.json"),
+    ("core.insight_manager", "InsightManager", "recommendations.json"),
+    ("core.inventory_manager", "InventoryManager", "inventory_items.json"),
+    ("core.inventory_manager", "InventoryManager", "inventory_usage_log.json"),
+    ("core.material_manager", "MaterialManager", "material_usage_log.json"),
+    ("core.material_manager", "MaterialManager", "materials.json"),
+    ("core.product_manager", "ProductManager", "product_usage_log.json"),
+    ("core.product_manager", "ProductManager", "products.json"),
+    ("core.real_estate_manager", "RealEstateManager", "properties.json"),
+    ("core.script_library_manager", "ScriptLibraryManager", "scripts.json"),
+    ("core.expedition_manager", "ExpeditionManager", "expeditions.json"),
 ]
 
 

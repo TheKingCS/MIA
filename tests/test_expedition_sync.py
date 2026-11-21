@@ -11,6 +11,8 @@ real data/ or trip_photos/ directories.
 from __future__ import annotations
 
 import json
+
+from core.at_rest import open_text  # merged files are sealed at rest (WP-04)
 import zipfile
 from pathlib import Path
 
@@ -90,7 +92,7 @@ def test_import_adds_new_records_and_merges_with_existing(isolated_paths, tmp_pa
     assert result.passed is True
     assert result.counts["expeditions.json"] == 1
 
-    merged = json.loads((data_dir / "expeditions.json").read_text(encoding="utf-8"))
+    merged = json.loads(open_text(data_dir / "expeditions.json"))
     ids = {record["expedition_id"] for record in merged}
     assert ids == {"home-exp", "pi-exp"}
 
@@ -108,7 +110,7 @@ def test_import_skips_records_with_ids_already_present(isolated_paths, tmp_path)
     assert result.passed is True
     assert result.counts["trips.json"] == 0
 
-    trips = json.loads((data_dir / "trips.json").read_text(encoding="utf-8"))
+    trips = json.loads(open_text(data_dir / "trips.json"))
     assert len(trips) == 1
     assert trips[0]["name"] == "Hike"  # untouched, not overwritten by the duplicate
 
@@ -148,7 +150,7 @@ def test_reimporting_the_same_bundle_does_not_duplicate(isolated_paths, tmp_path
     assert first.counts["trip_photos"] == 1
     assert second.counts["trip_photos"] == 0
 
-    expeditions = json.loads((data_dir / "expeditions.json").read_text(encoding="utf-8"))
+    expeditions = json.loads(open_text(data_dir / "expeditions.json"))
     assert len(expeditions) == 1
 
 
@@ -276,8 +278,6 @@ def test_import_still_merges_other_files_when_one_is_corrupted(isolated_paths, t
 
     assert result.counts["expeditions.json"] == 0  # skipped — corrupted
     assert result.counts["trips.json"] == 1  # merged fine — unaffected by the other file's corruption
-
-    from core.at_rest import open_text
 
     merged_trips = json.loads(open_text(data_dir / "trips.json"))  # sealed at rest (WP-04)
     trip_ids = {record["trip_id"] for record in merged_trips}

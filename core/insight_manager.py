@@ -57,6 +57,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -170,20 +171,20 @@ class InsightManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads both files; a damaged one is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads both files; a damaged one is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if self._insights_file.exists():
             try:
-                raw = json.loads(self._insights_file.read_text(encoding="utf-8"))
+                raw = json.loads(open_text(self._insights_file))
                 self._insights = [Insight.from_dict(d) for d in raw]
-            except (json.JSONDecodeError, OSError):
+            except (ValueError, OSError):
                 log.exception("Failed to load insights.json — starting with an empty list.")
                 notify_data_corruption(self.context, "insights.json")
                 self._insights = []
         if self._recommendations_file.exists():
             try:
-                raw = json.loads(self._recommendations_file.read_text(encoding="utf-8"))
+                raw = json.loads(open_text(self._recommendations_file))
                 self._recommendations = [Recommendation.from_dict(d) for d in raw]
-            except (json.JSONDecodeError, OSError):
+            except (ValueError, OSError):
                 log.exception("Failed to load recommendations.json — starting with an empty list.")
                 notify_data_corruption(self.context, "recommendations.json")
                 self._recommendations = []

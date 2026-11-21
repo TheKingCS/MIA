@@ -54,6 +54,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.homestead_costs import hour_readings
@@ -118,12 +119,12 @@ class BusinessUseManager:
         self._load()
 
     def _load(self) -> None:
-        """Reads the log; an unreadable file is logged, reported and starts empty."""
+        """Reads the log; an unreadable file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._use_file.exists():
             return
         try:
-            self._entries = [UseEntry.from_dict(d) for d in json.loads(self._use_file.read_text(encoding="utf-8"))]
-        except (json.JSONDecodeError, OSError, TypeError):
+            self._entries = [UseEntry.from_dict(d) for d in json.loads(open_text(self._use_file))]
+        except (ValueError, OSError, TypeError):
             log.exception("business_use.json unreadable — starting empty.")
             notify_data_corruption(self.context, "business_use.json")
             self._entries = []
