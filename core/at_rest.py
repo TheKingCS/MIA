@@ -172,6 +172,11 @@ SEALED = frozenset({
     "net_worth_history.json",
     "plans.json",
     "sensors.json",
+    "capture_proposals.json",
+    "homestead_snapshots.json",
+    "inbox.json",
+    "textbooks.json",
+    "calendar_events.json",
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
@@ -196,9 +201,7 @@ NOT_SEALED_YET: dict[str, str] = {
     "budget_expenses.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "budget_targets.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "business_entities.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "calendar_events.json": "its store reads the file directly: move its reader to open_text first",
     "capability_gaps.json": "its store reads the file directly: move its reader to open_text first",
-    "capture_proposals.json": "its store reads the file directly: move its reader to open_text first",
     "data_logger_readings.json": "its store reads the file directly: move its reader to open_text first",
     "debts.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "decided.json": "its store reads the file directly: move its reader to open_text first",
@@ -206,8 +209,6 @@ NOT_SEALED_YET: dict[str, str] = {
     "game.json": "its store reads the file directly: move its reader to open_text first",
     "good_news_following.json": "its store reads the file directly: move its reader to open_text first",
     "good_news_heard.json": "its store reads the file directly: move its reader to open_text first",
-    "homestead_snapshots.json": "its store reads the file directly: move its reader to open_text first",
-    "inbox.json": "its store reads the file directly: move its reader to open_text first",
     "inbox_mail_state.json": "its store reads the file directly: move its reader to open_text first",
     "income.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "income_sources.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
@@ -222,7 +223,6 @@ NOT_SEALED_YET: dict[str, str] = {
     "profile.json": "its store reads the file directly: move its reader to open_text first",
     "skill_progress.json": "its store reads the file directly: move its reader to open_text first",
     "skill_xp_log.json": "its store reads the file directly: move its reader to open_text first",
-    "textbooks.json": "its store reads the file directly: move its reader to open_text first",
     "trail_maps.json": "its store reads the file directly: move its reader to open_text first",
     "why_checkpoints.json": "its store reads the file directly: move its reader to open_text first",
 }

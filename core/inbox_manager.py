@@ -181,12 +181,12 @@ class InboxManager:
         return self.folder / "items" / item_id
 
     def _load(self) -> None:
-        """Reads the items; an unreadable file is logged, reported and starts empty."""
+        """Reads the items; an unreadable file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._items_file.exists():
             return
         try:
-            self._items = [InboxItem.from_dict(d) for d in json.loads(self._items_file.read_text(encoding="utf-8"))]
-        except (json.JSONDecodeError, OSError, TypeError):
+            self._items = [InboxItem.from_dict(d) for d in json.loads(open_text(self._items_file))]  # sealed at rest (WP-04)
+        except (ValueError, OSError, TypeError):
             log.exception("inbox.json unreadable — starting empty.")
             notify_data_corruption(self.context, "inbox.json")
             self._items = []

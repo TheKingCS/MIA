@@ -49,6 +49,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.document_text import PDF_SUFFIXES, TEXT_SUFFIXES, extract, first_heading
@@ -261,12 +262,12 @@ class TextbookManager:
         return Path(configured) if configured else _DEFAULT_ROOT
 
     def _load(self) -> None:
-        """Reads the list of books; an unreadable file is logged, reported and starts empty."""
+        """Reads the list of books; an unreadable file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._library_file.exists():
             return
         try:
-            self._books = [Textbook.from_dict(d) for d in json.loads(self._library_file.read_text(encoding="utf-8"))]
-        except (json.JSONDecodeError, OSError, KeyError, TypeError):
+            self._books = [Textbook.from_dict(d) for d in json.loads(open_text(self._library_file))]  # sealed at rest (WP-04)
+        except (ValueError, OSError, KeyError, TypeError):
             log.exception("textbooks.json unreadable — starting with an empty library.")
             notify_data_corruption(self.context, "textbooks.json")
             self._books = []

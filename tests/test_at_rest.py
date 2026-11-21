@@ -272,6 +272,11 @@ SEALED_STORES = [
     ("core.net_worth_history", "NetWorthHistory", "net_worth_history.json"),
     ("core.plan_library", "PlanLibrary", "plans.json"),
     ("core.sensors", "SensorStore", "sensors.json"),
+    ("core.lite_capture_manager", "LiteCaptureManager", "capture_proposals.json"),
+    ("core.homestead_manager", "HomesteadManager", "homestead_snapshots.json"),
+    ("core.inbox_manager", "InboxManager", "inbox.json"),
+    ("core.textbook_manager", "TextbookManager", "textbooks.json"),
+    ("core.calendar_manager", "CalendarManager", "calendar_events.json"),
 ]
 
 

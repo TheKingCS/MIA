@@ -66,6 +66,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -182,13 +183,13 @@ class LiteCaptureManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the proposals; a damaged file is logged, reported and starts with none."""
+        """Reads the proposals; a damaged file is logged, reported and starts with none. Sealed at rest: read through open_text (WP-04)."""
         if not self._proposals_file.exists():
             return
         try:
-            raw = json.loads(self._proposals_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._proposals_file))  # sealed at rest (WP-04)
             self._proposals = [CaptureProposal.from_dict(d) for d in raw.get("proposals", [])]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load capture_proposals.json — starting with no proposals.")
             notify_data_corruption(self.context, "capture_proposals.json")
             self._proposals = []

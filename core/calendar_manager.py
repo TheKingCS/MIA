@@ -42,6 +42,7 @@ from typing import Optional
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -154,14 +155,14 @@ class CalendarManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the events file; a damaged file is logged, reported (notify_data_corruption) and starts empty."""
+        """Reads the events file; a damaged file is logged, reported (notify_data_corruption) and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._events_file.exists():
             self._events = []
             return
         try:
-            raw = json.loads(self._events_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._events_file))  # sealed at rest (WP-04)
             self._events = [CalendarEvent.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load calendar_events.json — starting with an empty list.")
             notify_data_corruption(self.context, "calendar_events.json")
             self._events = []

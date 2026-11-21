@@ -52,6 +52,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 from core.logger import get_logger
@@ -164,12 +165,12 @@ class HomesteadManager:
     def _load(self) -> None:
         """Reads the latest snapshots (homestead_snapshots.json); a damaged file is logged, reported and starts with none, and one
         entry that isn't a snapshot is skipped.
-        """
+         Sealed at rest: read through open_text (WP-04)."""
         if not self._snapshots_file.exists():
             return
         try:
-            raw = json.loads(self._snapshots_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+            raw = json.loads(open_text(self._snapshots_file))  # sealed at rest (WP-04)
+        except (ValueError, OSError):
             log.warning("Could not read %s — starting with no stored snapshots.", self._snapshots_file)
             notify_data_corruption(self.context, self._snapshots_file.name)
             return

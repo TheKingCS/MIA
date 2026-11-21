@@ -8,7 +8,7 @@ from pathlib import Path
 from core import at_rest, retention
 
 ROOT = Path(__file__).resolve().parent.parent
-NOT_SEALED_YET_MOST = 38  # 2026-11-20: lower it as stores are sealed; it may never rise
+NOT_SEALED_YET_MOST = 33  # 2026-11-20: lower it as stores are sealed; it may never rise
 
 
 def test_every_personal_store_is_sealed_or_said_why_not():
