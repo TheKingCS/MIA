@@ -39,11 +39,12 @@ _DATA_DIR = DATA_DIR
 KEEP = 5000
 KINDS = ("sign_in", "sign_in_failed", "waiting", "session_ended", "signed_out", "signed_out_everywhere",
          "password_changed", "recovery_code", "phone_linked", "phone_unlinked", "two_step_on", "two_step_off", "data_key_unopened", "data_key_restored", "data_key_shown", "data_exported",
-         "email_changed")
+         "email_changed", "lockdown", "lockdown_lifted")
 WORDS = {"sign_in": "Signed in", "sign_in_failed": "Wrong password", "waiting": "Too many wrong passwords: made to wait",
          "session_ended": "Session ended (unused too long)", "signed_out": "Signed out",
          "signed_out_everywhere": "Signed out everywhere", "password_changed": "Password changed",
          "email_changed": "Sign-in email changed",
+         "lockdown": "Lockdown: everything signed out, the vaults locked", "lockdown_lifted": "Lockdown lifted with your password",
          "recovery_code": "New recovery code made", "phone_linked": "A phone linked to this computer",
          "phone_unlinked": "A linked phone was unlinked",
          "two_step_on": "Two-step sign-in turned on", "two_step_off": "Two-step sign-in turned off",

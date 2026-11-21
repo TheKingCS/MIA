@@ -7,7 +7,7 @@ build on Windows now and carry over.*
 
 | ID | Package | Stream | Stage | Milestone | Size |
 |---|---|---|---|---|---|
-| WP-01 | The lockdown phrase (Q-93) | W-SEC | 0 | M0 | S |
+| WP-01 | The lockdown phrase (Q-93). **Built 2026-11-20** (`core/lockdown.py`) | W-SEC | 0 | M0 | S |
 | WP-02 | Approvals bound to their parameters (REQ-SEC-016) | W-SEC | 0 | M0 | S |
 | WP-03 | Outside content marked at every entry; the injection test set | W-SEC | 0 | M0 | M |
 | WP-04 | Every personal store sealed; a test over the classes | W-SEC | 0 | M0 | M |

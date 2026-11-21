@@ -95,7 +95,8 @@ def _about_her(prompt: str) -> bool:
 
 def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     """For the desktop's chat panels, which build their own model request
-    (2026-10-30: they never got these): a plain-word command done by code
+    (2026-10-30: they never got these): the lockdown phrase and the stop
+    commands (core/lockdown.py, core/stop.py), a plain-word command done by code
     ("workout complete", "undo that"), a job being walked through ("next",
     "checked", core/trade_actions.py), the greenhouse and its hardware
     ("take over the greenhouse", "flash the safety MCU", DEC-0150), what MIA runs on ("what breaks if Ollama
@@ -109,7 +110,9 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
     try:
-        stopped = stop.handle(context, prompt)
+        from core import lockdown
+
+        stopped = lockdown.handle(context, prompt) or stop.handle(context, prompt)
     except Exception:
         log.exception("Couldn't follow the stop")
         stopped = None
@@ -240,13 +243,16 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # before the message is stored, so it's stored with the privacy its
     # own words asked for, and before the model, which the safety floor
     # never waits on.
-    """One turn, in order: "stop", "stop everything" and "carry on" (core/stop.py, in code, first), then mode switches and the safety floor (before anything is stored or the model asked), then
+    """One turn, in order: the lockdown phrase (core/lockdown.py), "stop", "stop everything" and "carry on"
+    (core/stop.py), in code, first, then mode switches and the safety floor (before anything is stored or the model asked), then
     show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a taught skill being shown, started or answered (core/taught_skills.take_turn), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
-    stopped = stop.handle(context, prompt)
+    from core import lockdown
+
+    stopped = lockdown.handle(context, prompt) or stop.handle(context, prompt)
     if stopped is not None:
         add_message(conversation, "user", prompt)
         add_message(conversation, "assistant", stopped)

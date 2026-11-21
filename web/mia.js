@@ -409,6 +409,7 @@
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
       : call("GET", "/api/security/log"),
     signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
+    lockdown: () => demo ? demoOnly() : call("POST", "/api/security/lockdown"),
     // One linked phone unlinked from the computer (core/linked_devices.py): its key stops working.
     unlinkDevice: (device) => demo ? demoOnly() : call("POST", "/api/security/devices/unlink", { device }),
     // Your Data (core/your_data.py): what MIA keeps about you and what she read to answer you.

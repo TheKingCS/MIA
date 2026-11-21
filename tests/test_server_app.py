@@ -10,7 +10,8 @@ sandbox with no real browser/phone). pywebpush.webpush is mocked in
 the push-test cases, same as tests/test_web_push.py. Also the inbox's
 email endpoints (they answer plainly without a mailbox, and need a
 signed-in person), a startup sound to hear before choosing it, and the
-phones linked to the computer, listed and unlinked from it.
+phones linked to the computer, listed and unlinked from it. The Lockdown button
+signs everything out and only his password lifts it (WP-01).
 No secret used in sign-in, two-step or a password change reaches a log
 line (docs/SECURITY.md step 6). The recovery key for sealed files is shown
 only on the PC itself, with the password, and logged (DEC-0126). Your Data
@@ -872,6 +873,21 @@ def test_sign_out_everywhere_ends_every_other_session_and_shows_on_the_log(clien
     assert client.get("/api/settings", headers=laptop).status_code == 401
     events = client.get("/api/security/log", headers=phone).json()["events"]
     assert events[0]["kind"] == "signed_out_everywhere" and events[0]["what"] == "Signed out everywhere"
+
+
+def test_the_lockdown_button_signs_everything_out_and_only_his_password_lifts_it(client, context, monkeypatch):
+    """Lockdown (WP-01): every session ends, this one too; a linked phone's key is refused; signing in with his password
+    lifts it, and the log shows both."""
+    monkeypatch.setattr("core.stop._mark_on_disk", lambda value: None)
+    here, laptop = _signed_in(client, context), _signed_in(client, context)
+    phone = _linked_phone(client, context)
+    done = client.post("/api/security/lockdown", headers=here).json()
+    assert done["sessions"] >= 2 and done["phones"] == 1
+    for auth in (here, laptop, phone):
+        assert client.get("/api/settings", headers=auth).status_code == 401
+    after = _signed_in(client, context)
+    kinds = [e["kind"] for e in client.get("/api/security/log", headers=after).json()["events"]]
+    assert "lockdown" in kinds and "lockdown_lifted" in kinds
 
 
 def _linked_phone(client, context) -> dict:

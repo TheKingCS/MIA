@@ -828,6 +828,11 @@ def create_app(context: AppContext) -> FastAPI:
                 status.HTTP_403_FORBIDDEN,
                 "Set a password for this profile in MIA's Settings before using MIA remotely.",
             )
+        from core import lockdown
+
+        view = view_for(context, profile.profile_id)  # his own settings, where a lockdown is kept
+        if lockdown.active(view) is not None and lockdown.lift(view, profile.profile_id, body.password):
+            _security("lockdown_lifted", profile.profile_id, request)
         token = _new_session(profile.profile_id)
         _remember(profile.profile_id)
         app.state.warned.discard(profile.profile_id)
@@ -3256,6 +3261,22 @@ def create_app(context: AppContext) -> FastAPI:
         _security("signed_out_everywhere", profile_id, request, f"{len(ended)} other session{'s' if len(ended) != 1 else ''}"
                   + (f", {phones} linked phone{'s' if phones != 1 else ''}" if phones else ""))
         return {"ended": len(ended), "unlinked": phones}
+
+    @app.post("/api/security/lockdown")
+    def lockdown_now(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Lockdown button (WP-01, core/lockdown.py): every session of his ends, this one too, every phone is
+        unlinked, the vaults lock and everything of hers stops, until he signs in with his password."""
+        from core import lockdown
+
+        with app.state.turn_lock:
+            done = lockdown.engage(view_for(context, profile_id), profile_id)
+        # This server's own sessions of his (the phrase's path reaches them through the runtime's server).
+        mine = [token for token, who in list(app.state.sessions.items()) if who == profile_id]
+        for token in mine:
+            _end_session(token)
+        done["sessions"] = max(done["sessions"], len(mine))
+        _security("lockdown", profile_id, request, f"{done['sessions']} sessions, {done['phones']} phones")
+        return done
 
     @app.post("/api/security/devices/unlink")
     def unlink_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:

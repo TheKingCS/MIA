@@ -5,7 +5,8 @@
  * this one stays, and every linked phone is unlinked), the phones linked to MIA on this computer with Unlink for each
  * (MIA.unlinkDevice, core/linked_devices.py), and two-step sign-in turned on (password, then the key for the authenticator app and a code from
  * it) or off (password and a code; core/two_step.py), and whether MIA's most private files are sealed on disk with
- * the recovery key shown behind the password, on the PC only (core/at_rest.py, DEC-0126). Formatting only.
+ * the recovery key shown behind the password, on the PC only (core/at_rest.py, DEC-0126), and Lockdown (WP-01,
+ * MIA.lockdown, core/lockdown.py). Formatting only.
  */
 (function () {
   "use strict";
@@ -13,7 +14,7 @@
   const $ = (id) => document.getElementById(id);
 
   const when = (iso) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  const WARN = new Set(["sign_in_failed", "waiting", "password_changed", "phone_linked", "phone_unlinked", "two_step_off"]);
+  const WARN = new Set(["sign_in_failed", "waiting", "password_changed", "phone_linked", "phone_unlinked", "two_step_off", "lockdown"]);
   const day = (iso) => new Date(iso.length === 10 ? iso + "T12:00:00" : iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
   async function everywhere() {
@@ -25,6 +26,15 @@
     }
     catch (e) { say(e.message); }
     draw(await MIA.securityLog());
+  }
+
+  // Lockdown (WP-01, core/lockdown.py): every sign-in ends, this one too; phones unlinked; vaults locked; all of hers
+  // stopped, until he signs in with his password.
+  async function lockdown() {
+    if (!(await MIAShell.confirm("Lock MIA down? Every device is signed out, this one too, linked phones are unlinked, "
+      + "your vaults lock and everything of MIA's own stops. Signing in with your password lifts it."))) return;
+    try { await MIA.lockdown(); } catch (e) { /* this session has ended: the sign-in page follows */ }
+    location.href = "index.html";
   }
 
   // Linked phones (core/linked_devices.py): each with when it linked and last reached this computer, and Unlink.
@@ -113,7 +123,10 @@
         el("p", {}, page.other_sessions ? page.other_sessions + " other device" + (page.other_sessions === 1 ? " is" : "s are") + " signed in to your account."
           : "No other devices are signed in to your account."),
         el("p", { class: "dim" }, "If you see a sign-in you don't recognize, change your password: that signs every other device out too."),
-        el("button", { type: "button", class: "btn btn-ghost", onclick: everywhere }, "Sign Out Everywhere")),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: everywhere }, "Sign Out Everywhere"),
+        el("p", { class: "dim" }, "Lockdown signs out everything, this device too, locks your vaults and stops MIA "
+          + "until you sign in with your password. You can also just say \u201clockdown\u201d."),
+        el("button", { type: "button", class: "btn btn-ghost", onclick: lockdown }, "Lockdown")),
       phones(page),
       twoStep(page),
       sealed(page),

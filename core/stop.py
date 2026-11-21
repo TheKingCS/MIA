@@ -410,7 +410,12 @@ def stop_everything(context, until: Optional[datetime] = None, now: Optional[dat
 
 
 def carry_on(context) -> bool:
-    """Lifts a stop-everything; whether one was on. Her held messages are offered at the gate's next turn."""
+    """Lifts a stop-everything; whether one was on. Her held messages are offered at the gate's next turn. While
+    a lockdown is on (core/lockdown.py) nothing is lifted: only his password lifts that."""
+    from core import lockdown
+
+    if lockdown.active(context) is not None:
+        return False
     was = _read(context) is not None
     _write(context, None)
     state(context)
@@ -459,12 +464,17 @@ def report(done: dict, everything: bool, now: Optional[datetime] = None) -> str:
 
 def handle(context, prompt: str) -> Optional[str]:
     """The turn pipeline's first question: when the message is a stop command, does it and returns what she says;
-    else None. A "stop everything" whose time can't be read stops what's running, holds nothing and asks."""
+    else None. A "stop everything" whose time can't be read stops what's running, holds nothing and asks. "Carry
+    on" is refused while a lockdown is on (core/lockdown.py)."""
     command = recognise(prompt, holding_now=_read(context) is not None)
     if command is None:
         return None
     kind, rest = command
     if kind == "carry_on":
+        from core import lockdown
+
+        if lockdown.active(context) is not None:
+            return "Lockdown is on, so I'm staying stopped. Sign in with your password to lift it."
         carry_on(context)
         return "Carrying on: my background work and messages are back. Anything I held comes through at its own pace."
     if kind == "everything":

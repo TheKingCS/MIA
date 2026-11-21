@@ -10,6 +10,11 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.
 
+**New 2026-11-20, WP-01 built (the lockdown)**: saying "lockdown" (the whole message), or Lockdown on Sign-ins
+and Security, ends every session of his (this one too), unlinks his phones, locks the vaults and stops everything
+of hers; only signing in with his password lifts it ("carry on" can't). Next on the Windows backlog: WP-02
+(approvals bound to their parameters), WP-03, WP-04 (the MVP gate's four).
+
 **New 2026-11-20, Fable reviewed Opus's work since 2026-11-18** (LS-01 to LS-10, FW-02 to FW-05) with three
 independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each
 one's status is in `audit/FABLE_REVIEW_2026-11-20.md` (not in the repository). **MIA OS no longer restarts by

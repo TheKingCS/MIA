@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1546 files, 342,359 lines; 1546 files describe themselves; 18,866 of 18,965 classes and functions are documented.
+1548 files, 342,645 lines; 1548 files describe themselves; 18,879 of 18,978 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-603 files, 172,984 lines; 8,916 of 9,002 classes and functions documented
+604 files, 173,152 lines; 8,923 of 9,009 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -304,6 +304,7 @@
 - `core/living_worlds.py`: Living Worlds Phase 1 (DEC-0134): the persistent data models for MIA's interactive worlds — **universes**, campaigns**, **characters** and their per-universe **versions** — so a campaign survives sessions and context limits by living in a store, not in a conversation (the spec's §3.3). Phase 1 is th
 - `core/llm_manager.py`: The Assistant's LLM backend core service — docs/ROADMAP.md milestone 5.1. Defines a small backend-agnostic interface (`LLMBackend`) with one concrete implementation, `OllamaBackend`, talking to a local Ollama server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md), and a second, `
 - `core/local_model.py`: MIA's model on the phone (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md): download a small open model once, run it with llama.cpp's server (`llama-server`, built into the phone app) on 127.0.0.1, point MIA's Talk at it, and measure whether it does MIA's job (core/model_bench.py).
+- `core/lockdown.py`: The lockdown (WP-01, DEC-0254, Q-93 yes, REQ-IMP-007): one phrase, or the Lockdown button on Sign-ins and Security, and MIA closes up until he signs in again with his password.
 - `core/logger.py`: Centralized logging setup for MIA
 - `core/loop_actions.py`: The Loop's actions (DEC-0047, core/the_loop.py) on the action contract: what the person says about when things happen, in plain words, undoable.
 - `core/loop_catalog.py`: The loops as built (DEC-0094, DEC-0101): `docs/LOOPS.md` is the code's own list of every loop in `core/loops.py`, by area, with what it watches, its floor, what it does when it slips and the processes it covers. It's generated, never edited by hand, and `tests/test_loop_catalog.py` fails when it fal
@@ -614,7 +615,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,545 lines; 57 of 57 classes and functions documented
+2 files, 4,566 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -899,7 +900,7 @@
 
 ## tests/: the test suite: what each part must do
 
-543 files, 89,845 lines; 7,591 of 7,604 classes and functions documented
+544 files, 89,928 lines; 7,597 of 7,610 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1140,6 +1141,7 @@
 - `tests/test_living_worlds.py`: Living Worlds Phase 1 (core/living_worlds.py, DEC-0134): universes, campaigns, characters and per-universe versions are created and persisted so a campaign survives sessions; a version's growth is its own and never touches another's; ids are validated; and a campaign can be paused and resumed. The s
 - `tests/test_llm_manager.py`: Unit tests for core.llm_manager. No real Ollama server involved — urllib.request.urlopen is monkeypatched to a fake so these exercise the manager/backend's success and graceful-degradation paths in isolation, same fake-dependency approach as test_reference_library_manager.py's _FakeConfig. And (T-00
 - `tests/test_local_model.py`: The phone's own model (core/local_model.py, 2026-10-07, DEC-0019): downloading (and carrying on after a break), starting llama.cpp's server and pointing Talk at it, running the test, and starting the same model again after MIA restarts. A small Python script stands in for llama-server, and a local H
+- `tests/test_lockdown.py`: Tests for the lockdown (WP-01, DEC-0254, core/lockdown.py): the phrase; what it ends, unlinks, locks and stops; that "carry on" can't lift it and only his password can; and the button on the server.
 - `tests/test_logger.py`: core/logger.py: an exception that ends a background thread reaches MIA's log with its traceback (2026-11-10), and is still handed on to the hook that was there before. pytest swaps in its own thread hook per test, so the test installs MIA's over a stand-in and calls it directly.
 - `tests/test_logger_fallback.py`: Tests for the logger's fallback (core/logger.py): a log folder that can't be written leaves console logging, so her shell still starts on a read-only image (FW-03's first VM run).
 - `tests/test_look_by_voice.py`: Look asked out loud (DEC-0125, core/sight.py `wants_look`): "look at this" opens Look with the question and the camera, since no tool can take the photo; ordinary talk about looking at something doesn't.
@@ -1447,7 +1449,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,431 lines
+116 files, 21,445 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
