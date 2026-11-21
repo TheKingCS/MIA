@@ -128,12 +128,114 @@ SEALED = frozenset({
     "failures.jsonl",
     "failure_state.json",
     "trade_session.json",  # the job or diagnosis being walked through (DEC-0149)
+    # 2026-11-20 (WP-04): stores that already read through open_text
+    "requirements.json",  # what each project needs
+    "shelf.json",  # what he set aside for later
+    "step_plans.json",  # plans worked step by step
+    "teamwork.json",  # a project's workspace and teams
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
 # from before, and a line that won't open is kept as it is, never the whole file lost (open_text reads it leniently).
 # The person's history repeats the names sealed stores keep ("Added a person: ..."), so it's sealed too.
 LINE_SEALED = frozenset({"life_events.jsonl"})
+
+# Personal stores NOT sealed yet, each with why (WP-04, 2026-11-20). Every record, log or derived file in the
+# retention registry (core/retention.py) is SEALED, LINE_SEALED, PUBLIC (with why) or here; tests/test_sealed_stores.py
+# fails on a new one in none of them, and this list may only shrink. Sealing one: its store reads through open_text
+# (catching ValueError and OSError) and writes through atomic_write_text; then its name moves to SEALED.
+NOT_SEALED_YET: dict[str, str] = {
+    "seasons.json": "seals its own text as it writes (core/seasons.py); has no store class for the start-up test",
+    "alarms.json": "its store reads the file directly: move its reader to open_text first",
+    "bills.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "boss_book.json": "its store reads the file directly: move its reader to open_text first",
+    "budget_expenses.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "budget_targets.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "business.json": "its store reads the file directly: move its reader to open_text first",
+    "business_entities.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "business_use.json": "its store reads the file directly: move its reader to open_text first",
+    "calendar_events.json": "its store reads the file directly: move its reader to open_text first",
+    "capability_gaps.json": "its store reads the file directly: move its reader to open_text first",
+    "capture_proposals.json": "its store reads the file directly: move its reader to open_text first",
+    "component_usage_log.json": "its store reads the file directly: move its reader to open_text first",
+    "components.json": "its store reads the file directly: move its reader to open_text first",
+    "corrections.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "craft_recipes.json": "its store reads the file directly: move its reader to open_text first",
+    "data_logger_readings.json": "its store reads the file directly: move its reader to open_text first",
+    "debts.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "decided.json": "its store reads the file directly: move its reader to open_text first",
+    "energy_sources.json": "its store reads the file directly: move its reader to open_text first",
+    "expeditions.json": "its store reads the file directly: move its reader to open_text first",
+    "expenses.json": "its store reads the file directly: move its reader to open_text first",
+    "failure_log.json": "its store reads the file directly: move its reader to open_text first",
+    "flock.json": "its store reads the file directly: move its reader to open_text first",
+    "game.json": "its store reads the file directly: move its reader to open_text first",
+    "good_news_following.json": "its store reads the file directly: move its reader to open_text first",
+    "good_news_heard.json": "its store reads the file directly: move its reader to open_text first",
+    "grow_lab.json": "its store reads the file directly: move its reader to open_text first",
+    "homestead_snapshots.json": "its store reads the file directly: move its reader to open_text first",
+    "inbox.json": "its store reads the file directly: move its reader to open_text first",
+    "inbox_mail_state.json": "its store reads the file directly: move its reader to open_text first",
+    "inbox_reading.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "income.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "income_sources.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
+    "insights.json": "its store reads the file directly: move its reader to open_text first",
+    "inventory_items.json": "its store reads the file directly: move its reader to open_text first",
+    "inventory_usage_log.json": "its store reads the file directly: move its reader to open_text first",
+    "jobs.json": "its store reads the file directly: move its reader to open_text first",
+    "kitchen.json": "its store reads the file directly: move its reader to open_text first",
+    "kitchen_grocery_list.json": "its store reads the file directly: move its reader to open_text first",
+    "kitchen_meal_log.json": "its store reads the file directly: move its reader to open_text first",
+    "kitchen_pantry.json": "its store reads the file directly: move its reader to open_text first",
+    "kitchen_recipe_user_stats.json": "its store reads the file directly: move its reader to open_text first",
+    "kitchen_recipes.json": "its store reads the file directly: move its reader to open_text first",
+    "links.json": "its store reads the file directly: move its reader to open_text first",
+    "maintenance.json": "its store reads the file directly: move its reader to open_text first",
+    "maker_log.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "material_usage_log.json": "its store reads the file directly: move its reader to open_text first",
+    "materials.json": "its store reads the file directly: move its reader to open_text first",
+    "memory_corrections.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "mission_pathways.json": "its store reads the file directly: move its reader to open_text first",
+    "mission_proposals.json": "its store reads the file directly: move its reader to open_text first",
+    "missions.json": "its store reads the file directly: move its reader to open_text first",
+    "music_playlists.json": "its store reads the file directly: move its reader to open_text first",
+    "music_tracks.json": "its store reads the file directly: move its reader to open_text first",
+    "net_worth_history.json": "its store reads the file directly: move its reader to open_text first",
+    "obligations.json": "its store reads the file directly: move its reader to open_text first",
+    "password_vault.json": "its store reads the file directly: move its reader to open_text first",
+    "pathway_progress.json": "its store reads the file directly: move its reader to open_text first",
+    "plans.json": "its store reads the file directly: move its reader to open_text first",
+    "private_journal.json": "its store reads the file directly: move its reader to open_text first",
+    "private_journal_keys.json": "its store reads the file directly: move its reader to open_text first",
+    "product_usage_log.json": "its store reads the file directly: move its reader to open_text first",
+    "products.json": "its store reads the file directly: move its reader to open_text first",
+    "profile.json": "its store reads the file directly: move its reader to open_text first",
+    "projections.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "projects.json": "its store reads the file directly: move its reader to open_text first",
+    "properties.json": "its store reads the file directly: move its reader to open_text first",
+    "recommendations.json": "its store reads the file directly: move its reader to open_text first",
+    "recurring_mission_templates.json": "its store reads the file directly: move its reader to open_text first",
+    "revenue.json": "its store reads the file directly: move its reader to open_text first",
+    "scripts.json": "its store reads the file directly: move its reader to open_text first",
+    "security_log.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "sensors.json": "its store reads the file directly: move its reader to open_text first",
+    "sight_log.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "skill_progress.json": "its store reads the file directly: move its reader to open_text first",
+    "skill_xp_log.json": "its store reads the file directly: move its reader to open_text first",
+    "sureness.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
+    "tasks.json": "its store reads the file directly: move its reader to open_text first",
+    "textbooks.json": "its store reads the file directly: move its reader to open_text first",
+    "trail_maps.json": "its store reads the file directly: move its reader to open_text first",
+    "trips.json": "its store reads the file directly: move its reader to open_text first",
+    "waypoints.json": "its store reads the file directly: move its reader to open_text first",
+    "why_checkpoints.json": "its store reads the file directly: move its reader to open_text first",
+}
+# Records that aren't anyone's: nothing personal to seal.
+PUBLIC: dict[str, str] = {
+    "skill_definitions.json": "the skills MIA ships with (the person's progress is skill_progress.json)",
+    "vocab.json": "a model's vocabulary card, not about anyone",
+    "meaning.json": "a cache of example sentences' vectors for matching words, not his records",
+}
 
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the
