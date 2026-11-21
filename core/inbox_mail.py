@@ -47,6 +47,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Callable, Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 from core.secrets_manager import SecretsError, decrypt_bytes, encrypt_bytes
@@ -223,9 +224,10 @@ def _header(raw: bytes, name: str) -> str:
 
 
 def load_state(path: Path = _STATE_FILE) -> dict:
-    """Where the last check of the everyday mailbox got to: {uidvalidity, last_uid}; {} the first time."""
+    """Where the last check of the everyday mailbox got to: {uidvalidity, last_uid}; {} the first time (or when it
+    won't open). Sealed at rest (WP-04)."""
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(open_text(path))  # sealed at rest (WP-04)
     except (OSError, ValueError):
         return {}
 

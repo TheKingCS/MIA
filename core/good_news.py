@@ -66,6 +66,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Callable, Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -579,10 +580,10 @@ def _folder(context) -> Optional[Path]:
 
 
 def heard(context) -> list[dict]:
-    """What this person has heard: each day's stories, and any they called misleading."""
+    """What this person has heard: each day's stories, and any they called misleading (sealed at rest: WP-04)."""
     folder = _folder(context)
     try:
-        return json.loads((folder / "good_news_heard.json").read_text(encoding="utf-8")).get("heard", []) if folder else []
+        return json.loads(open_text(folder / "good_news_heard.json")).get("heard", []) if folder else []
     except (OSError, ValueError):
         return []
 
@@ -629,10 +630,11 @@ def _find_story(stories: list[dict], words: str) -> Optional[dict]:
 
 def following(context) -> list[dict]:
     """The stories this person follows, oldest first: id, title, topic, its links and their outlets, when it was
-    published and followed (`since`), the later reports found (`updates`) and every report link seen (`seen`)."""
+    published and followed (`since`), the later reports found (`updates`) and every report link seen (`seen`). Sealed
+    at rest (WP-04)."""
     folder = _folder(context)
     try:
-        found = json.loads((folder / "good_news_following.json").read_text(encoding="utf-8")) if folder else {}
+        found = json.loads(open_text(folder / "good_news_following.json")) if folder else {}
     except (OSError, ValueError):
         return []
     return [f for f in found.get("following", []) if isinstance(f, dict) and f.get("id")]

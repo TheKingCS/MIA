@@ -177,6 +177,12 @@ SEALED = frozenset({
     "inbox.json",
     "textbooks.json",
     "calendar_events.json",
+    # 2026-11-21 (WP-04): stores kept by functions, tested through their readers
+    "capability_gaps.json",
+    "good_news_heard.json",
+    "good_news_following.json",
+    "inbox_mail_state.json",
+    "seasons.json",
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
@@ -195,21 +201,15 @@ NOT_SEALED_YET: dict[str, str] = {
     "music_tracks.json": "reads through open_text already; its store takes no data folder, so the start-up test can't hold it yet",
     "music_playlists.json": "reads through open_text already; its store takes no data folder, so the start-up test can't hold it yet",
     "recurring_mission_templates.json": "reads through open_text already; its store takes no data folder, so the start-up test can't hold it yet",
-    "seasons.json": "seals its own text as it writes (core/seasons.py); has no store class for the start-up test",
     "bills.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "boss_book.json": "its store reads the file directly: move its reader to open_text first",
     "budget_expenses.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "budget_targets.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "business_entities.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "capability_gaps.json": "its store reads the file directly: move its reader to open_text first",
     "data_logger_readings.json": "its store reads the file directly: move its reader to open_text first",
     "debts.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
-    "decided.json": "its store reads the file directly: move its reader to open_text first",
     "failure_log.json": "its store reads the file directly: move its reader to open_text first",
     "game.json": "its store reads the file directly: move its reader to open_text first",
-    "good_news_following.json": "its store reads the file directly: move its reader to open_text first",
-    "good_news_heard.json": "its store reads the file directly: move its reader to open_text first",
-    "inbox_mail_state.json": "its store reads the file directly: move its reader to open_text first",
     "income.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "income_sources.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "kitchen.json": "its store reads the file directly: move its reader to open_text first",
@@ -231,6 +231,7 @@ PUBLIC: dict[str, str] = {
     "skill_definitions.json": "the skills MIA ships with (the person's progress is skill_progress.json)",
     "vocab.json": "a model's vocabulary card, not about anyone",
     "meaning.json": "a cache of example sentences' vectors for matching words, not his records",
+    "decided.json": "the Chronicle candidates accepted or dropped: the project's history in work/saga/, read by every session",
 }
 
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a

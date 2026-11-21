@@ -34,6 +34,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -71,12 +72,13 @@ def _folder(context) -> Optional[Path]:
 
 
 def load(context) -> list[dict]:
-    """Every capability gap (capability_gaps.json); none when it's missing or unreadable."""
+    """Every capability gap (capability_gaps.json, sealed at rest: WP-04); none when it's missing or unreadable (a
+    sealed one that won't open is copied aside first)."""
     folder = _folder(context)
     if folder is None:
         return []
     try:
-        return json.loads((folder / FILE_NAME).read_text(encoding="utf-8")).get("gaps", [])
+        return json.loads(open_text(folder / FILE_NAME)).get("gaps", [])
     except (OSError, ValueError):
         return []
 

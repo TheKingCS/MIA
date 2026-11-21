@@ -5,7 +5,7 @@ tests.test_at_rest
 MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM
 envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a
 file that won't open is copied aside before the error, so a store starting empty can't lose it (and every sealed
-store starts empty rather than stopping MIA; every file naming a sealed file reads it with open_text); a changed file is
+store starts empty rather than stopping MIA, and a sealed file kept by functions reads as none; every file naming a sealed file reads it with open_text); a changed file is
 refused; a recovery key brings a key back; sync and export carry the real content; the Fix-It Log is written whole,
 sealed, and never part of an undoable change; the history is sealed a line at a time; and, on Windows, the key is protected by DPAPI and only opens for this
 Windows user.
@@ -280,9 +280,40 @@ SEALED_STORES = [
 ]
 
 
+# Stores kept by functions, not classes: (module, reader, file, what the reader takes: a context whose person's
+# folder is the test's, the folder itself, or the file's path).
+SEALED_READERS = [
+    ("core.capability_gaps", "load", "capability_gaps.json", "context"),
+    ("core.good_news", "heard", "good_news_heard.json", "context"),
+    ("core.good_news", "following", "good_news_following.json", "context"),
+    ("core.inbox_mail", "load_state", "inbox_mail_state.json", "path"),
+    ("core.seasons", "kept", "seasons.json", "context"),
+]
+
+
 def test_every_sealed_name_has_its_store_here():
-    """SEALED and this list agree, so each sealed file's store is tested below."""
-    assert {name for _, _, name in SEALED_STORES} == set(at_rest.SEALED)
+    """SEALED and these lists agree, so each sealed file's store (or reader) is tested below."""
+    names = [name for _, _, name in SEALED_STORES] + [name for _, _, name, _ in SEALED_READERS]
+    assert set(names) == set(at_rest.SEALED)
+
+
+@pytest.mark.parametrize("module, reader, name, takes", SEALED_READERS)
+def test_a_sealed_file_kept_by_functions_reads_as_none_and_keeps_a_copy(tmp_path, module, reader, name, takes):
+    """Sealed under a key that's gone: the reader gives nothing back rather than failing, and the file's copy is
+    set aside."""
+    import importlib
+    from types import SimpleNamespace
+
+    at_rest.use_key(bytes(32))
+    atomic_write_text(tmp_path / name, "{}")
+    before = (tmp_path / name).read_bytes()
+    at_rest.use_key(KEY)
+    read = getattr(importlib.import_module(module), reader)
+    given = {"context": SimpleNamespace(failures=SimpleNamespace(data_dir=tmp_path)), "folder": tmp_path,
+             "path": tmp_path / name}[takes]
+    assert not read(given)
+    [aside] = tmp_path.glob(name + ".unreadable-*")
+    assert aside.read_bytes() == before
 
 
 @pytest.mark.parametrize("module, cls, name", SEALED_STORES)
