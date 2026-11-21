@@ -262,6 +262,16 @@ SEALED_STORES = [
     ("core.real_estate_manager", "RealEstateManager", "properties.json"),
     ("core.script_library_manager", "ScriptLibraryManager", "scripts.json"),
     ("core.expedition_manager", "ExpeditionManager", "expeditions.json"),
+    ("core.kitchen_manager", "KitchenManager", "kitchen_recipes.json"),
+    ("core.kitchen_manager", "KitchenManager", "kitchen_pantry.json"),
+    ("core.kitchen_manager", "KitchenManager", "kitchen_grocery_list.json"),
+    ("core.kitchen_manager", "KitchenManager", "kitchen_meal_log.json"),
+    ("core.kitchen_manager", "KitchenManager", "kitchen_recipe_user_stats.json"),
+    ("core.ledger_manager", "LedgerManager", "expenses.json"),
+    ("core.ledger_manager", "LedgerManager", "revenue.json"),
+    ("core.net_worth_history", "NetWorthHistory", "net_worth_history.json"),
+    ("core.plan_library", "PlanLibrary", "plans.json"),
+    ("core.sensors", "SensorStore", "sensors.json"),
 ]
 
 

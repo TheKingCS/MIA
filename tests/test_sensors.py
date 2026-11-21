@@ -41,8 +41,11 @@ NOW = datetime(2026, 11, 9, 8, 0)
 def test_a_lab_sensors_readings_land_in_its_series_and_the_key_is_kept_only_as_a_hash(world):
     sensor, key = world.sensors.add("p1", "Bench probe", "lab", {"series": "soil moisture", "unit": "%"})
     assert sensor["goes_to"] == "The Lab: soil moisture (%)" and "key_hash" not in sensor
-    raw = (world.sensors.data_dir / sensors.FILE).read_text()
-    assert key not in raw and sensors._hash(key) in raw
+    from core.at_rest import open_text
+
+    raw = (world.sensors.data_dir / sensors.FILE).read_text()  # sealed at rest (WP-04)
+    opened = open_text(world.sensors.data_dir / sensors.FILE)
+    assert key not in raw and key not in opened and sensors._hash(key) in opened
     done = sensors.reading(world, _same, key, "41.5", now=NOW)
     assert done["value"] == 41.5
     assert [r.value for r in world.data_logger.readings_for("soil moisture")] == [41.5]

@@ -54,6 +54,7 @@ from core.app_context import AppContext
 from core.gamification import SkillWeight
 from core.logger import get_logger
 from core.mission_manager import Mission
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -222,14 +223,14 @@ class RecurringMissionManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the templates; a damaged file is logged, reported and starts empty."""
+        """Reads the templates; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not self._templates_file.exists():
             self._templates = []
             return
         try:
-            raw = json.loads(self._templates_file.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(self._templates_file))  # sealed at rest (WP-04)
             self._templates = [RecurringMissionTemplate.from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load recurring_mission_templates.json — starting with an empty list.")
             notify_data_corruption(self.context, "recurring_mission_templates.json")
             self._templates = []

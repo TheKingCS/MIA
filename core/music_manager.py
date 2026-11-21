@@ -81,6 +81,7 @@ import json
 
 from core.app_context import AppContext
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -334,20 +335,20 @@ class MusicManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the tracks and playlists (undo calls this to reload)."""
+        """Reads the tracks and playlists (undo calls this to reload). Sealed at rest: read through open_text (WP-04)."""
         self._tracks = self._load_file(_TRACKS_FILE, Track.from_dict)
         self._playlists = self._load_file(_PLAYLISTS_FILE, Playlist.from_dict)
 
     def _load_file(self, path: Path, from_dict) -> list:
         """One file's records; missing is empty, a damaged file is logged, reported (notify_data_corruption) and starts
         empty.
-        """
+         Read through open_text: sealed files open (WP-04)."""
         if not path.exists():
             return []
         try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(path))  # sealed at rest (WP-04)
             return [from_dict(d) for d in raw]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load %s — starting with an empty list.", path.name)
             notify_data_corruption(self.context, path.name)
             return []

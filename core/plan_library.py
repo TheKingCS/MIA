@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Optional
 
 from core import build_calcs, life_events
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -250,9 +251,9 @@ class PlanLibrary:
         self._load()
 
     def _load(self) -> None:
-        """Reads the kept plans; a missing or unreadable file is none."""
+        """Reads the kept plans; a missing or unreadable file is none. Sealed at rest: read through open_text (WP-04)."""
         try:
-            self.plans = json.loads(self._file.read_text(encoding="utf-8")).get("plans", {})
+            self.plans = json.loads(open_text(self._file)).get("plans", {})  # sealed at rest (WP-04)
         except (OSError, ValueError):
             self.plans = {}
 

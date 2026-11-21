@@ -34,6 +34,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -105,10 +106,10 @@ class NetWorthHistory:
         self._load()
 
     def _load(self) -> None:
-        """Reads the points; an unreadable file is logged and means none yet."""
+        """Reads the points; an unreadable file is logged and means none yet. Sealed at rest: read through open_text (WP-04)."""
         self.points: list[dict] = []
         try:
-            raw = json.loads(self._file.read_text(encoding="utf-8")) if self._file.exists() else []
+            raw = json.loads(open_text(self._file)) if self._file.exists() else []  # sealed at rest (WP-04)
         except (OSError, ValueError):
             log.exception("%s unreadable; starting the line again.", _FILE)
             raw = []

@@ -34,6 +34,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
@@ -94,12 +95,12 @@ class SensorStore:
         self._load()
 
     def _load(self) -> None:
-        """Reads the sensors; a missing or unreadable file gives none (logged)."""
+        """Reads the sensors; a missing or unreadable file gives none (logged). Sealed at rest: read through open_text (WP-04)."""
         self.sensors: list[dict] = []
         if not self._file.exists():
             return
         try:
-            self.sensors = list(json.loads(self._file.read_text(encoding="utf-8")).get("sensors", []))
+            self.sensors = list(json.loads(open_text(self._file)).get("sensors", []))  # sealed at rest (WP-04)
         except (OSError, ValueError, AttributeError):
             log.exception("%s unreadable; no sensors.", FILE)
 
