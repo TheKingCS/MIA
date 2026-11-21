@@ -18,7 +18,8 @@ each asked the machine for a naive local time. New code asks here instead:
 Dates are always worked out here in code, never by a model (P3).
 
 **His zone** is the setting `region.timezone` (an IANA name such as "America/Chicago") when it's set and known, else
-the computer's own. **Tests freeze it** (`frozen(moment)`), so a test can't fail because the suite crossed midnight
+the computer's own, asked of the system for each moment so a summer date gets summer time (`_Local`). **Tests
+freeze it** (`frozen(moment)`), so a test can't fail because the suite crossed midnight
 (the glasses test of 2026-11-18). Existing modules move here as they're next touched; nothing is changed underneath
 them.
 """
@@ -41,8 +42,36 @@ WORD_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "fiv
 _frozen = threading.local()
 
 
+class _Local(tzinfo):
+    """The computer's own zone, asked of the operating system for each moment, so a date in summer gets summer
+    time even when it's winter now (a fixed offset taken today didn't)."""
+
+    def _local(self, dt: datetime):
+        """The operating system's local time for this wall-clock moment."""
+        import time as _time
+
+        stamp = _time.mktime((dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, 0, 0, -1))
+        return _time.localtime(stamp)
+
+    def utcoffset(self, dt):
+        """The offset from UTC at that moment."""
+        return timedelta(seconds=self._local(dt).tm_gmtoff) if dt is not None else None
+
+    def dst(self, dt):
+        """How much of the offset is summer time at that moment."""
+        return timedelta(hours=1) if dt is not None and self._local(dt).tm_isdst > 0 else timedelta(0)
+
+    def tzname(self, dt):
+        """The zone's short name at that moment."""
+        return self._local(dt).tm_zone if dt is not None else None
+
+
+_LOCAL = _Local()
+
+
 def zone(context=None) -> tzinfo:
-    """His time zone: the `region.timezone` setting when it names a known zone, else the computer's own."""
+    """His time zone: the `region.timezone` setting when it names a known zone, else the computer's own (`_LOCAL`,
+    with each date's own offset)."""
     name = ""
     config = getattr(context, "config", None) if context is not None else None
     if config is not None:
@@ -57,7 +86,7 @@ def zone(context=None) -> tzinfo:
             return ZoneInfo(name)
         except Exception:  # noqa: BLE001 - an unknown name is the computer's zone
             pass
-    return datetime.now().astimezone().tzinfo
+    return _LOCAL
 
 
 def now(context=None) -> datetime:

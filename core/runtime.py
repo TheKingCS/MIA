@@ -367,7 +367,8 @@ class Runtime(BackgroundJobs, AssistantTools):
         """Starts the schedule on its own thread and, with `serve`, the phone server when it's switched on
         (server.enabled). A phone server that can't start is logged and doesn't stop the rest. In MIA's own desktop
         session (`MIA_DESKTOP_SESSION_FILE` set), her server starts on 127.0.0.1 and the session file is written for
-        her shell. Once up, she tells systemd she's ready (`READY=1`, core/sd_notify.py)."""
+        her shell (tried again later when her server couldn't start: `_keep_session`). Once up, she tells systemd
+        she's ready (`READY=1`, core/sd_notify.py)."""
         if self._thread is not None:
             return
         self.started_at = datetime.now().isoformat(timespec="seconds")
@@ -395,7 +396,7 @@ class Runtime(BackgroundJobs, AssistantTools):
 
             where = desktop_session.path_from_env()
             if where is not None:
-                desktop_session.write(self.context, where)
+                self._session_written = desktop_session.write(self.context, where)
         log.info("The MIA Runtime is up: %d services, %d tools, %d scheduled jobs.", len(self.services()),
                  len(self.context.assistant_actions._actions), len(JOBS))
         from core import sd_notify
@@ -486,9 +487,23 @@ class Runtime(BackgroundJobs, AssistantTools):
             sd_notify.notify(f"STATUS=MIA is up ({self.readiness(quick=True)})")
             state["said"] = now
 
+    def _keep_session(self, now: float, state: dict) -> None:
+        """In MIA's own desktop session: when the session file couldn't be written at the start (her server's port
+        was busy), her server is tried again every 30 seconds and the file written once it's up, so her shell's
+        "Try again" finds her."""
+        if getattr(self, "_session_written", True) or now - state.get("session_tried", 0.0) < 30:
+            return
+        state["session_tried"] = now
+        from core import desktop_session
+
+        where = desktop_session.path_from_env()
+        if where is not None:
+            self._session_written = desktop_session.write(self.context, where)
+
     def run_until_stopped(self) -> None:
         """Starts, then waits for Ctrl+C or a stop signal (SIGTERM, what a service manager sends), telling systemd
-        each second what it should hear (`_tell_systemd`), and stops."""
+        each second what it should hear (`_tell_systemd`) and trying again for her desktop session's file when it
+        couldn't be written (`_keep_session`), and stops."""
         import signal
 
         def asked(*_args) -> None:
@@ -504,6 +519,7 @@ class Runtime(BackgroundJobs, AssistantTools):
         try:
             while not self._stop.wait(1.0):
                 self._tell_systemd(time.monotonic(), told)
+                self._keep_session(time.monotonic(), told)
         finally:
             self.stop()
             log.info("The MIA Runtime has stopped.")

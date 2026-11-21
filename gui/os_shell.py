@@ -25,6 +25,9 @@ showing: such a link on any other page does nothing.
 **When her runtime is restarted.** The front end it loaded holds a sign-in that ended with the old runtime. Every
 few seconds the shell reads the session file again; when it's gone or names a new sign-in, it looks for her afresh.
 
+**A site.** Only her own server on this computer and the shell's own pages open inside it (`stays_here`); any other
+address opens in his browser, since the frameless shell has no way back from it.
+
 **What it says.** It prints one line when it settles, "showing: front end" or "showing: recovery", and writes it
 with the time to `shell-state` beside the session file (also "front end loaded" once the page is in), so the VM
 test can tell which and how fast. `os/files/mia-shell` starts it again if it dies.
@@ -40,6 +43,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Callable, Optional
@@ -69,6 +73,15 @@ def step(session: Optional[dict], reachable: Callable[[str], bool], now: float, 
         if reachable(url):
             return "open", url
     return ("recover", None) if now >= deadline else ("wait", None)
+
+
+def stays_here(url: str, scheme: str) -> bool:
+    """Pure logic. Whether a page opens inside the shell: her own server on this computer (127.0.0.1 or
+    localhost), or a page the shell writes itself. Anything else opens in the person's browser."""
+    if scheme in ("data", "about", ""):
+        return True
+    host = urllib.parse.urlsplit(url).hostname or ""
+    return scheme in ("http", "https") and host in ("127.0.0.1", "localhost", "::1")
 
 
 def restarted(loaded: Optional[dict], now: Optional[dict]) -> bool:
@@ -142,7 +155,8 @@ def run_action(action: str) -> None:
 def main(argv: Optional[list] = None) -> int:
     """Opens the shell full screen; with `--screenshot PATH --after SECONDS`, saves what it shows and quits. Each
     state it reaches (front end, front end loaded, recovery) is announced beside the session file. While her front
-    end shows, it checks every few seconds that her runtime is still the one it loaded from (`watch`)."""
+    end shows, it checks every few seconds that her runtime is still the one it loaded from (`watch`); an address
+    outside her server opens in his browser."""
     args = list(sys.argv[1:] if argv is None else argv)
     shot = args[args.index("--screenshot") + 1] if "--screenshot" in args else ""
     after = float(args[args.index("--after") + 1]) if "--after" in args else 20.0
@@ -163,6 +177,11 @@ def main(argv: Optional[list] = None) -> int:
             from anywhere else that carries such a link is refused. Every other address loads as usual."""
             action = action_for(url.toString())
             if action is None:
+                if main_frame and not stays_here(url.toString(), url.scheme()):
+                    from PySide6.QtGui import QDesktopServices
+
+                    QDesktopServices.openUrl(url)  # the person's browser: the shell has no way back from a site
+                    return False
                 return super().acceptNavigationRequest(url, kind, main_frame)
             if not state.get("recovery"):
                 return False

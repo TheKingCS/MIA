@@ -86,6 +86,10 @@ _OLD_NEVER_SYNC = frozenset({  # kept for the record; the registry decides now (
 # synced to the phone before 2026-11-18 are removed there once (Zac, Q-112). Runs and turn traces hold the phone's
 # own records too, so they stay and age out.
 PC_ONLY = ("activity.json", "recall_index.json")
+# The household's: the PC's link to the greenhouse node (stopped syncing on 2026-11-18, LS-03); a phone's copy is
+# stale and its node state wrong.
+PC_ONLY_HOME = ("greenhouse_link.json",)
+PC_ONLY_VERSION = 2  # raised when either list grows, so a phone removes the new ones once
 # What never syncs is the retention registry's (core/retention.py, DEC-0286): every file it says belongs to one
 # device, to MIA's own work, or to settings.
 NEVER_SYNC = frozenset(name for name, kept in _retention.REGISTRY.items() if not kept.syncs)
@@ -362,14 +366,18 @@ def keep_loser(profile_id: str, path: Path, losing: Optional[bytes], lost: list,
         return ""
 
 
-def remove_pc_only_copies(profiles_dir: Path) -> list[Path]:
-    """On the phone: removes the PC-only files (`PC_ONLY`) that synced there before they stopped syncing, and the
-    writer's safety copies of them, from every profile's folder. Returns what it removed."""
+def remove_pc_only_copies(profiles_dir: Path, home_dir: Optional[Path] = None) -> list[Path]:
+    """On the phone: removes the PC-only files that synced there before they stopped syncing, and the writer's
+    safety copies of them: `PC_ONLY` from every profile's folder, `PC_ONLY_HOME` from the household's folder
+    (`home_dir`). Returns what it removed."""
     from core.atomic_write import prev_path
 
     gone = []
-    for folder in sorted(Path(profiles_dir).glob("*")) if Path(profiles_dir).is_dir() else []:
-        for name in PC_ONLY:
+    places = [(f, PC_ONLY) for f in (sorted(Path(profiles_dir).glob("*")) if Path(profiles_dir).is_dir() else [])]
+    if home_dir is not None and Path(home_dir).is_dir():
+        places.append((Path(home_dir), PC_ONLY_HOME))
+    for folder, names in places:
+        for name in names:
             for path in (folder / name, prev_path(folder / name)):
                 if path.is_file():
                     try:

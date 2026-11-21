@@ -189,11 +189,16 @@ def _describe_pick(context, params) -> str:
 
 
 def _pick(context, params) -> str:
-    """Does `style.pick`: records the chosen way over the other, and clears the offer."""
+    """Does `style.pick`: records the chosen way over the other (with no offer waiting, over the dimension's other
+    ways: still a pick, which "What I've learned" can forget), and clears the offer."""
     _describe_pick(context, params)
     pending = person_settings.get(context, PENDING_KEY, None) or {}
     dimension, chosen = str(params.get("dimension") or pending.get("dimension")), str(params["chosen"])
     others = [v for v in pending.get("values", []) if v != chosen] if pending.get("dimension") == dimension else []
+    if not others:  # no offer waiting: picked over the dimension's other ways (a pick, not a setting he chose)
+        from core.response_style import DIMENSIONS
+
+        others = [v for v in DIMENSIONS.get(dimension, ()) if v != chosen]
     rejected = str(params.get("rejected") or (others[0] if others else ""))
     _need_book(context).record_pick(dimension, chosen, rejected if rejected != chosen else "")
     person_settings.put(context, PENDING_KEY, None)

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1545 files, 342,179 lines; 1545 files describe themselves; 18,852 of 18,951 classes and functions are documented.
+1546 files, 342,359 lines; 1546 files describe themselves; 18,866 of 18,965 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-603 files, 172,918 lines; 8,910 of 8,996 classes and functions documented
+603 files, 172,984 lines; 8,916 of 9,002 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -621,7 +621,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-125 files, 22,376 lines; 1,119 of 1,119 classes and functions documented
+125 files, 22,395 lines; 1,120 of 1,120 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -899,7 +899,7 @@
 
 ## tests/: the test suite: what each part must do
 
-542 files, 89,750 lines; 7,584 of 7,597 classes and functions documented
+543 files, 89,845 lines; 7,591 of 7,604 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1276,6 +1276,7 @@
 - `tests/test_retention.py`: Tests for LS-03: the retention registry (DEC-0286, core/retention.py) decides what syncs, and a field changed on two devices keeps its losing value in the change history with one note that quotes no value (DEC-0285, core/sync.py).
 - `tests/test_review_2026_11_20_authority.py`: Fable's review of Opus's work, 2026-11-20, batch A (authority and actions): the capability check sees how tools really reach kinds; the lab's proof must be seen to pass; the read-back checks the record a line is about; a failed change takes its history back; a stop isn't a taught task's failure; a h
 - `tests/test_review_2026_11_20_data.py`: Fable's review of Opus's work, 2026-11-20, batch B (data, sync, learning): an older phone's sync isn't ended by a file that stays on one device now; the homestead's snapshots sync; a sync conflict's kept copy is sealed, never swept into another undo, and its note quotes nothing; the daily budget is 
+- `tests/test_review_2026_11_20_low.py`: The review of 2026-11-20's low findings, fixed: code beyond Python needs the lab's proof; a taught skill's hold is refused; the phone removes the PC's greenhouse link once; a summer date gets summer time; a pick with no offer is learned; a busy port is tried again; a site opens in his browser, not t
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths.
 - `tests/test_runs.py`: The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record for anything MIA runs in steps. A run moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off run looking alive or calls it done (shown with a real process killed m

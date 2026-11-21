@@ -178,11 +178,18 @@ def removed_tests(status_lines: list[str]) -> list[str]:
     return out
 
 
+CODE_SUFFIXES = (".py", ".js", ".sh")  # what counts as code for DEC-0224's proof
+
+
 def needs_proof(files: list[str]) -> bool:
     """Pure logic. Whether a change must come with a test that fails before it (DEC-0224): any change to code
-    outside tests/ does; a change to tests, docs or data alone doesn't."""
-    return any(f.replace("\\", "/").endswith(".py") and not f.replace("\\", "/").lower().startswith("tests/")
-               for f in files)
+    outside tests/ does (Python, the web front end's JavaScript, shell scripts); a change to tests, docs, styles or
+    data alone doesn't."""
+    def code(name: str) -> bool:
+        """Whether a changed file is code."""
+        name = name.replace("\\", "/")
+        return not name.lower().startswith("tests/") and name.endswith(CODE_SUFFIXES)
+    return any(code(f) for f in files)
 
 
 def test_files(files: list[str]) -> list[str]:

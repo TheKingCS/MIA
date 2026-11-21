@@ -177,17 +177,18 @@ def guard(kind: str) -> None:
     a tool step the person hasn't said yes to, the initiative is MIA's, so the action goes through the grant check
     (`core.grants.require`, DEC-0156): a kind that always asks is refused whatever was learned, and a change to the
     person's records is refused unless the skill is learned (its grant). The run then asks. So a tool can't pay, send
-    or delete inside a skill on the strength of its name alone, nor change records before the skill has earned it."""
+    or delete inside a skill on the strength of its name alone, nor change records before the skill has earned it.
+    What it holds back is `Refused` (an ActionError of the kind "refused")."""
     held = _UNAPPROVED.get()
     if held is None:
         return
     from core import grants
-    from core.actions import ActionError
+    from core.actions import ActionError, Refused
 
     try:
         if always_asks(kind):  # the floor, whatever a manifest's tier says
             grants.note_held(kind, grants.MIA, "it always asks")
-            raise ActionError(grants.NEEDS_YES)
+            raise Refused(grants.NEEDS_YES)
         grants.require(kind, grants.MIA, granted=bool(held.get("standing")))
     except ActionError:
         held["blocked"] = kind
