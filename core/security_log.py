@@ -31,6 +31,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from core.at_rest import open_text, seal_line
+from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -87,7 +89,7 @@ class SecurityLog:
 
     def record(self, kind: str, profile_id: Optional[str], device: str = "", detail: str = "") -> dict:
         """Appends one event, with the trace id of what caused it, and returns it; the log is cut back to its newest
-        KEEP lines when it grows past twice that."""
+        KEEP lines when it grows past twice that. Each line is sealed as it's written (seal_line, WP-04)."""
         from core import trace
 
         entry = {"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "profile_id": profile_id or "",
@@ -96,26 +98,26 @@ class SecurityLog:
             try:
                 self.path.parent.mkdir(parents=True, exist_ok=True)
                 with open(self.path, "a", encoding="utf-8") as f:
-                    f.write(json.dumps(entry) + "\n")
+                    f.write(seal_line(self.path, json.dumps(entry)) + "\n")
                 self._trim()
             except OSError:
                 log.exception("Couldn't write the security log.")
         return entry
 
     def _trim(self) -> None:
-        """Keeps the newest KEEP lines once the file holds more than twice that (called under the lock)."""
+        """Keeps the newest KEEP lines once the file holds more than twice that (called under the lock). The kept lines are written back sealed, a line at a time (WP-04)."""
         try:
-            lines = self.path.read_text(encoding="utf-8").splitlines()
+            lines = self.path.read_text(encoding="utf-8").splitlines()  # as stored: kept lines stay sealed
         except OSError:
             return
         if len(lines) > 2 * KEEP:
-            self.path.write_text("\n".join(lines[-KEEP:]) + "\n", encoding="utf-8")
+            atomic_write_text(self.path, "\n".join(lines[-KEEP:]) + "\n")  # each line sealed
 
     def entries(self) -> list[dict]:
-        """Every event, oldest first (a damaged line is skipped)."""
+        """Every event, oldest first (a damaged line is skipped). Its sealed lines open through open_text (WP-04)."""
         with self._lock:
             try:
-                lines = self.path.read_text(encoding="utf-8").splitlines()
+                lines = open_text(self.path).splitlines()
             except OSError:
                 return []
         out = []

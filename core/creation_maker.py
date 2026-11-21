@@ -30,6 +30,7 @@ from typing import Callable, Optional
 
 from core import blueprints as bp
 from core.creation_spec import BLOCKS, ICONS, check
+from core.at_rest import open_text, seal_line
 from core.logger import get_logger
 from core.record_sets import FIELD_TYPES
 
@@ -248,7 +249,7 @@ def make_workflow(context, need: str, ask: Optional[Callable[[str, dict], str]] 
 
 
 def _note(context, kind: str, outcome: str, problems: list) -> None:
-    """For the creations.maker loop: each design, how it went and what its checks said (never the request)."""
+    """For the creations.maker loop: each design, how it went and what its checks said (never the request). Each line is sealed as it's written (seal_line, WP-04)."""
     from datetime import datetime
 
     folder = getattr(getattr(context, "failures", None), "data_dir", None)
@@ -257,14 +258,15 @@ def _note(context, kind: str, outcome: str, problems: list) -> None:
     try:
         Path(folder).mkdir(parents=True, exist_ok=True)
         with open(Path(folder) / "maker_log.jsonl", "a", encoding="utf-8") as out:
-            out.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "outcome": outcome,
-                                  "problems": [str(p)[:120] for p in problems[:4]]}) + "\n")
+            out.write(seal_line(out.name, json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind,
+                                                     "outcome": outcome,
+                                                     "problems": [str(p)[:120] for p in problems[:4]]})) + "\n")
     except OSError:
         pass
 
 
 def maker_log(context, days: int = 30) -> list[dict]:
-    """The Make Something attempts of the last `days` days (maker_log.jsonl in the person's folder)."""
+    """The Make Something attempts of the last `days` days (maker_log.jsonl in the person's folder). Its sealed lines open through open_text (WP-04)."""
     from datetime import datetime, timedelta
 
     folder = getattr(getattr(context, "failures", None), "data_dir", None)
@@ -272,7 +274,7 @@ def maker_log(context, days: int = 30) -> list[dict]:
         return []
     since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
     try:
-        lines = (Path(folder) / "maker_log.jsonl").read_text(encoding="utf-8").splitlines()
+        lines = open_text(Path(folder) / "maker_log.jsonl").splitlines()
     except OSError:
         return []
     out = []

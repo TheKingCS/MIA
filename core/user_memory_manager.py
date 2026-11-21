@@ -65,6 +65,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.app_context import AppContext
+from core.at_rest import open_text, seal_line
 from core.logger import get_logger
 from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
@@ -474,7 +475,7 @@ class UserMemoryManager:
 
     def _note_correction(self, memory: UserMemory, how: str) -> None:
         """A memory under CORRECTED_WITHIN days old, edited or deleted: a judgment of what she kept.
-        Kept beside the memories, with its category and age only, never its words."""
+        Kept beside the memories, with its category and age only, never its words. Each line is sealed as it's written (seal_line, WP-04)."""
         try:
             kept = datetime.fromisoformat(memory.created_at)
         except ValueError:
@@ -486,15 +487,15 @@ class UserMemoryManager:
         try:
             self.data_dir.mkdir(parents=True, exist_ok=True)
             with open(self.data_dir / _CORRECTIONS_FILE, "a", encoding="utf-8") as out:
-                out.write(json.dumps(line) + "\n")
+                out.write(seal_line(out.name, json.dumps(line)) + "\n")
         except OSError:
             log.exception("Couldn't note a memory correction.")
 
     def corrections(self, days: int = 30) -> list[dict]:
-        """Memories corrected soon after she kept them, in the last `days`."""
+        """Memories corrected soon after she kept them, in the last `days`. Its sealed lines open through open_text (WP-04)."""
         since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
         try:
-            lines = (self.data_dir / _CORRECTIONS_FILE).read_text(encoding="utf-8").splitlines()
+            lines = open_text(self.data_dir / _CORRECTIONS_FILE).splitlines()
         except OSError:
             return []
         out = []

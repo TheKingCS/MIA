@@ -65,6 +65,7 @@ from core.inbox_classify import (
     DOC_TYPE_LABELS, INVOICE, MANUAL, RECEIPT, WARRANTY, DetailProposal, ScheduleItem, detail_proposals, document_details,
     document_type, expense_category, maintenance_schedule, match_asset, match_project, receipt_fields, receipt_items,
 )
+from core.at_rest import open_text, seal_line
 from core.logger import get_logger
 from core.region import money
 
@@ -484,22 +485,22 @@ class InboxManager:
 
     def _note_reading(self, item, corrected: list[str]) -> None:
         """For the inbox.reading loop (build plan step 4): each filed item, which of the fields MIA read the person
-        corrected (field names only, never values)."""
+        corrected (field names only, never values). Each line is sealed as it's written (seal_line, WP-04)."""
         try:
             self.data_dir.mkdir(parents=True, exist_ok=True)
             with open(self.data_dir / "inbox_reading.jsonl", "a", encoding="utf-8") as out:
-                out.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "doc_type": item.doc_type,
-                                      "corrected": corrected}) + "\n")
+                out.write(seal_line(out.name, json.dumps({"at": datetime.now().isoformat(timespec="seconds"),
+                                                         "doc_type": item.doc_type, "corrected": corrected})) + "\n")
         except OSError:
             log.exception("Inbox: couldn't note the reading")
 
     def readings(self, days: int = 60) -> list[dict]:
         """The record of how filed documents were read and what the person corrected, for the last `days` days (what the
-        inbox-reading loop learns from).
+        inbox-reading loop learns from). Its sealed lines open through open_text (WP-04).
         """
         since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
         try:
-            lines = (self.data_dir / "inbox_reading.jsonl").read_text(encoding="utf-8").splitlines()
+            lines = open_text(self.data_dir / "inbox_reading.jsonl").splitlines()
         except OSError:
             return []
         out = []

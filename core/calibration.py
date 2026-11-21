@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from core.atomic_write import atomic_write_text
+from core.at_rest import open_text, seal_line
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -47,7 +48,7 @@ def _folder(context) -> Optional[Path]:
 
 def note(context, plan: str, level: str, answer: str) -> None:
     """Notes how sure an answer was (sureness.jsonl: its plan, its level and a fingerprint of the answer, never its
-    words); past 3,000 lines the oldest go, down to 1,800. A write that fails is logged.
+    words); past 3,000 lines the oldest go, down to 1,800. A write that fails is logged. Each line is sealed as it's written (seal_line, WP-04).
     """
     folder = _folder(context)
     if folder is None or not str(answer or "").strip():
@@ -58,22 +59,22 @@ def note(context, plan: str, level: str, answer: str) -> None:
         with _lock:
             path = folder / FILE_NAME
             with open(path, "a", encoding="utf-8") as out:
-                out.write(json.dumps(line) + "\n")
-            lines = path.read_text(encoding="utf-8").splitlines()
+                out.write(seal_line(path, json.dumps(line)) + "\n")
+            lines = path.read_text(encoding="utf-8").splitlines()  # as stored: kept lines stay sealed
             if len(lines) > _MAX_LINES:
-                path.write_text("\n".join(lines[-(_MAX_LINES * 3 // 5):]) + "\n", encoding="utf-8")
+                atomic_write_text(path, "\n".join(lines[-(_MAX_LINES * 3 // 5):]) + "\n")  # each line sealed
     except OSError:
         log.exception("Couldn't note how sure an answer was.")
 
 
 def notes(context, days: int = 90) -> list[dict]:
-    """The notes of the last `days` days (90 by default); a bad line is skipped."""
+    """The notes of the last `days` days (90 by default); a bad line is skipped. Its sealed lines open through open_text (WP-04)."""
     folder = _folder(context)
     if folder is None:
         return []
     since = (datetime.now() - timedelta(days=days)).isoformat(timespec="seconds")
     try:
-        text = (folder / FILE_NAME).read_text(encoding="utf-8")
+        text = open_text(folder / FILE_NAME)  # sealed a line at a time (WP-04)
     except OSError:
         return []
     out = []
@@ -96,13 +97,13 @@ KINDS = ("debt_free", "freedom")
 
 def project(context, kind: str, when: str, plan: str = "") -> None:
     """A date MIA projected ("debt-free 2027-08", "freedom 2028-01-07"), kept once per kind and date, to be
-    checked when it comes."""
+    checked when it comes. Each line is sealed as it's written (seal_line, WP-04)."""
     folder = _folder(context)
     if folder is None or kind not in KINDS or not when:
         return
     path = folder / PROJECTIONS
     try:
-        kept = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        kept = [json.loads(l) for l in open_text(path).splitlines() if l.strip()]
     except (OSError, ValueError):
         kept = []
     if any(p.get("kind") == kind and p.get("when") == when for p in kept):
@@ -110,8 +111,8 @@ def project(context, kind: str, when: str, plan: str = "") -> None:
     try:
         folder.mkdir(parents=True, exist_ok=True)
         with _lock, open(path, "a", encoding="utf-8") as out:
-            out.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind, "when": when,
-                                  "plan": plan, "outcome": None}) + "\n")
+            out.write(seal_line(path, json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind,
+                                              "when": when, "plan": plan, "outcome": None})) + "\n")
     except OSError:
         log.exception("Couldn't keep a projection.")
 
@@ -145,13 +146,13 @@ def happened(context, kind: str) -> Optional[bool]:
 
 
 def check_due(context, now: Optional[datetime] = None, judge: Optional[Callable] = None) -> int:
-    """Projections whose date (and a month's grace) has passed, checked against what happened. Returns how many."""
+    """Projections whose date (and a month's grace) has passed, checked against what happened. Returns how many. Its sealed lines open through open_text; written back sealed (WP-04)."""
     folder = _folder(context)
     if folder is None:
         return 0
     path = folder / PROJECTIONS
     try:
-        kept = [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        kept = [json.loads(l) for l in open_text(path).splitlines() if l.strip()]
     except (OSError, ValueError):
         return 0
     now = now or datetime.now()
@@ -172,10 +173,10 @@ def check_due(context, now: Optional[datetime] = None, judge: Optional[Callable]
 
 
 def projections(context) -> list[dict]:
-    """Every projection kept (debt-free dates, freedom dates), to check when their day comes."""
+    """Every projection kept (debt-free dates, freedom dates), to check when their day comes. Its sealed lines open through open_text (WP-04)."""
     folder = _folder(context)
     try:
-        return [json.loads(l) for l in (folder / PROJECTIONS).read_text(encoding="utf-8").splitlines() if l.strip()] \
+        return [json.loads(l) for l in open_text(folder / PROJECTIONS).splitlines() if l.strip()] \
             if folder else []
     except (OSError, ValueError):
         return []

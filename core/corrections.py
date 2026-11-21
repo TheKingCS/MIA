@@ -34,6 +34,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterable, Optional
 
+from core.at_rest import open_text, seal_line
+from core.atomic_write import atomic_write_text
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -112,10 +114,10 @@ def _folder(context) -> Optional[Path]:
 
 def _lines(folder: Path) -> list[dict]:
     """Every correction record (corrections.jsonl), one JSON line each; a bad line is skipped, a missing file gives
-    none.
+    none. Its sealed lines open through open_text (WP-04).
     """
     try:
-        text = (folder / FILE_NAME).read_text(encoding="utf-8")
+        text = open_text(folder / FILE_NAME)  # sealed a line at a time (WP-04)
     except OSError:
         return []
     out = []
@@ -129,17 +131,17 @@ def _lines(folder: Path) -> list[dict]:
 
 def _append(folder: Path, entry: dict) -> None:
     """Adds one record, under a lock; past 4,000 lines the oldest are dropped down to 2,400. A file that can't be
-    written is logged, never raised.
+    written is logged, never raised. Each line is sealed as it's written (seal_line, WP-04). The kept lines are written back sealed, a line at a time (WP-04).
     """
     try:
         folder.mkdir(parents=True, exist_ok=True)
         with _lock:
             path = folder / FILE_NAME
             with open(path, "a", encoding="utf-8") as out:
-                out.write(json.dumps(entry) + "\n")
-            lines = path.read_text(encoding="utf-8").splitlines()
+                out.write(seal_line(path, json.dumps(entry)) + "\n")
+            lines = path.read_text(encoding="utf-8").splitlines()  # as stored: kept lines stay sealed
             if len(lines) > _MAX_LINES:
-                path.write_text("\n".join(lines[-(_MAX_LINES * 3 // 5):]) + "\n", encoding="utf-8")
+                atomic_write_text(path, "\n".join(lines[-(_MAX_LINES * 3 // 5):]) + "\n")  # each line sealed
     except OSError:
         log.exception("Couldn't keep a correction record.")
 

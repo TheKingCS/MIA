@@ -46,6 +46,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
 
+from core.at_rest import open_text, seal_line
 from core.logger import get_logger
 
 log = get_logger(__name__)
@@ -187,7 +188,7 @@ def _folder(context) -> Optional[Path]:
 
 def _note(context, kind: str, answered: bool, seconds: float) -> None:
     """Notes one look (sight_log.jsonl): its kind, whether it was answered and how long it took; never the photo or
-    the question.
+    the question. Each line is sealed as it's written (seal_line, WP-04).
     """
     folder = _folder(context)
     if folder is None:
@@ -195,21 +196,21 @@ def _note(context, kind: str, answered: bool, seconds: float) -> None:
     try:
         folder.mkdir(parents=True, exist_ok=True)
         with open(folder / "sight_log.jsonl", "a", encoding="utf-8") as out:
-            out.write(json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind,
-                                  "answered": answered, "seconds": round(seconds, 1)}) + "\n")
+            out.write(seal_line(out.name, json.dumps({"at": datetime.now().isoformat(timespec="seconds"), "kind": kind,
+                                                     "answered": answered, "seconds": round(seconds, 1)})) + "\n")
     except OSError:
         log.exception("Sight: couldn't note a look")
 
 
 def looks(context, days: int = 30) -> list[dict]:
-    """The looks of the last `days` days (30); a bad line is skipped."""
+    """The looks of the last `days` days (30); a bad line is skipped. Its sealed lines open through open_text (WP-04)."""
     folder = _folder(context)
     if folder is None:
         return []
     since = (datetime.now().timestamp() - days * 86400)
     out = []
     try:
-        lines = (folder / "sight_log.jsonl").read_text(encoding="utf-8").splitlines()
+        lines = open_text(folder / "sight_log.jsonl").splitlines()
     except OSError:
         return []
     for line in lines:

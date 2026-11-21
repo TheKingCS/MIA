@@ -177,7 +177,10 @@ SEALED = frozenset({
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
 # from before, and a line that won't open is kept as it is, never the whole file lost (open_text reads it leniently).
 # The person's history repeats the names sealed stores keep ("Added a person: ..."), so it's sealed too.
-LINE_SEALED = frozenset({"life_events.jsonl"})
+# 2026-11-21 (WP-04): the appended logs, each line sealed as it's written, read through open_text
+LINE_SEALED = frozenset({"life_events.jsonl", "corrections.jsonl", "inbox_reading.jsonl", "maker_log.jsonl",
+                         "memory_corrections.jsonl", "projections.jsonl", "security_log.jsonl", "sight_log.jsonl",
+                         "sureness.jsonl"})
 
 # Personal stores NOT sealed yet, each with why (WP-04, 2026-11-20). Every record, log or derived file in the
 # retention registry (core/retention.py) is SEALED, LINE_SEALED, PUBLIC (with why) or here; tests/test_sealed_stores.py
@@ -196,7 +199,6 @@ NOT_SEALED_YET: dict[str, str] = {
     "calendar_events.json": "its store reads the file directly: move its reader to open_text first",
     "capability_gaps.json": "its store reads the file directly: move its reader to open_text first",
     "capture_proposals.json": "its store reads the file directly: move its reader to open_text first",
-    "corrections.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
     "data_logger_readings.json": "its store reads the file directly: move its reader to open_text first",
     "debts.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "decided.json": "its store reads the file directly: move its reader to open_text first",
@@ -207,12 +209,9 @@ NOT_SEALED_YET: dict[str, str] = {
     "homestead_snapshots.json": "its store reads the file directly: move its reader to open_text first",
     "inbox.json": "its store reads the file directly: move its reader to open_text first",
     "inbox_mail_state.json": "its store reads the file directly: move its reader to open_text first",
-    "inbox_reading.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
     "income.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "income_sources.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "kitchen.json": "its store reads the file directly: move its reader to open_text first",
-    "maker_log.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
-    "memory_corrections.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
     "mission_pathways.json": "its store reads the file directly: move its reader to open_text first",
     "mission_proposals.json": "its store reads the file directly: move its reader to open_text first",
     "missions.json": "its store reads the file directly: move its reader to open_text first",
@@ -221,12 +220,8 @@ NOT_SEALED_YET: dict[str, str] = {
     "private_journal.json": "its store reads the file directly: move its reader to open_text first",
     "private_journal_keys.json": "its store reads the file directly: move its reader to open_text first",
     "profile.json": "its store reads the file directly: move its reader to open_text first",
-    "projections.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
-    "security_log.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
-    "sight_log.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
     "skill_progress.json": "its store reads the file directly: move its reader to open_text first",
     "skill_xp_log.json": "its store reads the file directly: move its reader to open_text first",
-    "sureness.jsonl": "appended a line at a time: needs line sealing (LINE_SEALED) and its reader moved to open_lines",
     "textbooks.json": "its store reads the file directly: move its reader to open_text first",
     "trail_maps.json": "its store reads the file directly: move its reader to open_text first",
     "why_checkpoints.json": "its store reads the file directly: move its reader to open_text first",
@@ -242,7 +237,9 @@ PUBLIC: dict[str, str] = {
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the
 # budget's files (bills, income, expenses, debts) wait on the Plaid work in core/budget_manager.py.
 
-_lock = threading.Lock()
+# Re-entrant: a key that won't open is noted in the security log (_alert) while this is held, and that log's
+# lines are sealed (LINE_SEALED), which asks for the key again on the same thread (it finds _blocked).
+_lock = threading.RLock()
 _keys: Optional[dict] = None  # kid -> key, opened once
 _current: Optional[str] = None
 _blocked = ""  # why sealing stopped ("" while it works)
