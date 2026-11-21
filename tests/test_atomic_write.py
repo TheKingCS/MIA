@@ -98,7 +98,7 @@ def test_a_write_that_shrinks_a_large_file_keeps_the_old_contents_as_prev(tmp_pa
     """Guard (a): a store that started empty after a failed read can't silently wipe its file."""
     from core.atomic_write import prev_path
 
-    target = tmp_path / "missions.json"
+    target = tmp_path / "readings.json"  # not a sealed name: the bytes on disk are the text
     original = "[" + ",".join('{"id": %d}' % i for i in range(100)) + "]"
     target.write_text(original, encoding="utf-8")
     atomic_write_text(target, '[{"id": 1}]')

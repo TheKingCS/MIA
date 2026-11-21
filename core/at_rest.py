@@ -183,6 +183,16 @@ SEALED = frozenset({
     "good_news_following.json",
     "inbox_mail_state.json",
     "seasons.json",
+    # 2026-11-21 (WP-04): stores whose file is a module constant
+    "pathway_progress.json",
+    "mission_proposals.json",
+    "trail_maps.json",
+    "missions.json",
+    "skill_progress.json",
+    "skill_xp_log.json",
+    "music_tracks.json",
+    "music_playlists.json",
+    "recurring_mission_templates.json",
 })
 # Sealed a line at a time (2026-11-08): an append-only history, where a whole-file envelope would mean rewriting it
 # (CLAUDE.md: never rewrite it). Each line is its own envelope as it's appended (seal_line); a file can hold plain lines
@@ -198,9 +208,6 @@ LINE_SEALED = frozenset({"life_events.jsonl", "corrections.jsonl", "inbox_readin
 # fails on a new one in none of them, and this list may only shrink. Sealing one: its store reads through open_text
 # (catching ValueError and OSError) and writes through atomic_write_text; then its name moves to SEALED.
 NOT_SEALED_YET: dict[str, str] = {
-    "music_tracks.json": "reads through open_text already; its store takes no data folder, so the start-up test can't hold it yet",
-    "music_playlists.json": "reads through open_text already; its store takes no data folder, so the start-up test can't hold it yet",
-    "recurring_mission_templates.json": "reads through open_text already; its store takes no data folder, so the start-up test can't hold it yet",
     "bills.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "boss_book.json": "its store reads the file directly: move its reader to open_text first",
     "budget_expenses.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
@@ -213,22 +220,16 @@ NOT_SEALED_YET: dict[str, str] = {
     "income.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "income_sources.json": "the budget's files wait on the Plaid work (core/budget_manager.py)",
     "kitchen.json": "its store reads the file directly: move its reader to open_text first",
-    "mission_pathways.json": "its store reads the file directly: move its reader to open_text first",
-    "mission_proposals.json": "its store reads the file directly: move its reader to open_text first",
-    "missions.json": "its store reads the file directly: move its reader to open_text first",
     "password_vault.json": "its store reads the file directly: move its reader to open_text first",
-    "pathway_progress.json": "its store reads the file directly: move its reader to open_text first",
     "private_journal.json": "its store reads the file directly: move its reader to open_text first",
     "private_journal_keys.json": "its store reads the file directly: move its reader to open_text first",
     "profile.json": "its store reads the file directly: move its reader to open_text first",
-    "skill_progress.json": "its store reads the file directly: move its reader to open_text first",
-    "skill_xp_log.json": "its store reads the file directly: move its reader to open_text first",
-    "trail_maps.json": "its store reads the file directly: move its reader to open_text first",
     "why_checkpoints.json": "its store reads the file directly: move its reader to open_text first",
 }
 # Records that aren't anyone's: nothing personal to seal.
 PUBLIC: dict[str, str] = {
     "skill_definitions.json": "the skills MIA ships with (the person's progress is skill_progress.json)",
+    "mission_pathways.json": "the pathways MIA ships with (the person's progress is pathway_progress.json)",
     "vocab.json": "a model's vocabulary card, not about anyone",
     "meaning.json": "a cache of example sentences' vectors for matching words, not his records",
     "decided.json": "the Chronicle candidates accepted or dropped: the project's history in work/saga/, read by every session",

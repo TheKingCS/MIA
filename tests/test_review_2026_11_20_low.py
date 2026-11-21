@@ -6,6 +6,7 @@ from datetime import datetime
 from types import SimpleNamespace
 
 from core import clock, dev_lab, sync
+from core.at_rest import open_text
 from tests.test_sync import phone  # noqa: F401  (the fixture)
 
 
@@ -92,4 +93,4 @@ def test_a_field_changed_on_both_devices_is_kept_and_told_through_a_whole_sync(p
     assert kept == [("missions.json", [{"mission_id": "m1", "name": "Fix fence", "xp": 30}],
                      [("mission_id=m1", "xp")], True)]
     assert ("told", ["note"]) in offered
-    assert json.loads((phone.dirs["home"] / "missions.json").read_text())[0]["xp"] == 20
+    assert json.loads(open_text(phone.dirs["home"] / "missions.json"))[0]["xp"] == 20  # sealed at rest (WP-04)

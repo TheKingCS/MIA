@@ -77,6 +77,7 @@ from core.gamification import SkillWeight
 from core.logger import get_logger
 from core.mission_manager import DIFFICULTY_LEVELS
 from core.skill_patterns import declining_categories, momentum_categories
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -245,14 +246,14 @@ class DiscoveryManager:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
-        """Reads the proposals; a damaged file is logged, reported and starts empty."""
+        """Reads the proposals; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not _PROPOSALS_FILE.exists():
             self._proposals = []
             return
         try:
-            raw = json.loads(_PROPOSALS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(_PROPOSALS_FILE))  # sealed at rest (WP-04)
             self._proposals = [MissionProposal.from_dict(d) for d in raw.get("proposals", [])]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load mission_proposals.json — starting with no proposals.")
             notify_data_corruption(self.context, "mission_proposals.json")
             self._proposals = []

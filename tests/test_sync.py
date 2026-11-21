@@ -11,6 +11,7 @@ import json
 import pytest
 
 from core import sync
+from core.at_rest import open_bytes, open_text  # missions.json is sealed at rest (WP-04)
 from core.sync import _MISSING, digest, merge_file, merge_game, merge_json, merge_lines
 
 
@@ -161,7 +162,7 @@ def test_a_full_sync_both_ways(phone):
     (phone.dirs["home"] / "security_logins.json").write_text("{}")
     done = sync.sync_now(phone, call=pc)
     assert done["pulled"] == 2 and done["pushed"] == 1
-    assert (phone.dirs["home"] / "missions.json").read_bytes() == _missions("pc1")
+    assert open_bytes(phone.dirs["home"] / "missions.json") == _missions("pc1")
     assert "kitchen_recipes.json" in pc.files["home"] and "security_logins.json" not in pc.files["home"]
 
     # Both add a mission: both end up with both.
@@ -169,9 +170,9 @@ def test_a_full_sync_both_ways(phone):
     pc.files["home"]["missions.json"] = _missions("pc1", "pc3")
     done = sync.sync_now(phone, call=pc)
     assert done["merged"] == 1
-    ids = [m["mission_id"] for m in json.loads((phone.dirs["home"] / "missions.json").read_text())]
+    ids = [m["mission_id"] for m in json.loads(open_text(phone.dirs["home"] / "missions.json"))]
     assert ids == ["pc1", "phone2", "pc3"]
-    assert json.loads(pc.files["home"]["missions.json"]) == json.loads((phone.dirs["home"] / "missions.json").read_text())
+    assert json.loads(pc.files["home"]["missions.json"]) == json.loads(open_text(phone.dirs["home"] / "missions.json"))
 
     # Nothing changed: nothing moves, even when the PC saves Windows line endings.
     pc.files["home"] = {n: d.replace(b"\n", b"\r\n") for n, d in pc.files["home"].items()}
@@ -221,7 +222,7 @@ def test_the_pcs_endpoints(tmp_path, monkeypatch):
     assert stale.status_code == 409
     ok = client.post("/api/sync/file", json={"scope": "home", "name": "missions.json",
                                               "expect": digest(_missions("a")), "data": new})
-    assert ok.status_code == 200 and (home / "missions.json").read_bytes() == _missions("a", "b")
+    assert ok.status_code == 200 and open_bytes(home / "missions.json") == _missions("a", "b")
     # A file that stays on one device is never written here; an older phone that still offers it is told "done"
     # (not an error, which ended its whole sync: Fable's review, 2026-11-20). A name that isn't a data file is refused.
     kept_out = client.post("/api/sync/file", json={"scope": "home", "name": "security_logins.json", "expect": "",
@@ -351,7 +352,7 @@ def test_an_edit_made_while_the_computer_answers_is_merged_not_written_over(phon
         return pc(context, path, payload, **kwargs)
 
     sync.sync_now(phone, call=pc_while_the_phone_edits)
-    ids = [m["mission_id"] for m in json.loads(missions.read_text())]
+    ids = [m["mission_id"] for m in json.loads(open_text(missions))]
     assert "phone3" in ids and "pc2" in ids
 
 

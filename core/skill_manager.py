@@ -47,6 +47,7 @@ from core.achievements import crossed_a_level, format_skill_level_up, format_ski
 from core.app_context import AppContext
 from core.logger import get_logger
 from core.skill_leveling import capability_status_for_level, compute_skill_level_progress
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -258,12 +259,12 @@ class SkillManager:
     # ------------------------------------------------------------------
 
     def _load_progress(self) -> None:
-        """Reads everyone's progress; a damaged file is logged, reported and starts with none."""
+        """Reads everyone's progress; a damaged file is logged, reported and starts with none. Sealed at rest: read through open_text (WP-04)."""
         if not _SKILL_PROGRESS_FILE.exists():
             return
         try:
-            raw = json.loads(_SKILL_PROGRESS_FILE.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+            raw = json.loads(open_text(_SKILL_PROGRESS_FILE))  # sealed at rest (WP-04)
+        except (ValueError, OSError):
             log.exception("Failed to load skill_progress.json — starting with no progress.")
             notify_data_corruption(self.context, "skill_progress.json")
             return
@@ -278,12 +279,12 @@ class SkillManager:
         atomic_write_text(_SKILL_PROGRESS_FILE, json.dumps(payload, indent=2), encoding="utf-8")
 
     def _load_xp_log(self) -> None:
-        """Reads the XP log; a damaged file is logged, reported and starts empty."""
+        """Reads the XP log; a damaged file is logged, reported and starts empty. Sealed at rest: read through open_text (WP-04)."""
         if not _SKILL_XP_LOG_FILE.exists():
             return
         try:
-            raw = json.loads(_SKILL_XP_LOG_FILE.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+            raw = json.loads(open_text(_SKILL_XP_LOG_FILE))  # sealed at rest (WP-04)
+        except (ValueError, OSError):
             log.exception("Failed to load skill_xp_log.json — starting with no XP history.")
             notify_data_corruption(self.context, "skill_xp_log.json")
             return

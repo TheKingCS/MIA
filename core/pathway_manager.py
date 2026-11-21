@@ -50,6 +50,7 @@ from typing import Optional
 from core.app_context import AppContext
 from core.gamification import SkillWeight
 from core.logger import get_logger
+from core.at_rest import open_text
 from core.atomic_write import atomic_write_text
 from core.data_recovery import notify_data_corruption
 
@@ -226,13 +227,13 @@ class PathwayManager:
         self._load_progress()
 
     def _load_progress(self) -> None:
-        """Reads everyone's progress; a damaged file is logged, reported and starts with none."""
+        """Reads everyone's progress; a damaged file is logged, reported and starts with none. Sealed at rest: read through open_text (WP-04)."""
         if not _PROGRESS_FILE.exists():
             return
         try:
-            raw = json.loads(_PROGRESS_FILE.read_text(encoding="utf-8"))
+            raw = json.loads(open_text(_PROGRESS_FILE))  # sealed at rest (WP-04)
             self._progress = [PathwayProgress.from_dict(d) for d in raw.get("progress", [])]
-        except (json.JSONDecodeError, OSError):
+        except (ValueError, OSError):
             log.exception("Failed to load pathway_progress.json — starting with no progress.")
             notify_data_corruption(self.context, "pathway_progress.json")
             self._progress = []

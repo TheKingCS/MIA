@@ -5,7 +5,7 @@ tests.test_at_rest
 MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM
 envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a
 file that won't open is copied aside before the error, so a store starting empty can't lose it (and every sealed
-store starts empty rather than stopping MIA, and a sealed file kept by functions reads as none; every file naming a sealed file reads it with open_text); a changed file is
+store starts empty rather than stopping MIA, a store whose file is a module constant too, and a sealed file kept by functions reads as none; every file naming a sealed file reads it with open_text); a changed file is
 refused; a recovery key brings a key back; sync and export carry the real content; the Fix-It Log is written whole,
 sealed, and never part of an undoable change; the history is sealed a line at a time; and, on Windows, the key is protected by DPAPI and only opens for this
 Windows user.
@@ -14,6 +14,7 @@ Windows user.
 import json
 import sys
 import zipfile
+from pathlib import Path
 
 from unittest.mock import MagicMock
 
@@ -280,6 +281,40 @@ SEALED_STORES = [
 ]
 
 
+# Stores whose file is a module constant, not a data folder: (module, class, the constant, file).
+SEALED_FIXED = [
+    ("core.pathway_manager", "PathwayManager", "_PROGRESS_FILE", "pathway_progress.json"),
+    ("core.discovery_manager", "DiscoveryManager", "_PROPOSALS_FILE", "mission_proposals.json"),
+    ("core.trail_map_library", "TrailMapLibrary", "_TRAIL_MAPS_FILE", "trail_maps.json"),
+    ("core.mission_manager", "MissionManager", "_MISSIONS_FILE", "missions.json"),
+    ("core.skill_manager", "SkillManager", "_SKILL_PROGRESS_FILE", "skill_progress.json"),
+    ("core.skill_manager", "SkillManager", "_SKILL_XP_LOG_FILE", "skill_xp_log.json"),
+    ("core.music_manager", "MusicManager", "_TRACKS_FILE", "music_tracks.json"),
+    ("core.music_manager", "MusicManager", "_PLAYLISTS_FILE", "music_playlists.json"),
+    ("core.recurring_mission_manager", "RecurringMissionManager", "_TEMPLATES_FILE", "recurring_mission_templates.json"),
+]
+
+
+@pytest.mark.parametrize("module, cls, attr, name", SEALED_FIXED)
+def test_a_sealed_store_with_a_fixed_file_starts_empty_and_keeps_a_copy(tmp_path, monkeypatch, module, cls,
+                                                                        attr, name):
+    """The same as above, the store's file constant pointed at the test's folder."""
+    import importlib
+
+    found = importlib.import_module(module)
+    for other in [a for a in dir(found) if a.endswith("_FILE") and isinstance(getattr(found, a), Path)]:
+        monkeypatch.setattr(found, other, tmp_path / getattr(found, other).name)
+    at_rest.use_key(bytes(32))
+    atomic_write_text(tmp_path / name, "[]")
+    before = (tmp_path / name).read_bytes()
+    at_rest.use_key(KEY)
+    context = MagicMock()
+    context.config.get.side_effect = lambda key, default=None: default
+    getattr(found, cls)(context)
+    [aside] = tmp_path.glob(name + ".unreadable-*")
+    assert aside.read_bytes() == before
+
+
 # Stores kept by functions, not classes: (module, reader, file, what the reader takes: a context whose person's
 # folder is the test's, the folder itself, or the file's path).
 SEALED_READERS = [
@@ -292,8 +327,9 @@ SEALED_READERS = [
 
 
 def test_every_sealed_name_has_its_store_here():
-    """SEALED and these lists agree, so each sealed file's store (or reader) is tested below."""
-    names = [name for _, _, name in SEALED_STORES] + [name for _, _, name, _ in SEALED_READERS]
+    """SEALED and these three lists agree, so each sealed file's store (or reader) is tested below."""
+    names = [name for _, _, name in SEALED_STORES] + [name for _, _, name, _ in SEALED_READERS] + \
+        [name for _, _, _, name in SEALED_FIXED]
     assert set(names) == set(at_rest.SEALED)
 
 
