@@ -12,8 +12,9 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 **New 2026-11-20, WP-01 built (the lockdown)**: saying "lockdown" (the whole message), or Lockdown on Sign-ins
 and Security, ends every session of his (this one too), unlinks his phones, locks the vaults and stops everything
-of hers; only signing in with his password lifts it ("carry on" can't). Next on the Windows backlog: WP-02
-(approvals bound to their parameters), WP-03, WP-04 (the MVP gate's four).
+of hers; only signing in with his password lifts it ("carry on" can't). **WP-02 built too**: each card carries a
+binding (its kind, params and sentence); approve refuses a card changed since it was shown or another card's
+binding, and execute gets a copy. Next on the Windows backlog: WP-03, WP-04 (the MVP gate's last two).
 
 **New 2026-11-20, Fable reviewed Opus's work since 2026-11-18** (LS-01 to LS-10, FW-02 to FW-05) with three
 independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each

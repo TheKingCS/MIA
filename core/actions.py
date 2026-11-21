@@ -25,6 +25,10 @@ failure is one of four kinds (DEC-0283, `ERROR_KINDS`): `Refused` (a tier,
 a grant, the stop), invalid (a plain `ActionError`), `Unavailable` (a
 service or device away), or failed (anything else); the proposal keeps it.
 
+An approval is for the card exactly as it was shown (WP-02, REQ-SEC-016): each
+proposal carries a binding (`binding_of`: its kind, params and sentence),
+and approve refuses a card that changed since, or a binding from another card.
+
 The front end holds no business logic: it shows Life State's
 `due[].action` suggestions and the proposals, and calls these. A child
 account can only take the actions marked `child_ok`. Proposals live in
@@ -71,6 +75,17 @@ class Unavailable(ActionError):
     kind = "unavailable"
 
 
+def binding_of(kind: str, params: dict, summary: str) -> str:
+    """Pure logic. The card as shown, as a short hash of its kind, its parameters and its sentence (WP-02): an
+    approval holds only while all three are what the person saw."""
+    import hashlib
+    import json
+
+    shown = json.dumps({"kind": kind, "params": params, "summary": summary}, sort_keys=True, default=str,
+                       ensure_ascii=False)
+    return hashlib.sha256(shown.encode("utf-8")).hexdigest()[:24]
+
+
 def error_kind(problem: BaseException) -> str:
     """Pure logic. Which of the four kinds a problem is: an ActionError's own, else `failed`."""
     return getattr(problem, "kind", "failed") if isinstance(problem, ActionError) else "failed"
@@ -108,8 +123,9 @@ class Proposal:
     (made in code, never by the model), whose it is, who proposed it (the person or MIA), its status (proposed,
     executed, rejected, failed, expired, undone), when, the result line, what it earned (for a surface to celebrate),
     whether it ran at once on his standing yes (`auto`, DEC-0215), the trace id of what proposed it (DEC-0280), whether
-    its effect read back after it ran (DEC-0218), what kind of failure it was if it failed (DEC-0283), and the undo
-    record (kept server-side, never sent).
+    its effect read back after it ran (DEC-0218), what kind of failure it was if it failed (DEC-0283), its binding
+    (WP-02: the card exactly as shown; an approval is for that card and nothing else), and the undo record (kept
+    server-side, never sent).
     """
     proposal_id: str
     kind: str
@@ -127,6 +143,7 @@ class Proposal:
     auto: bool = False  # done at once on his standing yes for the kind (Approve From Now On, DEC-0215)
     trace: str = ""  # the trace id of what proposed it (core/trace.py, DEC-0280); approving it runs under the same
     read_back: str = ""  # "ok" when its effect read back after it ran, else what didn't (DEC-0218, LS-05)
+    binding: str = ""  # the card as shown: a hash of kind, params and sentence (WP-02, REQ-SEC-016)
     error: str = ""  # when it failed: refused, invalid, unavailable or failed (DEC-0283)
     _change: object = field(default=None, repr=False)  # the undo record, never sent
 
@@ -614,7 +631,8 @@ class ActionCenter:
         core/action_effects.py); changes nothing. Except: when MIA herself proposes a kind he approved from now on
         (core/kind_grants.py, DEC-0215), it's approved at once and comes back executed (or failed), marked `auto`;
         unless the grants check holds it (a stop-everything), when it stays a card like any other. It carries the
-        trace id of what proposed it, or a new one for a press on a screen (core/trace.py)."""
+        trace id of what proposed it, or a new one for a press on a screen (core/trace.py), and its binding: the
+        card exactly as it's shown (WP-02)."""
         from core.child_accounts import is_child
 
         action = ACTION_TYPES.get(kind)
@@ -636,6 +654,7 @@ class ActionCenter:
                             "mia" if proposed_by == "mia" else "person",
                             created_at=datetime.now().isoformat(timespec="seconds"),
                             trace=trace.current() or trace.new_id())  # a press on a screen starts its own
+        proposal.binding = binding_of(kind, params, summary)  # after describe: the card exactly as it's shown
         with self._lock:
             self._expire()
             self._proposals[proposal.proposal_id] = proposal
@@ -664,7 +683,8 @@ class ActionCenter:
             self._expire()
             return [p for p in self._proposals.values() if p.profile_id == profile_id and p.status == PROPOSED]
 
-    def approve(self, context, proposal_id: str, from_now_on: bool = False, _auto: bool = False) -> Proposal:
+    def approve(self, context, proposal_id: str, from_now_on: bool = False, _auto: bool = False,
+                binding: str = "") -> Proposal:
         """Steps 2 to 5: the person said yes. Executes through the store,
         which records the history; the change is kept for undo, with the
         approved sentence as its description in the lasting history
@@ -674,7 +694,8 @@ class ActionCenter:
         skill can't approve a kind that always asks (taught_skills.guard).
         With `from_now_on` (Approve From Now On, DEC-0215) his standing yes
         for the kind is kept once it has run; a kind that always asks is
-        refused that, before anything runs.
+        refused that, before anything runs. With `binding` (the card the screen showed,
+        WP-02) it must be this card, and the card must still be as it was made.
         Her orb shows "working" while it runs, then success or a warning
         (core/orb_state.py). Once it has run, its effect is read back
         (`_read_back`, DEC-0218) and the result says what didn't; a failure keeps its kind (`error`, DEC-0283). One
@@ -697,6 +718,12 @@ class ActionCenter:
             return proposal  # already run on his standing yes: the caller gets what happened, done or failed
         if proposal.status != PROPOSED:
             raise ActionError(f"That was already {proposal.status}.")
+        # The card as shown (WP-02, REQ-SEC-016): an approval is for exactly that card. Its kind, parameters or
+        # sentence changed since it was made, or the screen approving it saw another card: nothing is done.
+        if proposal.binding and binding_of(proposal.kind, proposal.params, proposal.summary) != proposal.binding:
+            raise Refused("That card changed after it was shown, so nothing was done. Ask again for a fresh one.")
+        if binding and binding != proposal.binding:
+            raise Refused("That isn't the card that was shown, so nothing was done.")
         if from_now_on:
             from core.kind_grants import grantable
 
@@ -721,7 +748,8 @@ class ActionCenter:
                     recording(f"action_{proposal.kind}", proposal.profile_id) as change, \
                     life_events.acting(source, proposal.profile_id), crediting(context, proposal.profile_id), \
                     orb_state.active("working"):  # her orb shows it (core/orb_state.py)
-                proposal.result = action.execute(context, proposal.params)
+                # A copy: what runs can't change the card that was approved (WP-02).
+                proposal.result = action.execute(context, __import__("copy").deepcopy(proposal.params))
         except ActionError as problem:
             proposal.status, proposal.result = FAILED, str(problem)
             proposal.error = error_kind(problem)

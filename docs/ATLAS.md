@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1548 files, 342,645 lines; 1548 files describe themselves; 18,879 of 18,978 classes and functions are documented.
+1549 files, 342,746 lines; 1549 files describe themselves; 18,884 of 18,983 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-604 files, 173,152 lines; 8,923 of 9,009 classes and functions documented
+604 files, 173,180 lines; 8,924 of 9,010 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -615,7 +615,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,566 lines; 57 of 57 classes and functions documented
+2 files, 4,569 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -900,7 +900,7 @@
 
 ## tests/: the test suite: what each part must do
 
-544 files, 89,928 lines; 7,597 of 7,610 classes and functions documented
+545 files, 89,992 lines; 7,601 of 7,614 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -929,6 +929,7 @@
 - `tests/test_app_scaffold.py`: MIA Forge's scaffold (phase M7, core/app_scaffold.py, tools/new_app.py): from one short description it writes a manifest the Application Registry accepts, a screen on the shared frame, a first test, and the two code edits that list the app; it refuses a bad id, a taken id, an unknown area and a file
 - `tests/test_appearance.py`: The glass design system's foundation (prompt 24 phase A2, DEC-0183, DEC-0184; web/tokens.css, web/themes.css, core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens with defaults inside their ranges; the glass material draws every tier from its tokens; a theme can set a tier o
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
+- `tests/test_approval_binding.py`: Tests for approvals bound to the card (WP-02, REQ-SEC-016, core/actions.py): an approval holds only for the card exactly as it was shown; a changed card, another card's binding, or a second approval does nothing.
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.
 - `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
@@ -1449,7 +1450,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,445 lines
+116 files, 21,451 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

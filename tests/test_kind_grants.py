@@ -100,6 +100,9 @@ def test_from_now_on_on_a_kind_that_always_asks_is_refused_before_anything_runs(
     center = world.actions
     p = center.propose(world, "mission.add", {"name": "x"})
     p.kind = "bill.pay"  # as if the card were for a kind that always asks
+    from core.actions import binding_of
+
+    p.binding = binding_of(p.kind, p.params, p.summary)  # as if made that way (a changed card is WP-02's refusal)
     with pytest.raises(ActionError, match="always asks first"):
         center.approve(world, p.proposal_id, from_now_on=True)
     assert p.status == "proposed"

@@ -4360,10 +4360,13 @@ def create_app(context: AppContext) -> FastAPI:
         return {"proposals": [p.as_dict() for p in _actions().pending(profile_id)]}
 
     @app.post("/api/actions/{proposal_id}/approve")
-    def approve_action(proposal_id: str, from_now_on: bool = False, profile_id: str = Depends(require_profile_id)) -> dict:
+    def approve_action(proposal_id: str, from_now_on: bool = False, binding: str = "",
+                       profile_id: str = Depends(require_profile_id)) -> dict:
         """Approves a card; with `?from_now_on=true` (Approve From Now On, DEC-0215) his standing yes for the kind is
-        kept too, for kinds that may have one (core/kind_grants.py)."""
-        return _decide(lambda view, pid: _actions().approve(view, pid, from_now_on=from_now_on), profile_id, proposal_id)
+        kept too, for kinds that may have one (core/kind_grants.py); with `?binding=` (WP-02) only when it is the
+        card the screen showed."""
+        return _decide(lambda view, pid: _actions().approve(view, pid, from_now_on=from_now_on, binding=binding),
+                       profile_id, proposal_id)
 
     @app.post("/api/actions/{proposal_id}/reject")
     def reject_action(proposal_id: str, profile_id: str = Depends(require_profile_id)) -> dict:

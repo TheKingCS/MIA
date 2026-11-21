@@ -229,6 +229,10 @@
     window.MIA.signedIn = false;
   }
 
+  // The cards this page was shown, by id: their binding goes with the approval (WP-02, core/actions.binding_of).
+  const bindings = {};
+  function shown(p) { if (p && p.proposal_id && p.binding) bindings[p.proposal_id] = p.binding; return p; }
+
   window.MIA = {
     demo,
     reachable: true,  // false while MIA can't be reached; onConnection(fn) hears each change
@@ -731,7 +735,7 @@
     files: (folder) => read("/api/files" + (folder ? "?path=" + encodeURIComponent(folder) : ""), "files"),
     money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),
-    pending: () => call("GET", "/api/actions"),
+    pending: () => call("GET", "/api/actions").then((r) => { ((r && r.proposals) || []).forEach(shown); return r; }),
     // The Universal Action Layer (core/ual.py, DEC-0165): what MIA can do with a selection, and doing the pick.
     ualOffer: (capture) => demo ? Promise.resolve({ capture: { kind: "text", characters: (capture.text || "").length, from: "this page", missing: [] }, actions: [["find_known", "Find What I Know About This", false], ["explain", "Explain This", false], ["summarise", "Summarise This", false], ["draft_email", "Draft An Email From This", false], ["build_skill", "Build A Skill For MIA", false], ["learn_path", "Learn This Myself", true], ["save_inbox", "Save To My Inbox", true], ["make_mission", "Make This A Mission", true], ["make_project", "Start A Project From This", true]].map(([id, label, needs_approval]) => ({ id, label, needs_approval })), later: ["Research This", "Verify These Claims", "Convert This", "Have The Council Review This"] })
       : call("POST", "/api/ual/offer", { capture }),
@@ -743,8 +747,10 @@
     shelf: () => demo ? Promise.resolve({ entries: [], keep_days: 7 }) : call("GET", "/api/shelf"),
     shelfUse: (which, action_id) => demo ? demoOnly() : call("POST", "/api/shelf/use", { which: which || [], action_id: action_id || "" }),
     ualRun: (action_id, capture) => demo ? demoOnly() : call("POST", "/api/ual/run", { action_id, capture }),
-    propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }),
-    approve: (id, fromNowOn) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/approve" + (fromNowOn ? "?from_now_on=true" : "")),
+    propose: (kind, params) => demo ? demoOnly() : call("POST", "/api/actions/propose", { kind, params: params || {} }).then(shown),
+    // WP-02: an approval names the card this page was shown (its binding), so it's for that card and nothing else.
+    approve: (id, fromNowOn) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/approve?"
+      + new URLSearchParams(Object.assign(fromNowOn ? { from_now_on: "true" } : {}, bindings[id] ? { binding: bindings[id] } : {}))),
     reject: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/reject"),
     undo: (id) => demo ? demoOnly() : call("POST", "/api/actions/" + id + "/undo"),
     onChange,
