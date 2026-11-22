@@ -252,6 +252,23 @@
         el("button", { type: "button", class: "btn btn-ghost", disabled: desktop.here ? null : "", onclick: () => open(s.key) }, s.label))));
   }
 
+  // MIA's models (REQ-HW-014): each on the model server with its size, Remove (not the one she answers with) and
+  // Fetch Again for one removed; both approved on a card. They live in the model server, never among your records.
+  let models = null;
+  function modelSection() {
+    if (!models || (!models.installed.length && !models.fetchable.length)) return "";
+    return section("MIA's Models",
+      el("p", { class: "dim" }, "Her AI models, kept by the model server apart from your records: removing one frees its space and never touches your data."),
+      el("div", { class: "rows" }, models.installed.map((m) => el("div", { class: "row" },
+        el("div", {}, el("div", { class: "row-title" }, m.name + (m.in_use ? " · the one she answers with" : "")),
+          el("div", { class: "row-sub" }, m.size_gb + " GB")),
+        m.in_use ? null : el("button", { type: "button", class: "btn btn-ghost", onclick: () => act({ kind: "model.remove", params: { name: m.name } }) }, "Remove")))),
+      models.fetchable.length ? el("div", { class: "rows" }, models.fetchable.map((n) => el("div", { class: "row" },
+        el("div", {}, el("div", { class: "row-title" }, n), el("div", { class: "row-sub" }, models.fetching[n] || "not on this computer")),
+        el("button", { type: "button", class: "btn btn-ghost", disabled: models.fetching[n] === "fetching" ? "" : null,
+          onclick: () => act({ kind: "model.fetch", params: { name: n } }) }, "Fetch Again")))) : null);
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => group(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : null)),
@@ -265,6 +282,7 @@
       starterSets(),
       backupSection(),
       systemSection(),
+      modelSection(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
       section("Notifications", el("p", { class: "dim" }, "Everything MIA has told you, and why she sent the ones she sent on her own."),
@@ -288,6 +306,7 @@
     page = await MIA.settings();
     try { backups = await MIA.backups(); } catch (e) { backups = null; }  // the PC owner's only
     try { desktop = await MIA.desktop(); } catch (e) { desktop = null; }  // MIA OS's own settings pages (FW-11)
+    try { models = await MIA.modelStore(); } catch (e) { models = null; }  // her models (REQ-HW-014), the owner's
     try { voices = await MIA.voiceChoice(); } catch (e) { voices = null; }  // the PC owner's only
     draw();
   });

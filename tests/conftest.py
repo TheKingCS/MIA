@@ -301,8 +301,9 @@ def _orb_idle():
 
 @pytest.fixture(autouse=True)
 def _no_fallback_model_asked_for_real(monkeypatch):
-    """No test asks the real Ollama on this PC which models it has (FW-12's fallback would, then call one): a
-    backend reports none unless a test gives it its own."""
+    """No test asks the real Ollama on this PC which models it has (FW-12's fallback would, then call one) or where
+    one is loaded: a backend reports none and unknown unless a test gives it its own."""
     from core.llm_manager import OllamaBackend
 
     monkeypatch.setattr(OllamaBackend, "installed", lambda self, timeout=3.0: [])
+    monkeypatch.setattr(OllamaBackend, "on_gpu", lambda self, timeout=2.0: None)  # nor where a model is loaded

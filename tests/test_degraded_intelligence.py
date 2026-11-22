@@ -4,7 +4,8 @@ tests.test_degraded_intelligence
 
 FW-12, the first version's part (REQ-AI-013, REQ-HW-029, DEC-0204): when the chosen local model fails or times out,
 the next one the computer has answers and MIA says which; and one model call runs at a time, a conversation before
-background work, so his turn waits at most for the one call already running.
+background work, so his turn waits at most for the one call already running; and with the graphics card
+unavailable, the smaller model that answered on the processor says so (REQ-HW-012).
 """
 import threading
 import time
@@ -124,3 +125,18 @@ def test_a_call_made_inside_another_never_waits_on_itself_and_the_schedule_is_ba
         pass
     else:
         raise AssertionError("an unknown kind was accepted")
+
+
+def test_with_the_graphics_card_unavailable_the_smaller_model_on_the_processor_says_so():
+    """REQ-HW-012: the fallback that answered with none of it on the graphics card names the processor."""
+    real = (OllamaBackend.generate, getattr(OllamaBackend, "installed"), getattr(OllamaBackend, "on_gpu"))
+    try:
+        manager, _ = _manager({"qwen2.5:7b": "slower, but here"})
+        OllamaBackend.on_gpu = lambda self, timeout=2.0: 0.0
+        assert manager.generate("hello") == "slower, but here"
+        assert manager.level.endswith("the smaller model, on the processor (the graphics card isn't available)")
+        OllamaBackend.on_gpu = lambda self, timeout=2.0: 1.0
+        manager.generate("hello")
+        assert manager.level == "THIS COMPUTER · qwen2.5:7b, the smaller model"
+    finally:
+        OllamaBackend.generate, OllamaBackend.installed, OllamaBackend.on_gpu = real

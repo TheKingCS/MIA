@@ -383,7 +383,9 @@ approves itself.
 > **The first version's part built 2026-11-22** (Opus): the chosen model failing or timing out hands the turn to
 > the first of `llm.fallback_models` the computer has (one extra try), and the answering level names it
 > (REQ-AI-013); `core/model_queue.py` runs one model call at a time, a conversation before her scheduled work
-> (REQ-HW-029, DEC-0204). Alpha's CPU fallback and removable models are still to come.
+> (REQ-HW-029, DEC-0204). Then the rest: a smaller model that ran on the processor says so (REQ-HW-012), and her
+> models are removed and fetched again from Settings or by voice, through the model server by name, never a file
+> (REQ-HW-014). Still to do: REQ-FUN-221/222 across every surface, REQ-HW-004's alternatives.
 
 | Objective | Requirements | Tasks | Acceptance | Size |
 |---|---|---|---|---|

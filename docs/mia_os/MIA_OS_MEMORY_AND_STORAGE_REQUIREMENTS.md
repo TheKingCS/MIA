@@ -46,4 +46,4 @@ used, so the fix is a 4 TB NVMe **replacing** the 1 TB, with Windows cloned onto
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-HW-013 | MIA shall show how its disk is used (models, packs, snapshots, records) and warn before any one would push free space under 10%, offering what can be removed. | Must | R1 | PC | Partial (backups check space) | T | DEC-0193, → 14 |
-| REQ-HW-014 | Models and packs shall be removable and re-fetchable without touching his records; his records never share a deletion path with them. | Must | MVP | PC | New | T | DEC-0193 → 06 |
+| REQ-HW-014 | Models and packs shall be removable and re-fetchable without touching his records; his records never share a deletion path with them. | Must | MVP | PC | Exists (FW-12: `core/model_store.py`, through the model server's API by name, never a file) | T | DEC-0193 → 06 |

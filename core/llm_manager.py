@@ -11,7 +11,8 @@ the phone (`llm.backend: "openai"`). The server's address is written once
 (`DEFAULT_SERVER`) and every module asks `local_server_url()` for it; embeddings
 and vision go through `OllamaBackend.embed` and `see` (LS-08). When the chosen
 model fails or times out, the first smaller one the server has (`llm.fallback_models`,
-`OllamaBackend.installed`, `with_model`) answers and `level` names it; every call
+`OllamaBackend.installed`, `with_model`) answers and `level` names it, and the processor when none of it sits on
+the graphics card (`on_gpu`, REQ-HW-012); every call
 waits its turn for the GPU, a conversation first (core/model_queue.py) (FW-12).
 
 Built on stdlib `urllib.request` rather than the `requests` package —
@@ -325,6 +326,19 @@ class OllamaBackend:
         except (urllib.error.URLError, OSError, ValueError):
             return []
 
+    def on_gpu(self, timeout: float = 2.0) -> Optional[float]:
+        """How much of this backend's model sits on the graphics card now (0 to 1, from /api/ps), or None when it isn't
+        loaded or the server can't be asked (REQ-HW-012: 0 means it ran on the processor)."""
+        request = urllib.request.Request(f"{self._base_url}/api/ps", method="GET")
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                running = json.loads(response.read().decode("utf-8")).get("models", [])
+        except (urllib.error.URLError, OSError, ValueError):
+            return None
+        mine = next((m for m in running if self._model in (m.get("name"), m.get("model"))), None)
+        size = float((mine or {}).get("size") or 0)
+        return round(float(mine.get("size_vram") or 0) / size, 2) if mine and size else None
+
     def with_model(self, model: str) -> "OllamaBackend":
         """The same server and settings with another model (the fallback, FW-12)."""
         twin = OllamaBackend(self._base_url, model, "5m", self._temperature, num_ctx=self._num_ctx, think=self._think,
@@ -519,7 +533,8 @@ class LLMManager:
 
     def _fall_back(self, call, failed: Exception):
         """The chosen model failed or timed out (REQ-AI-013): the next local model it has from `llm.fallback_models`
-        answers instead, and `level` says which ("THIS COMPUTER · qwen2.5:7b, the smaller model"). Only one is
+        answers instead, and `level` says which ("THIS COMPUTER · qwen2.5:7b, the smaller model"), and that it ran on
+        the processor when none of it sat on the graphics card (REQ-HW-012, `OllamaBackend.on_gpu`). Only one is
         tried (a second wait would leave him waiting twice); the first failure is raised when none is there or it
         fails too."""
         backend = self._fallback()
@@ -530,7 +545,9 @@ class LLMManager:
         except LLMUnavailableError:
             raise failed from None
         self.fell_back = backend._model
-        self.level = f"{self._local_level()} · {backend._model}, the smaller model"
+        share = backend.on_gpu()
+        cpu = ", on the processor (the graphics card isn't available)" if share == 0 else ""  # REQ-HW-012
+        self.level = f"{self._local_level()} · {backend._model}, the smaller model{cpu}"
         log.warning("The chosen model didn't answer (%s); %s answered instead.", failed, backend._model)
         return result
 

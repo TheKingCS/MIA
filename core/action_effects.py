@@ -47,6 +47,9 @@ EFFECTS: dict[str, tuple[str, str, str]] = {
     "system.restart_service": ("system", "compensable", "restarts one of her system services; it comes back up"),
     "system.power": ("system", "irreversible", "powers off or restarts the computer: whatever was open closes"),
     "system.apply_update": ("system", "compensable", "restarts into the staged update; the previous one stays bootable"),
+    # REQ-HW-014: her models in the model server's store, never his records
+    "model.remove": ("device", "compensable", "removes one of her models from the model server; it can be fetched again"),
+    "model.fetch": ("device", "compensable", "downloads one of her models again into the model server; it can be removed"),
     # device: can't be put back
     "myfile.delete": ("device", "irreversible", "deletes one of his files or folders for good"),
     "track.delete": ("device", "irreversible", "deletes a music file from the disk"),

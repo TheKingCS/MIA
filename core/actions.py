@@ -441,6 +441,7 @@ import core.estate_actions  # noqa: E402,F401
 import core.mission_actions  # noqa: E402,F401  (Missions, Skills, Character)
 import core.account_actions  # noqa: E402,F401  (Profile, Settings)
 import core.system_helper  # noqa: E402,F401  (the system helper's three operations, FW-06)
+import core.model_store  # noqa: E402,F401  (her models removed and fetched again, REQ-HW-014)
 import core.creation_actions  # noqa: E402,F401  (MIA's creations and record sets, DEC-0091)
 import core.fitness_actions  # noqa: E402,F401  (fitness plan, weigh-ins, food, training)
 import core.plan_import  # noqa: E402,F401  (a whole plan and its recipes, pasted as text)

@@ -5,6 +5,7 @@ core.assistant_desktop_actions
 MIA OS's own desktop by voice (FW-11, DEC-0125: every feature by voice and on a screen): "open the display settings"
 opens KDE's System Settings at that page (REQ-DSK-023), and "open Krita" opens one of the computer's Linux apps
 (REQ-DSK-007), both through core/linux_apps.py. Neither changes a record; both happen on the computer itself.
+"Remove the 7b model" and "fetch it again" put up a card for one of her models (core/model_store.py, REQ-HW-014).
 """
 
 from __future__ import annotations
@@ -43,8 +44,26 @@ def _open_app(context, arguments: dict) -> str:
         return str(problem)
 
 
+def _model_card(kind: str):
+    """A tool that puts up a card for removing or fetching one of her models (REQ-HW-014): a tool call is MIA's own
+    and never stands for his yes."""
+    def handler(context, arguments: dict) -> str:
+        """The card, or why not."""
+        from core.actions import ActionError
+
+        actions = getattr(context, "actions", None)
+        if actions is None:
+            return "I can't put that to you from here: it's on Settings, MIA's Models."
+        try:
+            card = actions.propose(context, kind, {"name": str(arguments.get("name", "")).strip()})
+        except ActionError as problem:
+            return str(problem)
+        return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
+    return handler
+
+
 def register_desktop_actions(registry) -> None:
-    """Registers open_system_setting and open_linux_app."""
+    """Registers open_system_setting, open_linux_app, remove_ai_model and fetch_ai_model."""
     registry.register(AssistantAction(
         name="open_system_setting", domain="apps",
         description="Open a page of the computer's own System Settings: display, network, sound, bluetooth, users, "
@@ -64,3 +83,14 @@ def register_desktop_actions(registry) -> None:
         handler=_open_app,
         trigger_phrases=("open the app", "launch", "start the program"),
     ))
+    for name, kind, said, phrases in (
+            ("remove_ai_model", "model.remove", "Put up a card to remove one of MIA's own AI models from this computer "
+             "(not the one she answers with); it can be fetched again.", ("remove the model", "delete the model")),
+            ("fetch_ai_model", "model.fetch", "Put up a card to download one of MIA's AI models again (one she uses or "
+             "one removed here).", ("fetch the model", "download the model", "get the model back"))):
+        registry.register(AssistantAction(
+            name=name, domain="apps", description=said,
+            parameters={"type": "object", "properties": {"name": {"type": "string",
+                        "description": "The model's name, e.g. qwen2.5:7b."}}, "required": ["name"]},
+            handler=_model_card(kind), trigger_phrases=phrases,
+        ))

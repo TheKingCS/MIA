@@ -573,7 +573,8 @@ def create_app(context: AppContext) -> FastAPI:
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase" (core/linked_devices.py, WP-10). /api/desktop lists MIA OS's Linux apps and System
-    Settings pages and opens them from the computer only (core/linux_apps.py, FW-11). The Sign-ins page says whether the security log is intact
+    Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), and /api/models/store her models
+    (core/model_store.py, REQ-HW-014). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
@@ -3340,6 +3341,15 @@ def create_app(context: AppContext) -> FastAPI:
         return {"apps": [{k: a[k] for k in ("id", "name", "comment", "flatpak")} for a in entries()],
                 "settings": [{"key": k, "label": v[0]} for k, v in SYSTEM_SETTINGS.items()],
                 "here": _on_this_pc(request)}
+
+    @app.get("/api/models/store")
+    def models_store(profile_id: str = Depends(require_profile_id)) -> dict:
+        """MIA's models on this computer, the ones that can be fetched again, and downloads in progress
+        (core/model_store.py, REQ-HW-014), for the PC's owner."""
+        _owner_only(profile_id, "MIA's models")
+        from core.model_store import page
+
+        return page(context)
 
     @app.post("/api/desktop/open")
     def desktop_open(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:

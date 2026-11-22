@@ -488,6 +488,10 @@
       settings: [{ key: "display", label: "Display and monitors" }, { key: "network", label: "Wi-Fi and network" }] })
       : call("GET", "/api/desktop"),
     desktopOpen: (what) => demo ? demoOnly() : call("POST", "/api/desktop/open", what),
+    // REQ-HW-014: her models, removed and fetched again through the model server (core/model_store.py).
+    modelStore: () => demo ? Promise.resolve({ installed: [{ name: "qwen2.5:14b", size_gb: 9.0, in_use: true },
+      { name: "qwen2.5:7b", size_gb: 4.7, in_use: false }], fetchable: ["qwen2.5:3b"], fetching: {} })
+      : call("GET", "/api/models/store"),
     backupNow: (passphrase) => demo ? demoOnly() : call("POST", "/api/backups", { passphrase: passphrase || "" }),
     textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
       chapter: "Chapter 6: Gas Metal Arc Welding", text: "Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and leaves porosity in the bead…" }] : [] })

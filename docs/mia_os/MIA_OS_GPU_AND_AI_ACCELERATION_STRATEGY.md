@@ -42,7 +42,7 @@ recent kernels; whether Ollama or llama.cpp use it is Prompt 07's question.
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-HW-011 | Each device shall expose which acceleration paths it has (ROCm, Vulkan, CUDA, NPU, CPU) and how much memory each has, and model placement shall use only those. | Must | R1 | All | New | T: a fake registry with no ROCm gets a Vulkan or CPU placement | DEC-0203, → 07 |
-| REQ-HW-012 | With the GPU unavailable, MIA shall answer with a smaller model on the CPU or another node, and say so. | Must | MVP | PC | Partial (the phone falls back to the PC) | M: unload the driver in a VM | DEC-0204, REQ-HW-004 → 06 |
+| REQ-HW-012 | With the GPU unavailable, MIA shall answer with a smaller model on the CPU or another node, and say so. | Must | MVP | PC | Exists (FW-12: the smaller model answers and says it ran on the processor; measured by unloading the driver at MV-01) | M: unload the driver in a VM | DEC-0204, REQ-HW-004 → 06 |
 
 ## 4. Sources
 

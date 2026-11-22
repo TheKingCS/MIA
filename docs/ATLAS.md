@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1572 files, 346,895 lines; 1572 files describe themselves; 19,095 of 19,194 classes and functions are documented.
+1574 files, 347,280 lines; 1574 files describe themselves; 19,120 of 19,219 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-612 files, 175,252 lines; 9,017 of 9,103 classes and functions documented
+613 files, 175,471 lines; 9,030 of 9,116 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -344,6 +344,7 @@
 - `core/model_inspection.py`: Claude inspects MIA's models before they're used (DEC-0200; Zac, 2026-11-17: "MIA should have the ability to have her models inspected by Claude to test and approve them. This is similar to the Night School detail we have discussed."). The Specialist Forge's F6 (`docs/mia_os/MIA_OS_SPECIALIST_FORGE.
 - `core/model_queue.py`: One model job at a time on this computer's GPU, the conversation first (FW-12, DEC-0204: "MIA keeps one model job per GPU at a time, conversation first, then specialists, the Workroom, background work"; REQ-HW-029: "a conversation he's in shall never wait behind background model work for more than o
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information").
+- `core/model_store.py`: MIA's models, removable and fetched again (FW-12, REQ-HW-014, DEC-0193): "models and packs shall be removable and re-fetchable without touching his records; his records never share a deletion path with them."
 - `core/module_manager.py`: Discovers and manages MIA modules.
 - `core/module_validator.py`: Validates a candidate module folder against the compatibility contract in docs/MODULE_SPEC.md, before it's installed into modules/.
 - `core/momentum.py`: Natural Momentum (DEC-0148; Zac, 2026-11-08: a morning where waking naturally and a cup of coffee led to the dishes, laundry, the kitchen, the development list and getting ready for work, quickly and without forcing it). MIA learns the conditions of those runs and helps them happen again, and stays 
@@ -623,7 +624,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,659 lines; 57 of 57 classes and functions documented
+2 files, 4,669 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -909,7 +910,7 @@
 
 ## tests/: the test suite: what each part must do
 
-559 files, 91,659 lines; 7,717 of 7,730 classes and functions documented
+560 files, 91,792 lines; 7,729 of 7,742 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1198,6 +1199,7 @@
 - `tests/test_model_inspection.py`: Claude inspects MIA's models (DEC-0200, core/model_inspection.py): every specialist's chosen model is pending until a verdict on its current bench results; a re-run of the bench makes it pending again; the inspector is shown the bench counts and the problems it got wrong, never asked to change anyth
 - `tests/test_model_registry.py`: MIA about herself (core/model_registry.py): "What AI model are you using?" answered from the runtime, saying where each fact came from, never from the model's guess.
 - `tests/test_model_server_address.py`: Tests for LS-08: the model server's address is written in one place (core/llm_manager.py), every module asks local_server_url() for it, and embeddings and vision go through the backend.
+- `tests/test_model_store.py`: REQ-HW-014 (FW-12): MIA's models are removed and fetched again through the model server by name, never as files, so his records never share a deletion path with them; the model she answers with can't be removed; only a model she knows can be fetched; both need his yes on a card, by voice too.
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager.
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder.
 - `tests/test_momentum.py`: Natural Momentum (core/momentum.py, DEC-0148): runs of things done found in the history, what they have in common said as counts once there are enough, what tends to follow what, whether the person is in flow (and the gate holding her non-urgent messages then), one easy start in their usual hour, an
@@ -1473,7 +1475,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,691 lines
+116 files, 21,714 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

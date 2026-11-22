@@ -53,7 +53,14 @@ def test_a_change_is_kept_with_its_before_bytes_sealed_and_survives_a_restart(ho
     assert entry.change_id == first.change_id and entry.what == "log reading: greenhouse, 74"
     assert entry.files[0]["path"] == "greenhouse_log.json" and entry.files[0]["before"] != entry.files[0]["after"]
     blob = next((home.dir / "history" / "blobs").glob("*.blob")).read_text(encoding="utf-8")
-    assert "v0" not in blob and blob.startswith("MIA")  # sealed (the suite seals with its test key)
+    from core import at_rest
+
+    # Sealed (the suite seals with its test key), and it opens to what was there before. Not a search for "v0"
+    # in the sealed text: random ciphertext holds those two letters now and then (it failed that way, 2026-11-22).
+    import base64
+    import zlib
+
+    assert at_rest.is_sealed(blob) and zlib.decompress(base64.b64decode(at_rest.unseal(blob))) == b"v0"
     home.context.undo = UndoLog()  # MIA restarted: "undo that" has nothing, the history still has it
     found = ch.find(None, *today(), "greenhouse")
     assert [e.change_id for e in found] == [first.change_id]
