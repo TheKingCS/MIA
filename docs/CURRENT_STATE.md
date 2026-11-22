@@ -60,9 +60,15 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   phone part (pairing again starts sync fresh, so an old phone copy never merges into moved data); FW-09's
   procedure (his recovery stick, `docs/mia_os/MIA_OS_RECOVERY_STICK.md`). Three tests that wrote into the real
   data folder were found and fixed (the Linux and Windows CI caught one; the rest by halving the suite).
-- **Next:** the Fable review of everything since 2026-11-20 (Zac's plan); then the VM steps left: FW-07b's
-  rehearsal, FW-09's stick in a VM, FW-10's phone against the VM, FW-11's screenshots and the helper's dialog;
-  FW-08 needs his signing key; Zac's answers to Q-114 and Q-115; his install guide for MV-01.
+- **2026-11-22, evening, Opus: the VM steps that can run without him.** FW-07b's move rehearsed inside the image
+  (synthetic stores, a real backup, MIA's own restore, every store matched, a damaged record caught) and FW-09's
+  recovery-stick commands against the encrypted VM disk, both passed; the guide fixed on the way (no `home`
+  subvolume on a bootc install). FW-11's microphone indicator with one Stop; FW-12's rest: her models removed and
+  fetched again (never a file), the processor said, and the records she couldn't read named in her answers. A
+  test that failed now and then (random ciphertext holding "v0") fixed.
+- **Next:** the Fable review of everything since 2026-11-20 (Zac's plan). What's left needs him or his hardware:
+  FW-08 (his signing key), the helper's real dialog and FW-11's screenshots in his own session, FW-10's phone
+  against MIA OS, Q-114 and Q-115 (the Light theme), the backup's second place, the install guide for MV-01.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

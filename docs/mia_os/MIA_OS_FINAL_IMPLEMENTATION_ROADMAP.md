@@ -317,7 +317,7 @@ approves itself.
 > (REQ-IMP-005): pairing starts sync fresh, the computer's copies taken and the phone's kept aside for 30 days.
 > **The rehearsal** (`os/poc/vm/move_rehearsal.py`): synthetic stores, a real backup, MIA's own restore into a
 > fresh folder, every store compared; a record changed afterwards is named. Run by the suite on any machine and
-> in the VM inside the image.
+> in the VM inside the image: **passed** (run 45053904645).
 
 | Field | Specification |
 |---|---|
@@ -353,7 +353,9 @@ approves itself.
 
 > **The procedure written 2026-11-22** (`MIA_OS_RECOVERY_STICK.md`): Fedora's KDE live stick, the same one as
 > HW-01's, opens the encrypted disk with the recovery key (Dolphin, or cryptsetup and a read-only mount of the
-> `home` subvolume). Still to do: the VM rehearsal.
+> `home` subvolume). **Its commands passed against the encrypted VM disk** (run 45054001166): opened read-only with
+> the recovery key from another Linux, his folder found under ostree's var/home (a bootc install has no `home`
+> subvolume: the guide now lists both places), a file of his read back.
 
 | Objective | Requirements | Tasks | Acceptance | Size |
 |---|---|---|---|---|
