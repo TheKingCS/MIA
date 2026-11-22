@@ -16,4 +16,4 @@ grantable).
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-DSK-023 | MIA's Settings shall open the matching KDE System Settings page for each system setting, never a copy of it. | Must | MVP | PC | Planned | T | DEC-0227, REQ-FUN-003 → 10 |
+| REQ-DSK-023 | MIA's Settings shall open the matching KDE System Settings page for each system setting, never a copy of it. | Must | MVP | PC | Exists (FW-11: thirteen pages, from Settings and by voice; a VM check to come) | T | DEC-0227, REQ-FUN-003 → 10 |

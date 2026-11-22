@@ -148,6 +148,7 @@
         el("div", { class: "sect" }, el("h2", {}, g.name), el("span", { class: "more" }, apps.length + "")),
         el("div", { class: "app-grid" }, apps.map(card)));
     }));
+    if (linuxSection && !words.length) $("groups").append(linuxSection);  // FW-11: the computer's own apps, after MIA's
     $("nothing").hidden = shown > 0;
   }
 
@@ -192,8 +193,30 @@
   }
 
   let areas = [], everywhere = [];
+  // The computer's Linux apps (FW-11, REQ-DSK-007): listed from its own desktop entries, marked as Linux apps, never
+  // in MIA's registry; opened on the computer by the desktop's own launcher.
+  async function linuxApps() {
+    let d;
+    try { d = await MIA.desktop(); } catch (e) { return null; }
+    if (!d || !(d.apps || []).length) return null;
+    const open = async (a) => {
+      try { const done = await MIA.desktopOpen({ app: a.id }); MIAShell.say("Opened " + done.opened + "."); }
+      catch (e) { MIAShell.say(e.message); }
+    };
+    return el("section", { class: "glass money-section", "aria-label": "Linux apps on this computer" },
+      el("h2", {}, "Linux Apps on This Computer"),
+      el("p", { class: "dim" }, "Installed and updated by the system, not by MIA." + (d.here ? "" : " They open on the computer itself.")),
+      el("div", { class: "rows" }, d.apps.map((a) => el("div", { class: "row" },
+        el("div", {}, el("div", { class: "row-title" }, a.name + (a.flatpak ? " · Flatpak" : "")),
+          a.comment ? el("div", { class: "row-sub" }, a.comment) : null),
+        el("button", { type: "button", class: "btn btn-ghost", disabled: d.here ? null : "", onclick: () => open(a) }, "Open")))));
+  }
+
+  let linuxSection = null;
+
   async function render() {
     data = await MIA.apps();
+    linuxSection = await linuxApps();
     // DEC-0153 (Zac, 2026-11-11): each destination with only what's directly in it, its subdashboards and its own apps,
     // in alphabetical order (a subdashboard opens to the rest). A search still looks through everything.
     try {

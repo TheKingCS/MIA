@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1567 files, 346,326 lines; 1567 files describe themselves; 19,071 of 19,170 classes and functions are documented.
+1570 files, 346,720 lines; 1570 files describe themselves; 19,088 of 19,187 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-610 files, 174,991 lines; 9,005 of 9,091 classes and functions documented
+612 files, 175,206 lines; 9,015 of 9,101 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -48,6 +48,7 @@
 - `core/assistant_cooking_actions.py`: Cook mode by voice (DEC-0113 cook mode, DEC-0125: full use both ways). With flour on your hands: "start cooking the chili", "next step", "go back", "what step am I on", "go to step 4", "set a rice timer for 18 minutes", "stop the rice timer", "I made it", "stop cooking". Each tool runs the same acti
 - `core/assistant_correction_actions.py`: Fixing and planning by voice what the screens already let you change (DEC-0125: every action has a voice twin; 2026-11-08). Measuring the screens' 332 action kinds against her tools showed everyday ones with no voice twin: taking something off the grocery list, clearing what's checked off, a pantry 
 - `core/assistant_creation_actions.py`: What MIA has made for you, by voice (DEC-0091, DEC-0125: every action both ways). Until now a screen of your own could only be asked for, published, rolled back or removed on the web (core/creation_actions.py, `POST /api/creations/make`): "make me a screen to track my seed orders", "what have you ma
+- `core/assistant_desktop_actions.py`: MIA OS's own desktop by voice (FW-11, DEC-0125: every feature by voice and on a screen): "open the display settings" opens KDE's System Settings at that page (REQ-DSK-023), and "open Krita" opens one of the computer's Linux apps (REQ-DSK-007), both through core/linux_apps.py. Neither changes a recor
 - `core/assistant_direction_actions.py`: My Directions by voice (DEC-0141/0143, DEC-0125's both-ways rule; the screen is web/directions.html): "what are my directions?", "add a direction: grow my own food, cook from scratch", "pause the whimsy direction", "bring it back", "let go of that direction", and "give me something to make today" (t
 - `core/assistant_domain_actions.py`: Assistant actions added by the 2026-09-27 conversational audit (docs/ASSISTANT_AUDIT.md), so what the owner *says* updates the right records: kitchen (recipes, meals, grocery list, pantry), debts and budget targets, asset details and notes (including greenhouse/garden plants, which are Maintenance a
 - `core/assistant_dungeon_actions.py`: The Dungeon by voice (DEC-0046): "How much loot this week?", "I worked 9 hours, we were unstocked", "I picked up an overtime shift Saturday", "Make it a quest". Each runs the same code as the screen (the action kinds in core/dungeon_actions.py, the numbers in core/web_dungeon.py), so the loot matche
@@ -301,6 +302,7 @@
 - `core/life_notes.py`: Remembering what you say you'll do, decide and want to try (DEC-0054, T-0018). Four kinds of note MIA picks up from normal conversation, never a form, each shown back for a yes before it's kept (Propose → Approve):
 - `core/linked_devices.py`: The phones linked to MIA on this computer (DEC-0022, `core/home_link.py`), seen and withdrawn from the computer's side (2026-11-10).
 - `core/links.py`: How things relate (2026-10-05, Engine Phase 1 step 2, docs/ENGINE_PHASE1_PLAN.md): typed links between the records MIA already keeps, like "this loan FUNDS that property", "the walipini DEPENDS_ON selling the lot", "this mission is EVIDENCE_FOR that skill". (Named `links` because `relationships_mana
+- `core/linux_apps.py`: MIA OS's own desktop, reached from MIA (FW-11, the first version's part; DEC-0233, DEC-0227):
 - `core/lite_capture_manager.py`: The receiving/processing side of "MIA Lite" (`docs/VISION.md`'s Core/Home split section, "MIA Lite — a fourth tier, lighter than Core") — scoped directly with the user across 4 real questions before any code: hardware (a mode on the existing Receiver, no new device), capture scope v1 (voice notes on
 - `core/live.py`: Live updates (2026-10-05, Phase 2 foundation, DEC-0013): one number, the state version, that goes up whenever any of MIA's data changes, so every open surface (the web Home, the phone, later the glasses) knows to re-read `/api/state` the moment something changes, wherever it changed: the desktop, th
 - `core/living_worlds.py`: Living Worlds Phase 1 (DEC-0134): the persistent data models for MIA's interactive worlds — **universes**, campaigns**, **characters** and their per-universe **versions** — so a campaign survives sessions and context limits by living in a store, not in a conversation (the spec's §3.3). Phase 1 is th
@@ -621,7 +623,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,629 lines; 57 of 57 classes and functions documented
+2 files, 4,659 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -907,7 +909,7 @@
 
 ## tests/: the test suite: what each part must do
 
-556 files, 91,473 lines; 7,705 of 7,718 classes and functions documented
+557 files, 91,575 lines; 7,712 of 7,725 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1149,6 +1151,7 @@
 - `tests/test_life_notes.py`: DEC-0054 (T-0018): what someone says they'll do, decide, want to try and set aside, spotted in code, kept only on their yes, and answered by the recall plan.
 - `tests/test_life_state_v2.py`: Life State v2 (core/context_assembler.py), Engine Phase 1 step 3, 2026-10-05: the whole picture as data, computed from the stores, the life-event history and the links. No hand-written prose in the path.
 - `tests/test_links.py`: How things relate (core/links.py), Engine Phase 1 step 2, 2026-10-05: stated links between real records, links the stores already imply, and what waits on what, and the newer kinds (a grow-lab batch, a workplace, a class subject, an inbox letter, and the stores that keep dicts) named and found like 
+- `tests/test_linux_apps.py`: FW-11, the first version's part (REQ-DSK-007, REQ-DSK-023, REQ-FUN-003, REQ-ARC-013): MIA's launcher lists the computer's Linux apps from its own desktop entries (hidden ones and other desktops' left out, each once), never in her registry, opened by the desktop's launcher with fixed arguments; MIA's
 - `tests/test_lite_capture_manager.py`: Unit tests for core.lite_capture_manager. format_capture_journal_title() is tested directly (pure). LiteCaptureManager itself is tested against a real tmp_path watched folder (genuine file moves/reads, same reasoning test_finance_manager.py already gives for not mocking the filesystem) with a _FakeC
 - `tests/test_lite_captures_tool.py`: Unit tests for modules.toolbox.tools.lite_captures_tool's pure format_capture_card_text(), same style as tests/test_discovery_tool.py (no Qt event loop, no fixtures).
 - `tests/test_living_system.py`: The Living System doctrine's invariants that had no test yet (DEC-0173, `docs/mia_os/MIA_OS_LIVING_SYSTEM.md` section 8): Identity:** MIA's identity is written in one place (core/personality.py). The files that already frame a task prompt as "You are MIA" in their own words are listed here and may o
@@ -1468,7 +1471,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,599 lines
+116 files, 21,646 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

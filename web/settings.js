@@ -235,6 +235,23 @@
       el("p", { class: "dim" }, "With a passphrase the backup is encrypted; keep it somewhere safe, it can't be recovered. Restoring is on the PC."));
   }
 
+  // This computer's own settings (FW-11, REQ-DSK-023): each opens KDE's System Settings at that page, never a copy.
+  // Only on MIA OS (on Windows the list says so), and only from the computer itself. By voice: "open the display settings".
+  let desktop = null;
+  function systemSection() {
+    if (!desktop || !desktop.settings || !desktop.apps) return "";
+    if (!desktop.apps.length && !desktop.here) return "";
+    const open = async (key) => {
+      try { const done = await MIA.desktopOpen({ setting: key }); MIAShell.say("Opened " + done.opened + "."); }
+      catch (e) { MIAShell.say(e.message); }
+    };
+    return section("This Computer's Settings",
+      el("p", { class: "dim" }, "Display, network, sound and the rest are the system's own: each button opens its page in System Settings."
+        + (desktop.here ? "" : " They open on the computer itself.")),
+      el("div", { class: "acct-actions" }, desktop.settings.map((s) =>
+        el("button", { type: "button", class: "btn btn-ghost", disabled: desktop.here ? null : "", onclick: () => open(s.key) }, s.label))));
+  }
+
   function draw() {
     $("panel").replaceChildren(
       ...page.groups.map((g) => group(g.title, ...g.settings.map(setting), g.title === "Sound" ? soundCheck() : null)),
@@ -247,6 +264,7 @@
       voiceSection(),
       starterSets(),
       backupSection(),
+      systemSection(),
       section("My Places", el("p", { class: "dim" }, "Places where arriving opens something: your workout at the gym, your grocery list at the store."),
         el("div", { class: "acct-actions" }, el("a", { class: "btn btn-ghost", href: "places.html" }, "My Places"))),
       section("Notifications", el("p", { class: "dim" }, "Everything MIA has told you, and why she sent the ones she sent on her own."),
@@ -269,6 +287,7 @@
   MIAShell.start(async () => {
     page = await MIA.settings();
     try { backups = await MIA.backups(); } catch (e) { backups = null; }  // the PC owner's only
+    try { desktop = await MIA.desktop(); } catch (e) { desktop = null; }  // MIA OS's own settings pages (FW-11)
     try { voices = await MIA.voiceChoice(); } catch (e) { voices = null; }  // the PC owner's only
     draw();
   });

@@ -356,6 +356,11 @@ approves itself.
 
 ### FW-11 Desktop integration and accessibility
 
+> **Part built 2026-11-22** (Opus, on Windows): the computer's Linux apps listed from its desktop entries on the
+> Apps page and opened by the desktop's launcher (REQ-DSK-007), System Settings' pages from MIA's Settings and by
+> voice (REQ-DSK-023, REQ-FUN-003), both opened only from the computer itself. Still to do: portals for sharing,
+> the microphone and camera indicator (REQ-DSK-025), the VM screenshots, and Alpha's accessibility passes.
+
 | Objective | Requirements | Tasks | Acceptance | Size |
 |---|---|---|---|---|
 | Her shell lists Linux apps, opens KDE's settings pages, uses portals for sharing, shows the microphone and camera in use; at Alpha, Orca, full keyboard use, layouts from 1280×720, two monitors | MVP: REQ-ARC-013, REQ-FUN-003, REQ-DSK-007, 023, 025. Alpha: REQ-ACC-004, REQ-DSK-003, 026, 033, REQ-VIS-005, 008, 011, 015, REQ-HW-020, REQ-UX-010 | read `.desktop` entries; `systemsettings` page links; the xdg-desktop-portal screenshot and file chooser; an indicator from her own audio and camera use; Alpha: Orca pass, a keyboard-only pass, two monitors in the VM | VM screenshots for each; Orca reads the approval card (Alpha) | MVP one session; Alpha two |

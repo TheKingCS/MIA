@@ -29,5 +29,5 @@
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-DSK-007 | The launcher shall list conventional Linux applications from the system's desktop entries, marked as such, without adding them to MIA's registry. | Must | MVP | PC | Planned | T | DEC-0233, REQ-ARC-013 → 10 |
+| REQ-DSK-007 | The launcher shall list conventional Linux applications from the system's desktop entries, marked as such, without adding them to MIA's registry. | Must | MVP | PC | Exists (FW-11: `core/linux_apps.py`, the Apps page's Linux Apps; a VM check to come) | T | DEC-0233, REQ-ARC-013 → 10 |
 | REQ-DSK-008 | The launcher shall say which kind each entry is (app, capability, agent, service, Linux app, integration, setting). | Should | R1 | PC | Partial | T | DEC-0228 → 10 |

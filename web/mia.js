@@ -483,6 +483,11 @@
     suggestMission: () => demo ? demoOnly() : call("POST", "/api/missions/idea", {}),
     checkCaptures: () => demo ? demoOnly() : call("POST", "/api/journal/captures/check", {}),
     deletePack: (id, confirm) => demo ? demoOnly() : call("POST", "/api/knowledge/pack/delete", { id, confirm }),
+    // FW-11: MIA OS's Linux apps and System Settings pages (core/linux_apps.py); opened on the computer only.
+    desktop: () => demo ? Promise.resolve({ here: true, apps: [{ id: "org.kde.krita.desktop", name: "Krita", comment: "Digital painting", flatpak: true }],
+      settings: [{ key: "display", label: "Display and monitors" }, { key: "network", label: "Wi-Fi and network" }] })
+      : call("GET", "/api/desktop"),
+    desktopOpen: (what) => demo ? demoOnly() : call("POST", "/api/desktop/open", what),
     backupNow: (passphrase) => demo ? demoOnly() : call("POST", "/api/backups", { passphrase: passphrase || "" }),
     textbookSearch: (q, book) => demo ? Promise.resolve({ query: q, hits: q ? [{ book_id: "b1", book: "Welding Fundamentals", page: 112,
       chapter: "Chapter 6: Gas Metal Arc Welding", text: "Hold the gun at a 10 to 15 degree push angle. Too steep an angle traps gas and leaves porosity in the bead…" }] : [] })

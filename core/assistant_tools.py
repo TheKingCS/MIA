@@ -36,6 +36,7 @@ from core.assistant_actions import AssistantAction
 from core.assistant_answer_style_actions import register_answer_style_actions
 from core.assistant_asset_part_actions import register_asset_part_actions
 from core.assistant_backup_actions import register_backup_actions
+from core.assistant_desktop_actions import register_desktop_actions
 from core.assistant_browser_actions import register_browser_actions
 from core.assistant_business_view_actions import register_business_view_actions
 from core.assistant_camera_actions import register_camera_actions
@@ -172,7 +173,7 @@ class AssistantTools:
         """
         Register the built-in actions the Assistant can invoke via
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
-        milestone 5.5. Registered here (not in modules/assistant/) for
+        milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11). Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
         the one place independent core services get wired together
         (tools in their own files register here too, such as
@@ -232,6 +233,7 @@ class AssistantTools:
         register_waypoint_actions(self.context.assistant_actions)  # rename a waypoint, its kind and notes (DEC-0125)
         register_trip_route_actions(self.context.assistant_actions)  # a trip's route and checkpoints by voice (DEC-0125)
         register_backup_actions(self.context.assistant_actions)  # when MIA was last backed up (DEC-0125)
+        register_desktop_actions(self.context.assistant_actions)  # MIA OS's settings pages and Linux apps (FW-11)
         register_voice_choice_actions(self.context.assistant_actions)  # MIA's own voice, effect and volume (DEC-0125)
         register_subscription_actions(self.context.assistant_actions)  # "still using it?" on subscriptions (DEC-0054)
         register_proposal_actions(self.context.assistant_actions)  # mission ideas and field recordings (DEC-0125)

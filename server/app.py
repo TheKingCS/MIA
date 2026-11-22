@@ -572,7 +572,8 @@ def create_app(context: AppContext) -> FastAPI:
     """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
-    lost is answered "erase" (core/linked_devices.py, WP-10). The Sign-ins page says whether the security log is intact
+    lost is answered "erase" (core/linked_devices.py, WP-10). /api/desktop lists MIA OS's Linux apps and System
+    Settings pages and opens them from the computer only (core/linux_apps.py, FW-11). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
@@ -3326,6 +3327,35 @@ def create_app(context: AppContext) -> FastAPI:
         done["sessions"] = max(done["sessions"], len(mine))
         _security("lockdown", profile_id, request, f"{done['sessions']} sessions, {done['phones']} phones")
         return done
+
+    # MIA OS's own desktop (FW-11, core/linux_apps.py): the computer's Linux apps for the launcher, and its System
+    # Settings pages for MIA's Settings. Listed to anyone signed in; opened only from the computer itself (a window
+    # opening on the PC from a phone is never what someone wants).
+    @app.get("/api/desktop")
+    def desktop_listing(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Linux apps (id, name, comment, flatpak) and the system settings pages, and whether this request can open
+        them (made on the computer itself)."""
+        from core.linux_apps import SYSTEM_SETTINGS, entries
+
+        return {"apps": [{k: a[k] for k in ("id", "name", "comment", "flatpak")} for a in entries()],
+                "settings": [{"key": k, "label": v[0]} for k, v in SYSTEM_SETTINGS.items()],
+                "here": _on_this_pc(request)}
+
+    @app.post("/api/desktop/open")
+    def desktop_open(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Opens a listed Linux app ({"app": id}) or a System Settings page ({"setting": key}), on the computer only."""
+        from core.linux_apps import launch, open_setting
+
+        if not _on_this_pc(request):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Apps and the computer's settings open on the computer itself.")
+        try:
+            if (body or {}).get("setting"):
+                return {"opened": open_setting(str(body["setting"]))}
+            return {"opened": launch(str((body or {}).get("app", "")))}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(problem)) from None
+        except RuntimeError as problem:
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(problem)) from None
 
     @app.post("/api/security/devices/lost")
     def lost_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
