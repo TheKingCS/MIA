@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!-- MIA's system helper (FW-06, DEC-0194): each of its three operations needs the person's own password, asked in the
+     operating system's dialog, every time (auth_self, never kept: no _keep). Nobody away from the desk (inactive) and
+     no other session (any) may. -->
+<policyconfig>
+  <vendor>MIA</vendor>
+  <action id="org.mia.system1.apply-update">
+    <description>Restart into MIA OS's staged update</description>
+    <message>MIA asks to restart the computer now to finish the update. Your password confirms it.</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>no</allow_inactive><allow_active>auth_self</allow_active></defaults>
+  </action>
+  <action id="org.mia.system1.restart-unit">
+    <description>Restart one of MIA's system services</description>
+    <message>MIA asks to restart one of her system services (the model server or the update stager). Your password confirms it.</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>no</allow_inactive><allow_active>auth_self</allow_active></defaults>
+  </action>
+  <action id="org.mia.system1.power">
+    <description>Power off or restart the computer</description>
+    <message>MIA asks to power off or restart the computer. Your password confirms it.</message>
+    <defaults><allow_any>no</allow_any><allow_inactive>no</allow_inactive><allow_active>auth_self</allow_active></defaults>
+  </action>
+</policyconfig>

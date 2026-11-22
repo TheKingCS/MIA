@@ -1,0 +1,6 @@
+# MIA's system helper (FW-06): started by D-Bus on the first call, through its systemd unit; it exits when idle.
+[D-BUS Service]
+Name=org.mia.System1
+Exec=/bin/false
+User=root
+SystemdService=mia-system-helper.service

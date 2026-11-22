@@ -241,6 +241,41 @@ jobs:
           name: mia-login-screenshots
           path: /tmp/shots/
           if-no-files-found: ignore
+      - name: FW-06 the system helper, its fixed operations and polkit
+        run: |
+          . ~/vm.sh
+          # One helper call: the method and its one text argument (as a D-Bus string), if any.
+          cat > /tmp/helper_call.sh <<'EOS'
+          #!/bin/sh
+          exec gdbus call --system --dest org.mia.System1 --object-path /org/mia/System1 --method "org.mia.System1.$1" ${2:+"'$2'"}
+          EOS
+          vm 'cat > /var/tmp/helper_call.sh && chmod 755 /var/tmp/helper_call.sh' < /tmp/helper_call.sh
+          hc() { vm "/var/tmp/helper_call.sh $*"; }
+          # Installed, its policy known (his password every time), and nothing of it running until called (A6).
+          vm 'test -x /usr/libexec/mia/mia-system-helper && pkaction --action-id org.mia.system1.power --verbose | grep -q "implicit active: *auth_self"'
+          if vm 'systemctl is-active --quiet mia-system-helper'; then echo "the helper runs before any call"; exit 1; fi
+          # Hostile arguments: refused by the helper's own rules, even from root, before polkit is asked (A8).
+          if hc RestartUnit sshd.service; then echo "an unlisted unit was restarted"; exit 1; fi
+          if hc Power halt; then echo "a power word outside the list was taken"; exit 1; fi
+          if hc Format x; then echo "a method that isn't one was answered"; exit 1; fi
+          vm 'journalctl -u mia-system-helper --no-pager | grep -q "refused RestartUnit"'
+          # Nobody at the desk to confirm it (a session over SSH isn't one): refused, nothing restarted.
+          if as_mia '/var/tmp/helper_call.sh RestartUnit ollama.service'; then echo "restarted with no one confirming"; exit 1; fi
+          # A test-only polkit rule stands in for his password in the dialog: then it's done, and the journal says so.
+          cat > /tmp/90-mia-test.rules <<'EOS'
+          polkit.addRule(function (action, subject) {
+            if (action.id == "org.mia.system1.restart-unit" && subject.user == "mia") { return polkit.Result.YES; }
+          });
+          EOS
+          vm 'cat > /etc/polkit-1/rules.d/90-mia-test.rules' < /tmp/90-mia-test.rules
+          sleep 3
+          as_mia '/var/tmp/helper_call.sh RestartUnit ollama.service' | grep -q "restarted ollama.service"
+          vm 'journalctl -u mia-system-helper --no-pager | grep -q "done RestartUnit"'
+          vm 'rm /etc/polkit-1/rules.d/90-mia-test.rules'
+          # Root only while called: a minute idle and it's gone.
+          sleep 75
+          if vm 'systemctl is-active --quiet mia-system-helper'; then echo "the helper stayed running"; exit 1; fi
+          vm 'journalctl -u mia-system-helper --no-pager | tail -n 12'
       - name: The whole suite inside the image, on its own Python and packages (FW-02)
         run: |
           . ~/vm.sh

@@ -33,6 +33,11 @@ sys.path.insert(0, str(root))
 import core.config_manager as config_module, core.profile_manager as profile_module
 config_module._CONFIG_FILE = home / "config.json"
 profile_module._DATA_PROFILES_DIR = home / "profiles"
+# A fresh Python, so the suite's own setup isn't here: sealed stores (missions, WP-04) seal with a test key kept in
+# this test's folder, never a key made in the real data/.keys.
+import core.at_rest as at_rest_module
+at_rest_module.KEY_DIR = home / ".keys"
+at_rest_module.use_key(bytes(range(32)))
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.app_context import AppContext

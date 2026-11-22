@@ -91,5 +91,15 @@ COPY os/files/mia-login.conf /etc/plasmalogin.conf.d/mia.conf
 COPY os/files/mia-login.conf /etc/sddm.conf.d/mia.conf
 RUN chmod 755 /usr/lib/mia/os/files/mia-session /usr/lib/mia/os/files/mia-shell /usr/lib/mia/os/files/mia-disk-enrol
 
+# Her system helper (FW-06, DEC-0194): org.mia.System1, three fixed operations, each confirmed by him in polkit's
+# dialog; started by D-Bus on a call and gone when idle. Its Python is the system's, with GLib's bindings.
+RUN dnf -y install python3-gobject polkit && dnf clean all && rm -rf /var/cache/dnf /var/lib/dnf
+COPY os/files/mia-system-helper /usr/libexec/mia/mia-system-helper
+COPY os/files/org.mia.system1.policy /usr/share/polkit-1/actions/org.mia.system1.policy
+COPY os/files/org.mia.System1.conf /usr/share/dbus-1/system.d/org.mia.System1.conf
+COPY os/files/org.mia.System1.service /usr/share/dbus-1/system-services/org.mia.System1.service
+COPY os/files/mia-system-helper.service /usr/lib/systemd/system/mia-system-helper.service
+RUN chmod 755 /usr/libexec/mia/mia-system-helper
+
 # The image passes bootc's own checks, or the build fails.
 RUN bootc container lint

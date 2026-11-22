@@ -1,0 +1,18 @@
+# MIA's system helper (FW-06, DEC-0194): org.mia.System1, three fixed operations each confirmed by polkit. Started
+# by D-Bus on a call, exits after a minute idle, so nothing of MIA's runs as root otherwise (acceptance A6).
+[Unit]
+Description=MIA's system helper (fixed operations, each confirmed by you)
+
+[Service]
+Type=dbus
+BusName=org.mia.System1
+ExecStart=/usr/libexec/mia/mia-system-helper
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native

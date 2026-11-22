@@ -189,6 +189,10 @@
    "status": "none",
    "why": "worlds, campaigns and quests are the person's own fiction (DEC-0134, DEC-0137); nothing real to improve"
   },
+  "action:system": {
+   "status": "none",
+   "why": "the system helper's three operations (FW-06) each need his yes on the card and his password in the OS's dialog; whether one was done is the helper's journal and the action's own record, with no judgement of MIA's in it to improve"
+  },
   "check:restore_drill": {
    "status": "none",
    "why": "the monthly restore drill (WP-09) passes or fails on what the backup holds: a failure is told at once and kept as backup.drill on the Backups screen; there is no judgement of MIA's in it to improve"

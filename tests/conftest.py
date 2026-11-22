@@ -158,6 +158,12 @@ import core.at_rest as at_rest_module  # noqa: E402
 at_rest_module.KEY_DIR = _TEST_RUNTIME_DIR / ".keys"
 at_rest_module.use_key(bytes(range(32)))
 
+# 2026-11-22: the capability registry (core/capability_registry.py, WP-08) keeps its last states beside the data;
+# a test that opens Diagnostics rebuilds it (the Linux suite caught it writing the real data/).
+import core.capability_registry as capability_registry_module  # noqa: E402
+
+capability_registry_module._DATA_DIR = _TEST_RUNTIME_DIR
+
 # 2026-11-06: tests that run MIA's daily checks (test_communication_gate)
 # ran the PC's improvement loops for real: readings into data/dev/ and a
 # task opened in work/tasks/ (T-0049). The development platform's records

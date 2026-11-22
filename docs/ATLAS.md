@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1565 files, 346,094 lines; 1565 files describe themselves; 19,059 of 19,158 classes and functions are documented.
+1567 files, 346,326 lines; 1567 files describe themselves; 19,071 of 19,170 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-609 files, 174,894 lines; 9,001 of 9,087 classes and functions documented
+610 files, 174,991 lines; 9,005 of 9,091 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -496,6 +496,7 @@
 - `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
 - `core/system_check.py`: "Is everything set up?" (2026-10-01, accounts stage 5): one list that says what works on this device, what's missing, and exactly what to do about each, so a new person (or a new Raspberry Pi) doesn't have to guess why voice or photos of receipts don't work.
 - `core/system_health.py`: Point-in-time system health readings (CPU/RAM/disk/network/temperature) via `psutil` — originally lived in modules/diagnostics/module.py (v0.7 milestone 7.1) as that module's "own exclusive concern", deliberately not promoted to core/ at the time since nothing else needed it. Moved here when milesto
+- `core/system_helper.py`: MIA's side of the system helper (FW-06, DEC-0194, REQ-AGT-024): the only way she changes the operating system. The helper itself is os/files/mia-system-helper, `org.mia.System1` on the system bus, with three fixed operations; each is confirmed twice, first on her approval card (the action kinds here
 - `core/system_map.py`: One map of everything that makes MIA (Zac, 2026-11-08: "everything she learns and does needs to be organized and categorized and mapped into a distinguishable map of the total system architecture, capabilities, decisions, loops, user preferences, etc… so MIA and everything that makes her is easy to 
 - `core/tak.py`: MIA's places in the open, civilian standards a TAK app speaks (build plan step 14, DEC-0099): Cursor on Target events and KML, packed as a TAK data package (a zip with a `MANIFEST/manifest.xml`) that ATAK-CIV, iTAK and WinTAK import, so the person's waypoints show on their TAK map with MIA's names, 
 - `core/talk_it_out.py`: Slice A of docs/COGNITIVE_EXTENSION_PROPOSAL.md, "Talk it out": the glue every chat surface (Home's chat bar, the character panel, the Assistant module, the phone, the headless voice loop) calls around one turn, so they all behave the same way.
@@ -906,7 +907,7 @@
 
 ## tests/: the test suite: what each part must do
 
-555 files, 91,338 lines; 7,697 of 7,710 classes and functions documented
+556 files, 91,473 lines; 7,705 of 7,718 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1353,6 +1354,7 @@
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
 - `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), and the PC's own endpoints.
 - `tests/test_system_health.py`: Unit tests for core.system_health (moved here from modules.diagnostics.module in milestone 5.7 — see that module's own docstring and core/system_health.py's docstring for why). format_system_health() is tested with hand-built snapshots (pure, deterministic). read_system_health()/_read_cpu_temperatur
+- `tests/test_system_helper.py`: FW-06 (PoC 5; DEC-0194, REQ-ARC-010, REQ-AGT-024, REQ-SEC-022): MIA changes the system only through her helper's three fixed operations, each confirmed twice (her card, then his password in polkit's dialog). Checked here, on any machine: the helper's own rules refuse anything but its operations and 
 - `tests/test_system_map.py`: The one map of everything that makes MIA (core/system_map.py, DEC-0139): it assembles every category from the real sources (decisions, loops, knowledge, learnings, stores, preferences, architecture, capabilities), renders a navigable page, and a broken source becomes a noted gap rather than a crash.
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).

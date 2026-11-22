@@ -7,4 +7,8 @@ systemctl --user enable mia-runtime >/dev/null 2>&1 || true
 # --no-block: her runtime tells systemd when it's ready (Type=notify), so a plain start would hold this session on a
 # black screen until then; her shell shows "MIA is starting", and the recovery page if she doesn't come.
 systemctl --user start --no-block mia-runtime || true
-exec kwin_wayland --xwayland --exit-with-session=/usr/lib/mia/os/files/mia-shell
+# KDE's polkit agent beside her shell (FW-06): without it, the system helper's password dialog could never appear
+# in her session and every system change would be refused.
+agent=/usr/libexec/kf6/polkit-kde-authentication-agent-1
+[ -x "$agent" ] || agent=
+exec kwin_wayland --xwayland --exit-with-session=/usr/lib/mia/os/files/mia-shell $agent

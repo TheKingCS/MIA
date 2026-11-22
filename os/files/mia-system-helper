@@ -1,0 +1,163 @@
+#!/usr/bin/python3
+"""
+mia-system-helper
+===================
+
+MIA's system helper (FW-06, PoC 5; DEC-0194, REQ-ARC-010, REQ-AGT-024, REQ-SEC-022): the only way MIA changes the
+system, a small D-Bus service on the system bus, `org.mia.System1`, with three fixed operations and nothing else:
+
+- `ApplyUpdate()`: restart into the update already staged (core: mia-update-stage), only when one is staged;
+- `RestartUnit(s unit)`: restart one of `ALLOWED_UNITS` (the model server, the update stager);
+- `Power(s what)`: power off or restart, `what` one of `POWER`.
+
+**Each is checked twice.** First here, against its own fixed rules (`check`: the method one of the three, its arguments
+exactly what it takes); then by polkit, for the caller, as `org.mia.system1.<operation>`, with the person's own
+password asked in the operating system's dialog (the policy's `auth_self`). A caller that isn't authorised gets an
+error and nothing happens. It trusts no caller: whoever calls, only these operations, only these arguments.
+
+**Root only while a call is in progress** (acceptance A6): D-Bus starts it on the first call (its unit,
+mia-system-helper.service) and it exits after IDLE_SECONDS with nothing to do. Every call and its outcome is written to
+its log (the journal).
+
+It never runs a shell: the systemd, logind and bootc calls are made with fixed arguments.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+
+NAME = "org.mia.System1"
+PATH = "/org/mia/System1"
+ACTION_PREFIX = "org.mia.system1."
+IDLE_SECONDS = 60
+ALLOWED_UNITS = ("ollama.service", "mia-update-stage.service")
+POWER = ("poweroff", "reboot")
+# The three operations: (polkit action, the D-Bus signature of their arguments).
+OPERATIONS = {
+    "ApplyUpdate": ("apply-update", ""),
+    "RestartUnit": ("restart-unit", "s"),
+    "Power": ("power", "s"),
+}
+INTERFACE = """
+<node>
+  <interface name="org.mia.System1">
+    <method name="ApplyUpdate"><arg type="s" name="outcome" direction="out"/></method>
+    <method name="RestartUnit"><arg type="s" name="unit" direction="in"/><arg type="s" name="outcome" direction="out"/></method>
+    <method name="Power"><arg type="s" name="what" direction="in"/><arg type="s" name="outcome" direction="out"/></method>
+  </interface>
+</node>
+"""
+
+
+class Refused(Exception):
+    """A call this helper won't make (its own rules, or polkit's answer); the message says why, in words."""
+
+
+def check(method: str, args: tuple) -> str:
+    """Pure logic. The polkit action a call needs, after checking it against the helper's own rules: one of the three
+    methods, with exactly its arguments, each from its fixed list. Refused for anything else."""
+    if method not in OPERATIONS:
+        raise Refused(f"{method!r} isn't one of the helper's operations")
+    action, signature = OPERATIONS[method]
+    if len(args) != len(signature) or not all(isinstance(a, str) for a in args):
+        raise Refused(f"{method} takes {len(signature)} text argument(s)")
+    if method == "RestartUnit" and args[0] not in ALLOWED_UNITS:
+        raise Refused(f"{args[0][:60]!r} isn't a unit MIA may restart")
+    if method == "Power" and args[0] not in POWER:
+        raise Refused(f"{args[0][:60]!r} isn't poweroff or reboot")
+    return ACTION_PREFIX + action
+
+
+def staged(status_json: str) -> bool:
+    """Pure logic. Whether `bootc status --json` says an update is staged."""
+    try:
+        return bool((json.loads(status_json).get("status") or {}).get("staged"))
+    except (ValueError, AttributeError):
+        return False
+
+
+def _log(line: str) -> None:
+    """One line to the journal (the unit's standard error)."""
+    print(line, file=sys.stderr, flush=True)
+
+
+def main() -> int:
+    """Owns org.mia.System1 on the system bus, answers the three operations, and exits when idle."""
+    from gi.repository import Gio, GLib
+
+    bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+    loop = GLib.MainLoop()
+    idle = {"source": 0}
+
+    def rest() -> None:
+        """Starts (again) the countdown to exiting with nothing to do."""
+        if idle["source"]:
+            GLib.source_remove(idle["source"])
+        idle["source"] = GLib.timeout_add_seconds(IDLE_SECONDS, lambda: (loop.quit(), False)[1])
+
+    def authorised(sender: str, action: str) -> bool:
+        """polkit's answer for this caller and action, asking the person in the OS's own dialog."""
+        subject = ("system-bus-name", {"name": GLib.Variant("s", sender)})
+        reply = bus.call_sync("org.freedesktop.PolicyKit1", "/org/freedesktop/PolicyKit1/Authority",
+                              "org.freedesktop.PolicyKit1.Authority", "CheckAuthorization",
+                              GLib.Variant("((sa{sv})sa{ss}us)", (subject, action, {}, 1, "")),
+                              GLib.VariantType("((bba{ss}))"), Gio.DBusCallFlags.NONE, 300000, None)
+        return bool(reply.unpack()[0][0])
+
+    def systemd(method: str, args: GLib.Variant) -> None:
+        """One call to systemd's manager (as root, the helper's own)."""
+        bus.call_sync("org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager",
+                      method, args, None, Gio.DBusCallFlags.NONE, 30000, None)
+
+    def power(what: str) -> None:
+        """Powers off or restarts through logind."""
+        bus.call_sync("org.freedesktop.login1", "/org/freedesktop/login1", "org.freedesktop.login1.Manager",
+                      "PowerOff" if what == "poweroff" else "Reboot", GLib.Variant("(b)", (False,)), None,
+                      Gio.DBusCallFlags.NONE, 30000, None)
+
+    def run(method: str, args: tuple) -> str:
+        """Does one checked and authorised operation; its outcome in words."""
+        if method == "RestartUnit":
+            systemd("RestartUnit", GLib.Variant("(ss)", (args[0], "replace")))
+            return f"restarted {args[0]}"
+        if method == "Power":
+            power(args[0])
+            return f"{args[0]} started"
+        out = subprocess.run(["bootc", "status", "--json"], capture_output=True, text=True, timeout=60)
+        if not staged(out.stdout):
+            return "no update is staged"
+        power("reboot")
+        return "restarting into the staged update"
+
+    def on_call(_conn, sender, _path, _iface, method, params, invocation) -> None:
+        """One call: checked, authorised, done, logged; an error back for anything refused or failed."""
+        rest()
+        args = tuple(params.unpack())
+        try:
+            action = check(method, args)
+            if not authorised(sender, action):
+                raise Refused("not authorised (the dialog was refused or no one could be asked)")
+            outcome = run(method, args)
+        except Refused as why:
+            _log(f"refused {method}{args!r} from {sender}: {why}")
+            invocation.return_dbus_error("org.mia.System1.Error.Refused", str(why))
+            return
+        except Exception as problem:  # noqa: BLE001 - a failure is said back, never a crash of the helper
+            _log(f"failed {method}{args!r} from {sender}: {problem}")
+            invocation.return_dbus_error("org.mia.System1.Error.Failed", str(problem)[:200])
+            return
+        _log(f"done {method}{args!r} for {sender}: {outcome}")
+        invocation.return_value(GLib.Variant("(s)", (outcome,)))
+
+    node = Gio.DBusNodeInfo.new_for_xml(INTERFACE)
+    bus.register_object(PATH, node.interfaces[0], on_call, None, None)
+    Gio.bus_own_name_on_connection(bus, NAME, Gio.BusNameOwnerFlags.NONE, None, lambda *_: loop.quit())
+    rest()
+    loop.run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

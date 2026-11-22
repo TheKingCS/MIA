@@ -43,6 +43,10 @@ EFFECTS: dict[str, tuple[str, str, str]] = {
     # system
     "lab.approve": ("system", "compensable", "merges a change into MIA's own code; a later change can revert it"),
     "lab.revert": ("system", "compensable", "takes one of her changes back out of her code; it can be retried"),
+    # FW-06: through the system helper, his password asked again in the operating system's dialog
+    "system.restart_service": ("system", "compensable", "restarts one of her system services; it comes back up"),
+    "system.power": ("system", "irreversible", "powers off or restarts the computer: whatever was open closes"),
+    "system.apply_update": ("system", "compensable", "restarts into the staged update; the previous one stays bootable"),
     # device: can't be put back
     "myfile.delete": ("device", "irreversible", "deletes one of his files or folders for good"),
     "track.delete": ("device", "irreversible", "deletes a music file from the disk"),
