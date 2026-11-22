@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1574 files, 347,280 lines; 1574 files describe themselves; 19,120 of 19,219 classes and functions are documented.
+1575 files, 347,340 lines; 1575 files describe themselves; 19,123 of 19,222 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-613 files, 175,471 lines; 9,030 of 9,116 classes and functions documented
+613 files, 175,498 lines; 9,031 of 9,117 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -910,7 +910,7 @@
 
 ## tests/: the test suite: what each part must do
 
-560 files, 91,792 lines; 7,729 of 7,742 classes and functions documented
+561 files, 91,825 lines; 7,731 of 7,744 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1025,6 +1025,7 @@
 - `tests/test_dashboard_widgets.py`: Unit tests for core.dashboard_widgets — same shape as tests/test_module_manager.py's enable/disable coverage, since DashboardWidgetRegistry deliberately mirrors ModuleManager's convention.
 - `tests/test_data_logger_manager.py`: Unit tests for core.data_logger_manager. Isolates _DATA_DIR/_READINGS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption.
+- `tests/test_data_recovery_named.py`: REQ-FUN-221: an answer built from several stores names the parts it couldn't read, rather than leaving them out silently: a store reset to empty at start is remembered for the run and named in her context, with the rule to say so.
 - `tests/test_data_root.py`: Where MIA keeps a person's files (core/data_root.py, MIA_HOME): the code's folder unless it's set; with it set, nothing at all is written into the code's folder; and tools/move_home copies a MIA to a new home, checked.
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
 - `tests/test_degraded_intelligence.py`: FW-12, the first version's part (REQ-AI-013, REQ-HW-029, DEC-0204): when the chosen local model fails or times out, the next one the computer has answers and MIA says which; and one model call runs at a time, a conversation before background work, so his turn waits at most for the one call already r

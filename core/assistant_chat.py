@@ -494,7 +494,8 @@ def build_user_context_block(context, prompt: str = "") -> str:
     system message. Returns an empty-knowledge line rather than an
     empty string when nothing is known yet, framed as an invitation to
     learn more — matches this pass's "researcher" framing rather than
-    just silently omitting the section.
+    just silently omitting the section. Stores that couldn't be read at
+    start are named, with the rule to say so (REQ-FUN-221).
     """
     facts: list[str] = []
 
@@ -525,12 +526,21 @@ def build_user_context_block(context, prompt: str = "") -> str:
     steer = directions.context_block() if directions is not None else ""
 
     lead = f"{child_note}\n" if child_note else ""
+    # REQ-FUN-221: records that couldn't be read at start are named, so an answer that would use them says so instead
+    # of answering as if they were empty.
+    from core.data_recovery import unreadable
+    from core.your_data import label
+
+    unread = [label(name) for name in unreadable()]
+    unread_note = ("\n\nSome of this person's records couldn't be read when MIA started and are empty until restored: "
+                   + ", ".join(unread) + ". When an answer would draw on them, say you couldn't read them; never answer "
+                   "as if they were empty.") if unread else ""
     if not facts:
         base = lead + "You don't know much about this user yet — a great opportunity to ask and learn."
     else:
         bullet_list = "\n".join(f"- {fact}" for fact in facts)
         base = f"{lead}What you know about this user so far:\n{bullet_list}"
-    return base + (f"\n\n{steer}" if steer else "")
+    return base + (f"\n\n{steer}" if steer else "") + unread_note
 
 
 def format_birthday(iso_date: str) -> str:

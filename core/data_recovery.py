@@ -19,6 +19,9 @@ manager here DOES have notifications access by the time it loads, so
 the more valuable fix is a real, visible notification — the user finds
 out immediately, rather than only if they ever thought to go looking
 for a stray `.corrupted-<timestamp>` file.
+
+Each file that couldn't be read is also kept for the run (`unreadable`), so her answers name the
+records they couldn't read rather than treating them as empty (REQ-FUN-221).
 """
 
 from __future__ import annotations
@@ -29,12 +32,26 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 
+_unreadable: dict[str, float] = {}  # this run's stores that couldn't be read, by file name (REQ-FUN-221)
+
+
+def unreadable() -> list[str]:
+    """The stores that couldn't be read since MIA started (each reset to empty, its file set aside), by file name, in
+    the order they were met: what an answer built from her records must name rather than leave out silently
+    (REQ-FUN-221, core/assistant_chat.build_user_context_block)."""
+    return list(_unreadable)
+
+
 def notify_data_corruption(context: AppContext, filename: str) -> None:
     """Best-effort, never raises — called from inside an already-
     handled exception block (the caller already logged the real
     failure via log.exception()), so this must never itself become a
     new crash. Graceful no-op with no notifications service, same
-    stance as every other optional-service check in this codebase."""
+    stance as every other optional-service check in this codebase. The file's name is also kept for this run
+    (`unreadable`), so her answers say which of his records they couldn't read."""
+    import time
+
+    _unreadable.setdefault(str(filename), time.time())
     try:  # the data.recovered loop (core/loops.py): the file's name only, on this device
         from core.dev_store import DEV_DATA, DevStore
 

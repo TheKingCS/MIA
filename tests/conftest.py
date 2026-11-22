@@ -307,3 +307,14 @@ def _no_fallback_model_asked_for_real(monkeypatch):
 
     monkeypatch.setattr(OllamaBackend, "installed", lambda self, timeout=3.0: [])
     monkeypatch.setattr(OllamaBackend, "on_gpu", lambda self, timeout=2.0: None)  # nor where a model is loaded
+
+
+@pytest.fixture(autouse=True)
+def _no_unread_store_carried_over():
+    """Each test starts with no store counted as unreadable this run (core/data_recovery.unreadable, REQ-FUN-221), so
+    one test's damaged file never shows up in another's prompt."""
+    from core import data_recovery
+
+    data_recovery._unreadable.clear()
+    yield
+    data_recovery._unreadable.clear()
