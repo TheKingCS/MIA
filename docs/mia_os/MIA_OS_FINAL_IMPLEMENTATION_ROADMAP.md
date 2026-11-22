@@ -307,8 +307,9 @@ approves itself.
 > **FW-07a built 2026-11-22** (Opus): `core/migration.py` and `python -m tools.migration_manifest write | compare |
 > programs`: every store's count and a hash of its records (read through `open_text`, so a store re-sealed under
 > the new key still matches), a sample of his files' hashes, his programs with their MIA OS answers (48 of 51 on his
-> PC; the 3 left are games). Written beside his backups, never in the repository. FW-07b (the restore on the image,
-> the phone's reset, the rehearsal in the VM) is next.
+> PC; the 3 left are games). Written beside his backups, never in the repository. **FW-07b's phone part built**
+> (REQ-IMP-005): pairing starts sync fresh, the computer's copies taken and the phone's kept aside for 30 days.
+> Still to do in the VM: the restore on the image and the rehearsal on synthetic data.
 
 | Field | Specification |
 |---|---|

@@ -2,7 +2,8 @@
 Two-way sync between the phone and the home computer (core/sync.py):
 the merge rules, one full sync against a computer that answers like MIA
 on the PC does (and an edit made on the phone while it answers, which
-survives), and the PC's own endpoints.
+survives), the PC's own endpoints, and a phone paired again taking the computer's copies first
+(REQ-IMP-005).
 """
 
 import base64
@@ -371,3 +372,27 @@ def test_a_run_and_its_turn_traces_stay_on_the_device_that_ran_them():
     from core.sync import syncable
 
     assert not syncable("runs.json") and not syncable("turn_traces.jsonl")
+
+
+def test_after_pairing_again_the_computers_copy_is_taken_and_the_phones_kept_aside(phone):
+    """REQ-IMP-005 (FW-07b): a phone re-paired after the move starts fresh: the computer's (moved) copy of each file is
+    taken, never merged with an older phone copy; the phone's is kept in its change history, and said once; a file
+    only the phone has still goes up; the sync after that merges as usual."""
+    from core import change_history
+
+    pc = PretendPC()
+    pc.files["home"]["missions.json"] = _missions("pc1")
+    sync.sync_now(phone, call=pc)
+    (phone.dirs["home"] / "missions.json").write_bytes(_missions("pc1", "old-phone-edit"))
+    (phone.dirs["home"] / "notes.json").write_bytes(b'[{"id": "only-here"}]')
+    moved = PretendPC()  # MIA OS, with his moved data
+    moved.files["home"]["missions.json"] = _missions("pc1", "moved")
+    sync.start_fresh(phone)
+    assert sync.state_for(phone).status()["fresh"] is True
+    done = sync.sync_now(phone, call=moved)
+    ids = [m["mission_id"] for m in json.loads(open_text(phone.dirs["home"] / "missions.json"))]
+    assert ids == ["pc1", "moved"] and done["pulled"] >= 1 and "after pairing" in done["note"]
+    assert moved.files["home"]["notes.json"] == b'[{"id": "only-here"}]'
+    assert sync.state_for(phone).status()["fresh"] is False
+    kept = [e for e in change_history.entries(sync.owner(phone)) if "after pairing" in e.what]
+    assert kept

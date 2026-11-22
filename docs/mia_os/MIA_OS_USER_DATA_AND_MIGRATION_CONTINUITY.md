@@ -17,4 +17,4 @@ phone re-pairs after the move and syncs against MIA OS, its base reset, so it ca
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-IMP-005 | After the move, the phone shall re-pair with MIA OS and reset its sync base, so no stale copy overwrites moved data. | Must | MVP | Phone | New | T | DEC-0272, DEC-0243 → 16 |
+| REQ-IMP-005 | After the move, the phone shall re-pair with MIA OS and reset its sync base, so no stale copy overwrites moved data. | Must | MVP | Phone | Exists (FW-07b: `sync.start_fresh` on pairing; the phone's copies kept aside 30 days) | T | DEC-0272, DEC-0243 → 16 |

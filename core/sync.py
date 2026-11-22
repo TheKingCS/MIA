@@ -36,6 +36,10 @@ side's changed fields, and when both changed the same field the newer
 file wins. The history (life_events.jsonl) is merged line by line by
 event id. XP and credits add up what each side earned since the base.
 
+**After pairing** (`start_fresh`, REQ-IMP-005): pairing (again, after the move to MIA OS) clears the base, and
+the first sync after takes the computer's copy of each file both have, keeping the phone's in its change history
+for 30 days (`fresh_note`), so an old phone copy is never merged into moved data.
+
 **A photo or file** is matched by its place in its folder and its
 fingerprint (SHA-256); the base is only its fingerprint. Changed or
 added on one side: copied over. Deleted on one side and untouched on the
@@ -344,18 +348,20 @@ def conflict_note(name: str, lost: list, local_won: bool) -> str:
             f"device's copy of that file is kept for 30 days: say \"undo the sync conflict\" to take it instead.")
 
 
-def keep_loser(profile_id: str, path: Path, losing: Optional[bytes], lost: list, local_won: bool) -> str:
+def keep_loser(profile_id: str, path: Path, losing: Optional[bytes], lost: list, local_won: bool,
+               note: str = "") -> str:
     """Keeps the losing side's copy of a file in the person's change history after a conflicting merge, for 30
     days (DEC-0285), and returns the one note to say. The copy is kept as the file itself is kept on disk (sealed
     when its store is: `at_rest.seal_text`), so taking it back never leaves a sealed store in plain text. It is
     that device's whole copy of the file; only an undo that names the sync conflict takes it
-    (`change_history.find` leaves it out of any other). Never raises."""
+    (`change_history.find` leaves it out of any other). `note` replaces the conflict's own (a re-pairing's).
+    Never raises."""
     try:
         from core import change_history
         from core.at_rest import seal_text
         from core.undo_log import Change
 
-        note = conflict_note(Path(path).name, lost, local_won)
+        note = note or conflict_note(Path(path).name, lost, local_won)
         if losing is not None:
             losing = seal_text(Path(path), losing.decode("utf-8")).encode("utf-8")
         change = Change(SYNC_CONFLICT, profile_id, files={Path(path): losing}, by="sync", summary=note)
@@ -708,6 +714,29 @@ class SyncState:
         (self.root / "status.json").write_text(json.dumps({**self.status(), **values}), encoding="utf-8")
 
 
+def start_fresh(context) -> None:
+    """After pairing with a computer (core/home_link.connect; after the move to MIA OS, REQ-IMP-005): forgets every
+    last-synced copy and marks the next sync fresh, so it takes the computer's copy of each file both have instead of
+    merging an old phone copy into moved data. Never raises."""
+    import shutil
+
+    state = state_for(context)
+    try:
+        for scope in SCOPES:
+            shutil.rmtree(state.root / scope, ignore_errors=True)
+        for name in ("files.json", "game.json"):
+            (state.root / name).unlink(missing_ok=True)
+        state.set_status(fresh=True)
+    except OSError:
+        log.exception("Couldn't start the sync fresh after pairing.")
+
+
+def fresh_note(name: str) -> str:
+    """Pure logic. The note for a file whose computer copy was taken on the first sync after pairing."""
+    return (f"{Path(name).stem.replace('_', ' ')}: after pairing, the computer's copy was taken. This phone's copy is "
+            "kept for 30 days: say \"undo the sync conflict\" to take it instead.")
+
+
 def state_for(context) -> SyncState:
     """The sync memory for this device, in the shared data folder's .sync/."""
     personal = getattr(context, "personal_data", None)
@@ -734,7 +763,8 @@ def sync_now(context, call=None, lock=None) -> dict:
     is read again under `lock` once the computer has answered, so an edit
     made here meanwhile is merged with theirs, never written over. A field
     both changed keeps the losing copy in the change history and adds one
-    note (`keep_loser`, DEC-0285), which is also said to him (`_tell_conflicts`)."""
+    note (`keep_loser`, DEC-0285), which is also said to him (`_tell_conflicts`). The first sync after pairing
+    (`start_fresh`) takes the computer's copy of each file both have and keeps this device's aside instead."""
     from core.home_link import home_call
 
     call = call or home_call
@@ -744,6 +774,7 @@ def sync_now(context, call=None, lock=None) -> dict:
     if pid is None:
         raise ValueError("No account on this device to sync.")
     state = state_for(context)
+    fresh = bool(state.status().get("fresh"))  # the first sync since pairing (start_fresh): the computer's copies win
     remote = call(context, "/api/sync/manifest", timeout=30)
     done = {"pushed": 0, "pulled": 0, "merged": 0, "files": 0}
     notes = []
@@ -786,6 +817,17 @@ def sync_now(context, call=None, lock=None) -> dict:
                 done["pushed"] += 1
                 continue
             got = call(context, f"/api/sync/file?scope={scope}&name={name}", timeout=30, raw=True)
+            if fresh and local is not None:
+                # The first sync since pairing: the computer's copy is the one (moved data), this phone's kept aside.
+                with lock:
+                    write_file(context, path, got)
+                note = keep_loser(pid, path, local, [], False, note=fresh_note(name))
+                if note:
+                    notes.append(note)
+                    told.append(note)
+                state.set_base(scope, name, got)
+                done["pulled"] += 1
+                continue
             prefer_local = (path.stat().st_mtime if path.is_file() else 0) >= float(rtime or 0)
             with lock:
                 # The file again, now that nothing else can write it: an edit made here while the computer answered
@@ -834,7 +876,7 @@ def sync_now(context, call=None, lock=None) -> dict:
     done["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     done["note"] = " ".join(notes)
     state.set_status(last=done["at"], **{k: done[k] for k in ("pushed", "pulled", "merged", "files")},
-                     problem="", note=done["note"])
+                     problem="", note=done["note"], fresh=False)  # a fresh start ends once a whole sync is done
     return done
 
 

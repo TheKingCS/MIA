@@ -164,6 +164,12 @@ import core.capability_registry as capability_registry_module  # noqa: E402
 
 capability_registry_module._DATA_DIR = _TEST_RUNTIME_DIR
 
+# 2026-11-22: sync's memory falls back to the data folder for a context with no person's data (a test that pairs
+# a phone, FW-07b's fresh start, wrote data/.sync/status.json).
+import core.sync as sync_module  # noqa: E402
+
+sync_module.DATA_DIR = _TEST_RUNTIME_DIR
+
 # 2026-11-06: tests that run MIA's daily checks (test_communication_gate)
 # ran the PC's improvement loops for real: readings into data/dev/ and a
 # task opened in work/tasks/ (T-0049). The development platform's records

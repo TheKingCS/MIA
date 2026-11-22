@@ -150,7 +150,8 @@ class Reach:
 
 def connect(context, url: str, who: str, password: str, code: str = "") -> dict:
     """Sign in to MIA on the computer (with the authenticator's code when two-step sign-in is on there), check its
-    model, remember the link."""
+    model, remember the link, and start the sync fresh (`sync.start_fresh`: after pairing, the computer's copy of each
+    file is taken, this device's kept aside, so a phone re-paired after the move never writes old data over it)."""
     url = clean_url(url)
     try:
         login = _request(f"{url}/api/model/link", {"profile_id": who, "password": password, "code": code}, 8)
@@ -172,6 +173,9 @@ def connect(context, url: str, who: str, password: str, code: str = "") -> dict:
     config.set("home_pc.who", who)
     config.save()
     link(context)
+    from core import sync
+
+    sync.start_fresh(context)  # paired (again, after a move): the computer's copies are taken first (REQ-IMP-005)
     return {"url": url, "model": backend.model, "available": available}
 
 

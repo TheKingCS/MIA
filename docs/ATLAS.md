@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1570 files, 346,720 lines; 1570 files describe themselves; 19,088 of 19,187 classes and functions are documented.
+1570 files, 346,797 lines; 1570 files describe themselves; 19,091 of 19,190 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-612 files, 175,206 lines; 9,015 of 9,101 classes and functions documented
+612 files, 175,252 lines; 9,017 of 9,103 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -909,7 +909,7 @@
 
 ## tests/: the test suite: what each part must do
 
-557 files, 91,575 lines; 7,712 of 7,725 classes and functions documented
+557 files, 91,606 lines; 7,713 of 7,726 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1355,7 +1355,7 @@
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
-- `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), and the PC's own endpoints.
+- `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), the PC's own endpoints, and a phone paired again taking the computer's copies 
 - `tests/test_system_health.py`: Unit tests for core.system_health (moved here from modules.diagnostics.module in milestone 5.7 — see that module's own docstring and core/system_health.py's docstring for why). format_system_health() is tested with hand-built snapshots (pure, deterministic). read_system_health()/_read_cpu_temperatur
 - `tests/test_system_helper.py`: FW-06 (PoC 5; DEC-0194, REQ-ARC-010, REQ-AGT-024, REQ-SEC-022): MIA changes the system only through her helper's three fixed operations, each confirmed twice (her card, then his password in polkit's dialog). Checked here, on any machine: the helper's own rules refuse anything but its operations and 
 - `tests/test_system_map.py`: The one map of everything that makes MIA (core/system_map.py, DEC-0139): it assembles every category from the real sources (decisions, loops, knowledge, learnings, stores, preferences, architecture, capabilities), renders a navigable page, and a broken source becomes a noted gap rather than a crash.
