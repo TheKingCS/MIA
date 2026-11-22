@@ -25,4 +25,4 @@ a migration check).
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-IMP-002 | A migration report shall compare every store's record counts on Windows and on MIA OS, and the move shall not count as done until they match. | Must | MVP | PC | New | T | DEC-0272, REQ-CMP-002 → 16 |
+| REQ-IMP-002 | A migration report shall compare every store's record counts on Windows and on MIA OS, and the move shall not count as done until they match. | Must | MVP | PC | Partial (FW-07a: `core/migration.py` counts and hashes every store, `compare` names a mismatch; the report on MIA OS is FW-07b) | T | DEC-0272, REQ-CMP-002 → 16 |

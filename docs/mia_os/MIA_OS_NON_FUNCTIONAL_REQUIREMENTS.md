@@ -77,7 +77,7 @@ matters, where and how it's measured.
 |---|---|---|---|---|---|---|---|
 | REQ-CMP-001 | MIA shall keep running on Windows until the Linux image is Zac's daily system; no change may make Windows MIA worse in the meantime. | Must | MVP | PC | Exists | T: the suite on Windows | P1 (preserve working features) → 16 |
 | REQ-CMP-002 | Existing data shall carry over to the Linux image with nothing lost (stores, history, sealed files re-sealed under the new key). | Must | MVP | PC | Planned | D: migration rehearsal on a copy | P5 → 16 |
-| REQ-CMP-003 | Ordinary Linux GUI apps (Flatpak) and Windows-only needs shall be listed before the switch, each with its Linux answer or a reason to keep dual boot. | Must | MVP | PC | New | I | DEC-0157 → 06, 16 |
+| REQ-CMP-003 | Ordinary Linux GUI apps (Flatpak) and Windows-only needs shall be listed before the switch, each with its Linux answer or a reason to keep dual boot. | Must | MVP | PC | Exists (FW-07a: `python -m tools.migration_manifest programs`; his games stay his to decide) | I | DEC-0157 → 06, 16 |
 | REQ-CMP-004 | The phone app and the glasses shall work against the Linux PC exactly as against the Windows PC. | Must | MVP | Ph, Gl | New | T: sync and link tests against the Linux runtime | P11 → 12 |
 
 ## Operational (OPS)

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1560 files, 345,318 lines; 1560 files describe themselves; 19,020 of 19,119 classes and functions are documented.
+1563 files, 345,811 lines; 1563 files describe themselves; 19,042 of 19,141 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-607 files, 174,447 lines; 8,980 of 9,066 classes and functions documented
+608 files, 174,749 lines; 8,993 of 9,079 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -330,6 +330,7 @@
 - `core/message_kind.py`: Intent before action, first step (T-0009; `docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md` A7 P3): sorting what someone said into the kind of message it is, in code, before any path is chosen: a command, a question, chat, humor, frustration, a feeling, a plan, a follow-up, a request for advice, a hypotheti
 - `core/message_reasons.py`: "Why are you telling me this?" (2026-10-01, accounts stage 5): a plain answer for each kind of message MIA sends on her own (core/communication_gate.py topics), plus finding the kind someone means by their own words ("stop telling me about the budget").
 - `core/mia_coder.py`: MIA's own coder, and her shadow attempts (DEC-0074, T-0027; `docs/DEVELOPMENTAL_INDEPENDENCE_REVIEW.md` sections 3.3 and 4.3).
+- `core/migration.py`: The move to MIA OS, checked (FW-07a: REQ-CMP-002, REQ-CMP-003, REQ-IMP-002, REQ-IMP-005, REQ-IMP-009; docs/mia_os/MIA_OS_FINAL_MIGRATION_AND_DATA_CONTINUITY_PLAN.md). Before the move, on Windows, `manifest()` records what he has; after the restore on MIA OS, the same is recorded there and `compare()
 - `core/mission_actions.py`: Every change the Missions, Skills and Character screens make (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: missions (add, edit, delete, complete, give up on with a reason, reopen), their objectives (add, remove, count one more), the skill a mission teaches, startin
 - `core/mission_guide.py`: The step a mission is on, from whatever guides it (Zac's handoff, 2026-11-09, DEC-0152: "Missions are not merely checklists. They are MIA's universal execution and guidance system"). A mission's objectives say how far it is; a guide says what to do now: the step, why it comes now, what to watch for,
 - `core/mission_insights.py`: The Missions-domain scan for the observe -> understand -> insight -> recommend -> act -> result loop (core/insight_manager.py) — the second domain this loop covers, after core/maintenance_insights.py (see its own docstring for the full reasoning behind Insight/Recommendation; this file mirrors its s
@@ -853,7 +854,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-45 files, 5,143 lines; 157 of 157 classes and functions documented
+46 files, 5,223 lines; 159 of 159 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -881,6 +882,7 @@
 - `tools/lab.py`: MIA's development lab from the command line (DEC-0058, core/dev_lab.py).
 - `tools/make_food_table.py`: Builds data/foods.tsv, MIA's built-in food table (DEC-0020), from the USDA's FoodData Central "SR Legacy" download: about 7,800 everyday foods, public domain (CC0, https://fdc.nal.usda.gov). Kept per 100 g: calories, protein, fat, carbohydrate, fiber, sugars, sodium; plus each food's household measu
 - `tools/make_model_bench.py`: Freezes MIA's golden set (tests/live_model_check.py) into data/model_bench_cases.json for the model test (core/model_bench.py, docs/PHONE_MODEL_TEST.md): for each case, the exact messages and offered tools MIA's request builder makes with the PC's full set of tools, against the live check's placehol
+- `tools/migration_manifest.py`: The move's checklist on the command line (FW-07a; core/migration.py). Before the move, on Windows:
 - `tools/model_check.py`: Runs one of the phone's models (core/local_model.MODELS) through MIA's golden set (core/model_bench.py) with llama.cpp's server on a computer, started exactly as the phone starts it. CI's "Model check" workflow uses it to compare the models' accuracy; speed belongs to the phone's own Model test scre
 - `tools/model_forge.py`: MIA's model forge from the command line (DEC-0106; core/model_forge.py).
 - `tools/move_home.py`: Copies a person's MIA to a new home folder (core/data_root.py, `MIA_HOME`; DEC-0155, DEC-0168): the step from "her data lives inside the code's folder" to "her data lives in the person's own folder", which MIA OS and the Pi need.
@@ -903,7 +905,7 @@
 
 ## tests/: the test suite: what each part must do
 
-553 files, 91,089 lines; 7,681 of 7,694 classes and functions documented
+554 files, 91,200 lines; 7,688 of 7,701 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1178,6 +1180,7 @@
 - `tests/test_message_kind.py`: Intent before action, watched first: what kind of message it is, sorted in code (core/message_kind.py, T-0009).
 - `tests/test_mia_coder.py`: MIA's own coder and her shadow attempts (DEC-0074, core/mia_coder.py): no tools, only the files the task lists, never a protected one, graded by the lab's own check, never merged.
 - `tests/test_mia_voice.py`: MIA's voice (DEC-0029, docs/design/MIA_VOICE.md): what she writes on her own never guilts the person (DEC-0014).
+- `tests/test_migration.py`: FW-07a (REQ-CMP-002/003, REQ-IMP-009): the move's manifest records every store's count and a hash of what it holds (so a store re-sealed under a new key still matches), a sample of his files and his programs with their answers on MIA OS; comparing before and after names whatever didn't come across, 
 - `tests/test_mission_insights.py`: Unit tests for core.mission_insights — isolates _DATA_DIR for mission/insight files into a tmp_path scratch area, same monkeypatch pattern as test_maintenance_insights.py's own isolated_paths.
 - `tests/test_mission_manager.py`: Unit tests for core.mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_expedition_manager.py's isolated_paths. objective_progress()'s trip_duration_hours resolution also needs core.trip_manager isolated, same pattern as test_memory_manag
 - `tests/test_mission_patterns.py`: Unit tests for core.mission_patterns — isolates _DATA_DIR for mission/insight/profile files into a tmp_path scratch area, same monkeypatch pattern as test_mission_insights.py's own isolated_paths.

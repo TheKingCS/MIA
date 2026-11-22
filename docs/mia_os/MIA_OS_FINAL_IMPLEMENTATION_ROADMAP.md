@@ -304,6 +304,12 @@ approves itself.
 
 ### FW-07 Migration tooling and its rehearsal
 
+> **FW-07a built 2026-11-22** (Opus): `core/migration.py` and `python -m tools.migration_manifest write | compare |
+> programs`: every store's count and a hash of its records (read through `open_text`, so a store re-sealed under
+> the new key still matches), a sample of his files' hashes, his programs with their MIA OS answers (48 of 51 on his
+> PC; the 3 left are games). Written beside his backups, never in the repository. FW-07b (the restore on the image,
+> the phone's reset, the rehearsal in the VM) is next.
+
 | Field | Specification |
 |---|---|
 | Objective | A tool that records every store's count and content hash and a sample of his files on Windows, restores on MIA OS and compares, rehearsed end to end in the VM on synthetic data |
