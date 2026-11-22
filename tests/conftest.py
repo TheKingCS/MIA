@@ -274,3 +274,14 @@ def _no_stop_left_on():
     stop.hold_file().unlink(missing_ok=True)
     yield
     stop.hold_file().unlink(missing_ok=True)
+
+
+@pytest.fixture(autouse=True)
+def _orb_idle():
+    """Her orb starts each test idle: a condition one test held (waking, from a model that didn't answer) never
+    carries into the next (core/orb_state.py, WP-07)."""
+    from core import orb_state
+
+    orb_state.reset()
+    yield
+    orb_state.reset()

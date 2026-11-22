@@ -13,7 +13,7 @@ build on Windows now and carry over.*
 | WP-04 | Every personal store sealed; a test over the classes. **Begun 2026-11-20, all but the budget 2026-11-21**: every personal file is sealed (123 whole, 9 a line at a time), public (5), named but never kept as a file (`NO_FILE`, 4) or on `at_rest.NOT_SEALED_YET` with why (`tests/test_sealed_stores.py`, a list that only shrinks: 7 left, the budget's, waiting on the Plaid work); sync's last-synced copies are sealed with their files | W-SEC | 0 | M0 | M |
 | WP-05 | Hash-chained security log. **Built 2026-11-22** (`security_log.link`/`check_chain`/`holds`; the Sign-ins page keeps the head on the viewing device and asks next time; REQ-SEC-034) | W-SEC | 0 | M0 | S |
 | WP-06 | Light theme; interface sounds; the Theme Studio from a picture | W-LOOK | 0 | M0 | M |
-| WP-07 | The orb's states driven by events | W-SELF | 0 | M0 | S |
+| WP-07 | The orb's states driven by events. **Built 2026-11-22** (`orb_state.LOOK`: words and a still glyph per state, shown under reduced motion; `needs-you` from waiting cards, `offline` from the model not answering, speaking while her reply plays; REQ-VIS-010, most of 009) | W-SELF | 0 | M0 | S |
 | WP-08 | The capability truth registry with states and evidence | W-SELF | 0 | M0 | M |
 | WP-09 | The restore drill; the off-PC backup copy | W-REL | 0 | M0 | S |
 | WP-10 | Device records, scoped keys, the lost-phone erase, conflict notes | W-DEVICES | 0 | M0 | M |

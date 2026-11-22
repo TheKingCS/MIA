@@ -52,6 +52,10 @@
   animation-iteration-count: 1;
 }
 .mia-orb[data-state="offline"] { filter: grayscale(1); opacity: 0.4; animation: none; }
+/* Offline (DEC-0255, WP-07): answers in words aren't ready; the floating orb greys like the others. */
+:root[data-presence="offline"] .mia-orb-core { filter: grayscale(1); opacity: 0.5; }
+:root[data-presence="needs-you"] .mia-orb-core { background: var(--attention); }
+:root[data-presence="speaking"] .mia-orb-core { filter: brightness(1.2); }
 /* What she's really doing (prompt 24 A5, core/orb_state.py): working, the council, a message, a warning, a success. */
 .mia-orb[data-state="working"] { animation: mia-orb-think 2s linear infinite;
   box-shadow: 0 0 calc(var(--orb-d) * 0.36) rgba(var(--rgb-accent-2), 0.4); }
@@ -193,6 +197,26 @@
 
 @media (prefers-reduced-motion: reduce) {
   .mia-orb, .skeleton, .mia-orb-core { animation: none !important; }
+  /* WP-07, REQ-VIS-010: no movement, so each state is its still glyph with its words shown (core/orb_state.LOOK). */
+  .mia-orb[data-glyph] { position: relative; }
+  .mia-orb[data-state="offline"] { opacity: 1; filter: grayscale(1); }  /* grey, but its words stay readable */
+  .mia-orb[data-glyph]::after {
+    content: attr(data-glyph); position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: calc(var(--orb-d) * 0.4); line-height: 1; color: var(--bg); font-weight: 700;
+  }
+  .mia-orb[data-label]::before {
+    content: attr(data-label); position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    margin-top: 4px; white-space: nowrap; font-size: var(--text-xs); color: var(--text-dim);
+  }
+  #mia-orb[data-glyph] .mia-orb-core::after {
+    content: attr(data-glyph); display: grid; place-items: center; width: 100%; height: 100%;
+    font-size: 18px; line-height: 1; color: var(--bg); font-weight: 700;
+  }
+  #mia-orb[data-label]:not([data-state="idle"])::after {
+    content: attr(data-label); position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+    white-space: nowrap; padding: 4px 8px; border-radius: 8px; font-size: var(--text-xs);
+    color: var(--text); background: rgba(var(--rgb-panel), 0.92); border: 1px solid var(--line);
+  }
 }
 
 /* ------------------------------------------------------------ Home (the canvas's Home, DEC-0113) */

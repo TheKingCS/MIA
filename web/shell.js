@@ -27,11 +27,20 @@
   // notification) or this device (listening): set on <html data-presence> and on every orb that follows it
   // (.mia-orb[data-presence-orb]); the floating orb button reads the attribute through its styles. Never a timer
   // pretending: nothing changes unless something happened.
-  let presenceServer = "idle", presenceLocal = "";
+  // WP-07: each state's words and still glyph come from the engine (shell.orb, core/orb_state.LOOK), so every orb says
+  // the same; with reduced motion the styles show the glyph and the words instead of the movement (REQ-VIS-010).
+  let presenceServer = "idle", presenceLocal = "", orbLook = {};
   function showPresence() {
     const state = presenceLocal || presenceServer || "idle";
+    const look = orbLook[state] || { label: state, glyph: "" };
     document.documentElement.dataset.presence = state;
-    document.querySelectorAll(".mia-orb[data-presence-orb]").forEach((o) => { o.dataset.state = state; });
+    document.querySelectorAll(".mia-orb[data-presence-orb], #mia-orb").forEach((o) => {
+      o.dataset.state = state;
+      o.dataset.label = look.label;
+      o.dataset.glyph = look.glyph;
+      o.setAttribute("aria-label", o.id === "mia-orb" ? "Talk to MIA. " + look.label : "MIA: " + look.label);
+      o.title = look.label;
+    });
   }
   function presenceHere(state) { presenceLocal = state || ""; showPresence(); }
   window.addEventListener("mia-presence", (e) => { presenceServer = (e.detail && e.detail.state) || "idle"; showPresence(); });
@@ -433,6 +442,7 @@
 
   function renderNav(shell) {
     shellData = shell;
+    if (shell.orb) { orbLook = shell.orb; showPresence(); }  // WP-07: the orb's words and glyphs
     if (shell.display && shell.display.theme) applyTheme(shell.display.theme);
     document.body.classList.toggle("look-spatial", look() === "spatial");
     document.body.classList.toggle("look-cards", look() === "cards");
@@ -583,8 +593,16 @@
   }
 
   /** Her spoken reply, when her computer has a voice. */
+  // Her spoken reply; the orb says "speaking" only while it really plays (WP-07: only this device knows).
   function playReply(turn) {
-    if (turn && turn.audio_wav_base64) new Audio("data:audio/wav;base64," + turn.audio_wav_base64).play().catch(() => {});
+    if (!(turn && turn.audio_wav_base64)) return;
+    const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
+    const done = () => { if (presenceLocal === "speaking") presenceHere(""); };
+    audio.addEventListener("playing", () => presenceHere("speaking"));
+    audio.addEventListener("ended", done);
+    audio.addEventListener("pause", done);
+    audio.addEventListener("error", done);
+    audio.play().catch(done);
   }
 
   function mountTalk() {

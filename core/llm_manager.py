@@ -522,29 +522,37 @@ class LLMManager:
         return self._backend
 
     def is_available(self) -> bool:
-        """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises."""
-        if self.home is not None and self.home_reach.up():
-            return True
-        return self._backend.is_available(timeout=self._timeout)
+        """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises. Her orb says
+        "offline" while it's false (core/orb_state.py, DEC-0255)."""
+        from core import orb_state
+
+        up = (self.home is not None and self.home_reach.up()) or self._backend.is_available(timeout=self._timeout)
+        orb_state.hold("offline", not up)
+        return up
 
     def generate(self, prompt: str, timeout: Optional[float] = None) -> Optional[str]:
         """Return the model's reply, or None (logged) if the backend can't be reached. While it answers, MIA's presence
-        is "thinking" (core/orb_state.py)."""
+        is "thinking" (core/orb_state.py); one that can't be reached holds her orb "offline" until an answer comes
+        (DEC-0255, WP-07)."""
         from core import orb_state
 
         wait = self._timeout if timeout is None else timeout
         try:
             with orb_state.active("thinking"):  # her orb shows it (core/orb_state.py)
-                return self._ask(lambda backend: backend.generate(prompt, timeout=wait))
+                said = self._ask(lambda backend: backend.generate(prompt, timeout=wait))
+            orb_state.hold("offline", False)  # an answer came: words are ready
+            return said
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
+            orb_state.hold("offline", True)  # her orb says words aren't ready (DEC-0255)
             return None
 
     def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> Optional[ChatReply]:
         """
         Return a ChatReply (content and/or tool_calls), or None (logged)
         if the backend can't be reached; MIA's presence is "thinking" while
-        the model answers (core/orb_state.py). See this module's docstring
+        the model answers (core/orb_state.py), and "offline" from a failure to reach it until an answer comes
+        (WP-07). See this module's docstring
         for why a malformed tool-call-shaped `content` triggers one
         retry without tools.
         """
@@ -553,8 +561,10 @@ class LLMManager:
         try:
             with orb_state.active("thinking"):  # her orb shows it (core/orb_state.py)
                 reply = self._ask(lambda backend: backend.chat(messages, tools, timeout=self._timeout))
+            orb_state.hold("offline", False)  # an answer came: words are ready
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
+            orb_state.hold("offline", True)  # her orb says words aren't ready (DEC-0255)
             return None
 
         if not reply.tool_calls and _looks_like_malformed_tool_call(reply.content):

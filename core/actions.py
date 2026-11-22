@@ -29,6 +29,8 @@ An approval is for the card exactly as it was shown (WP-02, REQ-SEC-016): each
 proposal carries a binding (`binding_of`: its kind, params and sentence),
 and approve refuses a card that changed since, or a binding from another card.
 
+While a card waits for a yes, her orb says "needs you" (`ActionCenter.waiting`, core/orb_state.py, WP-07).
+
 The front end holds no business logic: it shows Life State's
 `due[].action` suggestions and the proposals, and calls these. A child
 account can only take the actions marked `child_ok`. Proposals live in
@@ -615,9 +617,19 @@ class ActionCenter:
     """The proposals waiting for a yes (context.actions)."""
 
     def __init__(self) -> None:
-        """Starts with no proposals; a lock keeps the phone server's threads from colliding."""
+        """Starts with no proposals; a lock keeps the phone server's threads from colliding. Her orb says "needs you"
+        whenever a card of this center's waits (core/orb_state.py, WP-07)."""
+        from core import orb_state
+
         self._proposals: dict[str, Proposal] = {}
         self._lock = threading.Lock()
+        orb_state.watch("needs-you", self.waiting)
+
+    def waiting(self) -> bool:
+        """Whether any card waits for a yes now (an expired one doesn't, nor one being decided)."""
+        with self._lock:
+            self._expire()
+            return any(p.status == PROPOSED and not getattr(p, "_deciding", False) for p in self._proposals.values())
 
     def _expire(self) -> None:
         """Marks proposals left undecided past KEEP_FOR (a day) expired, so an old card can't be approved later."""

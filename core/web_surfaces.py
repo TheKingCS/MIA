@@ -198,7 +198,8 @@ def shell(context, today: Optional[date] = None) -> dict:
     their subdashboards (DEC-0153, core/web_areas.py), their favorites, the ones still on the PC only, the screens MIA
     made, the owner's pages, the weather (core/weather.py), sound, places, the person's display style (DEC-0135:
     spatial or cards), `stopped` while a stop-everything is in force (core/stop.py), for the frame's banner, and
-    `noting` while MIA notes which app is in front of him (core/activity_watch.py, DEC-0197), for its indicator.
+    `noting` while MIA notes which app is in front of him (core/activity_watch.py, DEC-0197), for its indicator,
+    and `orb`, each orb state's words and still glyph (WP-07).
     """
     from core.child_accounts import is_child
 
@@ -228,7 +229,16 @@ def shell(context, today: Optional[date] = None) -> dict:
         "display": _display(context),
         "stopped": _stopped(context),  # a stop-everything in force: the frame's banner and its Carry On (core/stop.py)
         "noting": _noting(context),  # DEC-0197: the indicator while she notes the app in front of him
+        "orb": _orb_look(),  # WP-07: each orb state's words and still glyph (core/orb_state.py)
     }
+
+
+def _orb_look() -> dict:
+    """Each of the orb's states with its words and its still glyph (core/orb_state.look, WP-07), so every page's orb
+    says the same."""
+    from core import orb_state
+
+    return orb_state.look()
 
 
 def _noting(context) -> bool:
