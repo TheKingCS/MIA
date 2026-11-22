@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1554 files, 344,289 lines; 1554 files describe themselves; 18,960 of 19,059 classes and functions are documented.
+1556 files, 344,656 lines; 1556 files describe themselves; 18,980 of 19,079 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-605 files, 173,948 lines; 8,959 of 9,045 classes and functions documented
+606 files, 174,173 lines; 8,967 of 9,053 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -431,6 +431,7 @@
 - `core/requirements.py`: What each project needs (Procurement P1, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 6): one line per thing a project needs, with how many, what it has to be, the most it should cost, and how far along it is.
 - `core/response_composer.py`: How much MIA says, and how, on the device she's speaking through (DEC-0067; P2 of docs/PERSONALITY_AND_ECOSYSTEM_AUDIT.md). One identity, three surfaces:
 - `core/response_style.py`: Learning how the person likes MIA to answer (DEC-0138): now and then she offers the *same* answer two ways — "do you prefer this response, or this one?" — differing on one dimension of style (how long, how it's laid out, its tone, whether it leads with the answer). The person picks; MIA records it a
+- `core/restore_drill.py`: The monthly restore drill (WP-09, DEC-0259, REQ-SEC-037): proof that a backup really comes back. Once a month, from AFTER_HOUR at night, the newest backup that can be opened without a passphrase (the nightly `mia_auto_` one, else the newest plain zip) is restored into a scratch folder of its own, ne
 - `core/retention.py`: The retention registry (DEC-0286, LS-03): one table of every data file MIA keeps, with its class, how long it's kept, what happens at its end, and whether sync carries it. Sync reads it (`core/sync.syncable`), and `tests/test_retention.py` fails on a `.json` or `.jsonl` file named in core/ or module
 - `core/reward_shop.py`: The Reward Shop (DEC-0028, the game layer's first piece; Zac 2026-10-17): spend the credits you earn on real rewards you set yourself ("new bike pedals = 3,000", "guilt-free gaming night = 500").
 - `core/rewards_manager.py`: Rewards — real lifetime stats (mower hours, workout hours, missions completed, ...) unlocking real cosmetic/emblem rewards at thresholds, the "Call of Duty headshots/kills/bloodthirstys" motivational-stats system the user asked for (2026-09-14), alongside a character customization vision (a hat unlo
@@ -901,7 +902,7 @@
 
 ## tests/: the test suite: what each part must do
 
-549 files, 90,658 lines; 7,642 of 7,655 classes and functions documented
+550 files, 90,793 lines; 7,654 of 7,667 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -946,7 +947,7 @@
 - `tests/test_at_rest.py`: MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a file that won't open is copied aside before the error, so a store starti
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.
 - `tests/test_authority_review.py`: The defects Fable's review of 2026-11-18 found in what MIA may do on her own, each kept fixed by a test here: an undo can't lift a stop or revive a standing yes; a standing yes covers only routine entries; her own merges can't be passed half-read, by someone else's proposal, with tests deleted or er
-- `tests/test_auto_backup.py`: The nightly backup (core/auto_backup.py): when it is due, which automatic backups the rotation keeps (and that a hand-made one is never touched), and a real round trip: stores written, backed up at night, changed, then restored to what the backup held.
+- `tests/test_auto_backup.py`: The nightly backup (core/auto_backup.py): when it is due, which automatic backups the rotation keeps (7 nightly, 4 weekly, 6 monthly: DEC-0259; a hand-made one is never touched), and a real round trip: stores written, backed up at night, changed, then restored to what the backup held.
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
 - `tests/test_background_jobs.py`: MIA's scheduled jobs without the window (core/background_jobs.py, DEC-0155): the ten jobs and 43 daily checks are pinned so none is lost on the way to MIA OS; they run with no Qt; and the desktop app runs the very same ones.
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. Also a restore that waits for the next start (schedule_restore, then apply_
@@ -1280,6 +1281,7 @@
 - `tests/test_requirements_spec.py`: MIA OS's requirements specification (Prompt 04; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md`, `tools/requirements_matrix.py`): every requirement row is well formed, defined once, with a known priority, tier and status and an owner prompt; the scenarios name only requirements that exist; the generated
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half.
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
+- `tests/test_restore_drill.py`: WP-09 (DEC-0259, REQ-SEC-037): the monthly restore drill restores the newest backup into a scratch folder and opens every store in it, sealed ones through their key, passing only when all open, telling a failure at once; and the nightly backup's second copy goes to the place he chose off the PC, kep
 - `tests/test_retention.py`: Tests for LS-03: the retention registry (DEC-0286, core/retention.py) decides what syncs, and a field changed on two devices keeps its losing value in the change history with one note that quotes no value (DEC-0285, core/sync.py).
 - `tests/test_review_2026_11_20_authority.py`: Fable's review of Opus's work, 2026-11-20, batch A (authority and actions): the capability check sees how tools really reach kinds; the lab's proof must be seen to pass; the read-back checks the record a line is about; a failed change takes its history back; a stop isn't a taught task's failure; a h
 - `tests/test_review_2026_11_20_data.py`: Fable's review of Opus's work, 2026-11-20, batch B (data, sync, learning): an older phone's sync isn't ended by a file that stays on one device now; the homestead's snapshots sync; a sync conflict's kept copy is sealed, never swept into another undo, and its note quotes nothing; the daily budget is 
@@ -1455,7 +1457,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,532 lines
+116 files, 21,539 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

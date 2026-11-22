@@ -144,6 +144,11 @@ SETTINGS: tuple[Setting, ...] = (
     # Location quests (DEC-0028 #13, core/places.py): checked on this device only, while MIA is open.
     Setting("places.watch", "Location quests", "Notice when I arrive at my places", "toggle", False,
             "While MIA is open, this device checks where you are against your places. Where you are never leaves it."),
+    # WP-09, DEC-0259: the nightly backup's second place, off the PC (an external drive, or the laptop's shared folder).
+    Setting("backup.offsite_folder", "Backups", "Second copy of the nightly backup", "text", "",
+            "A folder on an external drive (like E:\\MIA Backups). Each night's backup is copied there too, and kept "
+            "7 nightly, 4 weekly and 6 monthly. If the drive isn't plugged in, MIA says so and tries the next night.",
+            child_ok=False),
     Setting("vault.on", "Memory vault", "Keep my photos safe on the home computer", "toggle", False,
             "MIA copies this phone's photos and videos to your home computer, so the phone can let them go. "
             "MIA never deletes: it only offers, and Android asks you itself.", child_ok=False, own_screen=True),

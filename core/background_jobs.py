@@ -136,6 +136,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("momentum", "_check_momentum"),
     ("greenhouse", "_check_greenhouse"),
     ("auto_backup", "_check_auto_backup"),
+    ("restore_drill", "_check_restore_drill"),
 )
 
 
@@ -368,6 +369,14 @@ class BackgroundJobs:
 
         if auto_backup.due(self.context.config, now):
             auto_backup.run(self.context, now)
+
+    def _check_restore_drill(self, now: datetime, today_iso: str) -> None:
+        """The monthly restore drill (core/restore_drill.py, WP-09): the newest backup restored into a scratch folder
+        and every store opened, once a month after the nightly backup."""
+        from core import restore_drill
+
+        if restore_drill.due(self.context.config, now):
+            restore_drill.run(self.context, now)
 
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a

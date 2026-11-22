@@ -3,7 +3,7 @@ tests.test_auto_backup
 ========================
 
 The nightly backup (core/auto_backup.py): when it is due, which automatic
-backups the rotation keeps (and that a hand-made one is never touched),
+backups the rotation keeps (7 nightly, 4 weekly, 6 monthly: DEC-0259; a hand-made one is never touched),
 and a real round trip: stores written, backed up at night, changed, then
 restored to what the backup held.
 """
@@ -47,16 +47,19 @@ def test_tonight_s_backup_is_due_once_after_two_and_never_when_turned_off(tmp_pa
     assert not auto_backup.due(config, datetime(2026, 11, 11, 3, 0))
 
 
-def test_the_rotation_keeps_a_week_of_nights_and_one_a_week_for_four_weeks():
+def test_the_rotation_keeps_a_week_of_nights_one_a_week_for_four_weeks_and_one_a_month_for_six_months():
+    """DEC-0259: 7 nightly, 4 weekly, 6 monthly; nothing older."""
     today = date(2026, 11, 30)
-    names = [f"mia_auto_{date.fromordinal(today.toordinal() - n).isoformat()}.zip" for n in range(60)]
+    names = [f"mia_auto_{date.fromordinal(today.toordinal() - n).isoformat()}.zip" for n in range(400)]
     kept = auto_backup.keep(names + ["mia_backup_2026-01-01_0900.zip"], today)
     nights = {f"mia_auto_{date.fromordinal(today.toordinal() - n).isoformat()}.zip" for n in range(7)}
-    assert nights <= kept and len(kept) == 7 + 4
+    assert nights <= kept and len(kept) == 7 + 4 + 6
+    assert min(kept) > f"mia_auto_{date.fromordinal(today.toordinal() - 7 - 28 - 31 * 6).isoformat()}.zip"
     assert "mia_backup_2026-01-01_0900.zip" not in kept  # never in question: run() only removes mia_auto_ files
 
 
 def test_a_night_s_backup_rotates_only_automatic_ones_and_says_a_problem(tmp_path, monkeypatch):
+    """Only automatic backups are rotated; with no second place chosen, the copy is skipped; a failed night is said."""
     monkeypatch.setattr(backup_module, "_build_zip_bytes", lambda config=None: b"PK\x05\x06" + b"\0" * 18)
     folder = tmp_path / "backups"
     folder.mkdir()
@@ -64,7 +67,7 @@ def test_a_night_s_backup_rotates_only_automatic_ones_and_says_a_problem(tmp_pat
     (folder / "mia_auto_2025-01-01.zip").write_bytes(b"old")
     context = SimpleNamespace(config=_Config(folder))
     done = auto_backup.run(context, datetime(2026, 11, 10, 2, 10))
-    assert done == {"made": "mia_auto_2026-11-10.zip", "removed": 1}
+    assert done == {"made": "mia_auto_2026-11-10.zip", "removed": 1, "offsite": {"skipped": "no second place chosen"}}
     assert sorted(p.name for p in folder.iterdir()) == ["mia_auto_2026-11-10.zip", "mia_backup_2025-01-01_0900.zip"]
     assert context.config.get("backup.auto_last") == "2026-11-10" and context.config.get("backup.auto_problem") == ""
 

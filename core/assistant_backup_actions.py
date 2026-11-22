@@ -14,7 +14,8 @@ from core.assistant_actions import AssistantAction
 
 
 def _status(context, arguments: dict) -> str:
-    """Tool get_backup_status: the last backup's age, how many there are, and where; for the PC's owner."""
+    """Tool get_backup_status: the last backup's age, how many there are, and where; its second copy off the PC and
+    the last restore check (WP-09); for the PC's owner."""
     from core.person_settings import _is_first_account, person_id
     from core.web_backups import status
 
@@ -24,8 +25,13 @@ def _status(context, arguments: dict) -> str:
     if not info["count"]:
         return f"There are no backups in {info['folder']} yet. Settings has Back Up Now."
     last = info["backups"][0]
+    second = info.get("offsite") or {}
+    extra = (" " + (f"The second copy didn't go to {second['folder']}: {second['problem']}." if second.get("problem")
+                    else f"A second copy goes to {second['folder']}." if second.get("folder")
+                    else "There's no second copy off this PC yet: choose a drive in Settings, Backups.")
+             + " " + (info.get("drill") or {}).get("said", ""))
     return (f"Your last backup was {info['last']} ({last['size']}{', with a passphrase' if last['locked'] else ''}); "
-            f"{info['count']} in {info['folder']}.")
+            f"{info['count']} in {info['folder']}.{extra}")
 
 
 def register_backup_actions(registry) -> None:

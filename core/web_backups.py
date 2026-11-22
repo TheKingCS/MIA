@@ -50,8 +50,9 @@ def size_words(size: int) -> str:
 
 
 def status(context, now: Optional[datetime] = None) -> dict:
-    """The backups section: the folder, the newest backups (newest first), how long since the last one, and the
-    nightly backup's state (auto: {"on", "problem"})."""
+    """The backups section: the folder, the newest backups (newest first), how long since the last one, the
+    nightly backup's state (auto: {"on", "problem"}), its second copy off the PC (offsite: {folder, last, problem},
+    core/auto_backup.copy_offsite) and the last restore drill (drill, with `said`, core/restore_drill.py)."""
     from core.backup_manager import is_backup_encrypted
 
     now = now or datetime.now()
@@ -70,8 +71,14 @@ def status(context, now: Optional[datetime] = None) -> dict:
     config = getattr(context, "config", None)
     auto = {"on": bool(config.get("backup.auto_enabled", True)) if config is not None else False,
             "problem": str(config.get("backup.auto_problem", "") or "") if config is not None else ""}
+    from core.restore_drill import words
+
+    get = (lambda key, default="": config.get(key, default) or default) if config is not None else (lambda k, d="": d)
+    offsite = {"folder": str(get("backup.offsite_folder")), "last": str(get("backup.offsite_last")),
+               "problem": str(get("backup.offsite_problem"))}
+    drill = get("backup.drill", {}) or {}
     return {"folder": str(where), "backups": rows, "count": len(files), "last": age_words(last), "days": last,
-            "auto": auto}
+            "auto": auto, "offsite": offsite, "drill": {**drill, "said": words(drill)}}
 
 
 def make(context, passphrase: str = "", now: Optional[datetime] = None) -> dict:

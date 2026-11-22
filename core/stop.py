@@ -60,8 +60,9 @@ JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online", "self
 CHECKS_THAT_WAIT = frozenset({"workflows", "night_school", "good_news", "chronicle", "chronicle_issue",
                               "vault_captions", "dependency_audit", "system_map", "self_report", "capability_gaps",
                               "seasons_of_memory", "loops", "fix_report", "findings", "rewards", "momentum"})
-# Never waiting, by name, because the definition says so: backups, the greenhouse's watch, reminders he set.
-CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "greenhouse", "grow_alert", "obligation_reminders", "loop",
+# Never waiting, by name, because the definition says so: backups and their monthly restore check, the greenhouse's
+# watch, reminders he set.
+CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "restore_drill", "greenhouse", "grow_alert", "obligation_reminders", "loop",
                                     "recurring_mission", "calendar_digest", "birthday", "warranty",
                                     "insurance_renewal", "promises"})
 # The rest only notice something and offer a message: they run, and the gate holds what they offer until he resumes.

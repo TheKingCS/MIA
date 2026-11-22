@@ -14,8 +14,15 @@ buttons, so a person who never pressed one had none.
   a failing backup is tried once a night, not every five minutes; a problem
   is kept in `backup.auto_problem` for the Backups screen and the log.
 - `keep(names, today)`: pure logic. Which automatic backups stay: the newest
-  DAILY days, and the newest one of each week in the WEEKLY weeks before.
+  DAILY days, the newest one of each week in the WEEKLY weeks before, and the
+  newest of each month in the MONTHLY months before that (DEC-0259: 7, 4, 6).
   Only `mia_auto_` files are ever removed; a backup made by hand never is.
+- **The second copy, off the PC** (WP-09, DEC-0259): when `backup.offsite_folder`
+  names a folder (an external drive he chooses, Settings), tonight's backup is
+  copied there too and that folder kept by the same rule. A drive that isn't
+  plugged in is said (`backup.offsite_problem`), never a failed backup.
+- The monthly restore drill that proves a backup comes back is
+  core/restore_drill.py.
 
 Not encrypted: a passphrase can't be typed at night. MIA's most private
 files are sealed on disk already (DEC-0126), and go into the zip sealed.
@@ -26,6 +33,7 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from typing import Optional
 
 from core.logger import get_logger
@@ -35,6 +43,7 @@ log = get_logger(__name__)
 PREFIX = "mia_auto_"
 DAILY = 7
 WEEKLY = 4
+MONTHLY = 6
 AFTER_HOUR = 2
 _NAME = re.compile(r"^mia_auto_(\d{4}-\d{2}-\d{2})\.zip$")
 
@@ -49,28 +58,68 @@ def due(config, now: Optional[datetime] = None) -> bool:
 
 
 def keep(names: list[str], today: date) -> set[str]:
-    """Pure logic. The automatic backups to keep: those from the last DAILY days, and the newest of each week (Monday
-    to Sunday) in the WEEKLY weeks before that, at most WEEKLY. Names that aren't automatic backups are never in
-    question."""
+    """Pure logic. The automatic backups to keep: those from the last DAILY days, the newest of each week (Monday to
+    Sunday) in the WEEKLY weeks before that, at most WEEKLY, and the newest of each month before those, at most
+    MONTHLY months and none older than about that many months (DEC-0259). Names that aren't automatic backups are
+    never in question."""
     dated = sorted(((date.fromisoformat(m.group(1)), n) for n in names if (m := _NAME.match(n))), reverse=True)
     kept = {n for d, n in dated if (today - d).days < DAILY}
-    weeks = []
+    weeks, months = [], []
     for d, n in dated:
-        if (today - d).days < DAILY:
+        age = (today - d).days
+        if age < DAILY:
             continue
-        if (today - d).days >= DAILY + 7 * WEEKLY:
-            break  # older than the weekly window: removed
-        week = d - timedelta(days=d.weekday())
-        if week not in weeks:
-            if len(weeks) == WEEKLY:
+        if age < DAILY + 7 * WEEKLY:
+            week = d - timedelta(days=d.weekday())
+            if week not in weeks and len(weeks) < WEEKLY:
+                weeks.append(week)
+                kept.add(n)
+            continue
+        if age >= DAILY + 7 * WEEKLY + 31 * MONTHLY:
+            break  # older than the monthly window: removed
+        month = (d.year, d.month)
+        if month not in months:
+            if len(months) == MONTHLY:
                 break
-            weeks.append(week)
+            months.append(month)
             kept.add(n)
     return kept
 
 
+def copy_offsite(config, made: Path, today: date) -> dict:
+    """Tonight's backup copied to the second place (`backup.offsite_folder`), that folder rotated by `keep`:
+    {"copied": folder, "removed": n}, {"skipped": "no second place chosen"}, or {"error": why} (kept in
+    `backup.offsite_problem` for the Backups section). Never raises; a missing drive is never a failed backup."""
+    import shutil
+
+    where = str(config.get("backup.offsite_folder", "") or "").strip()
+    if not where:
+        return {"skipped": "no second place chosen"}
+    target = Path(where)
+    try:
+        if not target.anchor or not Path(target.anchor).exists():
+            raise OSError(f"the drive for {where} isn't connected")
+        target.mkdir(parents=True, exist_ok=True)
+        tmp = target / (made.name + ".partial")
+        shutil.copy2(made, tmp)
+        tmp.replace(target / made.name)  # whole or not at all: a half-copied backup is never left looking finished
+        names = [p.name for p in target.iterdir() if p.is_file() and p.name.startswith(PREFIX)]
+        removed = 0
+        for old in set(names) - keep(names, today):
+            (target / old).unlink()
+            removed += 1
+    except OSError as problem:
+        config.set("backup.offsite_problem", f"{today.isoformat()}: {str(problem)[:200]}")
+        log.warning("The second copy of tonight's backup wasn't made: %s", problem)
+        return {"error": str(problem)}
+    config.set("backup.offsite_problem", "")
+    config.set("backup.offsite_last", today.isoformat())
+    return {"copied": str(target), "removed": removed}
+
+
 def run(context, now: Optional[datetime] = None) -> dict:
-    """Tonight's backup and the rotation: {"made": name, "removed": n} or {"error": why}. Never raises."""
+    """Tonight's backup, its second copy off the PC (`copy_offsite`) and the rotation: {"made": name, "removed": n,
+    "offsite": what the copy did} or {"error": why}. Never raises."""
     from core.backup_manager import create_backup
     from core.web_backups import folder
 
@@ -93,6 +142,7 @@ def run(context, now: Optional[datetime] = None) -> dict:
         config.save()
         return {"error": "; ".join(errors)}
     config.set("backup.auto_problem", "")
+    offsite = copy_offsite(config, where / name, now.date())  # the second place (WP-09)
     config.save()
     removed = 0
     try:
@@ -103,4 +153,4 @@ def run(context, now: Optional[datetime] = None) -> dict:
     except OSError:
         log.exception("Couldn't remove old automatic backups")
     log.info("Automatic backup %s made; %d old one(s) removed.", name, removed)
-    return {"made": name, "removed": removed}
+    return {"made": name, "removed": removed, "offsite": offsite}

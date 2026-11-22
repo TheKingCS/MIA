@@ -212,6 +212,7 @@
 
   // Backups (core/web_backups.py), for the PC's owner: how long since the last one, the newest few, and Back Up Now
   // with an optional passphrase (sent once, never kept). Restoring is on the PC. By voice: "when did I last back up?"
+  // Also where the second copy goes and the last monthly restore check (WP-09, core/restore_drill.py).
   let backups = null;
   function backupSection() {
     if (!backups) return "";
@@ -220,6 +221,12 @@
       el("p", { class: "dim" }, backups.count ? "Last backup " + backups.last + ". Saved in " + backups.folder + "." : "No backups yet. They're saved in " + backups.folder + "."),
       backups.backups.length ? el("ul", { class: "bk-list" }, backups.backups.map((b) => el("li", {},
         el("span", {}, b.when), el("span", { class: "dim" }, b.size + (b.locked ? " · passphrase" : ""))))) : null,
+      // WP-09: the second copy off the PC (its folder is a setting below) and the monthly restore check.
+      el("p", { class: backups.offsite && backups.offsite.problem ? "si-warn" : "dim" }, !backups.offsite || !backups.offsite.folder
+        ? "No second copy off this PC yet: choose a folder on an external drive in Backups below."
+        : backups.offsite.problem ? "The second copy wasn't made: " + backups.offsite.problem
+        : "A second copy goes to " + backups.offsite.folder + (backups.offsite.last ? ", last on " + backups.offsite.last : "") + "."),
+      backups.drill && backups.drill.said ? el("p", { class: backups.drill.passed === false ? "si-warn" : "dim" }, backups.drill.said) : null,
       el("div", { class: "acct-actions bk-make" }, pass, el("button", { type: "button", class: "btn btn-amber", onclick: async (ev) => {
         ev.target.disabled = true;
         try { const done = await MIA.backupNow(pass.value); pass.value = ""; MIAShell.say("Backed up: " + done.made); backups = await MIA.backups(); draw(); }

@@ -53,6 +53,7 @@
       "activity_watch",
       "recall_index",
       "auto_backup",
+      "restore_drill",
       "capability_gaps",
       "capability_reminder",
       "checkin",
