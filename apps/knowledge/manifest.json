@@ -15,7 +15,8 @@
     "knowledge",
     "plans",
     "plan_buying",
-    "plan_saving"
+    "plan_saving",
+    "library"
   ],
   "entry": "web:knowledge.html",
   "components": {
@@ -43,10 +44,12 @@
     "tools": [
       "ask_specialist",
       "cut_list",
+      "fetch_reference_packs",
       "find_plans",
       "forget_plan",
       "keep_plan",
       "list_specialists",
+      "look_up_offline",
       "material_list",
       "model_inspections",
       "plan_shopping_list",
@@ -57,6 +60,7 @@
       "work_it_out"
     ],
     "actions": [
+      "library.fetch",
       "plan.delete",
       "plan.import",
       "plan.keep",
@@ -80,7 +84,10 @@
       "plan.project": "act_within_grant",
       "work_it_out": "suggest",
       "specialist_roster": "observe",
-      "model_inspections": "observe"
+      "model_inspections": "observe",
+      "look_up_offline": "observe",
+      "fetch_reference_packs": "act_with_approval",
+      "library.fetch": "act_with_approval"
     },
     "outside": []
   },

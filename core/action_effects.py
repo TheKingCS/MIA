@@ -50,6 +50,7 @@ EFFECTS: dict[str, tuple[str, str, str]] = {
     # REQ-HW-014: her models in the model server's store, never his records
     "model.remove": ("device", "compensable", "removes one of her models from the model server; it can be fetched again"),
     "model.fetch": ("device", "compensable", "downloads one of her models again into the model server; it can be removed"),
+    "library.fetch": ("device", "compensable", "downloads reference packs into her offline library; each can be deleted"),
     # device: can't be put back
     "myfile.delete": ("device", "irreversible", "deletes one of his files or folders for good"),
     "track.delete": ("device", "irreversible", "deletes a music file from the disk"),

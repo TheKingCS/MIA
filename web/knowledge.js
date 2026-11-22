@@ -98,6 +98,34 @@
         el("p", { class: "dim" }, "Or say \"what would a 10 by 12 one need?\" or \"what do I still need to buy for it?\"")));
   }
 
+  // Get More (core/offline_library.py): the packs she should have, shelf by shelf, with their size, here or not,
+  // newer or downloading; Fetch for one, or a whole set (library.fetch: his yes, then downloaded in the background).
+  async function getMore() {
+    const lib = await MIA.knowledgeLibrary().catch(() => ({ available: false }));
+    if (!lib.available) return null;
+    const gb = (n) => n >= 10 ? Math.round(n) + " GB" : n >= 1 ? n.toFixed(1) + " GB" : Math.max(1, Math.round(n * 1000)) + " MB";
+    const sets = [["essential", "The Essentials"], ["standard", "The Standard Library"], ["all", "All Of It"]];
+    const inSet = (p, s) => s === "all" || (s === "standard" ? p.set !== "big" : p.set === s);
+    const missing = (s) => lib.packs.filter((p) => inSet(p, s) && p.published && (!p.here || p.newer));
+    const shelves = [...new Set(lib.packs.map((p) => p.shelf))];
+    const row = (p) => el("div", { class: "sync-row" },
+      el("div", {}, el("p", { class: "council-text" }, p.title), el("p", { class: "dim" }, p.why + " · " + gb(p.size_gb) + (p.state ? " · " + p.state : ""))),
+      p.here && !p.newer ? el("span", { class: "dim" }, "Here")
+        : p.published && !/^(waiting|fetching)/.test(p.state) ? el("button", { type: "button", class: "btn btn-ghost btn-small",
+          onclick: () => MIAShell.act({ kind: "library.fetch", params: { keys: [p.key] } }) }, p.newer ? "Update" : "Fetch") : null);
+    return el("section", { class: "glass money-section" }, el("h2", {}, "Get More"),
+      el("p", { class: "dim" }, "Chosen for what MIA helps with: homestead, building, food, health, preparedness and more. Downloaded from Kiwix and checked before use; " + lib.free_gb + " GB free."),
+      el("div", { class: "row-buttons" }, sets.map(([s, label]) => {
+        const left = missing(s);
+        return left.length ? el("button", { type: "button", class: "btn btn-amber btn-small",
+          onclick: () => MIAShell.act({ kind: "library.fetch", params: { set: s } }) },
+          "Fetch " + label + " (" + gb(left.reduce((n, p) => n + p.size_gb, 0)) + ")") : null;
+      })),
+      ...shelves.map((s) => el("details", {}, el("summary", {}, s + " · " + lib.packs.filter((p) => p.shelf === s && p.here).length + " of " + lib.packs.filter((p) => p.shelf === s).length + " here"),
+        el("div", { class: "sync-rows" }, lib.packs.filter((p) => p.shelf === s).map(row)))),
+      el("p", { class: "dim" }, "Or say \"fetch the essentials\". Ask her anything after: she looks here first."));
+  }
+
   function plansSection(shelf) {
     if (!shelf.available) return null;
     return el("section", { class: "glass money-section" }, el("h2", {}, "Plans"),
@@ -128,7 +156,8 @@
     if (tab === "packs") {
       $("panel").replaceChildren(el("section", { class: "glass money-section" }, el("h2", {}, "Packs"),
         data.packs.length ? el("div", { class: "sync-rows" }, data.packs.map(packRow)) : null,
-        el("p", { class: "dim" }, "To add a pack, copy its .zim file (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + " on the PC; it shows here next time.")));
+        el("p", { class: "dim" }, "To add a pack, copy its .zim file (Wikipedia, iFixit, medical and survival guides from kiwix.org) into " + (data.root || "the library folder") + " on the PC; it shows here next time.")),
+        await getMore());
       return;
     }
     const input = el("input", { type: "search", class: "input kn-search", placeholder: "Search the library", value: query, "aria-label": "Search the library" });

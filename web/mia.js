@@ -483,6 +483,11 @@
     suggestMission: () => demo ? demoOnly() : call("POST", "/api/missions/idea", {}),
     checkCaptures: () => demo ? demoOnly() : call("POST", "/api/journal/captures/check", {}),
     deletePack: (id, confirm) => demo ? demoOnly() : call("POST", "/api/knowledge/pack/delete", { id, confirm }),
+    // Her offline library's shelves (core/offline_library.py): what she should have, what's here, downloads.
+    knowledgeLibrary: () => demo ? Promise.resolve({ available: true, free_gb: 500, packs: [
+      { key: "appropedia_en_all_maxi", title: "Appropedia", shelf: "Homestead and growing", set: "essential", why: "appropriate technology", size_gb: 0.58, here: true, newer: false, published: true, state: "" },
+      { key: "usda-2015_en", title: "USDA Guide to Home Canning", shelf: "Food and water", set: "essential", why: "safe home canning", size_gb: 0.02, here: false, newer: false, published: true, state: "" }] })
+      : call("GET", "/api/knowledge/library"),
     // FW-11: MIA OS's Linux apps and System Settings pages (core/linux_apps.py); opened on the computer only.
     desktop: () => demo ? Promise.resolve({ here: true, apps: [{ id: "org.kde.krita.desktop", name: "Krita", comment: "Digital painting", flatpak: true }],
       settings: [{ key: "display", label: "Display and monitors" }, { key: "network", label: "Wi-Fi and network" }] })

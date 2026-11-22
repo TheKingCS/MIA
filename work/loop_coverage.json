@@ -189,6 +189,10 @@
    "status": "none",
    "why": "worlds, campaigns and quests are the person's own fiction (DEC-0134, DEC-0137); nothing real to improve"
   },
+  "action:library": {
+   "status": "none",
+   "why": "fetching offline packs is his choice on a card; each download is checked against Kiwix's hash and its outcome told, with no judgement of MIA's in it to improve (what her look-ups miss is for the library to learn from: T-0060)"
+  },
   "action:model": {
    "status": "none",
    "why": "removing or fetching one of her models (REQ-HW-014) is his choice on a card, done by the model server; the outcome is the server's and is told, with no judgement of MIA's in it to improve"

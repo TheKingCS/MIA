@@ -137,7 +137,8 @@ log = get_logger(__name__)
 def build_services(context: AppContext) -> AppContext:
     """Puts every core service on the context, in dependency order (a store that reaches into another is built after
     it), ending with each person's own stores, the module manager (nothing discovered yet), search and the usage
-    and help services. The same for the desktop and the headless runtime; returns the context."""
+    and help services; a download of her offline packs left waiting goes on (core/offline_library.resume). The
+    same for the desktop and the headless runtime; returns the context."""
     # ProfileManager needs the context to already exist (it reads/
     # writes config through it), so it's attached right after
     # construction rather than passed into AppContext's constructor.
@@ -210,6 +211,12 @@ def build_services(context: AppContext) -> AppContext:
 
     context.obligations = ObligationBook(context)  # tax and compliance deadlines (DEC-0040)
     context.reference_library = ReferenceLibraryManager(context)
+    try:  # a download of her offline packs left waiting goes on (core/offline_library.py)
+        from core.offline_library import resume
+
+        resume(context, context.reference_library.root_path)
+    except Exception:  # noqa: BLE001 - the library is never why she can't start
+        pass
     # The Library's plans shelf: built-in plans, kept ones, and plan files (core/plan_library.py).
     context.plans = PlanLibrary(context)
     context.llm = LLMManager(context)

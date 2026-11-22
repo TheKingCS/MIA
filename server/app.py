@@ -573,7 +573,7 @@ def create_app(context: AppContext) -> FastAPI:
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
-    core/home_link.erase_proof, WP-10). /api/desktop lists MIA OS's Linux apps and System
+    core/home_link.erase_proof, WP-10). /api/knowledge/library is her offline library's shelves (core/offline_library.py). /api/desktop lists MIA OS's Linux apps and System
     Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), and /api/models/store her models
     (core/model_store.py, REQ-HW-014). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
@@ -1397,6 +1397,20 @@ def create_app(context: AppContext) -> FastAPI:
         if found is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That picture isn't in the library.")
         return Response(found[0], media_type=found[1], headers={"Cache-Control": "private, max-age=86400"})
+
+    @app.get("/api/knowledge/library")
+    def knowledge_library(profile_id: str = Depends(require_profile_id)) -> dict:
+        """Her offline library's shelves (core/offline_library.status): each pack she should have, its size, whether
+        it's here or newer, and its download; the free space. Fetching is the action library.fetch."""
+        import shutil
+
+        from core.offline_library import status
+
+        library = getattr(context, "reference_library", None)
+        if library is None:
+            return {"available": False, "packs": []}
+        root = library.root_path
+        return {"available": True, "packs": status(context, root), "free_gb": round(shutil.disk_usage(root).free / 1e9)}
 
     @app.post("/api/knowledge/pack/delete")
     def knowledge_pack_delete(body: PackDelete, profile_id: str = Depends(require_profile_id)) -> dict:

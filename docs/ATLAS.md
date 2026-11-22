@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1576 files, 347,889 lines; 1576 files describe themselves; 19,155 of 19,254 classes and functions are documented.
+1581 files, 349,276 lines; 1581 files describe themselves; 19,235 of 19,334 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-613 files, 175,727 lines; 9,045 of 9,131 classes and functions documented
+616 files, 176,720 lines; 9,096 of 9,182 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -63,6 +63,7 @@
 - `core/assistant_humor_actions.py`: "Be funnier", "tone down the jokes", "no jokes for now" (Zac, 2026-11-07): the person sets how funny MIA is with them, in chat. One tool, set_humor, moving their own level (core/personality.py HUMOR_LEVELS: off, rare, sometimes, often, lots) up or down a step or to a level by name. Only the speaker'
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
 - `core/assistant_lab_actions.py`: The Lab by voice, for what the web Lab added (DEC-0125: full use both ways). "Delete the last soil moisture reading" takes out the newest reading in that series with the same action kind the Lab's Delete button uses (core/lab_reading_actions.py), so "undo that" brings it back. Logging and listing re
+- `core/assistant_library_actions.py`: Her offline library, by voice (core/offline_library.py): "how do I purify water", "how deep should fence posts go", "what's wrong with my tomato leaves" are looked up in the packs on this computer, with no internet (`look_up_offline`, observe: it only reads); "fetch the essentials" puts up a card to
 - `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's 
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
@@ -362,6 +363,7 @@
 - `core/obligations.py`: Tax and compliance obligations (DEC-0040; the Business OS spec's first increment, docs/BUSINESS_OS_AUDIT.md): every filing, payment, permit, licence, registration, inspection and renewal the household has to keep, in one list with one calendar.
 - `core/observations_web.py`: Observations' web screen (web/observations.html): what MIA has noticed, in two kinds, read only, as on the desktop:
 - `core/ocr.py`: Reading text out of photos and scanned pages (2026-09-28), so a phone photo of a paper receipt or a scanned manual/textbook works in the document inbox (core/inbox_manager.py) and the textbook tutor (core/textbook_manager.py).
+- `core/offline_library.py`: Her offline library, chosen and fetched (Zac, 2026-11-22: "add as many offline resources as you think would help her to be the most useful offline assistant for all the use cases we have talked about"). The packs are Kiwix ZIM files, read by core/reference_library_manager.py; this module says which 
 - `core/offline_maps.py`: Vector offline maps (build plan step 14; Zac's OK for the outside code, 2026-11-06): an area of OpenStreetMap cut from the Protomaps daily world build into one small file (PMTiles), kept on this PC in `data/maps/`, and drawn by MapLibre on the web's Maps page (`web/vendor/`). Unlike the topo tiles (
 - `core/onboarding.py`: The one-time, first-run welcome message injected into a brand-new user's very first conversation — docs/VISION.md's "interactive first-time onboarding... MIA teaches herself through real conversation and real tasks, not docs/slides." See gui/home_dashboard.py's `__init__` for how this gets injected:
 - `core/online_lookup.py`: Looking things up online, when asked (DEC-0053; T-0017; Zac, 2026-10-31: "offer-then-search; SearXNG on this computer").
@@ -371,6 +373,7 @@
 - `core/opportunity.py`: Opportunity scoring and recommendations (Procurement P3, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 8). A find from World Intelligence that meets one of a project's needs becomes an **opportunity**: the find, the need it meets, nine dimensions each with its value and the reason f
 - `core/orb_state.py`: What MIA is really doing right now, for her orb (not to be confused with `core/presence.py`, the "what matters now" list, DEC-0044) (prompt 24 A5, DEC-0184 §8: "these states should communicate actual system activity rather than simulate activity that is not occurring"). One state for the whole runti
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
+- `core/pack_index.py`: Her own search index for the offline packs Kiwix didn't index (core/offline_library.py). Many of the most useful ones have no full-text index of their own: iFixit's repair guides, the USDA canning guide, the LibreTexts textbooks, and the preppers' collections, which are PDFs inside the pack (water t
 - `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
 - `core/party.py`: Party and guild (DEC-0028, the game layer's tenth idea; Zac, 2026-10-17): the household plays together.
 - `core/passing_mentions.py`: "Propose, you confirm" (2026-09-28): when the owner mentions in passing something MIA keeps a record of, she answers as usual and then offers to record it, and does so only on a yes:
@@ -624,7 +627,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,674 lines; 57 of 57 classes and functions documented
+2 files, 4,688 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -859,7 +862,7 @@
 
 ## tools/: command-line tools for the PC and the development platform
 
-46 files, 5,227 lines; 159 of 159 classes and functions documented
+47 files, 5,302 lines; 161 of 161 classes and functions documented
 
 - `tools/app_manifests.py`: Wrote the first canonical manifest of every MIA-native app (DEC-0178, migration phase M1; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`), generated from the code so nothing changed behaviour. Since M3 the manifests are the app list's source (`core/web_surfaces.APPS` reads them), so `write --force` no
 - `tools/audit.py`: MIA's self-audit from the command line (DEC-0108; core/self_audit.py, core/practices.py).
@@ -893,6 +896,7 @@
 - `tools/move_home.py`: Copies a person's MIA to a new home folder (core/data_root.py, `MIA_HOME`; DEC-0155, DEC-0168): the step from "her data lives inside the code's folder" to "her data lives in the person's own folder", which MIA OS and the Pi need.
 - `tools/new_app.py`: MIA Forge's scaffold from the command line (core/app_scaffold.py, phase M7): a new app as a registered, empty screen.
 - `tools/night_school.py`: Night School from the command line (DEC-0100, core/night_school.py).
+- `tools/offline_library.py`: Her offline library from the command line (core/offline_library.py):
 - `tools/offline_map.py`: Cut an area of OpenStreetMap into a vector offline map (core/offline_maps.py), kept in data/maps/ and drawn on the web's Maps page.
 - `tools/page_check.py`: Every page of the web front end opened once, to catch the page that fails to load before a person does (roadmap 2.8, 2026-11-10). Serves `web/` on a local port, opens each `*.html` in demo mode (`?demo`, the placeholder example, no MIA needed) in headless Edge through Playwright, waits for it to set
 - `tools/pc_check.py`: Is this computer ready to be MIA's home base? (DEC-0022, DEC-0033.) Everything the phone, the glasses and the cameras need from it, each with what to do if it isn't there yet:
@@ -910,7 +914,7 @@
 
 ## tests/: the test suite: what each part must do
 
-562 files, 92,131 lines; 7,749 of 7,762 classes and functions documented
+563 files, 92,402 lines; 7,776 of 7,789 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1222,6 +1226,7 @@
 - `tests/test_observations_module.py`: Unit tests for modules.observations.module's pure functions, same style as tests/test_memories_module.py (no Qt event loop, no fixtures).
 - `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source, each with its card (kind, the apps it used, where to settle it: DEC-0113).
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.
+- `tests/test_offline_library.py`: Her offline library (core/offline_library.py, core/pack_index.py; Zac, 2026-11-22): the chosen packs and their sets, Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a wrong one never installed), one runner at a time, the older version replaced, her own index for packs 
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut.
 - `tests/test_ohms_law.py`: Unit tests for Ohm's law solve() (core/toolbox_calcs.py; modules.toolbox.calculators.ohms_law re-exports it).
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
@@ -1477,7 +1482,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,719 lines
+116 files, 21,753 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
