@@ -5,7 +5,17 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-18 (Opus on the PC: Prompts 12 to 17)*
+*Last updated: 2026-11-22 (Opus on the PC: the Windows backlog WP-05 to WP-12, FW-07a, FW-12's first part)*
+
+**New 2026-11-22: the Windows backlog is done (Stage 0), and for Fable to review.** Each package's commit says what
+it did; `docs/mia_os/MIA_OS_IMPLEMENTATION_WORK_PACKAGES.md` marks each built, and knowledge K-0321 to K-0333
+holds how and what went wrong. Worth a reviewer's eye: the two lock-order fixes (`at_rest.flush_alerts` with
+`security_log.writing`, K-0325; the RLock, K-0321), the lost device's erase (`home_link.erase_here` wipes the
+device's data folder on a 410 with X-MIA-Erase, K-0329), `lab_push` (pushes only her own commits, K-0330), the
+model queue (every model call now waits its turn, K-0333), and the capability registry's write path (K-0327).
+Open for Zac: Q-115 (a Light theme's meaning colours), choosing the backup's second place (WAITING_ON 0zf).
+The final roadmap's next packages need VM runs: FW-06 the system helper, FW-07b the restore and rehearsal,
+FW-09 the USB recovery stick, FW-10 the phone against the VM, FW-11 the desktop integration.
 
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.

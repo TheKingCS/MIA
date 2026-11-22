@@ -45,8 +45,18 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   (the security log among them); the vault and private journal sealed besides their own encryption; sync's
   last-synced copies sealed like their files. Only the budget's seven wait, on the Plaid work. Sealing the
   security log deadlocked the key's lock (now re-entrant), which the suite caught.
-- **Next:** WP-05 (the security log hash-chained); Zac's answer to Q-114; FW-06 (the system helper, for Fable);
-  his install guide for MV-01.
+- **2026-11-22, Opus: the Windows backlog finished, and three of the foundation's packages.** WP-05 the security
+  log hash-chained, its newest link kept on the device that views it; WP-07 every orb state with its words and a
+  still glyph, "needs you", "offline" and "speaking" from real events; WP-08 the capability truth registry (a
+  record per app, its state from evidence, on Diagnostics); WP-09 the monthly restore drill and the backup's
+  second copy off the PC (waits on his drive); WP-10 device records, scoped keys, Lost and its erase; WP-11 was
+  done; WP-12 her merged changes pushed with the daily summary; WP-06 interface sounds and light glass while a
+  model thinks (the Light theme waits on Q-115). Then FW-07a (the migration manifest, its compare, his programs'
+  answers: 48 of 51) and FW-12's first part (the next local model when one fails, said; one model call at a
+  time, the conversation first). Two lock-order hangs found and fixed on the way.
+- **Next:** a Fable review of everything since 2026-11-20 (Zac's plan); then FW-06 (the system helper), FW-07b
+  (the restore and rehearsal in the VM), FW-09, FW-10 and FW-11, each with VM runs; Zac's answers to Q-114 and
+  Q-115; his install guide for MV-01.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 
