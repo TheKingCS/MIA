@@ -340,10 +340,12 @@ class ModelChatRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Signing in to MIA: the profile and its password, and the authenticator's code when two-step sign-in is on."""
+    """Signing in to MIA: the profile and its password, and the authenticator's code when two-step sign-in is on; for a
+    device linking (/api/model/link), whether it's the household's (its key reaches household routes only, WP-10)."""
     profile_id: str
     password: str = ""
     code: str = ""
+    household: bool = False
 
 
 class AccountDataRequest(BaseModel):
@@ -569,7 +571,8 @@ SECURITY_HEADERS = {
 def create_app(context: AppContext) -> FastAPI:
     """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
-    which logins fit a sign-in (core/password_autofill.py). The Sign-ins page says whether the security log is intact
+    which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
+    lost is answered "erase" (core/linked_devices.py, WP-10). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
     password change unlink them all. Requests that read or change stores hold app.state.turn_lock (the context's
@@ -631,7 +634,11 @@ def create_app(context: AppContext) -> FastAPI:
             response.headers.setdefault("Cache-Control", "no-store")
         return response
 
-    def require_profile_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> str:
+    def require_profile_id(request: Request,
+                           credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> str:
+        """Who a request is from: a session's person, or a linked device's. A device reported lost is answered 410
+        with X-MIA-Erase, so it erases its MIA data (WP-10, Q-90); a device key is refused outside its scope (a
+        household device's reaches household routes only, REQ-DST-029)."""
         if credentials is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token.")
         token = credentials.credentials
@@ -642,7 +649,18 @@ def create_app(context: AppContext) -> FastAPI:
             _security("session_ended", profile_id)
             profile_id = None
         if profile_id is None:
+            from core import linked_devices
+
+            gone = linked_devices.lost(context.config, token)
+            if gone is not None:
+                if gone["first"]:
+                    _security("device_erased", gone["profile_id"], request)
+                raise HTTPException(status.HTTP_410_GONE, "This device was reported lost: it erases MIA's data now.",
+                                    headers={"X-MIA-Erase": "1"})
             profile_id = _linked_device(token)
+            if profile_id is not None and not linked_devices.allows(linked_devices.scope_of(context.config, token),
+                                                                    request.url.path):
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "This device's key doesn't reach that.")
         if profile_id is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
         app.state.last_seen[token] = time.time()
@@ -856,7 +874,10 @@ def create_app(context: AppContext) -> FastAPI:
         from core import linked_devices
 
         devices = dict(context.config.get(linked_devices.KEY, {}) or {})
-        devices[linked_devices.key_hash(key)] = {"profile_id": profile.profile_id, "linked": linked_devices.linked_at()}
+        name = _device(request).split(" · ")[0]  # what it is in words, never its address (WP-10)
+        devices[linked_devices.key_hash(key)] = linked_devices.record(
+            profile.profile_id, name, "household display" if body.household else "phone",
+            linked_devices.HOUSEHOLD if body.household else linked_devices.PERSON)
         context.config.set(linked_devices.KEY, devices)
         context.config.save()
         log.info("A phone linked to this computer for '%s'.", profile.profile_id)
@@ -3305,6 +3326,17 @@ def create_app(context: AppContext) -> FastAPI:
         done["sessions"] = max(done["sessions"], len(mine))
         _security("lockdown", profile_id, request, f"{done['sessions']} sessions, {done['phones']} phones")
         return done
+
+    @app.post("/api/security/devices/lost")
+    def lost_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Reports one of this person's linked devices lost (the Sign-ins page, WP-10, Q-90): its key is refused at once,
+        and when it next reaches this computer it's told to erase MIA's data on it."""
+        from core import linked_devices
+
+        if not linked_devices.mark_lost(context.config, profile_id, str((body or {}).get("device", ""))):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "No linked device of yours by that id.")
+        _security("device_lost", profile_id, request)
+        return {"lost": True}
 
     @app.post("/api/security/devices/unlink")
     def unlink_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:

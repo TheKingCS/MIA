@@ -27,7 +27,7 @@ OS on Pis.
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-DEV-001 | The same person shall be the same MIA on every device: one identity, one set of records (synced), one memory, one personality. | Must | MVP | All | Exists (sync, profiles) | T: `tests/test_sync.py` | P11 → 12 |
-| REQ-DEV-002 | A device shall join only after the person pairs it on a device already trusted, and can be removed from either side. | Must | MVP | All | Partial (phone pairing; removal from the PC New) | T | P8 → 12, 13 |
+| REQ-DEV-002 | A device shall join only after the person pairs it on a device already trusted, and can be removed from either side. | Must | MVP | All | Exists (pairing with his password; Unlink and Lost from Sign-ins, Disconnect on the device) | T | P8 → 12, 13 |
 | REQ-DEV-003 | Devices shall talk over an encrypted, authenticated channel: the home network or the person's own Tailscale; never a third party's relay that can read content. | Must | MVP | All | Partial (the glasses relay is sealed end to end; the link uses Tailscale) | I | P7 → 12, 13 |
 | REQ-DEV-004 | A change made offline on one device shall reach the others at the next sync, and a concurrent edit is merged or flagged, never lost silently. | Must | MVP | All | Exists (FR-Y1, `core/sync.py`) | T | FR-Y1 → 12 |
 | REQ-DEV-005 | Each device shall report its capabilities (screen, voice, camera, model size) and MIA shall offer only what that device can do, saying where the rest is. | Must | MVP | All | Partial (parity per device; capability report New) | T | DEC-0125 → 12 |

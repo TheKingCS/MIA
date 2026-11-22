@@ -16,4 +16,4 @@
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-DST-028 | Traffic between his devices on the home network shall be encrypted, as it is through Tailscale away. | Should | R1 | All | New | T | DEC-0244 → 12, 13 |
-| REQ-DST-029 | A key shall be refused for anything outside its scope. | Must | MVP | All | Partial | T | DEC-0242 → 12, 13 |
+| REQ-DST-029 | A key shall be refused for anything outside its scope. | Must | MVP | All | Exists (WP-10: household keys; sensors') | T | DEC-0242 → 12, 13 |

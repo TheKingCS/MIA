@@ -16,7 +16,7 @@ build on Windows now and carry over.*
 | WP-07 | The orb's states driven by events. **Built 2026-11-22** (`orb_state.LOOK`: words and a still glyph per state, shown under reduced motion; `needs-you` from waiting cards, `offline` from the model not answering, speaking while her reply plays; REQ-VIS-010, most of 009) | W-SELF | 0 | M0 | S |
 | WP-08 | The capability truth registry with states and evidence. **Built 2026-11-22** (`core/capability_registry.py`: a record per app, eight states incl. degraded and unverified, each change kept with its evidence, no write path but the rebuild; Diagnostics' "What I Can Do"; REQ-SLF-003/004/005) | W-SELF | 0 | M0 | M |
 | WP-09 | The restore drill; the off-PC backup copy. **Built 2026-11-22** (`core/restore_drill.py`, monthly, every store opened in a scratch folder; `auto_backup.copy_offsite` to `backup.offsite_folder`, kept 7 nightly, 4 weekly, 6 monthly; REQ-SEC-037). Waits on Zac: the drive to choose | W-REL | 0 | M0 | S |
-| WP-10 | Device records, scoped keys, the lost-phone erase, conflict notes | W-DEVICES | 0 | M0 | M |
+| WP-10 | Device records, scoped keys, the lost-phone erase, conflict notes. **Built 2026-11-22** (`linked_devices.record`/`allows`/`mark_lost`, 410 with X-MIA-Erase, `home_link.erase_here`; Sign-ins' Linked Devices with Lost; conflict notes were built with sync, LS-05; REQ-DST-005/029/030, REQ-DEV-002) | W-DEVICES | 0 | M0 | M |
 | WP-11 | The Linux suite job; uv lock with hashes; pinned actions | W-DEV | 0 | M0 | S |
 | WP-12 | Her merged changes pushed with the daily summary (Q-100) | W-DEV | 0 | M0 | S |
 | WP-13 | PoC 1 on his GPU | W-OS | 1 | M1 | S (his hour) |

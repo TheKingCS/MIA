@@ -13,5 +13,5 @@
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-DST-030 | A device unlinked while away shall erase its MIA data when it next reaches the hub. | Should | R1 | Phone | New | T | DEC-0247 (Q-90) → 12, 13 |
+| REQ-DST-030 | A device unlinked while away shall erase its MIA data when it next reaches the hub. | Should | R1 | Phone | Exists (WP-10: Lost on Sign-ins) | T | DEC-0247 (Q-90) → 12, 13 |
 | REQ-DST-031 | A replaced hub shall be refilled from a backup or from a full engine's sync, losing nothing either holds. | Must | R1 | PC | Partial | D | DEC-0247 → 12, 14 |

@@ -7,9 +7,9 @@
 | Control | State |
 |---|---|
 | Pairing with his password; a key per device, hash only on the hub | built |
-| Keys scoped to their kind (person, household, sensor, node) | partial |
+| Keys scoped to their kind (person, household, sensor, node) | built for person, household and sensor (WP-10); node partial |
 | Unlink from any trusted device; Sign Out Everywhere | built |
-| A lost device erases its MIA data on reconnecting (Q-90) | approved, to build |
+| A lost device erases its MIA data on reconnecting (Q-90) | built (WP-10: Lost on Sign-ins; `home_link.erase_here`) |
 | Each device's data sealed with its own key | built (PC, phone) |
 | Away from home only through Tailscale (Q-88) | built |
 | His home network's own traffic in TLS | planned (REQ-DST-028) |

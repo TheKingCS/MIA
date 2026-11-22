@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1556 files, 344,656 lines; 1556 files describe themselves; 18,980 of 19,079 classes and functions are documented.
+1557 files, 345,014 lines; 1557 files describe themselves; 18,999 of 19,098 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-606 files, 174,173 lines; 8,967 of 9,053 classes and functions documented
+606 files, 174,333 lines; 8,975 of 9,061 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -617,7 +617,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,597 lines; 57 of 57 classes and functions documented
+2 files, 4,629 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -902,7 +902,7 @@
 
 ## tests/: the test suite: what each part must do
 
-550 files, 90,793 lines; 7,654 of 7,667 classes and functions documented
+551 files, 90,940 lines; 7,665 of 7,678 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1033,6 +1033,7 @@
 - `tests/test_device_help_manager.py`: Unit tests for core.device_help_manager: the pure chunking/scoring logic (no filesystem), retrieval ranking (with pre-set chunks, bypassing the filesystem), and one test of the actual doc-loading path against a tmp_path fixture directory (monkeypatching `_DOCS_DIR`, same approach as test_voice_manag
 - `tests/test_device_loops.py`: Step 3's leftovers: turns traced by device, so glasses.voice can watch the glasses' turns; and a durable record of when a linked phone last reached the PC (core/phone_link.py), for phone.link.
 - `tests/test_device_profile.py`: Unit tests for core.device_profile. Isolates ConfigManager's _CONFIG_FILE (same pattern as test_assistant_action_handlers.py's own fixture) — without this, `ConfigManager()` here loads the real config/config.json, and `test_defaults_to_core_when_unset` silently starts asserting against whatever this
+- `tests/test_device_records.py`: WP-10 (DEC-0242, REQ-DST-005/006/029, Q-90): each linked device has a record (what it is in words, its kind, its key's scope, when it linked and last reached the computer, stale after 90 days); a household device's key is refused outside household routes; a device reported lost is refused at once an
 - `tests/test_diagnostics.py`: Diagnostic procedures (ACAF step 4, T-0040, core/diagnostics.py): check-ups written as specs over what inspection's PASSIVE methods read; checked before they run, so they can only read and compare; what couldn't be read said as such; the hardware list, only what was read; the log's newest problems, 
 - `tests/test_diagnostics_log_viewer.py`: Unit tests for the pure tail/filter helpers backing the Diagnostics module's log viewer (modules.diagnostics.module.tail_lines filter_lines). The QWidget-building side of get_widget() needs a live Qt event loop and is exercised manually instead — see docs/testing/2.6_system_logs_viewer.md.
 - `tests/test_did_it.py`: "I did X" (core/did_it.py, DEC-0148): what the person says they did is kept in their history, counted toward a routine it names (undoable), and offered once toward a task, a mission objective, or as a new routine when they keep doing it; never a negative, a vague or self-critical "I did", or a priva
@@ -1457,7 +1458,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,539 lines
+116 files, 21,558 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

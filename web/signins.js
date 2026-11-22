@@ -74,21 +74,38 @@
     location.href = "index.html";
   }
 
-  // Linked phones (core/linked_devices.py): each with when it linked and last reached this computer, and Unlink.
+  // Linked devices (core/linked_devices.py, WP-10): each in words (what it is, when it linked, when it last reached
+  // this computer, stale after 90 days unseen), with Unlink, and Lost: its key refused at once and the device told to
+  // erase MIA's data when it next reaches the computer. Those reported lost stay listed until they've been told.
   function phones(page) {
-    const list = page.linked_devices || [];
+    const list = (page.linked_devices || []).filter((d) => !d.lost);
+    const gone = (page.linked_devices || []).filter((d) => d.lost);
     const unlink = async (d) => {
-      if (!(await MIAShell.confirm("Unlink this phone? It stops reaching MIA on this computer until it links again with your password."))) return;
+      if (!(await MIAShell.confirm("Unlink this device? It stops reaching MIA on this computer until it links again with your password."))) return;
       try { await MIA.unlinkDevice(d.id); say("Unlinked."); } catch (e) { say(e.message); }
       draw(await load());
     };
-    return el("section", { class: "glass money-section", "aria-label": "Linked phones" },
-      el("h2", {}, "Linked Phones"),
-      list.length ? el("div", { class: "rows" }, list.map((d) => el("div", { class: "row" },
-        el("div", {}, el("div", { class: "row-title" }, "Phone linked " + day(d.linked)),
-          el("div", { class: "row-sub" }, d.last_seen ? "Last reached this computer " + day(d.last_seen) : "Not seen since it linked")),
-        el("button", { type: "button", class: "btn btn-ghost", onclick: () => unlink(d) }, "Unlink"))))
-        : el("p", { class: "empty" }, "No phones are linked to MIA on this computer."));
+    const lost = async (d) => {
+      if (!(await MIAShell.confirm("Report this device lost? Its key stops working now, and the next time it reaches this "
+        + "computer it erases MIA's data on it. Your data here is untouched."))) return;
+      try { await MIA.lostDevice(d.id); say("Reported lost. It erases MIA's data when it next connects."); } catch (e) { say(e.message); }
+      draw(await load());
+    };
+    const what = (d) => (d.name || (d.kind === "phone" ? "Phone" : d.kind)) + (d.scope === "household" ? " (the household's)" : "");
+    return el("section", { class: "glass money-section", "aria-label": "Linked devices" },
+      el("h2", {}, "Linked Devices"),
+      list.length ? el("div", { class: "rows" }, list.map((d) => el("div", { class: "row" + (d.stale ? " si-warn" : "") },
+        el("div", {}, el("div", { class: "row-title" }, what(d) + ", linked " + day(d.linked)),
+          el("div", { class: "row-sub" }, (d.last_seen ? "Last reached this computer " + day(d.last_seen) : "Not seen since it linked")
+            + (d.stale ? " · not seen for 90 days: unlink it if you don't use it" : ""))),
+        el("div", { class: "acct-actions" },
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => unlink(d) }, "Unlink"),
+          el("button", { type: "button", class: "btn btn-ghost", onclick: () => lost(d) }, "Lost")))))
+        : el("p", { class: "empty" }, "No devices are linked to MIA on this computer."),
+      gone.length ? el("div", { class: "rows" }, gone.map((d) => el("div", { class: "row si-warn" },
+        el("div", {}, el("div", { class: "row-title" }, what(d) + ", reported lost " + day(d.lost)),
+          el("div", { class: "row-sub" }, d.told ? "It reconnected on " + day(d.told) + " and was told to erase MIA's data."
+            : "Its key is refused. It erases MIA's data when it next reaches this computer."))))) : null);
   }
 
   // Two-step sign-in (core/two_step.py): on only once a code from the app is entered, so a mistyped key locks no one out.

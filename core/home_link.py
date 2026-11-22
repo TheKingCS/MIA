@@ -20,6 +20,12 @@ everything else (facts, actions, memory); only the model's wording moves.
 - `connect()`: sign in, check the model, remember the link (`home_pc.*`).
 - `LLMManager` (core/llm_manager.py) tries the home computer first when
   linked and reachable, and falls back to the phone's model.
+- **Reported lost** (WP-10, Q-90): when he reports this device lost on the
+  computer's Sign-ins page, its key is refused there at once; the next time
+  this device asks the computer anything (`home_call`), it's answered 410
+  with X-MIA-Erase, and `erase_here` removes MIA's data on this device (its
+  key folder too, so anything sealed left behind can't be opened) and
+  forgets the link. Only that answer, to this device's own key, erases.
 """
 
 from __future__ import annotations
@@ -207,7 +213,8 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
     back, or the raw bytes (a camera picture). `body` may be an open file
     (a photo going to the PC, with its Content-Length in `headers`), and
     `save_to` streams the answer into a file instead of memory (a photo
-    coming back). Raises HomeLinkError with something a person can act on."""
+    coming back). Raises HomeLinkError with something a person can act on. Answered "erase" (410 with X-MIA-Erase:
+    this device was reported lost), it erases MIA's data here first (`erase_here`, WP-10)."""
     config = context.config
     url, token = config.get("home_pc.url", ""), config.get("home_pc.token", "")
     if not (url and token):
@@ -228,6 +235,10 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
                 return save_to
             body = response.read()
     except urllib.error.HTTPError as exc:
+        if exc.code == 410 and (exc.headers.get("X-MIA-Erase") if exc.headers is not None else "") == "1":
+            erase_here(context)  # reported lost on the computer (WP-10)
+            raise HomeLinkError("This device was reported lost on the home computer, so MIA's data on it has been "
+                                "erased.", 410) from exc
         try:
             detail = json.loads(exc.read().decode("utf-8") or "{}").get("detail")
         except (ValueError, OSError):
@@ -236,6 +247,42 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
     except (urllib.error.URLError, OSError) as exc:
         raise HomeLinkError("Can't reach the home computer right now (is it on, and is Tailscale on here?).") from exc
     return body if raw else json.loads(body.decode("utf-8") or "{}")
+
+
+def erase_here(context, root: Optional[Path] = None) -> dict:
+    """This device was reported lost (WP-10): forgets the link and removes everything in MIA's data folder here (the
+    data key's folder with it, so a sealed file left anywhere can't be opened). Returns {"removed": how many entries}.
+    Never raises; what couldn't be removed is logged."""
+    import shutil
+
+    from core.data_root import DATA_DIR
+
+    config = context.config
+    for key in ("home_pc.url", "home_pc.token", "home_pc.who"):
+        config.set(key, "")
+    try:
+        config.save()
+    except Exception:  # noqa: BLE001 - erasing goes on
+        log.exception("Couldn't save the forgotten link")
+    folder = Path(root) if root is not None else Path(DATA_DIR)
+    removed = 0
+    for entry in list(folder.iterdir()) if folder.is_dir() else []:
+        try:
+            if entry.is_dir() and not entry.is_symlink():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
+            removed += 1
+        except OSError:
+            log.exception("Couldn't erase %s", entry.name)
+    try:
+        from core import at_rest
+
+        at_rest.forget()  # the opened key goes too
+    except Exception:  # noqa: BLE001
+        pass
+    log.warning("This device was reported lost: MIA's data on it was erased (%d entries).", removed)
+    return {"removed": removed}
 
 
 def status(context) -> dict:

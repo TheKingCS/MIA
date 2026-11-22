@@ -48,7 +48,7 @@ _DATA_DIR = DATA_DIR
 KEEP = 5000
 KINDS = ("sign_in", "sign_in_failed", "waiting", "session_ended", "signed_out", "signed_out_everywhere",
          "password_changed", "recovery_code", "phone_linked", "phone_unlinked", "two_step_on", "two_step_off", "data_key_unopened", "data_key_restored", "data_key_shown", "data_exported",
-         "email_changed", "lockdown", "lockdown_lifted", "log_trimmed", "log_changed")
+         "email_changed", "lockdown", "lockdown_lifted", "log_trimmed", "log_changed", "device_lost", "device_erased")
 WORDS = {"sign_in": "Signed in", "sign_in_failed": "Wrong password", "waiting": "Too many wrong passwords: made to wait",
          "session_ended": "Session ended (unused too long)", "signed_out": "Signed out",
          "signed_out_everywhere": "Signed out everywhere", "password_changed": "Password changed",
@@ -62,7 +62,9 @@ WORDS = {"sign_in": "Signed in", "sign_in_failed": "Wrong password", "waiting": 
          "data_key_shown": "The recovery key was shown",
          "data_exported": "Your data was exported",
          "log_trimmed": "The log was cut back to its newest lines",
-         "log_changed": "This log no longer holds what another device saw in it"}
+         "log_changed": "This log no longer holds what another device saw in it",
+         "device_lost": "A device reported lost: its key refused, told to erase when it reconnects",
+         "device_erased": "A lost device reconnected and was told to erase"}
 
 
 def device_of(user_agent: str, address: str) -> str:

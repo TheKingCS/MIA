@@ -20,11 +20,11 @@
 | Key | Can | Exists |
 |---|---|---|
 | A person's device key | everything that person can do | yes (phones) |
-| A household device key | household stores only (the household display) | new |
+| A household device key | household stores only (the household display) | built (WP-10: `/api/live` until the display's view, WP-20) |
 | A sensor key | log one number to one series | yes |
 | A node key | post its snapshots; read what it's told to show | partial (exports pulled today) |
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-DST-005 | Every device shall be paired by the person, hold its own key whose hash alone the hub keeps, and be listed in Sign-ins with its kind and last contact. | Must | MVP | All | Partial (phones) | T | DEC-0242 → 12, 13 |
-| REQ-DST-006 | A key shall be scoped to its kind: a person's, a household's, a sensor's one series, a node's snapshots. | Must | R1 | All | Partial (sensors) | T | DEC-0242 → 12, 13 |
+| REQ-DST-005 | Every device shall be paired by the person, hold its own key whose hash alone the hub keeps, and be listed in Sign-ins with its kind and last contact. | Must | MVP | All | Exists (WP-10: each device's record, stale after 90 days) | T | DEC-0242 → 12, 13 |
+| REQ-DST-006 | A key shall be scoped to its kind: a person's, a household's, a sensor's one series, a node's snapshots. | Must | R1 | All | Partial (person, household, sensor: WP-10; node to come) | T | DEC-0242 → 12, 13 |
