@@ -294,6 +294,13 @@ jobs:
           EOS
           vm 'cat > /var/tmp/suite.sh && chmod 755 /var/tmp/suite.sh' < /tmp/suite.sh
           vm 'runuser -l mia -c /var/tmp/suite.sh'
+      - name: FW-07b the move to MIA OS rehearsed on synthetic data, in the image
+        run: |
+          . ~/vm.sh
+          # Stores laid out as on Windows, a real backup, MIA's own restore into a fresh folder, every store compared
+          # by count and content hash; then one record changed by hand must be named (os/poc/vm/move_rehearsal.py).
+          vm 'runuser -l mia -c "rm -rf /var/tmp/move && /usr/lib/mia/venv/bin/python /var/tmp/mia-suite/os/poc/vm/move_rehearsal.py /var/tmp/mia-suite /var/tmp/move"' | tee /tmp/move.log
+          grep -q "stores matched after the restore" /tmp/move.log
       - name: 3. An update to version 2, booted
         run: |
           . ~/vm.sh

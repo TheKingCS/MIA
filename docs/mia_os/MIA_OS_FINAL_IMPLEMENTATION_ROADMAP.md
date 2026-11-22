@@ -315,7 +315,9 @@ approves itself.
 > the new key still matches), a sample of his files' hashes, his programs with their MIA OS answers (48 of 51 on his
 > PC; the 3 left are games). Written beside his backups, never in the repository. **FW-07b's phone part built**
 > (REQ-IMP-005): pairing starts sync fresh, the computer's copies taken and the phone's kept aside for 30 days.
-> Still to do in the VM: the restore on the image and the rehearsal on synthetic data.
+> **The rehearsal** (`os/poc/vm/move_rehearsal.py`): synthetic stores, a real backup, MIA's own restore into a
+> fresh folder, every store compared; a record changed afterwards is named. Run by the suite on any machine and
+> in the VM inside the image.
 
 | Field | Specification |
 |---|---|
