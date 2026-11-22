@@ -41,9 +41,9 @@ GROUPS: tuple[tuple[str, str, tuple[str, ...]], ...] = (
     ("How I'm run", "the server, how I start, my installation, settings, data and phone app",
      ("server/app.py", "main.py", "deploy/", ".github/", "config/", "data/", "requirements.txt", "android-phone/")),
     ("Your decisions", "the decisions log only you approve", ("docs/DECISIONS.md",)),
-    ("The lab and its rules", "how my changes are made, checked, merged and undone, and this list",
+    ("The lab and its rules", "how my changes are made, checked, merged, pushed and undone, and this list",
      ("core/dev_lab.py", "tools/lab.py", "core/lab_actions.py", "core/self_merges.py", "core/self_repair.py",
-      "core/protected_list.py")),
+      "core/protected_list.py", "core/lab_push.py")),
     ("What judges me", "who reviews work, my grades, my benchmarks, what my loops watch, and Claude's inspection of "
      "my models",
      ("core/work_review.py", "core/work_agents.py", "core/work_loop.py", "core/work_tasks.py", "core/work_activity.py",

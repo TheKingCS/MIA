@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1557 files, 345,014 lines; 1557 files describe themselves; 18,999 of 19,098 classes and functions are documented.
+1559 files, 345,217 lines; 1559 files describe themselves; 19,014 of 19,113 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-606 files, 174,333 lines; 8,975 of 9,061 classes and functions documented
+607 files, 174,447 lines; 8,980 of 9,066 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -290,6 +290,7 @@
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials.
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
+- `core/lab_push.py`: Her merged changes pushed with the daily summary (WP-12, Q-100, DEC-0264: "her merged changes are pushed with the daily summary, so CI tests them"). The changes MIA makes to herself go into the running copy on Claude's pass (core/self_merges.py) and were kept on the PC; now, once a day after the sum
 - `core/lab_reading_actions.py`: The Lab's changes on the web (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). `lab_reading.add` logs a reading to a series in the Data Logger (core/data_logger_manager.py), joining an existing series whatever its case and starting a new one with its first reading; `lab_reading.delete` t
 - `core/learned.py`: What MIA has learned about him on her own, each habit with its evidence and its own reset (DEC-0282, LS-10, REQ-LS-004). Three kinds today:
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
@@ -902,7 +903,7 @@
 
 ## tests/: the test suite: what each part must do
 
-551 files, 90,940 lines; 7,665 of 7,678 classes and functions documented
+552 files, 91,029 lines; 7,675 of 7,688 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1132,6 +1133,7 @@
 - `tests/test_knowledge_pack_delete.py`: Deleting a Knowledge pack from the web (core/reference_library_manager.delete_confirmed): only once its name is typed, as the desktop asks, because the file is gone for good.
 - `tests/test_knowledge_pictures.py`: Pictures in Knowledge articles (core/reference_library_manager.article_images): which <img> tags become pictures fetched from the pack, resolved against the article's own path.
 - `tests/test_lab_module.py`: Unit test for modules.lab.module.format_reading_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test.
+- `tests/test_lab_push.py`: WP-12 (Q-100, DEC-0264): her merged changes are pushed to GitHub with the daily summary, only hers, never forced or rebased, held when anything else is waiting or GitHub has newer commits, and never from the test suite itself.
 - `tests/test_learned.py`: Tests for what MIA learned on her own (DEC-0282, LS-10, core/learned.py): each habit with its evidence and its own reset, which never touches what he set himself or a break he asked for; and the daily budget for her own work.
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte

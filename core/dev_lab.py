@@ -86,7 +86,7 @@ PROTECTED = (
     # lab's actions, her merges and repairs, and the list itself (core/protected_list.py says it in words).
     "core/grants.py", "core/kind_grants.py", "core/stop.py", "core/browser_safety.py", "core/action_effects.py",
     "core/model_inspection.py", "core/lab_actions.py", "core/self_merges.py", "core/self_repair.py",
-    "core/protected_list.py",
+    "core/protected_list.py", "core/lab_push.py",
     # What those rest on (Fable's review, 2026-11-18): every kind's tier (the app manifests) and the registry that
     # reads them; taught skills' guard; the words that approve by voice and the turn they run in; what runs on a
     # schedule; whose settings are whose; the grants' own actions; the approval card's code; and the suite's own

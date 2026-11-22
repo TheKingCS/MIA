@@ -401,10 +401,12 @@ class BackgroundJobs:
 
     def _check_self_changes(self, now: datetime, today_iso: str) -> None:
         """The daily summary of the changes she made to herself that went in on Claude's pass (core/self_merges.py,
-        DEC-0225), to the PC's owner, through the gate, each with how to undo it."""
-        from core import self_merges
+        DEC-0225), to the PC's owner, through the gate, each with how to undo it; then those changes pushed to GitHub,
+        so CI tests them (core/lab_push.py, WP-12, Q-100)."""
+        from core import lab_push, self_merges
 
         self._offers.extend(self_merges.offer(self.context, now))
+        lab_push.run(self.context, now)
 
     def _check_recall_index(self) -> None:
         """Every 10 minutes: what's new or changed in his memories, notes and projects is embedded for recall by
