@@ -7,6 +7,12 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-22 (Opus on the PC: the Windows backlog, FW-06 to FW-12's parts, Fable's review fixed)*
 
+**New 2026-11-22, Zac: MIA as the teacher and guide for homestead and construction, offline** (T-0060): any
+build, garden or project planned with him and confirmed by his press becomes a project whose missions are made
+from the plan, each step taught on its own screen and by voice. It builds on the plans shelf, the mission guides,
+learning paths and the specialists; T-0060 lists what's there and the order. Ask him first: a build or a garden
+first, and which offline references to fetch.
+
 **New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
 data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one
 commit, each with a test in `tests/test_review_2026_11_22.py` (14 of its 15 fail on the old code). The biggest:
