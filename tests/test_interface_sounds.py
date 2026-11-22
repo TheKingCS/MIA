@@ -46,9 +46,10 @@ def test_one_setting_turns_them_all_off_and_the_alarm_is_never_one_of_them():
 
 
 def test_the_page_sounds_only_real_changes_of_her_state():
-    """showPresence passes each state to the sounds; a state that didn't change makes none."""
+    """showPresence passes each state to the sounds; a state that didn't change makes none, nor the first a page
+    learns."""
     assert "MIASound.presence(state)" in SHELL
-    assert "if (shown === before) return" in SOUND
+    assert "if (before === null || shown === before) return" in SOUND  # nor the first one a page learns
 
 
 def test_while_a_model_generates_auto_glass_goes_light_and_the_drift_holds():

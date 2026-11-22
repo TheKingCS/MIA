@@ -34,11 +34,15 @@ SHOWN_FAILURES = 10
 
 
 def due(config, now: Optional[datetime] = None) -> bool:
-    """Whether this month's drill is still to run: from AFTER_HOUR, and EVERY_DAYS since the last one (or never)."""
+    """Whether this month's drill is still to run: from AFTER_HOUR, and EVERY_DAYS since the last one (or never); one
+    that was skipped (no backup yet) is tried again the next night."""
     now = now or datetime.now()
     if now.hour < AFTER_HOUR:
         return False
-    last = (config.get("backup.drill", {}) or {}).get("at", "") if config is not None else ""
+    kept = (config.get("backup.drill", {}) or {}) if config is not None else {}
+    if kept.get("skipped"):
+        return str(kept.get("at", ""))[:10] != now.date().isoformat()  # no backup yet: looked for again each night
+    last = kept.get("at", "")
     try:
         return (now.date() - date.fromisoformat(str(last)[:10])).days >= EVERY_DAYS
     except ValueError:
@@ -59,35 +63,48 @@ def newest_backup(folder: Path) -> Optional[Path]:
 
 def open_store(path: Path) -> Optional[str]:
     """Opens one restored store the way MIA does: None when it opens, else why not (sealed under a key not held, a
-    damaged envelope, JSON that won't read)."""
+    damaged envelope, JSON that won't read). A .jsonl may be sealed line by line or whole; each line is read."""
     from core import at_rest
 
     try:
         text = path.read_text(encoding="utf-8")
-        if path.suffix.lower() == ".jsonl":
+        if at_rest.line_sealed(path):  # sealed a line at a time: each line opened (as open_text does)
             lines, failed = at_rest.open_lines(text)
             if failed:
                 return f"{failed} line(s) wouldn't open"
-            for line in lines:
+            text = "\n".join(lines)
+        elif at_rest.is_sealed(text):  # sealed whole, a .jsonl too (turn traces, the Fix-It Log)
+            text = at_rest.unseal(text)
+        if path.suffix.lower() == ".jsonl":
+            for line in text.splitlines():
                 if line.strip():
                     json.loads(line)
-            return None
-        json.loads(at_rest.unseal(text) if at_rest.is_sealed(text) else text)
+        else:
+            json.loads(text)
         return None
     except (OSError, ValueError, UnicodeDecodeError) as problem:
         return str(problem)[:120] or type(problem).__name__
 
 
 def drill(backup: Path) -> dict:
-    """Restores one backup into a scratch folder and opens every store in it: {at, backup, files, opened, failed:
-    [{file, why}], passed}. Never raises; the scratch folder is always removed."""
+    """Restores one backup's stores (data/ .json and .jsonl, never photos or documents) into a scratch folder and opens
+    every one: {at, backup, files, opened, failed: [{file, why}], passed}. Never raises; the scratch folder is
+    always removed."""
     from core.backup_manager import safe_extract_zip
 
     at = datetime.now().isoformat(timespec="seconds")
     scratch = Path(tempfile.mkdtemp(prefix="mia_restore_drill_"))
     try:
         with zipfile.ZipFile(backup) as zf:
-            safe_extract_zip(zf, scratch)
+            # Only the stores, through the same safe extraction a restore uses: photos and media aren't read here.
+            stores_only = zipfile.ZipFile(scratch / "stores.zip", "w")
+            for member in zf.infolist():
+                if member.filename.startswith("data/") and member.filename.lower().endswith((".json", ".jsonl")):
+                    stores_only.writestr(member, zf.read(member))
+            stores_only.close()
+            with zipfile.ZipFile(scratch / "stores.zip") as only:
+                safe_extract_zip(only, scratch)
+            (scratch / "stores.zip").unlink()
         stores = sorted(p for p in (scratch / "data").rglob("*") if p.is_file() and p.suffix.lower() in (".json", ".jsonl"))
         failed = []
         for path in stores:
@@ -98,7 +115,7 @@ def drill(backup: Path) -> dict:
         return {"at": at, "backup": backup.name, "files": len(stores), "opened": len(stores) - len(failed),
                 "failed": failed[:SHOWN_FAILURES], "passed": passed,
                 **({} if stores else {"why": "the backup holds no stores"})}
-    except (OSError, zipfile.BadZipFile, ValueError) as problem:
+    except Exception as problem:  # noqa: BLE001 - a BackupError, a bad zip, a full disk: the drill fails, said
         return {"at": at, "backup": backup.name, "files": 0, "opened": 0, "failed": [], "passed": False,
                 "why": f"it couldn't be restored: {str(problem)[:160]}"}
     finally:

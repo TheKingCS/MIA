@@ -419,7 +419,9 @@ def folders(context, profile_id: str) -> dict[str, Path]:
 
 def manifest(context, profile_id: str) -> dict:
     """{scope: {name: [hash, mtime]}} of the syncable files, and the game numbers. A sealed file (DEC-0126) is hashed
-    by its content (at_rest.open_bytes), so the phone and the PC compare the same thing."""
+    by its content (at_rest.open_bytes), so the phone and the PC compare the same thing. `restored_at` says when the
+    computer last restored a backup (core/backup_manager.restore_backup): a phone that hasn't seen it takes the
+    computer's copies first (REQ-IMP-005)."""
     out = {}
     for scope, folder in folders(context, profile_id).items():
         files = {}
@@ -433,6 +435,8 @@ def manifest(context, profile_id: str) -> dict:
     out["files"] = file_manifest(context, profile_id)
     out["journal_key"] = journal_key(folders(context, profile_id).get("mine"))
     out["vault_id"] = vault_id(folders(context, profile_id).get("mine"))
+    config = getattr(context, "config", None)
+    out["restored_at"] = str(config.get("sync.restored_at", "") or "") if config is not None else ""
     return out
 
 
@@ -764,7 +768,8 @@ def sync_now(context, call=None, lock=None) -> dict:
     made here meanwhile is merged with theirs, never written over. A field
     both changed keeps the losing copy in the change history and adds one
     note (`keep_loser`, DEC-0285), which is also said to him (`_tell_conflicts`). The first sync after pairing
-    (`start_fresh`) takes the computer's copy of each file both have and keeps this device's aside instead."""
+    (`start_fresh`), or after a restore on the computer (its manifest's `restored_at` newer than the one seen),
+    takes the computer's copy of each file both have and keeps this device's aside instead."""
     from core.home_link import home_call
 
     call = call or home_call
@@ -774,8 +779,13 @@ def sync_now(context, call=None, lock=None) -> dict:
     if pid is None:
         raise ValueError("No account on this device to sync.")
     state = state_for(context)
-    fresh = bool(state.status().get("fresh"))  # the first sync since pairing (start_fresh): the computer's copies win
+    # The first sync since start_fresh, or since the computer restored a backup (the move to MIA OS restores one):
+    # the computer's copies win, the phone's are kept aside (REQ-IMP-005). Named apart from the loop's re-read below
+    # (Fable's review, 2026-11-22: one name for both made ordinary syncs overwrite phone edits).
     remote = call(context, "/api/sync/manifest", timeout=30)
+    restored = str(remote.get("restored_at") or "")
+    seen = state.status()
+    first_after_pairing = bool(seen.get("fresh")) or bool(restored and restored != seen.get("restored_seen", ""))
     done = {"pushed": 0, "pulled": 0, "merged": 0, "files": 0}
     notes = []
     here = folders(context, pid)
@@ -817,7 +827,7 @@ def sync_now(context, call=None, lock=None) -> dict:
                 done["pushed"] += 1
                 continue
             got = call(context, f"/api/sync/file?scope={scope}&name={name}", timeout=30, raw=True)
-            if fresh and local is not None:
+            if first_after_pairing and local is not None:
                 # The first sync since pairing: the computer's copy is the one (moved data), this phone's kept aside.
                 with lock:
                     write_file(context, path, got)
@@ -876,7 +886,8 @@ def sync_now(context, call=None, lock=None) -> dict:
     done["at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     done["note"] = " ".join(notes)
     state.set_status(last=done["at"], **{k: done[k] for k in ("pushed", "pulled", "merged", "files")},
-                     problem="", note=done["note"], fresh=False)  # a fresh start ends once a whole sync is done
+                     problem="", note=done["note"], fresh=False,  # a fresh start ends once a whole sync is done
+                     restored_seen=restored)
     return done
 
 

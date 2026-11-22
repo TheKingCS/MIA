@@ -102,7 +102,8 @@ def test_the_frame_carries_the_orbs_words_for_every_page():
 
 
 def test_needs_you_shows_while_a_card_waits_and_stops_once_it_is_decided_or_expired(monkeypatch):
-    """The orb spec's "Needs you": only a real card waiting for a yes; approved, rejected or past its day, it stops."""
+    """The orb spec's "Needs you": only a real card waiting for a yes, from seconds old (not a press's own card);
+    approved, rejected or past its day, it stops."""
     from datetime import datetime, timedelta
     from types import SimpleNamespace
 
@@ -113,6 +114,8 @@ def test_needs_you_shows_while_a_card_waits_and_stops_once_it_is_decided_or_expi
     center = actions.ActionCenter()
     context = SimpleNamespace(config=None, undo=None, events=None, failures=None)
     first = center.propose(context, "zz.ok")
+    assert orb_state.current() != "needs-you"  # a moment old: a press's own propose-then-approve
+    first.created_at = (datetime.now() - timedelta(minutes=1)).isoformat(timespec="seconds")
     assert orb_state.current() == "needs-you"
     center.approve(context, first.proposal_id)
     assert orb_state.current() != "needs-you"

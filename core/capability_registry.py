@@ -157,11 +157,19 @@ def _offline() -> bool:
         return False
 
 
+def _recovered(used: Optional[str], failed: str) -> bool:
+    """Pure logic. Whether a use came after a failure, rather than being the very turn that failed (a turn's trace is
+    written just after its failure, with the failing tool among those it called): a use more than two minutes later."""
+    a, b = _when(used or ""), _when(failed)
+    return bool(a and b and (a - b).total_seconds() > 120)
+
+
 def _decide(status: dict, tests: list, used: Optional[str], failed: Optional[str], has_tools: bool,
             offline: bool) -> tuple[str, list[str], str]:
     """Pure logic. A capability's state from its evidence (the state model): (state, the evidence cited, confidence).
     The app status (core/capabilities.capability_status) gives partial, unavailable here, malfunctioning and planned;
-    a tool failure in the last week with no use since is malfunctioning; with the model offline, one used by words is
+    a tool failure in the last FAILED_DAYS with no use since is malfunctioning (a use counts only from two
+    minutes after the failure, so the failing turn's own trace isn't a recovery: `_recovered`); with the model offline, one used by words is
     degraded (its screens still work); built but with no test covering it and no use lately, unverified."""
     said = status.get("status", "implemented")
     evidence = [f"app status: {said} ({status.get('why', '')})"]
@@ -171,7 +179,7 @@ def _decide(status: dict, tests: list, used: Optional[str], failed: Optional[str
         evidence.append(f"used by MIA on {used[:10]}")
     if failed:
         evidence.append(f"a tool failed on {str(failed)[:10]}")
-    if said == "malfunctioning" or (failed and (not used or str(failed) > used)):
+    if said == "malfunctioning" or (failed and not _recovered(used, str(failed))):
         return "malfunctioning", evidence, "inferred"
     if said in ("unavailable here", "planned"):
         return said, evidence, "verified"
@@ -187,7 +195,8 @@ def _decide(status: dict, tests: list, used: Optional[str], failed: Optional[str
 def records(context=None, here: str = "pc") -> list[dict]:
     """Every capability's record, built now from its sources (never from a kept copy): {id, name, owner, needs:
     {services, permissions}, operations: {tools, actions}, devices, state, evidence, confidence, verification: {tests},
-    last_success, last_failure, limits}. Retired apps are kept as retired; a planned piece (a parity gap to do) is a
+    last_success, last_failure, limits}; the tool failures are read once, over FAILED_DAYS. Retired apps are kept as
+    retired; a planned piece (a parity gap to do) is a
     record of its own."""
     from core import capabilities
 
@@ -210,7 +219,8 @@ def records(context=None, here: str = "pc") -> list[dict]:
                         "verification": {"tests": []}, "last_success": None, "last_failure": None})
             continue
         tests = covering_tests(app_id, tools + actions, index)
-        used, failed = _use(context, set(tools), RECENT_DAYS)
+        used, _ = _use(context, set(tools), RECENT_DAYS)
+        _, failed = _use(context, set(tools), FAILED_DAYS)  # a failure counts for a week (FAILED_DAYS)
         state, evidence, confidence = _decide(statuses.get(app_id, {}), tests, used, failed, bool(tools), offline)
         out.append({**record, "state": state, "evidence": evidence, "confidence": confidence,
                     "verification": {"tests": tests}, "last_success": used, "last_failure": failed})

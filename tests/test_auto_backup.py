@@ -5,7 +5,7 @@ tests.test_auto_backup
 The nightly backup (core/auto_backup.py): when it is due, which automatic
 backups the rotation keeps (7 nightly, 4 weekly, 6 monthly: DEC-0259; a hand-made one is never touched),
 and a real round trip: stores written, backed up at night, changed, then
-restored to what the backup held.
+restored to what the backup held. Rotated night by night for 400 nights, the tiers really fill.
 """
 
 from __future__ import annotations
@@ -96,3 +96,16 @@ def test_a_nightly_backup_restores_the_stores_it_held(tmp_path, monkeypatch):
     (data / "notes.json").write_text("[]", encoding="utf-8")
     assert backup_module.restore_backup(folder / made).passed
     assert (data / "notes.json").read_text(encoding="utf-8") == '[{"id": "n1"}]'
+
+
+def test_night_after_night_the_backups_really_age_into_the_weekly_and_monthly_tiers():
+    """Fable's review (2026-11-22): rotated night by night for 400 nights, as the PC does, a backup about five months
+    old survives, and never more than 7 + 4 + 6 are kept."""
+    kept: set = set()
+    start = date(2025, 10, 1)
+    for n in range(400):
+        today = date.fromordinal(start.toordinal() + n)
+        kept = auto_backup.keep(sorted(kept | {f"mia_auto_{today.isoformat()}.zip"}), today)
+        assert len(kept) <= 7 + 4 + 6
+    oldest = date.fromisoformat(min(kept)[len("mia_auto_"):-4])
+    assert (today - oldest).days >= 150, sorted(kept)

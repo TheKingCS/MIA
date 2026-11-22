@@ -37,16 +37,16 @@ key will).
    The MIA OS drive's big partition says `crypto_LUKS` (on most PCs `/dev/nvme0n1p4`; use the name it shows).
 
    ```
-   sudo cryptsetup open /dev/nvme0n1p4 mia
+   sudo cryptsetup open --readonly /dev/nvme0n1p4 mia
    ```
 
-   Type the recovery key when it asks. Then open the disk **read-only**, so nothing can change it, and find your
-   folder:
+   Type the recovery key when it asks: the disk is opened **read-only**, and mounted so that not even a crash's
+   unfinished writes are replayed onto it. Then find your folder:
 
    ```
    sudo mkdir -p /mnt/mia
-   sudo mount -o ro /dev/mapper/mia /mnt/mia
-   ls -d /mnt/mia/home /mnt/mia/ostree/deploy/*/var/home
+   sudo mount -o ro,rescue=nologreplay /dev/mapper/mia /mnt/mia
+   ls -d /mnt/mia/home /mnt/mia/var/home /mnt/mia/ostree/deploy/*/var/home /mnt/mia/root/ostree/deploy/*/var/home
    ```
 
    One of those is there (which depends on how MIA OS was installed); your name is in it, and your files under it.

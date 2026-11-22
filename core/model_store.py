@@ -14,6 +14,8 @@ that server's API by a model's name, and never deletes a file: `remove` asks Oll
   (`models.removed`) so it can be fetched again.
 - `fetch()`: only a model she knows (the one she answers with, her fallbacks, one removed here), started in the
   background, since a download takes minutes; its outcome is told when it ends.
+- `in_use()`: the models she works with (words, meaning: `llm.embed_model`, sight: `sight.model`); none of them
+  can be removed.
 
 Both are actions that need his yes (`model.remove`, `model.fetch`), on Settings and by voice (a card, never done on
 her own say-so).
@@ -98,13 +100,26 @@ def page(context) -> dict:
 
 
 def _check_remove(context, name: str) -> str:
-    """The model to remove, checked: installed, and not the one she answers with."""
+    """The model to remove, checked: installed, and not one in use (`in_use`: words, meaning or sight)."""
     name = str(name or "").strip()
     if not _NAME.match(name) or not any(_same(name, m["name"]) for m in installed(context)):
         raise ActionError("That isn't one of the models on this computer.")
     if _same(name, chosen(context)):
         raise ActionError("That's the model I answer with: choose another first, or I'd have no words.")
+    if any(_same(name, used) for used in in_use(context)):
+        raise ActionError("I use that model for finding things by meaning or for looking at pictures: removing it "
+                          "would quietly break those.")
     return name
+
+
+def in_use(context) -> list[str]:
+    """The models her other work needs besides the one she answers with: the embedding model (core/meaning.py) and
+    the vision model (core/sight.py)."""
+    from core import meaning, sight
+
+    config = context.config
+    return [m for m in (config.get("llm.embed_model", meaning._DEFAULT_MODEL), config.get("sight.model", sight.MODEL))
+            if m]
 
 
 def remove(context, name: str) -> str:

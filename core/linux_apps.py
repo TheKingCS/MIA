@@ -13,7 +13,8 @@ MIA OS's own desktop, reached from MIA (FW-11, the first version's part; DEC-023
   each system setting (`SYSTEM_SETTINGS`: display, network, sound...), never a copy of it (`open_setting`).
 
 Both act only on this computer, with fixed arguments (never a shell); a desktop entry is opened only by an id from the
-list, a settings page only by a key from the table. Off Linux there are none (on Windows the list is empty and opening
+list, a settings page only by a key from the table; each is started in his desktop session (`in_session`:
+systemd-run --user), so it has his display and outlives a restart of MIA's runtime. Off Linux there are none (on Windows the list is empty and opening
 says so).
 """
 
@@ -101,13 +102,24 @@ def entries(dirs: Optional[list[Path]] = None) -> list[dict]:
     return sorted(out, key=lambda a: a["name"].lower())
 
 
+def in_session(argv: list[str]) -> list[str]:
+    """Pure logic. A program started as his session's own (systemd-run --user): with the display his session handed
+    the user manager (os/files/mia-shell), and outside MIA's runtime, so it neither lacks a screen nor dies with her."""
+    return ["systemd-run", "--user", "--collect", "--quiet", "--", *argv]
+
+
 def launch(app_id: str, run: Callable = subprocess.run, dirs: Optional[list[Path]] = None) -> str:
-    """Opens one listed Linux app through the desktop's launcher; ValueError for an id that isn't listed, RuntimeError
-    when it couldn't start. Returns its name."""
+    """Opens one listed Linux app through the desktop's launcher, in his session (`in_session`); ValueError for an id
+    that isn't listed, RuntimeError when it couldn't start. systemd-run returns once the app's unit has started, so
+    nothing here waits on the app. Returns its name."""
     found = next((a for a in entries(dirs) if a["id"] == app_id), None)
     if found is None:
         raise ValueError("That isn't one of the Linux apps on this computer.")
-    done = run(["gio", "launch", found["path"]], capture_output=True, text=True, timeout=30)
+    try:
+        done = run(in_session(["gio", "launch", found["path"]]), capture_output=True, text=True, timeout=30,
+                   creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except (OSError, subprocess.SubprocessError) as problem:
+        raise RuntimeError(f"{found['name']} didn't start: {problem}") from None
     if done.returncode != 0:
         raise RuntimeError(f"{found['name']} didn't start: {(done.stderr or '').strip()[:160]}")
     return found["name"]
@@ -132,7 +144,7 @@ def _start(argv: list[str]):
 
 
 def open_setting(key: str, start: Callable = _start) -> str:
-    """Opens KDE's System Settings at this system setting's page (never a copy of it), left running on its own;
+    """Opens KDE's System Settings at this system setting's page (never a copy of it), in his session (`in_session`);
     ValueError for one that isn't in the table, RuntimeError off MIA OS or when it couldn't start. Returns the page's
     name."""
     if key not in SYSTEM_SETTINGS:
@@ -141,7 +153,7 @@ def open_setting(key: str, start: Callable = _start) -> str:
     if not sys.platform.startswith("linux"):
         raise RuntimeError(f"{label} is opened in the system's own settings on MIA OS.")
     try:
-        start(["systemsettings", kcm])
+        start(in_session(["systemsettings", kcm]))
     except OSError as problem:
         raise RuntimeError(f"System Settings couldn't open: {problem}") from None
     return label

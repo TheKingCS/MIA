@@ -220,6 +220,14 @@ class OllamaBackend:
         return options
 
     def embed(self, model: str, texts: list[str], timeout: float) -> Optional[list]:
+        """The vectors, each model call waiting its turn for the GPU (core/model_queue.py: Fable's review, 2026-11-22);
+        see `_embed`."""
+        from core import model_queue
+
+        with model_queue.slot():
+            return self._embed(model, texts, timeout)
+
+    def _embed(self, model: str, texts: list[str], timeout: float) -> Optional[list]:
         """Vectors for `texts` from an embedding model (/api/embed); None when the server doesn't answer, answers
         wrongly, or returns a different count."""
         body = json.dumps({"model": model, "input": list(texts)}).encode("utf-8")
@@ -234,6 +242,13 @@ class OllamaBackend:
         return vectors if len(vectors) == len(texts) else None
 
     def see(self, model: str, prompt: str, image: bytes, timeout: float = 300) -> str:
+        """What the vision model says of a picture, waiting its turn for the GPU (core/model_queue.py); see `_see`."""
+        from core import model_queue
+
+        with model_queue.slot():
+            return self._see(model, prompt, image, timeout)
+
+    def _see(self, model: str, prompt: str, image: bytes, timeout: float = 300) -> str:
         """A vision model's answer about one image (/api/generate with the image as base64, temperature 0.2).
         Errors from the server are raised to the caller."""
         import base64
@@ -328,14 +343,16 @@ class OllamaBackend:
 
     def on_gpu(self, timeout: float = 2.0) -> Optional[float]:
         """How much of this backend's model sits on the graphics card now (0 to 1, from /api/ps), or None when it isn't
-        loaded or the server can't be asked (REQ-HW-012: 0 means it ran on the processor)."""
+        loaded or the server can't be asked (REQ-HW-012: 0 means it ran on the processor). A name without a tag is
+        read as :latest, as the server names it."""
         request = urllib.request.Request(f"{self._base_url}/api/ps", method="GET")
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 running = json.loads(response.read().decode("utf-8")).get("models", [])
         except (urllib.error.URLError, OSError, ValueError):
             return None
-        mine = next((m for m in running if self._model in (m.get("name"), m.get("model"))), None)
+        wanted = {self._model, self._model if ":" in self._model else self._model + ":latest"}
+        mine = next((m for m in running if wanted & {m.get("name"), m.get("model")}), None)
         size = float((mine or {}).get("size") or 0)
         return round(float(mine.get("size_vram") or 0) / size, 2) if mine and size else None
 
@@ -506,8 +523,9 @@ class LLMManager:
             return self._ask_unlocked(call)
 
     def _ask_unlocked(self, call):
-        """_ask's work, with no store lock held: the home computer, else this device's model, else (it failed and
-        Ollama didn't need waking) the next smaller one (`_fall_back`)."""
+        """_ask's work, with no store lock held: the home computer, else this device's model, else the next smaller
+        one (`_fall_back`). Ollama is woken only when its server doesn't answer; a model that fails on a running
+        server, or again after a wake, goes to the smaller one."""
         from core.home_link import HOME_PC
 
         if self.home is not None and self.home_reach.up():
@@ -523,10 +541,16 @@ class LLMManager:
             result = call(self._backend)
         except LLMUnavailableError as failed:
             # T-0054 (the answers.model_down loop): on the PC the model server is Ollama, and when it isn't running
-            # every turn failed. Start it once, quietly, and try the turn again.
-            if self._wake_local():
-                result = call(self._backend)
-            else:
+            # every turn failed. Start it once, quietly, and try the turn again: only when the server really isn't
+            # answering (a model that failed on a running server goes straight to the smaller one, FW-12), and a
+            # retry that fails too still falls back (Fable's review, 2026-11-22).
+            retried = False
+            if not self._backend.is_available(timeout=1.0) and self._wake_local():
+                try:
+                    result, retried = call(self._backend), True
+                except LLMUnavailableError as again:
+                    failed = again
+            if not retried:
                 return self._fall_back(call, failed)
         self.level = self._local_level()
         return result
@@ -601,6 +625,13 @@ class LLMManager:
         """The local backend in use."""
         return self._backend
 
+    def _backend_answers(self) -> bool:
+        """Whether this device's model server answers at all (a quick look, for the orb's offline). Never raises."""
+        try:
+            return bool(self._backend.is_available(timeout=1.0))
+        except Exception:  # noqa: BLE001 - one that can't be asked doesn't answer
+            return False
+
     def is_available(self) -> bool:
         """Cheap reachability check for surfacing an "assistant unavailable" state. Never raises. Her orb says
         "offline" while it's false (core/orb_state.py, DEC-0255)."""
@@ -612,8 +643,8 @@ class LLMManager:
 
     def generate(self, prompt: str, timeout: Optional[float] = None) -> Optional[str]:
         """Return the model's reply, or None (logged) if the backend can't be reached. While it answers, MIA's presence
-        is "thinking" (core/orb_state.py); one that can't be reached holds her orb "offline" until an answer comes
-        (DEC-0255, WP-07)."""
+        is "thinking" (core/orb_state.py); a failure while the server itself doesn't answer holds her orb "offline"
+        until an answer comes (DEC-0255, WP-07), never one slow or odd reply (`_backend_answers`)."""
         from core import orb_state
 
         wait = self._timeout if timeout is None else timeout
@@ -624,7 +655,9 @@ class LLMManager:
             return said
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
-            orb_state.hold("offline", True)  # her orb says words aren't ready (DEC-0255)
+            # her orb says words aren't ready (DEC-0255) only when the server itself doesn't answer, not for one
+            # slow or odd reply (Fable's review, 2026-11-22)
+            orb_state.hold("offline", not self._backend_answers())
             return None
 
     def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> Optional[ChatReply]:
@@ -632,7 +665,7 @@ class LLMManager:
         Return a ChatReply (content and/or tool_calls), or None (logged)
         if the backend can't be reached; MIA's presence is "thinking" while
         the model answers (core/orb_state.py), and "offline" from a failure to reach it until an answer comes
-        (WP-07). See this module's docstring
+        (WP-07; only when the server itself doesn't answer). See this module's docstring
         for why a malformed tool-call-shaped `content` triggers one
         retry without tools.
         """
@@ -644,7 +677,9 @@ class LLMManager:
             orb_state.hold("offline", False)  # an answer came: words are ready
         except LLMUnavailableError as exc:
             log.warning("Assistant unavailable: %s", exc)
-            orb_state.hold("offline", True)  # her orb says words aren't ready (DEC-0255)
+            # her orb says words aren't ready (DEC-0255) only when the server itself doesn't answer, not for one
+            # slow or odd reply (Fable's review, 2026-11-22)
+            orb_state.hold("offline", not self._backend_answers())
             return None
 
         if not reply.tool_calls and _looks_like_malformed_tool_call(reply.content):

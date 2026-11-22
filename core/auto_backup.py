@@ -58,38 +58,32 @@ def due(config, now: Optional[datetime] = None) -> bool:
 
 
 def keep(names: list[str], today: date) -> set[str]:
-    """Pure logic. The automatic backups to keep: those from the last DAILY days, the newest of each week (Monday to
-    Sunday) in the WEEKLY weeks before that, at most WEEKLY, and the newest of each month before those, at most
-    MONTHLY months and none older than about that many months (DEC-0259). Names that aren't automatic backups are
-    never in question."""
-    dated = sorted(((date.fromisoformat(m.group(1)), n) for n in names if (m := _NAME.match(n))), reverse=True)
+    """Pure logic. The automatic backups to keep: those from the last DAILY days, the first of each of the last
+    WEEKLY whole weeks before this one (Monday to Sunday), and the first of each of the last MONTHLY months, this one
+    among them (DEC-0259); both counted back from today. Names that aren't automatic backups are never in question."""
+    dated = sorted((date.fromisoformat(m.group(1)), n) for n in names if (m := _NAME.match(n)))  # oldest first
     kept = {n for d, n in dated if (today - d).days < DAILY}
-    weeks, months = [], []
+    # The FIRST backup of each week and of each month is the one kept: unlike "the newest", it stays the same as
+    # newer ones arrive, so it lives on into the next tier (Fable's review, 2026-11-22: with "the newest" no backup
+    # ever reached the monthly tier).
+    weeks: dict = {}
+    months: dict = {}
     for d, n in dated:
-        age = (today - d).days
-        if age < DAILY:
-            continue
-        if age < DAILY + 7 * WEEKLY:
-            week = d - timedelta(days=d.weekday())
-            if week not in weeks and len(weeks) < WEEKLY:
-                weeks.append(week)
-                kept.add(n)
-            continue
-        if age >= DAILY + 7 * WEEKLY + 31 * MONTHLY:
-            break  # older than the monthly window: removed
-        month = (d.year, d.month)
-        if month not in months:
-            if len(months) == MONTHLY:
-                break
-            months.append(month)
-            kept.add(n)
+        weeks.setdefault(d - timedelta(days=d.weekday()), n)
+        months.setdefault((d.year, d.month), n)
+    this_week = today - timedelta(days=today.weekday())
+    kept |= {n for week, n in weeks.items() if this_week - timedelta(days=7 * WEEKLY) <= week < this_week}
+    month_now = today.year * 12 + today.month
+    kept |= {n for (year, month), n in months.items() if month_now - (year * 12 + month) < MONTHLY}
     return kept
 
 
 def copy_offsite(config, made: Path, today: date) -> dict:
     """Tonight's backup copied to the second place (`backup.offsite_folder`), that folder rotated by `keep`:
     {"copied": folder, "removed": n}, {"skipped": "no second place chosen"}, or {"error": why} (kept in
-    `backup.offsite_problem` for the Backups section). Never raises; a missing drive is never a failed backup."""
+    `backup.offsite_problem` for the Backups section). The folder must already be there: an unplugged drive is said,
+    never a copy made on the internal disk; a copy that fails part-way leaves no .partial behind. Never raises; a
+    missing drive is never a failed backup."""
     import shutil
 
     where = str(config.get("backup.offsite_folder", "") or "").strip()
@@ -99,16 +93,21 @@ def copy_offsite(config, made: Path, today: date) -> dict:
     try:
         if not target.anchor or not Path(target.anchor).exists():
             raise OSError(f"the drive for {where} isn't connected")
-        target.mkdir(parents=True, exist_ok=True)
+        if not target.is_dir():  # on Linux "/" always exists: an unplugged drive is a missing folder, never made here
+            raise OSError(f"{where} isn't there: is the drive connected?")
         tmp = target / (made.name + ".partial")
         shutil.copy2(made, tmp)
         tmp.replace(target / made.name)  # whole or not at all: a half-copied backup is never left looking finished
-        names = [p.name for p in target.iterdir() if p.is_file() and p.name.startswith(PREFIX)]
+        names = [p.name for p in target.iterdir() if p.is_file() and _NAME.match(p.name)]  # only true backups
         removed = 0
         for old in set(names) - keep(names, today):
             (target / old).unlink()
             removed += 1
     except OSError as problem:
+        try:
+            (target / (made.name + ".partial")).unlink(missing_ok=True)  # never a half copy left behind
+        except OSError:
+            pass
         config.set("backup.offsite_problem", f"{today.isoformat()}: {str(problem)[:200]}")
         log.warning("The second copy of tonight's backup wasn't made: %s", problem)
         return {"error": str(problem)}
@@ -119,7 +118,7 @@ def copy_offsite(config, made: Path, today: date) -> dict:
 
 def run(context, now: Optional[datetime] = None) -> dict:
     """Tonight's backup, its second copy off the PC (`copy_offsite`) and the rotation: {"made": name, "removed": n,
-    "offsite": what the copy did} or {"error": why}. Never raises."""
+    "offsite": what the copy did} or {"error": why}. Only automatic backups (by their name) are rotated. Never raises."""
     from core.backup_manager import create_backup
     from core.web_backups import folder
 
@@ -146,7 +145,7 @@ def run(context, now: Optional[datetime] = None) -> dict:
     config.save()
     removed = 0
     try:
-        names = [p.name for p in where.iterdir() if p.is_file() and p.name.startswith(PREFIX)]
+        names = [p.name for p in where.iterdir() if p.is_file() and _NAME.match(p.name)]  # only true backups
         for old in set(names) - keep(names, now.date()):
             (where / old).unlink()
             removed += 1

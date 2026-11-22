@@ -43,23 +43,24 @@ def test_the_launcher_lists_each_linux_app_once_leaving_out_hidden_and_other_des
 
 
 def test_an_app_opens_only_by_a_listed_id_through_the_desktops_launcher(tmp_path):
-    """gio launch on its desktop file, fixed arguments; an id that isn't listed opens nothing."""
+    """gio launch on its desktop file, fixed arguments, in his session; an id that isn't listed opens nothing."""
     dirs = _apps(tmp_path)
     ran = []
     ok = lambda argv, **kw: ran.append(argv) or SimpleNamespace(returncode=0, stderr="")  # noqa: E731
     assert linux_apps.launch("firefox.desktop", run=ok, dirs=dirs) == "Firefox"
-    assert ran == [["gio", "launch", str(dirs[1] / "firefox.desktop")]]
+    assert ran == [linux_apps.in_session(["gio", "launch", str(dirs[1] / "firefox.desktop")])]
     for bad in ("hidden.desktop", "../../etc/passwd", "firefox.desktop; rm -rf ~"):
         with pytest.raises(ValueError):
             linux_apps.launch(bad, run=ok, dirs=dirs)
 
 
 def test_a_system_setting_opens_its_kde_page_and_only_one_from_the_table(monkeypatch):
-    """systemsettings with the page's module, started on its own; words map to the page; off Linux it says so."""
+    """systemsettings with the page's module, started in his session; words map to the page; off Linux it says
+    so."""
     started = []
     monkeypatch.setattr(linux_apps.sys, "platform", "linux")
     assert linux_apps.open_setting("display", start=started.append) == "Display and monitors"
-    assert started == [["systemsettings", "kcm_kscreen"]]
+    assert started == [linux_apps.in_session(["systemsettings", "kcm_kscreen"])]
     with pytest.raises(ValueError):
         linux_apps.open_setting("kcm_anything; reboot", start=started.append)
     assert linux_apps.setting_for("open the wifi settings") == "network"

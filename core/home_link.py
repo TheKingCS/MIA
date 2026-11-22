@@ -25,12 +25,19 @@ everything else (facts, actions, memory); only the model's wording moves.
   this device asks the computer anything (`home_call`), it's answered 410
   with X-MIA-Erase, and `erase_here` removes MIA's data on this device (its
   key folder too, so anything sealed left behind can't be opened) and
-  forgets the link. Only that answer, to this device's own key, erases.
+  forgets the link. Only that answer, to this device's own key, erases, and only
+  proved: each call carries a fresh nonce (X-MIA-Erase-Nonce) and the 410 must
+  carry `erase_proof` of it under the device's key (X-MIA-Erase-Proof), so
+  nothing else answering at the address can order an erase. Besides the data
+  folder, `other_folders` names what goes (his content folders, the config).
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
+import secrets
 import shutil
 import time
 import urllib.error
@@ -150,8 +157,9 @@ class Reach:
 
 def connect(context, url: str, who: str, password: str, code: str = "") -> dict:
     """Sign in to MIA on the computer (with the authenticator's code when two-step sign-in is on there), check its
-    model, remember the link, and start the sync fresh (`sync.start_fresh`: after pairing, the computer's copy of each
-    file is taken, this device's kept aside, so a phone re-paired after the move never writes old data over it)."""
+    model, remember the link. (A phone after the move takes the computer's copies first because the computer says it
+    restored a backup, `sync.manifest`'s restored_at, not because it paired: pairing again after a lockdown or a
+    password change keeps merging as usual.)"""
     url = clean_url(url)
     try:
         login = _request(f"{url}/api/model/link", {"profile_id": who, "password": password, "code": code}, 8)
@@ -173,9 +181,6 @@ def connect(context, url: str, who: str, password: str, code: str = "") -> dict:
     config.set("home_pc.who", who)
     config.save()
     link(context)
-    from core import sync
-
-    sync.start_fresh(context)  # paired (again, after a move): the computer's copies are taken first (REQ-IMP-005)
     return {"url": url, "model": backend.model, "available": available}
 
 
@@ -218,12 +223,14 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
     (a photo going to the PC, with its Content-Length in `headers`), and
     `save_to` streams the answer into a file instead of memory (a photo
     coming back). Raises HomeLinkError with something a person can act on. Answered "erase" (410 with X-MIA-Erase:
-    this device was reported lost), it erases MIA's data here first (`erase_here`, WP-10)."""
+    this device was reported lost, proved with this device's key against the nonce sent: `erase_proof`), it erases
+    MIA's data here first (`erase_here`, WP-10); an order without that proof erases nothing."""
     config = context.config
     url, token = config.get("home_pc.url", ""), config.get("home_pc.token", "")
     if not (url and token):
         raise HomeLinkError("Link the home computer first (Settings → Home Computer).")
-    sent = {"Authorization": f"Bearer {token}", **(headers or {})}
+    nonce = secrets.token_hex(16)  # an erase order must prove it knows this device's key (erase_proof)
+    sent = {"Authorization": f"Bearer {token}", "X-MIA-Erase-Nonce": nonce, **(headers or {})}
     data = body
     if payload is not None:
         sent["Content-Type"] = "application/json"
@@ -239,8 +246,10 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
                 return save_to
             body = response.read()
     except urllib.error.HTTPError as exc:
-        if exc.code == 410 and (exc.headers.get("X-MIA-Erase") if exc.headers is not None else "") == "1":
-            erase_here(context)  # reported lost on the computer (WP-10)
+        told = exc.headers if exc.headers is not None else {}
+        if exc.code == 410 and told.get("X-MIA-Erase") == "1" and hmac.compare_digest(
+                str(told.get("X-MIA-Erase-Proof") or ""), erase_proof(token, nonce)):
+            erase_here(context)  # reported lost on the computer that holds this device's key (WP-10)
             raise HomeLinkError("This device was reported lost on the home computer, so MIA's data on it has been "
                                 "erased.", 410) from exc
         try:
@@ -253,10 +262,36 @@ def home_call(context, path: str, payload: Optional[dict] = None, timeout: float
     return body if raw else json.loads(body.decode("utf-8") or "{}")
 
 
+def erase_proof(key: str, nonce: str) -> str:
+    """Pure logic. What a genuine erase order carries: an HMAC of the device's nonce, keyed with the hash of its key
+    (the computer keeps that hash, core/linked_devices.key_hash), so nothing else answering at the address can order
+    an erase (Fable's review, 2026-11-22)."""
+    secret = hashlib.sha256(str(key).encode()).hexdigest().encode()
+    return hmac.new(secret, str(nonce).encode(), hashlib.sha256).hexdigest()
+
+
+EXIT_AFTER_ERASE = True  # tests turn it off
+
+
+def other_folders(config) -> list:
+    """Besides the data folder, what a lost device's erase removes: the backup's external content folders (photos,
+    documents, captures, as configured) and the config file. Never raises: [] when they can't be worked out. The test
+    suite replaces this, so a test's erase never reaches the checkout's real folders."""
+    try:
+        from core.backup_manager import _CONFIG_FILE, _resolve_external_content_dirs
+
+        return [Path(d) for _name, d in _resolve_external_content_dirs(config)] + [Path(_CONFIG_FILE)]
+    except Exception:  # noqa: BLE001 - the data folder still goes
+        log.exception("Couldn't work out the other folders to erase")
+        return []
+
+
 def erase_here(context, root: Optional[Path] = None) -> dict:
     """This device was reported lost (WP-10): forgets the link and removes everything in MIA's data folder here (the
-    data key's folder with it, so a sealed file left anywhere can't be opened). Returns {"removed": how many entries}.
-    Never raises; what couldn't be removed is logged."""
+    data key's folder with it, so a sealed file left anywhere can't be opened), her other folders of his things (the
+    backup's external content folders: photos, documents, captures) and the config; then MIA stops, so nothing still
+    in memory is written back. Returns {"removed": how many entries}. Never raises; what couldn't be removed is
+    logged."""
     import shutil
 
     from core.data_root import DATA_DIR
@@ -270,7 +305,8 @@ def erase_here(context, root: Optional[Path] = None) -> dict:
         log.exception("Couldn't save the forgotten link")
     folder = Path(root) if root is not None else Path(DATA_DIR)
     removed = 0
-    for entry in list(folder.iterdir()) if folder.is_dir() else []:
+    extra = other_folders(config) if root is None else []
+    for entry in (list(folder.iterdir()) if folder.is_dir() else []) + [e for e in extra if Path(e).exists()]:
         try:
             if entry.is_dir() and not entry.is_symlink():
                 shutil.rmtree(entry)
@@ -286,6 +322,11 @@ def erase_here(context, root: Optional[Path] = None) -> dict:
     except Exception:  # noqa: BLE001
         pass
     log.warning("This device was reported lost: MIA's data on it was erased (%d entries).", removed)
+    if EXIT_AFTER_ERASE and root is None:
+        import os
+        import threading
+
+        threading.Timer(1.0, os._exit, args=(0,)).start()  # nothing in memory may write a store back
     return {"removed": removed}
 
 

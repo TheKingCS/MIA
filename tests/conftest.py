@@ -318,3 +318,13 @@ def _no_unread_store_carried_over():
     data_recovery._unreadable.clear()
     yield
     data_recovery._unreadable.clear()
+
+
+@pytest.fixture(autouse=True)
+def _never_exit_after_an_erase(monkeypatch):
+    """A lost device's erase ends MIA's process and removes his folders outside data/ (core/home_link.erase_here);
+    never the test run's process, nor the checkout's real folders and config."""
+    from core import home_link
+
+    monkeypatch.setattr(home_link, "EXIT_AFTER_ERASE", False)
+    monkeypatch.setattr(home_link, "other_folders", lambda config: [])  # never the checkout's photos or config

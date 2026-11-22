@@ -167,8 +167,8 @@ jobs:
           down
           LOOP=$(sudo losetup -Pf --show --read-only /tmp/out/disk.raw)
           printf '%s' "$(cat /tmp/recovery.txt)" | sudo cryptsetup open --readonly "${LOOP}p4" mia --key-file -
-          sudo mkdir -p /mnt/mia && sudo mount -o ro /dev/mapper/mia /mnt/mia
-          found=$(sudo sh -c 'ls -d /mnt/mia/home /mnt/mia/ostree/deploy/*/var/home 2>/dev/null' | head -n 1)
+          sudo mkdir -p /mnt/mia && sudo mount -o ro,rescue=nologreplay /dev/mapper/mia /mnt/mia
+          found=$(sudo sh -c 'ls -d /mnt/mia/home /mnt/mia/var/home /mnt/mia/ostree/deploy/*/var/home /mnt/mia/root/ostree/deploy/*/var/home 2>/dev/null' | head -n 1)
           echo "His files are under: $found"
           test "$(sudo cat "$found/recovery-check.txt")" = recovery-check
           sudo umount /mnt/mia && sudo cryptsetup close mia && sudo losetup -d "$LOOP"

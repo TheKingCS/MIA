@@ -48,6 +48,11 @@ PERSON, HOUSEHOLD = "person", "household"
 HOUSEHOLD_ROUTES = ("/api/live",)
 
 
+import threading
+
+_lock = threading.RLock()  # every read-modify-write of the device records (a lost device's request racing Lost)
+
+
 def _devices(config) -> dict:
     """Every linked device's entry, hash to {"profile_id", "linked", "last_seen"?}, as a fresh dict."""
     return dict(config.get(KEY, {}) or {})
@@ -66,7 +71,13 @@ def key_hash(key: str) -> str:
 
 def for_key(config, key: str, today: Optional[date] = None) -> Optional[str]:
     """Whose device key this is (a profile id), or None. Stamps the device's last_seen, at most once a day so a
-    phone's every request doesn't rewrite config."""
+    phone's every request doesn't rewrite config. Under `_lock`, so a report of loss can't cross a stamp."""
+    with _lock:
+        return _for_key(config, key, today)
+
+
+def _for_key(config, key: str, today: Optional[date] = None) -> Optional[str]:
+    """for_key's work, under the lock."""
     devices = _devices(config)
     digest = key_hash(key)
     found = devices.get(digest)
@@ -138,7 +149,13 @@ def _lost(config) -> dict:
 def mark_lost(config, profile_id: str, device_id: str, today: Optional[date] = None) -> bool:
     """Reports one of this person's devices lost: its key is refused from now on (its record leaves the linked ones),
     and its hash waits on LOST_KEY so the device is told to erase when it reconnects. False if there's none of theirs
-    by that id. Old lost entries (LOST_KEPT_DAYS) are dropped."""
+    by that id. Old lost entries (LOST_KEPT_DAYS) are dropped. Under `_lock`, with `for_key`."""
+    with _lock:
+        return _mark_lost(config, profile_id, device_id, today)
+
+
+def _mark_lost(config, profile_id: str, device_id: str, today: Optional[date] = None) -> bool:
+    """mark_lost's work, under the lock."""
     device_id = str(device_id or "")
     if len(device_id) != DEVICE_ID_CHARS:
         return False

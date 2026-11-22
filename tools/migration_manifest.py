@@ -7,8 +7,8 @@ The move's checklist on the command line (FW-07a; core/migration.py). Before the
     python -m tools.migration_manifest write
 
 records every store's count and content hash, a sample of his files and his programs (each with its answer on MIA
-OS) into the backups folder, beside the backup that goes across. After the restore on MIA OS, the same command there,
-then
+OS) into the backups folder, beside the backup that goes across. After the restore on MIA OS (and the recovery key
+entered), `write --after BEFORE.json` there, so the same files are hashed again, then
 
     python -m tools.migration_manifest compare BEFORE.json AFTER.json
 
@@ -36,7 +36,8 @@ def _default_out() -> Path:
 
 
 def main(argv: Optional[list] = None) -> int:
-    """Runs one of write, compare or programs; 0 on success (and a compare that matched), 1 on a mismatch."""
+    """Runs one of write, compare or programs; 0 on success (and a compare that matched), 1 on a mismatch. write with
+    --after hashes the same files the before manifest sampled."""
     from core import migration
 
     parser = argparse.ArgumentParser(prog="python -m tools.migration_manifest", description=__doc__.split("\n\n")[0])
@@ -44,6 +45,8 @@ def main(argv: Optional[list] = None) -> int:
     w = sub.add_parser("write", help="record the stores, a sample of files and the programs")
     w.add_argument("--out", type=Path, default=None)
     w.add_argument("--sample", type=int, default=migration.SAMPLE)
+    w.add_argument("--after", type=Path, default=None,
+                   help="on MIA OS: the manifest from before the move, so its very files are hashed again")
     c = sub.add_parser("compare", help="compare a manifest from before the move with one from after")
     c.add_argument("before", type=Path)
     c.add_argument("after", type=Path)
@@ -51,7 +54,8 @@ def main(argv: Optional[list] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.what == "write":
-        out = migration.write(args.out or _default_out(), migration.manifest(sample=args.sample))
+        like = json.loads(args.after.read_text(encoding="utf-8")) if args.after else None
+        out = migration.write(args.out or _default_out(), migration.manifest(sample=args.sample, like=like))
         data = json.loads(out.read_text(encoding="utf-8"))
         print(f"Written: {out}\n{len(data['stores'])} stores, {len(data['files'])} sample files, "
               f"{len(data['programs'])} programs.")

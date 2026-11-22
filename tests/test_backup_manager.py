@@ -39,6 +39,7 @@ def isolated_paths(tmp_path, monkeypatch):
 
 
 def test_create_plain_backup_then_restore_roundtrip(isolated_paths, tmp_path):
+    """A plain backup restores config and data as they were, the config noting when it was restored."""
     config_file, data_dir = isolated_paths
     backup_path = tmp_path / "backup.zip"
 
@@ -52,7 +53,9 @@ def test_create_plain_backup_then_restore_roundtrip(isolated_paths, tmp_path):
 
     restore_result = restore_backup(backup_path)
     assert restore_result.passed is True
-    assert json.loads(config_file.read_text()) == {"user": {"name": "Alex"}}
+    restored = json.loads(config_file.read_text())
+    assert restored.pop("sync")["restored_at"]  # noted, so a linked phone takes this computer's copies
+    assert restored == {"user": {"name": "Alex"}}
     assert (data_dir / "profiles" / "abc123" / "note.txt").read_text() == "hello from a profile"
     assert (data_dir / "notifications.json").read_text() == "[]"
 

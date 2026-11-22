@@ -47,31 +47,35 @@ def _git(*args: str) -> tuple[int, str]:
     return out.returncode, (out.stdout or out.stderr or "").strip()
 
 
-def hers(author: str, subject: str) -> bool:
-    """Pure logic. Whether a commit is the lab's: by MIA Lab, a merge of one of hers, or the Undo of such a merge."""
-    return author == LAB_NAME or subject.startswith(MERGE_SUBJECT) or subject.startswith(REVERT_SUBJECT)
+def hers(author: str, subject: str, parents: int = 1) -> bool:
+    """Pure logic. Whether a commit is the lab's: by MIA Lab, a merge (two parents) of one of hers, or the Undo of
+    such a merge; a single-parent commit merely titled like a merge isn't."""
+    return (author == LAB_NAME or (parents >= 2 and subject.startswith(MERGE_SUBJECT))
+            or subject.startswith(REVERT_SUBJECT))
 
 
 def waiting(git: Callable = _git) -> list[tuple[str, str, str]]:
     """The commits in the running copy that GitHub doesn't have yet (as far as this copy last knew), oldest first:
-    (hash, author, subject). None are asked of the network."""
-    code, out = git("log", "--reverse", "--format=%H%x09%an%x09%s", "origin/master..HEAD")
+    (hash, author, subject, how many parents). None are asked of the network."""
+    code, out = git("log", "--reverse", "--format=%H%x09%an%x09%P%x09%s", "origin/master..HEAD")
     if code != 0 or not out:
         return []
-    return [tuple(line.split("\t", 2)) for line in out.splitlines() if line.count("\t") >= 2]
+    rows = [line.split("\t", 3) for line in out.splitlines() if line.count("\t") >= 3]
+    return [(sha, author, subject, len(parents.split())) for sha, author, parents, subject in rows]
 
 
 def push(git: Callable = _git) -> dict:
     """Pushes her waiting merges to GitHub: {"pushed": n}, {"pushed": 0} when nothing waits, or {"held": why} when a
-    commit isn't hers, this isn't master, or GitHub has something newer; {"error": why} when the push fails. Never
-    forced, never rebased."""
+    commit isn't hers (a merge of hers needs its two parents), this isn't master, or GitHub has something newer;
+    {"error": why} when the push fails. Pushes exactly the newest commit it checked (its hash, to master), so one
+    made meanwhile is never carried along. Never forced, never rebased."""
     code, branch = git("rev-parse", "--abbrev-ref", "HEAD")
     if code != 0 or branch != "master":
         return {"held": "the running copy isn't on master"} if code == 0 else {"error": branch[:200]}
     commits = waiting(git)
     if not commits:
         return {"pushed": 0}
-    others = [c for c in commits if not hers(c[1], c[2])]
+    others = [c for c in commits if not hers(c[1], c[2], c[3])]
     if others:
         return {"held": f"{len(others)} waiting commit{'s' if len(others) != 1 else ''} not hers "
                         f"(the first: {others[0][2][:80]}): that's for its owner to push"}
@@ -82,9 +86,9 @@ def push(git: Callable = _git) -> dict:
     if code != 0 or (newer.isdigit() and int(newer) > 0):
         return {"held": "GitHub has newer commits: they're pushed once the running copy has those"}
     commits = waiting(git)
-    if any(not hers(c[1], c[2]) for c in commits):
+    if not commits or any(not hers(c[1], c[2], c[3]) for c in commits):
         return {"held": "a waiting commit isn't hers"}
-    code, out = git("push", "-q", "origin", "HEAD:master")
+    code, out = git("push", "-q", "origin", f"{commits[-1][0]}:refs/heads/master")  # exactly what was checked
     if code != 0:
         return {"error": f"the push failed: {out[:200]}"}
     log.info("Pushed %d of MIA's own commits to GitHub.", len(commits))

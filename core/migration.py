@@ -5,7 +5,8 @@ core.migration
 The move to MIA OS, checked (FW-07a: REQ-CMP-002, REQ-CMP-003, REQ-IMP-002, REQ-IMP-005, REQ-IMP-009;
 docs/mia_os/MIA_OS_FINAL_MIGRATION_AND_DATA_CONTINUITY_PLAN.md). Before the move, on Windows, `manifest()` records
 what he has; after the restore on MIA OS, the same is recorded there and `compare()` names anything that didn't
-come across whole. The move stops at the first mismatch (MV-01).
+come across whole. The move stops at the first mismatch (MV-01). After the move, `same_files` hashes again the
+very files the before manifest sampled (`manifest(..., like=before)`), so the two samples always compare.
 
 - **Every store** (`store_entry`, `stores`): each .json and .jsonl file under MIA's data folder, its record count and a
   hash of its records in a canonical order (each record as sorted, compact JSON; the records sorted), read the way MIA
@@ -134,12 +135,25 @@ def records_of(text: str, name: str) -> list:
     return [data]
 
 
-def store_entry(path: Path) -> dict:
-    """One store's {count, hash}, read the way MIA reads it (sealed ones opened); {error} when it won't open or read."""
-    from core.at_rest import open_text
+def _opened(path: Path) -> str:
+    """A store's text opened the way MIA does, but never copying aside one that won't open (writing the manifest on
+    MIA OS before the recovery key is entered must leave no copies behind): ValueError instead."""
+    from core import at_rest
 
+    text = path.read_text(encoding="utf-8")
+    if at_rest.line_sealed(path):
+        lines, failed = at_rest.open_lines(text)
+        if failed:
+            raise ValueError(f"{failed} line(s) are sealed under a key not held here (enter the recovery key first)")
+        return "\n".join(lines)
+    return at_rest.unseal(text) if at_rest.is_sealed(text) else text
+
+
+def store_entry(path: Path) -> dict:
+    """One store's {count, hash}, read the way MIA reads it (sealed ones opened); {error} when it won't open or read
+    (nothing copied aside)."""
     try:
-        records = records_of(open_text(path), path.name)
+        records = records_of(_opened(path), path.name)
     except (OSError, ValueError) as problem:
         return {"error": str(problem)[:120] or type(problem).__name__}
     digest = hashlib.sha256("\n".join(sorted(canonical(r) for r in records)).encode("utf-8")).hexdigest()
@@ -247,14 +261,31 @@ def programs(names: Optional[list[str]] = None) -> list[dict]:
     return [{"name": n, "answer": answer_for(n)} for n in (installed_programs() if names is None else names)]
 
 
+def same_files(before: list[dict], home: Optional[Path] = None) -> list[dict]:
+    """The after side's file sample: exactly the files the before manifest sampled, by their path under his home
+    (re-choosing would differ across systems: case-sensitive sorting, Windows' own desktop.ini files). A file that
+    isn't there is left out, so compare names it missing."""
+    home = Path(home) if home is not None else Path.home()
+    out = []
+    for f in before:
+        path = home / f["path"]
+        try:
+            size = path.stat().st_size
+            out.append({"path": f["path"], "size": size, "sha256": _sha256(path) if size <= BIG else ""})
+        except OSError:
+            continue
+    return out
+
+
 def manifest(root: Optional[Path] = None, folders: Optional[list[Path]] = None, sample: int = SAMPLE,
-             program_names: Optional[list[str]] = None) -> dict:
-    """Everything recorded before (or after) the move: {version, made, system, stores, files, programs}."""
+             program_names: Optional[list[str]] = None, like: Optional[dict] = None) -> dict:
+    """Everything recorded before (or after) the move: {version, made, system, stores, files, programs}. After the
+    move, `like` is the before manifest: its very files are hashed again (`same_files`)."""
     home = Path.home()
     folders = folders if folders is not None else [home / f for f in DEFAULT_FOLDERS if (home / f).is_dir()]
+    files = same_files(like.get("files", []), home) if like is not None else sample_files(folders, home, sample)
     return {"version": VERSION, "made": datetime.now().isoformat(timespec="seconds"), "system": sys.platform,
-            "stores": stores(root), "files": sample_files(folders, home, sample),
-            "programs": programs(program_names)}
+            "stores": stores(root), "files": files, "programs": programs(program_names)}
 
 
 def compare(before: dict, after: dict) -> dict:

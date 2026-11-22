@@ -5,7 +5,16 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-22 (Opus on the PC: the Windows backlog WP-05 to WP-12, FW-07a, FW-12's first part)*
+*Last updated: 2026-11-22 (Opus on the PC: the Windows backlog, FW-06 to FW-12's parts, Fable's review fixed)*
+
+**New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
+data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one
+commit, each with a test in `tests/test_review_2026_11_22.py` (14 of its 15 fail on the old code). The biggest:
+a sync flag reused inside its loop; the lost device's erase now has to be proved with the device's own key;
+the restore drill opens whole-sealed .jsonl stores as MIA does; the backup rotation's monthly tier really fills
+(a 400-night test); MIA OS opens apps and settings in his session (systemd-run --user). Fixing it found one
+more: the erase test removed the checkout's own content folders (only in a worktree); conftest now stubs
+`home_link.other_folders`. Knowledge K-0342. The few low findings left are listed privately in audit/.
 
 **New 2026-11-22: the Windows backlog is done (Stage 0), and for Fable to review.** Each package's commit says what
 it did; `docs/mia_os/MIA_OS_IMPLEMENTATION_WORK_PACKAGES.md` marks each built, and knowledge K-0321 to K-0333

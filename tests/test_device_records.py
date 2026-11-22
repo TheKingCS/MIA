@@ -79,8 +79,8 @@ def test_a_device_reported_lost_is_refused_at_once_and_told_once():
 
 
 def test_the_device_erases_mias_data_when_told_and_only_then(tmp_path, monkeypatch):
-    """A 410 with X-MIA-Erase to this device's own key erases its data folder (key folder too) and forgets the link;
-    any other refusal erases nothing."""
+    """A 410 with X-MIA-Erase proved with this device's own key erases its data folder (key folder too) and forgets
+    the link; any other refusal, or an order that can't prove it knows the key, erases nothing."""
     import urllib.error
     import urllib.request
 
@@ -96,11 +96,15 @@ def test_the_device_erases_mias_data_when_told_and_only_then(tmp_path, monkeypat
     config = _Config(**{"home_pc.url": "http://pc:8765", "home_pc.token": "k1", "home_pc.who": "zac"})
     context = SimpleNamespace(config=config)
 
-    def answer(code, erase):
-        """The computer answers with this code (and the erase header or not)."""
+    monkeypatch.setattr(home_link, "EXIT_AFTER_ERASE", False)
+
+    def answer(code, erase, proof=True):
+        """The computer answers with this code, and the erase order (proved with this device's key, or forged)."""
         def opener(request, timeout=None):
             """Raises the computer's answer."""
-            headers = {"X-MIA-Erase": "1"} if erase else {}
+            nonce = request.get_header("X-mia-erase-nonce") or ""
+            headers = {"X-MIA-Erase": "1", "X-MIA-Erase-Proof": home_link.erase_proof("k1" if proof else "x", nonce)} \
+                if erase else {}
             raise urllib.error.HTTPError(request.full_url, code, "no", headers, None)
         return opener
 
@@ -108,6 +112,10 @@ def test_the_device_erases_mias_data_when_told_and_only_then(tmp_path, monkeypat
     with pytest.raises(home_link.HomeLinkError):
         home_link.home_call(context, "/api/state")
     assert (data / "conversations.json").exists()
+    monkeypatch.setattr(urllib.request, "urlopen", answer(410, True, proof=False))  # anything else at the address
+    with pytest.raises(home_link.HomeLinkError):
+        home_link.home_call(context, "/api/state")
+    assert (data / "conversations.json").exists()  # a forged order erases nothing
     monkeypatch.setattr(urllib.request, "urlopen", answer(410, True))
     with pytest.raises(home_link.HomeLinkError, match="reported lost"):
         home_link.home_call(context, "/api/state")

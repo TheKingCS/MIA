@@ -125,6 +125,17 @@ _EXTERNAL_CONTENT_DIRS = (
 )
 
 
+def _mark_restored(config_file: Path) -> None:
+    """Notes in the restored config when this restore happened (`sync.restored_at`), so each phone's next sync takes
+    the computer's copies first instead of merging its older ones in (core/sync.py, REQ-IMP-005). Never raises."""
+    try:
+        data = json.loads(config_file.read_text(encoding="utf-8"))
+        data.setdefault("sync", {})["restored_at"] = datetime.now().isoformat(timespec="seconds")
+        config_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except (OSError, ValueError, AttributeError):
+        log.exception("Couldn't note the restore for the phones' sync.")
+
+
 def _resolve_external_content_dirs(config) -> list[tuple[str, Path]]:
     """(archive_name, real resolved directory) for every external
     content directory config knows how to place — empty if `config`
@@ -244,7 +255,9 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None, config=N
     (zip archives don't record empty directories, so this case is
     indistinguishable from "predates the feature") — restore favors
     never wiping real content over faithfully reproducing "this was
-    empty," the safer default for a destructive operation.
+    empty," the safer default for a destructive operation. The
+    restored config notes when (`sync.restored_at`, `_mark_restored`), so a
+    linked phone's next sync takes this computer's copies (REQ-IMP-005).
     """
     source_path = Path(source_path)
 
@@ -294,6 +307,7 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None, config=N
         # Everything validated — now touch the live filesystem.
         _CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(staged_config, _CONFIG_FILE)
+        _mark_restored(_CONFIG_FILE)
 
         staged_data = staging_dir / "data"
         if _DATA_DIR.exists():

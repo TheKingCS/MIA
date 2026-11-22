@@ -71,6 +71,9 @@
     root.dataset.sidebar = layout.sidebar || "full";
     root.dataset.effects = theme.effects && theme.effects !== "auto" ? theme.effects
       : (window.matchMedia && matchMedia("(max-width: 860px)").matches ? "light" : "full");
+    if (root.dataset.generating === "1" && (!theme.effects || theme.effects === "auto") && root.dataset.effects !== "none") {
+      root.dataset.effectsBefore = root.dataset.effects; root.dataset.effects = "light";  // a model is still generating
+    }
     if (theme.reduce_transparency) root.dataset.transparency = "reduced"; else delete root.dataset.transparency;
     root.dataset.ambient = theme.ambient === "drift" ? "drift" : "off";  // A7: a slow drift of the colours' glow
     ambientHeld.easing = !!theme.easing;  // MIA easing off for a busy computer or low battery: keep it still
@@ -91,6 +94,7 @@
     const root = document.documentElement;
     if (ambientHeld.generating === on) return;
     ambientHeld.generating = on;
+    root.dataset.generating = on ? "1" : "";  // applyTheme keeps light glass while it's set
     if (themeNow && (!themeNow.effects || themeNow.effects === "auto") && root.dataset.effects !== "none") {
       if (on) { root.dataset.effectsBefore = root.dataset.effects; root.dataset.effects = "light"; }
       else if (root.dataset.effectsBefore) { root.dataset.effects = root.dataset.effectsBefore; delete root.dataset.effectsBefore; }

@@ -15,7 +15,7 @@ no account is kept cut short. The newest KEEP lines are kept, and the trim is it
 (`h`, `link`), so a changed line, or one removed or put in, breaks the chain (`verify`, `check_chain`). A chain can
 be rewritten whole by whoever can write the file, so its head is copied to another device: the Sign-ins page
 remembers the newest hash it saw, and asks next time whether the log still holds it (`holds`). One that doesn't
-is logged (`log_changed`) and told.
+is logged (`log_changed`) and told, unless the log was only trimmed past it (`trimmed_since`).
 
 **Changes made anywhere.** A password or sign-in email changed on this computer (not through the web, which logs
 its own with the device) reaches the log through the event bus (`on_account_change`, wired in core/application.py),
@@ -263,6 +263,11 @@ class SecurityLog:
         """Whether a hash another device saw as this log's head is still one of its lines (REQ-SEC-034): a log rewritten
         from before that point no longer holds it."""
         return bool(h) and any(e.get("h") == h for e in self.entries())
+
+    def trimmed_since(self, h: str) -> bool:
+        """Whether the log was cut back (a log_trimmed line) and so may simply no longer hold this older head: then a
+        device that last looked long ago is told the log moved on, not that it was rewritten."""
+        return bool(h) and any(e.get("kind") == "log_trimmed" for e in self.entries())
 
     def for_person(self, profile_id: str, limit: int = 100) -> list[dict]:
         """One account's events, newest first, each with its words."""

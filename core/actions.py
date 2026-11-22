@@ -628,10 +628,15 @@ class ActionCenter:
         orb_state.watch("needs-you", self.waiting)
 
     def waiting(self) -> bool:
-        """Whether any card waits for a yes now (an expired one doesn't, nor one being decided)."""
+        """Whether a card waits for a yes now: one from the last quarter hour (an older one, left on a page he closed,
+        doesn't hold the orb for a day), at least a few seconds old (a press's propose-then-approve never blinks it),
+        not being decided."""
+        recent = (datetime.now() - timedelta(minutes=15)).isoformat(timespec="seconds")
+        settled = (datetime.now() - timedelta(seconds=3)).isoformat(timespec="seconds")
         with self._lock:
             self._expire()
-            return any(p.status == PROPOSED and not getattr(p, "_deciding", False) for p in self._proposals.values())
+            return any(p.status == PROPOSED and not getattr(p, "_deciding", False) and recent <= p.created_at <= settled
+                       for p in self._proposals.values())
 
     def _expire(self) -> None:
         """Marks proposals left undecided past KEEP_FOR (a day) expired, so an old card can't be approved later."""

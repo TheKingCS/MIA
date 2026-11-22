@@ -253,8 +253,17 @@ class PhoneServer:
     def local_session(self, profile_id: str) -> Optional[str]:
         """A sign-in token for the person already signed in at the
         desktop, so the web view needs no second password. None if the
-        server isn't running."""
+        server isn't running, or while a lockdown is on (WP-01: only his
+        password lifts it)."""
         if self._app is None:
+            return None
+        from core import lockdown
+        from core.personal_data import view_for
+
+        try:
+            if lockdown.active(view_for(self.context, profile_id)) is not None:
+                return None  # a lockdown lifts only with his password (Fable's review, 2026-11-22)
+        except Exception:  # noqa: BLE001 - unsure: no session
             return None
         import secrets
 

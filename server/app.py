@@ -572,7 +572,8 @@ def create_app(context: AppContext) -> FastAPI:
     """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
-    lost is answered "erase" (core/linked_devices.py, WP-10). /api/desktop lists MIA OS's Linux apps and System
+    lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
+    core/home_link.erase_proof, WP-10). /api/desktop lists MIA OS's Linux apps and System
     Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), and /api/models/store her models
     (core/model_store.py, REQ-HW-014). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
@@ -657,8 +658,11 @@ def create_app(context: AppContext) -> FastAPI:
             if gone is not None:
                 if gone["first"]:
                     _security("device_erased", gone["profile_id"], request)
+                from core.home_link import erase_proof
+
+                nonce = request.headers.get("X-MIA-Erase-Nonce", "")[:64]
                 raise HTTPException(status.HTTP_410_GONE, "This device was reported lost: it erases MIA's data now.",
-                                    headers={"X-MIA-Erase": "1"})
+                                    headers={"X-MIA-Erase": "1", "X-MIA-Erase-Proof": erase_proof(token, nonce)})
             profile_id = _linked_device(token)
             if profile_id is not None and not linked_devices.allows(linked_devices.scope_of(context.config, token),
                                                                     request.url.path):
@@ -3215,7 +3219,8 @@ def create_app(context: AppContext) -> FastAPI:
 
         found = book.verify()
         seen = (seen or "").strip()[:64]
-        found["seen"] = "" if not seen else ("held" if book.holds(seen) else "missing")
+        found["seen"] = "" if not seen else ("held" if book.holds(seen) else
+                                             "trimmed" if book.trimmed_since(seen) else "missing")
         if found["seen"] == "missing" and (profile_id, seen) not in app.state.chain_warned:
             app.state.chain_warned.add((profile_id, seen))
             book.record("log_changed", profile_id, _device(request), detail="seen " + seen[:12])

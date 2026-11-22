@@ -5,6 +5,9 @@ export MIA_DESKTOP_SESSION_FILE="${XDG_RUNTIME_DIR}/mia/desktop.json"
 # Her home, as her runtime's service has it (os/files/mia-runtime.service): the image's own folder is read-only.
 export MIA_HOME="${MIA_HOME:-$HOME/.local/share/mia}"
 cd /usr/lib/mia || exit 1
+# Her runtime is a user service started before the desktop: hand his session's display to the user manager, so the
+# apps and System Settings pages she opens (core/linux_apps.py, through systemd-run) appear on his screen.
+systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE 2>/dev/null || true
 # MIA_SHELL_ARGS: extra arguments for a test (KWin starts the session's program without arguments).
 # The shell comes back by itself if it dies; closing it cleanly (exit 0) ends the session (FW-03). If it dies three
 # times within 20 seconds of starting (it can't run on this machine), it stops trying: a terminal opens saying so,

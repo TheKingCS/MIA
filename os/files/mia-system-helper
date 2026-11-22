@@ -125,11 +125,15 @@ def main() -> int:
         if method == "Power":
             power(args[0])
             return f"{args[0]} started"
-        out = subprocess.run(["bootc", "status", "--json"], capture_output=True, text=True, timeout=60)
-        if not staged(out.stdout):
-            return "no update is staged"
-        power("reboot")
+        power("reboot")  # checked staged before polkit was asked (on_call)
         return "restarting into the staged update"
+
+    def update_staged() -> bool:
+        """Whether bootc has an update staged; Refused when bootc itself fails (never read as "nothing staged")."""
+        out = subprocess.run(["bootc", "status", "--json"], capture_output=True, text=True, timeout=60)
+        if out.returncode != 0:
+            raise Refused(f"bootc status failed: {(out.stderr or '').strip()[:160]}")
+        return staged(out.stdout)
 
     def on_call(_conn, sender, _path, _iface, method, params, invocation) -> None:
         """One call: checked, authorised, done, logged; an error back for anything refused or failed."""
@@ -137,6 +141,12 @@ def main() -> int:
         args = tuple(params.unpack())
         try:
             action = check(method, args)
+            if method == "ApplyUpdate" and not update_staged():  # nothing to do: never ask him for his password
+                _log(f"done {method}() for {sender}: no update is staged")
+                invocation.return_value(GLib.Variant("(s)", ("no update is staged",)))
+                bus.flush_sync(None)
+                rest()
+                return
             if not authorised(sender, action):
                 raise Refused("not authorised (the dialog was refused or no one could be asked)")
             outcome = run(method, args)
@@ -150,6 +160,8 @@ def main() -> int:
             return
         _log(f"done {method}{args!r} for {sender}: {outcome}")
         invocation.return_value(GLib.Variant("(s)", (outcome,)))
+        bus.flush_sync(None)  # the reply is out before an idle exit can come (he may have taken a while at the dialog)
+        rest()
 
     node = Gio.DBusNodeInfo.new_for_xml(INTERFACE)
     bus.register_object(PATH, node.interfaces[0], on_call, None, None)

@@ -34,14 +34,15 @@ class _Git:
         return 1, "unknown"
 
 
-HERS = ("a1\tMIA Lab\tlab: tidy the greenhouse alert\n"
-        "b2\tTheKingCS\tFrom the lab: tidy the greenhouse alert (p-0042)\n"
-        "c3\tTheKingCS\tRevert \"From the lab: tidy the greenhouse alert (p-0042)\"")
+HERS = ("a1\tMIA Lab\tz0\tlab: tidy the greenhouse alert\n"
+        "b2\tTheKingCS\tz0 a1\tFrom the lab: tidy the greenhouse alert (p-0042)\n"
+        "c3\tTheKingCS\tb2\tRevert \"From the lab: tidy the greenhouse alert (p-0042)\"")
 
 
 def test_only_her_own_commits_are_pushed():
-    """Her commits, the merges of them and their Undo are hers; anyone else's isn't."""
-    assert lab_push.hers("MIA Lab", "lab: x") and lab_push.hers("TheKingCS", "From the lab: x (p-1)")
+    """Her commits, the merges of them (two parents) and their Undo are hers; anyone else's isn't."""
+    assert lab_push.hers("MIA Lab", "lab: x") and lab_push.hers("TheKingCS", "From the lab: x (p-1)", parents=2)
+    assert not lab_push.hers("TheKingCS", "From the lab: x (p-1)")  # a plain commit titled like a merge
     assert lab_push.hers("TheKingCS", 'Revert "From the lab: x (p-1)"')
     assert not lab_push.hers("TheKingCS", "WP-12: something of Claude's") and not lab_push.hers("Claude", "Fix a bug")
 
@@ -60,8 +61,8 @@ def test_nothing_waiting_asks_nothing_of_the_network():
 
 
 def test_anything_not_hers_holds_the_push_for_its_owner():
-    """One of Claude's or Zac's commits waiting: nothing is pushed past it."""
-    git = _Git(log=HERS + "\nd4\tClaude\tWP-12: her merges pushed")
+    """One of Claude's or Zac's commits waiting (with its parent): nothing is pushed past it."""
+    git = _Git(log=HERS + "\nd4\tClaude\tc3\tWP-12: her merges pushed")
     held = lab_push.push(git)
     assert "not hers" in held["held"] and "push" not in git.ran and "fetch" not in git.ran
 

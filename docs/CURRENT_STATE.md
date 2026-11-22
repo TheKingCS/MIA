@@ -2,7 +2,17 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system packages), by claude.*
+session. Last updated: 2026-11-22 (Opus at the PC: the Windows backlog, the foundation's parts, Fable's review),
+by claude.*
+
+**New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
+data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one
+commit, each with a test in `tests/test_review_2026_11_22.py` (14 of its 15 fail on the old code). The biggest:
+a sync flag reused inside its loop; the lost device's erase now has to be proved with the device's own key;
+the restore drill opens whole-sealed .jsonl stores as MIA does; the backup rotation's monthly tier really fills
+(a 400-night test); MIA OS opens apps and settings in his session (systemd-run --user). Fixing it found one
+more: the erase test removed the checkout's own content folders (only in a worktree); conftest now stubs
+`home_link.other_folders`. Knowledge K-0342. The few low findings left are listed privately in audit/.
 
 **2026-11-18, later (Claude on Opus, at the PC). Foundation and living-system work, one package at a time.**
 - **Foundation:** FW-01 accepted (the image builds the same twice), FW-02 (CI pinned, the suite inside the image).

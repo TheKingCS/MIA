@@ -76,7 +76,8 @@
   }
 
   // ------------------------------------------------------------ voice (the shared recorder, web/shell.js)
-  const recorder = MIAShell.voiceRecorder();
+  // Stopped from the frame's microphone indicator (REQ-DSK-025): nothing sent, the mic and orb back to ready.
+  const recorder = MIAShell.voiceRecorder(() => { $("mic").classList.remove("listening"); orb("idle", "Ready"); note(""); });
   async function toggleMic() {
     if (!recorder.recording) {
       try { await recorder.start(); } catch (e) { note(e.message); return; }

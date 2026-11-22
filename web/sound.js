@@ -86,11 +86,11 @@
   // a failure; done and message off (Q-84). Every one has its visual twin in the orb's state and words.
   const CUES = { listening: "listenOn", "needs-you": "needsYou", warning: "error" };
   const OFF_BY_DEFAULT = { success: "done", notification: "message" };
-  let shown = "";
+  let shown = null;  // nothing heard yet: the first state a page learns makes no sound (a reload never replays one)
   function presence(state) {
     const before = shown;
     shown = state || "idle";
-    if (shown === before) return "";
+    if (before === null || shown === before) return "";
     const cue = CUES[shown] || (before === "listening" ? "listenOff" : "");
     if (cue) play(cue);
     return cue;
