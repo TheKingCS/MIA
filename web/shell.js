@@ -34,6 +34,8 @@
     const state = presenceLocal || presenceServer || "idle";
     const look = orbLook[state] || { label: state, glyph: "" };
     document.documentElement.dataset.presence = state;
+    if (window.MIASound && MIASound.presence) MIASound.presence(state);  // WP-06: the interface sound, if any
+    generating(state === "thinking" || state === "council");
     document.querySelectorAll(".mia-orb[data-presence-orb], #mia-orb").forEach((o) => {
       o.dataset.state = state;
       o.dataset.label = look.label;
@@ -82,7 +84,19 @@
   // Ambient motion (A7, core/appearance.py `display.ambient`): its own fixed layer behind the page, drifting only while
   // nothing holds it still: the page hidden, the device on battery, or MIA easing off (themes.css also stills it for
   // reduced motion, light or no glass effects, and high contrast). Held, it pauses where it is rather than vanishing.
-  const ambientHeld = { hidden: false, battery: false, easing: false };
+  const ambientHeld = { hidden: false, battery: false, easing: false, generating: false };
+  // WP-06 (REQ-VIS-026, REQ-VIS-012): while a local model is generating, auto effects drop to light glass and the
+  // ambient drift holds still, so the computer's power goes to her answer; both come back when it ends.
+  function generating(on) {
+    const root = document.documentElement;
+    if (ambientHeld.generating === on) return;
+    ambientHeld.generating = on;
+    if (themeNow && (!themeNow.effects || themeNow.effects === "auto") && root.dataset.effects !== "none") {
+      if (on) { root.dataset.effectsBefore = root.dataset.effects; root.dataset.effects = "light"; }
+      else if (root.dataset.effectsBefore) { root.dataset.effects = root.dataset.effectsBefore; delete root.dataset.effectsBefore; }
+    }
+    ambient();
+  }
   function ambient() {
     const root = document.documentElement;
     let layer = document.querySelector(".theme-ambient");

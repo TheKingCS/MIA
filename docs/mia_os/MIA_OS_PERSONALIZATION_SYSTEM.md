@@ -24,4 +24,4 @@ orb's state shapes can't be changed.
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-VIS-015 | The approval card and the orb's state shapes shall stay recognisable under every theme and personalisation. | Must | MVP | All | Partial | T | DEC-0236, DEC-0237 → 11 |
-| REQ-VIS-016 | From one of his pictures, MIA shall suggest a palette that passes the contrast checks, which he can save as his own theme. | Could | R1 | All | New | T | DEC-0236 → 11 |
+| REQ-VIS-016 | From one of his pictures, MIA shall suggest a palette that passes the contrast checks, which he can save as his own theme. | Could | R1 | All | Exists (A7, 2026-11-16: `core/theme_picture.py`, the Studio's From a Picture, theme.save) | T | DEC-0236 → 11 |

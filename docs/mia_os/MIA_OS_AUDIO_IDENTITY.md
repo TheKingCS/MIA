@@ -2,7 +2,9 @@
 
 *Claude (Opus), 2026-11-17. Planning only. Built: the win sounds (`web/sound.js`: an objective's chime, a mission's
 arpeggio, a level's fanfare, made in the browser, no files), voiced per theme (`SOUND_SETS`), and one setting
-(`sound.on`, plus `sound.voice` for her spoken reward line). Not built: interface sounds. Her voice is Prompt 07's.*
+(`sound.on`, plus `sound.voice` for her spoken reward line). **Interface sounds built 2026-11-22 (WP-06)**: from her
+orb's real changes of state (`MIASound.presence`): listening on and off, needs you, error; done and message made
+but off. Her voice is Prompt 07's.*
 
 | Sound | When | Character | Default (Q-84) |
 |---|---|---|---|
@@ -21,4 +23,4 @@ a sound profile (off, soft, full) but not replace the alarm. Her voice stays as 
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-VIS-023 | Every interface sound shall have a visual twin, be turned off with one setting, and never replace the alarm's sound. | Must | R1 | All | New | T | DEC-0240 → 11 |
+| REQ-VIS-023 | Every interface sound shall have a visual twin, be turned off with one setting, and never replace the alarm's sound. | Must | R1 | All | Exists (WP-06) | T | DEC-0240 → 11 |

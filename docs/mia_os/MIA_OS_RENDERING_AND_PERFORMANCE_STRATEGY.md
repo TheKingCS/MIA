@@ -15,4 +15,4 @@ no continuous GPU work at idle; a transition 60 fps; blur only on floating and p
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-VIS-026 | With effects on auto, the shell shall drop to light effects while a local model is generating and return when it ends. | Should | R1 | PC | New | T | DEC-0238, DEC-0204 → 11 |
+| REQ-VIS-026 | With effects on auto, the shell shall drop to light effects while a local model is generating and return when it ends. | Should | R1 | PC | Exists (WP-06, from the orb's thinking and council) | T | DEC-0238, DEC-0204 → 11 |

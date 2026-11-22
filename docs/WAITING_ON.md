@@ -8,6 +8,15 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### From the Windows backlog (2026-11-22)
+0ze. [ ] **Q-115: may a Light theme use darker shades of the meaning colours?** A light theme (dark words on light
+   panels) is the last piece of WP-06. Green "done", amber "needs you" and red "wrong" are tuned for MIA's dark
+   glass; on white, amber words are hard to read. A rule (DEC-0136) says no theme may change them. The choice: let
+   a light theme use darker shades of the same three colours (same meaning, still checked for readability by
+   code), or keep MIA dark-only. Claude's recommendation: yes, darker shades, with Muse's eye on the look.
+0zf. [ ] **Choose where the second backup copy goes** (WP-09): Settings, Backups, "Second copy of the nightly
+   backup": a folder on your external drive (like E:\MIA Backups). Until then the nightly backup is only on the PC.
+
 ### From Fable's review of 2026-11-20
 0zc. [ ] **Q-114: should MIA OS ever restart your PC by itself to finish an update?** As built now it never does: an
    update is downloaded at night and goes in the next time *you* restart or shut down (a snapshot of your files is

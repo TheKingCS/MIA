@@ -26,4 +26,4 @@ continuous animation over 2 % of a CPU core at idle.
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-VIS-011 | No animation shall delay or block input, and every animation shall be interruptible. | Must | MVP | All | Partial | T | DEC-0238 → 11 |
-| REQ-VIS-012 | Decorative motion shall stop with reduced motion, light or no effects, while hidden, and while her models are generating. | Should | R1 | All | Partial | T | DEC-0238, DEC-0204 → 11 |
+| REQ-VIS-012 | Decorative motion shall stop with reduced motion, light or no effects, while hidden, and while her models are generating. | Should | R1 | All | Exists (the last, WP-06) | T | DEC-0238, DEC-0204 → 11 |

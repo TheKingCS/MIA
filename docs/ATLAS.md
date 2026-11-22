@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1559 files, 345,217 lines; 1559 files describe themselves; 19,014 of 19,113 classes and functions are documented.
+1560 files, 345,318 lines; 1560 files describe themselves; 19,020 of 19,119 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -903,7 +903,7 @@
 
 ## tests/: the test suite: what each part must do
 
-552 files, 91,029 lines; 7,675 of 7,688 classes and functions documented
+553 files, 91,089 lines; 7,681 of 7,694 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1118,6 +1118,7 @@
 - `tests/test_intelligence_bench.py`: The Intelligence Benchmark (docs/INTELLIGENCE_BENCHMARK.md): the question list and the document stay in step, and the routing audit runs.
 - `tests/test_intent_manager.py`: Unit tests for core.intent_manager. Isolates _DATA_DIR/_INTENTS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_project_manager.py's isolated_paths.
 - `tests/test_intent_tool.py`: Unit tests for modules.toolbox.tools.intent_tool's pure functions, same style as tests/test_project_tool.py (no Qt event loop, no fixtures).
+- `tests/test_interface_sounds.py`: WP-06 (DEC-0240, REQ-VIS-023, REQ-VIS-026, REQ-VIS-012): interface sounds come from her orb's real changes of state, each with its visual twin (the orb's state and words), all off with the one sound setting, and never the alarm's; while a local model generates, auto glass drops to light effects and 
 - `tests/test_interview_form.py`: Unit tests for gui.widgets.interview_form's pure functions, same style as every other *_module.py test file in this project (no Qt event loop, no fixtures).
 - `tests/test_inventory_manager.py`: Unit tests for core.inventory_manager. Isolates _DATA_DIR/_ITEMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_inventory_tool.py`: Unit test for modules.toolbox.tools.inventory_tool.format_item_row — pure formatting logic, no Qt event loop needed.
@@ -1460,7 +1461,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,558 lines
+116 files, 21,599 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

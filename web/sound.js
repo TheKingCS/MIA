@@ -5,8 +5,14 @@
  * mission, a fanfare for a level. MIA's voice line (from the engine's
  * reward.say, core/actions.voice_line) is spoken by this device's voice
  * when the person turned voice lines on. Settings come from MIA.shell()
- * (`sound`: on, voice; Settings → Sound). Only ever for a win. A theme may voice
- * them its own way (SETS, picked in the Theme Studio, DEC-0136).
+ * (`sound`: on, voice; Settings → Sound). A theme may voice them its own way
+ * (SETS, picked in the Theme Studio, DEC-0136).
+ * Interface sounds (WP-06, DEC-0240, REQ-VIS-023): her orb's real changes of
+ * state (web/shell.js calls `presence`) as soft cues: the microphone opening and
+ * closing, a card waiting for him, something failing; "done" and "message" are
+ * made but off (Q-84). Each one's visual twin is the orb's state with its words
+ * (WP-07); `sound.on` turns them all off with the wins. Alarms aren't here: their
+ * sound is their own and nothing here can replace it.
  */
 (function () {
   "use strict";
@@ -67,7 +73,28 @@
     },
     // A quiet tick (credits, XP without a finish).
     tick: () => note(1200, 0, 0.12, 0.08),
+    // Interface sounds (WP-06): soft, short, under the wins' volume.
+    listenOn: () => { note(587.33, 0, 0.12, 0.07); note(880, 0.08, 0.16, 0.07); },
+    listenOff: () => { note(880, 0, 0.12, 0.06); note(587.33, 0.08, 0.16, 0.06); },
+    needsYou: () => note(659.25, 0, 0.5, 0.07),
+    error: () => { note(329.63, 0, 0.18, 0.08, "triangle"); note(261.63, 0.14, 0.3, 0.08, "triangle"); },
+    done: () => note(1318.5, 0, 0.1, 0.05),
+    message: () => { note(1046.5, 0, 0.25, 0.05); note(1318.5, 0.1, 0.3, 0.04); },
   };
+
+  // Which change of her orb's state makes which sound (REQ-VIS-023). On by default: the microphone, a card waiting,
+  // a failure; done and message off (Q-84). Every one has its visual twin in the orb's state and words.
+  const CUES = { listening: "listenOn", "needs-you": "needsYou", warning: "error" };
+  const OFF_BY_DEFAULT = { success: "done", notification: "message" };
+  let shown = "";
+  function presence(state) {
+    const before = shown;
+    shown = state || "idle";
+    if (shown === before) return "";
+    const cue = CUES[shown] || (before === "listening" ? "listenOff" : "");
+    if (cue) play(cue);
+    return cue;
+  }
 
   function play(name) {
     if (!settings.on || !TUNES[name]) return;
@@ -97,7 +124,7 @@
 
   window.MIASound = {
     configure: (s) => { if (s) settings = { on: s.on !== false, voice: !!s.voice }; },
-    play, speak, celebrate, preview,
+    play, speak, celebrate, preview, presence, cues: CUES, offByDefault: OFF_BY_DEFAULT,
     /** The theme's chimes ("classic" when it names none or one this page doesn't know). */
     useSet: (name) => { voice = SETS[name] || SETS.classic; },
     sets: Object.keys(SETS),
