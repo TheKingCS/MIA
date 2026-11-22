@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1552 files, 343,857 lines; 1552 files describe themselves; 18,935 of 19,034 classes and functions are documented.
+1554 files, 344,289 lines; 1554 files describe themselves; 18,960 of 19,059 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-604 files, 173,653 lines; 8,942 of 9,028 classes and functions documented
+605 files, 173,948 lines; 8,959 of 9,045 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -130,6 +130,7 @@
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 - `core/capability_check.py`: A capability's four descriptions read as one (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A capability is described in four places that each work on their own:
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
+- `core/capability_registry.py`: The capability truth registry (WP-08, DEC-0220, REQ-SLF-003/004/005; docs/mia_os/MIA_OS_CAPABILITY_TRUTH_REGISTRY.md and MIA_OS_CAPABILITY_STATE_MODEL.md). One record per capability (each app), joining what's said about it elsewhere:
 - `core/capability_reminders.py`: Now and then, MIA reminds the person of what they're already capable of doing right now — "did you know you could go do X?" (Zac, 2026-11-08). It isn't a new task and it isn't a value to live up to: it's a subtle redirect that meets him where he is — the gentle reminder that the ability is already i
 - `core/carpentry.py`: Carpentry, the first of Trade Master's apprentice programs (DEC-0149; Zac, 2026-11-08: "She should become a Trade master and be able to teach an entry level Apprentice"). A learning path on core/paths.py's method, the same as guitar (core/guitar.py): stages of lessons, each with steps, why and what 
 - `core/change_history.py`: The lasting history of what MIA changed, with undo by time and subject (prompt 23's review, UI-3; DEC-0188; REQ-TRU-001, REQ-TRU-002; `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` sections 3 and 14). "Undo that" (core/undo_log.py) keeps the last 20 changes in memory, so it's for "oops, just 
@@ -900,7 +901,7 @@
 
 ## tests/: the test suite: what each part must do
 
-548 files, 90,544 lines; 7,634 of 7,647 classes and functions documented
+549 files, 90,658 lines; 7,642 of 7,655 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -969,6 +970,7 @@
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, a missing 
 - `tests/test_capability_check.py`: Tests for a capability's four descriptions read as one (DEC-0283, LS-04, core/capability_check.py): the tool, the action kind, the manifest's tier and the effects table must agree.
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap
+- `tests/test_capability_registry.py`: The capability truth registry (WP-08, DEC-0220, REQ-SLF-003/004/005): one record per capability joining its owner, needs, operations, devices, state, verification, last success and failure, limits and evidence; states decided from evidence only, degraded and unverified among them; every change of st
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
 - `tests/test_change_history.py`: The lasting history of MIA's changes (prompt 23's review, UI-3; core/change_history.py): every change is kept with its files' bytes before (sealed, compressed, once per content), so it outlives a restart; "undo what you did this afternoon" puts changes back newest first, each whole or not at all, an *(1 undocumented)*
@@ -1453,7 +1455,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,509 lines
+116 files, 21,532 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

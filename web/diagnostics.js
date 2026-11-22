@@ -3,7 +3,8 @@
  * Renders MIA.diagnostics() (core/diagnostics.py): each built-in check-up over
  * one passive inspection (nothing is probed or changed), what passed, what to
  * look at, and what couldn't be read (never counted as a pass). The PC's
- * owner's page. Formatting only; the look is muse's.
+ * owner's page. Formatting only; the look is muse's. What she can do (WP-08): each capability's state from its
+ * evidence (core/capability_registry.py).
  * Her care of herself (DEC-0222, DEC-0225): the changes she made to herself,
  * each with Undo (the action lab.revert, approved on its card), what she put
  * right, and what she can never change. All decided in core (self_view).
@@ -64,6 +65,27 @@
   }
   const when = (iso) => !iso ? "" : new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
+  // What she can do (WP-08, core/capability_registry.py): each capability's state from its evidence, counted; the ones
+  // not fully working with why; and the latest changes of state, each with what caused it. Read only, rebuilt each look.
+  const STATE_WORDS = { working: "Working", partial: "Partly", degraded: "Degraded now", "unavailable here": "Not on this device",
+    malfunctioning: "Unwell", unverified: "Unverified", planned: "Planned", retired: "Retired" };
+  function capabilitiesPanel(c) {
+    if (!c) return null;
+    const n = c.counts || {};
+    const line = Object.keys(STATE_WORDS).filter((s) => n[s]).map((s) => STATE_WORDS[s] + " " + n[s]).join(" · ");
+    return el("details", { class: "glass dx-list dx-repo" },
+      el("summary", { class: "dx-label" }, "What I Can Do · " + line),
+      el("p", { class: "dim" }, "Each one's state is worked out from evidence: its tests, when it was last used and last failed, "
+        + "the devices it's on and what it needs. Nothing here can be set by hand, or by me."),
+      ...(c.notable || []).map((r) => el("div", { class: "dx-hw-row" },
+        el("span", { class: "dx-hw-name" }, r.name), el("span", { class: "dx-hw-value" }, STATE_WORDS[r.state] || r.state),
+        el("span", { class: "dim" }, r.evidence.slice(1).join("; ") || r.evidence[0]))),
+      ...((c.changes || []).length ? [el("p", { class: "dx-repo-title" }, "Lately")].concat(c.changes.map((x) =>
+        el("div", { class: "dx-hw-row" }, el("span", { class: "dx-hw-name" }, x.id),
+          el("span", { class: "dx-hw-value" }, (STATE_WORDS[x.from] || x.from) + " \u2192 " + (STATE_WORDS[x.to] || x.to)),
+          el("span", { class: "dim" }, when(x.at) + " · " + (x.because || []).slice(1).join("; "))))) : []));
+  }
+
   function paint(data) {
     const sum = (f) => data.checks.reduce((n, c) => n + f(c), 0);
     const passed = sum((c) => c.passed), look = sum((c) => c.failed.length), unread = sum((c) => c.unknown.length);
@@ -86,6 +108,7 @@
           : [el("p", { class: "dim" }, "No warnings or errors lately.")])),
       repoPanel(data.repository),
       ...selfPanels(data.self),
+      capabilitiesPanel(data.capabilities),
       el("p", { class: "dim dx-foot" }, "Looks only. Nothing is probed or changed. Anything it couldn't read is never counted as a pass. "
         + "You can also ask her: \"check my PC\", \"check the network\"."),
       el("button", { type: "button", class: "btn btn-ghost", onclick: async () => paint(await MIA.diagnostics()) }, "Run Again"),

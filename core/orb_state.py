@@ -18,6 +18,7 @@ events only:
   once); `offline` (`hold(state, on)`) while answers in words aren't ready, because the
   model server doesn't answer (`core/llm_manager.py`: its reachability check, or a turn that couldn't reach it;
   cleared by the next answer). DEC-0255: "her orb says when answers in words aren't ready yet".
+  `held(state)` says whether one is held (the capability registry reads `offline`: WP-08).
 
 `current()` is the strongest one now, in `PRIORITY` order, else `idle`. `listening` and `speaking` are the page's own
 (only the device knows its microphone is open or its speaker playing), so the page shows them itself.
@@ -133,6 +134,12 @@ def _probed() -> set:
         except Exception:  # noqa: BLE001 - a probe that fails says nothing
             continue
     return out
+
+
+def held(state: str) -> bool:
+    """Whether a condition is held now (`hold`; a watched one isn't asked here)."""
+    with _lock:
+        return state in _held
 
 
 def look() -> dict:

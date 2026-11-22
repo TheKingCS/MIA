@@ -1,6 +1,9 @@
 # MIA OS: the capability truth registry (Prompt 09 §5; DEC-0220)
 
-*Claude (Opus), 2026-11-17. Planning only.*
+*Claude (Opus), 2026-11-17. Planning only. **Built 2026-11-22 (WP-08)**: `core/capability_registry.py`, one record per
+app from its manifest, the tests, the turn traces, the Fix-It Log, parity and `LIMITS`; shown on Diagnostics as
+"What I Can Do". Not yet: a record per cross-app capability (voice, browser...), each test's last result, the
+version.*
 
 ## 1. From what exists
 
@@ -31,5 +34,5 @@ state into it by hand, and nothing a model says changes it.
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-SLF-003 | Each capability shall have one record joining its owner, needs, operations, devices, state, verification, last success and failure, limits and evidence. | Must | R1 | All | Partial (apps' status) | T | DEC-0220 → 09 |
-| REQ-SLF-004 | The registry shall be rebuilt from its sources and never edited by hand or by a model. | Must | R1 | All | New | T: no write path | DEC-0220 → 09 |
+| REQ-SLF-003 | Each capability shall have one record joining its owner, needs, operations, devices, state, verification, last success and failure, limits and evidence. | Must | R1 | All | Exists (WP-08: per app, `core/capability_registry.py`; the version per capability not yet) | T | DEC-0220 → 09 |
+| REQ-SLF-004 | The registry shall be rebuilt from its sources and never edited by hand or by a model. | Must | R1 | All | Exists | T: no write path | DEC-0220 → 09 |

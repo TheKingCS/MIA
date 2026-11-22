@@ -243,7 +243,8 @@ def self_view() -> dict:
 def screen(context, inspect=None) -> dict:
     """The Diagnostics web screen (web/diagnostics.html, the PC's owner's): every built-in check-up over one
     passive inspection, the hardware list it read (hardware), the log's newest problems (recent_problems), where
-    her docs disagree with her own repository (repository_view), and her care of herself (self_view)."""
+    her docs disagree with her own repository (repository_view), her care of herself (self_view), and what she can
+    do, each capability's state from its evidence (`capabilities`, core/capability_registry.py, WP-08)."""
     if inspect is None:
         from core.inspection import inspect
     try:
@@ -268,7 +269,19 @@ def screen(context, inspect=None) -> dict:
     except Exception:  # noqa: BLE001 - her repository is a side panel; the PC's check-up stands without it
         repo = repository_view(None)
     return {"checks": checks, "error": "", "hardware": hardware(facts), "problems": recent_problems(), "repository": repo,
-            "self": self_view()}
+            "self": self_view(), "capabilities": _capabilities(context)}
+
+
+def _capabilities(context) -> dict:
+    """The capability truth registry for the page (core/capability_registry.py, WP-08): counts by state, those not
+    working with their evidence, and the latest changes; None when it can't be built (the check-up stands without
+    it)."""
+    try:
+        from core import capability_registry
+
+        return capability_registry.summary(context)
+    except Exception:  # noqa: BLE001 - a side panel
+        return None
 
 
 _ASK = (("network", ("network", "internet connection", "wifi", "wi-fi", "connection")),

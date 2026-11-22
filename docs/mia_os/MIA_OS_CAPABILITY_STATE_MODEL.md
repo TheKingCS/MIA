@@ -18,4 +18,4 @@ move it back; a fallback that answered marks degraded for that period; age witho
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-SLF-005 | Capability states shall include degraded and unverified, and every state change shall cite the evidence that caused it. | Must | R1 | All | Partial | T | DEC-0220 → 09 |
+| REQ-SLF-005 | Capability states shall include degraded and unverified, and every state change shall cite the evidence that caused it. | Must | R1 | All | Exists | T | DEC-0220 → 09 |
