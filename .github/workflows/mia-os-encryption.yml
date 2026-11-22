@@ -158,6 +158,20 @@ jobs:
           # After such a change he enrols the TPM again, opened by the recovery key: one tpm2 slot, and the recovery one.
           vm "PASSWORD=$(cat /tmp/recovery.txt) MIA_DISK_PIN=271828 /usr/lib/mia/os/files/mia-disk-enrol again" | tee /tmp/again.txt
           test "$(grep -c tpm2 <(sed -n '/SLOT/,$p' /tmp/again.txt))" = 1 && grep -q recovery /tmp/again.txt
+      - name: FW-09 the recovery stick's steps open the disk from outside, with the recovery key
+        run: |
+          . ~/vm.sh
+          # docs/mia_os/MIA_OS_RECOVERY_STICK.md's commands, run from another Linux (the stick is one): the disk opened
+          # read-only with the recovery key, mounted read-only, his folder found and a file of his read back.
+          vm 'echo recovery-check > /var/home/recovery-check.txt && sync'
+          down
+          LOOP=$(sudo losetup -Pf --show --read-only /tmp/out/disk.raw)
+          printf '%s' "$(cat /tmp/recovery.txt)" | sudo cryptsetup open --readonly "${LOOP}p4" mia --key-file -
+          sudo mkdir -p /mnt/mia && sudo mount -o ro /dev/mapper/mia /mnt/mia
+          found=$(sudo sh -c 'ls -d /mnt/mia/home /mnt/mia/ostree/deploy/*/var/home 2>/dev/null' | head -n 1)
+          echo "His files are under: $found"
+          test "$(sudo cat "$found/recovery-check.txt")" = recovery-check
+          sudo umount /mnt/mia && sudo cryptsetup close mia && sudo losetup -d "$LOOP"
       - name: The VM's serial log, for the record
         if: always()
         run: tail -n 120 /tmp/serial.log || true

@@ -27,7 +27,7 @@ key will).
 2. Choose **Start Fedora** and wait for the desktop. Don't choose "Install".
 3. **The easy way:** open **Dolphin** (the folder icon). On the left, under Devices, the MIA OS drive shows as an
    encrypted volume. Click it, type the recovery key (with its dashes), and it opens. Your files are in
-   `home`, then your name.
+   `home` (or `ostree`, `deploy`, `default`, `var`, `home`), then your name.
 4. **If Dolphin doesn't show it**, open **Konsole** and type, one line at a time:
 
    ```
@@ -40,15 +40,16 @@ key will).
    sudo cryptsetup open /dev/nvme0n1p4 mia
    ```
 
-   Type the recovery key when it asks. Then open your files **read-only**, so nothing can change them:
+   Type the recovery key when it asks. Then open the disk **read-only**, so nothing can change it, and find your
+   folder:
 
    ```
    sudo mkdir -p /mnt/mia
-   sudo mount -o subvol=home,ro /dev/mapper/mia /mnt/mia
-   ls /mnt/mia
+   sudo mount -o ro /dev/mapper/mia /mnt/mia
+   ls -d /mnt/mia/home /mnt/mia/ostree/deploy/*/var/home
    ```
 
-   Your name is there, and your files under it.
+   One of those is there (which depends on how MIA OS was installed); your name is in it, and your files under it.
 5. **Copy what you need** to another drive (your external one): drag in Dolphin, or `cp -r` in Konsole.
 6. **Close it when done:** `sudo umount /mnt/mia` and `sudo cryptsetup close mia` (or just shut down).
 
@@ -60,6 +61,7 @@ key will).
 
 ## Rehearsed
 
-To check with each release (REQ-OPS-002: "rehearsed once a release"), and once in a VM in CI (the stick's image
-booted against an encrypted test disk, the key typed, a test file read). Neither is done yet: the VM rehearsal is
-FW-09's remaining step, and the first real rehearsal is with you at MV-01.
+To check with each release (REQ-OPS-002: "rehearsed once a release"). The commands above are run by CI against
+the encrypted test disk (`.github/workflows/mia-os-encryption.yml`, FW-09's step): opened read-only with that disk's
+recovery key from another Linux, his folder found, a file of his read back. Booting Fedora's own stick and doing it
+by hand is the first real rehearsal, with you at MV-01.
