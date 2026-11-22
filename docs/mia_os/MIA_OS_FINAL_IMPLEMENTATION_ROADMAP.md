@@ -343,6 +343,10 @@ approves itself.
 
 ### FW-09 USB recovery
 
+> **The procedure written 2026-11-22** (`MIA_OS_RECOVERY_STICK.md`): Fedora's KDE live stick, the same one as
+> HW-01's, opens the encrypted disk with the recovery key (Dolphin, or cryptsetup and a read-only mount of the
+> `home` subvolume). Still to do: the VM rehearsal.
+
 | Objective | Requirements | Tasks | Acceptance | Size |
 |---|---|---|---|---|
 | A USB stick reaches a desktop and his data without MIA and without the internal OS | REQ-OPS-002 | the image's installer ISO (bootc's `anaconda-iso` or Fedora's live KDE) documented as the recovery stick; unlocking LUKS with the recovery key from it; mounting `/var/home`; a written procedure in his guide | in the VM: boot the ISO, unlock, read a test file | one session |
