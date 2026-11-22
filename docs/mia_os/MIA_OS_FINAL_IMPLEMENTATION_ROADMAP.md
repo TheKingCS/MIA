@@ -362,6 +362,11 @@ approves itself.
 
 ### FW-12 Degraded intelligence
 
+> **The first version's part built 2026-11-22** (Opus): the chosen model failing or timing out hands the turn to
+> the first of `llm.fallback_models` the computer has (one extra try), and the answering level names it
+> (REQ-AI-013); `core/model_queue.py` runs one model call at a time, a conversation before her scheduled work
+> (REQ-HW-029, DEC-0204). Alpha's CPU fallback and removable models are still to come.
+
 | Objective | Requirements | Tasks | Acceptance | Size |
 |---|---|---|---|---|
 | A model failure falls back to the next local model and says so; the conversation never waits behind background work; at Alpha, the CPU fallback, removable models and the capability truth | MVP: REQ-AI-013, REQ-HW-029. Alpha: REQ-HW-004, 012, 014, REQ-FUN-221, 222 | inspect `core/llm*` routing; a fallback chain with a spoken note; the GPU queue gives the conversation priority (DEC-0204); tests with a failing fake backend | tests; in the VM with no GPU: answers from a small CPU model, said so | one session |

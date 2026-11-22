@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1563 files, 345,811 lines; 1563 files describe themselves; 19,042 of 19,141 classes and functions are documented.
+1565 files, 346,094 lines; 1565 files describe themselves; 19,059 of 19,158 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-608 files, 174,749 lines; 8,993 of 9,079 classes and functions documented
+609 files, 174,894 lines; 9,001 of 9,087 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -340,6 +340,7 @@
 - `core/model_bench.py`: "Can the model on this device do MIA's job?" (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Replays MIA's golden set (tests live_model_check.py) against a model and reports two things:
 - `core/model_forge.py`: MIA's model forge (DEC-0106, stage 1): where she trains small models of her own, measures them honestly, and keeps a card saying what each one is.
 - `core/model_inspection.py`: Claude inspects MIA's models before they're used (DEC-0200; Zac, 2026-11-17: "MIA should have the ability to have her models inspected by Claude to test and approve them. This is similar to the Night School detail we have discussed."). The Specialist Forge's F6 (`docs/mia_os/MIA_OS_SPECIALIST_FORGE.
+- `core/model_queue.py`: One model job at a time on this computer's GPU, the conversation first (FW-12, DEC-0204: "MIA keeps one model job per GPU at a time, conversation first, then specialists, the Workroom, background work"; REQ-HW-029: "a conversation he's in shall never wait behind background model work for more than o
 - `core/model_registry.py`: Which AI model MIA is running, asked of the runtime itself (2026-10-21, the intelligence spec's first slice: "What AI model are you using?" was answered with "I don't have that kind of technical information").
 - `core/module_manager.py`: Discovers and manages MIA modules.
 - `core/module_validator.py`: Validates a candidate module folder against the compatibility contract in docs/MODULE_SPEC.md, before it's installed into modules/.
@@ -905,7 +906,7 @@
 
 ## tests/: the test suite: what each part must do
 
-554 files, 91,200 lines; 7,688 of 7,701 classes and functions documented
+555 files, 91,338 lines; 7,697 of 7,710 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1021,6 +1022,7 @@
 - `tests/test_data_recovery.py`: Unit tests for core.data_recovery.notify_data_corruption.
 - `tests/test_data_root.py`: Where MIA keeps a person's files (core/data_root.py, MIA_HOME): the code's folder unless it's set; with it set, nothing at all is written into the code's folder; and tools/move_home copies a MIA to a new home, checked.
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
+- `tests/test_degraded_intelligence.py`: FW-12, the first version's part (REQ-AI-013, REQ-HW-029, DEC-0204): when the chosen local model fails or times out, the next one the computer has answers and MIA says which; and one model call runs at a time, a conversation before background work, so his turn waits at most for the one call already r
 - `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci
 - `tests/test_dev_checks.py`: The development checks that need a real run (core/dev_checks.py, build plan step 2): the committed code's suite against the known failures, reverts per merge, and the dependency audit; the loops that read them are heavy, so the app's own check never runs them.

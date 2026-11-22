@@ -365,7 +365,8 @@ class _DownThenUp:
 
 
 def _manager(monkeypatch, backend, started, start_ok=True, setting=True):
-    """An LLMManager over a fake Ollama backend, with `ollama serve` faked: `started` collects each start."""
+    """An LLMManager over a fake Ollama backend, with `ollama serve` faked: `started` collects each start; it has no
+    smaller model to fall back to."""
     from types import SimpleNamespace
 
     from core import llm_manager as lm
@@ -387,6 +388,8 @@ def _manager(monkeypatch, backend, started, start_ok=True, setting=True):
     manager._backend = backend.real
     monkeypatch.setattr(backend.real, "generate", backend.generate)
     monkeypatch.setattr(backend.real, "is_available", backend.is_available)
+    # No smaller model to fall back to (FW-12): the real Ollama on this PC is never asked from a test.
+    monkeypatch.setattr(backend.real, "installed", lambda timeout=3.0: [])
     return manager
 
 

@@ -32,5 +32,5 @@ is measured before the Workroom is built (`MIA_OS_SPECIALIST_FORGE.md`, W1).
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-HW-029 | A conversation he's in shall never wait behind background model work for more than one model load. | Must | MVP | PC | Partial (homeostasis defers) | M: a bench running while he asks | DEC-0204 → 06 |
+| REQ-HW-029 | A conversation he's in shall never wait behind background model work for more than one model load. | Must | MVP | PC | Exists (FW-12: `core/model_queue.py`, one call at a time, the conversation first; measured at MV-02) | M: a bench running while he asks | DEC-0204 → 06 |
 | REQ-HW-030 | The model queue shall be visible ("what's using the card?"), with each job's owner and priority. | Should | R1 | PC | New | T | DEC-0204, → 07 |

@@ -9,7 +9,10 @@ server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md),
 and a second, `OpenAIBackend` (2026-10-07), for llama.cpp's server on
 the phone (`llm.backend: "openai"`). The server's address is written once
 (`DEFAULT_SERVER`) and every module asks `local_server_url()` for it; embeddings
-and vision go through `OllamaBackend.embed` and `see` (LS-08).
+and vision go through `OllamaBackend.embed` and `see` (LS-08). When the chosen
+model fails or times out, the first smaller one the server has (`llm.fallback_models`,
+`OllamaBackend.installed`, `with_model`) answers and `level` names it; every call
+waits its turn for the GPU, a conversation first (core/model_queue.py) (FW-12).
 
 Built on stdlib `urllib.request` rather than the `requests` package —
 this is a single local JSON endpoint, and requirements.txt stays light
@@ -111,6 +114,8 @@ DEFAULT_SERVER = "http://127.0.0.1:11434"  # the one place the model server's ad
 _DEFAULT_BASE_URL = DEFAULT_SERVER
 _DEFAULT_MODEL = "llama3.2"
 _DEFAULT_TIMEOUT_SECONDS = 60.0
+# FW-12 (REQ-AI-013): when the chosen model fails or times out, the first of these the computer has answers instead.
+FALLBACK_MODELS = ("qwen2.5:7b", "qwen2.5:3b", "llama3.2")
 _DEFAULT_KEEP_ALIVE = "-1"
 _DEFAULT_TEMPERATURE = 0.0
 
@@ -311,6 +316,21 @@ class OllamaBackend:
         ]
         return ChatReply(content=message.get("content", ""), tool_calls=tool_calls)
 
+    def installed(self, timeout: float = 3.0) -> list[str]:
+        """The models this Ollama server has (/api/tags), by name; [] when it can't be asked."""
+        request = urllib.request.Request(f"{self._base_url}/api/tags", method="GET")
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return [m.get("name", "") for m in json.loads(response.read().decode("utf-8")).get("models", [])]
+        except (urllib.error.URLError, OSError, ValueError):
+            return []
+
+    def with_model(self, model: str) -> "OllamaBackend":
+        """The same server and settings with another model (the fallback, FW-12)."""
+        twin = OllamaBackend(self._base_url, model, "5m", self._temperature, num_ctx=self._num_ctx, think=self._think,
+                             num_predict=self._num_predict)
+        return twin
+
     def is_available(self, timeout: float) -> bool:
         """Whether the Ollama server answers (/api/tags)."""
         request = urllib.request.Request(f"{self._base_url}/api/tags", method="GET")
@@ -421,8 +441,8 @@ class LLMManager:
 
     def __init__(self, context: AppContext) -> None:
         """The Assistant's model: the configured backend and timeout, plus, when the phone is linked, the home
-        computer's model, tried first (DEC-0022); `level` says which answered last; and when Ollama was last
-        started for a turn (`_wake_local`).
+        computer's model, tried first (DEC-0022); `level` says which answered last (and `fell_back` the smaller
+        model, when the chosen one failed, FW-12); and when Ollama was last started for a turn (`_wake_local`).
         """
         self.context = context
         self._timeout = float(context.config.get("llm.timeout_seconds", _DEFAULT_TIMEOUT_SECONDS))
@@ -434,6 +454,8 @@ class LLMManager:
         self.home = None
         self.home_reach = None
         self.level = ""
+        self.fell_back = ""  # the smaller model that answered last, when the chosen one failed (FW-12)
+        self._installed: tuple = (float("-inf"), [])  # (when asked, the server's models), for the fallback
 
     def use_backend(self, backend: "LLMBackend", timeout: Optional[float] = None) -> None:
         """Switch models while running (the phone, once its model is up)."""
@@ -460,14 +482,18 @@ class LLMManager:
         the turn to this device's model. When this device's model doesn't
         answer, `_wake_local` may start Ollama and the call is tried once more.
         The server's store lock is let go while it runs (core/store_lock.py):
-        the model touches no store, and the phone and pages needn't wait."""
+        the model touches no store, and the phone and pages needn't wait.
+        Then it waits its turn for the GPU (core/model_queue.py, FW-12): one
+        model call at a time, a conversation before background work."""
+        from core import model_queue
         from core.store_lock import released
 
-        with released():
+        with released(), model_queue.slot():
             return self._ask_unlocked(call)
 
     def _ask_unlocked(self, call):
-        """_ask's work, with no store lock held."""
+        """_ask's work, with no store lock held: the home computer, else this device's model, else (it failed and
+        Ollama didn't need waking) the next smaller one (`_fall_back`)."""
         from core.home_link import HOME_PC
 
         if self.home is not None and self.home_reach.up():
@@ -478,16 +504,53 @@ class LLMManager:
             except LLMUnavailableError as exc:
                 log.info("Home computer didn't answer (%s); using this device's model.", exc)
                 self.home_reach.down()
+        self.fell_back = ""
         try:
             result = call(self._backend)
-        except LLMUnavailableError:
+        except LLMUnavailableError as failed:
             # T-0054 (the answers.model_down loop): on the PC the model server is Ollama, and when it isn't running
             # every turn failed. Start it once, quietly, and try the turn again.
-            if not self._wake_local():
-                raise
-            result = call(self._backend)
+            if self._wake_local():
+                result = call(self._backend)
+            else:
+                return self._fall_back(call, failed)
         self.level = self._local_level()
         return result
+
+    def _fall_back(self, call, failed: Exception):
+        """The chosen model failed or timed out (REQ-AI-013): the next local model it has from `llm.fallback_models`
+        answers instead, and `level` says which ("THIS COMPUTER · qwen2.5:7b, the smaller model"). Only one is
+        tried (a second wait would leave him waiting twice); the first failure is raised when none is there or it
+        fails too."""
+        backend = self._fallback()
+        if backend is None:
+            raise failed
+        try:
+            result = call(backend)
+        except LLMUnavailableError:
+            raise failed from None
+        self.fell_back = backend._model
+        self.level = f"{self._local_level()} · {backend._model}, the smaller model"
+        log.warning("The chosen model didn't answer (%s); %s answered instead.", failed, backend._model)
+        return result
+
+    def _fallback(self):
+        """The first of `llm.fallback_models` this computer's Ollama has (asked at most every 5 minutes), as a
+        backend; None for another kind of server or when it has none of them."""
+        import time
+
+        config = getattr(getattr(self, "context", None), "config", None)
+        if not isinstance(self._backend, OllamaBackend) or config is None:
+            return None
+        wanted = [m for m in (config.get("llm.fallback_models", FALLBACK_MODELS) or []) if m and m != self._backend._model]
+        if not wanted:
+            return None
+        asked, have = getattr(self, "_installed", (float("-inf"), []))
+        if time.monotonic() - asked > 300:
+            have = self._backend.installed()
+            self._installed = (time.monotonic(), have)
+        found = next((m for m in wanted if m in have or f"{m}:latest" in have), None)
+        return self._backend.with_model(found) if found else None
 
     def _wake_local(self) -> bool:
         """When the local model is Ollama on this machine and isn't answering: start `ollama serve` with no window

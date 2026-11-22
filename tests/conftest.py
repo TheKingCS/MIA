@@ -285,3 +285,12 @@ def _orb_idle():
     orb_state.reset()
     yield
     orb_state.reset()
+
+
+@pytest.fixture(autouse=True)
+def _no_fallback_model_asked_for_real(monkeypatch):
+    """No test asks the real Ollama on this PC which models it has (FW-12's fallback would, then call one): a
+    backend reports none unless a test gives it its own."""
+    from core.llm_manager import OllamaBackend
+
+    monkeypatch.setattr(OllamaBackend, "installed", lambda self, timeout=3.0: [])

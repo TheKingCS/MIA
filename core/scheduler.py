@@ -130,7 +130,8 @@ class Scheduler:
         """Runs one due job under the store lock; False when the stores were busy (it stays due) or it was asked to
         wait (due again one interval on). A failure is logged and recorded, and the job is due again one interval on,
         like a run that worked, or later once it keeps failing (backoff). Each run is a cause of its own, with its own
-        trace id (core/trace.py), and its time is told to `on_ran`."""
+        trace id (core/trace.py), and its time is told to `on_ran`. Its model calls are background work, so a
+        conversation's go first (core/model_queue.py)."""
         why = self._defer_reason(job.name)
         if why:
             job.deferrals += 1
@@ -142,10 +143,11 @@ class Scheduler:
             log.debug("Skipped %s for now: the stores are busy.", job.name)
             return False
         started = self._clock()
-        from core import trace
+        from core import model_queue, trace
 
         try:
-            with trace.tracing(trace.new_id()):  # each run its own cause (DEC-0280)
+            # each run its own cause (DEC-0280); its model calls wait behind a conversation's (FW-12, DEC-0204)
+            with trace.tracing(trace.new_id()), model_queue.as_kind("background"):
                 job.run()
             job.last_error = ""
             job.failures_in_a_row = 0
