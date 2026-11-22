@@ -35,6 +35,6 @@ def test_the_camera_and_anything_else_are_turned_down_even_for_her_page():
 def test_talk_on_every_page_has_a_mic_that_sends_her_voice_path():
     """The shared frame's Talk form carries the mic, recording with the shared recorder and sending MIA.voice."""
     shell = (Path(__file__).resolve().parent.parent / "web" / "shell.js").read_text(encoding="utf-8")
-    assert "talk-mic" in shell and "voiceRecorder()" in shell and "MIA.voice(audio)" in shell
+    assert "talk-mic" in shell and "voiceRecorder(() =>" in shell and "MIA.voice(audio)" in shell  # with its cancel (REQ-DSK-025)
     # the mic sits between the box (and the Look eye, DEC-0129) and Send
     assert "input, mic, el(\"button\"" in shell or "input, look, mic, el(\"button\"" in shell

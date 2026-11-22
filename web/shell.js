@@ -572,12 +572,45 @@
     return wav((await offline.startRendering()).getChannelData(0), rate);
   }
 
+  // The microphone or camera in use (FW-11, REQ-DSK-025): whenever a page of MIA's has one open, the frame shows it,
+  // and one press on Stop closes every stream at once (each capture says how to close itself). Never hidden while
+  // open; gone the moment the last one closes.
+  const captures = new Map();
+  let capturePill = null;
+  function capture(kind, stop) {
+    const id = {};
+    captures.set(id, { kind, stop });
+    drawCapture();
+    return () => { if (captures.delete(id)) drawCapture(); };
+  }
+  function drawCapture() {
+    if (!captures.size) { if (capturePill) { capturePill.remove(); capturePill = null; } return; }
+    const kinds = [...new Set([...captures.values()].map((c) => c.kind))];
+    const words = kinds.map((k) => k === "camera" ? "Camera" : "Microphone").join(" and ") + " on";
+    const stopAll = () => { [...captures.values()].forEach((c) => { try { c.stop(); } catch (e) { /* closed */ } }); captures.clear(); drawCapture(); };
+    const pill = el("div", { class: "capture-pill", role: "status", "aria-live": "polite" },
+      el("span", { class: "capture-dot", "aria-hidden": "true" }), el("span", {}, words),
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: stopAll, "aria-label": "Stop: close the " + words.replace(" on", "").toLowerCase() }, "Stop"));
+    if (capturePill) capturePill.replaceWith(pill); else document.body.append(pill);
+    capturePill = pill;
+  }
+
   /** A recorder: start() asks for the microphone and records; stop() resolves to the WAV. Throws a sentence when
-   * this browser can't record or the microphone isn't allowed. */
-  function voiceRecorder() {
-    let recorder = null, stream = null, chunks = [];
+   * this browser can't record or the microphone isn't allowed. While it records, the frame shows the microphone is on
+   * (REQ-DSK-025); its Stop ends the recording without sending it and calls `onCancel`. */
+  function voiceRecorder(onCancel) {
+    let recorder = null, stream = null, chunks = [], release = () => {};
+    const cancel = () => {
+      if (!recorder) return;
+      recorder.onstop = () => { stream.getTracks().forEach((t) => t.stop()); };
+      recorder.stop();
+      recorder = null;
+      release();
+      if (onCancel) onCancel();
+    };
     return {
       get recording() { return !!recorder && recorder.state === "recording"; },
+      cancel,
       async start() {
         if (!navigator.mediaDevices || !window.MediaRecorder) {
           throw new Error("This browser can't record here. Voice works in MIA's phone app and on the PC.");
@@ -591,6 +624,7 @@
         recorder = new MediaRecorder(stream);
         recorder.ondataavailable = (e) => chunks.push(e.data);
         recorder.start();
+        release = capture("microphone", cancel);
       },
       stop() {
         return new Promise((resolve, reject) => {
@@ -598,6 +632,7 @@
           recorder.onstop = async () => {
             stream.getTracks().forEach((t) => t.stop());
             recorder = null;
+            release();
             try { resolve(await toWav(new Blob(chunks))); } catch (e) { reject(e); }
           };
           recorder.stop();
@@ -648,7 +683,12 @@
       log.scrollTop = log.scrollHeight;
     }
     // The mic: tap to talk, tap again when done (DEC-0125).
-    const recorder = voiceRecorder();
+    // Stopped from the frame's microphone indicator: nothing is sent, and the mic button is back to "Speak".
+    const recorder = voiceRecorder(() => {
+      presenceHere("");
+      mic.classList.remove("listening");
+      mic.setAttribute("aria-label", "Speak to MIA");
+    });
     const mic = el("button", { type: "button", class: "btn btn-ghost chat-mic talk-mic", "aria-label": "Speak to MIA",
       title: "Speak to MIA (tap again when you're done)", onclick: async () => {
         if (recorder.recording) {
@@ -1295,7 +1335,7 @@
   }
 
   window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk, copy, copyButton,
-    notRight, voiceRecorder, playReply, twoWays };
+    notRight, voiceRecorder, playReply, twoWays, capture };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

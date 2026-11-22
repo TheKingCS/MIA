@@ -18,4 +18,4 @@ strip and in KDE's own indicators (PipeWire shows which app uses them). Off mean
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-DSK-025 | Whenever the microphone or camera is in use by MIA, the shell shall show it, and one press shall close the stream. | Must | MVP | All | Partial | T | DEC-0211 → 10, 13 |
+| REQ-DSK-025 | Whenever the microphone or camera is in use by MIA, the shell shall show it, and one press shall close the stream. | Must | MVP | All | Exists (FW-11: the frame's Microphone on indicator with Stop; MIA has no live camera stream yet) | T | DEC-0211 → 10, 13 |

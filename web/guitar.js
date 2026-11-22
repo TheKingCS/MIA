@@ -40,10 +40,15 @@
     recorder.ondataavailable = (e) => parts.push(e.data);
     const stopped = new Promise((done) => { recorder.onstop = done; });
     recorder.start();
-    await new Promise((r) => setTimeout(r, SECONDS * 1000));
-    recorder.stop();
+    // The frame shows the microphone is on, and its Stop ends the take now (REQ-DSK-025).
+    let early = null;
+    const ended = new Promise((r) => { early = r; });
+    const release = MIAShell.capture ? MIAShell.capture("microphone", () => early()) : () => {};
+    await Promise.race([new Promise((r) => setTimeout(r, SECONDS * 1000)), ended]);
+    if (recorder.state === "recording") recorder.stop();
     await stopped;
     stream.getTracks().forEach((t) => t.stop());
+    release();
     const audio = new AudioContext();
     const decoded = await audio.decodeAudioData(await new Blob(parts).arrayBuffer());
     audio.close();

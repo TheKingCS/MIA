@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1571 files, 346,817 lines; 1571 files describe themselves; 19,092 of 19,191 classes and functions are documented.
+1572 files, 346,895 lines; 1572 files describe themselves; 19,095 of 19,194 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -909,7 +909,7 @@
 
 ## tests/: the test suite: what each part must do
 
-558 files, 91,626 lines; 7,714 of 7,727 classes and functions documented
+559 files, 91,659 lines; 7,717 of 7,730 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -980,6 +980,7 @@
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap
 - `tests/test_capability_registry.py`: The capability truth registry (WP-08, DEC-0220, REQ-SLF-003/004/005): one record per capability joining its owner, needs, operations, devices, state, verification, last success and failure, limits and evidence; states decided from evidence only, degraded and unverified among them; every change of st
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
+- `tests/test_capture_indicator.py`: REQ-DSK-025 (FW-11): whenever a page of MIA's has the microphone open, the frame shows it, and one press closes it: Talk's recorder and the guitar check register with the frame's indicator, and its Stop closes every stream.
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
 - `tests/test_change_history.py`: The lasting history of MIA's changes (prompt 23's review, UI-3; core/change_history.py): every change is kept with its files' bytes before (sealed, compressed, once per content), so it outlives a restart; "undo what you did this afternoon" puts changes back newest first, each whole or not at all, an *(1 undocumented)*
 - `tests/test_character_module.py`: Unit tests for modules.character.module's pure functions, same style as tests/test_household_module.py (no Qt event loop, no fixtures).
@@ -1472,7 +1473,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,646 lines
+116 files, 21,691 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
