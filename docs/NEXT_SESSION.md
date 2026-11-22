@@ -14,8 +14,13 @@ holds how and what went wrong. Worth a reviewer's eye: the two lock-order fixes 
 device's data folder on a 410 with X-MIA-Erase, K-0329), `lab_push` (pushes only her own commits, K-0330), the
 model queue (every model call now waits its turn, K-0333), and the capability registry's write path (K-0327).
 Open for Zac: Q-115 (a Light theme's meaning colours), choosing the backup's second place (WAITING_ON 0zf).
-The final roadmap's next packages need VM runs: FW-06 the system helper, FW-07b the restore and rehearsal,
-FW-09 the USB recovery stick, FW-10 the phone against the VM, FW-11 the desktop integration.
+**Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**
+(K-0334 to K-0337). For the reviewer too: the system helper (`os/files/mia-system-helper`, security-critical,
+the plan asks Codex to review it), the model queue, and the fresh sync after pairing (`sync.start_fresh`).
+Left of the foundation, each needing VM runs or Zac: FW-07b's restore and rehearsal in the VM, FW-09's stick
+booted in a VM, FW-10's phone emulator against the VM, FW-11's screenshots and portals, the helper's real dialog
+on screen; FW-08 waits on his signing key. Check a suite run for the "Tests wrote into the real data/" line,
+not only the pass count: it fails the run while the summary still says passed.
 
 **At the start of every session (FW-02):** `gh run list -L 8`, and read any failed run (`gh run view <id>
 --log-failed`) before building anything: CI is the gate, and a red run is the first thing to fix.

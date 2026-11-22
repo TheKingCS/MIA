@@ -287,6 +287,12 @@ approves itself.
 
 ### FW-06 The system helper (PoC 5)
 
+> **Built and passed in the VM 2026-11-22** (Opus; run 45036996998 on 1215a795): org.mia.System1 with three fixed
+> operations; hostile arguments refused before polkit (A8), a call with no one at the desk refused, an approved one
+> done and in the journal (A7, with a test-only polkit rule standing in for his password), the helper gone a minute
+> after (A6); MIA's session still starts with KDE's polkit agent beside her shell. Not yet: a screenshot of the real
+> dialog in her session, and Codex's security review (the plan's).
+
 | Field | Specification |
 |---|---|
 | Objective | MIA changes the system only through a helper with fixed operations, each confirmed in the OS's own dialog |

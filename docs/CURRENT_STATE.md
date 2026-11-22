@@ -54,9 +54,15 @@ session. Last updated: 2026-11-18 (Opus at the PC: foundation and living-system 
   model thinks (the Light theme waits on Q-115). Then FW-07a (the migration manifest, its compare, his programs'
   answers: 48 of 51) and FW-12's first part (the next local model when one fails, said; one model call at a
   time, the conversation first). Two lock-order hangs found and fixed on the way.
-- **Next:** a Fable review of everything since 2026-11-20 (Zac's plan); then FW-06 (the system helper), FW-07b
-  (the restore and rehearsal in the VM), FW-09, FW-10 and FW-11, each with VM runs; Zac's answers to Q-114 and
-  Q-115; his install guide for MV-01.
+- **2026-11-22, later, Opus: four more foundation packages.** FW-06 the system helper (three fixed operations,
+  each his yes on the card and his password in the OS's dialog), passed in the VM; FW-11's first part (the
+  computer's Linux apps on the Apps page, System Settings' pages from MIA's Settings, both by voice); FW-07b's
+  phone part (pairing again starts sync fresh, so an old phone copy never merges into moved data); FW-09's
+  procedure (his recovery stick, `docs/mia_os/MIA_OS_RECOVERY_STICK.md`). Three tests that wrote into the real
+  data folder were found and fixed (the Linux and Windows CI caught one; the rest by halving the suite).
+- **Next:** the Fable review of everything since 2026-11-20 (Zac's plan); then the VM steps left: FW-07b's
+  rehearsal, FW-09's stick in a VM, FW-10's phone against the VM, FW-11's screenshots and the helper's dialog;
+  FW-08 needs his signing key; Zac's answers to Q-114 and Q-115; his install guide for MV-01.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

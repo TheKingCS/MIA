@@ -16,4 +16,4 @@
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
 | REQ-AGT-023 | Automation of his own desktop apps shall use the app's portals or D-Bus where offered, and input only in a session he's watching. | Must | R1 | PC | New | M | DEC-0213 → 08, 10, 13 |
-| REQ-AGT-024 | System changes shall go only through the fixed-operation helper, each confirmed in the OS's own dialog. | Must | MVP | PC | New (PoC 5) | T | DEC-0194 → 08 |
+| REQ-AGT-024 | System changes shall go only through the fixed-operation helper, each confirmed in the OS's own dialog. | Must | MVP | PC | Exists (FW-06, the helper; checked in the VM, run 45036996998: refusals, an approved restart, root only while called) | T | DEC-0194 → 08 |
