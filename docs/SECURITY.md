@@ -34,7 +34,7 @@ most likely first:
 | MIA can't act unasked | Email is only drafted (Send is a person's press); bank data is read-only; her browser holds anything that commits for a person's OK and never types into a password field; unprompted messages pass a gate; every change is undoable | `core/email_drafts.py`, `core/browser_safety.py`, `core/communication_gate.py`, `core/undo_log.py` |
 | Reach | Files only inside the person's own MIA folder; cameras only on the home network; each person's data in their own folder, shared only by joining a household with approval | `core/my_files.py`, `core/security_cams.py`, `core/personal_data.py` |
 | Two-step sign-in | An authenticator app's code after the password, from any device but the PC; codes never reused | `core/two_step.py` |
-| Security log | Every sign-in with its device, wrong passwords, account changes; alerts on a new device and repeated wrong passwords; Sign Out Everywhere | `core/security_log.py` |
+| Security log | Every sign-in with its device, wrong passwords, account changes; alerts on a new device and repeated wrong passwords; Sign Out Everywhere; each line hash-chained to the one before, the newest link kept on the device viewing it and checked next time (WP-05) | `core/security_log.py` |
 | Code hygiene | A test keeps control characters out of code (a mangled `\b` once silently disabled a check) | `tests/test_no_control_characters.py` |
 
 ## 3. Honest gaps

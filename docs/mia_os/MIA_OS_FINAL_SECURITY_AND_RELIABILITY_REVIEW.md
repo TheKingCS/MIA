@@ -18,7 +18,7 @@ repository is public).*
 | The phone's stores sealed by its Keystore | **no** (nothing sealed on the phone yet) | — | WP-10 |
 | Two-step sign-in offered | planned (DEC-0250 approved) | — | Alpha, specified when scheduled |
 | The lockdown phrase | planned (DEC-0254 approved) | — | WP-01 |
-| Security log | **yes** (not hash-chained) | FW-02 | WP-05 (the chain) |
+| Security log | **yes**, hash-chained with its head kept on the device that views it (WP-05, 2026-11-22) | FW-02 | done |
 | Disk encryption, TPM with PIN, recovery key | — | **no** | FW-05 |
 | Secure Boot on Fedora's signed chain | — | **no** | FW-05 |
 | The runtime unprivileged | **yes** (a user service) | **yes** (the VM run) | — |

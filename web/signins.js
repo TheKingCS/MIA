@@ -6,7 +6,8 @@
  * (MIA.unlinkDevice, core/linked_devices.py), and two-step sign-in turned on (password, then the key for the authenticator app and a code from
  * it) or off (password and a code; core/two_step.py), and whether MIA's most private files are sealed on disk with
  * the recovery key shown behind the password, on the PC only (core/at_rest.py, DEC-0126), and Lockdown (WP-01,
- * MIA.lockdown, core/lockdown.py). Formatting only.
+ * MIA.lockdown, core/lockdown.py), and whether the log is intact (WP-05: its chain, and the newest hash this device
+ * kept, checked again next time). Formatting only.
  */
 (function () {
   "use strict";
@@ -17,6 +18,42 @@
   const WARN = new Set(["sign_in_failed", "waiting", "password_changed", "phone_linked", "phone_unlinked", "two_step_off", "lockdown"]);
   const day = (iso) => new Date(iso.length === 10 ? iso + "T12:00:00" : iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
+  // The log's head kept on this device (WP-05, REQ-SEC-034): the newest hash it saw, sent next time so the computer
+  // says whether its log still holds it. Kept only while the log checks out, so a rewrite stays shown until he says.
+  const HEAD = "mia.securityLogHead";
+  const seenHead = () => { try { return localStorage.getItem(HEAD) || ""; } catch (e) { return ""; } };
+  const keepHead = (h) => { try { if (h) localStorage.setItem(HEAD, h); } catch (e) { /* private window: not kept */ } };
+
+  async function load() {
+    const page = await MIA.securityLog(seenHead());
+    const c = page.chain || {};
+    if (c.ok && c.seen !== "missing" && c.head) keepHead(c.head.h);
+    return page;
+  }
+
+  // Whether the log is as written: each entry chained to the one before, and still holding what this device saw.
+  function chain(page) {
+    const c = page.chain || {};
+    const box = el("section", { class: "glass money-section", "aria-label": "Whether your security log is intact" },
+      el("h2", {}, "Is the Log Intact?"));
+    if (c.seen === "missing") {
+      box.append(el("p", { class: "si-warn" }, "Changed. This log no longer holds the newest entry this device saw last time: "
+        + "something other than MIA rewrote it or cut it back. Check the sign-ins below, change your password if anything "
+        + "looks wrong, and consider Lockdown."),
+        el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: async () => {
+          keepHead(c.head && c.head.h); say("This device checks from the log as it is now."); draw(await load());
+        } }, "Check From Now On")));
+    } else if (!c.ok) {
+      const b = c.broken || {};
+      box.append(el("p", { class: "si-warn" }, "Changed: " + (b.why || "the chain is broken") + (b.at ? " (the entry of " + when(b.at) + ")" : "") + "."));
+    } else {
+      box.append(el("p", {}, c.chained ? "Intact. Each of its " + c.chained + " entries is linked to the one before, so one changed or removed shows."
+        + (c.seen === "held" ? " It still holds what this device saw last time." : "") : "Nothing to check yet."),
+        el("p", { class: "dim" }, "This device keeps the newest link and checks it next time, so a log rewritten on the computer shows here."));
+    }
+    return box;
+  }
+
   async function everywhere() {
     if (!(await MIAShell.confirm("Sign out every other device? This one stays signed in. Linked phones are unlinked too, and link again with your password."))) return;
     try {
@@ -25,7 +62,7 @@
       say(n ? "Signed out " + n + " other device" + (n === 1 ? "" : "s") + "." : "No other devices were signed in.");
     }
     catch (e) { say(e.message); }
-    draw(await MIA.securityLog());
+    draw(await load());
   }
 
   // Lockdown (WP-01, core/lockdown.py): every sign-in ends, this one too; phones unlinked; vaults locked; all of hers
@@ -43,7 +80,7 @@
     const unlink = async (d) => {
       if (!(await MIAShell.confirm("Unlink this phone? It stops reaching MIA on this computer until it links again with your password."))) return;
       try { await MIA.unlinkDevice(d.id); say("Unlinked."); } catch (e) { say(e.message); }
-      draw(await MIA.securityLog());
+      draw(await load());
     };
     return el("section", { class: "glass money-section", "aria-label": "Linked phones" },
       el("h2", {}, "Linked Phones"),
@@ -69,7 +106,7 @@
         el("p", { class: "dim" }, "On this phone? ", el("a", { href: setup.link }, "Open it in the app"), " instead of typing the key."),
         el("p", {}, "2. Enter the 6-digit code it shows:"), code,
         el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-green", onclick: async () => {
-          try { await MIA.twoStepConfirm(code.value.trim()); say("Two-step sign-in is on."); draw(await MIA.securityLog()); }
+          try { await MIA.twoStepConfirm(code.value.trim()); say("Two-step sign-in is on."); draw(await load()); }
           catch (e) { say(e.message); }
         } }, "Turn On")));
       code.focus();
@@ -79,7 +116,7 @@
         { name: "password", label: "Your password", type: "password", required: true, options: [], default: null },
         { name: "code", label: "Code from your authenticator app", type: "text", required: true, options: [], default: null }], {});
       if (!v) return;
-      try { await MIA.twoStepOff(v.password, v.code); say("Two-step sign-in is off."); draw(await MIA.securityLog()); }
+      try { await MIA.twoStepOff(v.password, v.code); say("Two-step sign-in is off."); draw(await load()); }
       catch (e) { say(e.message); }
     };
     box.replaceChildren(el("h2", {}, "Two-Step Sign-In"),
@@ -105,7 +142,7 @@
       box.replaceChildren(el("h2", {}, "Your Recovery Key"),
         el("p", { class: "ts-key" }, got.key),
         el("p", {}, "Put this in your password manager now, not in a file on this computer. With it, your files open on a new computer or after the system is reinstalled; without it, they can't."),
-        el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: async () => draw(await MIA.securityLog()) }, "Done")));
+        el("div", { class: "acct-actions" }, el("button", { type: "button", class: "btn btn-ghost", onclick: async () => draw(await load()) }, "Done")));
     };
     box.append(el("h2", {}, "Your Files on This Computer"),
       el("p", {}, s.sealing ? "Encrypted. Your conversations, memories, notes, people, finances and other private records are sealed on disk; only your " + (s.protection === "dpapi" ? "Windows account" : "account") + " on this computer opens them."
@@ -130,6 +167,7 @@
       phones(page),
       twoStep(page),
       sealed(page),
+      chain(page),
       el("section", { class: "glass money-section", "aria-label": "Your security log" },
         el("h2", {}, "Your Security Log"),
         page.events.length ? el("div", { class: "rows" }, page.events.map((e) => el("div", { class: "row" + (WARN.has(e.kind) ? " si-warn" : "") },
@@ -138,5 +176,5 @@
           : el("p", { class: "empty" }, "Nothing yet. Sign-ins from your phone and other devices show here.")));
   }
 
-  MIAShell.start(async () => draw(await MIA.securityLog()));
+  MIAShell.start(async () => draw(await load()));
 })();

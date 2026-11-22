@@ -18,4 +18,4 @@ recorded:** secrets, private-mode turns.
 
 | ID | Requirement | Pri | Tier | Dev | Status | Verify | Trace |
 |---|---|---|---|---|---|---|---|
-| REQ-SEC-034 | The security log shall be hash-chained and its head copied to another of his devices, so an altered or removed line is detected. | Should | R1 | All | New | T | DEC-0254 → 13 |
+| REQ-SEC-034 | The security log shall be hash-chained and its head copied to another of his devices, so an altered or removed line is detected. | Should | R1 | All | Exists | T | DEC-0254 → 13 |

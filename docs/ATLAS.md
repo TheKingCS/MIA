@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1551 files, 343,249 lines; 1551 files describe themselves; 18,900 of 18,999 classes and functions are documented.
+1551 files, 343,597 lines; 1551 files describe themselves; 18,920 of 19,019 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-604 files, 173,387 lines; 8,925 of 9,011 classes and functions documented
+604 files, 173,546 lines; 8,936 of 9,022 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -615,7 +615,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,569 lines; 57 of 57 classes and functions documented
+2 files, 4,597 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -900,7 +900,7 @@
 
 ## tests/: the test suite: what each part must do
 
-547 files, 90,288 lines; 7,616 of 7,629 classes and functions documented
+547 files, 90,409 lines; 7,625 of 7,638 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1304,7 +1304,7 @@
 - `tests/test_self_repair.py`: MIA putting her own services right and telling Zac after (core/self_repair.py, DEC-0222).
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.
 - `tests/test_sensors.py`: tests/test_sensors.py — sensors that send their own readings (core/sensors.py): a sensor added by a person gets a key shown once and kept as a hash; its readings go through its app's own reading action (the Lab, Power, the Greenhouse) as that person; a key does nothing else, a reading must be a numb
-- `tests/test_server_app.py`: Unit tests for server.app — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way to verify this code from a sandbox with no real bro
+- `tests/test_server_app.py`: Unit tests for server.app (the Sign-ins page's chain check among them, WP-05) — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way
 - `tests/test_service_map.py`: What MIA runs on (core/service_map.py, T-0007): each service's dependencies as derived DEPENDS_ON links, what stops when one does (through a chain: the vision model with Ollama), what each needs, the words that name each, checks that only look, and her answers in a turn.
 - `tests/test_shelf.py`: The shelf (UI-4, core/shelf.py; the review's acceptance row): the same thing captured from the phone, the palette and a drop lands on the shelf the same way; a planted instruction in something shelved changes nothing; an entry is gone after its time; nothing shelved becomes a memory by itself. Also:
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
@@ -1452,7 +1452,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,451 lines
+116 files, 21,491 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

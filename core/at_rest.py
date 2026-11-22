@@ -30,7 +30,8 @@ with no unlock secret made) nothing is sealed: files stay plain and `status()` s
 **Never losing a file.** Two rules: a file that can't be opened (a key that's gone, a damaged file) is copied aside
 (`<name>.unreadable-<time>`) before the error goes up, because a store that can't read its file starts empty and its
 next save would replace it; and a key file that exists but won't open (another Windows account, Windows reinstalled)
-is never replaced: sealing stops (`status()` reports it, the security log alerts) until the recovery key is entered.
+is never replaced: sealing stops (`status()` reports it, the security log alerts, once no lock is held:
+`flush_alerts`) until the recovery key is entered.
 And a MIA with no window doesn't start at all over files she can't open (`start_problem`, asked by
 `core.runtime`): she'd start those stores empty with no screen to say so.
 The recovery key (`recovery_key()`, `python -m tools.data_key recovery`) is the data key written out to keep in a
@@ -243,8 +244,8 @@ PUBLIC: dict[str, str] = {
 # file that won't open is copied aside and the store starts empty instead of MIA failing to start. Not yet: the
 # budget's files (bills, income, expenses, debts) wait on the Plaid work in core/budget_manager.py.
 
-# Re-entrant: a key that won't open is noted in the security log (_alert) while this is held, and that log's
-# lines are sealed (LINE_SEALED), which asks for the key again on the same thread (it finds _blocked).
+# Re-entrant, and a key problem met while it's held is recorded only once it's let go (flush_alerts): the security
+# log's lines are sealed (LINE_SEALED), so recording one asks for the key again.
 _lock = threading.RLock()
 _keys: Optional[dict] = None  # kid -> key, opened once
 _current: Optional[str] = None
@@ -455,30 +456,54 @@ def _open_keys() -> None:
         _alert("data_key_unopened")
 
 
-def _alert(kind: str) -> None:
-    """Records a key problem in the security log, never raising."""
-    try:
-        from core.security_log import SecurityLog
+_pending: list[str] = []  # key problems waiting to be recorded (flush_alerts)
+_pending_guard = threading.Lock()
 
-        SecurityLog().record(kind, None, detail="data key (DEC-0126)")
-    except Exception:
-        log.exception("Couldn't record %s in the security log", kind)
+
+def _alert(kind: str) -> None:
+    """Notes a key problem for the security log, recorded at once when no lock is held, else as soon as it's let go
+    (flush_alerts)."""
+    with _pending_guard:
+        _pending.append(kind)
+    flush_alerts()
+
+
+def flush_alerts() -> None:
+    """Records the key problems noted so far in the security log, never raising; waits (leaves them noted) while this
+    thread holds the key's lock or a security log's: recording then would take the other lock, and a thread holding
+    that one and wanting this one would never let go (WP-05)."""
+    from core import security_log
+
+    if getattr(_lock, "_is_owned", lambda: False)() or security_log.writing():
+        return
+    while True:
+        with _pending_guard:
+            if not _pending:
+                return
+            kind = _pending.pop(0)
+        try:
+            security_log.SecurityLog().record(kind, None, detail="data key (DEC-0126)")
+        except Exception:
+            log.exception("Couldn't record %s in the security log", kind)
 
 
 def _current_key() -> Optional[tuple[str, bytes]]:
-    """(kid, key) to seal with, or None when sealing isn't possible here."""
+    """(kid, key) to seal with, or None when sealing isn't possible here (a key problem met is recorded once the lock
+    is let go)."""
     with _lock:
         _open_keys()
-        if _keys is None or _current not in _keys:
-            return None
-        return _current, _keys[_current]
+        held = None if _keys is None or _current not in _keys else (_current, _keys[_current])
+    flush_alerts()
+    return held
 
 
 def _key_for(kid: str) -> Optional[bytes]:
-    """The key with this id, if it's held."""
+    """The key with this id, if it's held (a key problem met is recorded once the lock is let go)."""
     with _lock:
         _open_keys()
-        return (_keys or {}).get(kid)
+        found = (_keys or {}).get(kid)
+    flush_alerts()
+    return found
 
 
 # ------------------------------------------------------------------ sealing and opening

@@ -405,13 +405,15 @@
         findings: ["5 of your 7 runs of getting things done began with making coffee.", "6 of 7 began in the morning.", "5 of 7 were on a day off.", "4 of the 5 with sleep logged came after a full night."] } })
       : call("GET", "/api/operating-journal"),
     // Sign-ins and Security (core/security_log.py): this account's sign-ins and changes, and sign out everywhere.
-    securityLog: () => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, on_this_pc: true,
+    // `seen`: the newest hash of the log this device kept last time (WP-05), so the computer says whether it still holds it.
+    securityLog: (seen) => demo ? Promise.resolve({ available: true, other_sessions: 1, two_step: false, on_this_pc: true,
+      chain: { ok: true, chained: 3, before_chain: 0, head: { h: "demo", at: "2026-11-08T08:12:00" }, broken: null, seen: "held" },
       linked_devices: [{ id: "3f2a9c41d0be", linked: "2026-10-12T19:20:00", last_seen: "2026-11-08" }],
       at_rest: { sealing: true, protection: "dpapi", why_not: "", files: 10 }, events: [
       { at: "2026-11-08T08:12:00", kind: "sign_in", what: "Signed in", device: "Android phone · 100.64.0.7", detail: "" },
       { at: "2026-11-07T22:40:00", kind: "sign_in_failed", what: "Wrong password", device: "Edge on Windows · 100.64.0.9", detail: "" },
       { at: "2026-11-07T19:03:00", kind: "sign_in", what: "Signed in", device: "Edge on Windows · 100.64.0.9", detail: "a new device" }] })
-      : call("GET", "/api/security/log"),
+      : call("GET", "/api/security/log" + (seen ? "?seen=" + encodeURIComponent(seen) : "")),
     signOutEverywhere: () => demo ? demoOnly() : call("POST", "/api/security/sign-out-everywhere"),
     lockdown: () => demo ? demoOnly() : call("POST", "/api/security/lockdown"),
     // One linked phone unlinked from the computer (core/linked_devices.py): its key stops working.

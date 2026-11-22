@@ -2,7 +2,7 @@
 tests.test_server_app
 ========================
 
-Unit tests for server.app — exercised via FastAPI's TestClient, a real
+Unit tests for server.app (the Sign-ins page's chain check among them, WP-05) — exercised via FastAPI's TestClient, a real
 in-process HTTP client that needs no running server, no real network,
 and no HTTPS (see the Mobile Phase 1 plan's verification section for
 why this is a legitimate, complete way to verify this code from a
@@ -873,6 +873,28 @@ def test_sign_out_everywhere_ends_every_other_session_and_shows_on_the_log(clien
     assert client.get("/api/settings", headers=laptop).status_code == 401
     events = client.get("/api/security/log", headers=phone).json()["events"]
     assert events[0]["kind"] == "signed_out_everywhere" and events[0]["what"] == "Signed out everywhere"
+
+
+def test_the_page_says_whether_the_log_is_intact_and_tells_him_when_it_no_longer_holds_what_his_phone_saw(client, context):
+    """WP-05: the chain's state comes with the page; a head the phone kept is "held" while the log is as it was, and
+    "missing" once the log is rewritten, which is logged and told once."""
+    import json
+
+    from core.at_rest import open_text
+
+    phone = _signed_in(client, context)
+    _signed_in(client, context)  # a second line, so cutting back to the first loses the head
+    page = client.get("/api/security/log", headers=phone).json()
+    assert page["chain"]["ok"] and page["chain"]["seen"] == ""
+    head = page["chain"]["head"]["h"]
+    assert client.get("/api/security/log", params={"seen": head}, headers=phone).json()["chain"]["seen"] == "held"
+    path = context.security_log.path
+    first = json.loads([x for x in open_text(path).splitlines() if x.strip()][0])
+    path.write_text(json.dumps(first) + chr(10), encoding="utf-8")  # the log cut back to its first line by hand
+    told = client.get("/api/security/log", params={"seen": head}, headers=phone).json()
+    assert told["chain"]["seen"] == "missing" and told["events"][0]["kind"] == "log_changed"
+    again = client.get("/api/security/log", params={"seen": head}, headers=phone).json()
+    assert [e["kind"] for e in again["events"]].count("log_changed") == 1
 
 
 def test_the_lockdown_button_signs_everything_out_and_only_his_password_lifts_it(client, context, monkeypatch):
