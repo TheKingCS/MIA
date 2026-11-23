@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1617 files, 356,387 lines; 1617 files describe themselves; 19,620 of 19,737 classes and functions are documented.
+1619 files, 356,522 lines; 1619 files describe themselves; 19,629 of 19,747 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-633 files, 181,187 lines; 9,303 of 9,389 classes and functions documented
+634 files, 181,285 lines; 9,309 of 9,395 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -244,6 +244,7 @@
 - `core/gamification.py`: Shared "grant XP for a real completion" helper — docs/VISION.md's Missions/Gamification concept, extended 2026-09-11 from the dedicated Missions module out to routine completion moments in other domains (Kitchen/Workout/Maintenance/Budget), at the user's own explicit request to make MIA feel more li
 - `core/gap_actions.py`: Capability gaps (core/capability_gaps.py, build plan step 9) through the action contract (core/actions.py): `gap.build` (the person says yes to a new ability being built: a development task naming the gap, never their words) and `gap.dismiss` (not wanted: never offered again).
 - `core/garden_plans.py`: A garden worked out in code (T-0060; Zac, 2026-11-22: "auto generated missions for plans we confirm together for different builds or gardens"), the way core/build_calcs.py works out lumber: never by the model.
+- `core/garden_week.py`: This week in the garden (Jarvis brainstorm, round 2; Zac, 2026-11-23: "homestead skills ... aware"): what his confirmed garden plans say is due in the next seven days (start indoors, transplant or sow, ready to harvest), said once a week through the communication gate, so a seed-starting date never 
 - `core/generate_worker.py`: Runs a single `AppContext.llm.generate()` call off the GUI thread — same reasoning as `core/chat_worker.py`, a separate class only because `generate()` and `chat_with_tools()` have different signatures/return types (`Optional[str]` vs `Optional[ChatReply]`), not because the threading concern itself 
 - `core/geo_grid.py`: Grid references (build plan step 14, DEC-0099): UTM and MGRS, the Military Grid Reference System that maps, search-and-rescue teams and TAK apps use ("18S UJ 23396 06441"), worked out in code from latitude and longitude on the WGS84 ellipsoid. No dependency, no network. Accurate to well under a metr
 - `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the
@@ -931,7 +932,7 @@
 
 ## tests/: the test suite: what each part must do
 
-581 files, 94,721 lines; 7,954 of 7,985 classes and functions documented
+582 files, 94,758 lines; 7,957 of 7,989 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1107,6 +1108,7 @@
 - `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which (and what it is: Fact, Calculation or
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures).
+- `tests/test_garden_week.py`: This week in the garden (core/garden_week.py): his confirmed garden plans' steps in the next seven days, said once a week through the gate, with their days; nothing said when nothing's due. *(1 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML.
 - `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. Every ask reaches one o
 - `tests/test_glasses_cards.py`: The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026-11-08): every one builds a panel without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what needs the person in amber and only what's broken in red, and lets the gl

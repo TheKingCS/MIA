@@ -88,6 +88,13 @@ _PLAN = {"type": "object", "properties": {
     "title": {"type": "string"}}}
 
 
+def _garden_week(context, arguments: dict) -> str:
+    """This week in the garden (core/garden_week.say)."""
+    from core import garden_week
+
+    return garden_week.say(context)
+
+
 def _year(context, arguments: dict) -> str:
     """The homestead's year ahead (core/homestead_year.say)."""
     from core import homestead_year
@@ -109,7 +116,8 @@ def _price(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), show_plans,
+    chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
+    show_plans,
     confirm_plan and drop_plan."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
@@ -140,6 +148,14 @@ def register_project_plan_actions(registry) -> None:
             "margin": {"type": "number", "description": "margin percent; 20 when not said"}}},
         handler=_price, trigger_phrases=("price the build", "what would it cost", "what should i charge",
                                          "quote for the", "how much to charge", "cost to build"),
+    ))
+    registry.register(AssistantAction(
+        name="garden_this_week", domain=DOMAIN,
+        description="What his confirmed garden plans say is due in the next seven days: start indoors, transplant or "
+                    "sow, ready to harvest, each with its day.",
+        parameters={"type": "object", "properties": {}},
+        handler=_garden_week, trigger_phrases=("garden this week", "what do i plant this week", "seeds this week",
+                                               "what's due in the garden", "garden today"),
     ))
     registry.register(AssistantAction(
         name="homestead_year", domain=DOMAIN,

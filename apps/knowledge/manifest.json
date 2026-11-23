@@ -53,6 +53,7 @@
       "fetch_reference_packs",
       "find_plans",
       "forget_plan",
+      "garden_this_week",
       "homestead_year",
       "keep_plan",
       "list_specialists",
@@ -114,7 +115,8 @@
       "projectplan.drop": "act_with_approval",
       "read_reference": "observe",
       "price_build": "observe",
-      "homestead_year": "observe"
+      "homestead_year": "observe",
+      "garden_this_week": "observe"
     },
     "outside": []
   },
@@ -131,6 +133,8 @@
       "glasses": "view",
       "voice": true
     },
-    "background": []
+    "background": [
+      "garden_week"
+    ]
   }
 }

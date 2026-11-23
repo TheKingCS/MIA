@@ -250,3 +250,23 @@ Questions for Zac (each is the Q he answers to unlock it):
 - Which hobbies should get a companion first (3.3)?
 - May she build the "picture of you" page (1.3)?
 - Try a bigger local model on your PC (1.5)? It's a download of 10 to 20 GB.
+
+---
+
+## Round 2 (2026-11-23, after the first round was built)
+
+New ideas, each checked against what's there first:
+
+- **This week in the garden** (S, no decision): built 2026-11-23 (`core/garden_week.py`): his garden plans' steps in
+  the next seven days, once a week through the gate, and "what's due in the garden this week?".
+- **Seed inventory against the plans** (S-M): what seeds he has (the pantry or inventory) against what his garden
+  plans need, said before the starting dates. Needs his seeds logged somewhere first.
+- **The canning shelf** (S-M): jars put up, by date, from his kitchen records, with the USDA's best-quality window
+  ("use within a year") said as they near it. Builds on the pantry's expiry dates. *Partly there: "how prepared am I?" lists
+  what expires in the next 30 days (`core/preparedness.rotate`).*
+- **Equipment hours to service** (S): the hour meters he logs (core/maintenance_manager.py meter tasks) said a week
+  before a service falls due, through the gate. *Already there: `core/maintenance_insights.py` says a meter task
+  trending toward due soon.*
+- **A quiet evening wrap** (M, his say: it's a new daily message): what got done today, tomorrow's first thing, the
+  weather for it, in two sentences, at the hour he usually winds down.
+

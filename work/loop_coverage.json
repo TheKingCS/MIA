@@ -436,6 +436,10 @@
   "check:unusual": {
    "status": "none",
    "why": "each finding is worked out in code from his own records against their own normal; what it says is paced by the gate, whose pacing learns from what he opens or dismisses (the topic 'unusual')"
+  },
+  "check:garden_week": {
+   "status": "none",
+   "why": "his garden plans' own dates, worked out in code from his frost dates and said once a week; the gate's pacing already learns from what he opens or dismisses (topic garden_week)"
   }
  }
 }
