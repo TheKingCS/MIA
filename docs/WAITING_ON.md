@@ -16,6 +16,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
    code), or keep MIA dark-only. Claude's recommendation: yes, darker shades, with Muse's eye on the look.
 0zf. [ ] **Choose where the second backup copy goes** (WP-09): Settings, Backups, "Second copy of the nightly
    backup": a folder on your external drive (like E:\MIA Backups). Until then the nightly backup is only on the PC.
+   (Not the 512 GB USB stick: that one is for Fedora and MIA OS, Zac 2026-11-22.)
 
 ### From Fable's review of 2026-11-20
 0zc. [ ] **Q-114: should MIA OS ever restart your PC by itself to finish an update?** As built now it never does: an
@@ -87,7 +88,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ### From the Fable run (2026-11-16)
 0n. [x] ~~**MIA OS architecture: five questions**~~ (answered 2026-11-16) (Q-47 to Q-51, `docs/mia_os/MIA_OS_CORE_ARCHITECTURE_OPEN_QUESTIONS.md` section 1). In short: is the PC's base Fedora's KDE desktop as an image built from the repository (Ubuntu the fallback)? Should MIA's own screen run on KDE's window manager so ordinary programs can open beside her? May the tests be run? Should system changes always ask your password? Should MIA keep running when you're signed out?
-0m. [ ] **The graphics card test** (the USB stick comes next week, Zac 2026-11-18) (part of Q-49): start the PC from a Fedora 45 KDE USB stick, install nothing, and run MIA's three models to measure their speed. About an hour; a Claude session can talk you through it. It decides Fedora or Ubuntu.
+0m. [ ] **The graphics card test** (part of Q-49): start the PC from a Fedora 45 KDE USB stick, install nothing, and run MIA's three models to measure their speed. About an hour; a Claude session can talk you through it. It decides Fedora or Ubuntu. **2026-11-22: the stick is here** (Zac: "That USB is for you, it will be for the linux fedora thing and then eventually will house the whole program/OS we build"; the 512 GB removable drive). The Fedora 45 KDE live image is downloaded and checked (Fedora's signed checksum) in Downloads, "MIA OS". Left for you: writing it to the stick needs your Windows yes (an administrator prompt): with Fedora Media Writer, or with Ventoy so the stick keeps room for MIA OS's files later; then start the PC from it.
 0l. [ ] **Prompt 23, Universal Intelligence: four questions** (Q-43 to Q-46, `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` section 13): what the shelf may keep; whether MIA may note which program is in front of you (recommended: not yet); whose browsing Recall may search; when the work runs.
 
 ### Start here (2026-11-08 evening: the short list, in order; everything else is below)

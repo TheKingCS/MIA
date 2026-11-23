@@ -16,7 +16,8 @@ again) and removes any whose pack is gone; a pack over BIG_PACK that Kiwix index
 no PDFs) is left to Kiwix's index.
 
 **Searching** (`search`): the question's words, all of them first, then any of them, ranked by FTS5's bm25, each hit
-with its page (for a PDF) and a passage around the words. The indexes hold the packs' own published text, never
+with its page (for a PDF) and a passage around the words (or the page's whole text, for core/reference_reader.py to
+cut its best window from); `page_text` gives one page to read further. The indexes hold the packs' own published text, never
 anything of his.
 """
 
@@ -213,8 +214,27 @@ def _match(terms: list[str], joiner: str) -> str:
     return f" {joiner} ".join('"' + t.replace('"', "") + '"' for t in terms)
 
 
-def search(root: Path, library, query: str, limit: int = 20) -> list[Hit]:
-    """The question's words in every index here: all of them first, then any; best first, at most `limit`."""
+def page_text(root: Path, pack_file: Path, path: str, page: int) -> tuple[str, str]:
+    """One indexed page's whole text and its name (a PDF's page, or a page of a pack Kiwix didn't index); ("", "")
+    when it isn't in the index."""
+    db_file = index_path(root, pack_file)
+    if not db_file.exists():
+        return "", ""
+    try:
+        db = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
+        try:
+            row = db.execute("SELECT body, title FROM docs WHERE path = ? AND page = ? LIMIT 1",
+                             (path, int(page or 0))).fetchone()
+        finally:
+            db.close()
+    except sqlite3.Error:
+        return "", ""
+    return (row[0], row[1]) if row else ("", "")
+
+
+def search(root: Path, library, query: str, limit: int = 20, full: bool = False) -> list[Hit]:
+    """The question's words in every index here: all of them first, then any; best first, at most `limit`. With
+    `full`, each hit carries its page's whole text instead of a passage around the words."""
     terms = [t.lower() for t in _WORD.findall(query or "")][:12]
     folder = index_folder(root)
     if not terms or not folder.is_dir():
@@ -229,7 +249,8 @@ def search(root: Path, library, query: str, limit: int = 20) -> list[Hit]:
             continue
         try:
             for joiner in ("AND", "OR"):
-                rows = db.execute("SELECT path, title, page, snippet(docs, 3, '', '', ' ... ', 40), bm25(docs) "
+                body = "body" if full else "snippet(docs, 3, '', '', ' ... ', 40)"
+                rows = db.execute(f"SELECT path, title, page, {body}, bm25(docs) "
                                   "FROM docs WHERE docs MATCH ? ORDER BY bm25(docs) LIMIT ?",
                                   (_match(terms, joiner), limit)).fetchall()
                 if rows:

@@ -41,7 +41,7 @@ _READ_ONLY_PREFIXES = ("get_", "list_", "search_", "check_", "what_", "find_", "
 CHANGES_DESPITE_NAME = frozenset({"check_off_grocery_item"})
 # And the other way: lookups whose names don't start like one (WP-03): they only read, so the tool loop treats them
 # as lookups (their outside text is framed, and a change asked for after them is held).
-READ_ONLY_DESPITE_NAME = frozenset({"world_finds", "whats_in_the_workspace"})
+READ_ONLY_DESPITE_NAME = frozenset({"world_finds", "whats_in_the_workspace", "look_up_offline"})
 
 
 def changes_records(action_name: str) -> bool:

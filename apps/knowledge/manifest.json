@@ -61,6 +61,7 @@
       "plan_shopping_list",
       "plan_sources",
       "plan_with_me",
+      "read_reference",
       "show_plan",
       "show_plans",
       "specialist_roster",
@@ -108,7 +109,8 @@
       "projectplan.draft": "act_within_grant",
       "projectplan.change": "act_within_grant",
       "projectplan.confirm": "act_with_approval",
-      "projectplan.drop": "act_with_approval"
+      "projectplan.drop": "act_with_approval",
+      "read_reference": "observe"
     },
     "outside": []
   },

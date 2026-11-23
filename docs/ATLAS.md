@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1586 files, 350,433 lines; 1586 files describe themselves; 19,290 of 19,389 classes and functions are documented.
+1588 files, 350,849 lines; 1588 files describe themselves; 19,316 of 19,415 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-619 files, 177,607 lines; 9,141 of 9,227 classes and functions documented
+620 files, 177,902 lines; 9,155 of 9,241 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -63,7 +63,7 @@
 - `core/assistant_humor_actions.py`: "Be funnier", "tone down the jokes", "no jokes for now" (Zac, 2026-11-07): the person sets how funny MIA is with them, in chat. One tool, set_humor, moving their own level (core/personality.py HUMOR_LEVELS: off, rare, sometimes, often, lots) up or down a step or to a level by name. Only the speaker'
 - `core/assistant_inbox_actions.py`: Assistant tools for the document inbox (core/inbox_manager.py): what's waiting, "file it" (with MIA's proposal, or the owner's correction of which tool or build it's for), and "throw that one out". Filing by voice adds every maintenance step MIA found in a manual unless the owner says "without the t
 - `core/assistant_lab_actions.py`: The Lab by voice, for what the web Lab added (DEC-0125: full use both ways). "Delete the last soil moisture reading" takes out the newest reading in that series with the same action kind the Lab's Delete button uses (core/lab_reading_actions.py), so "undo that" brings it back. Logging and listing re
-- `core/assistant_library_actions.py`: Her offline library, by voice (core/offline_library.py): "how do I purify water", "how deep should fence posts go", "what's wrong with my tomato leaves" are looked up in the packs on this computer, with no internet (`look_up_offline`, observe: it only reads); "fetch the essentials" puts up a card to
+- `core/assistant_library_actions.py`: Her offline library, by voice (core/offline_library.py): "how do I purify water", "how deep should fence posts go", "what's wrong with my tomato leaves" are looked up in the packs on this computer, with no internet (`look_up_offline`, observe: it only reads); "tell me more about that" reads one sour
 - `core/assistant_life_actions.py`: Assistant actions for the personal side of MIA (2026-09-27, following docs/ASSISTANT_AUDIT.md): workouts, people and pets, household routines, and Classroom learning. Same contract as core/assistant_domain_actions.py: handlers are pure functions of (context, arguments), find records from the user's 
 - `core/assistant_life_event_actions.py`: "What did I get done this week?", "what changed this month?", "what bills did I pay?" (core/life_events.py, 2026-10-05). Facts from the log, counted in code; the model only phrases them.
 - `core/assistant_link_actions.py`: "The land loan funds the rental", "the greenhouse depends on selling the lot", "what depends on selling the lot?", "what's connected to the truck?" (core/links.py, 2026-10-05). Names are matched to real records in code; a link is only saved between things that exist. Undoable.
@@ -435,6 +435,7 @@
 - `core/recreation.py`: Recreation in the health cluster (DEC-0098, build plan step 12; Zac, 2026-11-06: "Playing sports for recreation should somehow be tracked in an activity log that may connect with workouts or as part of the health apps cluster").
 - `core/recurring_mission_manager.py`: Recurring Missions (2026-09-13), at the user's explicit request: a real daily goal (their first one — push-ups) that keeps generating itself, tracks a real streak, shows up on the Calendar, and rewards a bigger weekly bonus Mission when every day that week was done, with the daily target itself esca
 - `core/reference_library_manager.py`: The ZIM engine behind the Reference Library — docs/ROADMAP.md milestone 4.1, the "Reference Library" row of the shared core services table (indexed/searchable document + PDF + Kiwix ZIM viewer). This milestone is the engine only: pack discovery, reading, and search. The `knowledge` module's UI (mile
+- `core/reference_reader.py`: How she reads her offline library to answer (Zac, 2026-11-22: "make her really good at reading through these references and talking naturally but factually about what knowledge they contain").
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US.
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/relevance.py`: The Personal Relevance Engine (World Intelligence W2, DEC-0170; the proposal's section 4): how much a find matters to this person, worked out in code from their own records, never guessed by a model. Every point comes with a reason that names the record it came from, so "why is this here?" always ha
@@ -917,7 +918,7 @@
 
 ## tests/: the test suite: what each part must do
 
-564 files, 92,554 lines; 7,786 of 7,799 classes and functions documented
+565 files, 92,675 lines; 7,798 of 7,811 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1298,6 +1299,7 @@
 - `tests/test_recreation.py`: Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen, counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the Operating Journal and the Chronicle; never mistaking a song for a game;
 - `tests/test_recurring_mission_manager.py`: Unit tests for core.recurring_mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE/_TEMPLATES_FILE plus core.calendar_manager's own file constants (ensure_current_missions() creates a real CalendarEvent) into a tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py.
 - `tests/test_reference_library_manager.py`: Unit tests for core.reference_library_manager. Isolates the library root into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths), and builds tiny real .zim fixtures on the fly with libzim.writer rather than bundling a binary fixture in the repo or dependin
+- `tests/test_reference_reader.py`: How she reads her offline library and talks about it (core/reference_reader.py, core/tool_loop.py; Zac, 2026-11-22: "make her really good at reading through these references and talking naturally but factually"): the part of an article that answers is found, not its opening; the best passages win; a
 - `tests/test_region.py`: Country-aware crisis lines and money (core/region.py), 2026-10-01.
 - `tests/test_relationships_manager.py`: Unit tests for core.relationships_manager. Isolates _DATA_DIR/the two per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_workout_manager.py's isolated_paths.
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.

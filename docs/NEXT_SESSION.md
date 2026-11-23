@@ -15,7 +15,14 @@ first, and which offline references to fetch. He answered: both together, and as
 help. Built: her offline library (core/offline_library.py, core/pack_index.py: 74 Kiwix packs on 14 shelves, fetched
 with Kiwix's own hash, her own index where Kiwix has none, the look_up_offline tool, Knowledge's Get More), and the Planner (core/project_plans.py, core/garden_plans.py,
 web/planner.html): a build or a garden drafted together, Confirm makes the project and a mission a stage, each mission
-guided step by step with what her library says. For Zac: try it on a real build and his garden (his frost dates).
+guided step by step with what her library says. For Zac: try it on a real build and his garden (his frost dates). Then (Zac, the same day: "make her really good
+at reading through these references and talking naturally but factually"): core/reference_reader.py reads each
+pack's best articles whole and keeps where the answer is; the tool loop reads the library first for a question only
+it can answer, gives her its results whole, and holds every figure to the text (a sentence stating its own is left
+out). Tried live on qwen2.5:14b: before, she gave bleach figures from memory; after, only the text's. The library is
+downloading on the PC (all 74 packs, smallest first: `python -m tools.offline_library list` shows how far). The USB
+stick is for Fedora and MIA OS (WAITING_ON 0m: the Fedora image is downloaded and checked; writing it needs his
+administrator yes).
 
 **New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
 data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one

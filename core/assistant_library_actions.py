@@ -4,7 +4,7 @@ core.assistant_library_actions
 
 Her offline library, by voice (core/offline_library.py): "how do I purify water", "how deep should fence posts go",
 "what's wrong with my tomato leaves" are looked up in the packs on this computer, with no internet (`look_up_offline`,
-observe: it only reads); "fetch the essentials" puts up a card to download packs (`fetch_reference_packs`, his yes:
+observe: it only reads); "tell me more about that" reads one source further (`read_reference`, observe); "fetch the essentials" puts up a card to download packs (`fetch_reference_packs`, his yes:
 gigabytes from Kiwix). The Knowledge page does both too (DEC-0125).
 """
 
@@ -26,6 +26,14 @@ def _look_up(context, arguments: dict) -> str:
     return look_up(getattr(context, "reference_library", None), str(arguments.get("question", "")))
 
 
+def _read(context, arguments: dict) -> str:
+    """One source from a look-up read at length, around what's asked."""
+    from core.offline_library import read_further
+
+    return read_further(getattr(context, "reference_library", None), str(arguments.get("ref", "")),
+                        str(arguments.get("focus", "")))
+
+
 def _fetch(context, arguments: dict) -> str:
     """A card to download packs: a set, or the packs named."""
     from core.actions import ActionError
@@ -44,8 +52,8 @@ def _fetch(context, arguments: dict) -> str:
 
 
 def register_library_actions(registry) -> None:
-    """Registers look_up_offline (in its own domain, brought by how a how-to question is asked) and
-    fetch_reference_packs."""
+    """Registers look_up_offline and read_reference (in their own domain, brought by how a how-to question is
+    asked) and fetch_reference_packs."""
     registry.register_domain_keywords(DOMAIN, ASKING)
     registry.register(AssistantAction(
         name="look_up_offline", domain=DOMAIN,
@@ -58,6 +66,16 @@ def register_library_actions(registry) -> None:
         handler=_look_up,
         trigger_phrases=("offline library", "look it up offline", "in the library", "in your library",
                          "reference library", "reference packs"),
+    ))
+    registry.register(AssistantAction(
+        name="read_reference", domain=DOMAIN,
+        description="Read one source from a look_up_offline result further (its ref), around what he wants to know "
+                    "more about; for 'tell me more', 'what else does it say', or a detail the passage cut off.",
+        parameters={"type": "object", "properties": {
+            "ref": {"type": "string", "description": "The passage's ref, as look_up_offline gave it."},
+            "focus": {"type": "string", "description": "What to read about in it, in a few words (optional)."}},
+            "required": ["ref"]},
+        handler=_read, trigger_phrases=("tell me more about that", "what else does it say", "read more"),
     ))
     registry.register(AssistantAction(
         name="fetch_reference_packs", domain="knowledge",

@@ -1107,12 +1107,17 @@ def numbers_in(text: str) -> set[str]:
     return out
 
 
-def invented_numbers(answer: str, sheet_text: str, prompt: str) -> set[str]:
+def invented_numbers(answer: str, sheet_text: str, prompt: str, strict: bool = False) -> set[str]:
     """Pure logic. Numbers in the answer that are in neither the sheet
     nor the question. Small counts (up to 12) are allowed: the model may
-    count the sheet's own lines ("3 bills")."""
+    count the sheet's own lines ("3 bills"); `strict` allows none (a
+    reference's "2 drops" is a figure, not a count; a list's own step
+    numbers at the start of a line aren't figures)."""
     allowed = numbers_in(sheet_text) | numbers_in(prompt)
-    return {n for n in numbers_in(answer) if n not in allowed and not (n.isdigit() and int(n) <= 12)}
+    if strict:
+        answer = re.sub(r"(?m)^\s*\d{1,2}[.)]\s", "", answer or "")
+    return {n for n in numbers_in(answer)
+            if n not in allowed and (strict or not (n.isdigit() and int(n) <= 12))}
 
 
 def _personal(conversation) -> bool:

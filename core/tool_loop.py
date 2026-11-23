@@ -14,8 +14,13 @@ up*:
    budget (`assistant.answer_budget_seconds`, 60 by Zac's call), never
    the same lookup twice;
 3. it writes one answer from the results, and an answer that states a
-   number the results don't hold is replaced by the results themselves
-   (`core.question_plans.invented_numbers`).
+   number the results don't hold is asked again once without it, then
+   replaced by the results themselves (`core.question_plans.invented_numbers`).
+   Her offline library's results (`LIBRARY_TOOLS`) are cut much longer and
+   held to their figures strictly, small ones included; said plainly, a
+   library result is its first passage and where it's from. A question only
+   the library's look-up was offered for, answered without it, is read from
+   the library first (`_read_first`).
 
 A change (anything that writes records) is never run inside the loop:
 the reply goes back to the caller as before, through the usual path.
@@ -33,6 +38,7 @@ web and voice inside `run_assistant_turn`.
 
 from __future__ import annotations
 
+import re
 import time
 from typing import Optional
 
@@ -43,6 +49,9 @@ log = get_logger(__name__)
 
 MAX_STEPS = 3
 RESULT_CHARS = 1500
+# Her offline library's reading (core/reference_reader.py): several passages and how to talk about them, which a
+# 1,500-character cut would lose; and their figures are held to the text exactly, small ones too (2 drops, 4 cups).
+LIBRARY_TOOLS = {"look_up_offline": 7000, "read_reference": 7000}
 DEFAULT_BUDGET = 60.0
 
 FOLLOW_UP = (
@@ -122,6 +131,23 @@ def _look_first(context, llm, messages: list[dict], tools: list[dict], prompt: s
     return reply
 
 
+def _read_first(context, tools: list[dict], prompt: str, reply: ChatReply) -> ChatReply:
+    """A how-to or factual question her offline library can answer, answered from memory (2026-11-22, live:
+    qwen2.5:14b gave bleach figures of its own, or said "let me look that up" without looking): when the library's
+    look-up is the only lookup offered and the message is a question, the look-up runs in code, so the answer is
+    read from the library (facts found in code, the model only phrases them)."""
+    from core.assistant_actions import changes_records, looks_like_question
+
+    names = [t.get("function", {}).get("name", "") for t in tools]
+    lookups = [n for n in names if not changes_records(n)]
+    library = getattr(context, "reference_library", None)
+    if ("look_up_offline" not in lookups or any(n not in LIBRARY_TOOLS for n in lookups)
+            or not looks_like_question(prompt) or library is None or not library.list_packs()):
+        return reply
+    log.info("Tool loop: a question for the library answered without reading it; reading it first.")
+    return ChatReply(content="", tool_calls=[ToolCall(name="look_up_offline", arguments={"question": prompt})])
+
+
 _REQUEST_STARTS = ("can you", "could you", "would you", "will you", "can u", "please", "i want you to",
                    "i need you to", "go ahead", "let's", "lets")
 ANSWER_ONLY = ("They asked a question, not for a change: answer it, using lookups if you need them. Don't add, "
@@ -164,15 +190,39 @@ def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply
                      tool_calls=[])
 
 
-def _short(text: str) -> str:
-    """A tool's result cut to RESULT_CHARS (1,500) at a word, marked as cut short."""
+def _short(text: str, name: str = "") -> str:
+    """A tool's result cut to RESULT_CHARS (1,500; LIBRARY_TOOLS their own) at a word, marked as cut short."""
     text = str(text or "").strip()
-    return text if len(text) <= RESULT_CHARS else text[:RESULT_CHARS].rsplit(" ", 1)[0] + " …(cut short)"
+    limit = LIBRARY_TOOLS.get(name, RESULT_CHARS)
+    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + " …(cut short)"
+
+
+def _library_said(text: str) -> str:
+    """Pure logic. A library result as it can be said plainly: its first passage with where it's from, without the
+    frame and the note on how to talk."""
+    lines = [ln for ln in str(text or "").splitlines()
+             if not ln.startswith(("[From her offline library", "[End of", "ref: ", "Answer from these"))]
+    body = "\n".join(lines).strip()
+    first = body.split("\n\n")[0].strip()
+    return (first.replace("\n", ": ", 1) if first.startswith("From ") else first) or body
+
+
+def without_figures(answer: str, wrong: set[str], keep_share: float = 0.6) -> str:
+    """Pure logic. A library answer with the sentences (or list lines) that state a figure the text doesn't hold taken
+    out, when most of it stays; "" when too little would (then the passage itself is said)."""
+    from core.question_plans import numbers_in
+
+    text = re.sub(r"(?m)^\s*(\d{1,2}[.)]|[-*•])\s+", "", str(answer or "").strip())  # a list's own markers
+    parts = [p for p in re.split(r"(?<=[.!?])\s+|\n+", text) if p.strip()]
+    kept = [p for p in parts if not (numbers_in(p) & wrong)]
+    if not parts or len(kept) < keep_share * len(parts) or len(kept) < 2:
+        return ""
+    return " ".join(p.strip() for p in kept)
 
 
 def _plain(results: list[tuple[str, str]]) -> str:
-    """Every tool result's text, one after another."""
-    return " ".join(text for _name, text in results)
+    """Every tool result's text, one after another (a library result as its first passage, said plainly)."""
+    return " ".join(_library_said(text) if name in LIBRARY_TOOLS else text for name, text in results)
 
 
 def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, named: Optional[str] = None,
@@ -183,7 +233,11 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     (OUTSIDE_WHAT) is framed as information before the model reads it
     (WP-03). Only lookups offered in `tools` run,
     and a change asked for after a lookup that brought in outside text
-    is held and said back (held_after_outside_text)."""
+    is held and said back (held_after_outside_text). A question only her
+    library's look-up was offered for is read from it first
+    (`_read_first`); a library answer's figures are held to its text
+    strictly, and one still stating its own after the retry loses just
+    those sentences (`without_figures`)."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -194,6 +248,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                        else DEFAULT_BUDGET)
     reply = llm.chat_with_tools(messages, tools)
     reply = settle_on_named_tool(named, messages, tools, reply, llm.chat_with_tools)
+    if reply is not None and not reply.tool_calls and tools and loop_ok(context):
+        reply = _read_first(context, tools, prompt, reply)
     if reply is not None and not reply.tool_calls and tools and loop_ok(context):
         reply = _look_first(context, llm, messages, tools, prompt, reply)
     if reply is not None and tools and loop_ok(context) and _wants_change(context, reply) and asks_not_tells(prompt):
@@ -226,7 +282,7 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                 log.exception("Lookup %s failed in the tool loop", call.name)
                 text = f"(The {call.name} lookup failed.)"
             results.append((call.name, text))
-            shown = _short(text)
+            shown = _short(text, call.name)
             if call.name in OUTSIDE_WHAT:  # outside text, marked as information before the model reads it (WP-03)
                 from core.browser_safety import outside
 
@@ -247,16 +303,25 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         return reply
     said = (reply.content if reply is not None else "") or ""
     sources = "\n".join(text for _n, text in results)
-    wrong = invented_numbers(said, sources, prompt) if said.strip() else set()
+    strict = any(name in LIBRARY_TOOLS for name, _t in results)  # a reference's figures, small ones too
+    wrong = invented_numbers(said, sources, prompt, strict) if said.strip() else set()
     if wrong:
         # Often general knowledge ("every 5,000 miles"), not a misread record: one more try without those
         # numbers before falling back to the bare results (2026-10-30, live).
+        where = "the library's text" if strict else "their records"
         retry = llm.chat_with_tools(talk + [{"role": "assistant", "content": said}, {"role": "system", "content": (
-            f"Your answer used numbers that aren't in their records: {', '.join(sorted(wrong))}. Answer again "
-            "without them: their records' numbers only; general advice is fine in words, without figures.")}], [])
+            f"Your answer used numbers that aren't in {where}: {', '.join(sorted(wrong))}. Answer again "
+            f"without them: only the numbers {where} gives, exactly; where it gives none, say so in words.")}], [])
         again = (retry.content if retry is not None else "") or ""
-        if again.strip() and not invented_numbers(again, sources, prompt):
+        if again.strip() and not invented_numbers(again, sources, prompt, strict):
             return ChatReply(content=again.strip(), tool_calls=[])
+        trimmed = without_figures(again or said, invented_numbers(again or said, sources, prompt, strict)) \
+            if strict else ""
+        if trimmed:  # a library answer: only the sentences with a figure of its own go (2026-11-22, live)
+            log.warning("Tool loop: a library answer stated figures the text didn't; those sentences left out.")
+            from core.plain_words import strip_markdown
+
+            return ChatReply(content=strip_markdown(trimmed), tool_calls=[])
         log.warning("Tool loop answer had numbers the lookups didn't (%s); saying the results instead.",
                     ", ".join(sorted(wrong)))
         failures = getattr(context, "failures", None)
