@@ -7,7 +7,7 @@ Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a
 runner at a time, the older version replaced, her own index for packs Kiwix didn't index, and look_up's passages
 framed as outside text. A pretend Kiwix answers; the suite never reaches the network. Fable's review (2026-11-22): metalinks only from
 Kiwix, mirrors only public, an update whose old file is held open, a queue being read. The fastest mirror first, a
-crawling one left for the next.
+crawling one left for the next, one well below what it showed too.
 """
 import hashlib
 import io
@@ -338,7 +338,7 @@ def test_fable_review_a_queue_being_read_is_waited_for_never_taken_as_empty(tmp_
 
 def test_the_fastest_mirror_is_used_first_and_a_crawling_one_is_left_for_the_next(tmp_path, monkeypatch):
     """fastest orders mirrors by what each sends in a few seconds; a download slower than SLOW for STALL seconds
-    moves to the next mirror and resumes there."""
+    moves to another mirror (ranked lower each time it crawls) and resumes there."""
     now = [0.0]
     clock = lambda: now[0]  # noqa: E731
 
@@ -368,7 +368,49 @@ def test_the_fastest_mirror_is_used_first_and_a_crawling_one_is_left_for_the_nex
     meta = {"name": "p.zim", "size": len(BODY), "sha256": hashlib.sha256(BODY).hexdigest(),
             "urls": ["https://mirror-a.example/p", "https://mirror-b.example/p"]}
     partial = tmp_path / "p.partial"
-    monkeypatch.setattr(lib, "fastest", lambda urls, get, clock: urls)  # crawl first, to see it left
+    monkeypatch.setattr(lib, "ranked", lambda urls, get, clock: [(u, 1e9 if "mirror-a" in u else 1.0) for u in urls])
     lib.download(meta, partial, Mirrors(), clock=clock)
     assert partial.read_bytes() == BODY
+
+
+def test_a_mirror_that_falls_well_below_what_it_showed_is_left_and_the_mirrors_tried_again(tmp_path, monkeypatch):
+    """Faster than SLOW but a quarter of its probe: crawling; the next try ranks it lower and the other finishes."""
+    now = [0.0]
+    probes = []
+
+    class Mirrors:
+        """mirror-a showed 4 MB/s and now sends 1 MB/s; mirror-b sends 2 MB/s."""
+
+        def __call__(self, url, timeout=60, headers=None):
+            """A pretend answer whose reads advance the clock by the mirror's rate."""
+            start = int((headers or {}).get("Range", "bytes=0-")[6:].split("-")[0] or 0)
+            rate = 1e6 if "mirror-a" in url else 2e6
+
+            class Answer(io.BytesIO):
+                """Each block costs its size over the rate."""
+                status = 206 if start else 200
+                headers = {}
+
+                def read(self, n=-1):
+                    """One block."""
+                    block = super().read(min(n if n > 0 else 64, 64))
+                    now[0] += len(block) * 4096 / rate
+                    return block
+            return Answer(BODY[start:])
+
+    def ranked(urls, get, clock):
+        """mirror-a showed itself fastest."""
+        probes.append(list(urls))
+        return sorted([(u, 4e6 if "mirror-a" in u else 2e6) for u in urls], key=lambda ur: -ur[1])
+
+    monkeypatch.setattr(lib, "ranked", ranked)
+    monkeypatch.setattr(lib, "STALL", 1)
+    meta = {"name": "p.zim", "size": len(BODY), "sha256": hashlib.sha256(BODY).hexdigest(),
+            "urls": ["https://mirror-a.example/p", "https://mirror-b.example/p"]}
+    big = 50 * lib.PROBE + 1
+    monkeypatch.setattr(lib, "PROBE", 1)  # so this small file counts as big and is probed
+    assert big and meta["size"] > 50
+    partial = tmp_path / "p.partial"
+    lib.download(meta, partial, Mirrors(), clock=lambda: now[0])
+    assert partial.read_bytes() == BODY and len(probes) >= 2
 

@@ -19,8 +19,8 @@ kept beside the packs (`.fetch/catalog.xml`), gives each pack's newest file, its
 
 **Getting a pack** (`fetch`, `run_queue`): packs wait in a queue (`.fetch/queue.json`) and are downloaded one at a
 time, smallest first, in the background. Each file's size and SHA-256 come from its metalink on Kiwix's own server
-(lb.download.kiwix.org, over HTTPS); the bytes come from the mirrors it lists, the fastest first (`fastest`), a
-crawling one left for the next, resumed where a download stopped (HTTP Range), and a file whose hash doesn't match is thrown away, never installed. Only then is it moved into the
+(lb.download.kiwix.org, over HTTPS); the bytes come from the mirrors it lists, the fastest first (`ranked`), one
+falling well below what it showed left and the mirrors tried again, resumed where a download stopped (HTTP Range), and a file whose hash doesn't match is thrown away, never installed. Only then is it moved into the
 library, and the older version of the same pack removed. A download never leaves less than `FREE_FLOOR` free on the
 disk. One runner at a time (a lock file), so MIA and the command line (`python -m tools.offline_library`) never fetch
 the same file twice; a restart picks the queue up again (`resume`).
@@ -65,8 +65,9 @@ AGENT = "MIA-offline-library/1.0"
 FREE_FLOOR = 40 * 10**9  # never fill the disk past this
 CHUNK = 1 << 20
 PROBE = 4 << 20  # bytes read from each mirror to see how fast it is
-SLOW = 300_000  # bytes a second: slower than this for STALL seconds, the next mirror is tried (resumed)
+SLOW = 300_000  # bytes a second: slower than this (or a quarter of what it showed) for STALL seconds: crawling
 STALL = 60
+TRIES = 16  # mirrors tried, and tried again, for one file
 SETS = ("essential", "standard", "big")
 
 
@@ -523,8 +524,14 @@ class _Crawling(OSError):
 
 
 def fastest(urls: list[str], get: Callable = _get, clock: Callable = time.monotonic) -> list[str]:
-    """The mirrors fastest first: each asked for its first PROBE bytes for a few seconds; one that fails or sends
-    nothing goes last (never left out: the hash still decides). Kiwix's order breaks ties."""
+    """The mirrors fastest first (`ranked`), as URLs."""
+    return [url for url, _rate in ranked(urls, get, clock)]
+
+
+def ranked(urls: list[str], get: Callable = _get, clock: Callable = time.monotonic) -> list[tuple[str, float]]:
+    """The mirrors fastest first with the rate each showed (bytes a second): each asked for its first PROBE bytes
+    for a few seconds; one that fails or sends nothing goes last (never left out: the hash still decides). Kiwix's
+    order breaks ties."""
     timed = []
     for n, url in enumerate(urls[:8]):
         started, got = clock(), 0
@@ -539,14 +546,15 @@ def fastest(urls: list[str], get: Callable = _get, clock: Callable = time.monoto
             got = 0
         rate = got / max(clock() - started, 1e-3)
         timed.append((-rate, n, url))
-    return [url for _r, _n, url in sorted(timed)] + urls[8:]
+    return [(url, -r) for r, _n, url in sorted(timed)] + [(url, 0.0) for url in urls[8:]]
 
 
 def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable = lambda done, total: None,
              clock: Callable = time.monotonic) -> None:
     """One file from its mirrors into `partial`, resumed from what's already there; then its hash checked against
-    the metalink's. The mirrors are tried fastest first (`fastest`), and one that slows below SLOW for STALL
-    seconds is left for the next, which resumes. A mirror that won't resume from exactly where it stopped is passed
+    the metalink's. The mirrors are tried fastest first (`ranked`), and one that falls below a quarter of what it
+    showed (or below SLOW) for STALL seconds is left: the mirrors are tried again, that one ranked lower, and the
+    fastest resumes (at most TRIES times). A mirror that won't resume from exactly where it stopped is passed
     over, never allowed to overwrite what's here; a partial larger than the file is thrown away. OSError when no mirror finishes it; ValueError
     (and the partial file removed) when the hash is wrong."""
     if not re.fullmatch(r"[0-9a-f]{64}", meta.get("sha256", "")):
@@ -554,16 +562,28 @@ def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable
     problems = []
     if partial.exists() and partial.stat().st_size > meta["size"]:
         partial.unlink()  # more than the file: never right
-    urls = fastest(meta["urls"], get, clock) if meta["size"] > 50 * PROBE else meta["urls"]
-    for url in urls[:6]:
+    big = meta["size"] > 50 * PROBE
+    failed: set = set()  # mirrors that errored or won't resume: not asked again for this file
+    crawled: dict = {}  # mirror -> how many times it crawled: its rate counts for less each time
+    for _attempt in range(TRIES):
         have = partial.stat().st_size if partial.exists() else 0
         if have >= meta["size"]:
             break
+        left = [u for u in meta["urls"] if u not in failed]
+        if not big:
+            left = [u for u in left if u not in crawled]
+        if not left:
+            break
+        order = sorted(ranked(left, get, clock) if big else [(u, 0.0) for u in left],
+                       key=lambda ur: -ur[1] / (4 ** crawled.get(ur[0], 0)))
+        url, shown = order[0]
+        floor = max(SLOW, shown / 4)  # well below what it showed: crawling
         try:
             headers = {"Range": f"bytes={have}-"} if have else {}
             with get(url, timeout=60, headers=headers) as response:
                 if have and not _resumes(response, have):
                     problems.append(f"{url.split('/')[2]}: won't resume")
+                    failed.add(url)
                     continue  # never throw away what's already here: the next mirror
                 with open(partial, "ab" if have else "wb") as out:
                     window_start, window_bytes = clock(), 0
@@ -573,11 +593,16 @@ def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable
                         window_bytes += len(block)
                         progress(have, meta["size"])
                         if clock() - window_start >= STALL:
-                            if window_bytes < SLOW * STALL:
-                                raise _Crawling(f"slower than {SLOW // 1000} kB/s")
+                            if window_bytes < floor * STALL:
+                                raise _Crawling(f"slower than {int(floor) // 1000} kB/s")
                             window_start, window_bytes = clock(), 0
+        except _Crawling as problem:
+            problems.append(f"{url.split('/')[2]}: {problem}")
+            crawled[url] = crawled.get(url, 0) + 1
+            continue
         except (urllib.error.URLError, OSError) as problem:
             problems.append(f"{url.split('/')[2]}: {problem}")
+            failed.add(url)
             continue
     if not partial.exists() or partial.stat().st_size != meta["size"]:
         raise OSError("no mirror finished it (" + "; ".join(problems[-3:]) + ")")
