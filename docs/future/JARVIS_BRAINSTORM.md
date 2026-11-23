@@ -23,7 +23,9 @@ communication gate; grants; the phone, the glasses and MIA OS.
 
 ## 1. Intelligence and conversation: "she gets it, and it flows"
 
-**1.1 Conversation that flows (barge-in and back-channel).** S-M, no decision needed.
+**1.1 Conversation that flows (barge-in and back-channel).** S-M, no decision needed. *(a) built 2026-11-23 on the
+web: one voice per page, and the mic, a new turn or Escape stops her mid-sentence (`web/shell.js` `stopSpeaking`);
+(b) and (c) to come.*
 Talking to her today is turn by turn: he speaks, waits, she answers in full. Jarvis-feel comes from three small things:
 (a) he can cut in ("stop", "no, the other one") and she stops speaking at once and takes the new words;
 (b) a short spoken acknowledgement while a slow answer is being worked out ("Looking in the canning guide..."), from
@@ -61,14 +63,18 @@ PC) so she sounds more like what he likes. Parked already in the personality pla
 
 ## 2. Awareness: "she knows what's going on"
 
-**2.1 "What's going on?", made whole.** S-M, no decision needed.
+**2.1 "What's going on?", made whole.** S-M, no decision needed. *Built 2026-11-23 (`core/needs_now.py`): "catch
+me up" now starts with what needs him (greenhouse alerts, tonight's weather, an update waiting), what the gate is
+holding, and what she did on her own since yesterday with how to undo it.*
 Half there: "catch me up" / "what's going on with me" already answers from the life state (wins, what's in the way,
 what waits on what, the monthly plan). Missing: the homestead (greenhouse readings, the flock), the weather's effect
 on today, what she did on her own overnight with its undo, and an order by what needs him first; spoken short, shown
 long, the same on the second monitor. Builds on: `core/context_assembler.py` (`describe_life_state_v2`),
 `core/homestead_manager.py`, `core/ambient.py`, `core/weather.py`, the undo log.
 
-**2.2 Weather that changes plans.** S, no decision needed.
+**2.2 Weather that changes plans.** S, no decision needed. *Built 2026-11-23 (`core/weather_watch.py`): frost,
+hard freeze and cold nights against the garden, heat and freezing water against the flock; rain against outdoor
+work is next.*
 She reads the forecast against what he's planned: a frost tonight against the seedlings in the Planner, rain against
 the roofing mission, heat against the flock, wind against a burn. One gate message, with the action ("Cover the
 tomatoes? I'll make it a mission."). Builds on: `core/weather.py`, the Planner, missions, the greenhouse snapshots.
@@ -113,7 +119,9 @@ and the radio frequencies he keeps. Every number worked out in code from his rec
 `core/connectivity.py` (she already knows when she's offline and what that stops), the offline library,
 kitchen/pantry, inventory, the homestead system, `core/safety_floor.py`.
 
-**4.2 First aid with a safety floor.** M, no decision needed (the floor follows the canning one).
+**4.2 First aid with a safety floor.** M, no decision needed (the floor follows the canning one). *First part built
+2026-11-23 (`core/first_aid_floor.py`): an emergency happening now gets the emergency number and the first steps in
+fixed words before any model. Next: the library's first-aid answers checked the same way.*
 Step-by-step first aid from the library's medical packs (wilderness and field medicine), with a floor in code that
 always says when to call emergency services (by his country, `core/region.py`) and never gives a dose the page
 doesn't. Builds on: the canning floor's pattern in `core/reference_reader.py`, `core/safety_floor.py`.

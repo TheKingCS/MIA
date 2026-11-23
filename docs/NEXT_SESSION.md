@@ -47,9 +47,12 @@ model queue (every model call now waits its turn, K-0333), and the capability re
 please brainstorm"): `docs/future/JARVIS_BRAINSTORM.md`, 30-odd ideas in eight areas, each with what it builds on,
 its size and whether it needs him, and a recommended order. First built: 2.2, the weather against his plans
 (`core/weather_watch.py`: frost against crops in the ground, seedlings hardening off, heat and freezing water for
-the flock; a daily check, the tool `weather_for_my_plans`, lines on Home's weather card). Next in the recommended
-order: 2.1 (the status report made whole), 1.1 (barge-in and spoken acknowledgements), 4.1 grid-down mode, 4.2
-first aid with a floor. Three questions for Zac at its end.
+the flock; a daily check, the tool `weather_for_my_plans`, lines on Home's weather card). Also built the same day: 2.1
+(`core/needs_now.py`: "catch me up" leads with what needs him, what the gate holds, what she did on her own), 1.1's
+first part (barge-in on the web: the mic, a new turn or Escape stops her voice), and 4.2's first part
+(`core/first_aid_floor.py`: an emergency happening now answered in fixed words with the number, before any model;
+worth a reviewer's eye, it's safety-critical). Next: 4.1 grid-down mode, 1.2 follow-through memory, 2.3 noticing
+what's unusual. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**

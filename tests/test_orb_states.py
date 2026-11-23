@@ -86,11 +86,12 @@ def test_a_condition_that_isnt_one_is_ignored_and_only_a_change_moves_the_versio
 
 
 def test_speaking_comes_only_from_her_reply_really_playing():
-    """The page says speaking when the reply's audio is playing, and stops when it ends, pauses or fails."""
+    """The page says speaking when the reply's audio is playing, and stops when it ends, pauses (he cut in) or
+    fails."""
     shell = (ROOT / "web" / "shell.js").read_text(encoding="utf-8")
-    start = shell.index("function playReply(turn)")
+    start = shell.index("function playReply(turn, hooks)")
     body = shell[start:shell.index("\n  }\n", start)]
-    assert 'addEventListener("playing", () => presenceHere("speaking"))' in body
+    assert 'addEventListener("playing", () => { presenceHere("speaking");' in body
     assert all(f'addEventListener("{e}", done)' in body for e in ("ended", "pause", "error"))
 
 

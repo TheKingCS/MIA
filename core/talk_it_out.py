@@ -115,8 +115,10 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
     plain yes is handled here first, in code: to the offer MIA just made,
     or to the browser step she just asked about (DEC-0117). Her browser
     hears the message first (not a private journal turn): the only words
-    it may type or search for on its own (DEC-0122). Past the danger
-    check, the words are looked at for connections to things started
+    it may type or search for on its own (DEC-0122). After the danger
+    check, an emergency happening now (core/first_aid_floor.py) is
+    answered in fixed words with the emergency number, before any model.
+    Past both, the words are looked at for connections to things started
     weeks ago (core/connections.py), kept to come up naturally later;
     that never changes this turn. A yes to "keep it" or to tracking what
     they did (core/did_it.py) is done here too."""
@@ -202,6 +204,15 @@ def pre_turn(context: AppContext, conversation: Conversation, prompt: str) -> Pr
             from core.safety_escalation import escalate
 
             escalate(context, person_id(context))
+        return result
+
+    # An emergency happening now (core/first_aid_floor.py, brainstorm 4.2): the emergency number and the first thing
+    # to do, in fixed words, before any model; the conversation carries on after it.
+    from core import first_aid_floor
+
+    emergency = first_aid_floor.detect(prompt)
+    if emergency is not None:
+        result.fixed_reply = first_aid_floor.reply(emergency, region_for(context))
         return result
 
     # Connections (core/connections.py, 2026-11-08): a remark that ties into something started weeks ago is kept,

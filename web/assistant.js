@@ -56,6 +56,7 @@
   async function send(text) {
     text = (text || "").trim();
     if (!text) return;
+    MIAShell.stopSpeaking();  // a new turn: she stops what she was saying (brainstorm 1.1)
     bubble("me", text);
     const reply = bubble("mia thinking", "…");
     orb("thinking", "Thinking");
@@ -98,12 +99,9 @@
       if (used) reply.after(used);
       tools(reply, turn.transcript || "");
       orb("idle", "Ready");
-      if (turn.audio_wav_base64) {  // her voice, with the orb speaking while it plays
-        const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
-        audio.onplay = () => orb("speaking", "Speaking");
-        audio.onended = () => orb("idle", "Ready");
-        audio.play().catch(() => orb("idle", "Ready"));
-      }
+      // her voice, with the orb speaking while it plays; through the shell's one voice, so the mic, a new turn or
+      // Escape cuts her off (brainstorm 1.1)
+      MIAShell.playReply(turn, { onPlay: () => orb("speaking", "Speaking"), onEnd: () => orb("idle", "Ready") });
       MIAShell.refresh();
     } catch (e) { reply.textContent = e.message; orb("offline", "Can't Reach MIA"); }
     reply.parentElement.classList.remove("thinking");

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1593 files, 353,025 lines; 1593 files describe themselves; 19,428 of 19,529 classes and functions are documented.
+1597 files, 353,469 lines; 1597 files describe themselves; 19,452 of 19,554 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-622 files, 179,219 lines; 9,212 of 9,298 classes and functions documented
+624 files, 179,469 lines; 9,222 of 9,308 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -226,6 +226,7 @@
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app.
 - `core/findings.py`: Findings (DEC-0052 step 3; docs/REASONING_PLAN.md section 4): what MIA notices by putting two apps together, worked out in code, never by the model. Each one says what it noticed, the records it came from (`refs`, "kind:id"), why it matters, one suggested next step, how sure it is (REAL from records
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo
+- `core/first_aid_floor.py`: A floor for emergencies happening now (Jarvis brainstorm 4.2; Zac, 2026-11-23: "the ultimate tool offline and online for survival skills"), the same idea as core/safety_floor.py: a deterministic check before the model, so the first words he gets in an emergency never wait on a model that may be slow
 - `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
 - `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
@@ -356,6 +357,7 @@
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
 - `core/navigation_web.py`: Navigation's web screen (web/navigation.html): the waypoints with their grid references (core/geo_grid.py, MGRS), the distance and bearing from one to another, and the sun and moon at one of them on a day. The same reading as the desktop's Navigation module (modules/navigation), assembled here so th
+- `core/needs_now.py`: The front of "catch me up" (brainstorm 2.1, `docs/future/JARVIS_BRAINSTORM.md`; Zac, 2026-11-23: "aware"): before the life state's wins and friction, what needs him first, what she's holding for him, and what she did on her own, each from the record it lives in, worked out in code; the model only sa
 - `core/net_worth_history.py`: Net worth over time, for the line on Money's Overview (DEC-0113, the design canvas's Money artboard: "net worth, +$X this month, and its line"). MIA only ever knew net worth *now* (core/finance_summary.py's `_net_worth`: each linked account's latest total plus property equity); this keeps one point 
 - `core/news_actions.py`: Good News Radio's buttons (core/good_news.py), so the radio is fully used without voice as well as with it (Zac, 2026-11-10; DEC-0125). Its page (web/news.html) turns it on and off, starts today's episode, follows a story or stops, and marks one misleading, each through one of these actions, and eac
 - `core/night_school.py`: Night School (DEC-0100; Zac, 2026-11-06: "MIAs night school module where she spends time every night with Claude learning how to build herself into the best version of herself, doing tests, building her skills and proving her capabilities. I want that happening asap."). The full design is `docs/NIGH
@@ -920,7 +922,7 @@
 
 ## tests/: the test suite: what each part must do
 
-568 files, 93,495 lines; 7,853 of 7,868 classes and functions documented
+570 files, 93,665 lines; 7,867 of 7,883 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1084,6 +1086,7 @@
 - `tests/test_finance_manager.py`: Unit tests for core.finance_manager. parse_snapshot_content() is tested directly (pure, no filesystem I/O). FinanceManager itself is tested against a real tmp_path watched folder (isolating both the persisted-storage _DATA_DIR/_SNAPSHOTS_FILE, same monkeypatch pattern as test_journal_manager.py's is
 - `tests/test_finance_summary.py`: Finance #4, money on the phone: core/finance_summary.py's numbers, the /api/finance/summary endpoint, and the phone's money.js drawing the real Python output (under Node, skipped without it).
 - `tests/test_findings.py`: Findings (DEC-0052 step 3, core/findings.py): what MIA notices by putting apps together, with the records it came from, why it matters, a next step, and only Zac's chosen kinds unprompted.
+- `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic goes on to the library. The corpus lists both what must trigger and what must not.
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
 - `tests/test_fitness_missions.py`: The fitness plan as missions (core/fitness_missions.py, DEC-0020, H-0026): made once per day and week from the plan, kept in step with the logs (the logs are the truth), ticked through the logs, completing themselves, and letting a missed day go quietly (DEC-0014). Placeholder plan values.
@@ -1220,6 +1223,7 @@
 - `tests/test_named_tool.py`: The tool a message names in its own words (2026-10-19, the PC model's misses): AssistantActionRegistry.named_action() and core/assistant_chat.settle_on_named_tool(). Pure logic, no model.
 - `tests/test_navigation_module.py`: Unit tests for modules.navigation.module's pure functions. format_sun_moon_summary() is tested against real coordinates (not mocked) since astral itself is the "real dependency" here (offline, deterministic, no network) — same reasoning as test_system_health.py mocking psutil but this module having 
 - `tests/test_navigation_web.py`: Navigation's web screen (core/navigation_web.py): waypoints with grid references, distance and bearing, the sun and the moon; and a waypoint changed with waypoint.edit, on the page and by voice.
+- `tests/test_needs_now.py`: The front of "catch me up" (core/needs_now.py, brainstorm 2.1): the greenhouse's open alerts, tonight's weather against his plans and an update waiting; what the gate is holding; what she did on her own in the last day. *(1 undocumented)*
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
@@ -1493,7 +1497,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 21,888 lines
+117 files, 21,912 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

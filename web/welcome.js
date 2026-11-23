@@ -199,7 +199,7 @@
     }
     b.onclick = async () => {
       b.disabled = true;
-      try { const said = await MIA.speak(text); await new Audio("data:audio/wav;base64," + said.audio_wav_base64).play(); }
+      try { MIAShell.playReply(await MIA.speak(text)); }  // the shell's one voice: the mic or Escape stops it
       catch (e) { MIAShell.say(e.message || "MIA's voice isn't available right now."); }
       finally { b.disabled = false; }
     };

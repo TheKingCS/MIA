@@ -2776,7 +2776,9 @@ class AssistantTools:
     def _action_get_life_state(context: AppContext, arguments: dict) -> str:
         """
         The first real consumer of core.context_assembler (2026-09-14) —
-        a synthesized "what's going on with me" answer, built live from
+        a synthesized "what's going on with me" answer, led by what needs
+        him now, what she's holding and what she did on her own
+        (core/needs_now.py, 2026-11-23), built live from
         Missions/Skills/Insights/Maintenance/Projects rather than the
         LLM having to stitch together several separate action calls
         itself. GUI-only, same reason list_observations/
@@ -2792,11 +2794,15 @@ class AssistantTools:
         profile_id = person_id(context)
         if profile_id is None:
             return "No active profile — nothing to report."
-        # Life State v2 (wins, friction, waiting chains, the monthly
-        # plan), then v1's missions-and-skills line.
+        # First what needs him now, what she's holding and what she did on her own (core/needs_now.py, brainstorm
+        # 2.1); then Life State v2 (wins, friction, waiting chains, the monthly plan), then v1's missions-and-skills
+        # line.
+        from core import needs_now
+
+        first = needs_now.describe(needs_now.gather(context))
         wider = describe_life_state_v2(assemble_life_state_v2(context, date.today()))
         snapshot = assemble_life_state(context, profile_id, date.today())
-        return " ".join(part for part in (wider, format_life_state_summary(snapshot)) if part)
+        return " ".join(part for part in (first, wider, format_life_state_summary(snapshot)) if part)
 
     @staticmethod
     def _action_add_waypoint(context: AppContext, arguments: dict) -> str:

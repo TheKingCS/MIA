@@ -617,6 +617,7 @@
       get recording() { return !!recorder && recorder.state === "recording"; },
       cancel,
       async start() {
+        stopSpeaking();  // he's cutting in: she stops talking the moment he starts (brainstorm 1.1)
         if (!navigator.mediaDevices || !window.MediaRecorder) {
           throw new Error("This browser can't record here. Voice works in MIA's phone app and on the PC.");
         }
@@ -646,17 +647,40 @@
     };
   }
 
+  // Her voice on this page, one at a time (Jarvis brainstorm 1.1: he can cut in). Anything he does to talk to her
+  // stops her mid-sentence: the mic (voiceRecorder.start), a new turn (Talk's answer), Escape, or stopSpeaking().
+  let speaking = null;
+  /** Stops her voice if she's speaking on this page; true when she was. */
+  function stopSpeaking() {
+    const was = speaking;
+    speaking = null;
+    if (!was) return false;
+    try { was.pause(); } catch (e) { /* already stopped */ }
+    return true;
+  }
   /** Her spoken reply, when her computer has a voice. */
-  // Her spoken reply; the orb says "speaking" only while it really plays (WP-07: only this device knows).
-  function playReply(turn) {
-    if (!(turn && turn.audio_wav_base64)) return;
+  // Her spoken reply; the orb says "speaking" only while it really plays (WP-07: only this device knows). Optional
+  // hooks (`onPlay`, `onEnd`) let a page's own orb follow it too. Starting one stops any she was still saying.
+  function playReply(turn, hooks) {
+    if (!(turn && turn.audio_wav_base64)) return null;
+    stopSpeaking();
     const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
-    const done = () => { if (presenceLocal === "speaking") presenceHere(""); };
-    audio.addEventListener("playing", () => presenceHere("speaking"));
+    const h = hooks || {};
+    let ended = false;
+    const done = () => {
+      if (ended) return;
+      ended = true;
+      if (speaking === audio) speaking = null;
+      if (presenceLocal === "speaking") presenceHere("");
+      if (h.onEnd) h.onEnd();
+    };
+    audio.addEventListener("playing", () => { presenceHere("speaking"); if (h.onPlay) h.onPlay(); });
     audio.addEventListener("ended", done);
     audio.addEventListener("pause", done);
     audio.addEventListener("error", done);
+    speaking = audio;
     audio.play().catch(done);
+    return audio;
   }
 
   function mountTalk() {
@@ -665,6 +689,7 @@
     const input = el("input", { id: "talk-input", placeholder: "Talk to MIA…", autocomplete: "off", "aria-label": "Message MIA" });
     // One turn, typed or spoken: her reply in the log, what she used, which brain answered, and 👍/👎.
     async function answer(asked, run) {
+      stopSpeaking();  // a new turn: what she was still saying about the last one stops
       const thinking = el("p", { class: "bubble mia thinking" }, "…");
       log.append(thinking);
       log.scrollTop = log.scrollHeight;
@@ -1229,6 +1254,7 @@
   }
   document.addEventListener("keydown", (e) => {
     const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+    if (e.key === "Escape" && speaking) { stopSpeaking(); return; }  // Escape: she stops talking (1.1)
     if ((e.key === "k" || e.key === "K") && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearch(); }
     else if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); openSearch(); }
   });
@@ -1340,7 +1366,7 @@
   }
 
   window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk, copy, copyButton,
-    notRight, voiceRecorder, playReply, twoWays, capture };
+    notRight, voiceRecorder, playReply, stopSpeaking, twoWays, capture };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).
