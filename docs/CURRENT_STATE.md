@@ -2,7 +2,8 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-22 (Opus at the PC: the Windows backlog, the foundation's parts, Fable's review),
+session. Last updated: 2026-11-23 (Opus at the PC: Zac's Q-114 and Q-115 built, then the Jarvis brainstorm and its
+first builds),
 by claude.*
 
 **Later 2026-11-22: her offline library, the Planner, and reading references well** (T-0060, Zac's asks): 74 Kiwix
@@ -86,8 +87,17 @@ more: the erase test removed the checkout's own content folders (only in a workt
   FW-08 (his signing key), the helper's real dialog and FW-11's screenshots in his own session, FW-10's phone
   against MIA OS, the backup's second place, the install guide for MV-01. (Q-114 and Q-115 answered and built
   2026-11-23: DEC-0287, DEC-0288.)
+- **2026-11-23, Opus: Zac's answers, then the Jarvis brainstorm.** Q-114 built (MIA OS never restarts by itself;
+  she says when an update waits; Restart To Update in Settings and by voice) and Q-115 (the Daylight theme, meaning
+  colours in checked darker shades). Zac asked for a smarter, more aware, Jarvis-like MIA and a brainstorm:
+  `docs/future/JARVIS_BRAINSTORM.md` (ideas in eight areas, a recommended order, three questions for him). Built
+  from it the same day: the weather against his garden and flock; "catch me up" led by what needs him, what the
+  gate holds and what she did on her own; barge-in on the web and glasses; the emergency floor (an emergency
+  happening now gets the number and first steps before any model); the hens laying far below normal and spending
+  far past a category's usual month; the next 13 weeks of money (Money's Ahead tab); her orb saying what a lookup is
+  for. A fresh reviewer found 12 problems in the day's work, the emergency floor's coverage worst; all fixed (K-0356).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
-  recovery-key envelope (`docs/WAITING_ON.md`).
+  recovery-key envelope, picking from the brainstorm (`docs/WAITING_ON.md` 0zg).
 
 **2026-11-18 (Claude on Opus, at the PC). MIA OS planning is complete through Prompt 17.**
 - **Prompts 12 to 16** (devices, security, reliability, development, the roadmap): written, and Zac answered each

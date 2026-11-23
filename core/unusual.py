@@ -15,8 +15,12 @@ order they're most often the answer (the shorter days of fall and winter, a molt
 change, eggs laid somewhere new, short on water, feed or protein, an illness) and, when he logged a bird lost or
 added in those weeks, that first.
 
-More checks belong here as their records allow (spending far above a category's own usual, a bill that didn't come):
-each its own pure function, its own fingerprint.
+**Spending** (`spending_over`): a category whose spending this month so far is already half again past its usual
+whole month (the average of the last three full months it had spending in, at least two of them), and at least
+SPEND_MARGIN over in money; so a month half gone is never compared with a whole one. Said with the amounts.
+
+More checks belong here as their records allow (a bill that didn't come): each its own pure function, its own
+fingerprint.
 """
 
 from __future__ import annotations
@@ -73,6 +77,49 @@ def egg_drop(entries: list, flock_id: str, today: date) -> Optional[dict]:
             "birds_changed": birds_changed}
 
 
+SPEND_OVER = 1.5
+SPEND_MARGIN = 50.0
+SPEND_MONTHS = 3
+
+
+def _month_bounds(day: date, back: int) -> tuple[date, date]:
+    """Pure logic. The first and last day of the month `back` months before the one `day` is in."""
+    year, month = day.year, day.month - back
+    while month < 1:
+        year, month = year - 1, month + 12
+    start = date(year, month, 1)
+    nxt = date(year + (month == 12), month % 12 + 1, 1)
+    return start, nxt - timedelta(days=1)
+
+
+def spending_over(by_month: list, this_month: dict) -> list[dict]:
+    """Pure logic. The categories already far past their usual month: each {category, so_far, usual}, the largest
+    overrun first. `by_month` holds the last full months' {category: total}, newest first; `this_month` the month so
+    far's."""
+    out = []
+    for category, so_far in this_month.items():
+        past = [m[category] for m in by_month[:SPEND_MONTHS] if m.get(category, 0) > 0]
+        if len(past) < 2:
+            continue
+        usual = sum(past) / len(past)
+        if so_far >= usual * SPEND_OVER and so_far - usual >= SPEND_MARGIN:
+            out.append({"category": category, "so_far": round(so_far, 2), "usual": round(usual, 2)})
+    return sorted(out, key=lambda f: f["usual"] - f["so_far"])
+
+
+def _spending(context, today: date) -> list[dict]:
+    """His budget's categories already far past their usual month, from his own expenses."""
+    budget = getattr(context, "budget", None)
+    if budget is None:
+        return []
+    months = []
+    for back in range(1, SPEND_MONTHS + 1):
+        start, end = _month_bounds(today, back)
+        months.append(budget.total_expenses_by_category(start.isoformat(), end.isoformat()))
+    start, _end = _month_bounds(today, 0)
+    return spending_over(months, budget.total_expenses_by_category(start.isoformat(), today.isoformat()))
+
+
 def _egg_words(name: str, found: dict) -> str:
     """Pure logic. The egg drop in her words, with what to check."""
     first = "You logged birds lost or added lately: that alone can do it. Otherwise, " if found["birds_changed"] else ""
@@ -82,8 +129,19 @@ def _egg_words(name: str, found: dict) -> str:
 
 
 def findings(context, today: date) -> list[dict]:
-    """Every unusual thing found in his records today: each {kind, title, text, key}."""
+    """Every unusual thing found in his records today, spending first, then each flock's eggs: each {kind, title,
+    text, key}; a record that can't be read leaves its check out."""
+    from core.region import money
+
     out = []
+    try:
+        for f in _spending(context, today):
+            out.append({"kind": "spending", "title": f"{f['category']}: more than usual",
+                        "text": (f"You've spent {money(f['so_far'])} on {f['category']} so far this month; a usual "
+                                 f"whole month is about {money(f['usual'])}. Worth a look at what's different."),
+                        "key": f"spend-{f['category'].lower()}"})
+    except Exception:  # noqa: BLE001 - the budget that can't be read never stops the rest
+        log.exception("Unusual: the budget couldn't be read")
     book = getattr(context, "flock", None)
     for flock in getattr(book, "flocks", []) or []:
         if max(0, flock.hens) == 0:

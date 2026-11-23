@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1602 files, 354,414 lines; 1602 files describe themselves; 19,502 of 19,607 classes and functions are documented.
+1602 files, 354,488 lines; 1602 files describe themselves; 19,508 of 19,613 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-626 files, 180,030 lines; 9,246 of 9,332 classes and functions documented
+626 files, 180,088 lines; 9,249 of 9,335 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -924,7 +924,7 @@
 
 ## tests/: the test suite: what each part must do
 
-573 files, 93,986 lines; 7,893 of 7,912 classes and functions documented
+573 files, 94,002 lines; 7,896 of 7,915 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1413,7 +1413,7 @@
 - `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
 - `tests/test_ual.py`: The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the catalogue and its tiers, what's offered for a selection, and running a pick (a read action at once; an act action only as a proposal to approve). And U2's phone card: a selection from a banking, health or password app is sens *(1 undocumented)*
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
-- `tests/test_unusual.py`: Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only on days he logged before today (today's count is still coming in), said once a week through the gate with the causes worth checking. *(1 undocumented)*
+- `tests/test_unusual.py`: Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only on days he logged before today (today's count is still coming in), said once a week through the gate with the causes worth checking; and a spending category already far past its usual wh *(1 undocumented)*
 - `tests/test_update_and_daylight.py`: Zac's two answers of 2026-11-23, held in code:
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g
 - `tests/test_upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, core/upkeep_missions.py): this week's upkeep becomes one mission per task and due date, attached to the task and its asset; it isn't made twice or remade once set aside; Done on the upkeep completes the mission, and completing the mission marks the upkeep done

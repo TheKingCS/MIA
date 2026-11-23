@@ -4,7 +4,7 @@ tests.test_unusual
 
 Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only
 on days he logged before today (today's count is still coming in), said once a week through the gate with the
-causes worth checking.
+causes worth checking; and a spending category already far past its usual whole month.
 """
 
 from datetime import date, datetime, timedelta
@@ -78,3 +78,19 @@ def test_todays_unfinished_count_never_makes_a_drop():
     log = _days([6] * 17)
     log[TODAY] = 1  # a morning's first log
     assert unusual.egg_drop(_log(log), "f1", TODAY) is None
+
+
+def test_spending_already_past_its_usual_month_is_found():
+    past = [{"Feed": 120, "Fuel": 200}, {"Feed": 100, "Fuel": 220}, {"Feed": 110}]
+    found = unusual.spending_over(past, {"Feed": 260, "Fuel": 230})
+    assert found == [{"category": "Feed", "so_far": 260, "usual": 110.0}]
+
+
+def test_spending_with_too_little_history_or_a_small_overrun_is_not():
+    assert unusual.spending_over([{"Feed": 100}, {}], {"Feed": 500}) == []  # one month of history
+    assert unusual.spending_over([{"Gum": 10}, {"Gum": 10}], {"Gum": 40}) == []  # under the money margin
+
+
+def test_month_bounds_cross_the_year():
+    assert unusual._month_bounds(date(2026, 1, 15), 1) == (date(2025, 12, 1), date(2025, 12, 31))
+    assert unusual._month_bounds(date(2026, 3, 31), 1) == (date(2026, 2, 1), date(2026, 2, 28))

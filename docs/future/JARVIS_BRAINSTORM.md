@@ -25,6 +25,7 @@ communication gate; grants; the phone, the glasses and MIA OS.
 
 **1.1 Conversation that flows (barge-in and back-channel).** S-M, no decision needed. *(a) built 2026-11-23 on the
 web: one voice per page, and the mic, a new turn or Escape stops her mid-sentence (`web/shell.js` `stopSpeaking`);
+(b) in part: her orb says what a lookup is for ("Thinking · Reading your library"), spoken words still to come;
 the glasses page too. (b) and (c) to come.*
 Talking to her today is turn by turn: he speaks, waits, she answers in full. Jarvis-feel comes from three small things:
 (a) he can cut in ("stop", "no, the other one") and she stops speaking at once and takes the new words;
@@ -81,7 +82,8 @@ tomatoes? I'll make it a mission."). Builds on: `core/weather.py`, the Planner, 
 
 **2.3 Noticing what's unusual.** M, no decision needed. *First check built 2026-11-23 (`core/unusual.py`): the
 hens laying far below their own normal, judged only on logged days, said weekly with the causes to check; on the
-Chickens page and in "how are the hens?". Next: spending far above a category's own usual, a bill that didn't come.*
+Chickens page and in "how are the hens?". Second, the same day: a spending category already half again past its usual whole month. Next: a bill that didn't
+come.*
 A change from his normal is worth a word: spending in a category far above its usual, the greenhouse water
 temperature drifting, egg count down three days running, a bill that didn't arrive, a mission stalled for weeks.
 Each is a small check in code with its own normal learned from the history (`core/life_events.py`), offered through
@@ -113,7 +115,9 @@ next stage, weekly homework missions, her honest read on progress. Needs his lis
 
 ## 4. Survival and homestead, offline first
 
-**4.1 Grid-down mode.** M, no decision needed.
+**4.1 Grid-down mode.** M, no decision needed. *Note 2026-11-23: her offline posture already exists
+(`core/connectivity.py`: she knows she's offline and says what still works); what's left needs his preparedness
+records (4.3) to count days of water, food and power.*
 When the internet or the power is out, she changes posture on her own: says so, works fully from the library and
 his records, and opens a "grid-down" page: days of water and food on hand (from the pantry and inventory), power left
 and what's drawing it, the flock's and greenhouse's needs without power, a checklist for the first hour, day and week,
