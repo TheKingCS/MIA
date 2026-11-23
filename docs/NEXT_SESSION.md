@@ -58,9 +58,10 @@ Afternoon: 1.2's first part (`core/left_off.py`, "where were we?"), 2.2's rain a
 (`core/preparedness.py`), and the orb's words fixed to show while the model reads; two fresh reviews, both fixed
 (K-0356, K-0357). Later the same day: 1.1(c) her first words sooner (the checked answer's first sentence voiced at once,
 the rest while it plays: `core/speech_split.py`) and 3.2's "show me where it says that" (`core/show_source.py`); a
-third fresh review fixed both (K-0358). Left that need no decision: 3.2's sources compared when they disagree, 4.2's
-next part (the library's first-aid answers held to a floor like canning's), 5.1's rest (a quote from a Planner build's
-material list), 7.2's event triggers. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
+third fresh review fixed both (K-0358). Then 4.2's second part (a first-aid answer from the library always says when to call) and 5.1's
+(`core/plan_price.py`: "what should I charge for the shed?"). Everything in the brainstorm that needs no decision is
+now built or found already there; what's left waits on Zac (WAITING_ON 0zg): hobby companions, the picture of him,
+a bigger model, event triggers (an event can come from something she reads), routines from his habits. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**

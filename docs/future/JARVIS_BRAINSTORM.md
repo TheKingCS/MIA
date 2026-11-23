@@ -112,8 +112,8 @@ inventory, budget) so an answer is about his place, not a textbook's.
 
 **3.2 Ask the library like an expert friend.** S-M, no decision needed. *"Show me where it says that" built
 2026-11-23 (`core/show_source.py`): the article (or PDF page) her last library answer came from opens on the Knowledge
-page. Following up on the same passage already works ("tell me more about that": `read_reference`). Next: sources
-compared when they disagree.*
+page. Following up on the same passage already works ("tell me more about that": `read_reference`). Sources that disagree: her reading guidance already tells her to say so
+(`HOW_TO_TALK`); a code check comparing figures across sources is worth building only if she's seen to miss one.*
 Follow-up questions about the same passage ("and if it's a pressure canner without a gauge?"), "show me where it says
 that" (the page opened at the passage), and a comparison across sources when they disagree ("the USDA says 25
 minutes; this older guide says 20; go by the USDA, it's newer and tested"). Builds on: `core/reference_reader.py`.
@@ -163,7 +163,8 @@ a scanner feed she listens to for weather alerts. Builds on: MIA OS, the device 
 **5.1 The business brain: quotes, jobs, customers.** M, no decision needed for the first part. *Mostly there
 already (checked 2026-11-23): `core/business_book.py` has customers, quotes priced from a recipe's materials, hours,
 labor rate and margin, orders whose payments go to the ledger, and market days. What's left: a quote from a Planner
-build's own material list, and the invoice drafted from an order.*
+build's own material list, and the invoice drafted from an order.* *The first built 2026-11-23 (`core/plan_price.py`,
+"what should I charge for the shed?"): the build's materials priced from his workshop, his hours, rate and margin.*
 For a build or repair job: a quote from the materials and hours (worked out in `core/build_calcs.py`, priced from his
 own records), the job as a mission, the customer and what was promised, the invoice drafted (never sent without his
 press), and paid or not. Builds on: business book, Trade Master, build calcs, email drafts.

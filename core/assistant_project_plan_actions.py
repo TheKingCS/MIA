@@ -88,9 +88,21 @@ _PLAN = {"type": "object", "properties": {
     "title": {"type": "string"}}}
 
 
+def _price(context, arguments: dict) -> str:
+    """What a build costs and what to charge (core/plan_price.say)."""
+    from core import plan_price
+
+    try:
+        hours = float(arguments.get("hours") or 0)
+        margin = float(arguments["margin"]) if arguments.get("margin") not in (None, "") else None
+    except (TypeError, ValueError):
+        return "Hours and margin are numbers: like 12 hours and a 20% margin."
+    return plan_price.say(context, str(arguments.get("plan") or ""), hours, margin)
+
+
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), show_plans, confirm_plan and drop_plan."""
+    chosen when drafted), price_build (core/plan_price.py), show_plans, confirm_plan and drop_plan."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -109,6 +121,17 @@ def register_project_plan_actions(registry) -> None:
         description="Change a draft plan: its size, beds, crops, frost dates, a stage left out or put back, notes.",
         parameters={"type": "object", "properties": changed, "required": ["plan_id"]},
         handler=_do("projectplan.change"), trigger_phrases=("change the plan", "make it", "leave out the"),
+    ))
+    registry.register(AssistantAction(
+        name="price_build", domain=DOMAIN,
+        description="What a Planner build would cost and what to charge for it: its materials priced from the "
+                    "workshop, those with no price named, the hours he says at his labor rate, and his margin.",
+        parameters={"type": "object", "properties": {
+            "plan": {"type": "string", "description": "words from the build's name, e.g. 'shed'; empty for the newest"},
+            "hours": {"type": "number", "description": "how many hours the job will take him"},
+            "margin": {"type": "number", "description": "margin percent; 20 when not said"}}},
+        handler=_price, trigger_phrases=("price the build", "what would it cost", "what should i charge",
+                                         "quote for the", "how much to charge", "cost to build"),
     ))
     registry.register(AssistantAction(
         name="show_plans", domain=DOMAIN,

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1610 files, 355,468 lines; 1610 files describe themselves; 19,571 of 19,679 classes and functions are documented.
+1612 files, 355,643 lines; 1612 files describe themselves; 19,579 of 19,688 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-630 files, 180,632 lines; 9,279 of 9,365 classes and functions documented
+631 files, 180,744 lines; 9,283 of 9,369 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -400,6 +400,7 @@
 - `core/plan_actions.py`: The plan page's changes (the screens review's missing "plan's page", its material list, cut list and shopping list; DEC-0118, DEC-0125), as action kinds so the Library page and voice agree and "undo that" takes each back (the plans and projects stores write through atomic_write_text):
 - `core/plan_import.py`: "Paste a plan" (2026-10-14, Zac: "work with Muse to fill out my workouts, goals, meals, nutrition"). A whole fitness plan and its recipes as one block of plain text, the kind Muse (or anyone) writes in a chat and the person pastes into My plan on their phone. The person's details go from that chat s
 - `core/plan_library.py`: The Library's plans shelf (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Three kinds of plan, found together by `find()`:
+- `core/plan_price.py`: What a Planner build would cost, and what to charge for it (Jarvis brainstorm 5.1; Zac, 2026-11-23: "my businesses skills"): from the build's own material list at his size (core/plan_library.detail, its quantities from core/build_calcs.py), every material priced at what it costs him (the workshop's 
 - `core/play_actions.py`: Recreation (core/recreation.py, DEC-0098) through the action contract (core/actions.py): `play.log` (a game or sport played) and `play.delete`. The log writes through atomic_write_text, so "undo that" takes it back. Children play too: both are child-safe.
 - `core/port_scanner.py`: Pure-Python TCP connect-scan port scanner — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. Deliberately doesn't wrap `nmap`: `nmap` isn't installed in this dev sandbox and can't be added without sudo (the same "no sudo" wall as every other missing system package this project h
 - `core/portal_pictures.py`: The picture inside each portal in the Nexus, chosen by the person (DEC-0140's "portal pictures painted by MIA"; since DEC-0153 the Nexus's portals are the person's Living Worlds stories, core/web_nexus.worlds, and the word "area" in the setting and the action means a portal's id).
@@ -928,7 +929,7 @@
 
 ## tests/: the test suite: what each part must do
 
-577 files, 94,376 lines; 7,929 of 7,951 classes and functions documented
+578 files, 94,439 lines; 7,933 of 7,956 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1279,6 +1280,7 @@
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002).
 - `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, the tools, the homestead, 
+- `tests/test_plan_price.py`: What a Planner build costs and what to charge (core/plan_price.py, brainstorm 5.1): its materials priced from his workshop (whole quantities: what's on hand gets used too), those with no price named, his hours at his rate, his margin, through his quotes' own arithmetic. *(1 undocumented)*
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140; the Nexus's portals are the person's stories since DEC-0153): the person puts one of their own paintings in a story's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the 
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h

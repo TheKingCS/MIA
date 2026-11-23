@@ -9,6 +9,7 @@
   "tests/test_left_off.py": 2,
   "tests/test_money_ahead.py": 2,
   "tests/test_needs_now.py": 1,
+  "tests/test_plan_price.py": 1,
   "tests/test_preparedness.py": 1,
   "tests/test_private_budget.py": 1,
   "tests/test_specialist_work.py": 2,
