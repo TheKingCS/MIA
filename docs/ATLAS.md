@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1621 files, 356,781 lines; 1621 files describe themselves; 19,643 of 19,762 classes and functions are documented.
+1621 files, 356,867 lines; 1621 files describe themselves; 19,648 of 19,767 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-635 files, 181,457 lines; 9,316 of 9,402 classes and functions documented
+635 files, 181,500 lines; 9,316 of 9,402 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -933,7 +933,7 @@
 
 ## tests/: the test suite: what each part must do
 
-583 files, 94,844 lines; 7,964 of 7,997 classes and functions documented
+583 files, 94,887 lines; 7,969 of 8,002 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1093,7 +1093,7 @@
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_fact_owners.py`: One owner per fact (DEC-0052): a retired copy of a fact never comes back, and every owner named in core/fact_owners.py exists.
 - `tests/test_failure_log.py`: The Fix-It Log (DEC-0049): where MIA stumbles is recorded (privately, redacted), grouped into issues, turned into a fix report with a test to write first, and what the person confirms she learns herself.
-- `tests/test_feed_runway.py`: How long the hens' feed will last (core/feed_runway.py): from the last bag, at his flock's own rate once two weeks of purchases show it, else the usual quarter pound a hen a day; said when it's down to a few days, once a bag. *(1 undocumented)*
+- `tests/test_feed_runway.py`: How long the hens' feed will last (core/feed_runway.py): from the last bag, at his flock's own rate once two weeks of purchases show it (the last 90 days, after the flock last changed, never under half the usual), else the usual quarter pound a hen a day; said when it's down to a few days, once a ba *(1 undocumented)*
 - `tests/test_field_kit_module.py`: Unit test for modules.field_kit.module.format_script_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test: the widget-building (QTabWidget, device list, script list) and worker-thread wiring in FieldKitModule needs a real Qt event loo
 - `tests/test_file_operations.py`: Unit tests for modules.files_mod.file_operations. All filesystem operations run against pytest's tmp_path, never real project or user files.
 - `tests/test_finance_manager.py`: Unit tests for core.finance_manager. parse_snapshot_content() is tested directly (pure, no filesystem I/O). FinanceManager itself is tested against a real tmp_path watched folder (isolating both the persisted-storage _DATA_DIR/_SNAPSHOTS_FILE, same monkeypatch pattern as test_journal_manager.py's is

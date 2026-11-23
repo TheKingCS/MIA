@@ -3,7 +3,8 @@ tests.test_feed_runway
 ========================
 
 How long the hens' feed will last (core/feed_runway.py): from the last bag, at his flock's own rate once two weeks of
-purchases show it, else the usual quarter pound a hen a day; said when it's down to a few days, once a bag.
+purchases show it (the last 90 days, after the flock last changed, never under half the usual), else the usual
+quarter pound a hen a day; said when it's down to a few days, once a bag; a bag without pounds is unknown.
 """
 
 from datetime import date
@@ -45,3 +46,27 @@ def test_running_low_is_said_once_a_bag_and_run_out_says_so():
 def test_no_feed_logged_or_no_birds_says_nothing():
     assert fr.runway([], FLOCK, TODAY) is None
     assert fr.runway([_feed("2026-11-13", 50)], SimpleNamespace(flock_id="f1", hens=0, roosters=0), TODAY) is None
+
+
+def test_a_bag_logged_without_pounds_makes_it_unknown_never_a_stale_figure():
+    entries = [_feed("2026-10-01", 50), _feed("2026-10-21", 50), _feed("2026-11-22", 0)]
+    found = fr.runway(entries, FLOCK, TODAY)
+    assert found["unknown"] and "without its pounds" in fr.words("The girls", found)
+    assert fr.soon(SimpleNamespace(flock=SimpleNamespace(flocks=[FLOCK], entries=entries)), TODAY) == []
+
+
+def test_bags_bought_the_same_day_are_one_purchase():
+    entries = [_feed("2026-10-01", 50), _feed("2026-11-01", 50), _feed("2026-11-01", 50)]
+    found = fr.runway(entries, FLOCK, TODAY)
+    # 50 lb lasted Oct 1 to Nov 1 (31 days, 1.61 lb a day, under half of 2 lb is 1: so 1.61); 100 lb bought Nov 1
+    assert found["rate"] == 1.61 and found["left_lb"] == round(100 - 50 / 31 * 22, 1)
+
+
+def test_his_rate_starts_after_the_flock_changed_and_never_falls_under_half_the_usual():
+    grown = SimpleNamespace(flock_id="f1", name="The girls", hens=20, roosters=0)
+    entries = [_feed("2026-09-01", 50), _feed("2026-10-01", 50),
+               SimpleNamespace(flock_id="f1", kind="birds", date="2026-10-15", pounds=0), _feed("2026-11-20", 50)]
+    found = fr.runway(entries, grown, TODAY)
+    assert not found["from_history"] and found["rate"] == 5  # 20 hens: the usual, not the old small flock's
+    old = [_feed("2025-11-20", 50), _feed("2026-11-20", 50)]
+    assert fr.runway(old, FLOCK, TODAY)["rate"] == 2  # a year apart is outside the window: the usual

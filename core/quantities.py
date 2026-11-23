@@ -52,6 +52,8 @@ UNITS: dict[str, tuple[float, tuple]] = {
     "m2": (1.0, (2, 0, 0, 0, 0)), "ft2": (0.09290304, (2, 0, 0, 0, 0)),
     "m3": (1.0, (3, 0, 0, 0, 0)), "L": (1e-3, (3, 0, 0, 0, 0)), "mL": (1e-6, (3, 0, 0, 0, 0)),
     "gal": (3.785411784e-3, (3, 0, 0, 0, 0)), "ft3": (0.028316846592, (3, 0, 0, 0, 0)),
+    "qt": (9.46352946e-4, (3, 0, 0, 0, 0)), "pt": (4.73176473e-4, (3, 0, 0, 0, 0)),
+    "cup": (2.365882365e-4, (3, 0, 0, 0, 0)), "floz": (2.95735296e-5, (3, 0, 0, 0, 0)),
     # Flows and the greenhouse's heat (the greenhouse specialist, S4): BTU per hour is a power; a U-value is a power
     # per area per degree.
     "BTU/h": (0.29307107, _WATT), "m3/s": (1.0, (3, 0, -1, 0, 0)), "cfm": (4.719474432e-4, (3, 0, -1, 0, 0)),
@@ -75,7 +77,9 @@ _ALIASES = {"Ω": "ohm", "ohms": "ohm", "kΩ": "kohm", "MΩ": "Mohm", "µA": "uA
             "volt": "V", "volts": "V", "amp": "A", "amps": "A", "watt": "W", "watts": "W", "feet": "ft", "foot": "ft",
             "inch": "in", "inches": "in", "hr": "h", "hours": "h", "hour": "h", "sec": "s", "percent": "%",
             "ml": "mL", "millilitre": "mL", "millilitres": "mL", "milliliter": "mL", "milliliters": "mL",
-            "litre": "L", "litres": "L", "liter": "L", "liters": "L", "l": "L", "Btu/h": "BTU/h", "btu/h": "BTU/h",
+            "litre": "L", "litres": "L", "liter": "L", "liters": "L", "l": "L", "quart": "qt", "quarts": "qt",
+            "pint": "pt", "pints": "pt", "cups": "cup", "fl oz": "floz", "fl. oz": "floz", "gallon": "gal",
+            "gallons": "gal", "Btu/h": "BTU/h", "btu/h": "BTU/h",
             "BTU/hr": "BTU/h", "Btu/hr": "BTU/h", "btuh": "BTU/h", "CFM": "cfm", "GPM": "gpm", "GPH": "gph",
             "cu ft": "ft3", "sq ft": "ft2", "ft²": "ft2", "m²": "m2", "ft³": "ft3", "cfm/sq ft": "cfm/ft2",
             "CFM/ft2": "cfm/ft2", "cfm per sq ft": "cfm/ft2",

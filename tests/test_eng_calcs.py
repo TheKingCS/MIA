@@ -3,7 +3,8 @@ DEC-0197): each calculator against an example worked by hand, units that don't g
 input named, never guessed, and no input's description offering a value a model could copy. The hoodie's
 calculators (acoustics, audio DSP, textiles, portable power) are checked the same way, with their units, and a
 temperature given on another scale is read as a temperature, not a difference. Survival's water-bleach dose follows
-the EPA's table and refuses a bleach strength it isn't for."""
+the EPA's table (never under its 2-drop minimum, doubled for water still cloudy) and refuses a bleach strength
+it isn't for; kitchen volumes (a cup, a quart) are read."""
 
 import pytest
 
@@ -296,3 +297,13 @@ def test_water_is_made_safe_with_the_epas_bleach_dose():
         except CalcError:
             pass
     assert calc.safety
+
+
+def test_a_small_amount_of_water_never_gets_less_than_the_epas_smallest_dose():
+    calc = BY_ID["water_bleach"]
+    assert calc.run(q(1, "cup"), q(6, "%"))["values"]["drops"].value == 2  # never 0: untreated water said treated
+    assert calc.run(q(1, "qt"), q(8.25, "%"))["values"]["drops"].value == 2  # the EPA's quart row
+    assert calc.run(q(500, "mL"), q(8.25, "%"))["values"]["drops"].value == 2
+    one = calc.run(q(1, "gal"), q(6, "%"))
+    assert one["values"]["cloudy_drops"].value == 16 and "16 drops" in one["said"]
+    assert "812 teaspoons" in calc.run(q(10000, "gal"), q(6, "%"))["said"]

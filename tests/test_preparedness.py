@@ -4,7 +4,7 @@ tests.test_preparedness
 
 How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a
 day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water
-or a filter), days of food from the staples by weight and their calories, what expires soon, and what
+or a filter), days of food from the staples by weight and their calories (whole words; nothing wet, canned or a drink), what expires soon, and what
 isn't counted, said plainly.
 """
 
@@ -87,3 +87,10 @@ def test_say_counts_the_food_and_names_what_it_couldnt(monkeypatch):
     said = rd.say(SimpleNamespace(kitchen=kitchen), TODAY)
     assert "Food: about 20.7 days for you" in said and "Not counted: Canned soup" in said
 
+
+def test_only_dry_staples_count_never_what_shares_a_word_with_one():
+    for name in ("Collard greens", "Goat cheese", "Float", "Bean sprouts", "Green beans", "Oat milk", "Rice vinegar",
+                 "Pasta sauce", "Chicken noodle soup", "Honeydew melon", "Sugar snap peas", "Coffee beans"):
+        assert rd.food_days([_item(name, 1, "lb")], 1)[1] == [], name
+    assert rd.food_days([_item("Rolled oats", 1, "lb"), _item("Rice flour", 1, "lb")], 1)[1] == \
+        ["Rolled oats", "Rice flour"]

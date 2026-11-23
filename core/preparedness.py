@@ -36,6 +36,11 @@ STAPLES = (("peanut butter", 2667), ("powdered milk", 1642), ("dry milk", 1642),
            ("rice", 1656), ("lentil", 1597), ("bean", 1574), ("flour", 1651), ("oat", 1719), ("pasta", 1683),
            ("spaghetti", 1683), ("macaroni", 1683), ("noodle", 1683), ("cornmeal", 1678), ("wheat", 1483),
            ("sugar", 1755), ("honey", 1379), ("potato", 349))
+# Sold wet, canned, fresh or as a drink or sauce: never counted as the dry staple its name holds ("green beans", "oat
+# milk", "rice vinegar", "pasta sauce", "collard greens", "bean sprouts").
+_NOT_STAPLE = re.compile(r"\b(?:green|sprouts?|canned|can|cans|coffee|vanilla|vinegar|sauce|soup|dew|snap|sweet|"
+                         r"cheese|juice|drink|chips|crackers|cereal|bars?|greens)\b|\b(?:oat|rice|almond|soy|coconut|"
+                         r"goat)\s+milk\b", re.I)
 TO_POUNDS = {"lb": 1.0, "lbs": 1.0, "pound": 1.0, "pounds": 1.0, "kg": 2.20462, "kgs": 2.20462, "kilogram": 2.20462,
              "kilograms": 2.20462, "oz": 1 / 16, "ounce": 1 / 16, "ounces": 1 / 16, "g": 0.00220462, "gram": 0.00220462,
              "grams": 0.00220462}
@@ -97,13 +102,15 @@ def water_days(items: list, people: int) -> tuple[float, list]:
 
 def food_days(items: list, people: int) -> tuple[float, list, list]:
     """Pure logic. (days of food for that many people at CALORIES_A_DAY, the staples counted, the food not counted:
-    no weight, or not a known staple). Drinking water isn't food."""
+    no weight, or not a known staple). A staple is matched by whole word ("collard" isn't lard, "goat" isn't oat), and
+    what's sold wet, canned, fresh or as a drink is never one (`_NOT_STAPLE`). Drinking water isn't food."""
     calories, counted, uncounted = 0.0, [], []
     for item in items:
         name = str(getattr(item, "name", "")).lower()
         if not name or is_drinking_water(item):
             continue
-        per_lb = next((c for words, c in STAPLES if words in name), None)
+        per_lb = None if _NOT_STAPLE.search(name) else next(
+            (c for words, c in STAPLES if re.search(rf"\b{re.escape(words)}s?\b", name)), None)
         unit = str(getattr(item, "unit", "")).lower().strip().rstrip(".")
         pounds = float(getattr(item, "quantity", 0) or 0) * TO_POUNDS[unit] if unit in TO_POUNDS else None
         if per_lb is None or pounds is None:
