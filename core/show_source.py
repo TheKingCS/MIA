@@ -39,7 +39,8 @@ _read: dict = {}  # person -> [{pack, article, ref, at}], newest first
 
 
 def sources_in(text: str) -> list[dict]:
-    """Pure logic. The sources a library result names, in order: each {pack, article, ref}."""
+    """Pure logic. The sources a library result names, in order: each {pack, article, ref}, trimmed (a ref with spaces,
+    like a PDF's name, kept whole; a title with quotes in it kept)."""
     return [{k: v.strip() for k, v in m.groupdict().items()} for m in _SOURCE.finditer(str(text or ""))]
 
 
