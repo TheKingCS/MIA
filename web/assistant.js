@@ -93,7 +93,7 @@
     orb("thinking", "Thinking");
     const epoch = MIAShell.currentVoice();  // cut in again before she answers, and this answer isn't spoken
     try {
-      const turn = await MIA.voice(await recorder.stop());
+      const turn = await MIA.voice(await recorder.stop(), { split: true });  // her first words sooner (1.1(c))
       if (turn.transcript) reply.parentElement.before(el("div", { class: "chat-bubble me" }, el("p", {}, turn.transcript)));
       reply.textContent = turn.reply_text || "Done.";
       const used = usedLine(turn);

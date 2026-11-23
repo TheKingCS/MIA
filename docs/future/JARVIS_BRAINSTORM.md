@@ -26,6 +26,9 @@ communication gate; grants; the phone, the glasses and MIA OS.
 **1.1 Conversation that flows (barge-in and back-channel).** S-M, no decision needed. *(a) built 2026-11-23 on the
 web: one voice per page, and the mic, a new turn or Escape stops her mid-sentence (`web/shell.js` `stopSpeaking`);
 (b) in part: her orb says what a lookup is for ("Thinking · Reading your library"), spoken words still to come;
+(c) built the honest way (`core/speech_split.py`): the answer is still checked whole (figures, the floors), then only
+its first sentence is voiced before it's sent and the page voices the rest while it plays, so her first words come
+sooner; streaming the model's own words would skip those checks;
 the glasses page too. (b) and (c) to come.*
 Talking to her today is turn by turn: he speaks, waits, she answers in full. Jarvis-feel comes from three small things:
 (a) he can cut in ("stop", "no, the other one") and she stops speaking at once and takes the new words;

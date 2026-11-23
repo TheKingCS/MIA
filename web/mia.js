@@ -785,10 +785,12 @@
     // MIA makes in a turn is recorded and undoable like everything else.
     // Voice (the phone's path): a mono 16-bit WAV in, MIA's reply (and her
     // spoken reply as WAV, when voice is set up on her computer) out.
-    voice: (wavBlob) => demo ? Promise.reject(new MiaError(400, "Voice needs MIA running — this is the placeholder demo."))
+    // opts.split (brainstorm 1.1(c)): the reply's first part comes voiced, the rest as `audio_rest_text` for the page
+    // to voice while it plays (web/shell.js playReply), so her first words come sooner.
+    voice: (wavBlob, opts) => demo ? Promise.reject(new MiaError(400, "Voice needs MIA running — this is the placeholder demo."))
       : (async () => {
         if (!token) throw new MiaError(401, "Not signed in.");
-        const response = await fetch("/api/voice/turn", { method: "POST", body: wavBlob,
+        const response = await fetch("/api/voice/turn" + (opts && opts.split ? "?split=1" : ""), { method: "POST", body: wavBlob,
           headers: { Authorization: "Bearer " + token, "Content-Type": "audio/wav" } });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new MiaError(response.status, data.detail || response.statusText);

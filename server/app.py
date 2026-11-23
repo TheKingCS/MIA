@@ -569,7 +569,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); a page that asks (/api/voice/turn?split=1) gets the reply's first part voiced and the rest as text to voice while it plays (core/speech_split.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
@@ -1102,7 +1102,7 @@ def create_app(context: AppContext) -> FastAPI:
         return _private(conversation)
 
     def respond(profile_id: str, transcript: str, background: BackgroundTasks, hearing: Optional[float] = None,
-                surface: str = "phone") -> dict:
+                surface: str = "phone", split: bool = False) -> dict:
         # The phone user's own view: their conversations, memories, journal
         # and reasons, whoever is signed in at the desktop (core/personal_data.py).
         view = view_for(context, profile_id)
@@ -1132,7 +1132,12 @@ def create_app(context: AppContext) -> FastAPI:
         if turn.followup is not None:
             background.add_task(followup_locked, conversation, turn.followup, view)
         started = time.monotonic()
-        audio = speak_to_base64(reply_text)
+        # A page that asks (`split`, brainstorm 1.1(c)) gets the first part's audio now and voices the rest itself while
+        # it plays (core/speech_split.py); the phone app gets the whole answer's audio as before.
+        from core.speech_split import first_part
+
+        said_first, rest = first_part(reply_text) if split else (reply_text, "")
+        audio = speak_to_base64(said_first)
         timings = turn_timings(hearing, thinking, time.monotonic() - started)
         log.info("Phone turn: %s", describe_timings(timings))
         return {
@@ -1140,6 +1145,7 @@ def create_app(context: AppContext) -> FastAPI:
             "replies": replies,
             "reply_text": reply_text,
             "audio_wav_base64": audio,
+            "audio_rest_text": rest,
             "timings": timings,
             "draft": new_draft,
             "used": turn.used,
@@ -1214,6 +1220,7 @@ def create_app(context: AppContext) -> FastAPI:
     @app.post("/api/voice/turn")
     async def voice_turn(
         request: Request, background: BackgroundTasks, profile_id: str = Depends(require_profile_id),
+        split: bool = False,
     ) -> dict:
         audio = await request.body()
         if len(audio) > MAX_VOICE_UPLOAD_BYTES:
@@ -1233,7 +1240,7 @@ def create_app(context: AppContext) -> FastAPI:
                 "transcript": "", "replies": [NOT_HEARD_REPLY], "reply_text": NOT_HEARD_REPLY,
                 "audio_wav_base64": await run_in_threadpool(speak_to_base64, NOT_HEARD_REPLY),
             }
-        return await run_in_threadpool(respond, profile_id, transcript.strip(), background, hearing)
+        return await run_in_threadpool(respond, profile_id, transcript.strip(), background, hearing, "phone", split)
 
     @app.post("/api/voice/text")
     def voice_text(

@@ -677,27 +677,56 @@
   /** Her spoken reply, when her computer has a voice. */
   // Her spoken reply; the orb says "speaking" only while it really plays (WP-07: only this device knows). Optional
   // hooks (`onPlay`, `onEnd`) let a page's own orb follow it too. Starting one stops any she was still saying.
+  // The rest of a split reply (turn.audio_rest_text, brainstorm 1.1(c)) in parts of whole sentences, each voiced
+  // (MIA.speak) while the one before plays.
+  function speechParts(text) {
+    const sentences = String(text || "").split(/(?<=[.!?])\s+(?=[A-Z0-9"'(])/).filter((s) => s.trim());
+    const parts = [];
+    sentences.forEach((s) => {
+      if (parts.length && (parts[parts.length - 1] + " " + s).length <= 220) parts[parts.length - 1] += " " + s;
+      else parts.push(s);
+    });
+    return parts;
+  }
   function playReply(turn, hooks, epoch) {
     if (!(turn && turn.audio_wav_base64)) return null;
     if (epoch != null && epoch !== voiceEpoch) return null;  // he cut in after asking: don't talk over him
     stopSpeaking();
-    const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
+    const mine = voiceEpoch;  // any later stop or reply moves it: the rest is then never said
     const h = hooks || {};
-    const done = () => {
-      if (speaking !== audio) return;  // already stopped (stopSpeaking ran its end), or a newer one plays
+    const rest = speechParts(turn.audio_rest_text);
+    const fetchNext = () => (rest.length ? MIA.speak(rest.shift()).catch(() => null) : null);
+    let next = fetchNext();  // the second part is being voiced while the first plays
+    let first = null;
+    const finish = () => {
       speaking = null;
       speakingEnd = null;
       if (presenceLocal === "speaking") presenceHere("");
       if (h.onEnd) h.onEnd();
     };
-    audio.addEventListener("playing", () => { presenceHere("speaking"); if (h.onPlay) h.onPlay(); });
-    audio.addEventListener("ended", done);
-    audio.addEventListener("pause", done);
-    audio.addEventListener("error", done);
-    speaking = audio;
-    speakingEnd = h.onEnd || null;
-    audio.play().catch(done);
-    return audio;
+    const playOne = (b64) => {
+      const audio = new Audio("data:audio/wav;base64," + b64);
+      const done = () => {
+        if (speaking !== audio) return;  // already stopped (stopSpeaking ran its end), or a newer one plays
+        if (!next || mine !== voiceEpoch) { finish(); return; }
+        const coming = next;
+        next = fetchNext();
+        coming.then((said) => {
+          if (speaking !== audio || mine !== voiceEpoch) return;  // cut off while it was being voiced
+          if (said && said.audio_wav_base64) playOne(said.audio_wav_base64); else finish();
+        });
+      };
+      audio.addEventListener("playing", () => { presenceHere("speaking"); if (h.onPlay && audio === first) h.onPlay(); });
+      audio.addEventListener("ended", done);
+      audio.addEventListener("pause", done);
+      audio.addEventListener("error", done);
+      speaking = audio;
+      speakingEnd = h.onEnd || null;
+      audio.play().catch(done);
+      return audio;
+    };
+    first = playOne(turn.audio_wav_base64);
+    return first;
   }
 
   function mountTalk() {
@@ -745,7 +774,7 @@
           mic.setAttribute("aria-label", "Speak to MIA");
           let audio;
           try { audio = await recorder.stop(); } catch (e) { say(e.message); return; }
-          await answer("", () => MIA.voice(audio));
+          await answer("", () => MIA.voice(audio, { split: true }));  // her first words sooner (1.1(c))
           return;
         }
         try { await recorder.start(); } catch (e) { say(e.message); return; }
