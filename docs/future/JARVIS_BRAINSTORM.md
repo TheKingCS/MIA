@@ -273,6 +273,8 @@ New ideas, each checked against what's there first:
 - **How long the feed lasts** (S, no decision): built 2026-11-23 (`core/feed_runway.py`): from the last bag and how
   fast his flock really eats (else a quarter pound a hen a day), on the Chickens page and in "how are the hens?", and
   said once a bag when it's down to five days.
+- **The day before a market** (S, no decision): built 2026-11-23 (`core/market_eve.py`): what to bring from what
+  usually sells (his own closed markets), beside what's on hand and what's short, the day before a market day he set.
 - **A quiet evening wrap** (M, his say: it's a new daily message): what got done today, tomorrow's first thing, the
   weather for it, in two sentences, at the hour he usually winds down.
 

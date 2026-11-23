@@ -440,6 +440,10 @@
   "check:garden_week": {
    "status": "none",
    "why": "his garden plans' own dates, worked out in code from his frost dates and said once a week; the gate's pacing already learns from what he opens or dismisses (topic garden_week)"
+  },
+  "check:market_eve": {
+   "status": "none",
+   "why": "his market days and goods, with how much to bring worked out in code from his own closed markets (core/goods.demand, already a figure that learns from each market); said once per market day, paced by the gate"
   }
  }
 }

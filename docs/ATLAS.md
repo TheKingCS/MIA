@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1623 files, 357,013 lines; 1623 files describe themselves; 19,656 of 19,776 classes and functions are documented.
+1625 files, 357,149 lines; 1625 files describe themselves; 19,663 of 19,785 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-636 files, 181,608 lines; 9,321 of 9,407 classes and functions documented
+637 files, 181,696 lines; 9,325 of 9,411 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -331,6 +331,7 @@
 - `core/map_tile_cache.py`: Disk-backed cache for real basemap tiles — the actual "offline maps" imagery gui/widgets/tile_map_view.py renders, unlike gui/widgets/waypoint_map_canvas.py's schematic waypoint plot (which has no basemap imagery at all, by design — see that module's docstring).
 - `core/map_tile_math.py`: Pure Web Mercator "slippy map" tile-numbering math — the same addressing scheme every standard XYZ/ArcGIS tile provider uses (OSM, USGS National Map, etc.), documented publicly as the OSM wiki's "Slippy map tilenames" formulas. Kept separate from core/map_tile_cache.py (which adds real network I/O/d
 - `core/maps_web.py`: Maps' web screen (web/maps.html): the basemap tiles the desktop keeps offline (core/map_tile_cache.py), with the waypoints on top. A tile is served from the cache; one that isn't cached is fetched once and kept, by the cache's own rules (the same as viewing the map on the desktop):
+- `core/market_eve.py`: The day before a market day (Jarvis brainstorm round 2; Zac, 2026-11-23: "my businesses skills ... automation"): when he has a market day set for tomorrow (core/business_book.py MarketDay, still open), one message through the gate with what to bring: for each good, how many usually sell and so how m
 - `core/material_manager.py`: MIA Home's fabrication-materials inventory — the first concrete slice of the proposed `mia_home_schema.sql`'s `materials` table (see `docs/VISION.md`'s "MIA Home's expanded scope" section), adapted to this project's persisted-JSON-manager convention rather than adopting SQLite, per the user's explic
 - `core/meal_plan.py`: The week's meals (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md phase 3): what's planned each day, the prep sessions that cook ahead, the nutrition the plan adds up to against the person's targets, a shopping list for the whole week, and a suggested week from the person's own recipes. The plan is the perso
 - `core/meaning.py`: Comparing what someone said with example sentences by meaning, not by the words they share (DEC-0052; docs/TOOL_CALLING_RESEARCH.md R2). A small local embedding model on the home computer's Ollama (`llm.embed_model`, default nomic-embed-text) turns each sentence into a vector; the nearest example wi
@@ -934,7 +935,7 @@
 
 ## tests/: the test suite: what each part must do
 
-584 files, 94,925 lines; 7,972 of 8,006 classes and functions documented
+585 files, 94,973 lines; 7,975 of 8,011 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1209,6 +1210,7 @@
 - `tests/test_map_tile_math.py`: Unit tests for core.map_tile_math — pure coordinate math, no network/Qt.
 - `tests/test_maps_module.py`: Unit tests for modules.maps.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_maps_web.py`: Maps' web screen (core/maps_web.py): cached tiles by the cache's rules, and the waypoints.
+- `tests/test_market_eve.py`: The day before a market day (core/market_eve.py): what to bring from what usually sells, beside what's on hand, the short ones and the goods without history named; once per market day, only for an open one tomorrow. *(2 undocumented)*
 - `tests/test_material_manager.py`: Unit tests for core.material_manager. Isolates _DATA_DIR/_MATERIALS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. materials_needing_restock() is also tested directly as a pure function (no filesystem I/O), same reasoning as every other pur
 - `tests/test_meal_plan.py`: Meal plans, prep and the shopping list (core/meal_plan.py, DEC-0020), with their actions (meal.*) and missions. Placeholder recipes and values.
 - `tests/test_memories_module.py`: Unit tests for modules.memories.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).

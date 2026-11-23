@@ -106,6 +106,8 @@
       "glasses": "view",
       "voice": true
     },
-    "background": []
+    "background": [
+      "market_eve"
+    ]
   }
 }

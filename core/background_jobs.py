@@ -141,6 +141,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("weather_watch", "_check_weather_watch"),
     ("unusual", "_check_unusual"),
     ("garden_week", "_check_garden_week"),
+    ("market_eve", "_check_market_eve"),
 )
 
 
@@ -413,6 +414,13 @@ class BackgroundJobs:
         from core import garden_week
 
         self._offers.extend(garden_week.offer(self.context, now))
+
+    def _check_market_eve(self, now: datetime, today_iso: str) -> None:
+        """The day before a market day (core/market_eve.py): what to bring, from what usually sells, beside what's on
+        hand; once per market day, through the gate."""
+        from core import market_eve
+
+        self._offers.extend(market_eve.offer(self.context, now))
 
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a

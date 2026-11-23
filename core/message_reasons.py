@@ -62,6 +62,8 @@ REASONS: dict[str, tuple[str, str]] = {
                 "move far from their normal, like the hens laying much less, I say so with what to check, once a week"),
     "garden_week": ("this week in the garden", "your confirmed garden plans have dates (from your frost dates): "
                     "once a week I say what falls in the coming seven days, so a seed-starting day doesn't slip by"),
+    "market_eve": ("the day before a market", "you set a market day: the day before, I say what to bring from what "
+                   "usually sells at yours, and what's short"),
     "greenhouse": ("the greenhouse", "you handed me the greenhouse node to watch (DEC-0150): its critical alerts "
                    "right away, its warnings when there's an opening"),
     "momentum": ("easy starts and tomorrow's prep", "you asked me (DEC-0148) to help your good runs of getting things "
