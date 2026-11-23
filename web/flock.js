@@ -100,6 +100,7 @@
         buttons(btn("For Baking", "btn-ghost btn-small", () => useEggs(f, "baking")), btn("Eaten At Home", "btn-ghost btn-small", () => useEggs(f, "home")),
           btn("Bought Feed", "btn-ghost btn-small", () => feed(f)), btn("Hens Came Or Went", "btn-ghost btn-small", () => birds(f))),
         x.feed_month_text ? el("p", { class: "dim" }, "Feed in the last 30 days: " + x.feed_month_text) : null,
+        f.feed_runway ? el("p", { class: "dim" }, f.feed_runway) : null,  // how long it lasts (core/feed_runway.py)
         good && good.price_text ? el("p", { class: "dim" }, good.name + ": " + good.price_text + " a " + (good.unit || "carton")) : null),  // priced per carton (a dozen), not per egg
       f.log.length ? el("details", { class: "glass ck-panel ck-logbook" }, el("summary", {}, el("span", { class: "pw-label" }, "Log · " + f.log.length)),
         el("div", { class: "rows" }, f.log.map((e) => el("div", { class: "row money-row" },

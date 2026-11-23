@@ -2,7 +2,8 @@
 DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing
 input named, never guessed, and no input's description offering a value a model could copy. The hoodie's
 calculators (acoustics, audio DSP, textiles, portable power) are checked the same way, with their units, and a
-temperature given on another scale is read as a temperature, not a difference."""
+temperature given on another scale is read as a temperature, not a difference. Survival's water-bleach dose follows
+the EPA's table and refuses a bleach strength it isn't for."""
 
 import pytest
 
@@ -277,3 +278,21 @@ def test_the_hoodies_units_are_read_in_the_ways_they_are_written():
     assert parse("1,536 kbps").number("bps") == 1_536_000 and round(parse("1 MB").number("bit")) == 8_000_000
     assert round(parse("3 ohms/ft").number("ohm/m"), 3) == 9.843 and parse("48 khz").number("Hz") == 48_000
     assert parse("2 metres").number("m") == 2 and round(parse("1.5 yards").number("in"), 6) == 54
+
+
+def test_water_is_made_safe_with_the_epas_bleach_dose():
+    from core.eng_calcs import CALCULATORS, CalcError
+
+    calc = next(c for c in CALCULATORS if c.id == "water_bleach")
+    one = calc.run(q(1, "gal"), q(6, "%"))
+    assert one["values"]["drops"].value == 8 and "30 minutes" in one["said"]
+    assert calc.run(q(1, "gal"), q(8.25, "%"))["values"]["drops"].value == 6  # the EPA's 8.25% row
+    five = calc.run(q(5, "gal"), q(6, "%"))
+    assert five["values"]["drops"].value == 40 and "teaspoons" in five["said"]
+    for bad in (q(1, "%"), q(12, "%")):
+        try:
+            calc.run(q(1, "gal"), bad)
+            raise AssertionError("expected CalcError")
+        except CalcError:
+            pass
+    assert calc.safety

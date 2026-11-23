@@ -267,6 +267,11 @@ New ideas, each checked against what's there first:
 - **Equipment hours to service** (S): the hour meters he logs (core/maintenance_manager.py meter tasks) said a week
   before a service falls due, through the gate. *Already there: `core/maintenance_insights.py` says a meter task
   trending toward due soon.*
+- **Water made safe with bleach** (S, no decision): built 2026-11-23, a calculator (`core/eng_calcs.py`
+  `water_bleach`): the EPA's drops of unscented bleach for the gallons and the bleach's strength, 30 minutes' contact.
+- **How long the feed lasts** (S, no decision): built 2026-11-23 (`core/feed_runway.py`): from the last bag and how
+  fast his flock really eats (else a quarter pound a hen a day), on the Chickens page and in "how are the hens?", and
+  said once a bag when it's down to five days.
 - **A quiet evening wrap** (M, his say: it's a new daily message): what got done today, tomorrow's first thing, the
   weather for it, in two sentences, at the hour he usually winds down.
 

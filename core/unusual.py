@@ -19,6 +19,9 @@ added in those weeks, that first.
 whole month (the average of the last three full months it had spending in, at least two of them), and at least
 SPEND_MARGIN over in money; so a month half gone is never compared with a whole one. Said with the amounts.
 
+**Feed** (core/feed_runway.py): a flock down to its last few days of feed, from the last bag and how fast his
+flock eats, once for each bag.
+
 More checks belong here as their records allow (a bill that didn't come): each its own pure function, its own
 fingerprint.
 """
@@ -131,8 +134,9 @@ def _egg_words(name: str, found: dict) -> str:
 
 
 def findings(context, today: date) -> list[dict]:
-    """Every unusual thing found in his records today, spending first, then each flock's eggs: each {kind, title,
-    text, key (naming the period it's said once in)}; a record that can't be read leaves its check out."""
+    """Every unusual thing found in his records today, spending first, then feed running low (core/feed_runway.py),
+    then each flock's eggs: each {kind, title, text, key (naming the period it's said once in)}; a record that can't be
+    read leaves its check out."""
     from core.region import money
 
     out = []
@@ -144,6 +148,12 @@ def findings(context, today: date) -> list[dict]:
                         "key": f"spend-{f['category'].lower()}-{today:%Y-%m}"})  # once a month
     except Exception:  # noqa: BLE001 - the budget that can't be read never stops the rest
         log.exception("Unusual: the budget couldn't be read")
+    try:  # feed running low (core/feed_runway.py): once for each bag bought
+        from core import feed_runway
+
+        out.extend(feed_runway.soon(context, today))
+    except Exception:  # noqa: BLE001
+        log.exception("Unusual: the feed couldn't be worked out")
     book = getattr(context, "flock", None)
     for flock in getattr(book, "flocks", []) or []:
         if max(0, flock.hens) == 0:

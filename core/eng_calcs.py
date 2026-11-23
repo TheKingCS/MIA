@@ -239,6 +239,29 @@ def _brine_salt(water: Quantity, vegetables: Quantity, strength: Quantity) -> di
             "said": f"{strength.si * 100:g}% of {total:.4g} g (water and vegetables together) is {salt} of salt."}
 
 
+BLEACH_DROPS_PER_GAL_AT_6 = 8  # the EPA: 8 drops of 6% unscented bleach per gallon of clear water
+DROP_ML = 0.05  # a drop, as the EPA's table counts them (about 20 drops a mL)
+
+
+def _water_bleach(water: Quantity, strength: Quantity) -> dict:
+    """Household bleach to make water safe to drink, the EPA's way: 8 drops of 6% unscented bleach a gallon (fewer for
+    stronger bleach, in proportion), stirred and left 30 minutes."""
+    if not 0.04 <= strength.si <= 0.0825:
+        raise CalcError("Use plain unscented household bleach of 4% to 8.25% sodium hypochlorite (the label says). "
+                        "Other strengths, scented or splash-less bleach, aren't for drinking water.")
+    gallons = water.number("gal")
+    if gallons <= 0:
+        raise CalcError("How much water? More than none.")
+    drops = round(gallons * BLEACH_DROPS_PER_GAL_AT_6 * 0.06 / strength.si)
+    dose = q(drops * DROP_ML, "mL")
+    spoon = f" (about {drops * DROP_ML / 4.92892:.2g} teaspoons)" if drops >= 40 else ""
+    return {"values": {"drops": q(drops, ""), "bleach": dose},
+            "said": f"For {water.to('gal')} of clear water: {drops} drops of {strength.si * 100:g}% unscented bleach, "
+                    f"{dose}{spoon}. Stir, and let it stand 30 minutes: it should smell slightly of chlorine; if not, "
+                    "add the same dose again and wait 15 minutes more. Cloudy water: let it settle and filter it "
+                    "through a clean cloth first. Boiling a full minute is better when you can."}
+
+
 def _candle_wax(volume: Quantity, fragrance: Quantity) -> dict:
     """Wax for a container candle: the container's volume times wax's density, and fragrance as a share of the wax."""
     wax = q(volume.number("L") * 1000 * 0.86, "g")
@@ -641,6 +664,12 @@ CALCULATORS: tuple[Calculator, ...] = (
                 "strength": ("%", "the salt percentage", "2 %")},
                _brine_salt, "common fermenting practice: salt as a percentage of the water and vegetables together; "
                "for canning and curing, follow a tested recipe instead"),
+    Calculator("water_bleach", "survival", "Make Water Safe With Bleach", "Unscented household bleach to "
+               "disinfect drinking water when it can't be boiled.",
+               {"water": ("gal", "how much clear water", None),
+                "strength": ("%", "the bleach's strength (sodium hypochlorite, on the label)", "6 %")},
+               _water_bleach, "the US EPA's Emergency Disinfection of Drinking Water: 8 drops of 6% (6 of 8.25%) "
+               "unscented bleach a gallon, 30 minutes' contact; boiling is preferred", True),
     Calculator("candle_wax", "crafts", "Candle Wax", "Wax and fragrance for a container candle.",
                {"volume": ("L", "the container's volume", None), "fragrance": ("%", "the fragrance load", "8 %")},
                _candle_wax, "common candle-making practice: wax at 0.86 g per mL; check the wax maker's own maximum "

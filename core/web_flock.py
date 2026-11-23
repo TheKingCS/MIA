@@ -39,8 +39,20 @@ def _unusual_line(flock, entries: list, today: date) -> str:
     return _egg_words(flock.name, drop) if drop else ""
 
 
+def _feed_line(flock, entries: list, today: date) -> str:
+    """How long the feed will last (core/feed_runway.py), or "" without a bag logged; never breaks the page."""
+    from core.feed_runway import runway, words
+
+    try:
+        found = runway(entries, flock, today)
+    except Exception:  # noqa: BLE001
+        log.exception("Flock: the feed couldn't be worked out")
+        return ""
+    return words(flock.name, found) if found else ""
+
+
 def flock_page(context, today: Optional[date] = None) -> dict:
-    """The Flock screen's data: the birds and their entries said in words, the figures (eggs, feed, costs), the week's series, laying far below their own normal (`unusual`, core/unusual.py, via `_unusual_line` so a bad record never breaks the page), what's kept and how fresh, and the recipes, jobs and ledger entries it touches, with its forms. Not available without a flock."""
+    """The Flock screen's data: the birds and their entries said in words, the figures (eggs, feed, costs), the week's series, laying far below their own normal (`unusual`, core/unusual.py, via `_unusual_line` so a bad record never breaks the page), how long the feed will last (`feed_runway`, core/feed_runway.py), what's kept and how fresh, and the recipes, jobs and ledger entries it touches, with its forms. Not available without a flock."""
     from core.flock import figures, week_series
     from core.flock_actions import FLOCK, USE_SAID, _entry_said
     from core.goods import freshness, lots
@@ -74,6 +86,7 @@ def flock_page(context, today: Optional[date] = None) -> dict:
             "series": week_series(f.flock_id, book.entries, today),
             # laying far below their own normal, with what to check (core/unusual.py), or ""
             "unusual": _unusual_line(f, book.entries, today),
+            "feed_runway": _feed_line(f, book.entries, today),
             "good": {"id": recipe.recipe_id, "name": recipe.name, "unit": unit,
                      "on_hand_text": amount_text(cartons_left, unit) if unit else f"{cartons_left:g}",
                      "on_hand": cartons_left, "price_text": _money(recipe.price) if recipe.price else "",

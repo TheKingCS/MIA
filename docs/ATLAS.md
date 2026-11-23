@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1619 files, 356,522 lines; 1619 files describe themselves; 19,629 of 19,747 classes and functions are documented.
+1621 files, 356,717 lines; 1621 files describe themselves; 19,640 of 19,759 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-634 files, 181,285 lines; 9,309 of 9,395 classes and functions documented
+635 files, 181,413 lines; 9,315 of 9,401 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -223,6 +223,7 @@
 - `core/fact_owners.py`: One owner per fact (DEC-0052, docs/REASONING_PLAN.md section 2). A fact MIA knows about a person lives in exactly one store; every other screen, answer and finding reads it from that owner and never keeps a copy, so two places can't disagree. `tests/test_fact_owners.py` fails when a retired copy com
 - `core/failure_actions.py`: The Fix-It Log's actions (DEC-0049, core/failure_log.py) on the action contract, and its screen (served as /api/failures).
 - `core/failure_log.py`: Where MIA stumbles, so it gets fixed (DEC-0049; Zac, 2026-10-27): "a log that you can be sent to audit the users interactions with MIA, see when she fails, why she fails, when the user runs into an issue and then use that information to fix her ... nearly self developing in a way that doesnt break h
+- `core/feed_runway.py`: How long the hens' feed will last (Jarvis brainstorm round 2; Zac, 2026-11-23: "homestead skills ... aware"), from his flock log (core/flock.py): the last bag bought, how much his flock really eats (from his own purchases over time, at least two weeks of them), else the usual quarter pound a hen a d
 - `core/finance_manager.py`: Watched-folder ingestion for MIA Home's external financial snapshot exports — the Kraken trading agent and the real estate portfolio dashboard (both built as separate projects, per `docs/VISION.md`'s "MIA Home's expanded scope" section), each producing the same shared JSON export shape documented th
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app.
 - `core/findings.py`: Findings (DEC-0052 step 3; docs/REASONING_PLAN.md section 4): what MIA notices by putting two apps together, worked out in code, never by the model. Each one says what it noticed, the records it came from (`refs`, "kind:id"), why it matters, one suggested next step, how sure it is (REAL from records
@@ -932,7 +933,7 @@
 
 ## tests/: the test suite: what each part must do
 
-582 files, 94,758 lines; 7,957 of 7,989 classes and functions documented
+583 files, 94,824 lines; 7,962 of 7,995 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1092,6 +1093,7 @@
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_fact_owners.py`: One owner per fact (DEC-0052): a retired copy of a fact never comes back, and every owner named in core/fact_owners.py exists.
 - `tests/test_failure_log.py`: The Fix-It Log (DEC-0049): where MIA stumbles is recorded (privately, redacted), grouped into issues, turned into a fix report with a test to write first, and what the person confirms she learns herself.
+- `tests/test_feed_runway.py`: How long the hens' feed will last (core/feed_runway.py): from the last bag, at his flock's own rate once two weeks of purchases show it, else the usual quarter pound a hen a day; said when it's down to a few days, once a bag. *(1 undocumented)*
 - `tests/test_field_kit_module.py`: Unit test for modules.field_kit.module.format_script_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test: the widget-building (QTabWidget, device list, script list) and worker-thread wiring in FieldKitModule needs a real Qt event loo
 - `tests/test_file_operations.py`: Unit tests for modules.files_mod.file_operations. All filesystem operations run against pytest's tmp_path, never real project or user files.
 - `tests/test_finance_manager.py`: Unit tests for core.finance_manager. parse_snapshot_content() is tested directly (pure, no filesystem I/O). FinanceManager itself is tested against a real tmp_path watched folder (isolating both the persisted-storage _DATA_DIR/_SNAPSHOTS_FILE, same monkeypatch pattern as test_journal_manager.py's is
@@ -1519,7 +1521,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 22,023 lines
+117 files, 22,024 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
