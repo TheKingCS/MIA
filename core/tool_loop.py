@@ -245,7 +245,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     strictly (when every result is the library's), and one still
     stating its own after the retry loses just those sentences
     (`without_figures`); every library answer passes her safety floor
-    (`_finish`, core/reference_reader.floor)."""
+    (`_finish`, core/reference_reader.floor), with what the library was
+    asked beside the question (a follow-up names its food there)."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -269,6 +270,7 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     offered = {t.get("function", {}).get("name", "") for t in tools}
     talk = list(messages)
     results: list[tuple[str, str]] = []
+    asked = ""  # what the library was asked: a follow-up names its food there
     seen: set[str] = set()
     step = 0
     while reply is not None and _lookups_only(context, reply.tool_calls):
@@ -290,6 +292,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                 log.exception("Lookup %s failed in the tool loop", call.name)
                 text = f"(The {call.name} lookup failed.)"
             results.append((call.name, text))
+            if call.name in LIBRARY_TOOLS:
+                asked += " " + " ".join(str(v) for v in (call.arguments or {}).values())
             shown = _short(text, call.name)
             if call.name in OUTSIDE_WHAT:  # outside text, marked as information before the model reads it (WP-03)
                 from core.browser_safety import outside
@@ -318,18 +322,21 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         # numbers before falling back to the bare results (2026-10-30, live).
         where = "the library's text" if strict else "their records"
         retry = llm.chat_with_tools(talk + [{"role": "assistant", "content": said}, {"role": "system", "content": (
-            f"Your answer used numbers that aren't in {where}: {', '.join(sorted(wrong))}. Answer again "
-            f"without them: only the numbers {where} gives, exactly; where it gives none, say so in words.")}], [])
+            f"Your answer used numbers that aren't in {where}: {', '.join(sorted(wrong))}. Write the same answer "
+            f"again, keeping everything else in it: only those numbers change, to the ones {where} gives, exactly, "
+            "or to words where it gives none.")}], [])
         again = (retry.content if retry is not None else "") or ""
+        if strict and len(again.strip()) < 0.5 * len(said.strip()):
+            again = ""  # a retry that lost most of the answer: the answer itself is trimmed instead
         if again.strip() and not invented_numbers(again, sources, prompt, strict):
-            return _finish(prompt, results, again.strip())
+            return _finish(prompt + asked, results, again.strip())
         trimmed = without_figures(again or said, invented_numbers(again or said, sources, prompt, strict)) \
             if strict else ""
         if trimmed:  # a library answer: only the sentences with a figure of its own go (2026-11-22, live)
             log.warning("Tool loop: a library answer stated figures the text didn't; those sentences left out.")
             from core.plain_words import strip_markdown
 
-            return _finish(prompt, results, strip_markdown(trimmed))
+            return _finish(prompt + asked, results, strip_markdown(trimmed))
         log.warning("Tool loop answer had numbers the lookups didn't (%s); saying the results instead.",
                     ", ".join(sorted(wrong)))
         failures = getattr(context, "failures", None)
@@ -339,10 +346,10 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             except Exception:
                 log.exception("Couldn't note the invented number.")
     if not said.strip() or wrong:
-        return _finish(prompt, results, _plain(results))
+        return _finish(prompt + asked, results, _plain(results))
     from core.plain_words import strip_markdown
 
-    return _finish(prompt, results, strip_markdown(said))
+    return _finish(prompt + asked, results, strip_markdown(said))
 
 
 def _finish(prompt: str, results: list, text: str) -> ChatReply:

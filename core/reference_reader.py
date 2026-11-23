@@ -24,7 +24,9 @@ only phrases them.
 
 **The floor** (`floor`): like core/safety_floor.py for a crisis, a rule in code under every library answer about one
 thing a source must never be read as leaving out: canning a low-acid food (green beans, corn, meat...) is only in a
-pressure canner. A sentence telling it to go in a boiling-water bath is taken out, and the USDA's rule is said.
+pressure canner. Only when canning is really asked (`canning_asked`: never "can I eat corn") and never for a pickled
+or acidified food (boiling water suits those); an answer telling a low-acid food into a water bath (`unsafe_bath`)
+isn't said at all, any other is kept whole with the USDA's rule after it; tomatoes get the added-acid rule.
 """
 
 from __future__ import annotations
@@ -51,68 +53,121 @@ HOW_TO_TALK = (
     "Answer from these the way someone who has just read them would: naturally, in your own words, the useful part "
     "first. Every fact, number, quantity, time and step comes from the text above, exactly as it says (never round "
     "or change a safety figure); name where it's from in passing (\"the USDA canning guide says...\"). If they "
-    "disagree, say so. If they don't cover what was asked, say that plainly rather than filling the gap. Keep to "
+    "disagree, say so. The people who wrote these aren't him: never say a detail of theirs (where they live, their "
+    "house, their fence) is his. If they don't cover what was asked, say that plainly rather than filling the gap. Keep to "
     "what was asked: the answer in a few short paragraphs at most, then offer to read further (read_reference with "
     "a passage's ref) if there's more worth knowing.")
 
 
-_CANNING = re.compile(r"\b(?:safely|properly|to|and|or|should|we'll|i'll)\s+can\b|\bcan\s+(?:my|our|the|some|fresh|"
-                      r"green|home|tomato|tomatoes|beans|corn|peaches|pears|apples|jam|jelly|meat|chicken|fish|soup|"
-                      r"stock|salsa|pickles|vegetables|veggies|fruit|peppers|carrots|potatoes)\b")
+_CANNING = re.compile(
+    r"\b(?:canning|canner|home[- ]canned|pressure[- ]can(?:ned|ning)?)\b"
+    r"|\b(?:how\s+(?:do|should|would|to)\s+(?:i\s+|you\s+|we\s+)?(?:safely\s+|properly\s+)?|(?<!what\s)to\s+|"
+    r"safely\s+|properly\s+)can\s+(?!i\b|you\b|we\b|they\b|it\b|be\b|eat\b|grow\b|have\b|get\b|go\b|use\b|keep\b|"
+    r"make\b|do\b|survive\b|freeze\b|store\b)[a-z]")
+# Not low-acid once acid is added: pickles and relishes go in a boiling-water canner (USDA Guide 6).
+_ACIDIFIED = re.compile(r"\b(?:pickl\w*|relish\w*|dilly|sauerkraut|chutney|fermented|vinegar|jams?|jell(?:y|ies)|"
+                        r"preserves|marmalade|salsa)\b")
+
+
+def canning_asked(text: str) -> bool:
+    """Pure logic. Whether a question is about canning food (preserving it in jars), never the "can" of "can I eat
+    corn" or "what can the dog eat": the words canning, canner or pressure-canning, or "can" as the thing to do
+    ("how do I safely can green beans", "to can tomatoes")."""
+    return bool(_CANNING.search((text or "").lower()))
+
+
+# The names the references use for what people call something else: the USDA's canning guide says "snap beans" for
+# green beans, "summer squash" for zucchini.
+OTHER_NAMES = {"green beans?": "snap", "string beans?": "snap", "zucchinis?": "summer", "courgettes?": "summer",
+               "sweet ?corn": "corn", "bell peppers?": "peppers", "scallions?": "onions"}
 
 
 def terms(text: str) -> list[str]:
     """Pure logic. The words of a question worth matching, in order, once each (a simple plural matched too). "can"
     as preserving food ("safely can green beans", "to can tomatoes") is the word that matters: it's kept as
-    "canning", never thrown away with "can I"."""
+    "canning" (`canning_asked`), never thrown away with "can I"."""
     lowered = (text or "").lower()
     out = []
     for w in _WORD.findall(lowered):
         if w not in _STOP and w not in out:
             out.append(w)
-    if _CANNING.search(lowered) and "canning" not in out:
+    if canning_asked(lowered) and "canning" not in out:
         out.insert(0, "canning")
+    for said, also in OTHER_NAMES.items():  # what the references call it, near the front (a question keeps 5 words)
+        if re.search(rf"\b{said}\b", lowered) and also not in out:
+            out.insert(1 if out and out[0] == "canning" else 0, also)
     return out
 
 
+_FAMILY = {"canning": "canning", "canner": "canning", "canners": "canning", "canned": "canning"}
+
+
 def _stem(word: str) -> str:
-    """Pure logic. A word without its plain endings, so 'posts' finds 'post' and 'canning', 'canner' and 'canned'
-    are one word ('can'): a plural s, then -ing, -ed or -er on a longer word (a doubled last letter undone)."""
+    """Pure logic. A word without its plain endings, so 'posts' finds 'post' and 'setting' finds 'sett': a plural s,
+    then -ing or -ed on a longer word (a doubled last letter undone), never down to a stopword or under four letters.
+    canning, canner and canned are one word ('canning'), so the modal "can" never counts as one of them. No -er: it
+    made corner corn and butter but."""
+    if word in _FAMILY:
+        return _FAMILY[word]
     if len(word) > 4 and word.endswith("s") and not word.endswith("ss"):
         word = word[:-1]
-    for end in ("ing", "ed", "er"):
-        if len(word) > len(end) + 3 and word.endswith(end):
-            word = word[:-len(end)]
-            if len(word) > 2 and word[-1] == word[-2] and word[-1] not in "lsz":
-                word = word[:-1]
+    for end in ("ing", "ed"):
+        if len(word) > len(end) + 4 and word.endswith(end):
+            cut = word[:-len(end)]
+            if len(cut) > 3 and cut[-1] == cut[-2] and cut[-1] not in "lsz":
+                cut = cut[:-1]
+            if len(cut) >= 4 and cut not in _STOP:
+                word = cut
             break
     return word
 
 
 # The floor under her library answers (like core/safety_floor.py for a crisis): what a source must never be read as
 # leaving out. Canning a low-acid food in a boiling-water bath can grow botulism; the USDA Complete Guide to Home
-# Canning (Guide 1 and Guide 4) processes every one of these only in a pressure canner.
-LOW_ACID = ("green beans", "snap beans", "beans", "peas", "corn", "carrots", "potatoes", "beets", "asparagus",
-            "okra", "pumpkin", "squash", "mushrooms", "meat", "beef", "pork", "venison", "chicken", "poultry", "fish",
-            "salmon", "tuna", "soup", "stock", "broth", "vegetables")
-_CAN_WORDS = re.compile(r"\b(can|canning|canned|canner|jars?)\b")
-_BATH = re.compile(r"boiling[- ]water|water[- ]bath|open[- ]kettle", re.I)
+# Canning processes each of these only in a pressure canner (Guides 1, 4 and 5). Acidified foods (pickles, relishes)
+# are another matter: boiling water is right for them (Guide 6), so the floor stands aside.
+LOW_ACID = ("green beans", "snap beans", "string beans", "wax beans", "lima beans", "beans", "bean", "peas", "pea",
+            "corn", "carrots", "carrot", "potatoes", "potato", "sweet potatoes", "beets", "beet", "asparagus", "okra",
+            "pumpkin", "squash", "mushrooms", "mushroom", "peppers", "pepper", "onions", "onion", "greens", "spinach",
+            "garlic", "meat", "beef", "pork", "venison", "chicken", "turkey", "poultry", "fish", "salmon", "tuna",
+            "seafood", "chili", "stew", "soup", "stock", "broth", "vegetables", "vegetable")
+_BATH = re.compile(r"boiling[- ]?water\s+(?:bath|canner|canning|process\w*)|water[- ]?bath|open[- ]kettle|oven[- ]can"
+                   r"|boil(?:ing)?\s+(?:the\s+)?(?:filled\s+)?jars|steam\s+canner", re.I)
+_SAFE_SIDE = re.compile(r"\b(?:never|not|don'?t|do not|isn'?t|can'?t|cannot|unsafe|instead of|rather than)\b|"
+                        r"pressure", re.I)
+
+
+def unsafe_bath(answer: str) -> bool:
+    """Pure logic. Whether an answer tells a food to go in a boiling-water bath (or the oven, open kettle, boiled
+    jars), in a sentence that doesn't say not to or name the pressure canner."""
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", answer or ""):
+        if _BATH.search(sentence) and not _SAFE_SIDE.search(sentence):
+            return True
+    return False
 
 
 def floor(question: str, answer: str) -> str:
-    """Pure logic. A library answer with its safety floor: about canning a low-acid food (green beans, corn, meat...),
-    any sentence telling it to go in a boiling-water bath is taken out, and the USDA's rule is always said: a pressure
-    canner, never a water bath. Anything else is returned as it was."""
+    """Pure logic. A library answer with its safety floor. About canning a low-acid food (green beans, corn, meat...;
+    never a pickled or acidified one, which boiling water suits): an answer that tells it to go in a boiling-water
+    bath is not said at all, only the USDA's rule and an offer to read the pressure-canning steps; any other answer is
+    kept whole (its own lines too) with the rule after it. Tomatoes get the USDA's added-acid rule. Anything else is
+    returned as it was. `question` may hold what was looked up too (a follow-up names the food in its look-up)."""
     asked = (question or "").lower()
-    food = next((f for f in LOW_ACID if re.search(rf"\b{re.escape(f)}\b", asked)), "")
-    if not food or not (_CAN_WORDS.search(asked) or "canning" in terms(question)):
+    if not canning_asked(asked) or _ACIDIFIED.search(asked):
         return answer
-    sentences = re.split(r"(?<=[.!?])\s+|\n+", (answer or "").strip())
-    kept = [s for s in sentences if s.strip() and not _BATH.search(s)]
-    rule = (f"One thing the USDA's canning guide is firm about: {food} is a low-acid food, canned only in a pressure "
-            "canner, at the pressure and time it gives for your altitude; a boiling-water bath can't make it safe "
+    if re.search(r"\btomato(?:es)?\b", asked):
+        return (answer or "").rstrip() + (
+            "\n\nThe USDA's guide adds acid to every jar of tomatoes, whichever canner: 2 tablespoons of bottled lemon "
+            "juice or 1/2 teaspoon of citric acid per quart (half that per pint).")
+    food = next((f for f in LOW_ACID if re.search(rf"\b{re.escape(f)}\b", asked)), "")
+    if not food:
+        return answer
+    rule = (f"One thing the USDA's canning guide is firm about: low-acid foods like {food} go only in a pressure "
+            "canner, at the pressure and time it gives for your altitude; a boiling-water bath can't make them safe "
             "(botulism).")
-    return (" ".join(kept) + "\n\n" + rule).strip()
+    if unsafe_bath(answer):
+        return rule + " I won't give a water-bath method for it. Want me to read you the guide's pressure-canning steps?"
+    return ((answer or "").rstrip() + "\n\n" + rule).strip()
 
 
 def _hits(chunk: str, wanted: list[str]) -> tuple[int, int]:
@@ -157,8 +212,9 @@ def score(question_terms: list[str], title: str, window: str) -> float:
 
 def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
     """Every pack searched, then the best articles read whole and cut to their best window: [{pack, article, text,
-    ref, score, distinct}]. Kiwix's index and hers (each index's own best two: `pack_index.search` per_index) both;
-    at most READS articles read, within SECONDS."""
+    ref, score, distinct}]. Her own index first (each index's own best two: `pack_index.search` per_index, within
+    its own SEARCH_SECONDS: the small guides and PDFs live only there), then Kiwix's; at most READS articles read
+    whole, within SECONDS."""
     from core import pack_index
 
     wanted = terms(question)
@@ -171,6 +227,14 @@ def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
         for n, hit in enumerate(library.search(pack.pack_id, question, limit=per_pack)):
             hits.append((n, -_hits(hit.title, wanted)[0], pack, hit))
     found = []
+    root = getattr(library, "root_path", None)
+    if root is not None:  # her own index first, with its own time: the small guides (PDFs) live only there
+        for hit in pack_index.search(Path(root), library, question, full=True, packs=packs, per_index=2):
+            window, distinct = best_window(hit.snippet, wanted)
+            found.append({"pack": hit.pack_title, "article": hit.article_title, "text": window,
+                          "ref": f"{hit.pack_id}|{hit.path}|{hit.page}", "score": score(wanted, hit.article_title, window),
+                          "distinct": distinct})
+    started = time.monotonic()  # the articles' own time
     for n, _t, pack, hit in sorted(hits, key=lambda h: (h[0], h[1]))[:READS]:
         if time.monotonic() - started > SECONDS:
             break  # the answer's time budget comes first
@@ -181,13 +245,6 @@ def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
         found.append({"pack": pack.title, "article": article.get("title") or hit.title, "text": window,
                       "ref": f"{pack.pack_id}|{hit.path}|0", "score": score(wanted, hit.title, window),
                       "distinct": distinct})
-    root = getattr(library, "root_path", None)
-    if root is not None:
-        for hit in pack_index.search(Path(root), library, question, full=True, packs=packs, per_index=2):
-            window, distinct = best_window(hit.snippet, wanted)
-            found.append({"pack": hit.pack_title, "article": hit.article_title, "text": window,
-                          "ref": f"{hit.pack_id}|{hit.path}|{hit.page}", "score": score(wanted, hit.article_title, window),
-                          "distinct": distinct})
     return found
 
 
@@ -214,7 +271,7 @@ def weighed(found: list[dict], wanted: list[str]) -> list[dict]:
 def rank(found: list[dict], keep: int = 4, wanted: int = 0, words: Optional[list] = None) -> list[dict]:
     """Pure logic. The best passages, one per article, best first (weighed by how rare each question word is among
     them, when the question's `words` are given); only those holding about half the question's words (`wanted` of
-    them, at least one), so one word repeated doesn't fill the places."""
+    them, at least one), so one word repeated doesn't fill the places; the same page found in two packs is one."""
     need = max(1, (wanted + 1) // 2)
     if words:
         found = weighed(found, words)
@@ -224,7 +281,7 @@ def rank(found: list[dict], keep: int = 4, wanted: int = 0, words: Optional[list
         order = sorted(found, key=lambda p: p["score"], reverse=True)
     seen, out = set(), []
     for p in order:
-        key = (p["pack"], p["article"])
+        key = " ".join(p["text"].split())[:160]  # the same page in two packs (the preppers' PDFs) is one passage
         if p["score"] >= 10 and p.get("distinct", need) >= need and key not in seen:
             seen.add(key)
             out.append(p)
@@ -232,12 +289,14 @@ def rank(found: list[dict], keep: int = 4, wanted: int = 0, words: Optional[list
 
 
 MEANING_TOP = 24  # passages, best by their words, that are then ranked by meaning
+MEANING_SECONDS = 5  # the embedding's own time, at most: then the words decide
 
 
 def by_meaning(context, question: str, found: list[dict], top: int = MEANING_TOP) -> Optional[list[dict]]:
     """The best `top` passages by their words, ranked again by how close each is in meaning to the question (her
     embedding model, core/meaning.py: the question as a search query, each passage as a document), each with its
-    `meaning` (cosine, 0 to 1). None when there's no embedding model here: the words' ranking stands. Words alone
+    `meaning` (cosine, 0 to 1); at most two passages of one article or PDF in the pool, and MEANING_SECONDS for the
+    embedding. None when there's no embedding model here: the words' ranking stands. Words alone
     can't tell "a deep cut" from prickly pears to cut, or canning beans from feeding a cat beans."""
     from core import meaning
 
@@ -248,10 +307,18 @@ def by_meaning(context, question: str, found: list[dict], top: int = MEANING_TOP
 
     model = meaning._model(context)
     query, document = ("search_query: ", "search_document: ") if model.startswith("nomic") else ("", "")
-    pool = sorted(found, key=lambda p: p["score"], reverse=True)[:top]
+    pool, per_article = [], {}
+    for p in sorted(found, key=lambda p: p["score"], reverse=True):  # at most two passages of one article or PDF
+        key = (p["pack"], p["article"].split(", page ")[0])
+        if per_article.get(key, 0) < 2:
+            per_article[key] = per_article.get(key, 0) + 1
+            pool.append(p)
+        if len(pool) >= top:
+            break
     try:
         vectors = OllamaBackend(url, model, "5m").embed(
-            model, [query + question] + [document + (p["article"] + ". " + p["text"])[:2000] for p in pool], 30)
+            model, [query + question] + [document + (p["article"] + ". " + p["text"])[:2000] for p in pool],
+            MEANING_SECONDS)
     except Exception:  # noqa: BLE001 - no meaning: the words decide
         vectors = None
     if not vectors or len(vectors) != len(pool) + 1:

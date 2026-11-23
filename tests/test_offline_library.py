@@ -375,7 +375,8 @@ def test_the_fastest_mirror_is_used_first_and_a_crawling_one_is_left_for_the_nex
 
 
 def test_a_mirror_that_falls_well_below_what_it_showed_is_left_and_the_mirrors_tried_again(tmp_path, monkeypatch):
-    """Faster than SLOW but a quarter of its probe: crawling; the next try ranks it lower and the other finishes."""
+    """Faster than SLOW but a quarter of its probe: crawling; it's ranked lower (the mirrors probed once a file) and the
+    other finishes."""
     now = [0.0]
     probes = []
 
@@ -413,7 +414,7 @@ def test_a_mirror_that_falls_well_below_what_it_showed_is_left_and_the_mirrors_t
     assert big and meta["size"] > 50
     partial = tmp_path / "p.partial"
     lib.download(meta, partial, Mirrors(), clock=lambda: now[0])
-    assert partial.read_bytes() == BODY and len(probes) >= 2
+    assert partial.read_bytes() == BODY and len(probes) == 1  # probed once a file (Fable's review, 2026-11-23)
 
 
 

@@ -33,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
@@ -117,15 +118,16 @@ class _PdfWorker:
         self.proc = None
 
     def _start(self) -> None:
-        """Starts the worker (no window on Windows)."""
+        """Starts the worker (no window on Windows; in UTF-8 mode, so a path with any letter in it reads the same)."""
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
-        self.proc = subprocess.Popen([sys.executable, "-m", "core.pack_index", "--pdf-worker"],
+        self.proc = subprocess.Popen([sys.executable, "-X", "utf8", "-m", "core.pack_index", "--pdf-worker"],
                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                      cwd=str(Path(__file__).resolve().parent.parent), creationflags=flags,
                                      text=True, encoding="utf-8")
 
     def read(self, path: Path) -> tuple[list[str], str]:
-        """One PDF through the worker; ([], "") when the worker died or ran out of time on it."""
+        """One PDF through the worker; ([], "") when the worker died, ran out of time on it, or answered out of step
+    (its answer must echo this path: otherwise it's started again, never trusted for the next PDF)."""
         if self.proc is None or self.proc.poll() is not None:
             self._start()
         answer: list = []
@@ -153,32 +155,48 @@ class _PdfWorker:
             return [], ""
         try:
             data = json.loads(line)
-            return list(data.get("pages") or []), str(data.get("title") or "")
         except ValueError:
+            data = None
+        if not isinstance(data, dict) or data.get("path") != str(path):
+            log.info("The PDF reader answered out of step (a stray line); it's started again.")
+            self.close()  # never let its next answer be read as this PDF's
             return [], ""
+        return list(data.get("pages") or []), str(data.get("title") or "")
 
     def close(self) -> None:
-        """Ends the worker."""
+        """Ends the worker: killed, waited for, its pipes closed."""
         if self.proc is not None:
             try:
                 self.proc.kill()
-            except OSError:
+                self.proc.wait(timeout=5)
+            except (OSError, subprocess.TimeoutExpired):
                 pass
+            for pipe in (self.proc.stdin, self.proc.stdout):
+                try:
+                    if pipe is not None:
+                        pipe.close()
+                except OSError:
+                    pass
             self.proc = None
 
 
 def _worker_main() -> None:
-    """The worker's loop: a path a line in, {pages, title} a line out, until its input ends."""
+    """The worker's loop: a path a line in, {path, pages, title} a line out (the path echoed, so an answer out of step
+    is caught), until its input ends."""
     for line in sys.stdin:
-        pages, title = _read_pdf(Path(line.strip()))
-        sys.stdout.write(json.dumps({"pages": pages, "title": title}) + "\n")
+        path = line.rstrip("\n")
+        pages, title = _read_pdf(Path(path))
+        sys.stdout.write(json.dumps({"path": path, "pages": pages, "title": title}) + "\n")
         sys.stdout.flush()
 
 
 def _pdf_pages(data: bytes, worker: Optional[_PdfWorker] = None) -> tuple[list[str], str]:
     """A PDF's pages as text and its own title, through QtPdf in the worker (`_PdfWorker`; in this process without
-    one); ([], "") where PySide6 isn't here, it won't open, it's over PDF_BYTES, or it crashed the reader."""
+    one); ([], "") where PySide6 isn't here, it won't open, it's over PDF_BYTES (said in the log), or it crashed the
+    reader."""
     if len(data) > PDF_BYTES:
+        log.info("A PDF of %d MB isn't indexed (over PDF_BYTES): a large manual can still be read by its title.",
+                 len(data) // 10**6)
         return [], ""
     handle, name = tempfile.mkstemp(suffix=".pdf")
     try:
@@ -337,8 +355,8 @@ def page_text(root: Path, pack_file: Path, path: str, page: int) -> tuple[str, s
 
 def _queries(terms: list[str]) -> list[list[str]]:
     """Pure logic. The FTS5 queries to try, in rounds: all the words; then every set of all but one; then all but
-    two, and so on down to two words together; then any of them. A round's results are gathered together and the first round
-    that finds any is used: which word to leave out can't be told from how common it is (in a canning guide
+    two, and so on down to two words together; then any of them. Rounds are gathered until an index has given enough
+    pages (one holding every word can still be the wrong page): which word to leave out can't be told from how common it is (in a canning guide
     "canning" is everywhere, yet it's the word that matters), so each is left out in turn and meaning picks."""
     from itertools import combinations
 
@@ -350,14 +368,22 @@ def _queries(terms: list[str]) -> list[list[str]]:
     return rounds
 
 
+WORDS = 5  # of a question, at most, in the word-set rounds (5 words: 25 queries an index)
+SEARCH_SECONDS = 4.0  # all the indexes, at most; the rest are skipped
+
+
 def search(root: Path, library, query: str, limit: int = 20, full: bool = False, packs=None,
-           per_index: int = 0) -> list[Hit]:
+           per_index: int = 0, seconds: float = SEARCH_SECONDS) -> list[Hit]:
     """The question's words in every index here: all of them first, then any; best first, at most `limit`. With
-    `full`, each hit carries its page's whole text instead of a passage around the words (`limit` from each index,
+    `full`, each hit carries its page's whole text instead of a passage around the words. The question is cut to
+    its words that matter (core/reference_reader.terms, at most WORDS) and the indexes are searched within `seconds` (`limit` from each index,
     so keep it small). `packs` is the library's list when the caller has it already. With `per_index`, each index's
     own best that many from each query of the first round that finds any (`_queries`), unranked against other
     indexes (their bm25 scores aren't one scale): the caller ranks them."""
-    terms = [t.lower() for t in _WORD.findall(query or "")][:12]
+    from core.reference_reader import terms as question_words
+
+    terms = question_words(query)[:WORDS]  # the words that matter (no "how", "should", "to"), at most WORDS
+    started = time.monotonic()
     folder = index_folder(root)
     if not terms or not folder.is_dir():
         return []
@@ -373,16 +399,20 @@ def search(root: Path, library, query: str, limit: int = 20, full: bool = False,
         try:
             body = "body" if full else "snippet(docs, 3, '', '', ' ... ', 40)"
             rows = []
+            if time.monotonic() - started > seconds:
+                db.close()
+                break  # the time is up: what's found stands
+            found: dict = {}
+            enough = (per_index or limit) * 3  # pages from this index before the rounds stop
             for queries in _queries(terms):
-                found: dict = {}
                 for query in queries:
                     for row in db.execute(f"SELECT path, title, page, {body}, bm25(docs) "
                                           "FROM docs WHERE docs MATCH ? ORDER BY bm25(docs) LIMIT ?",
                                           (query, per_index or limit)).fetchall():
                         found.setdefault((row[0], row[2]), row)
-                rows = sorted(found.values(), key=lambda r: r[4])[:(per_index or limit) * max(1, len(queries))]
-                if rows:
-                    break
+                if len(found) >= enough:
+                    break  # a page holding every word can still be the wrong one: the next rounds go on until enough
+            rows = list(found.values())[:enough]
             for path, title, page, snip, score in rows:
                 name = f"{title}, page {page}" if page else title
                 hits.append((score, Hit(pack_id, pack_title, name, snip, path, int(page or 0))))

@@ -10,7 +10,9 @@ never said (small ones too), while the rest of a natural answer stays. Fable's r
 searched, spoken how-tos read first, "tell me more" left to the model. Then, from live answers on the whole
 library (2026-11-23): numbers spelled out, each index's own best, canning as the word that matters, rare words over
 common ones, meaning over words, and the rarer words together before any word; word forms as one word, pairs
-of words last; and the floor: canning a low-acid food is never told as a water bath.
+of words last; and the floor: canning a low-acid food is never told as a water bath. Fable's review (2026-11-23):
+the floor stands aside for pickles and "can I eat", keeps a right answer whole; no -er stemming; a few dozen queries
+an index; a steady mirror is never failed.
 """
 from types import SimpleNamespace
 
@@ -151,9 +153,10 @@ def test_fable_review_spoken_how_tos_are_read_from_the_library_and_tell_me_more_
 
 
 def test_a_figure_the_text_spells_out_may_be_said_in_digits():
-    """'Sink a third of the post, about two feet' allows 1/3 and 2; 'four feet' still isn't 3."""
+    """'Sink a third of the post, about two feet' allows '1/3 of the post' and '2 feet'; '3 feet' still isn't."""
     text = "Sink a third of the post's length, about two feet for a six-foot post."
-    assert invented_numbers("Set 1/3 of it in the ground, about 2 feet for a 6-foot post.", text, "", strict=True) == set()
+    assert invented_numbers("Set 1/3 of the post in the ground, about 2 feet for a 6-foot post.", text, "",
+                            strict=True) == set()
     assert invented_numbers("About 3 feet.", text, "", strict=True) == {"3"}
 
 
@@ -252,23 +255,96 @@ def test_when_no_page_holds_every_word_the_rarer_words_together_come_before_any_
 
 
 def test_canning_a_low_acid_food_is_never_told_as_a_water_bath_and_the_pressure_rule_is_always_said():
-    """The floor: a boiling-water sentence about green beans is taken out; the USDA's pressure-canner rule is added;
-    a question about anything else is untouched."""
-    unsafe = ("Pack the beans into jars. Process them in a boiling-water canner for 15 minutes. "
-              "Let the jars cool for a day.")
-    safe = rr.floor("How do I safely can green beans at home?", unsafe)
-    assert "boiling-water canner for 15" not in safe and "Pack the beans" in safe
-    assert "pressure canner" in safe and "green beans is a low-acid food" in safe
+    """The floor (Fable's review, 2026-11-23): an answer telling green beans into a water bath isn't said at all,
+    only the rule; a correct pressure-canner answer is kept whole, lines and all, with the rule after it; pickled
+    beans, "can I eat", tomatoes and other questions are handled as their own."""
+    unsafe = "Pack the beans into jars. Fill a water bath canner. Process the pints for 10 minutes."
+    said = rr.floor("How do I safely can green beans at home?", unsafe)
+    assert "10 minutes" not in said and "pressure canner" in said and "won't give a water-bath method" in said
+    right = ("Process pints 20 minutes at 10 pounds in a pressure canner; never use a boiling-water bath.\n"
+             "Cover with boiling water, leaving 1-inch headspace.")
+    kept = rr.floor("How do I can green beans?", right)
+    assert kept.startswith(right) and "low-acid foods like green beans" in kept
+    assert rr.floor("how do I can pickled beans (dilly beans)?", "Boiling-water canner, 5 minutes.") == \
+        "Boiling-water canner, 5 minutes."
+    assert rr.floor("can I eat green beans raw?", "Yes.") == "Yes."
     assert rr.floor("How deep should fence posts be set?", "About 2 feet.") == "About 2 feet."
-    assert rr.floor("How do I can tomatoes?", "Use a water bath.") == "Use a water bath."  # acid: no floor here
+    assert "bottled lemon juice" in rr.floor("How do I can tomatoes?", "Use a water bath.")
+    assert rr.floor("and how long in a water bath?", "Fill a water bath canner.") == "Fill a water bath canner."
+    assert "won't give" in rr.floor("and how long in a water bath? how to can corn", "Fill a water bath canner.")
 
 
 def test_word_forms_are_one_word_and_two_words_together_are_tried_last():
-    """canning, canner and canned stem alike; the query rounds go down to pairs."""
+    """canning, canner and canned stem alike (never as the modal "can"); no -er (corner isn't corn); the query
+    rounds go down to pairs."""
     from core import pack_index
 
-    assert rr._stem("canning") == rr._stem("canner") == rr._stem("canned") == "can"
+    assert rr._stem("canning") == rr._stem("canner") == rr._stem("canned") == "canning" != rr._stem("can")
     assert rr._stem("posts") == "post" and rr._stem("seeds") == "seed"
+    assert [rr._stem(w) for w in ("corner", "butter", "herring", "summer")] == ["corner", "butter", "herring", "summer"]
+    assert rr._hits("You can grow beans; they can climb.", ["canning"]) == (0, 0)
     rounds = pack_index._queries(["canning", "safely", "green", "beans"])
     assert any(q == '"green" AND "beans"' for q in rounds[-2])
 
+
+def test_fable_review_canning_is_asked_only_when_preserving_food_is_meant():
+    """"can my chickens eat corn", "what can the dog eat", "can tomatoes grow in shade" aren't canning."""
+    for q in ("can my chickens eat corn", "what can the dog eat", "can tomatoes grow in shade",
+              "can potatoes be stored with onions", "how long do canned beans keep", "can I eat green beans raw?"):
+        assert not rr.canning_asked(q), q
+    for q in ("How do I safely can green beans at home?", "how to can corn", "pressure canning chicken"):
+        assert rr.canning_asked(q), q
+
+
+def test_fable_review_a_long_question_asks_each_index_a_few_dozen_queries_not_thousands():
+    """search keeps only the question's words that matter, at most WORDS of them."""
+    from core import pack_index
+
+    words = rr.terms("how long should I boil water to make it safe to drink at high altitude")[:pack_index.WORDS]
+    assert len(words) <= 5 and sum(len(r) for r in pack_index._queries(words)) <= 30
+
+
+def test_fable_review_a_steady_mirror_that_bursts_first_is_never_failed(tmp_path, monkeypatch):
+    """A mirror that probed at 20 MB/s and then delivers 3 MB/s is no crawler (the floor is capped at 4 x SLOW)."""
+    import hashlib
+    import io
+
+    from core import offline_library as lib
+
+    body = b"x" * 4000
+    now = [0.0]
+
+    class Steady:
+        """Probes fast, then sends at a steady 3 MB/s."""
+
+        def __call__(self, url, timeout=60, headers=None):
+            """Every read costs time at 3 MB/s (scaled)."""
+            start = int((headers or {}).get("Range", "bytes=0-")[6:].split("-")[0] or 0)
+
+            class Answer(io.BytesIO):
+                """Each block costs its size at 3 MB/s, scaled up."""
+                status = 206 if start else 200
+                headers = {}
+
+                def read(self, n=-1):
+                    """One block."""
+                    block = super().read(min(n if n > 0 else 100, 100))
+                    now[0] += len(block) * 1000 / 3e6
+                    return block
+            return Answer(body[start:])
+
+    monkeypatch.setattr(lib, "ranked", lambda urls, get, clock: [(u, 20e6) for u in urls])
+    monkeypatch.setattr(lib, "PROBE", 1)
+    monkeypatch.setattr(lib, "STALL", 1)
+    meta = {"name": "p.zim", "size": len(body), "sha256": hashlib.sha256(body).hexdigest(),
+            "urls": ["https://m1.example/p", "https://m2.example/p"]}
+    lib.download(meta, tmp_path / "p.partial", Steady(), clock=lambda: now[0])
+    assert (tmp_path / "p.partial").read_bytes() == body
+
+
+
+def test_what_the_references_call_it_is_searched_too():
+    """Green beans are snap beans in the USDA's guide: 'snap' joins the words, near the front."""
+    words = rr.terms("How do I safely can green beans at home?")
+    assert words[:2] == ["canning", "snap"]
+    assert "summer" in rr.terms("how to grow zucchini")

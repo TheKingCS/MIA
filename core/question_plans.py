@@ -1119,14 +1119,44 @@ _SPELLED = {"one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six
             "dozen": "12"}
 
 
-def spelled_numbers(text: str) -> set[str]:
-    """Pure logic. The numbers a text writes as words ("two feet", "a third", "one-half"), as digits ("2", "1/3"), so
-    an answer saying them in digits isn't taken as making them up."""
+_TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80,
+         "ninety": 90}
+_FILLER = {"a", "an", "of", "the", "per", "more", "or", "to"}
+
+
+def _unit(words: list[str], i: int) -> str:
+    """Pure logic. The word a number counts (the next one that isn't "a", "of", "the"...), without a plural s."""
+    for w in words[i:i + 4]:
+        if w not in _FILLER:
+            return w[:-1] if len(w) > 3 and w.endswith("s") else w
+    return ""
+
+
+def spelled_numbers(text: str) -> set[tuple[str, str]]:
+    """Pure logic. The numbers a text writes as words, each with what it counts: ("2", "foot") for "two feet",
+    ("1/3", "post") for "a third of the post", ("25", "minute") for "twenty-five minutes"; so an answer saying that
+    number in digits of that same thing isn't taken as making it up, and "one of these methods" never allows
+    "1 drop"."""
+    words = re.findall(r"[a-z]+|\d+", (text or "").lower().replace("-", " "))
     out = set()
-    for word in re.findall(r"[a-z]+", (text or "").lower()):
-        value = _SPELLED.get(word) or _SPELLED.get(word[:-1] if word.endswith("s") else "")
+    i = 0
+    while i < len(words):
+        w = words[i]
+        value = None
+        if w in _TENS:
+            value, step = _TENS[w], 1
+            if i + 1 < len(words) and _SPELLED.get(words[i + 1], "").isdigit() and int(_SPELLED[words[i + 1]]) < 10:
+                value, step = value + int(_SPELLED[words[i + 1]]), 2
+            value = str(value)
+        else:
+            value = _SPELLED.get(w) or _SPELLED.get(w[:-1] if w.endswith("s") else "")
+            step = 1
         if value:
-            out.add(value)
+            unit = _unit(words, i + step)
+            out.add((value, "foot" if unit == "feet" else unit))
+            i += step
+        else:
+            i += 1
     return out
 
 
@@ -1136,15 +1166,18 @@ def invented_numbers(answer: str, sheet_text: str, prompt: str, strict: bool = F
     count the sheet's own lines ("3 bills"). `strict` (a reference's
     figures): a small number is allowed only as a count ("2 methods"),
     never before a unit ("2 drops", `_UNITS`); a list's own step numbers
-    ("1.", "**2.**", "Step 3") aren't figures, and one the text spells out ("a third", "two feet") may be said
-    in digits."""
+    ("1.", "**2.**", "Step 3") aren't figures, and one the text spells out of the same thing ("a third of the
+    post", "two feet") may be said in digits (`spelled_numbers`)."""
     allowed = numbers_in(sheet_text) | numbers_in(prompt)
     if not strict:
         return {n for n in numbers_in(answer) if n not in allowed and not (n.isdigit() and int(n) <= 12)}
-    spelled = spelled_numbers(sheet_text)  # "a third of its length" may be said "1/3"
-    allowed |= {n for n in spelled if "/" not in n}
-    for fraction in (n for n in spelled if "/" in n):
-        answer = re.sub(rf"(?<![\d/]){re.escape(fraction)}(?![\d/])", " ", answer or "")
+    spelled = spelled_numbers(sheet_text)  # "a third of its length" may be said "1/3 of its length"
+    if spelled:
+        def said(m):
+            """A number in the answer, kept unless the text spelled that number of that same thing."""
+            unit = _unit(re.findall(r"[a-z]+", (answer or "").lower()[m.end():m.end() + 40]), 0)
+            return " " if (m.group(0), "foot" if unit == "feet" else unit) in spelled else m.group(0)
+        answer = re.sub(r"(?<![\d/.])\d+(?:/\d+)?(?![\d/])", said, answer or "")
     answer = re.sub(r"(?mi)^\s*(\**\s*)?\d{1,2}[.)]\s|\bstep\s+\d{1,2}\b|\*\*\d{1,2}[.)]\*\*", " ",
                     answer or "")
     # "2 methods" is a count, taken out; "2 drops" is a figure, kept (by its place, not its value)

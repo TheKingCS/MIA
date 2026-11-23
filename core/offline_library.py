@@ -65,6 +65,7 @@ AGENT = "MIA-offline-library/1.0"
 FREE_FLOOR = 40 * 10**9  # never fill the disk past this
 CHUNK = 1 << 20
 PROBE = 4 << 20  # bytes read from each mirror to see how fast it is
+PROBE_BLOCK = 64 << 10
 SLOW = 300_000  # bytes a second: slower than this (or a quarter of what it showed) for STALL seconds: crawling
 STALL = 60
 TRIES = 16  # mirrors tried, and tried again, for one file
@@ -530,15 +531,15 @@ def fastest(urls: list[str], get: Callable = _get, clock: Callable = time.monoto
 
 def ranked(urls: list[str], get: Callable = _get, clock: Callable = time.monotonic) -> list[tuple[str, float]]:
     """The mirrors fastest first with the rate each showed (bytes a second): each asked for its first PROBE bytes
-    for a few seconds; one that fails or sends nothing goes last (never left out: the hash still decides). Kiwix's
-    order breaks ties."""
+    for a few seconds, in PROBE_BLOCK reads (so a crawling one can't hold the probe for minutes); one that fails or
+    sends nothing goes last (never left out: the hash still decides). Kiwix's order breaks ties."""
     timed = []
     for n, url in enumerate(urls[:8]):
         started, got = clock(), 0
         try:
             with get(url, timeout=10, headers={"Range": f"bytes=0-{PROBE - 1}"}) as response:
                 while got < PROBE and clock() - started < 8:
-                    block = response.read(CHUNK)
+                    block = response.read(PROBE_BLOCK)  # small reads: a crawling mirror can't hold the probe long
                     if not block:
                         break
                     got += len(block)
@@ -552,9 +553,9 @@ def ranked(urls: list[str], get: Callable = _get, clock: Callable = time.monoton
 def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable = lambda done, total: None,
              clock: Callable = time.monotonic) -> None:
     """One file from its mirrors into `partial`, resumed from what's already there; then its hash checked against
-    the metalink's. The mirrors are tried fastest first (`ranked`), and one that falls below a quarter of what it
-    showed (or below SLOW) for STALL seconds is left: the mirrors are tried again, that one ranked lower, and the
-    fastest resumes (at most TRIES times). A mirror that won't resume from exactly where it stopped is passed
+    the metalink's. The mirrors are probed once (`ranked`) and tried fastest first; one that falls below a quarter of
+    what it showed (never more than 4 x SLOW, nor less than SLOW) for STALL seconds is left for the next, ranked lower,
+    which resumes. TRIES counts only tries that moved nothing (a slow mirror that still delivered isn't one). A mirror that won't resume from exactly where it stopped is passed
     over, never allowed to overwrite what's here; a partial larger than the file is thrown away. OSError when no mirror finishes it; ValueError
     (and the partial file removed) when the hash is wrong."""
     if not re.fullmatch(r"[0-9a-f]{64}", meta.get("sha256", "")):
@@ -565,7 +566,9 @@ def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable
     big = meta["size"] > 50 * PROBE
     failed: set = set()  # mirrors that errored or won't resume: not asked again for this file
     crawled: dict = {}  # mirror -> how many times it crawled: its rate counts for less each time
-    for _attempt in range(TRIES):
+    rates = dict(ranked(meta["urls"], get, clock)) if big else {}  # probed once a file, never on every retry
+    misses = 0
+    while misses < TRIES:
         have = partial.stat().st_size if partial.exists() else 0
         if have >= meta["size"]:
             break
@@ -574,10 +577,10 @@ def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable
             left = [u for u in left if u not in crawled]
         if not left:
             break
-        order = sorted(ranked(left, get, clock) if big else [(u, 0.0) for u in left],
-                       key=lambda ur: -ur[1] / (4 ** crawled.get(ur[0], 0)))
+        order = sorted(((u, rates.get(u, 0.0)) for u in left), key=lambda ur: -ur[1] / (4 ** crawled.get(ur[0], 0)))
         url, shown = order[0]
-        floor = max(SLOW, shown / 4)  # well below what it showed: crawling
+        floor = max(SLOW, min(shown / 4, 4 * SLOW))  # well below what it showed, but a steady 1.2 MB/s never is
+        started_at = have
         try:
             headers = {"Range": f"bytes={have}-"} if have else {}
             with get(url, timeout=60, headers=headers) as response:
@@ -599,10 +602,13 @@ def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable
         except _Crawling as problem:
             problems.append(f"{url.split('/')[2]}: {problem}")
             crawled[url] = crawled.get(url, 0) + 1
+            if (partial.stat().st_size if partial.exists() else 0) <= started_at:
+                misses += 1  # a crawl that still moved the file on isn't a lost try
             continue
         except (urllib.error.URLError, OSError) as problem:
             problems.append(f"{url.split('/')[2]}: {problem}")
             failed.add(url)
+            misses += 1
             continue
     if not partial.exists() or partial.stat().st_size != meta["size"]:
         raise OSError("no mirror finished it (" + "; ".join(problems[-3:]) + ")")
