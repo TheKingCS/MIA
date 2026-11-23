@@ -5,6 +5,12 @@
 session. Last updated: 2026-11-22 (Opus at the PC: the Windows backlog, the foundation's parts, Fable's review),
 by claude.*
 
+**Later 2026-11-22: her offline library, the Planner, and reading references well** (T-0060, Zac's asks): 74 Kiwix
+packs chosen and downloading (core/offline_library.py, her own index core/pack_index.py), the Planner (builds and
+gardens planned together, confirmed into missions: core/project_plans.py, core/garden_plans.py), and how she reads and
+talks from the library (core/reference_reader.py; every figure held to the text, tried live on qwen2.5:14b). Fable
+reviewed all three; its 30 findings are fixed (f813147f), CI green. The USB stick is for Fedora and MIA OS.
+
 **New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
 data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one
 commit, each with a test in `tests/test_review_2026_11_22.py` (14 of its 15 fail on the old code). The biggest:

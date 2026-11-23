@@ -23,6 +23,10 @@ out). Tried live on qwen2.5:14b: before, she gave bleach figures from memory; af
 downloading on the PC (all 74 packs, smallest first: `python -m tools.offline_library list` shows how far). The USB
 stick is for Fedora and MIA OS (WAITING_ON 0m: the Fedora image is downloaded and checked; writing it needs his
 administrator yes).
+Then Fable reviewed it (two reviewers over 9243749c, b8fc8049 and 24ad2189): 30 findings, all fixed in f813147f
+with tests (K-0346): every pack searched before reading, downloads that never lose progress to a mirror that won't
+resume, Windows-safe updates and queue, crop names by meaning, the guide pairing steps by their words, changes refused
+before the card. CI on f813147f and the VM run on b8fc8049 all passed (the image proof's limit is now 240 minutes).
 
 **New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
 data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one
