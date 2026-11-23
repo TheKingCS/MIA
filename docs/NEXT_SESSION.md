@@ -56,10 +56,11 @@ laying far below their normal) and 6.1 (`core/money_ahead.py`: 13 weeks of money
 4.1 grid-down mode, 1.2 follow-through memory, 1.1's spoken acknowledgements.
 Afternoon: 1.2's first part (`core/left_off.py`, "where were we?"), 2.2's rain against a build, 4.3's first part
 (`core/preparedness.py`), and the orb's words fixed to show while the model reads; two fresh reviews, both fixed
-(K-0356, K-0357). Left that need no decision: 1.1(c) her first sentence spoken while the rest is written (streaming
-speech: server and voice work), 3.2 the library's follow-ups and "show me where it says that", 4.2's next part (the
-library's first-aid answers held to a floor like canning's), 5.1's rest (a quote from a Planner build's material
-list), 7.2's event triggers. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
+(K-0356, K-0357). Later the same day: 1.1(c) her first words sooner (the checked answer's first sentence voiced at once,
+the rest while it plays: `core/speech_split.py`) and 3.2's "show me where it says that" (`core/show_source.py`); a
+third fresh review fixed both (K-0358). Left that need no decision: 3.2's sources compared when they disagree, 4.2's
+next part (the library's first-aid answers held to a floor like canning's), 5.1's rest (a quote from a Planner build's
+material list), 7.2's event triggers. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**
