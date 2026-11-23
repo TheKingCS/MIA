@@ -8,7 +8,8 @@ the preppers' collections, which are PDFs inside the pack (water treatment, fiel
 post-disaster). libzim can only find those by title, so their words would be out of her reach.
 
 **Building one** (`build`): every PDF in the pack (its text, page by page, through QtPdf, the same reader as
-core/document_text.py; skipped where PySide6 isn't installed), and its HTML pages too when Kiwix gave the pack no
+core/document_text.py, in a worker process so a PDF that crashes QtPdf loses only itself: `_PdfWorker`; skipped where
+PySide6 isn't installed, or over PDF_BYTES), and its HTML pages too when Kiwix gave the pack no
 full-text index (Kiwix's index covers a pack's pages, never the PDFs inside it), go into a SQLite FTS5 table beside
 the packs, `.fetch/index/<pack file>.sqlite`, built under a temporary name and moved into place only when finished.
 `index_missing` builds every one that's missing (an empty index for a pack with nothing to add, so it isn't looked at
@@ -23,10 +24,14 @@ anything of his.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sqlite3
+import subprocess
+import sys
 import tempfile
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
@@ -39,6 +44,8 @@ VERSION = "1"
 BIG_PACK = 5 * 10**9  # an indexed pack this big is left to Kiwix's own index
 PAGE_CHARS = 20_000  # of one page's text
 PDF_PAGES = 600  # of one PDF
+PDF_BYTES = 40 * 10**6  # a PDF larger than this isn't read (a scanned book: no text to find, and memory to spare)
+PDF_SECONDS = 120  # one PDF's reading, at most
 
 
 @dataclass
@@ -85,20 +92,98 @@ def _html_text(data: bytes) -> str:
     return html_to_text(data.decode("utf-8", errors="replace"))[:PAGE_CHARS]
 
 
-def _pdf_pages(data: bytes) -> tuple[list[str], str]:
-    """A PDF's pages as text and its own title, through QtPdf; ([], "") where PySide6 isn't here or it won't open."""
+def _read_pdf(path: Path) -> tuple[list[str], str]:
+    """A PDF file's pages as text and its own title, through QtPdf (in this process); ([], "") when it won't open."""
     try:
         from core.document_text import pdf_pages
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: BLE001 - no PySide6 here
+        return [], ""
+    try:
+        pages, title = pdf_pages(Path(path))
+        return [p[:PAGE_CHARS] for p in pages[:PDF_PAGES]], title
+    except Exception:  # noqa: BLE001 - a damaged PDF is skipped
+        return [], ""
+
+
+class _PdfWorker:
+    """A child process that reads PDFs (`python -m core.pack_index --pdf-worker`), one path a line in, one JSON line
+    out. QtPdf can crash on a PDF in native code (2026-11-23: Windows exception 0xe0000008 on a ready.gov PDF), which
+    no try can catch and which took the whole indexing with it; in a worker, only that PDF is lost: the worker is
+    started again for the next. One that takes longer than PDF_SECONDS is ended the same way."""
+
+    def __init__(self):
+        """No process until the first PDF."""
+        self.proc = None
+
+    def _start(self) -> None:
+        """Starts the worker (no window on Windows)."""
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+        self.proc = subprocess.Popen([sys.executable, "-m", "core.pack_index", "--pdf-worker"],
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     cwd=str(Path(__file__).resolve().parent.parent), creationflags=flags,
+                                     text=True, encoding="utf-8")
+
+    def read(self, path: Path) -> tuple[list[str], str]:
+        """One PDF through the worker; ([], "") when the worker died or ran out of time on it."""
+        if self.proc is None or self.proc.poll() is not None:
+            self._start()
+        answer: list = []
+
+        def listen():
+            """The worker's one line back."""
+            try:
+                answer.append(self.proc.stdout.readline())
+            except Exception:  # noqa: BLE001 - a dead worker answers nothing
+                answer.append("")
+
+        try:
+            self.proc.stdin.write(str(path) + "\n")
+            self.proc.stdin.flush()
+        except OSError:
+            self.close()
+            return [], ""
+        reader = threading.Thread(target=listen, daemon=True)
+        reader.start()
+        reader.join(PDF_SECONDS)
+        line = answer[0] if answer else ""
+        if not line:
+            log.info("A PDF couldn't be read (the reader stopped on it); skipped.")
+            self.close()
+            return [], ""
+        try:
+            data = json.loads(line)
+            return list(data.get("pages") or []), str(data.get("title") or "")
+        except ValueError:
+            return [], ""
+
+    def close(self) -> None:
+        """Ends the worker."""
+        if self.proc is not None:
+            try:
+                self.proc.kill()
+            except OSError:
+                pass
+            self.proc = None
+
+
+def _worker_main() -> None:
+    """The worker's loop: a path a line in, {pages, title} a line out, until its input ends."""
+    for line in sys.stdin:
+        pages, title = _read_pdf(Path(line.strip()))
+        sys.stdout.write(json.dumps({"pages": pages, "title": title}) + "\n")
+        sys.stdout.flush()
+
+
+def _pdf_pages(data: bytes, worker: Optional[_PdfWorker] = None) -> tuple[list[str], str]:
+    """A PDF's pages as text and its own title, through QtPdf in the worker (`_PdfWorker`; in this process without
+    one); ([], "") where PySide6 isn't here, it won't open, it's over PDF_BYTES, or it crashed the reader."""
+    if len(data) > PDF_BYTES:
         return [], ""
     handle, name = tempfile.mkstemp(suffix=".pdf")
     try:
         with os.fdopen(handle, "wb") as f:
             f.write(data)
-        pages, title = pdf_pages(Path(name))
-        return [p[:PAGE_CHARS] for p in pages[:PDF_PAGES]], title
-    except Exception:  # noqa: BLE001 - a damaged PDF is skipped
-        return [], ""
+        return worker.read(Path(name)) if worker is not None else _read_pdf(Path(name))
     finally:
         try:
             os.unlink(name)
@@ -124,7 +209,8 @@ def _entries(archive, pages: bool):
 def build(pack_file: Path, out: Path, archive=None, progress: Callable = lambda n: None,
           pages: Optional[bool] = None) -> int:
     """Builds the index for one pack into `out` (its PDFs, and its pages when it has no index of its own, or when
-    `pages` says so); how many rows. The file appears only when finished."""
+    `pages` says so; its PDFs read in one worker process, ended at the finish); how many rows. The file appears
+    only when finished."""
     if archive is None:
         from libzim.reader import Archive
 
@@ -135,6 +221,7 @@ def build(pack_file: Path, out: Path, archive=None, progress: Callable = lambda 
     tmp.unlink(missing_ok=True)
     db = sqlite3.connect(tmp)
     rows = 0
+    worker = None
     try:
         db.execute("CREATE VIRTUAL TABLE docs USING fts5(path UNINDEXED, title, page UNINDEXED, body, "
                    "tokenize='porter unicode61')")
@@ -146,7 +233,8 @@ def build(pack_file: Path, out: Path, archive=None, progress: Callable = lambda 
                 if len(text) > 80:
                     batch.append((path, title, 0, text))
             elif mime == "application/pdf":
-                texts, own = _pdf_pages(data)
+                worker = worker or _PdfWorker()
+                texts, own = _pdf_pages(data, worker)
                 name = pdf_name(path, title, own)
                 for page, text in enumerate(texts, start=1):
                     if len(text.strip()) > 40:
@@ -162,6 +250,8 @@ def build(pack_file: Path, out: Path, archive=None, progress: Callable = lambda 
         db.commit()
     finally:
         db.close()
+        if worker is not None:
+            worker.close()
     os.replace(tmp, out)
     return rows
 
@@ -277,3 +367,7 @@ def search(root: Path, library, query: str, limit: int = 20, full: bool = False,
         finally:
             db.close()
     return [h for _s, h in sorted(hits, key=lambda sh: sh[0])][:limit]
+
+
+if __name__ == "__main__" and "--pdf-worker" in sys.argv:
+    _worker_main()

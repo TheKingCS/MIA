@@ -7,7 +7,8 @@ Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a
 runner at a time, the older version replaced, her own index for packs Kiwix didn't index, and look_up's passages
 framed as outside text. A pretend Kiwix answers; the suite never reaches the network. Fable's review (2026-11-22): metalinks only from
 Kiwix, mirrors only public, an update whose old file is held open, a queue being read. The fastest mirror first, a
-crawling one left for the next, one well below what it showed too.
+crawling one left for the next, one well below what it showed too; a PDF that crashes its reader
+loses only itself.
 """
 import hashlib
 import io
@@ -414,3 +415,26 @@ def test_a_mirror_that_falls_well_below_what_it_showed_is_left_and_the_mirrors_t
     lib.download(meta, partial, Mirrors(), clock=lambda: now[0])
     assert partial.read_bytes() == BODY and len(probes) >= 2
 
+
+
+def test_a_pdf_that_crashes_its_reader_loses_only_itself_and_the_next_is_read_by_a_fresh_one(monkeypatch):
+    """_PdfWorker: a worker that dies on a PDF gives ([], "") for it and is started again for the next; a PDF over
+    PDF_BYTES isn't read at all."""
+    import subprocess
+    import sys
+
+    starts = []
+
+    def start(self):
+        """A worker that dies at once, as QtPdf did on a ready.gov PDF (2026-11-23)."""
+        starts.append(1)
+        self.proc = subprocess.Popen([sys.executable, "-c", "import os; os._exit(1)"], stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE, text=True)
+
+    monkeypatch.setattr(pack_index._PdfWorker, "_start", start)
+    worker = pack_index._PdfWorker()
+    assert worker.read(Path("one.pdf")) == ([], "") and worker.read(Path("two.pdf")) == ([], "")
+    assert len(starts) == 2
+    worker.close()
+    monkeypatch.setattr(pack_index, "PDF_BYTES", 10)
+    assert pack_index._pdf_pages(b"%PDF-1.4 " + b"x" * 20, worker) == ([], "")
