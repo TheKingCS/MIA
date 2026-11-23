@@ -12,8 +12,12 @@ skills ... offline"), worked out in code from his own pantry (core/kitchen_manag
   (`prepared.target_days`, 14 unless set: FEMA's two weeks at home).
 - **Rotate** (`rotate`): what's in the pantry and expires in the next ROTATE_DAYS days, soonest first, so it's eaten
   instead of thrown out.
-- **Not counted** (said plainly): days of food need what each item feeds, which the pantry doesn't hold yet; power
-  needs his batteries and generator. Both wait for him (brainstorm 4.1, 4.3).
+- **Food** (`food_days`): the dry staples he's logged by weight (rice, beans, lentils, flour, oats, pasta, cornmeal,
+  wheat, sugar, honey, peanut butter, powdered milk, oil, potatoes), at their calories a pound (`STAPLES`: USDA
+  FoodData Central's figures for the dry or raw food), against 2,000 calories a person a day (the FDA's reference
+  for daily values). What has no weight, or isn't a known staple (canned goods, frozen meals), is named as not
+  counted, never guessed.
+- **Not counted** (said plainly): power needs his batteries and generator; it waits for him (brainstorm 4.1).
 
 `say(context)` answers "how prepared am I?" / "how many days of water do I have?".
 """
@@ -25,6 +29,16 @@ from datetime import date, timedelta
 from typing import Optional
 
 GALLON_A_DAY = 1.0  # a person, drinking and a little washing (Red Cross, FEMA)
+CALORIES_A_DAY = 2000  # a person (the FDA's reference for daily values)
+# Calories a pound, dry or raw, from USDA FoodData Central (per 100 g x 4.536), first matching words win.
+STAPLES = (("peanut butter", 2667), ("powdered milk", 1642), ("dry milk", 1642), ("milk powder", 1642),
+           ("vegetable oil", 4010), ("olive oil", 4010), ("cooking oil", 4010), ("shortening", 4010), ("lard", 4105),
+           ("rice", 1656), ("lentil", 1597), ("bean", 1574), ("flour", 1651), ("oat", 1719), ("pasta", 1683),
+           ("spaghetti", 1683), ("macaroni", 1683), ("noodle", 1683), ("cornmeal", 1678), ("wheat", 1483),
+           ("sugar", 1755), ("honey", 1379), ("potato", 349))
+TO_POUNDS = {"lb": 1.0, "lbs": 1.0, "pound": 1.0, "pounds": 1.0, "kg": 2.20462, "kgs": 2.20462, "kilogram": 2.20462,
+             "kilograms": 2.20462, "oz": 1 / 16, "ounce": 1 / 16, "ounces": 1 / 16, "g": 0.00220462, "gram": 0.00220462,
+             "grams": 0.00220462}
 TARGET_DAYS = 14
 ROTATE_DAYS = 30
 TO_GALLONS = {"gallon": 1.0, "gallons": 1.0, "gal": 1.0, "liter": 0.264172, "liters": 0.264172, "litre": 0.264172,
@@ -81,6 +95,25 @@ def water_days(items: list, people: int) -> tuple[float, list]:
     return round(total / (GALLON_A_DAY * max(1, people)), 1), unread
 
 
+def food_days(items: list, people: int) -> tuple[float, list, list]:
+    """Pure logic. (days of food for that many people at CALORIES_A_DAY, the staples counted, the food not counted:
+    no weight, or not a known staple). Drinking water isn't food."""
+    calories, counted, uncounted = 0.0, [], []
+    for item in items:
+        name = str(getattr(item, "name", "")).lower()
+        if not name or is_drinking_water(item):
+            continue
+        per_lb = next((c for words, c in STAPLES if words in name), None)
+        unit = str(getattr(item, "unit", "")).lower().strip().rstrip(".")
+        pounds = float(getattr(item, "quantity", 0) or 0) * TO_POUNDS[unit] if unit in TO_POUNDS else None
+        if per_lb is None or pounds is None:
+            uncounted.append(item.name)
+            continue
+        calories += pounds * per_lb
+        counted.append(item.name)
+    return round(calories / (CALORIES_A_DAY * max(1, people)), 1), counted, uncounted
+
+
 def rotate(items: list, today: date, days: int = ROTATE_DAYS) -> list[tuple[str, date]]:
     """Pure logic. Pantry items expiring from today to `days` out, soonest first: (name, date)."""
     out = []
@@ -105,7 +138,8 @@ def _setting(context, key: str, default: int) -> int:
 
 
 def say(context, today: Optional[date] = None) -> str:
-    """For "how prepared am I?": water against his target, what to rotate, and what isn't counted yet."""
+    """For "how prepared am I?": water against his target, days of food from the staples, what to rotate, and what
+    isn't counted."""
     today = today or date.today()
     kitchen = getattr(context, "kitchen", None)
     items = kitchen.all_pantry_items() if kitchen is not None else []
@@ -126,5 +160,15 @@ def say(context, today: Optional[date] = None) -> str:
     soon = rotate(items, today)
     if soon:
         parts.append("Use soon, before it expires: " + ", ".join(f"{n} ({d:%b} {d.day})" for n, d in soon[:5]) + ".")
-    parts.append("Not counted yet: days of food (the pantry doesn't say what each thing feeds) and power.")
+    food, counted, uncounted = food_days(items, people)
+    if counted:
+        parts.append(f"Food: about {food:g} days for {who} at 2,000 calories a day, from the staples by weight ("
+                     + ", ".join(counted[:5]) + (f" and {len(counted) - 5} more" if len(counted) > 5 else "") + ").")
+    else:
+        parts.append("Food: no staples logged by weight yet (rice, beans, flour, oats...): log them in Kitchen, Pantry, "
+                     "like \"rice, 20 lb\", and I'll count the days.")
+    if uncounted:
+        parts.append("Not counted: " + ", ".join(uncounted[:4]) + (f" and {len(uncounted) - 4} more" if len(uncounted) > 4
+                                                                    else "") + " (no weight, or not a staple I know).")
+    parts.append("Power isn't counted yet.")
     return " ".join(parts)

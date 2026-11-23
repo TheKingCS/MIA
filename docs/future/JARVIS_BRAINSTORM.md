@@ -144,8 +144,8 @@ doesn't. Builds on: the canning floor's pattern in `core/reference_reader.py`, `
 
 **4.3 Preparedness inventory and rotation.** S-M, no decision needed. *First part built 2026-11-23
 (`core/preparedness.py`, "how prepared am I?"): days of drinking water from the pantry at a gallon a person a day against
-his target (14 days unless he sets one), and what to use before it expires. Days of food and power wait for records
-that say what each thing feeds and what he has for power.*
+his target (14 days unless he sets one), what to use before it expires, and (the same day) days of food from the
+staples he logs by weight at USDA calories. Power waits for what he has for power.*
 What he keeps for emergencies, its dates, what to rotate into the kitchen before it expires (into meal plans), and
 what's short against a target he sets (two weeks, three months). Builds on: inventory, kitchen, groceries, missions.
 
