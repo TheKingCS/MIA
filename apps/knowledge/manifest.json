@@ -53,6 +53,7 @@
       "fetch_reference_packs",
       "find_plans",
       "forget_plan",
+      "homestead_year",
       "keep_plan",
       "list_specialists",
       "look_up_offline",
@@ -112,7 +113,8 @@
       "projectplan.confirm": "act_with_approval",
       "projectplan.drop": "act_with_approval",
       "read_reference": "observe",
-      "price_build": "observe"
+      "price_build": "observe",
+      "homestead_year": "observe"
     },
     "outside": []
   },

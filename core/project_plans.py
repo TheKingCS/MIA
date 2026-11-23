@@ -493,7 +493,7 @@ def drop(context, params: dict) -> str:
 
 def page(context) -> dict:
     """The Planner page: the plans (drafts and confirmed, each build with its own size fields), the shelf's builds
-    that have a walkthrough, the crops, and his frost dates."""
+    that have a walkthrough, the crops, his frost dates, and the homestead's year (`year`, core/homestead_year.py)."""
     from core import garden_plans, trades
 
     book = getattr(context, "project_plans", None)
@@ -512,7 +512,19 @@ def page(context) -> dict:
             "builds": builds, "crops": [{"id": c.id, "name": c.name, "per_sqft": c.per_sqft, "days": c.days}
                                        for c in garden_plans.CROPS.values()],
             "last_frost": config.get("garden.last_frost", "") if config else "",
-            "first_frost": config.get("garden.first_frost", "") if config else "", "sources": list(garden_plans.SOURCES)}
+            "first_frost": config.get("garden.first_frost", "") if config else "", "sources": list(garden_plans.SOURCES),
+            "year": _year(context)}
+
+
+def _year(context) -> list:
+    """The homestead's next twelve months (core/homestead_year.py), [] when it can't be put together."""
+    from core.homestead_year import year
+
+    try:
+        return year(context)
+    except Exception:  # noqa: BLE001 - the page shows without it
+        log.exception("The homestead year couldn't be put together")
+        return []
 
 
 def _size_fields(context, plan: ProjectPlan) -> list:

@@ -88,6 +88,13 @@ _PLAN = {"type": "object", "properties": {
     "title": {"type": "string"}}}
 
 
+def _year(context, arguments: dict) -> str:
+    """The homestead's year ahead (core/homestead_year.say)."""
+    from core import homestead_year
+
+    return homestead_year.say(context)
+
+
 def _price(context, arguments: dict) -> str:
     """What a build costs and what to charge (core/plan_price.say)."""
     from core import plan_price
@@ -102,7 +109,8 @@ def _price(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), price_build (core/plan_price.py), show_plans, confirm_plan and drop_plan."""
+    chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), show_plans,
+    confirm_plan and drop_plan."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -132,6 +140,14 @@ def register_project_plan_actions(registry) -> None:
             "margin": {"type": "number", "description": "margin percent; 20 when not said"}}},
         handler=_price, trigger_phrases=("price the build", "what would it cost", "what should i charge",
                                          "quote for the", "how much to charge", "cost to build"),
+    ))
+    registry.register(AssistantAction(
+        name="homestead_year", domain=DOMAIN,
+        description="The homestead's next twelve months from his records: when each crop of his confirmed garden "
+                    "plans starts indoors, goes out and is ready to harvest, and his recurring upkeep, month by month.",
+        parameters={"type": "object", "properties": {}},
+        handler=_year, trigger_phrases=("homestead year", "this year on the homestead", "what's coming this year",
+                                        "when do i plant", "when do i start seeds", "year ahead"),
     ))
     registry.register(AssistantAction(
         name="show_plans", domain=DOMAIN,

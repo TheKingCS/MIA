@@ -88,6 +88,10 @@
             ...builds.map((b) => el("option", { value: b.id }, b.title + (b.walked ? " (walked step by step)" : ""))))),
         el("p", { class: "dim" }, "Or say \"let's plan a 4 by 8 raised bed\" or \"plan my garden\".")),
       ...data.plans.map(planCard),
+      // The homestead's year (core/homestead_year.py): his garden's dates and his upkeep, month by month.
+      (data.year || []).length ? el("section", { class: "glass money-section" }, el("h2", {}, "The Year Ahead"),
+        ...data.year.map((m) => el("div", { class: "row" }, el("div", {}, el("div", { class: "row-title" }, m.label),
+          el("div", { class: "row-sub" }, m.items.map((i) => i[1]).join(" · ")))))) : null,
       data.sources.length ? el("p", { class: "dim" }, "Garden dates from: " + data.sources.join("; ") + ".") : null,
     ].filter(Boolean));
   }

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1614 files, 355,902 lines; 1614 files describe themselves; 19,592 of 19,708 classes and functions are documented.
+1616 files, 356,102 lines; 1616 files describe themselves; 19,603 of 19,720 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-632 files, 180,910 lines; 9,291 of 9,377 classes and functions documented
+633 files, 181,055 lines; 9,298 of 9,384 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -272,6 +272,7 @@
 - `core/homeostasis.py`: MIA easing off her own background work (the Living System doctrine's homeostasis, DEC-0173, G2; Zac 2026-11-15: "Mia should slow herself down but make a notice about it").
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`homestead/` in this repository since DEC-0145; once a separate repo), which exports via its own `homestead/viewer
+- `core/homestead_year.py`: The homestead's year at a glance (Jarvis brainstorm 4.4; Zac, 2026-11-23: "homestead skills"): the next twelve months, month by month, from his own records, never a generic calendar:
 - `core/household_manager.py`: Households (2026-10-01, docs/ROADMAP.md "People and ownership"): MIA is built for anyone, so nothing is shared between people unless they choose it. Every new account starts in a household of its own. Two people share the household things (calendar, kitchen, budget, maintenance, builds, inventory, t
 - `core/household_routines.py`: The Household's web screen (web/household.html; the design canvas's Household, DEC-0113): the household's routines (recurring-mission templates in the "Household" category: laundry, dishes, the trash), each with its current occurrence (today's, or this week's for a weekly one), how far along it is a
 - `core/id_wallet.py`: The ID wallet (DEC-0129 follow-up, Zac 2026-11-08 00:25: "IDs and passports securely and safely stored and legally used or pulled up... same with insurance cards, registrations"). In Security.
@@ -930,7 +931,7 @@
 
 ## tests/: the test suite: what each part must do
 
-579 files, 94,529 lines; 7,938 of 7,968 classes and functions documented
+580 files, 94,580 lines; 7,942 of 7,973 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1133,6 +1134,7 @@
 - `tests/test_homestead_costs.py`: Finance #2, homestead builds and tools: expense tags, build budgets, tool cost of ownership (core/homestead_costs.py), the Assistant tools (core/assistant_homestead_actions.py), the maintenance-cost hook, and the Budget tab's formatting.
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, the Builds tab's Sell First and Best Earner (DEC-0113), and cups against pounds for materials on the density table.
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring
+- `tests/test_homestead_year.py`: The homestead's year (core/homestead_year.py, brainstorm 4.4): his confirmed garden plans' crop dates and his recurring upkeep, month by month over the next twelve, from his own records. *(1 undocumented)*
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures).
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py, the design canvas's Household): the household's routines, each with its current occurrence, how far along, and its streak in words; paused ones apart; and routines added, paused and resumed as actions (core/routine_actions.py) and by voice (cor
 - `tests/test_id_wallet.py`: The ID wallet (core/id_wallet.py): cards kept with their numbers and photos sealed at rest, numbers masked in lists and never in what MIA says or in an action, expiry reminders on Today, "show my license" opening the card, and the history noting a card added or removed without its name or number.
@@ -1514,7 +1516,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 22,007 lines
+117 files, 22,011 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

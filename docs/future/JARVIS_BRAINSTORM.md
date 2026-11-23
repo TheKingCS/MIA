@@ -149,7 +149,9 @@ that say what each thing feeds and what he has for power.*
 What he keeps for emergencies, its dates, what to rotate into the kitchen before it expires (into meal plans), and
 what's short against a target he sets (two weeks, three months). Builds on: inventory, kitchen, groceries, missions.
 
-**4.4 The homestead year.** M, no decision needed.
+**4.4 The homestead year.** M, no decision needed. *Built 2026-11-23 (`core/homestead_year.py`, the Planner's
+"The Year Ahead", "what's coming this year on the homestead?"): his garden plans' dates and his recurring upkeep,
+month by month over twelve months. The flock's seasons and firewood join it as their records exist.*
 One calendar of the whole year from his own place: planting and harvest by his frost dates, the flock's seasons,
 canning windows, firewood, maintenance by season, each becoming missions at the right time. Builds on: the Planner,
 garden plans, maintenance, `core/seasons`, missions.
