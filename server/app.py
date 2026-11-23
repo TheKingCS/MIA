@@ -569,7 +569,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
@@ -4553,10 +4553,12 @@ def create_app(context: AppContext) -> FastAPI:
                     yield f"event: state\ndata: {json_module.dumps({'version': current})}\n\n"
                     if once:
                         return
-                now_state = orb_state.current()  # her orb (core/orb_state.py): only when it changes
+                # her orb (core/orb_state.py) and what she's doing (its detail): only when either changes
+                now_state = (orb_state.current(), orb_state.detail())
                 if now_state != shown:
                     shown, quiet = now_state, 0.0
-                    yield f"event: presence\ndata: {json_module.dumps({'state': now_state})}\n\n"
+                    yield ("event: presence\ndata: "
+                           f"{json_module.dumps({'state': now_state[0], 'detail': now_state[1]})}\n\n")
                 elif quiet >= LIVE_PING_SECONDS:
                     quiet = 0.0
                     yield ": ping\n\n"

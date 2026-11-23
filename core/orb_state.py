@@ -20,6 +20,11 @@ events only:
   cleared by the next answer). DEC-0255: "her orb says when answers in words aren't ready yet".
   `held(state)` says whether one is held (the capability registry reads `offline`: WP-08).
 
+**What she's doing** (`doing(words)`, a context manager around one lookup in a turn, core/tool_loop.py): a few words
+from the tool really running ("Reading your library", "Checking your money"), sent with the state as its `detail`
+(brainstorm 1.1: he knows what the wait is for); the page shows "Thinking · Reading your library". Never invented:
+only while that tool runs.
+
 `current()` is the strongest one now, in `PRIORITY` order, else `idle`. `listening` and `speaking` are the page's own
 (only the device knows its microphone is open or its speaker playing), so the page shows them itself.
 
@@ -65,6 +70,7 @@ _lock = threading.Lock()
 _active: dict = {}  # activity -> how many are running
 _flashes: dict = {}  # moment -> until (clock seconds)
 _held: set = set()  # conditions true now
+_doing: list = []  # what she's doing right now, innermost last (`doing`)
 _probes: dict = {}  # condition -> a callable that says whether it's true now
 _version = 0
 _clock: Callable[[], float] = time.monotonic
@@ -90,6 +96,30 @@ def active(state: str):
         with _lock:
             _active[state] = max(0, _active.get(state, 1) - 1)
             _changed()
+
+
+@contextmanager
+def doing(words: str):
+    """Says what she's doing (a few words) for the length of the `with` block; nested ones stack, the newest shown."""
+    words = " ".join(str(words or "").split())[:60]
+    with _lock:
+        _doing.append(words)
+        _changed()
+    try:
+        yield
+    finally:
+        with _lock:
+            if words in _doing:
+                _doing.reverse()
+                _doing.remove(words)
+                _doing.reverse()
+            _changed()
+
+
+def detail() -> str:
+    """What she's doing right now, in a few words ("" when nothing is said)."""
+    with _lock:
+        return _doing[-1] if _doing else ""
 
 
 def flash(state: str, seconds: float = FLASH_SECONDS) -> None:
@@ -166,11 +196,12 @@ def version() -> int:
 
 
 def reset() -> None:
-    """Back to idle with nothing running or held (tests)."""
+    """Back to idle with nothing running, held or said to be doing (tests)."""
     global _version
     with _lock:
         _active.clear()
         _flashes.clear()
         _held.clear()
         _probes.clear()
+        _doing.clear()
         _version += 1

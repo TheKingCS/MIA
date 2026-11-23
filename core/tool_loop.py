@@ -22,6 +22,9 @@ up*:
    the library's look-up was offered for, answered without it, is read from
    the library first (`_read_first`).
 
+While a lookup runs, her orb says what it's for, from the tool's domain (`DOING`, `doing_words`, through
+core/orb_state.doing: "Reading your library"), so the wait is never a blank (brainstorm 1.1).
+
 A change (anything that writes records) is never run inside the loop:
 the reply goes back to the caller as before, through the usual path.
 Two checks (2026-11-10): a lookup the model names that wasn't offered
@@ -52,6 +55,21 @@ RESULT_CHARS = 1500
 # Her offline library's reading (core/reference_reader.py): several passages and how to talk about them, which a
 # 1,500-character cut would lose; and their figures are held to the text exactly, small ones too (2 drops, 4 cups).
 LIBRARY_TOOLS = {"look_up_offline": 7000, "read_reference": 7000}
+
+# What her orb says while a lookup runs (brainstorm 1.1), by the tool's domain; the rest say "Looking it up".
+DOING = {"library": "Reading your library", "budget": "Checking your money", "debts": "Checking your money",
+         "ledger": "Checking your money", "today": "Checking your day", "calendar": "Checking your calendar",
+         "missions": "Checking your missions", "maintenance": "Checking your upkeep", "kitchen": "Checking the kitchen",
+         "groceries": "Checking the groceries", "flock": "Checking the flock", "health": "Checking your health log",
+         "memory": "Remembering", "browser": "Looking online", "maps": "Checking the map", "music": "Checking music",
+         "inventory": "Checking what's on hand", "materials": "Checking materials", "jobs": "Checking jobs",
+         "learning": "Checking your learning", "journal": "Reading your journal"}
+
+
+def doing_words(registry, name: str) -> str:
+    """Pure logic. The few words her orb shows while this tool runs: by its domain (`DOING`), else "Looking it up"."""
+    action = getattr(registry, "_actions", {}).get(name)
+    return DOING.get(getattr(action, "domain", ""), "Looking it up")
 DEFAULT_BUDGET = 60.0
 
 FOLLOW_UP = (
@@ -235,7 +253,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         budget: Optional[float] = None) -> Optional[ChatReply]:
     """One turn with the loop: the model's reply when it isn't only
     lookups (unchanged, for the caller's usual path); else one answer
-    built from what it looked up. A lookup that brings outside text
+    built from what it looked up, her orb saying what each lookup is for
+    while it runs (`doing_words`). A lookup that brings outside text
     (OUTSIDE_WHAT) is framed as information before the model reads it
     (WP-03). Only lookups offered in `tools` run,
     and a change asked for after a lookup that brought in outside text
@@ -288,7 +307,10 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                 talk.append({"role": "tool", "content": results[-1][1], "tool_name": call.name})
                 continue
             try:
-                text = registry.execute(context, call.name, call.arguments or {})
+                from core import orb_state
+
+                with orb_state.doing(doing_words(registry, call.name)):  # her orb says what the wait is for (1.1)
+                    text = registry.execute(context, call.name, call.arguments or {})
             except Exception:
                 log.exception("Lookup %s failed in the tool loop", call.name)
                 text = f"(The {call.name} lookup failed.)"

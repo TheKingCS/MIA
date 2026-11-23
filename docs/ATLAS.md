@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1601 files, 354,292 lines; 1601 files describe themselves; 19,494 of 19,599 classes and functions are documented.
+1602 files, 354,414 lines; 1602 files describe themselves; 19,502 of 19,607 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-626 files, 179,977 lines; 9,243 of 9,329 classes and functions documented
+626 files, 180,030 lines; 9,246 of 9,332 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -637,7 +637,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,710 lines; 57 of 57 classes and functions documented
+2 files, 4,712 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -924,7 +924,7 @@
 
 ## tests/: the test suite: what each part must do
 
-572 files, 93,927 lines; 7,888 of 7,907 classes and functions documented
+573 files, 93,986 lines; 7,893 of 7,912 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1247,6 +1247,7 @@
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online".
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate ..
 - `tests/test_opportunity.py`: Opportunity scoring and recommendations (Procurement P3, core/opportunity.py; the proposal's section 17 rows it covers): a find is linked to the right need; every opportunity names all nine dimensions with reasons; a price is called a saving only when it's verified against prices seen, and "bargain"
+- `tests/test_orb_doing.py`: What her orb says she's doing while a lookup runs (core/orb_state.doing, core/tool_loop.doing_words; brainstorm 1.1): only while the tool really runs, from its domain, and sent with the state on the live stream.
 - `tests/test_orb_presence.py`: MIA's floating desktop orb (gui/orb_presence.py, Zac 2026-11-08): a frameless, transparent, always-on-top window that reuses the presence orb with no label, bobs where it stands, and wakes her (emits `activated`) on Enter or a plain click but not a drag.
 - `tests/test_orb_states.py`: WP-07 (REQ-VIS-009, REQ-VIS-010, DEC-0255): every state the orb can show has its own words and its own still glyph, and its own style on the page; with reduced motion the page shows the glyph and the words; "offline" comes only from the model really not answering, and the next answer clears it; "spe
 - `tests/test_os_image.py`: FW-01's checks on how the MIA OS image is made (DEC-0263, DEC-0279; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): the base pinned by digest, MIA's Python packages hash-locked and the locks covering `requirements.txt`, the reference PC's model set in the image, the GPU bench measuring tha
@@ -1501,7 +1502,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 21,953 lines
+117 files, 21,961 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

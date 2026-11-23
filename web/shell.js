@@ -29,10 +29,14 @@
   // pretending: nothing changes unless something happened.
   // WP-07: each state's words and still glyph come from the engine (shell.orb, core/orb_state.LOOK), so every orb says
   // the same; with reduced motion the styles show the glyph and the words instead of the movement (REQ-VIS-010).
-  let presenceServer = "idle", presenceLocal = "", orbLook = {};
+  // With the state, what she's doing (`detail`, core/orb_state.doing: "Reading your library"), shown after the
+  // state's words while she thinks or works (brainstorm 1.1): he knows what the wait is for.
+  let presenceServer = "idle", presenceLocal = "", presenceDetail = "", orbLook = {};
   function showPresence() {
     const state = presenceLocal || presenceServer || "idle";
-    const look = orbLook[state] || { label: state, glyph: "" };
+    const base = orbLook[state] || { label: state, glyph: "" };
+    const busy = !presenceLocal && presenceDetail && (state === "thinking" || state === "working");
+    const look = busy ? { label: base.label + " · " + presenceDetail, glyph: base.glyph } : base;
     document.documentElement.dataset.presence = state;
     if (window.MIASound && MIASound.presence) MIASound.presence(state);  // WP-06: the interface sound, if any
     generating(state === "thinking" || state === "council");
@@ -45,7 +49,11 @@
     });
   }
   function presenceHere(state) { presenceLocal = state || ""; showPresence(); }
-  window.addEventListener("mia-presence", (e) => { presenceServer = (e.detail && e.detail.state) || "idle"; showPresence(); });
+  window.addEventListener("mia-presence", (e) => {
+    presenceServer = (e.detail && e.detail.state) || "idle";
+    presenceDetail = (e.detail && e.detail.detail) || "";
+    showPresence();
+  });
 
   // ---------------------------------------------------------------- the theme (DEC-0136, core/themes.py)
   // A theme is data: tokens set on the page (every stylesheet follows), a material (themes.css) and the room's light
