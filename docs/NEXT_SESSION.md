@@ -59,7 +59,9 @@ Afternoon: 1.2's first part (`core/left_off.py`, "where were we?"), 2.2's rain a
 (K-0356, K-0357). Later the same day: 1.1(c) her first words sooner (the checked answer's first sentence voiced at once,
 the rest while it plays: `core/speech_split.py`) and 3.2's "show me where it says that" (`core/show_source.py`); a
 third fresh review fixed both (K-0358). Then 4.2's second part (a first-aid answer from the library always says when to call) and 5.1's
-(`core/plan_price.py`: "what should I charge for the shed?"). Everything in the brainstorm that needs no decision is
+(`core/plan_price.py`: "what should I charge for the shed?"). Then 6.2 (`core/debt_missions.py`: the payoff plan as a
+mission, each step ticked as a debt reaches zero), 4.4 (`core/homestead_year.py`: the Planner's Year Ahead) and 5.1's
+invoice (an order's Email Invoice, drafted for his Send). Everything in the brainstorm that needs no decision is
 now built or found already there; what's left waits on Zac (WAITING_ON 0zg): hobby companions, the picture of him,
 a bigger model, event triggers (an event can come from something she reads), routines from his habits. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built

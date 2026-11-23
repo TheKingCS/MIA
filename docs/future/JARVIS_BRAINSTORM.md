@@ -226,7 +226,9 @@ appointments pulled from email into their places.
 DEC-0231) is exactly this, on his second monitor today and on any tablet's browser.* S-M, no decision needed: a kiosk view (big clock, what's due, Talk, the situation report), for a
 tablet or a salvaged screen (the Echo Show idea in NEXT_SESSION section 3).
 **8.2 Her voice everywhere in the house.** M, needs hardware: Pi satellites with a mic array and wake word.
-**8.3 The glasses as a heads-up display.** Already started (DEC-0066); next: step-by-step walkthroughs shown
+**8.3 The glasses as a heads-up display.** *Mostly there (checked 2026-11-23): a Trade Master job is walked by voice
+("next", "what's next": `core/trade_actions.py`) from any Talk, the glasses' included, and the glasses' Home shows
+the mission's next step.* Already started (DEC-0066); next: step-by-step walkthroughs shown
 hands-free while he works (Trade Master's steps on the glasses, "next step" by voice).
 **8.4 A 3D view of the property.** L, later: the land, buildings, greenhouse and sensors as one map she can point at.
 
