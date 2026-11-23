@@ -135,7 +135,10 @@ Step-by-step first aid from the library's medical packs (wilderness and field me
 always says when to call emergency services (by his country, `core/region.py`) and never gives a dose the page
 doesn't. Builds on: the canning floor's pattern in `core/reference_reader.py`, `core/safety_floor.py`.
 
-**4.3 Preparedness inventory and rotation.** S-M, no decision needed.
+**4.3 Preparedness inventory and rotation.** S-M, no decision needed. *First part built 2026-11-23
+(`core/preparedness.py`, "how prepared am I?"): days of drinking water from the pantry at a gallon a person a day against
+his target (14 days unless he sets one), and what to use before it expires. Days of food and power wait for records
+that say what each thing feeds and what he has for power.*
 What he keeps for emergencies, its dates, what to rotate into the kitchen before it expires (into meal plans), and
 what's short against a target he sets (two weeks, three months). Builds on: inventory, kitchen, groceries, missions.
 
@@ -150,17 +153,23 @@ a scanner feed she listens to for weather alerts. Builds on: MIA OS, the device 
 
 ## 5. His businesses
 
-**5.1 The business brain: quotes, jobs, customers.** M, no decision needed for the first part.
+**5.1 The business brain: quotes, jobs, customers.** M, no decision needed for the first part. *Mostly there
+already (checked 2026-11-23): `core/business_book.py` has customers, quotes priced from a recipe's materials, hours,
+labor rate and margin, orders whose payments go to the ledger, and market days. What's left: a quote from a Planner
+build's own material list, and the invoice drafted from an order.*
 For a build or repair job: a quote from the materials and hours (worked out in `core/build_calcs.py`, priced from his
 own records), the job as a mission, the customer and what was promised, the invoice drafted (never sent without his
 press), and paid or not. Builds on: business book, Trade Master, build calcs, email drafts.
 
-**5.2 What's actually profitable.** S-M, no decision needed.
+**5.2 What's actually profitable.** S-M, no decision needed. *Mostly there already: each build's profit and
+profit per hour (`core/craft_recipes.build_result`), the Workshop's best earner per hour, market days' takings
+(`core/goods.py`), the flock's feed cost per dozen, homestead costs per hour. What's left: the stand's goods ranked
+the same way.*
 Per product and per business: what it really earns once his hours, feed, jars and fuel are counted, so he knows which
 eggs, wood goods or plant starts are worth more of his time. Builds on: business book, homestead costs, the ideas list's
 businesses.
 
-**5.3 The stand and the market.** M, later. What sold, when, at what price; what to bring next Saturday; a price check
+**5.3 The stand and the market.** M, later. *Mostly there already: market days, what sold, and how many to bring next time from what sold out (`core/goods.demand`).* What sold, when, at what price; what to bring next Saturday; a price check
 against the season.
 
 ## 6. Finance
@@ -180,12 +189,14 @@ steps are missions with real progress. Builds on: debts, missions, learning path
 
 ## 7. Automation: "she just handles it"
 
-**7.1 Routines she proposes from what he does.** M, no decision needed.
+**7.1 Routines she proposes from what he does.** M. *Worth designing with Zac first (2026-11-23): what she may infer from his habits, and what a yes turns into, so it's never a guess.*
 She notices a repeat (every Sunday he checks the budget and plans meals) and offers a routine for it; once he says yes,
 it runs with an exact undo (his rule: routine actions run on their own with a precise Undo; approval only for what
 goes outward or can't be undone). Builds on: `core/workflows.py`, grants (`grants.standing`), routines, the undo log.
 
-**7.2 "When this, do that."** M, no decision needed.
+**7.2 "When this, do that."** M, no decision needed. *Half there: `core/workflows.py` runs his workflows every
+day, week or month (read, count, compare, tell, add) under a grant; what's missing is a trigger on an event ("when a
+bill comes in") and the homestead's controls as a step.*
 Rules he says out loud: "when the greenhouse goes over 90, tell me and open the vents", "when a bill comes in, add
 it to the budget". Each a workflow with its tier from the manifest; the risky ones ask. Builds on: workflows, the event
 bus, the homestead's controls, grants.

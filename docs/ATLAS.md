@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1604 files, 354,743 lines; 1604 files describe themselves; 19,523 of 19,630 classes and functions are documented.
+1606 files, 354,924 lines; 1606 files describe themselves; 19,534 of 19,642 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-627 files, 180,255 lines; 9,258 of 9,344 classes and functions documented
+628 files, 180,383 lines; 9,264 of 9,350 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -406,6 +406,7 @@
 - `core/power_actions.py`: Power's changes on the web (DEC-0113 canvas, DEC-0125 parity: Power had no phone screen). Energy sources (solar, a generator, propane, a battery bank) are added, renamed and removed through the shared record kinds (`energy_source.add` / `.edit` / `.delete`, core/record_actions.py), and a reading is 
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
 - `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
+- `core/preparedness.py`: How ready he is if things go wrong (Jarvis brainstorm 4.3, first part; Zac, 2026-11-23: "survival skills, homestead skills ... offline"), worked out in code from his own pantry (core/kitchen_manager.py), never guessed:
 - `core/presence.py`: Presence (DEC-0044, docs/UX_SYSTEM_AUDIT.md): what matters now, across everything MIA keeps, in one ranked list, so nobody has to visit eight screens to find out. Each item says **why** it's there, what **kind** of thing it is (a deadline, a fact, a suggestion, progress), where it came from, where t
 - `core/price_actions.py`: Prices on the action contract (Procurement P2, DEC-0172; core/price_book.py): proposed in plain words, approved, run, undoable.
 - `core/price_book.py`: Prices MIA has seen, and what a thing really costs (Procurement P2, DEC-0172; the proposal's section 5).
@@ -925,7 +926,7 @@
 
 ## tests/: the test suite: what each part must do
 
-574 files, 94,090 lines; 7,902 of 7,923 classes and functions documented
+575 files, 94,143 lines; 7,907 of 7,929 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1281,6 +1282,7 @@
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
+- `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target, what expires soon, and what isn't counted yet, said plainly. *(1 undocumented)*
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again.
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).

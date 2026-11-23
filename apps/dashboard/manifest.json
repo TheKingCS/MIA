@@ -87,7 +87,8 @@
       "stop_team",
       "weather_for_my_plans",
       "anything_unusual",
-      "where_were_we"
+      "where_were_we",
+      "how_prepared"
     ],
     "actions": [
       "direction.add",
@@ -176,7 +177,8 @@
       "team.stop": "act_within_grant",
       "weather_for_my_plans": "observe",
       "anything_unusual": "observe",
-      "where_were_we": "observe"
+      "where_were_we": "observe",
+      "how_prepared": "observe"
     },
     "outside": [
       "whats_in_the_workspace"
