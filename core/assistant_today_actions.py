@@ -70,6 +70,13 @@ def _action_weather_for_my_plans(context, arguments: dict) -> str:
     return weather_watch.say(context)
 
 
+def _action_where_were_we(context, arguments: dict) -> str:
+    """Where he left off (core/left_off.say)."""
+    from core import left_off
+
+    return left_off.say(context)
+
+
 def _action_anything_unusual(context, arguments: dict) -> str:
     """What in his records is far off its own normal (core/unusual.say)."""
     from core import unusual
@@ -79,7 +86,7 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
-    core/weather_watch.py), anything_unusual (core/unusual.py) and set_weather_place (domain today: the
+    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py) and set_weather_place (domain today: the
     Dashboard's)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
@@ -127,6 +134,15 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_anything_unusual,
         trigger_phrases=("anything unusual", "anything off", "anything weird", "anything out of the ordinary",
                          "notice anything", "anything wrong"),
+    ))
+    registry.register(AssistantAction(
+        name="where_were_we", domain="today",
+        description="Where the user left off, from the records: missions worked on lately with their next step, "
+                    "Planner drafts not yet confirmed, open promises and recent decisions.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_where_were_we,
+        trigger_phrases=("where were we", "where did we leave off", "where did i leave off", "what was i working on",
+                         "pick up where", "what was i doing", "remind me where i was"),
     ))
     registry.register(AssistantAction(
         name="set_weather_place", domain="today",

@@ -34,7 +34,10 @@ what the turn is actually doing (the tool it's running), never invented; (c) her
 is still being written (streaming speech). Builds on: `core/voice_loop.py`, `core/tts_worker.py`, `core/orb_state.py`
 (she already knows when she's thinking), the tool loop's steps.
 
-**1.2 The follow-through memory: "what did we say about..."** M, no decision needed.
+**1.2 The follow-through memory: "what did we say about..."** M, no decision needed. *First part built 2026-11-23
+(`core/left_off.py`): "where were we?" and the front of "catch me up" say the missions he's been on with their next
+step, Planner drafts waiting, open promises and recent decisions, from the records. Next: a conversation's own open
+questions picked up next time.*
 Every conversation ends with what was settled kept as facts with their source (the decision, the number, the next
 step), so "what did we decide about the coop door?" is answered from what was actually said, a week later, on any
 device. Builds on: `core/life_notes.py` (promises, decisions, ideas, offered after a reply), `core/recall_index.py`,

@@ -2778,7 +2778,8 @@ class AssistantTools:
         The first real consumer of core.context_assembler (2026-09-14) —
         a synthesized "what's going on with me" answer, led by what needs
         him now, what she's holding and what she did on her own
-        (core/needs_now.py, 2026-11-23), built live from
+        (core/needs_now.py, 2026-11-23), then where he left off
+        (core/left_off.py), built live from
         Missions/Skills/Insights/Maintenance/Projects rather than the
         LLM having to stitch together several separate action calls
         itself. GUI-only, same reason list_observations/
@@ -2797,12 +2798,13 @@ class AssistantTools:
         # First what needs him now, what she's holding and what she did on her own (core/needs_now.py, brainstorm
         # 2.1); then Life State v2 (wins, friction, waiting chains, the monthly plan), then v1's missions-and-skills
         # line.
-        from core import needs_now
+        from core import left_off, needs_now
 
         first = needs_now.describe(needs_now.gather(context))
+        picked_up = left_off.describe(left_off.gather(context))  # where he left off (brainstorm 1.2)
         wider = describe_life_state_v2(assemble_life_state_v2(context, date.today()))
         snapshot = assemble_life_state(context, profile_id, date.today())
-        return " ".join(part for part in (first, wider, format_life_state_summary(snapshot)) if part)
+        return " ".join(part for part in (first, picked_up, wider, format_life_state_summary(snapshot)) if part)
 
     @staticmethod
     def _action_add_waypoint(context: AppContext, arguments: dict) -> str:

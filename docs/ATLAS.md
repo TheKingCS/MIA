@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1602 files, 354,488 lines; 1602 files describe themselves; 19,508 of 19,613 classes and functions are documented.
+1604 files, 354,689 lines; 1604 files describe themselves; 19,520 of 19,627 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-626 files, 180,088 lines; 9,249 of 9,335 classes and functions documented
+627 files, 180,224 lines; 9,257 of 9,343 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -299,6 +299,7 @@
 - `core/lab_reading_actions.py`: The Lab's changes on the web (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). `lab_reading.add` logs a reading to a series in the Data Logger (core/data_logger_manager.py), joining an existing series whatever its case and starting a new one with its first reading; `lab_reading.delete` t
 - `core/learned.py`: What MIA has learned about him on her own, each habit with its evidence and its own reset (DEC-0282, LS-10, REQ-LS-004). Three kinds today:
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
+- `core/left_off.py`: Where he left off (Jarvis brainstorm 1.2; Zac, 2026-11-23: "smooth conversation ... aware"): "where were we?" or "what was I working on?" answered from what his records hold, never from the model's guess, so a conversation picks up where the last one stopped, on any device.
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
 - `core/life_areas.py`: The rest of a life, at a glance: the life state's `areas` section (DEC-0108's interconnection audit, 2026-11-07). `core/context_assembler.py` has full sections for money, property, assets, the kitchen, workouts, projects, goals and missions; the other stores were missing from her picture of a life e
 - `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s
@@ -924,7 +925,7 @@
 
 ## tests/: the test suite: what each part must do
 
-573 files, 94,002 lines; 7,896 of 7,915 classes and functions documented
+574 files, 94,067 lines; 7,900 of 7,921 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1163,6 +1164,7 @@
 - `tests/test_learned.py`: Tests for what MIA learned on her own (DEC-0282, LS-10, core/learned.py): each habit with its evidence and its own reset, which never touches what he set himself or a break he asked for; and the daily budget for her own work.
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte
+- `tests/test_left_off.py`: Where he left off (core/left_off.py, brainstorm 1.2): missions changed lately with their next step, Planner drafts not yet confirmed, open promises and recent decisions, from the records only. *(2 undocumented)*
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has, and the homestead area reads its snapshots' critical alerts.
 - `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. A decorated method that answers False changed nothing and records nothing. Each line is sealed on its own as it's appen

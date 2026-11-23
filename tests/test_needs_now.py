@@ -71,9 +71,12 @@ def test_a_source_that_fails_never_stops_the_rest(monkeypatch):
 
 
 def test_catch_me_up_starts_with_what_needs_him(monkeypatch):
+    """What needs him first, then where he left off (core/left_off.py), then the life state."""
     from core import assistant_tools
 
     monkeypatch.setattr(needs_now, "gather", lambda context, now=None: {"now": ["Pump stopped."], "held": [], "own": []})
+    monkeypatch.setattr("core.left_off.gather", lambda context, now=None: {"missions": [], "drafts": ["Coop floor"],
+                                                                          "promises": [], "decisions": []})
     monkeypatch.setattr("core.person_settings.person_id", lambda context: "p1")
     monkeypatch.setattr(assistant_tools, "assemble_life_state_v2", lambda context, today: {})
     monkeypatch.setattr(assistant_tools, "describe_life_state_v2", lambda state: "This week: 3 missions done.")
@@ -82,4 +85,5 @@ def test_catch_me_up_starts_with_what_needs_him(monkeypatch):
     tools = getattr(assistant_tools, "AssistantTools", None) or next(
         v for v in vars(assistant_tools).values() if isinstance(v, type) and hasattr(v, "_action_get_life_state"))
     said = tools._action_get_life_state(SimpleNamespace(profiles=object()), {})
-    assert said == "Needs you now: Pump stopped. This week: 3 missions done. 2 active missions."
+    assert said.startswith("Needs you now: Pump stopped. Still a draft in the Planner: Coop floor.")
+    assert said.endswith("This week: 3 missions done. 2 active missions.")
