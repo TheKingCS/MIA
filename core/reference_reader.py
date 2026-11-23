@@ -26,7 +26,9 @@ only phrases them.
 thing a source must never be read as leaving out: canning a low-acid food (green beans, corn, meat...) is only in a
 pressure canner. Only when canning is really asked (`canning_asked`: never "can I eat corn") and never for a pickled
 or acidified food (boiling water suits those); an answer telling a low-acid food into a water bath (`unsafe_bath`)
-isn't said at all, any other is kept whole with the USDA's rule after it; tomatoes get the added-acid rule.
+isn't said at all: the rule and the guide's own page for that food instead (`usda_passage`, stopping where another
+food's times begin), any other is kept whole with the USDA's rule after it; tomatoes get the added-acid rule. A plain
+canning question never reads the pickle recipes (`not_pickling`): their water bath is right only with vinegar.
 """
 
 from __future__ import annotations
@@ -131,25 +133,60 @@ LOW_ACID = ("green beans", "snap beans", "string beans", "wax beans", "lima bean
             "pumpkin", "squash", "mushrooms", "mushroom", "peppers", "pepper", "onions", "onion", "greens", "spinach",
             "garlic", "meat", "beef", "pork", "venison", "chicken", "turkey", "poultry", "fish", "salmon", "tuna",
             "seafood", "chili", "stew", "soup", "stock", "broth", "vegetables", "vegetable")
-_BATH = re.compile(r"boiling[- ]?water\s+(?:bath|canner|canning|process\w*)|water[- ]?bath|open[- ]kettle|oven[- ]can"
-                   r"|boil(?:ing)?\s+(?:the\s+)?(?:filled\s+)?jars|steam\s+canner", re.I)
-_SAFE_SIDE = re.compile(r"\b(?:never|not|don'?t|do not|isn'?t|can'?t|cannot|unsafe|instead of|rather than)\b|"
-                        r"pressure", re.I)
+_BATH = re.compile(r"boiling[- ]?water\s+(?:bath|canner|canning|process\w*)|(?<!ice )(?<!cold )(?<!iced )water[- ]?bath"
+                   r"|open[- ]kettle|oven[- ]can|boil(?:ing)?\s+(?:the\s+)?(?:filled\s+)?jars|steam\s+canner", re.I)
+_NEGATED = re.compile(r"\b(?:never|not|don'?t|do not|isn'?t|can'?t|cannot|unsafe|instead of|rather than)\b", re.I)
+
+
+def not_pickling(question: str, found: list[dict]) -> list[dict]:
+    """Pure logic. For a question about canning a food plainly (not pickled, not a relish), the passages without the
+    pickle and relish recipes: those go in a boiling-water bath because vinegar is added, and read beside green
+    beans they made her give green beans a water bath (2026-11-23, live). Any other question: all of them."""
+    asked = (question or "").lower()
+    if not canning_asked(asked) or _ACIDIFIED.search(asked):
+        return found
+    return [p for p in found if not _ACIDIFIED.search((p["article"] + " " + p["text"][:600]).lower())]
+
+
+NO_PAGE = " I won't give a water-bath method for it. Want me to read you the guide's pressure-canning steps?"
 
 
 def unsafe_bath(answer: str) -> bool:
     """Pure logic. Whether an answer tells a food to go in a boiling-water bath (or the oven, open kettle, boiled
-    jars), in a sentence that doesn't say not to or name the pressure canner."""
+    jars), in a sentence that doesn't say not to; "a pressure canner or a water bath" offers the bath, so it counts.
+    An ice or cold water bath (cooling blanched food) isn't canning."""
     for sentence in re.split(r"(?<=[.!?])\s+|\n+", answer or ""):
-        if _BATH.search(sentence) and not _SAFE_SIDE.search(sentence):
+        if _BATH.search(sentence) and not _NEGATED.search(sentence):
             return True
     return False
 
 
-def floor(question: str, answer: str) -> str:
+def usda_passage(sources: str, food: str) -> str:
+    """Pure logic. From what her library gave this turn, the USDA guide's passage about this food that says
+    pressure: its text, cut short, and cut where another food's process-time table starts (a PDF page runs one food
+    into the next: snap beans' steps, then lima beans' times), with a note that its own times may be on the next page;
+    "" when there's none."""
+    blocks = re.split(r"\n\s*\n", sources or "")
+    words = set(food.lower().split()) | {"snap", "italian", "green", "wax"} if "bean" in food else set(food.lower().split())
+    stem = food.split()[-1].rstrip("s")
+    for block in blocks:
+        low = block.lower()
+        if "usda" in low and "pressure" in low and stem in low and not _ACIDIFIED.search(low):
+            body = " ".join("\n".join(line for line in block.splitlines()
+                                      if not line.startswith(("From ", "ref: ", "["))).split())
+            for m in re.finditer(r"(?:\b[A-Za-z]+\s+){0,2}Recommended process time for ([^.]{0,40})", body):
+                if not (set(m.group(1).lower().split()) & (words - {"beans", "bean"})):
+                    return body[:m.start()].strip()[:1500] + " (Its own process times are on the next page of the " \
+                        "guide: ask and I'll read them.)"
+            return body[:1500]
+    return ""
+
+
+def floor(question: str, answer: str, sources: str = "") -> str:
     """Pure logic. A library answer with its safety floor. About canning a low-acid food (green beans, corn, meat...;
     never a pickled or acidified one, which boiling water suits): an answer that tells it to go in a boiling-water
-    bath is not said at all, only the USDA's rule and an offer to read the pressure-canning steps; any other answer is
+    bath is not said at all, only the USDA's rule and the guide's own page for that food from what she read
+    (`usda_passage`, `sources`), or an offer to read it; any other answer is
     kept whole (its own lines too) with the rule after it. Tomatoes get the USDA's added-acid rule. Anything else is
     returned as it was. `question` may hold what was looked up too (a follow-up names the food in its look-up)."""
     asked = (question or "").lower()
@@ -166,7 +203,10 @@ def floor(question: str, answer: str) -> str:
             "canner, at the pressure and time it gives for your altitude; a boiling-water bath can't make them safe "
             "(botulism).")
     if unsafe_bath(answer):
-        return rule + " I won't give a water-bath method for it. Want me to read you the guide's pressure-canning steps?"
+        passage = usda_passage(sources, food)
+        if passage:
+            return rule + "\n\nHere is the guide's own page for them:\n" + passage
+        return rule + NO_PAGE
     return ((answer or "").rstrip() + "\n\n" + rule).strip()
 
 

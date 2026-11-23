@@ -830,7 +830,8 @@ def rank(question: str, snippets: list, keep: int = 4) -> list:
 def passages(library, question: str, keep: int = 4) -> list[dict]:
     """The best passages in the offline library for a question: each pack's best articles read whole and cut to
     where the question's words gather (core/reference_reader.py), Kiwix's index and hers, weighed by how rare each
-    word is, then ranked by meaning where her embedding model answers (about half the question's words held):
+    word is, then ranked by meaning where her embedding model answers (about half the question's words held); for a
+    plain canning question, never the pickle and relish recipes (`reference_reader.not_pickling`):
     [{pack, article, text, ref}]; [] with no packs or nothing matching. Raises on a search that fails (look_up says so)."""
     from core import reference_reader
 
@@ -838,7 +839,8 @@ def passages(library, question: str, keep: int = 4) -> list[dict]:
     if not question or library is None or not library.list_packs():
         return []
     words = reference_reader.terms(question)
-    found = reference_reader.weighed(reference_reader.gather(library, question), words)
+    found = reference_reader.weighed(reference_reader.not_pickling(question, reference_reader.gather(library, question)),
+                                     words)
     meant = reference_reader.by_meaning(getattr(library, "context", None), question, found)
     return [{k: p[k] for k in ("pack", "article", "text", "ref")}
             for p in reference_reader.rank(meant if meant is not None else found, keep, len(words))]

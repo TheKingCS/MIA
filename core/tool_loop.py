@@ -246,7 +246,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     stating its own after the retry loses just those sentences
     (`without_figures`); every library answer passes her safety floor
     (`_finish`, core/reference_reader.floor), with what the library was
-    asked beside the question (a follow-up names its food there)."""
+    asked beside the question (a follow-up names its food there), and
+    the guide's page looked up in code when the turn's reading missed it."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -329,14 +330,14 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         if strict and len(again.strip()) < 0.5 * len(said.strip()):
             again = ""  # a retry that lost most of the answer: the answer itself is trimmed instead
         if again.strip() and not invented_numbers(again, sources, prompt, strict):
-            return _finish(prompt + asked, results, again.strip())
+            return _finish(context, prompt, asked, results, again.strip())
         trimmed = without_figures(again or said, invented_numbers(again or said, sources, prompt, strict)) \
             if strict else ""
         if trimmed:  # a library answer: only the sentences with a figure of its own go (2026-11-22, live)
             log.warning("Tool loop: a library answer stated figures the text didn't; those sentences left out.")
             from core.plain_words import strip_markdown
 
-            return _finish(prompt + asked, results, strip_markdown(trimmed))
+            return _finish(context, prompt, asked, results, strip_markdown(trimmed))
         log.warning("Tool loop answer had numbers the lookups didn't (%s); saying the results instead.",
                     ", ".join(sorted(wrong)))
         failures = getattr(context, "failures", None)
@@ -346,17 +347,30 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             except Exception:
                 log.exception("Couldn't note the invented number.")
     if not said.strip() or wrong:
-        return _finish(prompt + asked, results, _plain(results))
+        return _finish(context, prompt, asked, results, _plain(results))
     from core.plain_words import strip_markdown
 
-    return _finish(prompt + asked, results, strip_markdown(said))
+    return _finish(context, prompt, asked, results, strip_markdown(said))
 
 
-def _finish(prompt: str, results: list, text: str) -> ChatReply:
+def _finish(context, prompt: str, asked: str, results: list, text: str) -> ChatReply:
     """The answer, with her library's safety floor under it when it was read from the library
-    (core/reference_reader.floor: canning a low-acid food is never told as a water bath)."""
+    (core/reference_reader.floor: canning a low-acid food is never told as a water bath), what the library was asked
+    beside the question (a follow-up names its food there). When the floor must replace the answer and this turn's
+    reading holds no guide page to give instead (the model asked in its own words and missed it), the person's own
+    question is looked up in code for it."""
     if any(name in LIBRARY_TOOLS for name, _t in results):
-        from core.reference_reader import floor
+        from core.reference_reader import NO_PAGE, floor
 
-        text = floor(prompt, text)
+        sources = "\n\n".join(t for name, t in results if name in LIBRARY_TOOLS)
+        said = floor(prompt + asked, text, sources)
+        library = getattr(context, "reference_library", None)
+        if said.endswith(NO_PAGE) and library is not None:
+            from core.offline_library import look_up
+
+            try:
+                said = floor(prompt + asked, text, look_up(library, prompt))
+            except Exception:  # noqa: BLE001 - the rule alone stands
+                log.exception("The floor's own look-up failed.")
+        text = said
     return ChatReply(content=text, tool_calls=[])

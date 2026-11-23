@@ -12,7 +12,9 @@ library (2026-11-23): numbers spelled out, each index's own best, canning as the
 common ones, meaning over words, and the rarer words together before any word; word forms as one word, pairs
 of words last; and the floor: canning a low-acid food is never told as a water bath. Fable's review (2026-11-23):
 the floor stands aside for pickles and "can I eat", keeps a right answer whole; no -er stemming; a few dozen queries
-an index; a steady mirror is never failed.
+an index; a steady mirror is never failed. Then, live: no pickle recipes for a plain canning question, an ice bath
+isn't canning, "a pressure canner or water bath" is unsafe, the guide's own page given instead, cut where another
+food's times begin.
 """
 from types import SimpleNamespace
 
@@ -348,3 +350,33 @@ def test_what_the_references_call_it_is_searched_too():
     words = rr.terms("How do I safely can green beans at home?")
     assert words[:2] == ["canning", "snap"]
     assert "summer" in rr.terms("how to grow zucchini")
+
+
+def test_a_plain_canning_question_doesnt_read_the_pickle_recipes():
+    """Canning green beans: the dilly-bean (pickled) page is left out; asking about pickled beans keeps it."""
+    pages = [{"pack": "USDA", "article": "Guide 4, page 8", "text": "Snap beans: process in a pressure canner."},
+             {"pack": "USDA", "article": "Guide 6, page 14", "text": "PICKLED DILLY BEANS: 5 cups vinegar..."}]
+    assert [p["article"] for p in rr.not_pickling("How do I can green beans?", pages)] == ["Guide 4, page 8"]
+    assert len(rr.not_pickling("How do I can pickled beans?", pages)) == 2
+    assert len(rr.not_pickling("How deep should fence posts be set?", pages)) == 2
+
+
+def test_an_ice_bath_isnt_canning_an_or_offers_the_bath_and_the_guides_page_is_given_instead():
+    """Cooling beans in an ice water bath is fine; 'a pressure canner or water bath canner' is unsafe; replaced, the
+    answer gives the USDA's own page for the food from what she read."""
+    assert not rr.unsafe_bath("Blanch, then move them to an ice water bath to cool.")
+    assert rr.unsafe_bath("Process them in a pressure canner or water bath canner.")
+    sources = ("[From her offline library.]\nFrom USDA Guide to Home Canning, \"Guide 4, page 8\"\nref: u|g4|8\n"
+               "BEANS, SNAP AND ITALIAN. Green and wax. Process in a pressure canner: pints 20 minutes, 11 pounds.")
+    said = rr.floor("How do I can green beans?", "Use a pressure canner or water bath canner.", sources)
+    assert "Here is the guide's own page" in said and "pints 20 minutes, 11 pounds" in said
+
+
+
+def test_the_guides_page_stops_where_another_foods_times_begin():
+    """Snap beans' steps, then lima beans' table on the same PDF page: the lima table is never given for green beans."""
+    sources = ("From USDA Guide to Home Canning, \"Guide 4, page 8\"\nref: u|g4|8\n"
+               "BEANS, SNAP. Procedure: Wash beans. Adjust lids and process. Lima beans Recommended process time for "
+               "Lima Beans in a dial-gauge pressure canner Hot Pints 40 min 11 lb")
+    page = rr.usda_passage(sources, "green beans")
+    assert "Adjust lids and process." in page and "40 min" not in page and "Lima" not in page
