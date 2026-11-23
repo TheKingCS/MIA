@@ -529,11 +529,15 @@ class CharacterPanel(QFrame):
         self._on_send()
 
     def _on_send(self) -> None:
-        """Sends what's typed, one turn at a time: the safety floor and its fixed reply first (even with no model), any notice, an answer from code when there is one; otherwise a question plan or the model with tools, off the UI thread."""
+        """Sends what's typed, one turn at a time: the safety floor and the emergency floor (core/first_aid_floor.py) and their fixed replies first (even with no model), any notice, an answer from code when there is one; otherwise a question plan or the model with tools, off the UI thread."""
         prompt = self._input.text().strip()
         if not prompt or self._worker is not None:
             return
-        if self.context.llm is None and not detect_danger(prompt):
+        from core.first_aid_floor import detect as emergency_now
+
+        # Without a model, only the two floors answer: danger (core/safety_floor.py) and an emergency happening now
+        # (core/first_aid_floor.py).
+        if self.context.llm is None and not detect_danger(prompt) and not emergency_now(prompt):
             return
 
         self._input.clear()

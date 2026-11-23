@@ -7,7 +7,8 @@ Zac's two answers of 2026-11-23, held in code:
 - Q-114 ("Never by itself"): MIA OS never restarts by itself to finish an update; MIA says once when one waits
   (`core/update_notice.py`), and a tool and a Settings button put the restart to him for his yes.
 - Q-115 ("Yes, darker shades"): the Daylight theme, light glass whose meaning colours are darker shades of the same
-  hues, each checked (`core/themes.py`: `MEANING_TOKENS`, `meaning_problems`); no other theme may touch them.
+  hues, each checked (`core/themes.py`: `MEANING_TOKENS`, `meaning_problems`: never grey, near-black or another
+  meaning's colour); no other theme may touch them, and every colour scheme on it keeps its soft accent readable.
 """
 
 from datetime import datetime
@@ -93,3 +94,19 @@ def test_a_light_theme_shade_that_changes_hue_or_reads_faintly_is_dropped():
     assert "--bad" not in themes.clean_theme(data)["tokens"]
     assert themes.meaning_problems({"--ok": "#9fe0bf"})  # the right hue, but too pale on white
     assert themes.meaning_problems({"--bad": "#1b7a2a"})
+
+
+def test_a_meaning_colour_cant_be_emptied_or_turned_into_another_meaning():
+    assert themes.meaning_problems({"--bad": "#140000"})  # near-black: would read as body text
+    assert themes.meaning_problems({"--attention": "#1c1a12"})
+    assert themes.meaning_problems({"--win": "#8a5600"})  # amber's shade: the reward would read as "needs you"
+    assert themes.meaning_problems(themes.THEMES["daylight"].tokens) == []
+
+
+def test_every_scheme_on_daylight_keeps_its_soft_accent_readable():
+    from core import appearance
+
+    daylight = themes.clean_theme(themes.as_data(themes.THEMES["daylight"]))
+    for scheme in appearance.SCHEMES:
+        soft = appearance.compose(daylight, scheme)["tokens"]["--accent-soft"]
+        assert themes.contrast(soft, "#ffffff") >= 4.5, scheme

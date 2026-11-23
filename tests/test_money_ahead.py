@@ -3,7 +3,8 @@ tests.test_money_ahead
 ========================
 
 The next 13 weeks of money (core/money_ahead.py, brainstorm 6.1): bills, income and debt minimums by week from his
-budget, the tight weeks worst first, overdue and late said now, never a bank balance it can't know.
+budget, the tight weeks worst first, every overdue and late one said now, a debt never counted twice (paid this
+month, or already a bill), never a bank balance it can't know.
 """
 
 from datetime import date
@@ -69,3 +70,17 @@ def test_say_gives_totals_tight_weeks_and_no_balance(monkeypatch):
 def test_an_empty_budget_says_what_to_add():
     assert "Add them in Budget" in ma.say(SimpleNamespace(budget=None), TODAY)
     assert ma.page(SimpleNamespace(budget=None), TODAY)["any"] is False
+
+
+def test_every_missed_occurrence_counts_now_not_only_the_first():
+    moves = ma.flows([_bill("Water", 40, "2026-09-15", paid="2026-09-15")], [], [], TODAY)
+    late = [m for m in moves if m["note"] == "overdue"]
+    assert len(late) == 2 and all(m["day"] == TODAY for m in late)  # October's and November's
+
+
+def test_a_debt_paid_this_month_or_kept_as_a_bill_isnt_counted_twice():
+    paid = Debt(debt_id="c", name="Card", balance=900, interest_rate=20, minimum_payment=40,
+                last_payment_date="2026-11-23")
+    assert [m["day"] for m in ma.flows([], [], [paid], TODAY)][0] == date(2026, 12, 23)
+    both = ma.flows([_bill("Card payment", 40, "2026-12-05")], [], [paid], TODAY)
+    assert not any(m["what"] == "Card minimum" for m in both)

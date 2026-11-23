@@ -3,7 +3,8 @@ tests.test_unusual
 ====================
 
 Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only
-on days he logged, said once a week through the gate with the causes worth checking.
+on days he logged before today (today's count is still coming in), said once a week through the gate with the
+causes worth checking.
 """
 
 from datetime import date, datetime, timedelta
@@ -23,7 +24,8 @@ TODAY = date(2026, 11, 23)
 
 
 def _days(values_oldest_first):
-    start = TODAY - timedelta(days=len(values_oldest_first) - 1)
+    """Egg counts by day, oldest first, ending yesterday (None: a day not logged)."""
+    start = TODAY - timedelta(days=len(values_oldest_first))
     return {start + timedelta(days=i): v for i, v in enumerate(values_oldest_first) if v is not None}
 
 
@@ -70,3 +72,9 @@ def test_a_flock_with_no_hens_or_no_flock_says_nothing():
     book = SimpleNamespace(flocks=[SimpleNamespace(flock_id="f1", name="Roos", hens=0, roosters=2)], entries=[])
     assert unusual.findings(SimpleNamespace(flock=book), TODAY) == []
     assert "Nothing in your records" in unusual.say(SimpleNamespace(flock=None))
+
+
+def test_todays_unfinished_count_never_makes_a_drop():
+    log = _days([6] * 17)
+    log[TODAY] = 1  # a morning's first log
+    assert unusual.egg_drop(_log(log), "f1", TODAY) is None

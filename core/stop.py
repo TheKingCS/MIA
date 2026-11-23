@@ -59,11 +59,12 @@ JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online", "self
 # The rest only notice something and offer a message, which the gate holds until he resumes.
 CHECKS_THAT_WAIT = frozenset({"workflows", "night_school", "good_news", "chronicle", "chronicle_issue",
                               "vault_captions", "dependency_audit", "system_map", "self_report", "capability_gaps",
-                              "seasons_of_memory", "loops", "fix_report", "findings", "rewards", "momentum",
-                              "weather_watch"})
+                              "seasons_of_memory", "loops", "fix_report", "findings", "rewards", "momentum"})
 # Never waiting, by name, because the definition says so: backups and their monthly restore check, the greenhouse's
-# watch, reminders he set.
-CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "restore_drill", "greenhouse", "grow_alert", "obligation_reminders", "loop",
+# watch and the weather's against what's planted and the flock (frost, freezing water: review 2026-11-23), reminders
+# he set.
+CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "restore_drill", "greenhouse", "grow_alert", "weather_watch",
+                                    "obligation_reminders", "loop",
                                     "recurring_mission", "calendar_digest", "birthday", "warranty",
                                     "insurance_renewal", "promises"})
 # The rest only notice something and offer a message: they run, and the gate holds what they offer until he resumes.
@@ -74,7 +75,7 @@ CHECKS_THAT_ONLY_OFFER = frozenset({"self_changes", "checkin", "budget_nudge", "
                                     "direction_nudge", "capability_reminder", "update_waiting", "unusual"})
 # The gate's topics (core/communication_gate.py) of what the checks in CHECKS_THAT_ALWAYS_RUN offer: reminders he set
 # and the greenhouse's alerts, which "stop everything" never holds (as she says in `report`).
-TOPICS_NEVER_HELD = frozenset({"birthday", "calendar_digest", "warranty", "grow_alert", "greenhouse",
+TOPICS_NEVER_HELD = frozenset({"birthday", "calendar_digest", "warranty", "grow_alert", "greenhouse", "weather_watch",
                                "insurance_renewal", "obligation_deadline", "promise_due"})
 
 _PRE = r"^\s*(?:hey,?\s+)?(?:mia[,:]?\s+)?(?:please\s+)?"  # "hey MIA, please ..."

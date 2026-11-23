@@ -279,7 +279,7 @@
   function ahead() {
     const a = page.ahead || { weeks: [], tight: [], any: false };
     return [section("The Next 13 Weeks", null, null, a.any ? a.weeks.map((w) => row("Week of " + w.label,
-      "in " + w.in_text + " · out " + w.out_text, fmt(w.net), w.net < 0 ? "overdue" : "",
+      "in " + w.in_text + " · out " + w.out_text, fmt(w.net), "",
       null, w.items.length ? el("div", { class: "row-sub dim" }, w.items.join(" · ")) : null)) : [],
     "Nothing to look ahead with yet: add your bills, income and debts, and each week shows here."),
     a.tight.length ? el("p", { class: "dim" }, "More going out than coming in: " + a.tight.join(", ") + ". Weekly flow only: no bank balance until bank linking.") : null].filter(Boolean);

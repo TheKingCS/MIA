@@ -81,13 +81,17 @@ def scheme_colours(scheme_id: str, light: bool = False) -> tuple:
 def scheme_tokens(scheme_id: str, light: bool = False) -> dict:
     """Pure logic. The tokens a scheme sets ({} for "theme" or an unknown one): the accent with its soft and deep
     versions as `core/themes.build_theme` makes them, the second and third accents, and the chart palette; on a light
-    theme, the accents in their darker shades and quieter greys (`scheme_colours`)."""
+    theme, the accents in their darker shades and quieter greys (`scheme_colours`), and the soft accent darker than
+    the accent rather than washed toward white (it's used as text)."""
     if scheme_id not in SCHEMES:
         return {}
     accent, second, third = scheme_colours(scheme_id, light)
     greys = _LIGHT_GREYS if light else _GREYS
+    # --accent-soft is used as text: on a light theme a lighter tint would wash out on white (review 2026-11-23), so
+    # it's the accent a little darker instead, like Daylight's own
+    soft = themes.mix(accent, "#000000", 0.12) if light else themes.mix(accent, "#ffffff", 0.6)
     out = {"--accent": accent, "--rgb-accent": themes.triplet(accent),
-           "--accent-soft": themes.mix(accent, "#ffffff", 0.6), "--accent-deep": themes.mix(accent, "#000000", 0.45),
+           "--accent-soft": soft, "--accent-deep": themes.mix(accent, "#000000", 0.45),
            "--accent-2": second, "--rgb-accent-2": themes.triplet(second),
            "--accent-3": third, "--rgb-accent-3": themes.triplet(third)}
     for i, colour in enumerate((accent, second, third) + greys, start=1):

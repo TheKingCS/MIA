@@ -8,10 +8,11 @@ come. Worked out in code from his records; the model only says it. No bank balan
 Zac 2026-11-17), so it shows each week's flow, never a balance it can't know.
 
 - **In**: each income source's expected amount on each day it's due (core/budget_manager.next_income_due_date for the
-  first, then `date_recurs_on` from its anchor); one expected but not yet received counts in the first week, said as
-  late.
-- **Out**: each bill the same way (an overdue one in the first week, said as overdue), and each debt's minimum once a
-  month, on the day of the month he last paid it (the 1st when he never logged a payment: said).
+  first, then `date_recurs_on` from its anchor); every one expected but not yet received counts today, said as late.
+- **Out**: each bill the same way (every missed one today, said as overdue; a bill on the 31st skips shorter months,
+  as `date_recurs_on` does), and each debt's minimum once a month, on the day of the month he last paid it (the 1st
+  when he never logged a payment: said), not again in a month already paid, and not at all when a bill of the same
+  name already holds that payment.
 - **The weeks** (`weeks`): Monday to Sunday, from this week; each {start, in, out, net, items}. `tight` are those where
   more goes out than comes in, the worst first.
 
@@ -70,30 +71,38 @@ def _monthly(day_of_month: int, start: date, end: date) -> list[date]:
 
 
 def flows(bills: list, incomes: list, debts: list, today: date, weeks: int = WEEKS) -> list[dict]:
-    """Pure logic. Every money movement in the window: {day, amount (+ in, - out), what, note}. A late or overdue
-    one is put on today, with its note."""
+    """Pure logic. Every money movement in the window: {day, amount (+ in, - out), what, note}. Every late or
+    overdue one is put on today, with its note; a debt's minimum skips a month already paid and a debt whose payment
+    is already a bill of the same name."""
     from core.budget_manager import next_bill_due_date, next_income_due_date
 
     end = _monday(today) + timedelta(weeks=weeks, days=-1)
     out = []
+    billed = [b.name.lower() for b in bills]
     for b in bills:
-        for i, day in enumerate(_dates(next_bill_due_date(b), b.due_date, b.recurrence, end)):
-            late = i == 0 and day < today
+        for day in _dates(next_bill_due_date(b), b.due_date, b.recurrence, end):
+            late = day < today  # every missed one, not only the first, counts now
             out.append({"day": today if late else day, "amount": -float(b.amount), "what": b.name,
                         "note": "overdue" if late else ""})
     for s in incomes:
-        for i, day in enumerate(_dates(next_income_due_date(s), s.next_date, s.recurrence, end)):
-            late = i == 0 and day < today
+        for day in _dates(next_income_due_date(s), s.next_date, s.recurrence, end):
+            late = day < today
             out.append({"day": today if late else day, "amount": float(s.expected_amount), "what": s.name,
                         "note": "late" if late else ""})
     for d in debts:
         if float(d.minimum_payment or 0) <= 0 or float(d.balance or 0) <= 0:
             continue
+        name = d.name.lower()
+        if any(name in b or b in name for b in billed):
+            continue  # its payment is already a bill: counted once
         try:
-            dom, note = date.fromisoformat(str(d.last_payment_date)[:10]).day, ""
+            paid = date.fromisoformat(str(d.last_payment_date)[:10])
+            dom, note = paid.day, ""
         except ValueError:
-            dom, note = 1, "on the 1st: no payment logged yet to know its day"
+            paid, dom, note = None, 1, "on the 1st: no payment logged yet to know its day"
         for day in _monthly(dom, today, end):
+            if paid is not None and (day.year, day.month) == (paid.year, paid.month):
+                continue  # this month's is paid already
             out.append({"day": day, "amount": -float(d.minimum_payment), "what": f"{d.name} minimum", "note": note})
     return sorted(out, key=lambda f: (f["day"], f["amount"]))
 

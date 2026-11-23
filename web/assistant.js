@@ -91,6 +91,7 @@
     note("");
     const reply = bubble("mia thinking", "…");
     orb("thinking", "Thinking");
+    const epoch = MIAShell.currentVoice();  // cut in again before she answers, and this answer isn't spoken
     try {
       const turn = await MIA.voice(await recorder.stop());
       if (turn.transcript) reply.parentElement.before(el("div", { class: "chat-bubble me" }, el("p", {}, turn.transcript)));
@@ -101,7 +102,7 @@
       orb("idle", "Ready");
       // her voice, with the orb speaking while it plays; through the shell's one voice, so the mic, a new turn or
       // Escape cuts her off (brainstorm 1.1)
-      MIAShell.playReply(turn, { onPlay: () => orb("speaking", "Speaking"), onEnd: () => orb("idle", "Ready") });
+      MIAShell.playReply(turn, { onPlay: () => orb("speaking", "Speaking"), onEnd: () => orb("idle", "Ready") }, epoch);
       MIAShell.refresh();
     } catch (e) { reply.textContent = e.message; orb("offline", "Can't Reach MIA"); }
     reply.parentElement.classList.remove("thinking");

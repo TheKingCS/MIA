@@ -8,7 +8,8 @@ learned from his history, never a fixed number from somewhere else; the daily ch
 through the communication gate, once per finding.
 
 **Eggs** (`egg_drop`): the hens laying far less than they were. Judged only on days he logged eggs (a day without
-an entry isn't a day of zero eggs): the last three logged days, all within the last five, against the logged days of
+an entry isn't a day of zero eggs, and today's count isn't finished): the last three logged days before today, all
+within the last five, against the logged days of
 the two weeks before (at least five of them). A fall of 40% or more is said, with the causes worth checking in the
 order they're most often the answer (the shorter days of fall and winter, a molt, heat, a scare from a predator or a
 change, eggs laid somewhere new, short on water, feed or protein, an illness) and, when he logged a bird lost or
@@ -42,7 +43,7 @@ CAUSES = ("the shorter days of fall and winter (hens slow down under about 14 ho
 
 def egg_drop(entries: list, flock_id: str, today: date) -> Optional[dict]:
     """Pure logic. {recent, usual, fall, birds_changed} when this flock's laying fell by DROP or more from its own
-    normal (see the module docstring), else None. `entries` are core/flock.py Entry records."""
+    normal over the logged days before today (see the module docstring), else None. `entries` are core/flock.py Entry records."""
     days: dict[date, float] = {}
     birds_changed = False
     for e in entries:
@@ -56,7 +57,7 @@ def egg_drop(entries: list, flock_id: str, today: date) -> Optional[dict]:
             days[day] = days.get(day, 0.0) + float(e.count or 0)
         elif e.kind == "birds" and today - timedelta(days=RECENT_WITHIN + BASELINE_DAYS) <= day <= today:
             birds_changed = True
-    logged = sorted((d for d in days if d <= today), reverse=True)
+    logged = sorted((d for d in days if d < today), reverse=True)  # today's count is still coming in
     recent = logged[:RECENT_DAYS]
     if len(recent) < RECENT_DAYS or (today - recent[-1]).days >= RECENT_WITHIN:
         return None

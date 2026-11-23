@@ -649,28 +649,36 @@
 
   // Her voice on this page, one at a time (Jarvis brainstorm 1.1: he can cut in). Anything he does to talk to her
   // stops her mid-sentence: the mic (voiceRecorder.start), a new turn (Talk's answer), Escape, or stopSpeaking().
-  let speaking = null;
+  // `voiceEpoch` moves each time she's cut off: a reply asked for before that is never played (it would talk over
+  // him), and an old voice's late pause event never resets the presence of a newer one.
+  let speaking = null, speakingEnd = null, voiceEpoch = 0;
   /** Stops her voice if she's speaking on this page; true when she was. */
   function stopSpeaking() {
-    const was = speaking;
+    voiceEpoch += 1;
+    const was = speaking, end = speakingEnd;
     speaking = null;
+    speakingEnd = null;
     if (!was) return false;
     try { was.pause(); } catch (e) { /* already stopped */ }
+    if (presenceLocal === "speaking") presenceHere("");
+    if (end) end();
     return true;
   }
+  /** Which turn of hers is current: pass it back to playReply so a reply he's since cut off isn't played. */
+  function currentVoice() { return voiceEpoch; }
   /** Her spoken reply, when her computer has a voice. */
   // Her spoken reply; the orb says "speaking" only while it really plays (WP-07: only this device knows). Optional
   // hooks (`onPlay`, `onEnd`) let a page's own orb follow it too. Starting one stops any she was still saying.
-  function playReply(turn, hooks) {
+  function playReply(turn, hooks, epoch) {
     if (!(turn && turn.audio_wav_base64)) return null;
+    if (epoch != null && epoch !== voiceEpoch) return null;  // he cut in after asking: don't talk over him
     stopSpeaking();
     const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
     const h = hooks || {};
-    let ended = false;
     const done = () => {
-      if (ended) return;
-      ended = true;
-      if (speaking === audio) speaking = null;
+      if (speaking !== audio) return;  // already stopped (stopSpeaking ran its end), or a newer one plays
+      speaking = null;
+      speakingEnd = null;
       if (presenceLocal === "speaking") presenceHere("");
       if (h.onEnd) h.onEnd();
     };
@@ -679,6 +687,7 @@
     audio.addEventListener("pause", done);
     audio.addEventListener("error", done);
     speaking = audio;
+    speakingEnd = h.onEnd || null;
     audio.play().catch(done);
     return audio;
   }
@@ -690,6 +699,7 @@
     // One turn, typed or spoken: her reply in the log, what she used, which brain answered, and 👍/👎.
     async function answer(asked, run) {
       stopSpeaking();  // a new turn: what she was still saying about the last one stops
+      const epoch = voiceEpoch;
       const thinking = el("p", { class: "bubble mia thinking" }, "…");
       log.append(thinking);
       log.scrollTop = log.scrollHeight;
@@ -697,7 +707,7 @@
         const turn = await run();
         if (turn.transcript) thinking.before(el("p", { class: "bubble me" }, turn.transcript));  // what she heard
         thinking.textContent = turn.reply_text || "Done.";
-        playReply(turn);
+        playReply(turn, null, epoch);
         if (turn.open) setTimeout(() => { location.href = turn.open; }, 900);  // e.g. show-off mode's tour
         const used = usedList(turn.used);
         if (used) thinking.after(used);
@@ -1366,7 +1376,7 @@
   }
 
   window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk, copy, copyButton,
-    notRight, voiceRecorder, playReply, stopSpeaking, twoWays, capture };
+    notRight, voiceRecorder, playReply, stopSpeaking, currentVoice, twoWays, capture };
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

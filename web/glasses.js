@@ -225,9 +225,10 @@
       micShown(false);
       if (cancelled) { cancelled = false; return; }
       orbState("thinking");
+      const epoch = voiceEpoch;
       try {
         const turn = await MIA.voice(await toWav(new Blob(chunks)));
-        if (turn.audio_wav_base64) voiceOut(turn.audio_wav_base64);
+        if (turn.audio_wav_base64) voiceOut(turn.audio_wav_base64, epoch);
         answer(turn.reply_text || "Done.", 9);
         load();
         if (view === "log") openLog();
@@ -679,13 +680,16 @@
   // topics she offers to keep going. This screen follows the phone: it
   // re-reads while it's up, so typing there and Allow show here too.
   // Her voice on the glasses, one at a time (brainstorm 1.1): a new reply stops the last, and the mic stops her.
-  let voice = null;
+  // `voiceEpoch` moves each time she's cut off: a reply asked for before that isn't played over him.
+  let voice = null, voiceEpoch = 0;
   function stopVoice() {
+    voiceEpoch += 1;
     if (!voice) return;
     try { voice.pause(); } catch (e) { /* already stopped */ }
     voice = null;
   }
-  function voiceOut(b64) {
+  function voiceOut(b64, epoch) {
+    if (epoch != null && epoch !== voiceEpoch) return;
     stopVoice();
     const a = new Audio("data:audio/wav;base64," + b64);
     voice = a;

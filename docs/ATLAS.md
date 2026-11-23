@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1601 files, 353,982 lines; 1601 files describe themselves; 19,482 of 19,588 classes and functions are documented.
+1601 files, 354,292 lines; 1601 files describe themselves; 19,494 of 19,599 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-626 files, 179,812 lines; 9,239 of 9,325 classes and functions documented
+626 files, 179,977 lines; 9,243 of 9,329 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -644,7 +644,7 @@
 
 ## gui/: the desktop's Qt shell and dialogs
 
-125 files, 22,395 lines; 1,120 of 1,120 classes and functions documented
+125 files, 22,403 lines; 1,120 of 1,120 classes and functions documented
 
 - `gui/__init__.py`: Presentation layer only. Everything in this package talks to the rest of the system through core.app_context.AppContext and modules.module_base. ModuleBase — never by importing module internals or reaching into core services directly beyond what AppContext exposes.
 - `gui/account_dialogs.py`: Accounts and households on the desktop (2026-10-01, docs/ROADMAP.md "People and ownership"; core/profile_manager.py, core/household_manager.py):
@@ -774,7 +774,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,631 lines; 1,025 of 1,025 classes and functions documented
+93 files, 22,635 lines; 1,025 of 1,025 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -924,7 +924,7 @@
 
 ## tests/: the test suite: what each part must do
 
-572 files, 93,809 lines; 7,880 of 7,900 classes and functions documented
+572 files, 93,927 lines; 7,888 of 7,907 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1088,7 +1088,7 @@
 - `tests/test_finance_manager.py`: Unit tests for core.finance_manager. parse_snapshot_content() is tested directly (pure, no filesystem I/O). FinanceManager itself is tested against a real tmp_path watched folder (isolating both the persisted-storage _DATA_DIR/_SNAPSHOTS_FILE, same monkeypatch pattern as test_journal_manager.py's is
 - `tests/test_finance_summary.py`: Finance #4, money on the phone: core/finance_summary.py's numbers, the /api/finance/summary endpoint, and the phone's money.js drawing the real Python output (under Node, skipped without it).
 - `tests/test_findings.py`: Findings (DEC-0052 step 3, core/findings.py): what MIA notices by putting apps together, with the records it came from, why it matters, a next step, and only Zac's chosen kinds unprompted.
-- `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic goes on to the library. The corpus lists both what must trigger and what must not.
+- `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
 - `tests/test_fitness_missions.py`: The fitness plan as missions (core/fitness_missions.py, DEC-0020, H-0026): made once per day and week from the plan, kept in step with the logs (the logs are the truth), ticked through the logs, completing themselves, and letting a missed day go quietly (DEC-0014). Placeholder plan values.
@@ -1219,7 +1219,7 @@
 - `tests/test_module_manager.py`: Unit tests for core.module_manager.ModuleManager.
 - `tests/test_module_validator.py`: Unit tests for core.module_validator.validate_module_folder.
 - `tests/test_momentum.py`: Natural Momentum (core/momentum.py, DEC-0148): runs of things done found in the history, what they have in common said as counts once there are enough, what tends to follow what, whether the person is in flow (and the gate holding her non-urgent messages then), one easy start in their usual hour, an
-- `tests/test_money_ahead.py`: The next 13 weeks of money (core/money_ahead.py, brainstorm 6.1): bills, income and debt minimums by week from his budget, the tight weeks worst first, overdue and late said now, never a bank balance it can't know. *(2 undocumented)*
+- `tests/test_money_ahead.py`: The next 13 weeks of money (core/money_ahead.py, brainstorm 6.1): bills, income and debt minimums by week from his budget, the tight weeks worst first, every overdue and late one said now, a debt never counted twice (paid this month, or already a bill), never a bank balance it can't know. *(2 undocumented)*
 - `tests/test_move_rehearsal.py`: FW-07b: the move to MIA OS rehearsed on synthetic data (os/poc/vm/move_rehearsal.py), here as in the VM: a real backup of stores laid out as on Windows, restored by MIA's own code into a fresh folder, matches store for store; a record changed afterwards is named.
 - `tests/test_music_manager.py`: Unit tests for core.music_manager. The CRUD/scan_library() section is entirely Qt-free (matches this project's established convention — see tests/test_avatar_manager.py monkeypatching QMediaDevices rather than constructing a real QApplication). The playback section monkeypatches MusicManager._ensure
 - `tests/test_music_module.py`: Unit tests for modules.music.module's pure formatting functions — no Qt event loop needed, same shape as tests/test_power_module.py.
@@ -1412,7 +1412,7 @@
 - `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
 - `tests/test_ual.py`: The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the catalogue and its tiers, what's offered for a selection, and running a pick (a read action at once; an act action only as a proposal to approve). And U2's phone card: a selection from a banking, health or password app is sens *(1 undocumented)*
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
-- `tests/test_unusual.py`: Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only on days he logged, said once a week through the gate with the causes worth checking. *(2 undocumented)*
+- `tests/test_unusual.py`: Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only on days he logged before today (today's count is still coming in), said once a week through the gate with the causes worth checking. *(1 undocumented)*
 - `tests/test_update_and_daylight.py`: Zac's two answers of 2026-11-23, held in code:
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g
 - `tests/test_upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, core/upkeep_missions.py): this week's upkeep becomes one mission per task and due date, attached to the task and its asset; it isn't made twice or remade once set aside; Done on the upkeep completes the mission, and completing the mission marks the upkeep done
@@ -1501,7 +1501,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 21,938 lines
+117 files, 21,953 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

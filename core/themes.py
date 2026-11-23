@@ -821,9 +821,32 @@ def _hue(hex_colour: str) -> float:
 
 def meaning_problems(tokens: dict) -> list[str]:
     """Pure logic. Why a light theme's meaning colours can't stand ([] when they can): each one it sets, and its deep
-    version, must be a #rrggbb within 15 degrees of its meaning's hue (amber stays amber) and read at 4.5:1 on white;
-    each rgb triplet must be its colour's own."""
+    version, must be a #rrggbb within 15 degrees of its meaning's hue (amber stays amber), nearer its own meaning's hue
+    than any other's (the reward's orange never becomes amber), and read at 4.5:1 on white; each main one must stay a
+    colour (saturation 0.5 or more, brightness 0.3 or more: never near-black, which would read as body text); each rgb
+    triplet must be its colour's own. Review of 2026-11-23."""
+    import colorsys
+
     out = []
+    meaning_of = {"--attention": "amber", "--soon": "amber", "--ok": "ok", "--bad": "bad", "--win": "win"}
+    hues = {"amber": _hue(MEANING_BASE["--attention"]), "ok": _hue(MEANING_BASE["--ok"]),
+            "bad": _hue(MEANING_BASE["--bad"]), "win": _hue(MEANING_BASE["--win"])}
+
+    def apart(a: float, b: float) -> float:
+        d = abs(a - b) % 360
+        return min(d, 360 - d)
+
+    for key, meaning in meaning_of.items():
+        value = str(tokens.get(key, ""))
+        if not _HEX.match(value):
+            continue
+        r, g, b = (int(value[i:i + 2], 16) / 255 for i in (1, 3, 5))
+        _h, sat, bright = colorsys.rgb_to_hsv(r, g, b)
+        if sat < 0.5 or bright < 0.3:
+            out.append(f"{key} would be too grey or too dark to read as its meaning")
+        own = apart(_hue(value), hues[meaning])
+        if any(apart(_hue(value), h) < own for m, h in hues.items() if m != meaning):
+            out.append(f"{key} would read as another meaning's colour")
     for rgb_key, key in MEANING_RGB.items():
         if rgb_key in tokens and (not _HEX.match(str(tokens.get(key, ""))) or
                                   str(tokens[rgb_key]).replace(" ", "") != triplet(tokens[key]).replace(" ", "")):

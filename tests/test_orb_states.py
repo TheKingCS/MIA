@@ -87,12 +87,16 @@ def test_a_condition_that_isnt_one_is_ignored_and_only_a_change_moves_the_versio
 
 def test_speaking_comes_only_from_her_reply_really_playing():
     """The page says speaking when the reply's audio is playing, and stops when it ends, pauses (he cut in) or
-    fails."""
+    fails; cutting her off ends the speaking state itself, and a reply asked before he cut in is never played."""
     shell = (ROOT / "web" / "shell.js").read_text(encoding="utf-8")
-    start = shell.index("function playReply(turn, hooks)")
+    start = shell.index("function playReply(turn, hooks, epoch)")
     body = shell[start:shell.index("\n  }\n", start)]
     assert 'addEventListener("playing", () => { presenceHere("speaking");' in body
     assert all(f'addEventListener("{e}", done)' in body for e in ("ended", "pause", "error"))
+    # cut off by him: stopSpeaking ends the speaking state itself, and a stale reply is never played
+    stop = shell[shell.index("function stopSpeaking()"):start]
+    assert 'if (presenceLocal === "speaking") presenceHere("");' in stop
+    assert "epoch !== voiceEpoch) return null" in body
 
 
 def test_the_frame_carries_the_orbs_words_for_every_page():
