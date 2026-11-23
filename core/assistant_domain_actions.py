@@ -667,6 +667,21 @@ def _list(description: str) -> dict:
     return {"type": "array", "items": {"type": "string"}, "description": description}
 
 
+def _action_debt_payoff_mission(context, arguments: dict) -> str:
+    """A card to make the payoff plan a mission (core/debt_missions.py, `debts.missions`): his press makes it."""
+    from core.actions import ActionError
+
+    actions = getattr(context, "actions", None)
+    if actions is None:
+        return "I can't put that to you from here: it's on the Money page, Debts."
+    params = {k: v for k, v in (arguments or {}).items() if k in ("strategy", "extra") and v not in ("", None)}
+    try:
+        card = actions.propose(context, "debts.missions", params)
+    except ActionError as problem:
+        return str(problem)
+    return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
+
+
 def _action_money_ahead(context, arguments: dict) -> str:
     """The next 13 weeks of money, week by week (core/money_ahead.say)."""
     from core import money_ahead
@@ -679,7 +694,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     """Registers every tool above with the Assistant's registry, with its description, parameters and trigger
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
-    them money_ahead, the next 13 weeks of money (core/money_ahead.py).
+    them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
+    mission on his yes (core/debt_missions.py).
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -777,6 +793,16 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_money_ahead,
         trigger_phrases=("next 90 days", "next few months", "next three months", "money ahead", "cash flow",
                          "tight weeks", "tight week", "money coming up", "can i cover", "short this month"),
+    ))
+    registry.register(AssistantAction(
+        name="debt_payoff_mission", domain="debts",
+        description="Put up a card to make the debt payoff plan a mission: one step a debt in payoff order with the "
+                    "month each is paid off, ticked as each balance reaches zero. Strategy: hybrid (default), "
+                    "avalanche or snowball; extra: more a month toward debt.",
+        parameters=_obj({"strategy": _s("hybrid, avalanche or snowball."), "extra": _n("Extra a month toward debt.")}, []),
+        handler=_action_debt_payoff_mission,
+        trigger_phrases=("payoff mission", "make my payoff plan a mission", "debt free mission", "track my payoff",
+                         "mission to pay off"),
     ))
     registry.register(AssistantAction(
         name="get_debt_payoff_plan", domain="debts",

@@ -49,6 +49,7 @@
       "add_income",
       "add_income_source",
       "change_bill",
+      "debt_payoff_mission",
       "delete_bill",
       "delete_expense",
       "get_budget_summary",
@@ -88,6 +89,7 @@
       "debt.delete",
       "debt.edit",
       "debt.pay",
+      "debts.missions",
       "expense.add",
       "expense.business",
       "expense.delete",
@@ -154,7 +156,9 @@
       "income_source.add": "act_within_grant",
       "income_source.delete": "act_with_approval",
       "income_source.edit": "act_within_grant",
-      "money_ahead": "observe"
+      "money_ahead": "observe",
+      "debt_payoff_mission": "act_with_approval",
+      "debts.missions": "act_with_approval"
     },
     "outside": [
       "get_receipt"

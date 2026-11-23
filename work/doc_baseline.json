@@ -6,6 +6,7 @@
   "tests/test_budget_manager.py": 5,
   "tests/test_budget_nudges.py": 2,
   "tests/test_change_history.py": 1,
+  "tests/test_debt_missions.py": 7,
   "tests/test_left_off.py": 2,
   "tests/test_money_ahead.py": 2,
   "tests/test_needs_now.py": 1,

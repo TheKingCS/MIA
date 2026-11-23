@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1612 files, 355,643 lines; 1612 files describe themselves; 19,579 of 19,688 classes and functions are documented.
+1614 files, 355,902 lines; 1614 files describe themselves; 19,592 of 19,708 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-631 files, 180,744 lines; 9,283 of 9,369 classes and functions documented
+632 files, 180,910 lines; 9,291 of 9,377 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -182,6 +182,7 @@
 - `core/data_root.py`: Where MIA keeps a person's files, as one setting (the MIA Runtime's next step, DEC-0155; needed for MIA OS and the Pi, DEC-0168).
 - `core/deadline.py`: A deadline and the stop, for device and outside work only (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A long loop that waits on something outside MIA (a browser task, a download) asks `why_not()` between its steps, never in the middle of a write: it says why the loop
 - `core/debt_math.py`: Pure logic (DEC-0052, the "debts" question plan): when each debt is paid off at the current payments, the interest it costs, and what an extra amount a month changes. MIA never asks the model to do this arithmetic.
+- `core/debt_missions.py`: His debt payoff plan as a mission (Jarvis brainstorm 6.2; Zac, 2026-11-23: "finance skills"): the order to pay them off and the month each is gone, worked out in code (core/budget_manager.rank_debts for the order, his strategy; core/debt_math.simulate for the months, with any extra he names), made i
 - `core/dependency_audit.py`: The weekly check for known vulnerabilities in the packages MIA runs on (docs/SECURITY.md step 5). The check itself is tools/dependency_audit.py (it asks OSV over the internet, a few seconds' work); this is the part MIA's daily checks use: whether a check is `due` (none in the last CHECK_DAYS), `laun
 - `core/desktop_session.py`: How MIA's own desktop session finds her (FW-03, DEC-0278; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4). On MIA OS her runtime is a systemd user service, separate from the window that shows her, so the window can't be handed a sign-in token in-process the way the Windows desktop app does 
 - `core/dev_checks.py`: The development checks that need a real run (build plan step 2, DEC-0094): the measures behind the loops `dev.suite`, `dev.suite_time`, `dev.reverts`, `dev.vulnerable` and `dev.outdated` in core/loops.py.
@@ -929,7 +930,7 @@
 
 ## tests/: the test suite: what each part must do
 
-578 files, 94,439 lines; 7,933 of 7,956 classes and functions documented
+579 files, 94,529 lines; 7,938 of 7,968 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1047,6 +1048,7 @@
 - `tests/test_data_recovery_named.py`: REQ-FUN-221: an answer built from several stores names the parts it couldn't read, rather than leaving them out silently: a store reset to empty at start is remembered for the run and named in her context, with the rule to say so.
 - `tests/test_data_root.py`: Where MIA keeps a person's files (core/data_root.py, MIA_HOME): the code's folder unless it's set; with it set, nothing at all is written into the code's folder; and tools/move_home copies a MIA to a new home, checked.
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
+- `tests/test_debt_missions.py`: His debt payoff plan as a mission (core/debt_missions.py, brainstorm 6.2): the order and months worked out in code, one mission with an objective for each debt on his press, each ticked when that debt's balance reaches zero. *(7 undocumented)*
 - `tests/test_degraded_intelligence.py`: FW-12, the first version's part (REQ-AI-013, REQ-HW-029, DEC-0204): when the chosen local model fails or times out, the next one the computer has answers and MIA says which; and one model call runs at a time, a conversation before background work, so his turn waits at most for the one call already r
 - `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci
@@ -1512,7 +1514,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 22,004 lines
+117 files, 22,007 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

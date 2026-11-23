@@ -215,6 +215,9 @@
       el("section", { class: "glass money-section" },
         el("div", { class: "sect" }, el("h2", {}, "Which to pay first"), btn("Add debt", "btn-amber", () => add("debt", "Add a debt"))),
         strategies, el("p", { class: "dim" }, help),
+        // The payoff plan as a mission (core/debt_missions.py): a step a debt in this order, ticked as each is paid off.
+        d.ranked.length ? buttons(btn("Make It A Mission", "btn-ghost btn-small",
+          () => act({ kind: "debts.missions", params: { strategy: d.strategy } }))) : null,
         el("div", { class: "money-figures" }, figure("Total owed", fmt(d.total), "bad"), figure("Minimums each month", fmt(d.minimum_payments))),
         d.ranked.length ? el("div", { class: "rows" }, d.ranked.map((x) => row(
           "#" + x.rank + "  " + x.name,

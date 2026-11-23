@@ -1059,8 +1059,9 @@ class BackgroundJobs:
         # preventing duplicates.
         """The daily recurring-missions check: once a day, makes sure every active template has its current mission
         (ensure_current_missions is idempotent, so the gate is only a cheap skip), plus the fitness plan's missions for
-        whoever is signed in, and this week's upkeep as scheduled missions (core/upkeep_missions.py, DEC-0153). Once
-        ever, it also removes the old calendar copies of chores (DEC-0052).
+        whoever is signed in, this week's upkeep as scheduled missions (core/upkeep_missions.py, DEC-0153), and a debt
+        payoff mission's steps ticked as each debt is paid off (core/debt_missions.py). Once ever, it also removes the
+        old calendar copies of chores (DEC-0052).
         """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_recurring_mission_check_date"), today_iso):
@@ -1080,6 +1081,10 @@ class BackgroundJobs:
 
             upkeep_missions.settle(self.context, now.date())
             upkeep_missions.ensure(self.context, now.date())
+            # A payoff mission's steps ticked as each debt reaches zero, from the budget's record (core/debt_missions.py).
+            from core import debt_missions
+
+            debt_missions.tick(self.context)
             config.set("system.last_recurring_mission_check_date", today_iso)
             config.save()
 

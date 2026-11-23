@@ -444,6 +444,7 @@ import core.system_helper  # noqa: E402,F401  (the system helper's three operati
 import core.model_store  # noqa: E402,F401  (her models removed and fetched again, REQ-HW-014)
 import core.offline_library  # noqa: E402,F401  (her offline library's packs fetched, Zac 2026-11-22)
 import core.project_plans  # noqa: E402,F401  (plans made together, then missions: T-0060)
+import core.debt_missions  # noqa: E402,F401  (a debt payoff plan as a mission: brainstorm 6.2)
 import core.creation_actions  # noqa: E402,F401  (MIA's creations and record sets, DEC-0091)
 import core.fitness_actions  # noqa: E402,F401  (fitness plan, weigh-ins, food, training)
 import core.plan_import  # noqa: E402,F401  (a whole plan and its recipes, pasted as text)
