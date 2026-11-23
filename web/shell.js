@@ -706,7 +706,10 @@
     };
     const playOne = (b64) => {
       const audio = new Audio("data:audio/wav;base64," + b64);
+      let moved = false;  // Edge and Chrome fire pause, then ended, when a clip ends: move on once (review 2026-11-23)
       const done = () => {
+        if (moved) return;
+        moved = true;
         if (speaking !== audio) return;  // already stopped (stopSpeaking ran its end), or a newer one plays
         if (!next || mine !== voiceEpoch) { finish(); return; }
         const coming = next;
