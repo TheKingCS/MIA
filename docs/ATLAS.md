@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1617 files, 356,208 lines; 1617 files describe themselves; 19,609 of 19,727 classes and functions are documented.
+1617 files, 356,387 lines; 1617 files describe themselves; 19,620 of 19,737 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-633 files, 181,106 lines; 9,301 of 9,387 classes and functions documented
+633 files, 181,187 lines; 9,303 of 9,389 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -931,7 +931,7 @@
 
 ## tests/: the test suite: what each part must do
 
-581 files, 94,625 lines; 7,945 of 7,977 classes and functions documented
+581 files, 94,721 lines; 7,954 of 7,985 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1049,7 +1049,7 @@
 - `tests/test_data_recovery_named.py`: REQ-FUN-221: an answer built from several stores names the parts it couldn't read, rather than leaving them out silently: a store reset to empty at start is remembered for the run and named in her context, with the rule to say so.
 - `tests/test_data_root.py`: Where MIA keeps a person's files (core/data_root.py, MIA_HOME): the code's folder unless it's set; with it set, nothing at all is written into the code's folder; and tools/move_home copies a MIA to a new home, checked.
 - `tests/test_debt_math.py`: The payoff arithmetic behind "when will my debts be paid off?" and "what if I put an extra $200 toward it?" (core/debt_math.py).
-- `tests/test_debt_missions.py`: His debt payoff plan as a mission (core/debt_missions.py, brainstorm 6.2): the order and months worked out in code, one mission with an objective for each debt on his press, each ticked when that debt's balance reaches zero. *(7 undocumented)*
+- `tests/test_debt_missions.py`: His debt payoff plan as a mission (core/debt_missions.py, brainstorm 6.2): the order and months worked out in code, one mission with an objective for each debt on his press, each ticked when that debt (by its id) reaches zero, the mission completed when all are, one running at a time. *(6 undocumented)*
 - `tests/test_degraded_intelligence.py`: FW-12, the first version's part (REQ-AI-013, REQ-HW-029, DEC-0204): when the chosen local model fails or times out, the next one the computer has answers and MIA says which; and one model call runs at a time, a conversation before background work, so his turn waits at most for the one call already r
 - `tests/test_dependency_audit.py`: Known vulnerabilities in MIA's packages (docs/SECURITY.md step 5): OSV's answer is read into one finding per package and advisory with the fixing version (tools/dependency_audit.py); the weekly check is due after a week; findings are said once, plainly, and none means nothing is said (core/dependenc
 - `tests/test_derived_links.py`: The ties the stores' own fields already say, made into derived links (core/links.py, 2026-11-08, for core/connections.py's `connections.unlinked`): a mission is part of its project and trip, a skill builds on its prerequisites, a trip is part of its expedition, a job uses its workshop recipe, a reci
@@ -1134,7 +1134,7 @@
 - `tests/test_homestead_costs.py`: Finance #2, homestead builds and tools: expense tags, build budgets, tool cost of ownership (core/homestead_costs.py), the Assistant tools (core/assistant_homestead_actions.py), the maintenance-cost hook, and the Budget tab's formatting.
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, the Builds tab's Sell First and Best Earner (DEC-0113), and cups against pounds for materials on the density table.
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring
-- `tests/test_homestead_year.py`: The homestead's year (core/homestead_year.py, brainstorm 4.4): his confirmed garden plans' crop dates and his recurring upkeep, month by month over the next twelve, from his own records. *(1 undocumented)*
+- `tests/test_homestead_year.py`: The homestead's year (core/homestead_year.py, brainstorm 4.4): his confirmed garden plans' crop dates and his recurring upkeep, month by month over the next twelve, from his own records (a frequent task once a month, with how many times). *(1 undocumented)*
 - `tests/test_household_module.py`: Unit tests for modules.household.module's pure functions, same style as tests/test_greenhouse_module.py (no Qt event loop, no fixtures).
 - `tests/test_household_routines.py`: The Household's web screen (core/household_routines.py, the design canvas's Household): the household's routines, each with its current occurrence, how far along, and its streak in words; paused ones apart; and routines added, paused and resumed as actions (core/routine_actions.py) and by voice (cor
 - `tests/test_id_wallet.py`: The ID wallet (core/id_wallet.py): cards kept with their numbers and photos sealed at rest, numbers masked in lists and never in what MIA says or in an action, expiry reminders on Today, "show my license" opening the card, and the history noting a card added or removed without its name or number.
@@ -1156,7 +1156,7 @@
 - `tests/test_interview_form.py`: Unit tests for gui.widgets.interview_form's pure functions, same style as every other *_module.py test file in this project (no Qt event loop, no fixtures).
 - `tests/test_inventory_manager.py`: Unit tests for core.inventory_manager. Isolates _DATA_DIR/_ITEMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_inventory_tool.py`: Unit test for modules.toolbox.tools.inventory_tool.format_item_row — pure formatting logic, no Qt event loop needed.
-- `tests/test_invoice_email.py`: An order's invoice (core/business_actions.invoice_email, brainstorm 5.1): what, the price, what's been paid, the balance and when it's due, drafted for his Send, never sent; a paid-up order's is a receipt. *(1 undocumented)*
+- `tests/test_invoice_email.py`: An order's invoice (core/business_actions.invoice_email, brainstorm 5.1): what, the price, what's been paid, the balance and when it's due, drafted for his Send, never sent; a paid-up order's is a receipt; a delivered order can be invoiced, a cancelled one can't; by voice too (draft_invoice). *(1 undocumented)*
 - `tests/test_job_manager.py`: Unit tests for core.job_manager. Isolates _DATA_DIR/_JOBS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. consume_material() total_cost()/produce_product() also need core.material_manager core.product_manager isolated in the same tmp_path, s
 - `tests/test_journal_manager.py`: Unit tests for core.journal_manager. Isolates _DATA_DIR/_ENTRIES_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_journal_reflection.py`: The opt-in weekly journal reflection (core/journal_reflection.py): when it's due, the content-free notice, the reflection itself, and that asking for it is a private turn.
@@ -1285,7 +1285,7 @@
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002).
 - `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, the tools, the homestead, 
-- `tests/test_plan_price.py`: What a Planner build costs and what to charge (core/plan_price.py, brainstorm 5.1): its materials priced from his workshop (whole quantities: what's on hand gets used too), those with no price named, his hours at his rate, his margin, through his quotes' own arithmetic. *(1 undocumented)*
+- `tests/test_plan_price.py`: What a Planner build costs and what to charge (core/plan_price.py, brainstorm 5.1): its materials priced from his workshop (whole quantities: what's on hand gets used too), those with no price named, his hours at his rate, his margin, through his quotes' own arithmetic; without his labor in it, a fl *(1 undocumented)*
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140; the Nexus's portals are the person's stories since DEC-0153): the person puts one of their own paintings in a story's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the 
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
@@ -1517,7 +1517,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 22,021 lines
+117 files, 22,023 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

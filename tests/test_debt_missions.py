@@ -3,7 +3,8 @@ tests.test_debt_missions
 ==========================
 
 His debt payoff plan as a mission (core/debt_missions.py, brainstorm 6.2): the order and months worked out in code,
-one mission with an objective for each debt on his press, each ticked when that debt's balance reaches zero.
+one mission with an objective for each debt on his press, each ticked when that debt (by its id) reaches zero,
+the mission completed when all are, one running at a time.
 """
 
 from datetime import date
@@ -22,8 +23,12 @@ def _debts():
 
 
 def _ctx(debts=None, missions=None):
+    """A context with the budget's debts, the missions and a small settings store (the steps' debt ids)."""
+    store = {}
+    config = SimpleNamespace(get=lambda key, default=None: store.get(key, default),
+                             set=lambda key, value: store.__setitem__(key, value))
     return SimpleNamespace(budget=SimpleNamespace(all_debts=lambda: debts if debts is not None else _debts()),
-                           missions=missions)
+                           missions=missions, config=config)
 
 
 def test_the_plan_orders_debts_and_dates_each_payoff():
@@ -88,3 +93,32 @@ def test_the_card_kind_is_registered_for_his_press():
     from core.actions import ACTION_TYPES
 
     assert "debts.missions" in ACTION_TYPES and ACTION_TYPES["debts.missions"].label == "Make It A Mission"
+
+
+def test_a_renamed_or_twin_named_debt_ticks_only_its_own_step_and_the_mission_completes(monkeypatch):
+    monkeypatch.setattr("core.person_settings.person_id", lambda context: "p1")
+    missions = _Missions()
+    completed = []
+    missions.update_mission = lambda mid, **kw: completed.append((mid, kw))
+    debts = [Debt(debt_id="v1", name="Visa", balance=300, interest_rate=20.0, minimum_payment=30),
+             Debt(debt_id="v2", name="Visa", balance=2000, interest_rate=20.0, minimum_payment=60)]
+    store = {}
+    config = SimpleNamespace(get=lambda key, default=None: store.get(key, default),
+                             set=lambda key, value: store.__setitem__(key, value))
+    ctx = SimpleNamespace(budget=SimpleNamespace(all_debts=lambda: debts), missions=missions, config=config)
+    dm._make(ctx, {"strategy": "snowball"})
+    [m] = missions.missions
+    debts[1].name = "Visa (old card)"  # renamed: still owed, never ticked
+    debts[0].balance = 0
+    assert dm.tick(ctx) == 1 and [o.progress for o in m.objectives] == [1.0, 0.0] and not completed
+    debts[1].balance = 0
+    assert dm.tick(ctx) == 1 and completed == [(m.mission_id, {"status": "completed"})]
+
+
+def test_a_second_payoff_mission_is_refused_while_one_runs():
+    running = SimpleNamespace(all_missions=lambda: [SimpleNamespace(status="active", name="Debt-free by May 2028")])
+    try:
+        dm._describe(_ctx(missions=running), {})
+        raise AssertionError("expected ActionError")
+    except dm.ActionError as problem:
+        assert "already a payoff mission" in str(problem)

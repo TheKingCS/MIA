@@ -4,7 +4,7 @@ tests.test_plan_price
 
 What a Planner build costs and what to charge (core/plan_price.py, brainstorm 5.1): its materials priced from his
 workshop (whole quantities: what's on hand gets used too), those with no price named, his hours at his rate, his
-margin, through his quotes' own arithmetic.
+margin, through his quotes' own arithmetic; without his labor in it, a floor.
 """
 
 from types import SimpleNamespace
@@ -61,3 +61,14 @@ def test_unpriced_materials_make_the_price_a_floor_and_no_build_says_how_to_star
     said = pp.say(ctx)
     assert "No price yet for Plywood 4x8 sheet, Deck screws" in said and "charge at least" in said
     assert "Start one there" in pp.say(SimpleNamespace(project_plans=None))
+
+
+def test_without_labor_the_price_is_a_floor(monkeypatch):
+    import core.plan_library as library
+
+    monkeypatch.setattr(library, "detail", lambda context, plan, sizes=None: {"items": ITEMS[:1]})
+    ctx = SimpleNamespace(
+        project_plans=SimpleNamespace(listed=lambda: [SimpleNamespace(kind="build", status="draft", shelf_plan="shed",
+                                                                      title="10x12 shed", sizes={})]),
+        materials=SimpleNamespace(all_materials=lambda: [_mat("2x4 x 8 ft", 4.25)]), config=None)
+    assert "charge at least" in pp.say(ctx)

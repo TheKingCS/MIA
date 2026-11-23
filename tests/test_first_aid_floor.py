@@ -6,7 +6,8 @@ The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an
 first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of
 speech goes on as usual. The corpus lists both what must trigger (the review of 2026-11-23 added the panicked,
 pronoun-less and missing kinds) and what must not; and a first-aid answer from the library always ends with when
-to call for help.
+to call for help, and the homestead's own words (an engine, a fence, seedlings) never set
+it off.
 """
 
 from types import SimpleNamespace
@@ -167,3 +168,23 @@ def test_a_first_aid_answer_from_the_library_says_when_to_call():
     assert faf.library_floor("how do I can green beans?", "Use a pressure canner.") == "Use a pressure canner."
     assert faf.library_floor("my dog was bit by a snake", "See a vet.") == "See a vet."  # an animal: the vet's
     assert "call 999" in faf.library_floor("what to do for a deep cut", "Press on it.", REGIONS["GB"])
+
+
+HOMESTEAD = ["I choked the engine and it flooded", "what causes engine seizure in a chainsaw?",
+             "how strong an electric shock should my electric fence give?", "the rain drowned my tomato seedlings",
+             "I burnt the rice bad", "cut the post holes deep", "hydraulic lines keep bleeding out air",
+             "the throttle is unresponsive on my mower", "did I overdose the tomatoes on fertilizer"]
+
+
+@pytest.mark.parametrize("words", HOMESTEAD)
+def test_the_homesteads_own_words_are_never_an_emergency(words):
+    assert faf.kinds(words) == [] and faf.topic_kinds(words) == []
+    assert faf.library_floor(words, "An answer.") == "An answer."
+
+
+def test_the_number_is_found_whole_and_never_guessed_for_an_unlisted_country():
+    burn = faf.library_floor("treating a bad burn", "Cool it; 1,000 mg is not a dose to give.", REGIONS["AU"])
+    assert "call 000 first" in burn  # "1,000" isn't Australia's number
+    assert faf.library_floor("treating a bad burn", "Call 000, then cool it.", REGIONS["AU"]) == \
+        "Call 000, then cool it."
+    assert "local emergency number" in faf.library_floor("how to treat a snakebite", "Keep your arm still.", OTHER)

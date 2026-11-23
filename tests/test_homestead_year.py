@@ -3,7 +3,8 @@ tests.test_homestead_year
 ===========================
 
 The homestead's year (core/homestead_year.py, brainstorm 4.4): his confirmed garden plans' crop dates and his
-recurring upkeep, month by month over the next twelve, from his own records.
+recurring upkeep, month by month over the next twelve, from his own records (a frequent task once a month,
+with how many times).
 """
 
 from datetime import date
@@ -49,3 +50,10 @@ def test_the_year_is_months_in_order_and_said_a_few_at_a_time():
 
 def test_with_nothing_planned_she_says_how_to_fill_it():
     assert "confirm a garden plan" in hy.say(SimpleNamespace(project_plans=None, maintenance=None), TODAY)
+
+
+def test_a_daily_task_is_one_line_a_month_and_a_bad_interval_is_left_out():
+    daily = SimpleNamespace(trigger_type="calendar", interval_days=1, last_completed="2026-11-22", title="Feed hens")
+    bad = SimpleNamespace(trigger_type="calendar", interval_days=-7, last_completed="2026-11-01", title="Broken")
+    items = hy.upkeep_items([daily, bad], TODAY, END)
+    assert len(items) == 13 and items[0][1] == "Feed hens (8 times)" and not any("Broken" in t for _d, t in items)

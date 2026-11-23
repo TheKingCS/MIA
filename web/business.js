@@ -84,7 +84,9 @@
         o.left_value > 0 && !(step && step.opens === "payment") ? btn("Payment", "btn-ghost btn-small", () => pay(o)) : null,
         btn("Email Invoice", "btn-ghost btn-small", () => emailInvoice(o)),
         btn("Edit", "btn-ghost btn-small", () => edit("order", o, o.title)),
-        btn("Cancel Order", "btn-ghost btn-small", () => status(o, "Cancelled"))) : null);
+        btn("Cancel Order", "btn-ghost btn-small", () => status(o, "Cancelled"))) :
+        o.status === "Delivered" ? el("div", { class: "row-buttons ord-more" },
+          btn("Email Invoice", "btn-ghost btn-small", () => emailInvoice(o))) : null);
   }
 
   function quoteCard(q) {

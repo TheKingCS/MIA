@@ -61,21 +61,26 @@ def garden_items(plans: list, today: date, end: date) -> list[tuple[date, str]]:
 
 
 def upkeep_items(tasks: list, today: date, end: date) -> list[tuple[date, str]]:
-    """Pure logic. Each recurring calendar task's due dates between today and end: (day, title)."""
+    """Pure logic. Each recurring calendar task once in each month it falls due between today and end, with how many
+    times when it's more than once ("Feed the chickens (31 times)"); a task without a positive interval is left out."""
     from core.maintenance_manager import next_due_date
 
     out = []
     for task in tasks:
-        if getattr(task, "trigger_type", "calendar") != "calendar" or not task.interval_days:
+        days = getattr(task, "interval_days", None)
+        if getattr(task, "trigger_type", "calendar") != "calendar" or not isinstance(days, int) or days <= 0:
             continue
         due = next_due_date(task)
         if due is None:
             continue
-        while due < today:
-            due += timedelta(days=task.interval_days)
+        if due < today:
+            due += timedelta(days=days * -(-(today - due).days // days))
+        months: dict = {}
         while due <= end:
-            out.append((due, task.title))
-            due += timedelta(days=task.interval_days)
+            months.setdefault(_key(due), []).append(due)
+            due += timedelta(days=days)
+        for dates in months.values():  # once a month on the year, with how often when it's more
+            out.append((dates[0], task.title + (f" ({len(dates)} times)" if len(dates) > 1 else "")))
     return sorted(out)
 
 

@@ -667,6 +667,26 @@ def _list(description: str) -> dict:
     return {"type": "array", "items": {"type": "string"}, "description": description}
 
 
+def _action_draft_invoice(context, arguments: dict) -> str:
+    """A card to draft an order's invoice (`order.invoice`): the order the words name, else the newest open one."""
+    from core.actions import ActionError
+
+    actions, book = getattr(context, "actions", None), getattr(context, "business", None)
+    if actions is None or book is None:
+        return "I can't put that to you from here: it's on the Business page, Orders."
+    words = [w for w in str((arguments or {}).get("order") or "").lower().split() if len(w) > 2]
+    orders = [o for o in book.orders if o.status != "Cancelled"]
+    named = [o for o in orders if words and all(w in o.title.lower() for w in words)]
+    order = (named or ([] if words else sorted(orders, key=lambda o: o.created_at, reverse=True)) or [None])[0]
+    if order is None:
+        return "I don't see that order. Its name, or check the Business page's Orders."
+    try:
+        card = actions.propose(context, "order.invoice", {"order_id": order.order_id})
+    except ActionError as problem:
+        return str(problem)
+    return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
+
+
 def _action_debt_payoff_mission(context, arguments: dict) -> str:
     """A card to make the payoff plan a mission (core/debt_missions.py, `debts.missions`): his press makes it."""
     from core.actions import ActionError
@@ -695,7 +715,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
-    mission on his yes (core/debt_missions.py).
+    mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes.
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -793,6 +813,14 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_money_ahead,
         trigger_phrases=("next 90 days", "next few months", "next three months", "money ahead", "cash flow",
                          "tight weeks", "tight week", "money coming up", "can i cover", "short this month"),
+    ))
+    registry.register(AssistantAction(
+        name="draft_invoice", domain="business",
+        description="Put up a card to draft an order's invoice email (what's paid, what's left, when it's due; a "
+                    "receipt once paid). Only drafted: he presses Send.",
+        parameters=_obj({"order": _s("words from the order's name; empty for the newest open one")}, []),
+        handler=_action_draft_invoice,
+        trigger_phrases=("draft the invoice", "invoice for", "send an invoice", "bill the customer", "make an invoice"),
     ))
     registry.register(AssistantAction(
         name="debt_payoff_mission", domain="debts",

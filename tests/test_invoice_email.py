@@ -3,7 +3,8 @@ tests.test_invoice_email
 ==========================
 
 An order's invoice (core/business_actions.invoice_email, brainstorm 5.1): what, the price, what's been paid, the
-balance and when it's due, drafted for his Send, never sent; a paid-up order's is a receipt.
+balance and when it's due, drafted for his Send, never sent; a paid-up order's is a receipt; a delivered
+order can be invoiced, a cancelled one can't; by voice too (draft_invoice).
 """
 
 from types import SimpleNamespace
@@ -43,3 +44,24 @@ def test_the_invoice_is_only_drafted_on_his_press():
     src = open(ba.__file__, encoding="utf-8").read()
     body = src[src.index("def _invoice(context"):src.index("def _feature_describe")]
     assert "email_drafts.create(" in body and ".send(" not in body
+
+
+def test_a_cancelled_order_is_never_invoiced(monkeypatch):
+    order = SimpleNamespace(title="Cedar bench", status="Cancelled", customer_id="", quantity=1, price=300.0,
+                            due_date="")
+    monkeypatch.setattr(ba, "_order", lambda context, params: order)
+    try:
+        ba._invoice_describe(SimpleNamespace(email_drafts=object()), {"order_id": "o1"})
+        raise AssertionError("expected ActionError")
+    except ba.ActionError as problem:
+        assert "cancelled" in str(problem)
+
+
+def test_a_delivered_order_can_still_be_invoiced_and_by_voice():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    page = (root / "web" / "business.js").read_text(encoding="utf-8")
+    assert 'o.status === "Delivered"' in page
+    tools = (root / "core" / "assistant_domain_actions.py").read_text(encoding="utf-8")
+    assert 'name="draft_invoice"' in tools and '"order.invoice"' in tools

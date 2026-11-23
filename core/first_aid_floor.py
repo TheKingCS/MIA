@@ -86,7 +86,8 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                             r"(?! (?:the|my|our|his|her|a) (?:brakes?|radiators?|lines?|air|pipes?|system|hydraulics))|"
                             r"\bblood (?:is )?(?:spurting|pouring|everywhere|gushing)\b|"
                             r"\b(?:severe|heavy|serious|bad) bleeding\b|\bdeep (?:cut|gash|wound)\b|"
-                            r"\bcut (?:\w+ ){0,3}(?:deep|to the bone|bad|badly)\b|\b(?:been|got|was|i'?m) (?:shot|stabbed)\b|"
+                            r"\bcut (?:my |his |her |their |the baby'?s |a )?(?:hand|finger|thumb|leg|arm|foot|"
+                            r"toe|head|face|wrist|knee|neck|palm|shin)\b.{0,25}\b(?:deep|to the bone|bad|badly)\b|\b(?:been|got|was|i'?m) (?:shot|stabbed)\b|"
                             r"\b(?:shot|stabbed) (?:him|her|me|them)\b"),
      "Press hard on the wound with a cloth or your hand, and keep pressing; don't lift it to look. If blood soaks "
      "through, add more on top. If it's an arm or leg and pressure doesn't stop it, put a tourniquet (a belt or strip "
@@ -164,7 +165,19 @@ _FIGURE = re.compile(r"\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that
                      r"\bgave me a heart attack\b|\bmy heart (?:almost |nearly )?stopped when\b|\bunresponsive "
                      r"(?:app|page|website|computer|laptop|screen|server)\b|\b(?:app|page|website|site|computer|"
                      r"laptop|screen|server|program|phone|printer|mouse|keyboard|browser|tv|it)\b.{0,15}"
-                     r"\b(?:not responding|unresponsive)\b", re.I)
+                     r"\b(?:not responding|unresponsive)\b|"
+                     # the homestead's own words (review 2026-11-23): engines, fences, plants, cooking, lines
+                     r"\bchok\w*\s+(?:the\s+|my\s+)?(?:engine|carb\w*|saw|chainsaw|mower|motor|truck|tractor)\b|\bthe choke\b|"
+                     r"\b(?:engine|motor|pump|bearing|piston|chainsaw|saw|bolt|brake|caliper)s?\s+seiz\w*|"
+                     r"\bseiz\w*\s+(?:up|the\s+(?:engine|bolt|motor))|\belectric fence\b|\bfence (?:charger|energi[sz]er)\b|"
+                     r"\bdrown\w*\s+(?:the\s+|my\s+)?(?:\w+\s+)?(?:seedlings?|plants?|tomato(?:es)?|garden|roots|"
+                     r"crops?|lawn|beds?|starts|transplants)\b|"
+                     r"\bburn\w*\s+(?:the\s+|my\s+)?(?:rice|toast|food|dinner|pan|pot|beans|bread|cookies|meat|steak|"
+                     r"sauce|brush|pile|trash|wood|leaves)\b|"
+                     r"\b(?:lines?|brakes?|hydraulics?|radiators?)\b.{0,25}\bbleed\w*|\bbleed\w*\b.{0,15}\b(?:lines?|"
+                     r"brakes?|air)\b|\b(?:throttle|mower|engine|tractor|truck|pump|controller|sensor|remote|valve)\b"
+                     r".{0,25}\b(?:unresponsive|not responding)\b|\boverdos\w*\s+(?:the\s+|my\s+)?(?:tomatoes|plants?|"
+                     r"garden|lawn|soil|seedlings?)\b|\bon (?:fertili[sz]er|nitrogen)\b", re.I)
 # An animal and no person: the vet's work, not these words ("my dog is choking", "the hens are gasping").
 _ANIMAL = re.compile(r"\b(?:dog|dogs|puppy|cat|cats|kitten|chickens?|hens?|rooster|horse|goat|cow|calf|pig|sheep|"
                      r"lamb|duck|rabbit|bird|birds|chicks?)\b", re.I)
@@ -209,6 +222,15 @@ def reply(kind, where=None) -> str:
     return f"Call {region.emergency} now, {MARK} " + " ".join(steps) + " Tell me what's happening and I'll stay with you and help."
 
 
+def _says_number(region, answer: str) -> bool:
+    """Pure logic. Whether an answer already gives the region's emergency number, as a whole number ("000" isn't in
+    "1,000 mg"); never for a region without a listed number."""
+    if not region.emergency[:1].isdigit():
+        return False
+    return any(re.search(rf"(?<!\d)(?<!\d[,.]){re.escape(n)}(?!\d|[,.]\d)", answer)  # "911," yes; "1,000" no
+               for n in re.findall(r"\d+", region.emergency))
+
+
 def topic_kinds(prompt: str) -> list[str]:
     """Pure logic. The emergencies a question is about, happening now or not ("how do you treat a snakebite?" is
     snakebite), leaving out figures of speech and animals: for `library_floor`."""
@@ -221,7 +243,8 @@ def topic_kinds(prompt: str) -> list[str]:
 def library_floor(prompt: str, answer: str, where=None) -> str:
     """Pure logic. A first-aid answer from her library (brainstorm 4.2): when the question is about one of the
     emergencies here, the answer ends with when to call for help and the number (his country's), unless it already
-    gives the number. Every other answer is left as it is."""
+    gives the number as a whole number (`_says_number`; never assumed for a country without one listed). Every other
+    answer is left as it is."""
     from core.region import DEFAULT, REGIONS
 
     found = topic_kinds(prompt)
@@ -229,7 +252,7 @@ def library_floor(prompt: str, answer: str, where=None) -> str:
         return answer
     region = where or REGIONS[DEFAULT]
     number = region.emergency
-    if number.split()[0] in str(answer or ""):
+    if _says_number(region, str(answer or "")):
         return answer
     return (str(answer or "").rstrip() + f" If it's happening now, or it's severe, call {number} first; this is "
             "first aid until help comes, not instead of it.")

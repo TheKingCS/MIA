@@ -12,7 +12,8 @@
   "retired": false,
   "ask": "How much profit did I make this month?",
   "domains": [
-    "ledger"
+    "ledger",
+    "business"
   ],
   "entry": "web:business.html",
   "components": {
@@ -37,6 +38,7 @@
   },
   "capabilities": {
     "tools": [
+      "draft_invoice",
       "get_business",
       "get_businesses",
       "get_ledger_summary",
@@ -86,7 +88,8 @@
       "quote.edit": "act_within_grant",
       "quote.email": "act_with_approval",
       "quote.send": "act_with_approval",
-      "order.invoice": "act_with_approval"
+      "order.invoice": "act_with_approval",
+      "draft_invoice": "act_with_approval"
     },
     "outside": []
   },

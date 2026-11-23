@@ -357,8 +357,11 @@ def invoice_email(context, order) -> tuple[list[str], str, str]:
 
 
 def _invoice_describe(context, params) -> str:
-    """The sentence the approval card shows for `order.invoice` (Propose): MIA only drafts; the person presses Send."""
+    """The sentence the approval card shows for `order.invoice` (Propose): MIA only drafts; the person presses Send.
+    A cancelled order is refused."""
     o = _order(context, params)
+    if o.status == "Cancelled":
+        raise ActionError(f"{o.title} was cancelled: there's nothing to invoice.")
     if getattr(context, "email_drafts", None) is None:
         raise ActionError("Email drafts aren't available here.")
     to, subject, _b = invoice_email(context, o)

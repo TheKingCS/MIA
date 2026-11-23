@@ -50,7 +50,8 @@ def find(context, words: str = ""):
 
 
 def say(context, words: str = "", hours: Optional[float] = None, margin: Optional[float] = None) -> str:
-    """The build's cost and price in words: materials (priced, and those with no price), labor, margin, the price."""
+    """The build's cost and price in words: materials (priced, and those with no price), labor, margin, the price
+    (said as "at least" while any material has no price or his labor isn't in it)."""
     from core.business_book import suggested_price
     from core.plan_library import detail
     from core.region import money
@@ -83,7 +84,7 @@ def say(context, words: str = "", hours: Optional[float] = None, margin: Optiona
         parts.append("Tell me how many hours it'll take you and I'll add the labor.")
     price = suggested_price(priced["known"], hours, rate, 0.0, margin)
     if price:
-        word = "at least " if priced["unpriced"] else ""
+        word = "at least " if priced["unpriced"] or not (hours and rate) else ""  # no labor in it: a floor
         parts.append(f"With a {margin:g}% margin, charge {word}{money(price)}. Making it a quote for a customer is on "
                      "the Workshop's Quotes.")
     return " ".join(parts)
