@@ -17,6 +17,9 @@ the question (`by_meaning`): words alone can't tell a deep cut from a fruit to c
 **Reading further** (`read`): a passage carries its `ref` (pack, entry, page); asked for more ("tell me more about
 that", "what does it say about hardening off?"), she reads that source at length, around what's asked.
 
+**Whose it is** (`not_theirs`): a Q&A asker's "I live in Florida" is taken out of the passage, so a stranger's
+place is never read as his.
+
 **Talking about it** (`HOW_TO_TALK`): the material comes framed as outside text (core/browser_safety.outside), with
 how to use it: in her own words and naturally, as someone who has read it, but every fact, number and step from the
 text, the source named in passing, and what it doesn't cover said plainly. The facts are found in code; the model
@@ -220,6 +223,17 @@ def _hits(chunk: str, wanted: list[str]) -> tuple[int, int]:
 _SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"(])")
 
 
+_WHERE_THEY_ARE = re.compile(
+    r"\b(I live in|I'm in|I am in|we live in|we're in|we are in|here in|I'm located in|I am located in|"
+    r"my (?:house|home|property|yard|garden|farm) (?:is )?in)\s+(?:the\s+)?[A-Z][\w.'-]*(?:[ ,]+[A-Z][\w.'-]*){0,3}")
+
+
+def not_theirs(text: str) -> str:
+    """Pure logic. A Q&A passage with the asker's own place taken out ("I live in Florida" reads "I live in [where
+    the asker lives]"): read beside his question, her model took a stranger's state for his (2026-11-23, live)."""
+    return _WHERE_THEY_ARE.sub(lambda m: m.group(1) + " [where the asker lives]", text or "")
+
+
 def best_window(text: str, wanted: list[str], size: int = WINDOW) -> tuple[str, int]:
     """Pure logic. The stretch of text, about `size` characters cut at sentence ends, where the wanted words gather
     most: (the window, how many of the wanted words it holds). An opening when none is found."""
@@ -254,7 +268,7 @@ def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
     """Every pack searched, then the best articles read whole and cut to their best window: [{pack, article, text,
     ref, score, distinct}]. Her own index first (each index's own best two: `pack_index.search` per_index, within
     its own SEARCH_SECONDS: the small guides and PDFs live only there), then Kiwix's; at most READS articles read
-    whole, within SECONDS."""
+    whole, within SECONDS; a Q&A passage with the asker's own place taken out (`not_theirs`)."""
     from core import pack_index
 
     wanted = terms(question)
@@ -282,6 +296,8 @@ def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
         if not article or not article.get("text"):
             continue
         window, distinct = best_window(article["text"], wanted)
+        if "Q&A" in pack.title or "stackexchange" in pack.pack_id:
+            window = not_theirs(window)  # an asker's "I live in Florida" isn't his
         found.append({"pack": pack.title, "article": article.get("title") or hit.title, "text": window,
                       "ref": f"{pack.pack_id}|{hit.path}|0", "score": score(wanted, hit.title, window),
                       "distinct": distinct})

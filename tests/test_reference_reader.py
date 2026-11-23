@@ -14,7 +14,7 @@ of words last; and the floor: canning a low-acid food is never told as a water b
 the floor stands aside for pickles and "can I eat", keeps a right answer whole; no -er stemming; a few dozen queries
 an index; a steady mirror is never failed. Then, live: no pickle recipes for a plain canning question, an ice bath
 isn't canning, "a pressure canner or water bath" is unsafe, the guide's own page given instead, cut where another
-food's times begin.
+food's times begin; and an asker's own place taken out of a Q&A passage.
 """
 from types import SimpleNamespace
 
@@ -380,3 +380,11 @@ def test_the_guides_page_stops_where_another_foods_times_begin():
                "Lima Beans in a dial-gauge pressure canner Hot Pints 40 min 11 lb")
     page = rr.usda_passage(sources, "green beans")
     assert "Adjust lids and process." in page and "40 min" not in page and "Lima" not in page
+
+
+def test_an_askers_own_place_is_taken_out_of_a_qa_passage():
+    """'I live in Florida' is the asker's, never his: it reads as where the asker lives."""
+    said = rr.not_theirs("I live in Central Florida, so frost isn't an issue. Set posts a third deep.")
+    assert "Florida" not in said and "[where the asker lives]" in said and "a third deep" in said
+    assert rr.not_theirs("Posts in Florida rot fast.") == "Posts in Florida rot fast."
+
