@@ -139,6 +139,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("restore_drill", "_check_restore_drill"),
     ("update_waiting", "_check_update_waiting"),
     ("weather_watch", "_check_weather_watch"),
+    ("unusual", "_check_unusual"),
 )
 
 
@@ -397,6 +398,13 @@ class BackgroundJobs:
 
         fetch = None if os.environ.get("PYTEST_CURRENT_TEST") else weather._fetch_json
         self._offers.extend(weather_watch.offer(self.context, now, fetch))
+
+    def _check_unusual(self, now: datetime, today_iso: str) -> None:
+        """What's off from his own normal (core/unusual.py, brainstorm 2.3; first, the hens laying far less): through
+        the gate, once a week per finding."""
+        from core import unusual
+
+        self._offers.extend(unusual.offer(self.context, now))
 
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a

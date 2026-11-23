@@ -74,6 +74,8 @@
       "glasses": "view",
       "voice": true
     },
-    "background": []
+    "background": [
+      "unusual"
+    ]
   }
 }

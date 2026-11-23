@@ -667,11 +667,19 @@ def _list(description: str) -> dict:
     return {"type": "array", "items": {"type": "string"}, "description": description}
 
 
+def _action_money_ahead(context, arguments: dict) -> str:
+    """The next 13 weeks of money, week by week (core/money_ahead.say)."""
+    from core import money_ahead
+
+    return money_ahead.say(context)
+
+
 def register_domain_actions(registry: AssistantActionRegistry) -> None:
     # -- maintenance (assets incl. greenhouse/garden plants) --------------
     """Registers every tool above with the Assistant's registry, with its description, parameters and trigger
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
-    pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase.
+    pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
+    them money_ahead, the next 13 weeks of money (core/money_ahead.py).
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -760,6 +768,15 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         }, ["debt_name", "amount"]),
         handler=_action_record_debt_payment,
         trigger_phrases=("paid toward", "toward my", "toward the", "payment on my", "loan payment", "card payment", "paid down", "paid off"),
+    ))
+    registry.register(AssistantAction(
+        name="money_ahead", domain="budget",
+        description="The next 13 weeks of money from the budget's bills, income and debt minimums: totals, the "
+                    "tightest weeks with what's in them, and anything overdue or late now (no bank balance).",
+        parameters=_obj({}, []),
+        handler=_action_money_ahead,
+        trigger_phrases=("next 90 days", "next few months", "next three months", "money ahead", "cash flow",
+                         "tight weeks", "tight week", "money coming up", "can i cover", "short this month"),
     ))
     registry.register(AssistantAction(
         name="get_debt_payoff_plan", domain="debts",

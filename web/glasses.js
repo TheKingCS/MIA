@@ -211,6 +211,7 @@
       }, 2600);
       return;
     }
+    stopVoice();  // he's talking: she stops mid-sentence (brainstorm 1.1)
     if (!navigator.mediaDevices || !window.MediaRecorder) { answer("This screen can't use a microphone. \"Hey MIA\" comes with the phone companion."); return; }
     let stream;
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
@@ -226,10 +227,7 @@
       orbState("thinking");
       try {
         const turn = await MIA.voice(await toWav(new Blob(chunks)));
-        if (turn.audio_wav_base64) {
-          const audio = new Audio("data:audio/wav;base64," + turn.audio_wav_base64);
-          audio.play().catch(() => {});
-        }
+        if (turn.audio_wav_base64) voiceOut(turn.audio_wav_base64);
         answer(turn.reply_text || "Done.", 9);
         load();
         if (view === "log") openLog();
@@ -680,11 +678,25 @@
   // First the phone's permissions, as the phone reports them, and between
   // topics she offers to keep going. This screen follows the phone: it
   // re-reads while it's up, so typing there and Allow show here too.
+  // Her voice on the glasses, one at a time (brainstorm 1.1): a new reply stops the last, and the mic stops her.
+  let voice = null;
+  function stopVoice() {
+    if (!voice) return;
+    try { voice.pause(); } catch (e) { /* already stopped */ }
+    voice = null;
+  }
+  function voiceOut(b64) {
+    stopVoice();
+    const a = new Audio("data:audio/wav;base64," + b64);
+    voice = a;
+    a.addEventListener("ended", () => { if (voice === a) voice = null; });
+    a.play().catch(() => { if (voice === a) voice = null; });
+  }
   const SYNC_POLL_MS = 3000;
   let sync = null, syncLeft = false, syncRow = 0, syncPainted = "";
   function sayHere(text) {
     if (!text || demo) return;
-    MIA.speak(text).then((said) => { new Audio("data:audio/wav;base64," + said.audio_wav_base64).play().catch(() => {}); }).catch(() => {});
+    MIA.speak(text).then((said) => voiceOut(said.audio_wav_base64)).catch(() => {});
   }
   async function checkSync() {
     try { const now = await MIA.userSync(); syncLeft = !!now && !now.done && !!(now.paused || now.offer || now.active); return now; }

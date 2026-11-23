@@ -87,6 +87,9 @@
         el("div", { class: "glass ck-fig" }, el("span", { class: "pw-label" }, "This Week"), el("strong", {}, String(x.week))),
         el("div", { class: "glass ck-fig" }, el("span", { class: "pw-label" }, "Lay Rate"), el("strong", {}, x.lay_rate_text || "—")),
         el("div", { class: "glass ck-fig" }, el("span", { class: "pw-label" }, "Feed / Doz"), el("strong", {}, x.feed_per_dozen_text || "—"))),
+      // laying far below their own normal, with what to check (core/unusual.py, brainstorm 2.3)
+      f.unusual ? el("section", { class: "glass ck-panel fl-unusual", role: "status" },
+        el("span", { class: "pw-label" }, "Fewer Eggs Lately"), el("p", {}, f.unusual)) : null,
       el("section", { class: "glass ck-panel" }, el("span", { class: "pw-label" }, "Two Weeks of Eggs"), bars(f.series)),
       el("section", { class: "glass ck-cartons", "aria-label": "Cartons" },
         el("div", {}, el("span", { class: "pw-label" }, "Cartons on Hand"), el("p", {}, cartons),

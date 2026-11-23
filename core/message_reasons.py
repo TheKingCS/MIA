@@ -58,6 +58,8 @@ REASONS: dict[str, tuple[str, str]] = {
     "weather_watch": ("the weather and your plans", "you asked me to be aware (2026-11-23): when the forecast "
                       "threatens what you've planted or the flock (frost, a hard freeze, heat, freezing water), I "
                       "say so the day it matters"),
+    "unusual": ("something off from your usual", "you asked me to be aware (2026-11-23): when your own records "
+                "move far from their normal, like the hens laying much less, I say so with what to check, once a week"),
     "greenhouse": ("the greenhouse", "you handed me the greenhouse node to watch (DEC-0150): its critical alerts "
                    "right away, its warnings when there's an opening"),
     "momentum": ("easy starts and tomorrow's prep", "you asked me (DEC-0148) to help your good runs of getting things "

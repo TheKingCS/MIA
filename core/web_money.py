@@ -72,7 +72,7 @@ def _r(value) -> float:
 
 
 def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") -> dict:
-    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point); each bill whether it's a subscription and when it was last said to be in use, each expense its business and its receipt's lines (`receipt_lines`), and `business` holds the charges waiting to be sorted (`_business`). Not available without a budget."""
+    """The Money screen's data: the same finances summary Life State serves, this month's spending by category (largest first), bills, income, debts ranked by the chosen payoff strategy, and the rest of the budget's records, each with its form values and its one-tap action (Mark paid...), and net worth with its change this month and its line (`_net_worth_line`, which keeps today's point); each bill whether it's a subscription and when it was last said to be in use, each expense its business and its receipt's lines (`receipt_lines`), and `business` holds the charges waiting to be sorted (`_business`); `ahead` is the next 13 weeks of bills, income and debt minimums by week (core/money_ahead.py). Not available without a budget."""
     from core.budget_manager import (DEBT_PAYOFF_STRATEGIES, days_until_bill_due, days_until_income_due,
                                      days_until_promo_expires, next_bill_due_date, next_income_due_date, rank_debts)
     from core.context_assembler import _finances
@@ -173,6 +173,9 @@ def money_page(context, today: Optional[date] = None, strategy: str = "hybrid") 
         trends.append({"month": start.strftime("%b %Y"), "income": _r(income), "expenses": _r(spent),
                        "net": _r(income - spent)})
     page["trends"] = trends
+    from core.money_ahead import page as ahead
+
+    page["ahead"] = ahead(context, today)  # the next 13 weeks, week by week (core/money_ahead.py)
 
     page["bank"] = _bank(context)
     page["net_worth"] = _net_worth_line(context, page["summary"], today)

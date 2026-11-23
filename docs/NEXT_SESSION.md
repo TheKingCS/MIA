@@ -51,8 +51,9 @@ the flock; a daily check, the tool `weather_for_my_plans`, lines on Home's weath
 (`core/needs_now.py`: "catch me up" leads with what needs him, what the gate holds, what she did on her own), 1.1's
 first part (barge-in on the web: the mic, a new turn or Escape stops her voice), and 4.2's first part
 (`core/first_aid_floor.py`: an emergency happening now answered in fixed words with the number, before any model;
-worth a reviewer's eye, it's safety-critical). Next: 4.1 grid-down mode, 1.2 follow-through memory, 2.3 noticing
-what's unusual. Three questions for Zac at the brainstorm's end.
+worth a reviewer's eye, it's safety-critical). Then 2.3's first check (`core/unusual.py`: the hens
+laying far below their normal) and 6.1 (`core/money_ahead.py`: 13 weeks of money by week, Money's Ahead tab). Next:
+4.1 grid-down mode, 1.2 follow-through memory, 1.1's spoken acknowledgements. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**

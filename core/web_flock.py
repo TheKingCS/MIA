@@ -23,8 +23,9 @@ def _money(x) -> str:
 
 
 def flock_page(context, today: Optional[date] = None) -> dict:
-    """The Flock screen's data: the birds and their entries said in words, the figures (eggs, feed, costs), the week's series, what's kept and how fresh, and the recipes, jobs and ledger entries it touches, with its forms. Not available without a flock."""
+    """The Flock screen's data: the birds and their entries said in words, the figures (eggs, feed, costs), the week's series, laying far below their own normal (`unusual`, core/unusual.py), what's kept and how fresh, and the recipes, jobs and ledger entries it touches, with its forms. Not available without a flock."""
     from core.flock import figures, week_series
+    from core.unusual import _egg_words, egg_drop
     from core.flock_actions import FLOCK, USE_SAID, _entry_said
     from core.goods import freshness, lots
     from core.record_actions import record_form
@@ -55,6 +56,8 @@ def flock_page(context, today: Optional[date] = None) -> dict:
                         "feed_month_text": _money(fig["feed_cost_month"]) if fig["feed_cost_month"] else "",
                         "lay_rate_text": f"{round(fig['lay_rate'] * 100)}%" if fig["lay_rate"] is not None else ""},
             "series": week_series(f.flock_id, book.entries, today),
+            # laying far below their own normal, with what to check (core/unusual.py), or ""
+            "unusual": _egg_words(f.name, drop) if (drop := egg_drop(book.entries, f.flock_id, today)) else "",
             "good": {"id": recipe.recipe_id, "name": recipe.name, "unit": unit,
                      "on_hand_text": amount_text(cartons_left, unit) if unit else f"{cartons_left:g}",
                      "on_hand": cartons_left, "price_text": _money(recipe.price) if recipe.price else "",

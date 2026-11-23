@@ -29,7 +29,8 @@ def _run(context, kind: str, params: dict) -> str:
 
 def _get_eggs(context, arguments: dict) -> str:
     """Tool get_eggs: for each flock, eggs today and this week, the lay rate from its hens, loose eggs, cartons on
-    hand and feed cost a dozen, read from the Chickens page.
+    hand and feed cost a dozen, read from the Chickens page, and when they're laying far below their own normal, that
+    with what to check (core/unusual.py).
     """
     from core.web_flock import flock_page
 
@@ -47,7 +48,7 @@ def _get_eggs(context, arguments: dict) -> str:
             line += f", {f['good']['on_hand_text']} of {f['good']['name']} in cartons"
         if x["feed_per_dozen_text"]:
             line += f"; feed costs {x['feed_per_dozen_text']} a dozen"
-        parts.append(line + ".")
+        parts.append(line + "." + (" " + f["unusual"] if f.get("unusual") else ""))
     return " ".join(parts)
 
 

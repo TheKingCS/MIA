@@ -8,7 +8,7 @@
   const { el, act, form, say } = MIAShell;
   const $ = (id) => document.getElementById(id);
   const TABS = [["overview", "Overview"], ["bills", "Bills"], ["income", "Income"], ["expenses", "Expenses"],
-    ["debts", "Debts"], ["budgets", "Budgets"], ["trends", "Trends"], ["bank", "Bank"]];
+    ["debts", "Debts"], ["budgets", "Budgets"], ["trends", "Trends"], ["ahead", "Ahead"], ["bank", "Bank"]];
   let page = null;
   let tab = (location.hash.slice(1) && TABS.some(([t]) => t === location.hash.slice(1))) ? location.hash.slice(1) : "overview";
   let strategy = "hybrid";
@@ -274,7 +274,18 @@
     return [el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, "Bank")), ...lines)];
   }
 
-  const VIEWS = { overview, bills, income, expenses, debts, budgets, trends, bank };
+  // The next 13 weeks (core/money_ahead.py): each week's in and out from the budget's bills, income and debt
+  // minimums, the tight ones marked; no bank balance in it.
+  function ahead() {
+    const a = page.ahead || { weeks: [], tight: [], any: false };
+    return [section("The Next 13 Weeks", null, null, a.any ? a.weeks.map((w) => row("Week of " + w.label,
+      "in " + w.in_text + " · out " + w.out_text, fmt(w.net), w.net < 0 ? "overdue" : "",
+      null, w.items.length ? el("div", { class: "row-sub dim" }, w.items.join(" · ")) : null)) : [],
+    "Nothing to look ahead with yet: add your bills, income and debts, and each week shows here."),
+    a.tight.length ? el("p", { class: "dim" }, "More going out than coming in: " + a.tight.join(", ") + ". Weekly flow only: no bank balance until bank linking.") : null].filter(Boolean);
+  }
+
+  const VIEWS = { overview, bills, income, expenses, debts, budgets, trends, ahead, bank };
 
   function draw() {
     const s = page.summary;

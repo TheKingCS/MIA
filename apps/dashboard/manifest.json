@@ -85,7 +85,8 @@
       "propose_team",
       "start_team",
       "stop_team",
-      "weather_for_my_plans"
+      "weather_for_my_plans",
+      "anything_unusual"
     ],
     "actions": [
       "direction.add",
@@ -172,7 +173,8 @@
       "team.propose": "suggest",
       "team.start": "act_with_approval",
       "team.stop": "act_within_grant",
-      "weather_for_my_plans": "observe"
+      "weather_for_my_plans": "observe",
+      "anything_unusual": "observe"
     },
     "outside": [
       "whats_in_the_workspace"

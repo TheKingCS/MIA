@@ -25,7 +25,7 @@ communication gate; grants; the phone, the glasses and MIA OS.
 
 **1.1 Conversation that flows (barge-in and back-channel).** S-M, no decision needed. *(a) built 2026-11-23 on the
 web: one voice per page, and the mic, a new turn or Escape stops her mid-sentence (`web/shell.js` `stopSpeaking`);
-(b) and (c) to come.*
+the glasses page too. (b) and (c) to come.*
 Talking to her today is turn by turn: he speaks, waits, she answers in full. Jarvis-feel comes from three small things:
 (a) he can cut in ("stop", "no, the other one") and she stops speaking at once and takes the new words;
 (b) a short spoken acknowledgement while a slow answer is being worked out ("Looking in the canning guide..."), from
@@ -79,7 +79,9 @@ She reads the forecast against what he's planned: a frost tonight against the se
 the roofing mission, heat against the flock, wind against a burn. One gate message, with the action ("Cover the
 tomatoes? I'll make it a mission."). Builds on: `core/weather.py`, the Planner, missions, the greenhouse snapshots.
 
-**2.3 Noticing what's unusual.** M, no decision needed.
+**2.3 Noticing what's unusual.** M, no decision needed. *First check built 2026-11-23 (`core/unusual.py`): the
+hens laying far below their own normal, judged only on logged days, said weekly with the causes to check; on the
+Chickens page and in "how are the hens?". Next: spending far above a category's own usual, a bill that didn't come.*
 A change from his normal is worth a word: spending in a category far above its usual, the greenhouse water
 temperature drifting, egg count down three days running, a bill that didn't arrive, a mission stalled for weeks.
 Each is a small check in code with its own normal learned from the history (`core/life_events.py`), offered through
@@ -156,7 +158,9 @@ against the season.
 
 ## 6. Finance
 
-**6.1 The next 90 days of money.** M, no decision needed (from his entered records; Plaid stays off).
+**6.1 The next 90 days of money.** M, no decision needed (from his entered records; Plaid stays off). *Built
+2026-11-23 (`core/money_ahead.py`): 13 weeks of bills, income and debt minimums by week, the tight ones first; the
+Money page's Ahead tab and "what does money look like the next few months?". A balance joins it with bank linking.*
 "Can I afford it?" already exists (a question plan that checks a purchase against his freedom date). Missing: the
 day-by-day picture it stands on: the next 90 days from bills, income, debt payments and planned purchases, the
 lowest point and when, and what a purchase pushes back. Worked in code. Builds on: budget, debts, ledger,

@@ -70,9 +70,17 @@ def _action_weather_for_my_plans(context, arguments: dict) -> str:
     return weather_watch.say(context)
 
 
+def _action_anything_unusual(context, arguments: dict) -> str:
+    """What in his records is far off its own normal (core/unusual.say)."""
+    from core import unusual
+
+    return unusual.say(context)
+
+
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
-    core/weather_watch.py) and set_weather_place (domain today: the Dashboard's)."""
+    core/weather_watch.py), anything_unusual (core/unusual.py) and set_weather_place (domain today: the
+    Dashboard's)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -110,6 +118,15 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         trigger_phrases=("frost tonight", "will it frost", "going to frost", "freeze tonight", "will it freeze",
                          "cover the garden", "cover my plants", "weather for my garden", "weather mean for",
                          "too hot for the chickens", "too cold for the chickens", "hens' water"),
+    ))
+    registry.register(AssistantAction(
+        name="anything_unusual", domain="today",
+        description="Whether anything in the user's own records is far off its usual (first: the hens laying much "
+                    "less than their normal), with what to check; or that nothing looks off.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_anything_unusual,
+        trigger_phrases=("anything unusual", "anything off", "anything weird", "anything out of the ordinary",
+                         "notice anything", "anything wrong"),
     ))
     registry.register(AssistantAction(
         name="set_weather_place", domain="today",
