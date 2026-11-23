@@ -17,6 +17,8 @@ the forecast (core/weather.py); the model only says it.
   them in for the night.
 - **The flock** (any flock with birds): a high of 90°F (32°C) or over, shade, cool water and air; a low of 32°F
   (0°C) or under, the waterer may freeze by morning.
+- **A build in progress** (a confirmed Planner build with a mission still active): rain RAIN_LIKELY% likely or more
+  tomorrow, plan the outside steps around it and cover what's out.
 
 The night that matters is tonight: the forecast's low for tomorrow (its coldest hour is early tomorrow morning). The
 heat is today's high and tomorrow's.
@@ -43,6 +45,7 @@ HARDENING_COLD = 45
 FLOCK_HEAT = 90
 WATER_FREEZE = 32
 HARVEST_WEEKS = 3  # a crop is still in the ground this long past its first harvest
+RAIN_LIKELY = 60  # percent chance of rain tomorrow worth a word to a build in progress
 
 
 def _f(value: float, unit: str) -> float:
@@ -84,10 +87,10 @@ def _names(names: list) -> str:
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
-def concerns(forecast: dict, growing: dict, birds: int) -> list[dict]:
-    """Pure logic. What tonight's and the next days' weather means for what he's growing and keeping: each
-    {kind, text}, the most pressing first. `forecast` is core/weather.card's (high, low, unit, tomorrow); [] without
-    one."""
+def concerns(forecast: dict, growing: dict, birds: int, builds: tuple = ()) -> list[dict]:
+    """Pure logic. What tonight's and the next days' weather means for what he's growing, keeping and building: each
+    {kind, text}, the most pressing first. `forecast` is core/weather.card's (high, low, unit, tomorrow); `builds` the
+    titles of builds in progress; [] without a forecast."""
     if not forecast or forecast.get("high") is None or not forecast.get("unit"):
         return []
     unit = forecast["unit"]
@@ -122,7 +125,23 @@ def concerns(forecast: dict, growing: dict, birds: int) -> list[dict]:
             out.append({"kind": "flock_water", "text": (
                 f"The hens' water may freeze by morning (a low of {said_low}): a heated base, or fresh water first "
                 "thing.")})
+    rain = tomorrow.get("rain")
+    if builds and rain is not None and rain >= RAIN_LIKELY:
+        out.append({"kind": "rain_build", "text": (
+            f"Rain is {rain}% likely tomorrow: for {', '.join(builds)}, "
+            "keep the outside steps (concrete, roofing, paint, framing) for a dry day and cover lumber and tools left "
+            "out.")})
     return out
+
+
+def _builds(context) -> tuple:
+    """The titles of confirmed Planner builds with a mission still active."""
+    book, missions = getattr(context, "project_plans", None), getattr(context, "missions", None)
+    if book is None or missions is None:
+        return ()
+    active = {m.mission_id for m in missions.all_missions() if m.status == "active"}
+    return tuple(p.title for p in book.listed()
+                 if p.kind == "build" and p.status == "confirmed" and active.intersection(p.mission_ids))
 
 
 def _growing(context, today: date) -> dict:
@@ -145,8 +164,8 @@ def _birds(context) -> int:
 
 def watch(context, today: Optional[date] = None, fetch: Optional[Callable[[str], dict]] = None,
           forecast: Optional[dict] = None) -> list[dict]:
-    """What the weather means for his plans right now (`concerns`), from the forecast core/weather.py keeps (or the
-    one given); [] when there's no forecast yet or nothing it touches."""
+    """What the weather means for his plans right now (`concerns`: the garden, the flock, builds in progress), from
+    the forecast core/weather.py keeps (or the one given); [] when there's no forecast yet or nothing it touches."""
     from core import weather
 
     today = today or date.today()
@@ -154,7 +173,12 @@ def watch(context, today: Optional[date] = None, fetch: Optional[Callable[[str],
         forecast = weather.card(context, fetch)
     if not forecast or not forecast.get("text"):
         return []
-    return concerns(forecast, _growing(context, today), _birds(context))
+    try:
+        builds = _builds(context)
+    except Exception:  # noqa: BLE001 - a plan or mission that can't be read never stops the rest
+        log.exception("Weather watch: the builds couldn't be read")
+        builds = ()
+    return concerns(forecast, _growing(context, today), _birds(context), builds)
 
 
 def say(context) -> str:
@@ -178,13 +202,15 @@ def say(context) -> str:
 
 
 def offer(context, now: datetime, fetch: Optional[Callable[[str], dict]] = None) -> list:
-    """The daily check's messages: one per concern per day, TIMELY (it matters within hours), through the gate."""
+    """The daily check's messages: one per concern per day (frost, a hard freeze, seedlings, the hens, rain on a
+    build), TIMELY (it matters within hours), through the gate."""
     from core.communication_gate import TIMELY, Candidate
 
     day = now.date()
     found = watch(context, day, fetch)
     titles = {"frost": "Frost tonight", "hard_freeze": "A hard freeze tonight", "hardening": "Bring the seedlings in",
-              "flock_heat": "Hot for the hens", "flock_water": "The hens' water may freeze"}
+              "flock_heat": "Hot for the hens", "flock_water": "The hens' water may freeze",
+              "rain_build": "Rain tomorrow"}
     return [Candidate(topic="weather_watch", title=titles.get(c["kind"], "The weather and your plans"),
                       message=c["text"], urgency=TIMELY, source="system",
                       fingerprint=f"weather-{c['kind']}-{day.isoformat()}",

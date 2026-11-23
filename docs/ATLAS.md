@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1604 files, 354,689 lines; 1604 files describe themselves; 19,520 of 19,627 classes and functions are documented.
+1604 files, 354,743 lines; 1604 files describe themselves; 19,523 of 19,630 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-627 files, 180,224 lines; 9,257 of 9,343 classes and functions documented
+627 files, 180,255 lines; 9,258 of 9,344 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -925,7 +925,7 @@
 
 ## tests/: the test suite: what each part must do
 
-574 files, 94,067 lines; 7,900 of 7,921 classes and functions documented
+574 files, 94,090 lines; 7,902 of 7,923 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1436,7 +1436,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
-- `tests/test_weather_watch.py`: The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening off, heat and freezing water against the hens; in °F and °C; through t *(2 undocumented)*
+- `tests/test_weather_watch.py`: The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening off, heat and freezing water against the hens, rain likely tomorrow ag *(2 undocumented)*
 - `tests/test_web_about.py`: About MIA (DEC-0142, DEC-0057): the page reads every line from the facts, a missing source is a quiet gap, and how her apps are doing is counted by status on the asking device.
 - `tests/test_web_areas.py`: MIA's eight destinations and their subdashboards (DEC-0153, core/web_areas.py; the area hues from DEC-0130): the eight in Zac's order, every app and page with exactly one owner, every web page owned or listed as part of the frame, old area ids still opening, a hub listing its subdashboards, what the
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.

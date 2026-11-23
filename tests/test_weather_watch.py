@@ -4,7 +4,8 @@ tests.test_weather_watch
 
 The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost
 against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening
-off, heat and freezing water against the hens; in °F and °C; through the gate once per concern per day.
+off, heat and freezing water against the hens, rain likely tomorrow against a build in progress; in °F and °C;
+through the gate once per concern per day.
 """
 
 from datetime import date, datetime
@@ -106,3 +107,25 @@ def test_say_tells_him_when_nothing_is_planted_or_kept(monkeypatch):
     assert "Nothing of yours is planted out" in ww.say(ctx)
     ctx = SimpleNamespace(project_plans=None, flock=SimpleNamespace(flocks=[SimpleNamespace(hens=2, roosters=0)]))
     assert "hens' water may freeze" in ww.say(ctx)
+
+
+def test_rain_likely_tomorrow_is_said_to_a_build_in_progress():
+    forecast = _forecast(50, high=60)
+    forecast["tomorrow"]["rain"] = 80
+    [rain] = ww.concerns(forecast, {}, 0, ("Chicken coop",))
+    assert rain["kind"] == "rain_build" and "80% likely" in rain["text"] and "Chicken coop" in rain["text"]
+    forecast["tomorrow"]["rain"] = 30
+    assert ww.concerns(forecast, {}, 0, ("Chicken coop",)) == []
+    forecast["tomorrow"]["rain"] = 90
+    assert ww.concerns(forecast, {}, 0, ()) == []
+
+
+def test_only_confirmed_builds_with_an_active_mission_count():
+    plans = [SimpleNamespace(title="Coop", kind="build", status="confirmed", mission_ids=["m1"]),
+             SimpleNamespace(title="Shed", kind="build", status="confirmed", mission_ids=["m2"]),
+             SimpleNamespace(title="Deck", kind="build", status="draft", mission_ids=[]),
+             SimpleNamespace(title="Beds", kind="garden", status="confirmed", mission_ids=["m1"])]
+    missions = [SimpleNamespace(mission_id="m1", status="active"), SimpleNamespace(mission_id="m2", status="completed")]
+    ctx = SimpleNamespace(project_plans=SimpleNamespace(listed=lambda: plans),
+                          missions=SimpleNamespace(all_missions=lambda: missions))
+    assert ww._builds(ctx) == ("Coop",)

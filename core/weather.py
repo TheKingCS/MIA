@@ -87,24 +87,29 @@ def unit_for(context) -> str:
 
 
 def forecast_url(lat: float, lon: float, unit: str) -> str:
-    """Pure logic. The forecast request: now, and today's and tomorrow's high, low and weather."""
+    """Pure logic. The forecast request: now, and today's and tomorrow's high, low, weather and chance of rain."""
     query = {"latitude": f"{lat:.4f}", "longitude": f"{lon:.4f}", "current": "temperature_2m,weather_code",
-             "daily": "temperature_2m_max,temperature_2m_min,weather_code", "forecast_days": 2,
+             "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+             "forecast_days": 2,
              "temperature_unit": unit, "timezone": "auto"}
     return FORECAST + "?" + urllib.parse.urlencode(query)
 
 
 def read(raw: dict, unit: str) -> Optional[dict]:
-    """Pure logic. Open-Meteo's answer as {temp, words, high, low, tomorrow: {high, low, words}, unit: "°F"}, every
-    temperature rounded; None when it isn't a forecast."""
+    """Pure logic. Open-Meteo's answer as {temp, words, high, low, tomorrow: {high, low, words, rain?}, unit: "°F"},
+    every temperature rounded, tomorrow's chance of rain when it's given; None when it isn't a forecast."""
     try:
         now, daily = raw["current"], raw["daily"]
         sign = "°F" if unit == "fahrenheit" else "°C"
 
         def day(i: int) -> dict:
-            """One day's high, low and words."""
-            return {"high": round(daily["temperature_2m_max"][i]), "low": round(daily["temperature_2m_min"][i]),
-                    "words": CODES.get(int(daily["weather_code"][i]), "")}
+            """One day's high, low and words, and its chance of rain (`rain`, percent) when the forecast has it."""
+            got = {"high": round(daily["temperature_2m_max"][i]), "low": round(daily["temperature_2m_min"][i]),
+                   "words": CODES.get(int(daily["weather_code"][i]), "")}
+            chances = daily.get("precipitation_probability_max")
+            if chances and len(chances) > i and chances[i] is not None:
+                got["rain"] = round(chances[i])
+            return got
 
         today = day(0)
         return {"temp": round(now["temperature_2m"]), "words": CODES.get(int(now["weather_code"]), ""),

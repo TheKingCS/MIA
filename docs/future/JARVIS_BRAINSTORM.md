@@ -77,8 +77,8 @@ long, the same on the second monitor. Builds on: `core/context_assembler.py` (`d
 `core/homestead_manager.py`, `core/ambient.py`, `core/weather.py`, the undo log.
 
 **2.2 Weather that changes plans.** S, no decision needed. *Built 2026-11-23 (`core/weather_watch.py`): frost,
-hard freeze and cold nights against the garden, heat and freezing water against the flock; rain against outdoor
-work is next.*
+hard freeze and cold nights against the garden, heat and freezing water against the flock, and (the same day)
+rain likely tomorrow against a Planner build in progress.*
 She reads the forecast against what he's planned: a frost tonight against the seedlings in the Planner, rain against
 the roofing mission, heat against the flock, wind against a burn. One gate message, with the action ("Cover the
 tomatoes? I'll make it a mission."). Builds on: `core/weather.py`, the Planner, missions, the greenhouse snapshots.
