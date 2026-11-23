@@ -424,6 +424,10 @@
   "action:learned": {
    "status": "none",
    "why": "forgetting a habit she learned is the person's own decision about what she learned; the habits themselves are loops already (the gate's pace, answer style)"
+  },
+  "check:update_waiting": {
+   "status": "none",
+   "why": "says once, through the gate, that an MIA OS update is staged for his restart (Q-114); a fact about the machine, paced by the gate like every message: no judgement of MIA's in it to improve"
   }
  }
 }

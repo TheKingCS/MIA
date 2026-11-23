@@ -9,7 +9,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From the Windows backlog (2026-11-22)
-0ze. [ ] **Q-115: may a Light theme use darker shades of the meaning colours?** A light theme (dark words on light
+0ze. [x] (Zac, 2026-11-23: yes; DEC-0288, built as the Daylight theme) **Q-115: may a Light theme use darker shades of the meaning colours?** A light theme (dark words on light
    panels) is the last piece of WP-06. Green "done", amber "needs you" and red "wrong" are tuned for MIA's dark
    glass; on white, amber words are hard to read. A rule (DEC-0136) says no theme may change them. The choice: let
    a light theme use darker shades of the same three colours (same meaning, still checked for readability by
@@ -19,7 +19,7 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
    (Not the 512 GB USB stick: that one is for Fedora and MIA OS, Zac 2026-11-22.)
 
 ### From Fable's review of 2026-11-20
-0zc. [ ] **Q-114: should MIA OS ever restart your PC by itself to finish an update?** As built now it never does: an
+0zc. [x] (Zac, 2026-11-23: never by itself; DEC-0287, and MIA now says when one waits) **Q-114: should MIA OS ever restart your PC by itself to finish an update?** As built now it never does: an
    update is downloaded at night and goes in the next time *you* restart or shut down (a snapshot of your files is
    taken first). The other choice is a restart at night when the PC is idle; but your disk asks for its PIN at every
    start, so the PC would sit at that prompt, with MIA off, until you typed it. Claude's recommendation: keep it as

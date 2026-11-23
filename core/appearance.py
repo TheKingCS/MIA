@@ -10,7 +10,8 @@ look is three independent choices, composed into the one cleaned theme every pag
 - **Colour scheme** (`display.scheme`, `SCHEMES`): the accents (primary, second, third), the gradient, the chart
   palette and the orb's colour. "theme" means the theme's own accents (what every look did before). A scheme never
   sets a meaning colour (amber, red, green, gold: DEC-0014, DEC-0136); its accent is refused when it reads as one
-  (`themes.accent_problem`) or can't be seen on the theme's panels (under 3:1, `scheme_problem`).
+  (`themes.accent_problem`) or can't be seen on the theme's panels (under 3:1, `scheme_problem`). On a light theme
+  (Daylight, Q-115) its accents show in darker shades of their own hues (`scheme_colours`).
 - **Layout** (`display.density`, `display.sidebar`; `LAYOUT`): density (comfortable, compact) and the sidebar (full,
   icons only), each a plain setting of its own so Settings and `setting.set` handle them like any other, set
   on the page as attributes (`data-density`, `data-sidebar`); the experience stays `display.style` (DEC-0135).
@@ -57,6 +58,7 @@ DEFAULT_LAYOUT = {"density": "comfortable", "sidebar": "full"}
 # three quiet greys, so a chart never needs a meaning colour for a series. Cyan's second and third come from Zac's
 # reference picture (docs/design/reference/prompt24_glass_dashboard.jpg: cyan, blue, violet).
 _GREYS = ("#8ea3b8", "#5f7184", "#c9d6e2")
+_LIGHT_GREYS = ("#5f7184", "#3f4f60", "#8597a8")  # the same quiet greys, darker for white panels (Q-115)
 SCHEMES: dict[str, tuple] = {
     "cyan": ("Cyan", "#35d4ff", "#3f79e5", "#5955cb"),
     "turquoise": ("Turquoise", "#2fd6c3", "#1f9fb8", "#7fe0f0"),
@@ -69,17 +71,26 @@ SCHEMES: dict[str, tuple] = {
 }
 
 
-def scheme_tokens(scheme_id: str) -> dict:
+def scheme_colours(scheme_id: str, light: bool = False) -> tuple:
+    """Pure logic. A scheme's three accents as a theme shows them: as they are, or on a light theme (Q-115) each taken
+    darker in its own hue until it reads at 4.5:1 on white."""
+    colours = SCHEMES[scheme_id][1:4]
+    return tuple(themes.deepen(c) for c in colours) if light else colours
+
+
+def scheme_tokens(scheme_id: str, light: bool = False) -> dict:
     """Pure logic. The tokens a scheme sets ({} for "theme" or an unknown one): the accent with its soft and deep
-    versions as `core/themes.build_theme` makes them, the second and third accents, and the chart palette."""
+    versions as `core/themes.build_theme` makes them, the second and third accents, and the chart palette; on a light
+    theme, the accents in their darker shades and quieter greys (`scheme_colours`)."""
     if scheme_id not in SCHEMES:
         return {}
-    _name, accent, second, third = SCHEMES[scheme_id]
+    accent, second, third = scheme_colours(scheme_id, light)
+    greys = _LIGHT_GREYS if light else _GREYS
     out = {"--accent": accent, "--rgb-accent": themes.triplet(accent),
            "--accent-soft": themes.mix(accent, "#ffffff", 0.6), "--accent-deep": themes.mix(accent, "#000000", 0.45),
            "--accent-2": second, "--rgb-accent-2": themes.triplet(second),
            "--accent-3": third, "--rgb-accent-3": themes.triplet(third)}
-    for i, colour in enumerate((accent, second, third) + _GREYS, start=1):
+    for i, colour in enumerate((accent, second, third) + greys, start=1):
         out[f"--chart-{i}"] = colour
     return out
 
@@ -97,13 +108,13 @@ def _panel(theme: dict) -> str:
 
 def scheme_problem(scheme_id: str, theme: dict) -> str:
     """Pure logic. Why this scheme can't be used with this theme ("" when it can): one of its three accents reads as a
-    meaning colour, or its primary accent is under 3:1 against the theme's panels (WCAG 2.2's minimum for controls and
-    focus)."""
+    meaning colour, or its primary accent, as the theme shows it (darker on a light theme, `scheme_colours`), is under
+    3:1 against the theme's panels (WCAG 2.2's minimum for controls and focus)."""
     if scheme_id == DEFAULT_SCHEME:
         return ""
     if scheme_id not in SCHEMES:
         return "I don't have that colour scheme."
-    accent = SCHEMES[scheme_id][1]
+    accent = scheme_colours(scheme_id, bool(theme.get("light")))[0]
     for colour in SCHEMES[scheme_id][1:4]:  # charts use all three, so none may read as a meaning colour
         problem = themes.accent_problem(colour)
         if problem:
@@ -152,13 +163,14 @@ def readability_problems(theme: dict) -> list[str]:
 
 
 def compose(theme: dict, scheme_id: str) -> dict:
-    """Pure logic. The theme with the scheme's tokens over its own (a copy; "theme" leaves it as it is), and the scheme
-    named on it (`scheme`) for the page and the Studio."""
+    """Pure logic. The theme with the scheme's tokens over its own (a copy; "theme" leaves it as it is; on a light theme
+    the accents' darker shades), and the scheme named on it (`scheme`) for the page and the Studio."""
     out = dict(theme, tokens=dict(theme.get("tokens", {})))
-    out["tokens"].update(scheme_tokens(scheme_id))
+    light = bool(theme.get("light"))
+    out["tokens"].update(scheme_tokens(scheme_id, light))
     out["scheme"] = scheme_id if scheme_id in SCHEMES else DEFAULT_SCHEME
     if scheme_id in SCHEMES and out.get("room"):
-        out["room"] = dict(out["room"], accent=SCHEMES[scheme_id][1])  # the 3D room's light follows the accent
+        out["room"] = dict(out["room"], accent=scheme_colours(scheme_id, light)[0])  # the room's light follows it
     return out
 
 

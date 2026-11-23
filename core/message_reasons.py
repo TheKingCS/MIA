@@ -53,6 +53,8 @@ REASONS: dict[str, tuple[str, str]] = {
                                              "security problems, and tell you when one needs updating"),
     "produce": ("your producer goal", "you asked me to encourage your shift from consumer to producer, so now and then "
                                       "I nudge you toward making, restoring or growing something yourself"),
+    "update_waiting": ("an update waiting", "you chose (Q-114, DEC-0287) that MIA OS never restarts by itself: "
+                       "when an update is ready for your next restart, I say so once"),
     "greenhouse": ("the greenhouse", "you handed me the greenhouse node to watch (DEC-0150): its critical alerts "
                    "right away, its warnings when there's an opening"),
     "momentum": ("easy starts and tomorrow's prep", "you asked me (DEC-0148) to help your good runs of getting things "

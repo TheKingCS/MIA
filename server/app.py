@@ -574,7 +574,8 @@ def create_app(context: AppContext) -> FastAPI:
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
     core/home_link.erase_proof, WP-10). /api/live also takes a linked device's key as its token (a household device's one route), and a device reported lost ends the account's other sign-ins too. /api/knowledge/library is her offline library's shelves (core/offline_library.py); /api/planner the plans made together (core/project_plans.py, on the person's own view). /api/desktop lists MIA OS's Linux apps and System
-    Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), and /api/models/store her models
+    Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), with any MIA OS update waiting for his
+    restart (core/update_notice.py, Q-114), and /api/models/store her models
     (core/model_store.py, REQ-HW-014). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
     computer and unlinks one (/api/security/devices/unlink, core/linked_devices.py); sign out everywhere and a
@@ -3362,13 +3363,15 @@ def create_app(context: AppContext) -> FastAPI:
     # opening on the PC from a phone is never what someone wants).
     @app.get("/api/desktop")
     def desktop_listing(request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
-        """The Linux apps (id, name, comment, flatpak) and the system settings pages, and whether this request can open
-        them (made on the computer itself)."""
+        """The Linux apps (id, name, comment, flatpak) and the system settings pages, whether this request can open
+        them (made on the computer itself), and when an update staged on MIA OS waits for his restart
+        (`update_waiting`, core/update_notice.py, Q-114)."""
         from core.linux_apps import SYSTEM_SETTINGS, entries
+        from core.update_notice import waiting
 
         return {"apps": [{k: a[k] for k in ("id", "name", "comment", "flatpak")} for a in entries()],
                 "settings": [{"key": k, "label": v[0]} for k, v in SYSTEM_SETTINGS.items()],
-                "here": _on_this_pc(request)}
+                "here": _on_this_pc(request), "update_waiting": waiting()}
 
     @app.get("/api/models/store")
     def models_store(profile_id: str = Depends(require_profile_id)) -> dict:

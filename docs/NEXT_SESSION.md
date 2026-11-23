@@ -43,7 +43,8 @@ holds how and what went wrong. Worth a reviewer's eye: the two lock-order fixes 
 `security_log.writing`, K-0325; the RLock, K-0321), the lost device's erase (`home_link.erase_here` wipes the
 device's data folder on a 410 with X-MIA-Erase, K-0329), `lab_push` (pushes only her own commits, K-0330), the
 model queue (every model call now waits its turn, K-0333), and the capability registry's write path (K-0327).
-Open for Zac: Q-115 (a Light theme's meaning colours), choosing the backup's second place (WAITING_ON 0zf).
+Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
+(DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**
 (K-0334 to K-0337). For the reviewer too: the system helper (`os/files/mia-system-helper`, security-critical,
 the plan asks Codex to review it), the model queue, and the fresh sync after pairing (`sync.start_fresh`).
@@ -73,7 +74,7 @@ list and lower `NOT_SEALED_YET_MOST`. Next: WP-05, the security log hash-chained
 **New 2026-11-20, Fable reviewed Opus's work since 2026-11-18** (LS-01 to LS-10, FW-02 to FW-05) with three
 independent reviewers: 38 findings, fixed in three commits (authority; data and sync; MIA OS); the list with each
 one's status is in `audit/FABLE_REVIEW_2026-11-20.md` (not in the repository). **MIA OS no longer restarts by
-itself** (Q-114 asks Zac), and disk enrolment is two steps (`mia-disk-enrol`, restart with the PIN,
+itself** (Zac kept it so: DEC-0287), and disk enrolment is two steps (`mia-disk-enrol`, restart with the PIN,
 `mia-disk-enrol finish`). Both VM runs of the review's last commit passed (74509e62: CI runs 44699128590 and
 44699128448), and two builds of the image still match. **Next: FW-06** (the system helper); before building FW-06 to
 FW-12, read their specs against each other (the worst finding was two packages that each passed alone). GitHub's

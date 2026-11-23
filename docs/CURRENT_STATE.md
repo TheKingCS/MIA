@@ -49,7 +49,7 @@ more: the erase test removed the checkout's own content folders (only in a workt
   Fable reviewed FW-05 before its first run and fixed five things that would each have cost a run.
 - **2026-11-20, Fable reviewed all of Opus's work above** (three independent reviewers, 38 findings) and fixed it
   in three commits. What Zac will notice: MIA OS never restarts the PC by itself now (an update goes in when he
-  restarts; Q-114 asks if he wants otherwise); setting up the encrypted disk is two steps, and nothing is removed
+  restarts; he kept it so, DEC-0287, and MIA says when one waits); setting up the encrypted disk is two steps, and nothing is removed
   until his PIN has opened a start and the recovery key has been typed back; seven tools she could have used on
   her own now need his yes or a grant; an old phone can sync with the updated PC again.
   Both VM runs of those fixes passed, and two builds of the image still match.
@@ -67,7 +67,7 @@ more: the erase test removed the checkout's own content folders (only in a workt
   record per app, its state from evidence, on Diagnostics); WP-09 the monthly restore drill and the backup's
   second copy off the PC (waits on his drive); WP-10 device records, scoped keys, Lost and its erase; WP-11 was
   done; WP-12 her merged changes pushed with the daily summary; WP-06 interface sounds and light glass while a
-  model thinks (the Light theme waits on Q-115). Then FW-07a (the migration manifest, its compare, his programs'
+  model thinks, and the Daylight theme (DEC-0288, 2026-11-23). Then FW-07a (the migration manifest, its compare, his programs'
   answers: 48 of 51) and FW-12's first part (the next local model when one fails, said; one model call at a
   time, the conversation first). Two lock-order hangs found and fixed on the way.
 - **2026-11-22, later, Opus: four more foundation packages.** FW-06 the system helper (three fixed operations,
@@ -84,7 +84,8 @@ more: the erase test removed the checkout's own content folders (only in a workt
   test that failed now and then (random ciphertext holding "v0") fixed.
 - **Next:** the Fable review of everything since 2026-11-20 (Zac's plan). What's left needs him or his hardware:
   FW-08 (his signing key), the helper's real dialog and FW-11's screenshots in his own session, FW-10's phone
-  against MIA OS, Q-114 and Q-115 (the Light theme), the backup's second place, the install guide for MV-01.
+  against MIA OS, the backup's second place, the install guide for MV-01. (Q-114 and Q-115 answered and built
+  2026-11-23: DEC-0287, DEC-0288.)
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope (`docs/WAITING_ON.md`).
 

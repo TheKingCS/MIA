@@ -55,6 +55,7 @@
       "read_screen",
       "remove_ai_model",
       "reset_answer_style",
+      "restart_to_update",
       "set_answer_style",
       "set_app_focus",
       "set_app_visibility",
@@ -143,7 +144,8 @@
       "theme.save": "act_within_grant",
       "theme_from_picture": "act_within_grant",
       "tweak_theme": "act_within_grant",
-      "use_backdrop": "act_within_grant"
+      "use_backdrop": "act_within_grant",
+      "restart_to_update": "act_with_approval"
     },
     "outside": []
   },
@@ -157,6 +159,8 @@
       "glasses": "none",
       "voice": true
     },
-    "background": []
+    "background": [
+      "update_waiting"
+    ]
   }
 }

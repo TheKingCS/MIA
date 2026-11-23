@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1589 files, 352,361 lines; 1589 files describe themselves; 19,388 of 19,487 classes and functions are documented.
+1591 files, 352,683 lines; 1591 files describe themselves; 19,406 of 19,505 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-620 files, 178,782 lines; 9,192 of 9,278 classes and functions documented
+621 files, 178,987 lines; 9,201 of 9,287 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -545,6 +545,7 @@
 - `core/unit_conversion.py`: The unit converter's tables and math (moved from modules/toolbox/calculators/unit_converter.py so the web Toolbox and the convert_units voice tool can use them without Qt; the module re-exports them). Thirteen categories (length, area, volume, weight, temperature, speed, pressure, energy, power, tim
 - `core/units.py`: Kitchen and shop units, and converting between them (DEC-0036). A recipe can say "500 g flour" while the flour is kept in pounds, or "1 cup honey" while the honey is kept in cups: an amount converts when both units measure the same thing (weight to weight, volume to volume, a count to a count). Weig
 - `core/update_manager.py`: Apply an offline update package (a zip of new/changed project files) onto the running MIA installation, per docs/ROADMAP.md milestone 2.8. "No internet required" — the package is just a local file (from a USB drive, or anywhere else); this module never makes a network call.
+- `core/update_notice.py`: An update waiting for his restart, said (Q-114, Zac 2026-11-23: "Never by itself": MIA OS never restarts the computer by itself to finish an update, and MIA tells him when one is waiting).
 - `core/upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, Zac 2026-11-11): "home upkeep just like maintenance for cars and tools should be scheduled missions and relevant ones will be attached to each property/asset as well as able to be seen in the calendar and under a Your Week tab in Dashboard".
 - `core/usage_tracker.py`: Per-module usage tracking — "has the user ever actually opened X through the app" — the real gap docs/VISION.md's modular tutorial system names as still unbuilt: "proactively suggest a walkthrough for never-used features... needs a real per-feature usage-tracking subsystem that doesn't exist yet."
 - `core/user_memory_manager.py`: Persistent facts MIA has learned about the user over the course of conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request: "an ability to review and delete... see the AI's stored memories about the user and keep or delete them." Same persisted-JSON pattern
@@ -631,7 +632,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,707 lines; 57 of 57 classes and functions documented
+2 files, 4,710 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -918,7 +919,7 @@
 
 ## tests/: the test suite: what each part must do
 
-566 files, 93,279 lines; 7,833 of 7,846 classes and functions documented
+567 files, 93,387 lines; 7,842 of 7,855 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1403,6 +1404,7 @@
 - `tests/test_two_step.py`: Two-step sign-in (core/two_step.py, docs/SECURITY.md step 4): the codes are RFC 6238's, a clock a step off still works, a used code never works twice, and the authenticator link carries the secret and MIA's name.
 - `tests/test_ual.py`: The Universal Action Layer, phase U1 (DEC-0165): the capture contract, the catalogue and its tiers, what's offered for a selection, and running a pick (a read action at once; an act action only as a proposal to approve). And U2's phone card: a selection from a banking, health or password app is sens *(1 undocumented)*
 - `tests/test_unit_converter.py`: Unit tests for the unit converter's convert() (core/unit_conversion.py; modules.toolbox.calculators.unit_converter re-exports it).
+- `tests/test_update_and_daylight.py`: Zac's two answers of 2026-11-23, held in code:
 - `tests/test_update_manager.py`: Unit tests for core.update_manager. Isolates _PROJECT_ROOT into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py) so these tests never touch the real project files. Git-commit tests `git init` a throwaway repo in tmp_path — never the real project repo — with a local (not g
 - `tests/test_upkeep_missions.py`: Upkeep as scheduled missions (DEC-0153, core/upkeep_missions.py): this week's upkeep becomes one mission per task and due date, attached to the task and its asset; it isn't made twice or remade once set aside; Done on the upkeep completes the mission, and completing the mission marks the upkeep done
 - `tests/test_usage_loops.py`: Build plan step 3, the remaining usage loops (core/loops.py): numbers she didn't look up, memories corrected soon after she kept them, the gate's daily limit and the kinds it put on a break, published screens a later change broke, and data files found corrupt. Each record keeps kinds and counts, nev
@@ -1489,7 +1491,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 21,880 lines
+117 files, 21,886 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

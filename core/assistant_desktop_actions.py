@@ -62,8 +62,26 @@ def _model_card(kind: str):
     return handler
 
 
+def _update_card(context, arguments: dict) -> str:
+    """A card to restart into the waiting update (Q-114), or why there's nothing to restart for."""
+    from core.actions import ActionError
+    from core.update_notice import waiting
+
+    if waiting() is None:
+        return "There's no MIA OS update waiting for a restart."
+    actions = getattr(context, "actions", None)
+    if actions is None:
+        return "I can't put that to you from here: it's in Settings, This Computer's Settings."
+    try:
+        card = actions.propose(context, "system.apply_update", {})
+    except ActionError as problem:
+        return str(problem)
+    return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
+
+
 def register_desktop_actions(registry) -> None:
-    """Registers open_system_setting, open_linux_app, remove_ai_model and fetch_ai_model."""
+    """Registers open_system_setting, open_linux_app, restart_to_update (Q-114), remove_ai_model and
+    fetch_ai_model."""
     registry.register(AssistantAction(
         name="open_system_setting", domain="apps",
         description="Open a page of the computer's own System Settings: display, network, sound, bluetooth, users, "
@@ -82,6 +100,13 @@ def register_desktop_actions(registry) -> None:
                     "required": ["name"]},
         handler=_open_app,
         trigger_phrases=("open the app", "launch", "start the program"),
+    ))
+    registry.register(AssistantAction(
+        name="restart_to_update", domain="apps",
+        description="Put up a card to restart the computer into the MIA OS update that's waiting (his password is asked "
+                    "by the system's own dialog; MIA never restarts by herself).",
+        parameters={"type": "object", "properties": {}},
+        handler=_update_card, trigger_phrases=("restart to update", "install the update", "apply the update"),
     ))
     for name, kind, said, phrases in (
             ("remove_ai_model", "model.remove", "Put up a card to remove one of MIA's own AI models from this computer "

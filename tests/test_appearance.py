@@ -329,15 +329,28 @@ def test_every_token_a_sheet_reads_is_defined_in_the_tokens_or_that_sheet():
 
 
 def test_each_apps_own_colour_is_readable_on_every_theme_and_never_a_meaning_colour():
+    """Each app's colour reads at 4.5:1 on every dark theme's field, and its darker shade on the light ones (Q-115)
+    keeps the same hue and reads there."""
     tokens = (WEB / "tokens.css").read_text(encoding="utf-8")
     colours = {name: "#" + "".join(f"{int(v):02x}" for v in rgb.split(","))
                for name, rgb in re.findall(r"--rgb-atmo-([a-z]+):\s*([0-9, ]+);", tokens)}
     assert set(colours) >= {"workout", "kitchen", "workshop", "finance", "land", "skills"}  # DEC-0187
-    backgrounds = [t["tokens"]["--bg"] for t in _built_in().values() if t["tokens"].get("--bg")] + ["#05070a"]
+    backgrounds = [t["tokens"]["--bg"] for t in _built_in().values() if t["tokens"].get("--bg") and not t["light"]]
     for name, colour in colours.items():
         assert themes.accent_problem(colour) is None, name
-        assert min(themes.contrast(colour, bg) for bg in backgrounds) >= 4.5, name
+        assert min(themes.contrast(colour, bg) for bg in backgrounds + ["#05070a"]) >= 4.5, name
         assert f"var(--rgb-atmo-{name})" in tokens, name  # some app uses it
+    # a light theme (Q-115) has each app's colour in a darker shade of the same hue (web/themes.css)
+    light_css = (WEB / "themes.css").read_text(encoding="utf-8").split(':root[data-light="1"]', 1)[1]
+    dark = {name: "#" + "".join(f"{int(v):02x}" for v in rgb.split(","))
+            for name, rgb in re.findall(r"--rgb-atmo-([a-z]+):\s*([0-9, ]+);", light_css)}
+    assert set(dark) == set(colours)
+    fields = [t["tokens"]["--bg"] for t in _built_in().values() if t["light"]] + ["#ffffff"]
+    for name, colour in dark.items():
+        assert themes.accent_problem(colour) is None, name
+        assert min(themes.contrast(colour, bg) for bg in fields) >= 4.5, name
+        apart = abs(themes._hue(colour) - themes._hue(colours[name])) % 360
+        assert min(apart, 360 - apart) <= 15, name  # the same app's colour, only darker
 
 
 # ---------------------------------------------------------------- phase A7: ambient motion

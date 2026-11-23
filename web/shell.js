@@ -64,6 +64,7 @@
     });
     root.dataset.theme = theme.id;
     root.dataset.material = theme.material || "solid";
+    root.dataset.light = theme.light ? "1" : "0";  // Q-115: dark ink on light panels (themes.css: color-scheme)
     // The layout and how much glass to draw (DEC-0184, core/appearance.py): each its own choice, independent of the
     // colours. "auto" effects: light (no blur) on a phone-sized screen, full elsewhere.
     const layout = theme.layout || {};

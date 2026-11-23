@@ -246,6 +246,11 @@
       catch (e) { MIAShell.say(e.message); }
     };
     return section("This Computer's Settings",
+      // Q-114: MIA OS never restarts by itself; an update waiting says so here, and Restart To Update asks for his yes.
+      desktop.update_waiting ? el("div", { class: "row" },
+        el("div", {}, el("div", { class: "row-title" }, "An update is ready"),
+          el("div", { class: "row-sub" }, "It goes in the next time you restart, after a snapshot of your files. MIA never restarts by herself.")),
+        el("button", { type: "button", class: "btn btn-amber", onclick: () => act({ kind: "system.apply_update", params: {} }) }, "Restart To Update")) : null,
       el("p", { class: "dim" }, "Display, network, sound and the rest are the system's own: each button opens its page in System Settings."
         + (desktop.here ? "" : " They open on the computer itself.")),
       el("div", { class: "acct-actions" }, desktop.settings.map((s) =>

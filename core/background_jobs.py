@@ -137,6 +137,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("greenhouse", "_check_greenhouse"),
     ("auto_backup", "_check_auto_backup"),
     ("restore_drill", "_check_restore_drill"),
+    ("update_waiting", "_check_update_waiting"),
 )
 
 
@@ -377,6 +378,13 @@ class BackgroundJobs:
 
         if restore_drill.due(self.context.config, now):
             restore_drill.run(self.context, now)
+
+    def _check_update_waiting(self, now: datetime, today_iso: str) -> None:
+        """An update staged on MIA OS, waiting for his restart (core/update_notice.py, Q-114: never a restart by
+        herself): said once for each update, through the gate."""
+        from core import update_notice
+
+        self._offers.extend(update_notice.offer(self.context, now))
 
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a

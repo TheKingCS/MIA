@@ -144,3 +144,15 @@
 @media (prefers-reduced-motion: reduce) { .theme-ambient { animation: none; } }
 :root[data-contrast="high"] .theme-ambient { display: none; }
 @media (prefers-reduced-data: reduce) { .theme-ambient { display: none; } }
+
+/* A light theme (Daylight, Q-115): the browser's own controls, scrollbars and form fields drawn light too. */
+:root[data-light="1"] {
+  color-scheme: light;
+  /* each app's own colour (tokens.css --rgb-atmo-*), darker in the same hue so it reads on white */
+  --rgb-atmo-workout: 176, 51, 109;  /* #b0336d */
+  --rgb-atmo-kitchen: 122, 100, 32;  /* #7a6420 */
+  --rgb-atmo-workshop: 74, 93, 114;  /* #4a5d72 */
+  --rgb-atmo-finance: 74, 79, 208;  /* #4a4fd0 */
+  --rgb-atmo-land: 85, 104, 42;  /* #55682a */
+  --rgb-atmo-skills: 125, 69, 176;  /* #7d45b0 */
+}

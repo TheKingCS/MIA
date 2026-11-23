@@ -14,7 +14,8 @@ Plan: docs/design/EXPERIENCES_AND_THEMES.md.
   and the six glass presets of prompt 24 (Aquatic, the default since DEC-0183,
   from Zac's picture; Nebula, Evergreen, Aurelia, Glacial, Eclipse). First cuts
   for Muse to refine (DEC-0017, Q-38).
-- `TOKENS`, `MATERIALS`, `ROOM`: what a theme may change. Since prompt 24 (DEC-0184) that includes the five glass
+- `TOKENS`, `MATERIALS`, `ROOM`: what a theme may change. A light theme (Daylight; `Theme.light`) may also set the
+  meaning colours to darker shades of the same hues, each checked (`MEANING_TOKENS`, `meaning_problems`; Q-115). Since prompt 24 (DEC-0184) that includes the five glass
   surface tiers' values (`TIER_RANGES`, clamped by `clamp_tier`), the second and third accents and the chart colours. Meaning colours
   (amber needs you, red errors, green ok, gold rewards, rarity, area hues)
   are not in the list, so no theme can hide a warning (DEC-0014, DEC-0130);
@@ -65,6 +66,37 @@ TOKENS = frozenset({
     "--rgb-accent-2", "--accent-2", "--rgb-accent-3", "--accent-3",
     "--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5", "--chart-6",
 })
+# Q-115 (Zac, 2026-11-23: "Yes, darker shades"): a light theme may set the meaning colours to darker shades of the
+# same hues, so they read on light panels. Only a theme marked light, and only a shade that keeps its meaning's hue
+# and reads at 4.5:1 on white (`meaning_problems`); any other theme setting them has them dropped (DEC-0014, DEC-0136).
+MEANING_TOKENS = frozenset({
+    "--rgb-amber", "--attention", "--soon", "--soon-deep", "--rgb-ok", "--ok", "--ok-deep", "--rgb-bad", "--bad",
+    "--bad-deep", "--rgb-win", "--win", "--win-deep"})
+# Each meaning's colour as tokens.css sets it on dark glass: the hue a light theme's shade must keep.
+MEANING_BASE = {"--attention": "#f2b33d", "--soon": "#f2b33d", "--ok": "#4fc48c", "--bad": "#ef5350", "--win": "#ff8a1f"}
+MEANING_DEEP = {"--soon-deep": "--soon", "--ok-deep": "--ok", "--bad-deep": "--bad", "--win-deep": "--win"}
+MEANING_RGB = {"--rgb-amber": "--attention", "--rgb-ok": "--ok", "--rgb-bad": "--bad", "--rgb-win": "--win"}
+
+
+def is_light(tokens: dict) -> bool:
+    """Pure logic. Whether a theme's panels are light (dark ink on them): its panel colour at 10:1 or more against
+    black. A theme that says it's light but isn't is treated as dark (Q-115)."""
+    try:
+        panel = _hex(tuple(int(v) for v in str(tokens.get("--rgb-panel", "")).split(",")))
+    except ValueError:
+        return False
+    return contrast(panel, "#000000") >= 10
+
+
+def deepen(hex_colour: str, on: str = "#ffffff", ratio: float = 4.5) -> str:
+    """Pure logic. The colour taken darker, in small steps toward black, until it reads at `ratio` on `on`: the same
+    hue on a light theme (Q-115). Already dark enough, it's returned as it is."""
+    out = hex_colour
+    for step in range(1, 21):
+        if contrast(out, on) >= ratio:
+            break
+        out = mix(hex_colour, "#000000", step * 0.05)
+    return out
 TIER_TOKENS = frozenset(f"--surface-{tier}-{part}" for tier in ("primary", "secondary", "floating", "deep", "interactive")
                         for part in ("alpha", "tint", "blur", "border", "light", "shadow"))
 TOKENS = TOKENS | TIER_TOKENS
@@ -107,13 +139,15 @@ _BAD = re.compile(r"url\(|expression|@import|javascript:|[;{}<>\\]", re.I)
 
 @dataclass(frozen=True)
 class Theme:
-    """One theme: its id, name, a line about it, the tokens it sets, its panels' material, and the room's light."""
+    """One theme: its id, name, a line about it, the tokens it sets, its panels' material, the room's light, and
+    whether it's light (dark ink on light panels: only then may it set the meaning colours' darker shades, Q-115)."""
     id: str
     name: str
     line: str
     tokens: dict = field(default_factory=dict)
     material: str = "solid"
     room: dict = field(default_factory=dict)
+    light: bool = False  # dark text on light panels: only such a theme may set MEANING_TOKENS (Q-115)
 
 
 THEMES: dict[str, Theme] = {t.id: t for t in (
@@ -170,6 +204,43 @@ THEMES: dict[str, Theme] = {t.id: t for t in (
 
     # Prompt 24 (DEC-0183, DEC-0184): the glass presets, Aquatic the default (Q-37: from Zac's picture). First
     # values; Muse refines them (Q-38). Each passes core/appearance.readability_problems and the accent check.
+    Theme("daylight", "Daylight", "Light glass for a bright room: white panels, dark ink, a deep blue accent; "
+          "warnings in darker shades of their own colours (Q-115).",
+          tokens={
+              "--rgb-bg": "234, 240, 246", "--bg": "#eaf0f6", "--bg-soft": "#e2e9f1",
+              "--rgb-panel": "255, 255, 255", "--rgb-panel-2": "246, 249, 252", "--rgb-panel-3": "236, 242, 248",
+              "--surface-solid": "#ffffff", "--rgb-line": "30, 55, 85",
+              "--text": "#0f1b28", "--text-dim": "#33465a", "--text-faint": "#4f6175",
+              "--rgb-accent": "10, 106, 168", "--accent": "#0a6aa8", "--accent-soft": "#0a5d93", "--accent-deep": "#074b78",
+              "--rgb-accent-2": "47, 95, 201", "--accent-2": "#2f5fc9", "--rgb-accent-3": "90, 79, 196",
+              "--accent-3": "#5a4fc4", "--chart-1": "#0a6aa8", "--chart-2": "#2f5fc9", "--chart-3": "#5a4fc4",
+              "--radius": "16px", "--radius-sm": "10px", "--label-track": "0.08em",
+              "--font": '"Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif',
+              "--theme-backdrop": "radial-gradient(900px 620px at 82% 8%, rgba(10, 106, 168, 0.08), transparent 62%), "
+                                  "radial-gradient(820px 600px at 8% 92%, rgba(90, 79, 196, 0.06), transparent 62%), "
+                                  "linear-gradient(180deg, #f2f6fa, #e6edf4)",
+              "--frame-glow": "0.2",
+              "--surface-primary-alpha": "0.82", "--surface-primary-tint": "0", "--surface-primary-blur": "18px",
+              "--surface-primary-border": "0.14", "--surface-primary-light": "0.2", "--surface-primary-shadow": "0.12",
+              "--surface-secondary-alpha": "0.7", "--surface-secondary-tint": "0",
+              "--surface-secondary-blur": "0px", "--surface-secondary-border": "0.12",
+              "--surface-secondary-light": "0.12", "--surface-secondary-shadow": "0.08",
+              "--surface-floating-alpha": "0.96", "--surface-floating-tint": "0", "--surface-floating-blur": "22px",
+              "--surface-floating-border": "0.16", "--surface-floating-light": "0.2", "--surface-floating-shadow": "0.18",
+              "--surface-deep-alpha": "0.85", "--surface-deep-tint": "0", "--surface-deep-blur": "24px",
+              "--surface-deep-border": "0.12", "--surface-deep-light": "0.14", "--surface-deep-shadow": "0.12",
+              "--surface-interactive-alpha": "0.7", "--surface-interactive-tint": "0",
+              "--surface-interactive-blur": "8px", "--surface-interactive-border": "0.18",
+              "--surface-interactive-light": "0.12", "--surface-interactive-shadow": "0.1",
+              # Q-115: the same meanings in darker shades, so they read on white (each checked: `meaning_problems`)
+              "--rgb-amber": "138, 86, 0", "--attention": "#8a5600", "--soon": "#8a5600", "--soon-deep": "#5c3a00",
+              "--rgb-ok": "19, 115, 66", "--ok": "#137342", "--ok-deep": "#0c4a2b",
+              "--rgb-bad": "176, 32, 32", "--bad": "#b02020", "--bad-deep": "#6e1414",
+              "--rgb-win": "166, 77, 0", "--win": "#a64d00", "--win-deep": "#6b3200",
+          },
+          material="glass", light=True,
+          room={"accent": "#0a6aa8", "palette": ["#0a6aa8", "#2f5fc9", "#5a4fc4"], "back_top": "#f2f6fa",
+                "back_bottom": "#e2e9f1", "fire": 0.3, "bloom": 0.3, "mist": 0.4, "grain": 0.1}),
     Theme("aquatic", "Aquatic", "Glass over a calm, dim room: blue-graphite panels, a bright cyan frame, charts from cyan to violet.",
           tokens={
               "--rgb-bg": "11, 17, 22",
@@ -740,9 +811,42 @@ def build_theme(choices: dict, base: Optional[dict] = None, theme_id: str = "", 
     return data
 
 
+def _hue(hex_colour: str) -> float:
+    """Pure logic. A #rrggbb colour's hue, 0 to 360."""
+    import colorsys
+
+    r, g, b = (int(hex_colour[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return colorsys.rgb_to_hsv(r, g, b)[0] * 360
+
+
+def meaning_problems(tokens: dict) -> list[str]:
+    """Pure logic. Why a light theme's meaning colours can't stand ([] when they can): each one it sets, and its deep
+    version, must be a #rrggbb within 15 degrees of its meaning's hue (amber stays amber) and read at 4.5:1 on white;
+    each rgb triplet must be its colour's own."""
+    out = []
+    for rgb_key, key in MEANING_RGB.items():
+        if rgb_key in tokens and (not _HEX.match(str(tokens.get(key, ""))) or
+                                  str(tokens[rgb_key]).replace(" ", "") != triplet(tokens[key]).replace(" ", "")):
+            out.append(f"{rgb_key} isn't {key}'s own colour")
+    for key, base in [*MEANING_BASE.items(), *((deep, MEANING_BASE[of]) for deep, of in MEANING_DEEP.items())]:
+        value = str(tokens.get(key, ""))
+        if not value:
+            continue
+        if not _HEX.match(value):
+            out.append(f"{key} isn't a colour")
+            continue
+        apart = abs(_hue(value) - _hue(base)) % 360
+        if min(apart, 360 - apart) > 15:
+            out.append(f"{key} would no longer read as its meaning")
+        if contrast(value, "#ffffff") < 4.5:
+            out.append(f"{key} would be {contrast(value, '#ffffff'):.1f}:1 on white, under 4.5:1")
+    return out
+
+
 def clean_theme(data: dict) -> dict:
-    """Pure logic. A theme's data as the page may use it: {id, name, line, tokens, material, room}, keeping only the
-    tokens and room settings a theme may change, dropping any value that could break out of CSS (url(), braces,
+    """Pure logic. A theme's data as the page may use it: {id, name, line, tokens, material, room, light}, keeping
+    only the tokens and room settings a theme may change (and, for a theme that says it's light and whose panels are,
+    the meaning colours' darker shades when `meaning_problems` finds none: Q-115), dropping any value that could break out of CSS (url(), braces,
     semicolons, angle brackets, backslashes) or runs long, clamping the glass tiers' values (`clamp_tier`) and the
     room's levels, and keeping only #rrggbb
     colours in the room; a backdrop picture is kept only as a picture id with its strength (DEC-0140), and the sound
@@ -760,6 +864,11 @@ def clean_theme(data: dict) -> dict:
                 if not value:
                     continue
             tokens[key] = value
+    light = bool(data.get("light")) and is_light(tokens)
+    meanings = {k: str(v).strip() for k, v in (data.get("tokens") or {}).items() if k in MEANING_TOKENS}
+    if light and meanings and not meaning_problems(meanings) \
+            and not any(_BAD.search(v) or len(v) > 40 for v in meanings.values()):
+        tokens.update(meanings)  # Q-115: a light theme's darker shades of the same meanings, checked
     room: dict = {}
     raw = data.get("room") or {}
     for key in ROOM_COLOURS:
@@ -776,7 +885,7 @@ def clean_theme(data: dict) -> dict:
                 pass
     material = data.get("material") if data.get("material") in MATERIALS else "solid"
     out = {"id": theme_id, "name": name[:40], "line": str(data.get("line") or "")[:160], "tokens": tokens,
-           "material": material, "room": room,
+           "material": material, "room": room, "light": light,
            "sound": data.get("sound") if data.get("sound") in SOUND_SETS else "classic"}
     backdrop = data.get("backdrop") if isinstance(data.get("backdrop"), dict) else {}
     if _ART_ID.match(str(backdrop.get("art", ""))):  # one of the person's pictures, by id (core/art_studio.py)
@@ -789,9 +898,9 @@ def clean_theme(data: dict) -> dict:
 
 
 def as_data(theme: Theme) -> dict:
-    """Pure logic. A built-in theme as plain data (what clean_theme takes)."""
+    """Pure logic. A built-in theme as plain data (what clean_theme takes), with whether it's light."""
     return {"id": theme.id, "name": theme.name, "line": theme.line, "tokens": dict(theme.tokens),
-            "material": theme.material, "room": dict(theme.room), "sound": "classic"}
+            "material": theme.material, "room": dict(theme.room), "sound": "classic", "light": theme.light}
 
 
 def custom_themes(context) -> list[dict]:

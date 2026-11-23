@@ -4134,3 +4134,16 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Record: docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md §9
 - Related: DEC-0173, DEC-0206, DEC-0210, DEC-0212, DEC-0218, DEC-0243, DEC-0246, DEC-0251
 
+### DEC-0287: MIA OS never restarts by itself; MIA says when an update waits
+- Status: APPROVED (Zac, 2026-11-23, Q-114: "Never by itself")
+- Proposed by: claude (Fable's review of 2026-11-20), 2026-11-22
+- Decision: An update downloaded at night goes in only when he restarts or shuts down (a snapshot of his files first); MIA never restarts the computer by herself, since the disk asks for his PIN at every start. While one is staged she says so once through the communication gate (`core/update_notice.py`, the daily check `update_waiting`), and Settings and the tool `restart_to_update` put the restart to him for his yes (`system.apply_update`, act_with_approval).
+- Record: docs/WAITING_ON.md 0zc; core/update_notice.py
+- Related: DEC-0171, DEC-0156
+
+### DEC-0288: A light theme may use darker shades of the meaning colours
+- Status: APPROVED (Zac, 2026-11-23, Q-115: "Yes, darker shades")
+- Proposed by: claude (Opus), 2026-11-22, WP-06
+- Decision: Narrows DEC-0136 for light themes only. A theme marked light (light panels, checked in code) may set amber, green, red and the reward's orange to darker shades of the same hues: each within 15 degrees of its meaning's hue and at 4.5:1 on white (`core/themes.meaning_problems`); any other theme still has them dropped. The first is Daylight; on it a colour scheme's accents and each app's own colour also show in darker shades of their own hues. A theme made in the Studio or imported from a file can't be light. Muse's eye on the look is still welcome.
+- Record: docs/mia_os/MIA_OS_OPEN_QUESTIONS.md Q-115; core/themes.py
+- Related: DEC-0014, DEC-0136, DEC-0183, DEC-0186
