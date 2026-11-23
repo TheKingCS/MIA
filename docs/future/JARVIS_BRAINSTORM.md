@@ -260,7 +260,8 @@ New ideas, each checked against what's there first:
 - **This week in the garden** (S, no decision): built 2026-11-23 (`core/garden_week.py`): his garden plans' steps in
   the next seven days, once a week through the gate, and "what's due in the garden this week?".
 - **Seed inventory against the plans** (S-M): what seeds he has (the pantry or inventory) against what his garden
-  plans need, said before the starting dates. Needs his seeds logged somewhere first.
+  plans need, said before the starting dates. *Built 2026-11-23 (`core/seed_check.py`): crops starting in the next
+  month with no seeds logged (pantry or inventory) are named in the garden's weekly message.*
 - **The canning shelf** (S-M): jars put up, by date, from his kitchen records, with the USDA's best-quality window
   ("use within a year") said as they near it. Builds on the pantry's expiry dates. *Partly there: "how prepared am I?" lists
   what expires in the next 30 days (`core/preparedness.rotate`).*

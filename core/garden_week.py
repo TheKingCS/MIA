@@ -7,6 +7,8 @@ garden plans say is due in the next seven days (start indoors, transplant or sow
 through the communication gate, so a seed-starting date never slips by. The dates are core/homestead_year.py's, from
 his own frost dates (core/garden_plans.schedule); nothing is guessed.
 
+Crops starting in the next month with no seeds logged are added (core/seed_check.py).
+
 `this_week(context, today)` is the list; `offer(context, now)` the daily check's message (AMBIENT, once per ISO week,
 only when something falls in it); `say(context)` answers "what's due in the garden this week?".
 """
@@ -48,24 +50,38 @@ def words(items: list[tuple[date, str]], today: date) -> str:
 
 
 def offer(context, now: datetime) -> list:
-    """The daily check's message: once a week (its fingerprint names the ISO week), when anything falls in it."""
+    """The daily check's message: once a week (its fingerprint names the ISO week), when anything falls in it or a
+    crop starting in the next month has no seeds logged (core/seed_check.py)."""
     from core.communication_gate import AMBIENT, Candidate
 
     today = now.date()
     items = this_week(context, today)
-    if not items:
+    seeds = _seeds(context, today)
+    if not items and not seeds:
         return []
     year, week, _ = today.isocalendar()
-    return [Candidate(topic="garden_week", title="This week in the garden",
-                      message="This week in the garden: " + words(items, today) + ".", urgency=AMBIENT,
+    said = " ".join(x for x in (("This week in the garden: " + words(items, today) + ".") if items else "", seeds) if x)
+    return [Candidate(topic="garden_week", title="This week in the garden", message=said, urgency=AMBIENT,
                       source="system", fingerprint=f"garden-week-{year}-W{week:02d}")]
 
 
+def _seeds(context, today: date) -> str:
+    """The crops starting in the next month with no seeds logged (core/seed_check.py), "" when none or unreadable."""
+    from core import seed_check
+
+    try:
+        return seed_check.words(seed_check.check(context, today))
+    except Exception:  # noqa: BLE001 - the week's message goes without it
+        log.exception("Garden week: the seed check failed")
+        return ""
+
+
 def say(context, today: Optional[date] = None) -> str:
-    """For "what's due in the garden this week?"."""
+    """For "what's due in the garden this week?", with any crop starting soon that has no seeds logged."""
     today = today or date.today()
     items = this_week(context, today)
+    seeds = _seeds(context, today)
     if items:
-        return "This week in the garden: " + words(items, today) + "."
-    return ("Nothing due in the garden this week from your plans. Confirmed garden plans in the Planner, with your "
-            "frost dates, put their dates here.")
+        return " ".join(x for x in ("This week in the garden: " + words(items, today) + ".", seeds) if x)
+    return " ".join(x for x in ("Nothing due in the garden this week from your plans. Confirmed garden plans in the "
+                                "Planner, with your frost dates, put their dates here.", seeds) if x)
