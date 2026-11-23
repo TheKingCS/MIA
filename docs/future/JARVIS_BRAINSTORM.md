@@ -209,7 +209,8 @@ appointments pulled from email into their places.
 
 ## 8. Futuristic presence
 
-**8.1 A wall MIA.** S-M, no decision needed: a kiosk view (big clock, what's due, Talk, the situation report), for a
+**8.1 A wall MIA.** *There already (checked 2026-11-23): the ambient view (`core/ambient.py`, `web/ambient.html`,
+DEC-0231) is exactly this, on his second monitor today and on any tablet's browser.* S-M, no decision needed: a kiosk view (big clock, what's due, Talk, the situation report), for a
 tablet or a salvaged screen (the Echo Show idea in NEXT_SESSION section 3).
 **8.2 Her voice everywhere in the house.** M, needs hardware: Pi satellites with a mic array and wake word.
 **8.3 The glasses as a heads-up display.** Already started (DEC-0066); next: step-by-step walkthroughs shown

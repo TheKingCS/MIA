@@ -96,6 +96,11 @@ more: the erase test removed the checkout's own content folders (only in a workt
   happening now gets the number and first steps before any model); the hens laying far below normal and spending
   far past a category's usual month; the next 13 weeks of money (Money's Ahead tab); her orb saying what a lookup is
   for. A fresh reviewer found 12 problems in the day's work, the emergency floor's coverage worst; all fixed (K-0356).
+  Afternoon: "where were we?" (`core/left_off.py`), rain tomorrow against a build in progress, "how prepared am I?"
+  (`core/preparedness.py`: days of water from the pantry, what to use before it expires). A second fresh review found
+  8 more (the orb's words never showed; water in 16.9 fl oz bottles wasn't counted); all fixed (K-0357). Several
+  brainstorm items turned out to exist already (quotes and orders, profit per hour, what to bring to market,
+  scheduled workflows, the wall view): marked in the brainstorm, not built twice.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope, picking from the brainstorm (`docs/WAITING_ON.md` 0zg).
 

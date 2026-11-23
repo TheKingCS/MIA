@@ -53,7 +53,13 @@ first part (barge-in on the web: the mic, a new turn or Escape stops her voice),
 (`core/first_aid_floor.py`: an emergency happening now answered in fixed words with the number, before any model;
 worth a reviewer's eye, it's safety-critical). Then 2.3's first check (`core/unusual.py`: the hens
 laying far below their normal) and 6.1 (`core/money_ahead.py`: 13 weeks of money by week, Money's Ahead tab). Next:
-4.1 grid-down mode, 1.2 follow-through memory, 1.1's spoken acknowledgements. Three questions for Zac at the brainstorm's end.
+4.1 grid-down mode, 1.2 follow-through memory, 1.1's spoken acknowledgements.
+Afternoon: 1.2's first part (`core/left_off.py`, "where were we?"), 2.2's rain against a build, 4.3's first part
+(`core/preparedness.py`), and the orb's words fixed to show while the model reads; two fresh reviews, both fixed
+(K-0356, K-0357). Left that need no decision: 1.1(c) her first sentence spoken while the rest is written (streaming
+speech: server and voice work), 3.2 the library's follow-ups and "show me where it says that", 4.2's next part (the
+library's first-aid answers held to a floor like canning's), 5.1's rest (a quote from a Planner build's material
+list), 7.2's event triggers. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**
