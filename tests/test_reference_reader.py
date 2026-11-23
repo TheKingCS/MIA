@@ -6,7 +6,8 @@ How she reads her offline library and talks about it (core/reference_reader.py, 
 "make her really good at reading through these references and talking naturally but factually"): the part of an
 article that answers is found, not its opening; the best passages win; a source is read further by its ref; a
 question for the library is read from it even when the model didn't ask; and a figure the text doesn't hold is
-never said (small ones too), while the rest of a natural answer stays.
+never said (small ones too), while the rest of a natural answer stays. Fable's review (2026-11-22): every pack
+searched, spoken how-tos read first, "tell me more" left to the model.
 """
 from types import SimpleNamespace
 
@@ -115,3 +116,32 @@ def test_library_results_reach_the_model_whole_and_are_said_plainly_when_they_mu
     from core.main_thread import changes_records
 
     assert not changes_records("look_up_offline") and not changes_records("read_reference")
+
+
+def test_fable_review_every_pack_is_searched_before_any_is_read_and_each_packs_best_comes_first():
+    """74 packs: all searched; the reads go to each pack's first hit before any pack's second."""
+    searched = []
+
+    class Many(_Library):
+        """Seventy-four packs."""
+
+        def list_packs(self):
+            """Packs P00 to P73."""
+            return [SimpleNamespace(pack_id=f"p{i:02}", title=f"P{i:02}", file_path=f"p{i:02}.zim") for i in range(74)]
+
+        def search(self, pack_id, query, limit=2):
+            """Two hits a pack, noted."""
+            searched.append(pack_id)
+            return [SimpleNamespace(path=f"A/{n}", title="Fence building") for n in range(2)]
+
+    found = rr.gather(Many(), "how deep should corner posts be set")
+    assert len(set(searched)) == 74 and {f["ref"].split("|")[0] for f in found} >= {"p00", "p73"}
+
+
+def test_fable_review_spoken_how_tos_are_read_from_the_library_and_tell_me_more_is_left_to_the_model():
+    """'how do I purify water' (no question mark) reads first; 'tell me more about that?' doesn't force a look-up."""
+    context = SimpleNamespace(reference_library=_Library())
+    tools = [{"function": {"name": "look_up_offline"}}, {"function": {"name": "read_reference"}}]
+    plain = ChatReply(content="From memory", tool_calls=[])
+    assert tool_loop._read_first(context, tools, "how do I purify water", plain).tool_calls
+    assert tool_loop._read_first(context, tools, "tell me more about that?", plain) is plain

@@ -5,7 +5,8 @@ tests.test_project_plans
 Plans made together, then missions (core/project_plans.py, core/garden_plans.py, T-0060; Zac, 2026-11-22: builds and
 gardens both together): a garden's dates worked out from his frosts, plants and soil worked out in code, a build from
 the Library's shelf walked by Trade Master, a draft changed, then confirmed into one project and a mission a stage,
-guided step by step, and the whole of it taken back by one Undo.
+guided step by step, and the whole of it taken back by one Undo. Fable's review (2026-11-22): crop names, "either"
+crops, beds named loosely, failed changes, the guide after an objective is removed, frost dates on the edges.
 """
 import json
 from datetime import date
@@ -149,3 +150,77 @@ def test_confirming_is_his_yes_and_drafting_is_within_a_grant():
                        .read_text(encoding="utf-8"))["capabilities"]["tiers"]
     assert tiers["projectplan.confirm"] == tiers["confirm_plan"] == "act_with_approval"
     assert tiers["projectplan.draft"] == tiers["plan_with_me"] == "act_within_grant" and tiers["show_plans"] == "observe"
+
+
+def test_fable_review_crop_names_are_matched_by_what_they_mean_never_by_a_fragment():
+    """'potatoes' is potatoes, 'green beans' bush beans, 'squash' and 'a' nothing (said back)."""
+    from core.project_plans import match_crop
+
+    assert match_crop("potatoes") == "potato" and match_crop("sweet potatoes") == "sweet_potato"
+    assert match_crop("green beans") == "bean_bush" and match_crop("bell pepper") == "pepper"
+    assert match_crop("Butternut Squash") == "winter_squash" and match_crop("tomatoes") == "tomato"
+    assert match_crop("squash") == match_crop("a") == match_crop("ion") == ""
+
+
+def test_fable_review_an_either_crop_with_too_short_a_start_indoors_is_sown_outside():
+    """Lettuce (4 weeks indoors, out 3 before the frost) is sown, not transplanted a week after sowing."""
+    s = gp.schedule(gp.CROPS["lettuce"], date(2027, 4, 20))
+    assert s["how"] == "sow" and s["start_indoors"] is None
+    assert gp.schedule(gp.CROPS["cucumber"], date(2027, 4, 20))["how"] == "transplant"
+    assert gp.schedule(gp.CROPS["pumpkin"], date(2027, 6, 1), date(2027, 9, 1))["warning"].startswith("Pumpkins:")
+
+
+def test_fable_review_a_bed_named_loosely_is_found_and_one_that_isnt_there_is_said(world):
+    """'bed 1' is Bed 1; 'Bed 9' is refused with the beds named; space beyond a bed is warned."""
+    beds = [{"name": "Bed 1", "length_ft": 4, "width_ft": 4}]
+    _do(world, "projectplan.draft", kind="garden", beds=beds, crops=[{"crop": "radish", "bed": "bed 1", "sqft": 40}],
+        last_frost="April 20")
+    plan = world.project_plans.listed()[0]
+    assert "Sow outside" in [s["name"] for s in plan.stages] and any("40 square feet" in w for w in plan.warnings)
+    with pytest.raises(ActionError, match="no bed called"):
+        world.actions.propose(world, "projectplan.draft", {"kind": "garden", "beds": beds, "last_frost": "April 20",
+                                                           "crops": [{"crop": "radish", "bed": "Bed 9"}]})
+
+
+def test_fable_review_a_failed_change_leaves_the_draft_as_it_was_and_a_plan_with_no_stage_is_refused(world):
+    """change works on a copy; leaving out every stage, or one that isn't there, is refused."""
+    _do(world, "projectplan.draft", kind="garden", beds=[{"name": "Bed 1", "length_ft": 4, "width_ft": 4}],
+        crops=["radish"], last_frost="April 20")
+    plan = world.project_plans.listed()[0]
+    with pytest.raises(ActionError):  # said before the card; the draft is as it was
+        world.actions.propose(world, "projectplan.change", {"plan_id": plan.plan_id, "crops": ["zzz"]})
+    assert world.project_plans.get(plan.plan_id).crops[0]["crop"] == "radish"
+    with pytest.raises(ActionError, match="no stage called"):
+        world.actions.propose(world, "projectplan.change", {"plan_id": plan.plan_id, "leave_out": "Nope"})
+    for name in [s["name"] for s in plan.stages][:-1]:
+        _do(world, "projectplan.change", plan_id=plan.plan_id, leave_out=name)
+    with pytest.raises(ActionError, match="Every stage is left out"):
+        world.actions.propose(world, "projectplan.change", {"plan_id": plan.plan_id, "leave_out": plan.stages[-1]["name"]})
+
+
+def test_fable_review_the_guide_follows_the_steps_words_after_an_objective_is_removed(world):
+    """Removing the first objective: the guide's Done ticks the right one, and finishing leaves no Done."""
+    from core import mission_guide
+
+    _do(world, "projectplan.draft", kind="garden", beds=[{"name": "Bed 1", "length_ft": 4, "width_ft": 4}],
+        crops=["radish"], last_frost="April 20")
+    plan = world.project_plans.listed()[0]
+    _do(world, "projectplan.confirm", plan_id=plan.plan_id)
+    plan = world.project_plans.get(plan.plan_id)
+    mission_id = plan.mission_ids[0]
+    world.missions.delete_objective(mission_id, 0)
+    guide = mission_guide.guide_for(world, world.missions.get_mission(mission_id))
+    assert guide["step"] == 2 and guide["actions"][0]["params"]["index"] == 0
+    for i in range(len(world.missions.get_mission(mission_id).objectives)):
+        _do(world, "objective.tick", mission_id=mission_id, index=i)
+    assert mission_guide.guide_for(world, world.missions.get_mission(mission_id))["actions"] == []
+
+
+def test_fable_review_frost_dates_on_the_edges():
+    """A full-date first frost is moved to the garden's year; February 29 doesn't break the next year."""
+    from core.project_plans import ProjectPlan, _frosts
+
+    plan = ProjectPlan("p", "garden", "G", last_frost="2020-02-29", first_frost="2020-10-10")
+    last, first = _frosts(None, plan)
+    assert last.year > 2020 and first is not None and first.year == last.year and first > last
+

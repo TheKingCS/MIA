@@ -94,7 +94,8 @@
           d.sizes.length || !d.kept ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.keep", params }) },
             d.sized ? "Keep This Size" : "Keep It") : null,
           el("button", { type: "button", class: "btn btn-amber", onclick: () => MIAShell.act({ kind: "projectplan.draft",
-            params: { kind: "build", shelf_plan: d.id, sizes: planSizes || {} } }).then(() => { location.href = "planner.html"; }) }, "Plan It With MIA"),
+            params: { kind: "build", shelf_plan: d.id, sizes: planSizes || {} } }).then((done) => {
+              if (done && done.status === "executed") location.href = "planner.html"; }) }, "Plan It With MIA"),
           el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.project", params }) }, "Start A Project"),
           d.kept ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.delete", params: { plan_id: d.id } }) }, "Let It Go") : null),
         el("p", { class: "dim" }, "Or say \"what would a 10 by 12 one need?\" or \"what do I still need to buy for it?\"")));

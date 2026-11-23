@@ -37,11 +37,12 @@
   }
 
   async function sizeForm(plan) {
-    const fields = Object.keys(plan.sizes || {}).length ? Object.keys(plan.sizes) : ["length_ft", "width_ft"];
-    const v = await MIAShell.form("Change the size", fields.map((f) => ({ name: f, label: f.replace(/_/g, " "), type: "number", default: (plan.sizes || {})[f] || "" })), {});
+    const fields = plan.size_fields || [];  // the plan's own calculator's sizes (core/project_plans._size_fields)
+    if (!fields.length) { MIAShell.say("This plan has no sizes to change."); return; }
+    const v = await MIAShell.form("Change the size", fields.map((f) => ({ name: f.name, label: f.label + (f.unit ? " (" + f.unit + ")" : ""), type: "number", default: f.value })), {});
     if (!v) return;
     const sizes = {};
-    fields.forEach((f) => { if (String(v[f] || "").trim()) sizes[f] = Number(v[f]); });
+    fields.forEach((f) => { if (String(v[f.name] || "").trim()) sizes[f.name] = Number(v[f.name]); });
     await MIAShell.act({ kind: "projectplan.change", params: { plan_id: plan.plan_id, sizes } });
     draw();
   }
@@ -64,7 +65,7 @@
       return { name: name || undefined, length_ft: n[0], width_ft: n[1], depth_in: n[2] || 0 };
     });
     const cropRows = v.crops.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
-      const m = l.match(/^(.*?)(?:\s+in\s+(.*?))?(?:,\s*([\d.]+)\s*sq\s*ft)?$/i) || [l, l];
+      const m = l.match(/^(.*?)(?:\s+in\s+(.*?))?(?:,?\s*([\d.]+)\s*(?:sq\.?\s*ft|square\s+feet))?$/i) || [l, l];
       return { crop: (m[1] || "").trim(), bed: (m[2] || "").trim(), sqft: Number(m[3] || 0) };
     });
     const params = { beds: bedRows, crops: cropRows, last_frost: v.last_frost, first_frost: v.first_frost };

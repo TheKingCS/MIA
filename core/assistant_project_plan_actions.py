@@ -89,7 +89,8 @@ _PLAN = {"type": "object", "properties": {
 
 
 def register_project_plan_actions(registry) -> None:
-    """Registers plan_with_me, change_plan, show_plans, confirm_plan and drop_plan."""
+    """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
+    chosen when drafted), show_plans, confirm_plan and drop_plan."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -101,7 +102,8 @@ def register_project_plan_actions(registry) -> None:
     ))
     changed = dict(_PLAN["properties"], plan_id={"type": "string"}, leave_out={"type": "string"},
                    put_back={"type": "string"}, notes={"type": "string"})
-    changed.pop("kind")
+    for unused in ("kind", "shelf_plan", "job"):  # a draft's build is chosen when it's drafted
+        changed.pop(unused)
     registry.register(AssistantAction(
         name="change_plan", domain=DOMAIN,
         description="Change a draft plan: its size, beds, crops, frost dates, a stage left out or put back, notes.",

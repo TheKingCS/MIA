@@ -5,8 +5,9 @@ core.reference_reader
 How she reads her offline library to answer (Zac, 2026-11-22: "make her really good at reading through these
 references and talking naturally but factually about what knowledge they contain").
 
-**Reading the right part** (`gather`, `best_window`): an article's opening is rarely where the answer is. For each
-pack, the best few articles Kiwix's index finds are read whole (core/reference_library_manager.article_text), and so
+**Reading the right part** (`gather`, `best_window`): an article's opening is rarely where the answer is. Every
+pack is searched first; then the best few articles found are read whole (each pack's best before any pack's second,
+at most READS, inside SECONDS) (core/reference_library_manager.article_text), and so
 are the pages her own index finds (core/pack_index.py: the PDFs and the packs Kiwix didn't index); from each, the
 window of text where the question's words gather most, cut at sentence ends. `rank` then keeps the windows that hold
 the most of the question (all of its words beat one of them repeated; the title counts too).
@@ -23,6 +24,7 @@ only phrases them.
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -31,6 +33,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 WINDOW = 1400  # characters of an article kept per passage
+SECONDS = 12.0  # reading whole articles stops here, inside the answer's own budget
 PER_PACK = 2  # articles read whole per pack
 READS = 80  # articles read whole per question, at most
 _WORD = re.compile(r"[a-z0-9]{3,}")
@@ -102,40 +105,48 @@ def score(question_terms: list[str], title: str, window: str) -> float:
 
 
 def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
-    """Every pack's best articles for the question, each read whole and cut to its best window: [{pack, article,
-    text, ref, score}]. Kiwix's index and hers both; at most READS articles read whole."""
+    """Every pack searched, then the best articles read whole and cut to their best window: [{pack, article, text,
+    ref, score, distinct}]. Kiwix's index and hers both; at most READS articles read, within SECONDS."""
     from core import pack_index
 
     wanted = terms(question)
     if not wanted:
         return []
-    found, reads = [], 0
-    for pack in library.list_packs():
-        if reads >= READS:
-            break
-        for hit in library.search(pack.pack_id, question, limit=per_pack):
-            article = library.article_text(pack.pack_id, hit.path, max_chars=80_000)
-            reads += 1
-            if not article or not article.get("text"):
-                continue
-            window, _distinct = best_window(article["text"], wanted)
-            found.append({"pack": pack.title, "article": article.get("title") or hit.title, "text": window,
-                          "ref": f"{pack.pack_id}|{hit.path}|0", "score": score(wanted, hit.title, window)})
+    started = time.monotonic()
+    packs = library.list_packs()  # once per question
+    hits = []  # every pack searched first (cheap); then the best hits read whole, each pack's first before seconds
+    for pack in packs:
+        for n, hit in enumerate(library.search(pack.pack_id, question, limit=per_pack)):
+            hits.append((n, -_hits(hit.title, wanted)[0], pack, hit))
+    found = []
+    for n, _t, pack, hit in sorted(hits, key=lambda h: (h[0], h[1]))[:READS]:
+        if time.monotonic() - started > SECONDS:
+            break  # the answer's time budget comes first
+        article = library.article_text(pack.pack_id, hit.path, max_chars=80_000)
+        if not article or not article.get("text"):
+            continue
+        window, distinct = best_window(article["text"], wanted)
+        found.append({"pack": pack.title, "article": article.get("title") or hit.title, "text": window,
+                      "ref": f"{pack.pack_id}|{hit.path}|0", "score": score(wanted, hit.title, window),
+                      "distinct": distinct})
     root = getattr(library, "root_path", None)
     if root is not None:
-        for hit in pack_index.search(Path(root), library, question, limit=30, full=True):
-            window, _distinct = best_window(hit.snippet, wanted)
+        for hit in pack_index.search(Path(root), library, question, limit=8, full=True, packs=packs):
+            window, distinct = best_window(hit.snippet, wanted)
             found.append({"pack": hit.pack_title, "article": hit.article_title, "text": window,
-                          "ref": f"{hit.pack_id}|{hit.path}|{hit.page}", "score": score(wanted, hit.article_title, window)})
+                          "ref": f"{hit.pack_id}|{hit.path}|{hit.page}", "score": score(wanted, hit.article_title, window),
+                          "distinct": distinct})
     return found
 
 
-def rank(found: list[dict], keep: int = 4) -> list[dict]:
-    """Pure logic. The best passages, one per article, best first; none that holds none of the question."""
+def rank(found: list[dict], keep: int = 4, wanted: int = 0) -> list[dict]:
+    """Pure logic. The best passages, one per article, best first; only those holding about half the question's
+    words (`wanted` of them, at least one), so one word repeated doesn't fill the places."""
+    need = max(1, (wanted + 1) // 2)
     seen, out = set(), []
     for p in sorted(found, key=lambda p: p["score"], reverse=True):
         key = (p["pack"], p["article"])
-        if p["score"] >= 10 and key not in seen:
+        if p["score"] >= 10 and p.get("distinct", need) >= need and key not in seen:
             seen.add(key)
             out.append(p)
     return out[:keep]

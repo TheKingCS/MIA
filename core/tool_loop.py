@@ -134,16 +134,22 @@ def _look_first(context, llm, messages: list[dict], tools: list[dict], prompt: s
 def _read_first(context, tools: list[dict], prompt: str, reply: ChatReply) -> ChatReply:
     """A how-to or factual question her offline library can answer, answered from memory (2026-11-22, live:
     qwen2.5:14b gave bleach figures of its own, or said "let me look that up" without looking): when the library's
-    look-up is the only lookup offered and the message is a question, the look-up runs in code, so the answer is
-    read from the library (facts found in code, the model only phrases them)."""
+    look-up is the only lookup offered and the message is a question (or asked the way a how-to is, without a
+    question mark: ASKING) with something to look up, the look-up runs in code, so the answer is read from the
+    library (facts found in code, the model only phrases them)."""
     from core.assistant_actions import changes_records, looks_like_question
+
+    from core.assistant_library_actions import ASKING
+    from core.reference_reader import terms
 
     names = [t.get("function", {}).get("name", "") for t in tools]
     lookups = [n for n in names if not changes_records(n)]
     library = getattr(context, "reference_library", None)
-    if ("look_up_offline" not in lookups or any(n not in LIBRARY_TOOLS for n in lookups)
-            or not looks_like_question(prompt) or library is None or not library.list_packs()):
-        return reply
+    lowered = f" {prompt.lower()} "
+    asked = looks_like_question(prompt) or any(re.search(rf"(?<![a-z]){re.escape(a)}(?![a-z])", lowered) for a in ASKING)
+    if ("look_up_offline" not in lookups or any(n not in LIBRARY_TOOLS for n in lookups) or not asked
+            or len(terms(prompt)) < 2 or library is None or not library.list_packs()):
+        return reply  # spoken how-tos count ("how do I purify water"); "tell me more?" has nothing to look up
     log.info("Tool loop: a question for the library answered without reading it; reading it first.")
     return ChatReply(content="", tool_calls=[ToolCall(name="look_up_offline", arguments={"question": prompt})])
 
@@ -236,8 +242,9 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     is held and said back (held_after_outside_text). A question only her
     library's look-up was offered for is read from it first
     (`_read_first`); a library answer's figures are held to its text
-    strictly, and one still stating its own after the retry loses just
-    those sentences (`without_figures`)."""
+    strictly (when every result is the library's), and one still
+    stating its own after the retry loses just those sentences
+    (`without_figures`)."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -303,7 +310,7 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         return reply
     said = (reply.content if reply is not None else "") or ""
     sources = "\n".join(text for _n, text in results)
-    strict = any(name in LIBRARY_TOOLS for name, _t in results)  # a reference's figures, small ones too
+    strict = all(name in LIBRARY_TOOLS for name, _t in results)  # a reference's figures, small ones too
     wrong = invented_numbers(said, sources, prompt, strict) if said.strip() else set()
     if wrong:
         # Often general knowledge ("every 5,000 miles"), not a misread record: one more try without those

@@ -1107,17 +1107,26 @@ def numbers_in(text: str) -> set[str]:
     return out
 
 
+_UNITS = (r"(?:drops?|teaspoons?|tsp|tablespoons?|tbsp|cups?|quarts?|gallons?|liters?|litres?|ml|pints?|ounces?|oz|"
+          r"grams?|g\b|kg|pounds?|lbs?|minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?|inches|inch|in\b|feet|"
+          r"foot|ft|yards?|meters?|metres?|cm|mm|percent|degrees?|ppm|parts|psi|volts?|amps?|watts?|times)")
+
+
 def invented_numbers(answer: str, sheet_text: str, prompt: str, strict: bool = False) -> set[str]:
     """Pure logic. Numbers in the answer that are in neither the sheet
     nor the question. Small counts (up to 12) are allowed: the model may
-    count the sheet's own lines ("3 bills"); `strict` allows none (a
-    reference's "2 drops" is a figure, not a count; a list's own step
-    numbers at the start of a line aren't figures)."""
+    count the sheet's own lines ("3 bills"). `strict` (a reference's
+    figures): a small number is allowed only as a count ("2 methods"),
+    never before a unit ("2 drops", `_UNITS`); a list's own step numbers
+    ("1.", "**2.**", "Step 3") aren't figures."""
     allowed = numbers_in(sheet_text) | numbers_in(prompt)
-    if strict:
-        answer = re.sub(r"(?m)^\s*\d{1,2}[.)]\s", "", answer or "")
-    return {n for n in numbers_in(answer)
-            if n not in allowed and (strict or not (n.isdigit() and int(n) <= 12))}
+    if not strict:
+        return {n for n in numbers_in(answer) if n not in allowed and not (n.isdigit() and int(n) <= 12)}
+    answer = re.sub(r"(?mi)^\s*(\**\s*)?\d{1,2}[.)]\s|\bstep\s+\d{1,2}\b|\*\*\d{1,2}[.)]\*\*", " ",
+                    answer or "")
+    # "2 methods" is a count, taken out; "2 drops" is a figure, kept (by its place, not its value)
+    answer = re.sub(r"(?<![\d.,/])\b(?:[1-9]|1[0-2])\s+(?!" + _UNITS + r")(?=[a-z])", "", answer.lower())
+    return {n for n in numbers_in(answer) if n not in allowed}
 
 
 def _personal(conversation) -> bool:

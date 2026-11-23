@@ -95,25 +95,30 @@ def _greenhouse(context, mission) -> Optional[dict]:
                                                                   "it's done, or say “done”."}
 
 
-_LIBRARY: dict = {}  # (plan, stage) -> what her offline library says, looked up once
+_LIBRARY: dict = {}  # (plan, stage) -> (when, what her offline library says): found once; nothing, again later
 
 
 def _from_library(context, key: tuple, question: str) -> list:
     """What her offline library says about a stage (core/offline_library.passages: [{pack, article, text}]), looked
-    up once; [] without packs, a match, or a search that works."""
-    if key not in _LIBRARY:
+    up once when found; nothing found is looked for again after ten minutes (packs may have arrived)."""
+    import time
+
+    kept = _LIBRARY.get(key)
+    if kept is None or (not kept[1] and time.monotonic() - kept[0] > 600):  # nothing found: looked at again later
         from core.offline_library import passages
 
         try:
-            _LIBRARY[key] = passages(getattr(context, "reference_library", None), question, keep=2)
+            found = passages(getattr(context, "reference_library", None), question, keep=2)
         except Exception:  # noqa: BLE001 - a guide never fails for the library
-            _LIBRARY[key] = []
-    return _LIBRARY[key]
+            found = []
+        kept = _LIBRARY[key] = (time.monotonic(), found)
+    return kept[1]
 
 
 def _plan(context, mission) -> Optional[dict]:
     """A stage of a plan made together (core/project_plans.py): its next step with why, what to watch for and the
-    check, the stage's steps, and what her offline library says about it."""
+    check, the stage's steps, and what her offline library says about it. Steps are paired with the mission's
+    objectives by their words, so one he removed counts as set aside and Done always ticks the right one."""
     book = getattr(context, "project_plans", None)
     plan = book.for_mission(mission.mission_id) if book is not None else None
     if plan is None or mission.status != "active":
@@ -123,7 +128,13 @@ def _plan(context, mission) -> Optional[dict]:
         return None
     stage = plan.stages[index]
     steps = stage["steps"]
-    done = [i < len(mission.objectives) and mission.objectives[i].progress >= 1 for i in range(len(steps))]
+    if not steps:
+        return None
+    from core.project_plans import _objective
+
+    by_words = {o.description: (i, o) for i, o in enumerate(mission.objectives)}
+    pairs = [by_words.get(_objective(s)) for s in steps]  # a step whose objective he removed counts as set aside
+    done = [p is None or p[1].progress >= 1 for p in pairs]
     at = next((i for i, d in enumerate(done) if not d), len(steps) - 1)
     step = steps[at]
     listed = [{"n": i + 1, "title": s["do"], "done": done[i], "current": i == at} for i, s in enumerate(steps)]
@@ -132,7 +143,7 @@ def _plan(context, mission) -> Optional[dict]:
             "of": len(steps), "steps": listed, "do": step["do"] + (f" ({step['when']})" if step.get("when") else ""),
             "why": step.get("why", ""), "watch": list(step.get("watch") or []), "check": step.get("check", ""),
             "drafted": False, "library": library,
-            "actions": [_act("objective.tick", "Done", {"mission_id": mission.mission_id, "index": at})]
+            "actions": [_act("objective.tick", "Done", {"mission_id": mission.mission_id, "index": pairs[at][0]})]
             if not all(done) else [],
             "say": "Say “done” when it's done, or ask “why?” or “how do I…” about this step."}
 

@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Optional
 
+INDOOR_LEAD = 4  # weeks: a shorter head start indoors isn't worth the transplanting
 SOURCES = ("US land-grant extension vegetable planting calendars (dates relative to the average last frost)",
            "Square-foot gardening spacing (plants per square foot)")
 NOTE = ("General planting-chart figures: the seed packet's own dates and spacing come first, and a local extension "
@@ -114,15 +115,17 @@ def parse_day(text: str, year: int) -> Optional[date]:
 
 def schedule(crop: Crop, last_frost: date, first_frost: Optional[date] = None) -> dict:
     """Pure logic. One crop's dates from his frosts: {start_indoors, harden_off, out (transplant or sow), how
-    ("transplant" or "sow"), harvest, again_days, warning}."""
-    indoors = crop.start == "indoors" or (crop.start == "either" and crop.indoor_weeks)
+    ("transplant" or "sow"), harvest, again_days, warning (naming the crop)}. An "either" crop starts indoors only
+    when that gives it INDOOR_LEAD weeks; otherwise it's sown where it grows."""
+    # an "either" crop is started indoors only when that gives it at least INDOOR_LEAD weeks before it goes out
+    indoors = crop.start == "indoors" or (crop.start == "either" and crop.indoor_weeks + crop.out_weeks >= INDOOR_LEAD)
     out = last_frost + timedelta(weeks=crop.out_weeks)
     start = last_frost - timedelta(weeks=crop.indoor_weeks) if indoors else None
     harvest = out + timedelta(days=crop.days)
     warning = ""
     if first_frost is not None and crop.frost == "tender" and harvest > first_frost:
-        warning = (f"it needs about {crop.days} days after going out, so it may not ripen before your first fall "
-                   "frost: start it earlier indoors, choose a faster variety, or give it cover")
+        warning = (f"{crop.name}: it needs about {crop.days} days after going out, so it may not ripen before your "
+                   "first fall frost: start it earlier indoors, choose a faster variety, or give it cover")
     return {"start_indoors": start, "harden_off": out - timedelta(days=10) if indoors else None, "out": out,
             "how": "transplant" if indoors else "sow", "harvest": harvest, "again_days": crop.again_days,
             "warning": warning}

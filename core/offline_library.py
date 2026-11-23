@@ -224,7 +224,8 @@ _ATOM = {"a": "http://www.w3.org/2005/Atom"}
 
 
 def parse_catalog(xml_text: str) -> dict:
-    """Pure logic. Kiwix's OPDS catalog as {pack key: {title, size, metalink, file, date}}, the newest of each."""
+    """Pure logic. Kiwix's OPDS catalog as {pack key: {title, size, metalink, file, date}}, the newest of each; only
+    metalinks on Kiwix's own servers over HTTPS (`_kiwix`)."""
     found: dict = {}
     root = ET.fromstring(xml_text)
     for entry in root.findall("a:entry", _ATOM):
@@ -234,8 +235,8 @@ def parse_catalog(xml_text: str) -> dict:
         if not name or link is None:
             continue
         meta = link.get("href", "")
-        if not meta.startswith("https://"):
-            continue
+        if not _kiwix(meta):
+            continue  # a metalink only from Kiwix's own servers, over HTTPS
         file = meta.rsplit("/", 1)[-1].removesuffix(".meta4")
         key = f"{name}_{flavour}" if flavour else name
         date = (entry.findtext("a:updated", "", _ATOM) or "")[:10]
@@ -251,6 +252,30 @@ def _fetch_dir(root: Path) -> Path:
     folder = Path(root) / ".fetch"
     folder.mkdir(parents=True, exist_ok=True)
     return folder
+
+
+def _kiwix(url: str) -> bool:
+    """Pure logic. Whether a URL is one of Kiwix's own, over HTTPS (where the catalog's metalinks must be)."""
+    from urllib.parse import urlparse
+
+    host = (urlparse(url).hostname or "").lower()
+    return url.startswith("https://") and (host == "kiwix.org" or host.endswith(".kiwix.org"))
+
+
+def _public(url: str) -> bool:
+    """Pure logic. Whether a mirror's URL names a public host (never this computer or the home network: the hash
+    guards the bytes, this guards where she asks)."""
+    import ipaddress
+    from urllib.parse import urlparse
+
+    host = (urlparse(url).hostname or "").lower()
+    if not host or host == "localhost" or host.endswith(".local"):
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return True
+    return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved)
 
 
 def _get(url: str, timeout: float = 60.0, headers: Optional[dict] = None):
@@ -322,21 +347,84 @@ def status(context, root: Path, catalog: Optional[dict] = None) -> list[dict]:
 # ---- getting them --------------------------------------------------------------------------------------------
 
 def _read_queue(root: Path) -> dict:
-    """The download queue: {"waiting": [keys], "state": {key: "waiting" | "fetching 40%" | "fetched" | "failed: why"}}."""
+    """The download queue: {"waiting": [keys], "state": {key: "waiting" | "fetching 40%" | "fetched" | "failed: why"},
+    "remove": [older files still to delete]}. No file is an empty queue; one that can't be read just now (Windows,
+    another reader) is tried again, never taken as empty."""
     path = Path(root) / ".fetch" / "queue.json"  # read without making the folder
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        return {"waiting": list(data.get("waiting", [])), "state": dict(data.get("state", {}))}
-    except (OSError, ValueError):
-        return {"waiting": [], "state": {}}
+    for attempt in range(20):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return {"waiting": list(data.get("waiting", [])), "state": dict(data.get("state", {})),
+                    "remove": list(data.get("remove", []))}
+        except FileNotFoundError:
+            break
+        except ValueError:
+            log.warning("The download queue didn't read; starting it afresh.")
+            break
+        except OSError:
+            time.sleep(0.05 * (attempt + 1))  # another reader holds it a moment
+    else:
+        raise OSError("the download queue couldn't be read")
+    return {"waiting": [], "state": {}, "remove": []}
 
 
 def _write_queue(root: Path, queue: dict) -> None:
-    """Keeps the queue (a plain file beside the packs; never one of his records)."""
+    """Keeps the queue (a plain file beside the packs; never one of his records); a replace Windows refuses while
+    someone reads it is tried again."""
     path = _fetch_dir(root) / "queue.json"
-    tmp = path.with_suffix(".tmp")
+    tmp = path.with_suffix(f".{os.getpid()}.tmp")
     tmp.write_text(json.dumps(queue, indent=1), encoding="utf-8")
+    for attempt in range(20):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            time.sleep(0.05 * (attempt + 1))
     os.replace(tmp, path)
+
+
+class _QueueLock:
+    """The queue's read-change-write, one at a time across processes (MIA and the command line) and threads."""
+
+    def __init__(self, root: Path):
+        """The lock file beside the queue."""
+        self.path = _fetch_dir(root) / "queue.lock"
+        self.handle = None
+
+    def __enter__(self):
+        """Waits for the lock."""
+        _queue_lock.acquire()
+        self.handle = open(self.path, "a+b")
+        if os.name == "nt":
+            import msvcrt
+
+            self.handle.seek(0)
+            for _ in range(200):
+                try:
+                    msvcrt.locking(self.handle.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    time.sleep(0.05)
+        else:
+            import fcntl
+
+            fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, *exc) -> None:
+        """Lets it go."""
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                self.handle.seek(0)
+                try:
+                    msvcrt.locking(self.handle.fileno(), msvcrt.LK_UNLCK, 1)
+                except OSError:
+                    pass
+            self.handle.close()
+        finally:
+            _queue_lock.release()
 
 
 _queue_lock = threading.Lock()
@@ -377,11 +465,11 @@ def describe(context, root: Path, which: str = "", keys: Optional[list] = None) 
 
 
 def fetch(context, root: Path, which: str = "", keys: Optional[list] = None, start: bool = True) -> str:
-    """Puts the packs in the queue and starts the downloads in the background (a runner already going takes them);
-    said when each set is done."""
+    """Puts the packs in the queue (under the queue's lock, shared with the command line) and starts the downloads
+    in the background (a runner already going takes them); said when each set is done."""
     describe(context, root, which, keys)  # the same checks as the card
     todo = choose(context, root, which, keys)
-    with _queue_lock:
+    with _QueueLock(root):
         queue = _read_queue(root)
         for key in todo:
             if key not in queue["waiting"]:
@@ -394,7 +482,8 @@ def fetch(context, root: Path, which: str = "", keys: Optional[list] = None, sta
 
 
 def parse_metalink(xml_text: str) -> dict:
-    """Pure logic. A metalink's file: {name, size, sha256, urls (https first, by priority)}."""
+    """Pure logic. A metalink's file: {name, size, sha256, urls (https first, by priority; never a mirror on this
+    computer or the home network: `_public`)}."""
     ns = {"m": "urn:ietf:params:xml:ns:metalink"}
     root = ET.fromstring(xml_text)
     file = root.find("m:file", ns)
@@ -404,7 +493,17 @@ def parse_metalink(xml_text: str) -> dict:
     urls = sorted(((int(u.get("priority") or 99), (u.text or "").strip()) for u in file.findall("m:url", ns)),
                   key=lambda pu: (not pu[1].startswith("https://"), pu[0]))
     return {"name": file.get("name", ""), "size": int(file.findtext("m:size", "0", ns) or 0), "sha256": sha.strip(),
-            "urls": [u for _p, u in urls if u.startswith(("https://", "http://"))]}
+            "urls": [u for _p, u in urls if u.startswith(("https://", "http://")) and _public(u)]}
+
+
+def _resumes(response, have: int) -> bool:
+    """Whether an answer to a Range request carries the rest from exactly where the file stopped (206, its
+    Content-Range starting at `have`)."""
+    if getattr(response, "status", 200) != 206:
+        return False
+    headers = getattr(response, "headers", None)
+    told = (headers.get("Content-Range", "") if headers is not None else "") or ""
+    return not told or told.replace("bytes ", "").split("-", 1)[0].strip() == str(have)
 
 
 def _hash_of(path: Path) -> str:
@@ -418,11 +517,14 @@ def _hash_of(path: Path) -> str:
 
 def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable = lambda done, total: None) -> None:
     """One file from its mirrors into `partial`, resumed from what's already there; then its hash checked against
-    the metalink's. OSError when no mirror finishes it; ValueError (and the partial file removed) when the hash is
-    wrong."""
+    the metalink's. A mirror that won't resume from exactly where it stopped is passed over, never allowed to
+    overwrite what's here; a partial larger than the file is thrown away. OSError when no mirror finishes it; ValueError
+    (and the partial file removed) when the hash is wrong."""
     if not re.fullmatch(r"[0-9a-f]{64}", meta.get("sha256", "")):
         raise ValueError("Kiwix's metalink gave no SHA-256 for it")
     problems = []
+    if partial.exists() and partial.stat().st_size > meta["size"]:
+        partial.unlink()  # more than the file: never right
     for url in meta["urls"][:6]:
         have = partial.stat().st_size if partial.exists() else 0
         if have >= meta["size"]:
@@ -430,8 +532,9 @@ def download(meta: dict, partial: Path, get: Callable = _get, progress: Callable
         try:
             headers = {"Range": f"bytes={have}-"} if have else {}
             with get(url, timeout=60, headers=headers) as response:
-                if have and getattr(response, "status", 200) != 206:
-                    have = 0  # this mirror sent the whole file: start over
+                if have and not _resumes(response, have):
+                    problems.append(f"{url.split('/')[2]}: won't resume")
+                    continue  # never throw away what's already here: the next mirror
                 with open(partial, "ab" if have else "wb") as out:
                     for block in iter(lambda: response.read(CHUNK), b""):
                         out.write(block)
@@ -488,8 +591,9 @@ class _RunnerLock:
 
 
 def _set_state(root: Path, key: str, state: str, done: bool = False) -> None:
-    """One pack's state in the queue (and out of the waiting list when it's finished, fetched or failed)."""
-    with _queue_lock:
+    """One pack's state in the queue (and out of the waiting list when it's finished, fetched or failed), under the
+    queue's lock."""
+    with _QueueLock(root):
         queue = _read_queue(root)
         queue["state"][key] = state
         if done:
@@ -498,8 +602,9 @@ def _set_state(root: Path, key: str, state: str, done: bool = False) -> None:
 
 
 def run_queue(context, root: Path, get: Callable = _get, catalog: Optional[dict] = None) -> dict:
-    """Downloads every waiting pack, one at a time, then installs each checked one (moved into the library, its older
-    version removed). Returns {"fetched": n, "failed": n} or {"busy": True} when another runner holds the lock.
+    """Downloads every waiting pack, one at a time, then installs each checked one (the file named by Kiwix's catalog,
+    moved into the library and dated so it's listed at once; its older version removed, or listed to remove when
+    Windows still holds it open); then her index, then anything queued meanwhile. Returns {"fetched": n, "failed": n} or {"busy": True} when another runner holds the lock.
     Never raises."""
     if _in_tests(get):
         return {"fetched": 0, "failed": 0}  # the suite never downloads for real
@@ -509,9 +614,13 @@ def run_queue(context, root: Path, get: Callable = _get, catalog: Optional[dict]
         if not mine:
             return {"busy": True}
         catalog = published(root, get) if catalog is None else catalog
+        _remove_old(context, root)
         while True:
             waiting = _read_queue(root)["waiting"]
             if not waiting:
+                _index(context, root)  # her index for what came; then anything queued meanwhile
+                if _read_queue(root)["waiting"]:
+                    continue
                 break
             key = waiting[0]
             row = catalog.get(key)
@@ -520,9 +629,12 @@ def run_queue(context, root: Path, get: Callable = _get, catalog: Optional[dict]
                     raise ValueError("Kiwix doesn't publish it now")
                 with get(row["metalink"], timeout=60) as response:
                     meta = parse_metalink(response.read().decode("utf-8"))
-                if shutil.disk_usage(root).free - meta["size"] < FREE_FLOOR:
-                    raise OSError("not enough free space for it")
+                if meta["name"] != row["file"]:
+                    raise ValueError("Kiwix's metalink names another file")
                 partial = _fetch_dir(root) / (meta["name"] + ".partial")
+                have = partial.stat().st_size if partial.exists() else 0
+                if shutil.disk_usage(root).free - (meta["size"] - have) < FREE_FLOOR:
+                    raise OSError("not enough free space for it")
                 shown = [-1]
 
                 def progress(done, total, key=key, shown=shown):
@@ -530,14 +642,24 @@ def run_queue(context, root: Path, get: Callable = _get, catalog: Optional[dict]
                     pct = int(done * 100 / max(total, 1))
                     if pct != shown[0]:
                         shown[0] = pct
-                        _set_state(root, key, f"fetching {pct}%")
+                        try:
+                            _set_state(root, key, f"fetching {pct}%")
+                        except OSError:
+                            pass  # the progress line isn't the download
 
                 download(meta, partial, get, progress)
-                os.replace(partial, root / meta["name"])
-                for old in Path(root).glob("*.zim"):
-                    m = _DATED.match(old.name)
-                    if m and m.group("key") == key and old.name != meta["name"]:
-                        old.unlink(missing_ok=True)  # the older version of the same pack
+                final = root / meta["name"]
+                os.replace(partial, final)
+                past = time.time() - 60
+                os.utime(final, (past, past))  # settled: the library lists it at once (it skips files still copying)
+                older = [old.name for old in Path(root).glob("*.zim")
+                         if (m := _DATED.match(old.name)) and m.group("key") == key and old.name != meta["name"]]
+                if older:
+                    with _QueueLock(root):
+                        queue = _read_queue(root)
+                        queue["remove"] = sorted(set(queue["remove"]) | set(older))
+                        _write_queue(root, queue)
+                    _remove_old(context, root)
                 _set_state(root, key, "fetched", done=True)
                 fetched += 1
                 log.info("Fetched the offline pack %s", meta["name"])
@@ -545,13 +667,34 @@ def run_queue(context, root: Path, get: Callable = _get, catalog: Optional[dict]
                 _set_state(root, key, f"failed: {str(problem)[:160]}", done=True)
                 failed += 1
                 log.warning("Couldn't fetch the offline pack %s: %s", key, problem)
-        _index(context, root)
     if fetched or failed:
         notes = getattr(context, "notifications", None)
         if notes is not None:
             notes.notify("Offline library", f"{fetched} pack{'s' if fetched != 1 else ''} added to her library"
                          + (f", {failed} couldn't be fetched" if failed else "") + ".", source="knowledge")
     return {"fetched": fetched, "failed": failed}
+
+
+def _remove_old(context, root: Path) -> None:
+    """Deletes the older versions an update replaced, closing her own handle on each first; one Windows still holds
+    open stays listed and goes next time. Never raises."""
+    try:
+        with _QueueLock(root):
+            queue = _read_queue(root)
+            library = getattr(context, "reference_library", None)
+            left = []
+            for name in queue["remove"]:
+                if library is not None:
+                    getattr(library, "_archives", {}).pop(Path(name).stem, None)
+                try:
+                    (Path(root) / name).unlink(missing_ok=True)
+                except OSError:
+                    left.append(name)
+            if left != queue["remove"]:
+                queue["remove"] = left
+                _write_queue(root, queue)
+    except OSError as problem:
+        log.info("Older packs couldn't be removed yet: %s", problem)
 
 
 def _library(context, root: Path):
@@ -587,9 +730,9 @@ def _unindexed(root: Path) -> bool:
 
 
 def resume(context, root: Path) -> bool:
-    """At start: picks a waiting queue up again in the background, and indexes packs copied in by hand. True when
-    there was something to do."""
-    if not _read_queue(root)["waiting"] and not _unindexed(root):
+    """At start: picks a waiting queue up again in the background, indexes packs copied in by hand, and removes
+    older versions left over. True when there was something to do."""
+    if not _read_queue(root)["waiting"] and not _unindexed(root) and not _read_queue(root)["remove"]:
         return False
     threading.Thread(target=run_queue, args=(context, root), name="offline library", daemon=True).start()
     return True
@@ -619,15 +762,16 @@ def rank(question: str, snippets: list, keep: int = 4) -> list:
 
 def passages(library, question: str, keep: int = 4) -> list[dict]:
     """The best passages in the offline library for a question: each pack's best articles read whole and cut to
-    where the question's words gather (core/reference_reader.py), Kiwix's index and hers, ranked: [{pack, article,
-    text, ref}]; [] with no packs or nothing matching. Raises on a search that fails (look_up says so)."""
+    where the question's words gather (core/reference_reader.py), Kiwix's index and hers, ranked (about half the
+    question's words held): [{pack, article, text, ref}]; [] with no packs or nothing matching. Raises on a search that fails (look_up says so)."""
     from core import reference_reader
 
     question = " ".join(str(question or "").split())[:300]
     if not question or library is None or not library.list_packs():
         return []
     return [{k: p[k] for k in ("pack", "article", "text", "ref")}
-            for p in reference_reader.rank(reference_reader.gather(library, question), keep)]
+            for p in reference_reader.rank(reference_reader.gather(library, question), keep,
+                                           len(reference_reader.terms(question)))]
 
 
 def look_up(library, question: str, keep: int = 4) -> str:

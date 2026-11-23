@@ -13,7 +13,8 @@ code, never by the model:
   core/build_calcs.py) and the Trade Master job that walks it (core/trades.py: phases of steps, each with why, what to
   watch for and a hold point, its stop rules, permit note and PPE). Its stages: get the materials (the shopping list
   against what's on hand), then the job's phases.
-- **A garden**: his beds and crops and his frost dates (core/garden_plans.py): prepare the beds, start seeds indoors,
+- **A garden**: his beds and crops (`match_crop`: by name, a known other name, or the one crop holding all the
+  words; never a fragment) and his frost dates (core/garden_plans.py): prepare the beds, start seeds indoors,
   harden off and transplant, sow outside, care, harvest; each step dated from his frosts.
 
 **Changing it** (`change`): its size, beds, crops or frost dates (the stages are worked out again), a stage left out,
@@ -32,8 +33,10 @@ from core.data_root import DATA_DIR
 
 import json
 import uuid
+import copy
+import re
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -129,9 +132,9 @@ class ProjectPlanBook:
 
 # ---- working a plan out ------------------------------------------------------------------------------------------
 
-def _job_for(shelf_plan: str, job_id: str = ""):
-    """The Trade Master job for a build: the one named, else the one that walks this shelf plan; None when there's
-    none."""
+def _job_for(shelf_plan: str, job_id: str = "", context=None):
+    """The Trade Master job for a build: the one named, else the one that walks this shelf plan (a kept plan by the
+    built-in plan with its calculator); None when there's none."""
     from core import trades
 
     trades._loaded()
@@ -141,7 +144,14 @@ def _job_for(shelf_plan: str, job_id: str = ""):
             raise ActionError("That isn't one of Trade Master's jobs.")
         return job
     bare = _bare(shelf_plan)
-    return next((j for j in trades.JOBS.values() if bare and j.plan == bare), None)
+    found = next((j for j in trades.JOBS.values() if bare and j.plan == bare), None)
+    library = getattr(context, "plans", None)
+    if found is None and library is not None:
+        kept = library.get(shelf_plan) or {}
+        built = next((p for p in library.built_in() if kept.get("calc") and p.get("calc") == kept["calc"]), None)
+        if built is not None:
+            found = next((j for j in trades.JOBS.values() if j.plan == _bare(built["id"])), None)
+    return found
 
 
 def _bare(shelf_plan: str) -> str:
@@ -161,7 +171,8 @@ def _shelf_id(context, value: str) -> str:
 
 
 def _build_stages(context, plan: ProjectPlan) -> tuple[list, list]:
-    """A build's stages (materials, then the job's phases) and its warnings."""
+    """A build's stages (materials, then the job's phases; a kept plan walked by its built-in's job) and its
+    warnings."""
     from core.plan_library import detail
 
     stages, warnings = [], []
@@ -182,7 +193,7 @@ def _build_stages(context, plan: ProjectPlan) -> tuple[list, list]:
                  "already on hand.", "watch": ["buy a little extra for cuts and mistakes where the list says"],
                  "check": "It's on hand.", "when": ""} for line in lines[:40]]})
         warnings += [n for n in page.get("notes", []) if n]
-    job = _job_for(plan.shelf_plan, plan.job)
+    job = _job_for(plan.shelf_plan, plan.job, context)
     if job is not None:
         from core import trades
 
@@ -210,7 +221,9 @@ def _build_stages(context, plan: ProjectPlan) -> tuple[list, list]:
 
 
 def _frosts(context, plan: ProjectPlan) -> tuple[date, Optional[date]]:
-    """His frost dates for a garden this season; ActionError asking for the last spring frost when there's none."""
+    """His frost dates for a garden this season (a spring past rolls to next year, February 29 too; a first fall
+    frost before it is moved to its year or dropped); ActionError asking for the last spring frost when there's
+    none."""
     from core.garden_plans import parse_day
 
     today = date.today()
@@ -218,26 +231,51 @@ def _frosts(context, plan: ProjectPlan) -> tuple[date, Optional[date]]:
     if last is None:
         raise ActionError("When is your last spring frost, on average? (Say it like \"April 20\"; the extension "
                           "office or a frost-date chart for your area has it.)")
-    if last < today and (today - last).days > 60:
-        last = last.replace(year=last.year + 1)  # this spring is past: next year's garden
+    if last < today and (today - last).days > 60:  # this spring is past: next year's garden
+        try:
+            last = last.replace(year=last.year + 1)
+        except ValueError:  # February 29
+            last = last + timedelta(days=365)
     first = parse_day(plan.first_frost, last.year)
+    if first is not None and first < last:
+        try:
+            first = first.replace(year=last.year)
+        except ValueError:
+            first = None
+        if first is not None and first < last:
+            first = None  # a first fall frost before the last spring one isn't a date to plan by
     return last, first
 
 
 def _garden_stages(context, plan: ProjectPlan) -> tuple[list, list]:
-    """A garden's stages from its beds, crops and his frosts, and its warnings."""
+    """A garden's stages from its beds (named loosely: "bed 1" is Bed 1; one not there is refused), crops and his
+    frosts, and its warnings (crops not known, space asked beyond a bed, crops that may not ripen)."""
     from core import garden_plans
 
     if not plan.beds:
         raise ActionError("Which beds? Give each a name and its size in feet (and its depth for a raised bed).")
-    known = [c for c in plan.crops if c.get("crop") in garden_plans.CROPS]
+    names = {_norm(b["name"]): b["name"] for b in plan.beds}
+    known = []
+    for c in plan.crops:
+        if c.get("crop") not in garden_plans.CROPS:
+            continue
+        bed = names.get(_norm(c.get("bed") or plan.beds[0]["name"]))
+        if bed is None:
+            raise ActionError(f"There's no bed called “{c.get('bed')}”: the beds are "
+                              + ", ".join(b["name"] for b in plan.beds) + ".")
+        known.append({**c, "bed": bed})
     unknown = [str(c.get("crop")) for c in plan.crops if c.get("crop") not in garden_plans.CROPS]
     if not known:
         raise ActionError("Which crops? " + ", ".join(sorted(c.name for c in garden_plans.CROPS.values())) + ".")
     last, first = _frosts(context, plan)
     stages = garden_plans.stages(plan.beds, known, last, first)
-    warnings = [garden_plans.NOTE] + ([f"I don't know these crops yet, so they're left out: {', '.join(unknown)}."]
-                                      if unknown else [])
+    warnings = [garden_plans.NOTE] + ([f"I don't know these crops yet, so they're left out: {', '.join(unknown)}"
+                                       " (say summer or winter squash, bush or pole beans)."] if unknown else [])
+    for bed in plan.beds:
+        asked = sum(float(c.get("sqft") or 0) for c in known if c["bed"] == bed["name"])
+        area = bed["length_ft"] * bed["width_ft"]
+        if asked > area:
+            warnings.append(f"{bed['name']}: {asked:g} square feet asked of its {area:g}.")
     warnings += [s["watch"][-1][len("warning: "):] for st in stages for s in st["steps"]
                  if s["watch"] and str(s["watch"][-1]).startswith("warning: ")]
     plan.title = plan.title or "Garden: " + ", ".join(b["name"] for b in plan.beds)
@@ -245,9 +283,16 @@ def _garden_stages(context, plan: ProjectPlan) -> tuple[list, list]:
 
 
 def work_out(context, plan: ProjectPlan) -> ProjectPlan:
-    """Works a plan's stages out again from what it's made from (ActionError saying what's missing)."""
+    """Works a plan's stages out again from what it's made from (ActionError saying what's missing, a stage left out
+    that isn't there, or every stage left out)."""
     stages, warnings = (_build_stages if plan.kind == "build" else _garden_stages)(context, plan)
+    unknown = [s for s in plan.left_out if s not in {st["name"] for st in stages}]
+    if unknown:
+        raise ActionError(f"There's no stage called “{unknown[0]}”: the stages are "
+                          + ", ".join(st["name"] for st in stages) + ".")
     plan.stages = [s for s in stages if s["name"] not in plan.left_out]
+    if not plan.stages:
+        raise ActionError("Every stage is left out: put one back first.")
     plan.warnings = list(dict.fromkeys(warnings))
     return plan
 
@@ -268,18 +313,56 @@ def _beds(value) -> list:
     return out
 
 
-def _crops(value) -> list:
-    """Crops as {crop, bed, sqft}, from names or dicts; a name is matched to a crop by its id or its words."""
+_ALIASES = {"potatoes": "potato", "potato": "potato", "sweet potatoes": "sweet_potato", "green beans": "bean_bush",
+            "beans": "bean_bush", "bush beans": "bean_bush", "pole beans": "bean_pole", "bell peppers": "pepper",
+            "peppers": "pepper", "hot peppers": "pepper", "summer squash": "zucchini", "courgettes": "zucchini",
+            "butternut squash": "winter_squash", "butternut": "winter_squash", "acorn squash": "winter_squash",
+            "corn": "corn", "sweetcorn": "corn", "greens": "", "squash": "", "swiss chard": "chard", "chard": "chard",
+            "onion sets": "onion", "scallions": "", "garlic": "", "strawberries": ""}
+
+
+def _norm(text: str) -> str:
+    """Pure logic. A name compared loosely: lower case, spaces and dashes as one space, each word without a plain
+    plural ending."""
+    words = re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).split()
+    return " ".join(w[:-2] if w.endswith("oes") else w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss")
+                    else w for w in words)
+
+
+def match_crop(name: str) -> str:
+    """Pure logic. The crop a name means: its id, its name, a known other name, or the one crop whose name holds all
+    its words; "" when none or more than one could be meant."""
     from core.garden_plans import CROPS
 
+    said = _norm(name)
+    if not said:
+        return ""
+    aliases = {_norm(k): v for k, v in _ALIASES.items()}
+    if said in aliases:
+        return aliases[said]
+    for crop in CROPS.values():
+        if said in (_norm(crop.id), _norm(crop.name)):
+            return crop.id
+    words = set(said.split())
+    hits = [c.id for c in CROPS.values() if words <= set(_norm(c.name).split())]
+    return hits[0] if len(hits) == 1 else ""
+
+
+def _crops(value) -> list:
+    """Crops as {crop, bed, sqft}, from names or dicts (`match_crop`; one not known keeps its words, said back);
+    ActionError for space below zero."""
     items = value if isinstance(value, list) else [value] if value else []
     out = []
     for item in items:
         item = item if isinstance(item, dict) else {"crop": item}
-        name = str(item.get("crop") or "").strip().lower()
-        crop = name if name in CROPS else next((c.id for c in CROPS.values()
-                                                if name and (name in c.name.lower() or c.name.lower().startswith(name.rstrip("s")))), name)
-        out.append({"crop": crop, "bed": str(item.get("bed") or ""), "sqft": float(item.get("sqft") or 0)})
+        said = str(item.get("crop") or "").strip()
+        try:
+            sqft = float(item.get("sqft") or 0)
+        except (TypeError, ValueError):
+            raise ActionError("A crop's space is in square feet.") from None
+        if sqft < 0:
+            raise ActionError("A crop's space can't be below zero.")
+        out.append({"crop": match_crop(said) or said.lower(), "bed": str(item.get("bed") or "").strip(), "sqft": sqft})
     return out
 
 
@@ -334,9 +417,17 @@ def _draft_of(context, params: dict) -> ProjectPlan:
 
 
 def change(context, params: dict) -> ProjectPlan:
-    """Changes a draft: its title, sizes, beds, crops, frost dates, a stage left out or put back, its notes; worked out
-    again and kept."""
-    plan = _draft_of(context, params)
+    """Changes a draft (`_changed`) and keeps it; his frost dates remembered."""
+    plan = _changed(context, params)
+    _remember_frosts(context, plan)
+    return _need(context, "project_plans").put(plan)
+
+
+def _changed(context, params: dict) -> ProjectPlan:
+    """A draft with the change made: its title, sizes, beds, crops, frost dates, a stage left out or put back, its
+    notes; worked out again, on a copy (the kept one changes only when this all works and is put back). The card's
+    sentence runs this too, so a change that can't be made is said before the card."""
+    plan = copy.deepcopy(_draft_of(context, params))
     if "title" in params:
         plan.title = str(params["title"] or plan.title)[:80]
     if "sizes" in params:
@@ -349,12 +440,10 @@ def change(context, params: dict) -> ProjectPlan:
         if key in params:
             setattr(plan, key, str(params[key] or "")[:2000])
     if params.get("leave_out"):
-        plan.left_out = sorted(set(plan.left_out) | {str(params["leave_out"])})
+        plan.left_out = sorted(set(plan.left_out) | {str(params["leave_out"]).strip()})
     if params.get("put_back"):
         plan.left_out = [s for s in plan.left_out if s != str(params["put_back"])]
-    work_out(context, plan)
-    _remember_frosts(context, plan)
-    return _need(context, "project_plans").put(plan)
+    return work_out(context, plan)
 
 
 def _objective(step: dict) -> str:
@@ -364,9 +453,8 @@ def _objective(step: dict) -> str:
 
 def confirm(context, params: dict) -> str:
     """His press: the draft becomes one project and one mission a stage (each step an objective, in order), the
-    build's materials on the project's needs; the plan keeps their ids."""
-    plan = _draft_of(context, params)
-    work_out(context, plan)  # as things are now
+    build's materials on the project's needs; the plan keeps their ids. Worked out on a copy, kept only at the end."""
+    plan = work_out(context, copy.deepcopy(_draft_of(context, params)))  # as things are now, on a copy
     projects, missions = _need(context, "projects"), _need(context, "missions")
     summary = f"Planned with MIA (plan:{plan.plan_id})."
     if plan.warnings:
@@ -404,8 +492,8 @@ def drop(context, params: dict) -> str:
 
 
 def page(context) -> dict:
-    """The Planner page: the plans (drafts and confirmed), the shelf's builds that have a walkthrough, the crops, and
-    his frost dates."""
+    """The Planner page: the plans (drafts and confirmed, each build with its own size fields), the shelf's builds
+    that have a walkthrough, the crops, and his frost dates."""
     from core import garden_plans, trades
 
     book = getattr(context, "project_plans", None)
@@ -415,11 +503,28 @@ def page(context) -> dict:
     builds = [{"id": p["id"], "title": p["title"], "walked": _bare(p["id"]) in walked}
               for p in (library.built_in() if library is not None else [])]
     config = getattr(context, "config", None)
-    return {"available": book is not None, "plans": [asdict(p) for p in (book.listed() if book else [])],
+    plans = []
+    for p in (book.listed() if book else []):
+        row = asdict(p)
+        row["size_fields"] = _size_fields(context, p)
+        plans.append(row)
+    return {"available": book is not None, "plans": plans,
             "builds": builds, "crops": [{"id": c.id, "name": c.name, "per_sqft": c.per_sqft, "days": c.days}
                                        for c in garden_plans.CROPS.values()],
             "last_frost": config.get("garden.last_frost", "") if config else "",
             "first_frost": config.get("garden.first_frost", "") if config else "", "sources": list(garden_plans.SOURCES)}
+
+
+def _size_fields(context, plan: ProjectPlan) -> list:
+    """A build draft's own sizes, as its plan's calculator names them ({name, label, unit, value}); [] for a garden."""
+    if plan.kind != "build" or not plan.shelf_plan:
+        return []
+    from core.plan_library import detail
+
+    try:
+        return list((detail(context, plan.shelf_plan, plan.sizes or None) or {}).get("sizes") or [])
+    except Exception:  # noqa: BLE001 - the page shows the plan either way
+        return []
 
 
 def _describe_draft(c, p) -> str:
@@ -429,8 +534,8 @@ def _describe_draft(c, p) -> str:
 
 
 def _describe_confirm(c, p) -> str:
-    """The card's sentence for a confirm: what it makes."""
-    plan = work_out(c, _draft_of(c, p))
+    """The card's sentence for a confirm: what it makes (worked out on a copy)."""
+    plan = work_out(c, copy.deepcopy(_draft_of(c, p)))
     return (f"Confirm “{plan.title}”: a project and {len(plan.stages)} missions ("
             + ", ".join(s["name"] for s in plan.stages) + ")")
 
@@ -442,7 +547,7 @@ PLAN_ACTIONS: dict[str, ActionType] = {a.kind: a for a in (
                _describe_draft, lambda c, p: f"Drafted “{draft(c, p).title}”. Change anything, then Confirm."),
     ActionType("projectplan.change", "Change It", {"plan_id": "the draft", "sizes": "", "beds": "", "crops": "",
                "last_frost": "", "first_frost": "", "leave_out": "a stage", "put_back": "a stage", "notes": ""},
-               lambda c, p: f"Change the plan “{_draft_of(c, p).title}”",
+               lambda c, p: f"Change the plan “{_changed(c, p).title}”",
                lambda c, p: f"Changed “{change(c, p).title}”."),
     ActionType("projectplan.confirm", "Confirm", {"plan_id": "the draft"}, _describe_confirm, confirm),
     ActionType("projectplan.drop", "Let It Go", {"plan_id": "the draft"},

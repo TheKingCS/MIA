@@ -166,23 +166,35 @@ def build(pack_file: Path, out: Path, archive=None, progress: Callable = lambda 
     return rows
 
 
+class _Empty:
+    """A pack with nothing for her index: the marker for one left to Kiwix's own (so a start doesn't look again)."""
+
+    has_fulltext_index = True
+    all_entry_count = 0
+
+
 def index_missing(library, root: Path, progress: Callable = lambda key, n: None) -> int:
-    """Builds every index a pack wants and hasn't got (a pack copied in by hand too), and removes those whose pack
-    is gone; how many were built. Never raises."""
+    """Builds every index a pack wants and hasn't got (a pack copied in by hand too; a big pack left to Kiwix's own
+    gets an empty one, a marker), and removes those whose pack file is gone (not one that merely failed to open); how
+    many were built. Never raises."""
     built = 0
     folder = index_folder(root)
     packs = {Path(p.file_path).stem: p for p in library.list_packs()} if library is not None else {}
+    on_disk = {p.stem for p in Path(root).glob("*.zim")}
     if folder.is_dir():
         for old in folder.glob("*.sqlite"):
-            if old.stem not in packs:
-                old.unlink(missing_ok=True)
+            if old.stem not in on_disk:
+                old.unlink(missing_ok=True)  # its pack is gone (one that merely failed to open keeps its index)
     for stem, pack in packs.items():
         out = index_path(root, Path(pack.file_path))
         if out.exists():
             continue
         try:
             archive = library._get_archive(pack.pack_id, Path(pack.file_path))
-            if archive is None or (not needs_index(archive) and Path(pack.file_path).stat().st_size > BIG_PACK):
+            if archive is None:
+                continue
+            if not needs_index(archive) and Path(pack.file_path).stat().st_size > BIG_PACK:
+                build(Path(pack.file_path), out, _Empty(), pages=False)  # left to Kiwix's index: marked, not read
                 continue
             rows = build(Path(pack.file_path), out, archive, lambda n, stem=stem: progress(stem, n))
             built += 1
@@ -232,14 +244,16 @@ def page_text(root: Path, pack_file: Path, path: str, page: int) -> tuple[str, s
     return (row[0], row[1]) if row else ("", "")
 
 
-def search(root: Path, library, query: str, limit: int = 20, full: bool = False) -> list[Hit]:
+def search(root: Path, library, query: str, limit: int = 20, full: bool = False, packs=None) -> list[Hit]:
     """The question's words in every index here: all of them first, then any; best first, at most `limit`. With
-    `full`, each hit carries its page's whole text instead of a passage around the words."""
+    `full`, each hit carries its page's whole text instead of a passage around the words (`limit` from each index,
+    so keep it small). `packs` is the library's list when the caller has it already."""
     terms = [t.lower() for t in _WORD.findall(query or "")][:12]
     folder = index_folder(root)
     if not terms or not folder.is_dir():
         return []
-    titles = {Path(p.file_path).stem: (p.pack_id, p.title) for p in library.list_packs()} if library else {}
+    packs = packs if packs is not None else (library.list_packs() if library else [])
+    titles = {Path(p.file_path).stem: (p.pack_id, p.title) for p in packs}
     hits: list[tuple[float, Hit]] = []
     for db_file in folder.glob("*.sqlite"):
         pack_id, pack_title = titles.get(db_file.stem, (db_file.stem, db_file.stem))

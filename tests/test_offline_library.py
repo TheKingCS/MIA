@@ -5,7 +5,8 @@ tests.test_offline_library
 Her offline library (core/offline_library.py, core/pack_index.py; Zac, 2026-11-22): the chosen packs and their sets,
 Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a wrong one never installed), one
 runner at a time, the older version replaced, her own index for packs Kiwix didn't index, and look_up's passages
-framed as outside text. A pretend Kiwix answers; the suite never reaches the network.
+framed as outside text. A pretend Kiwix answers; the suite never reaches the network. Fable's review (2026-11-22): metalinks only from
+Kiwix, mirrors only public, an update whose old file is held open, a queue being read.
 """
 import hashlib
 import io
@@ -134,7 +135,8 @@ def test_a_set_that_would_leave_too_little_room_is_refused(world, monkeypatch):
 
 
 def test_a_pack_is_fetched_checked_installed_and_its_older_version_removed(world):
-    """The queue runs: the bytes from a mirror (HTTPS first), the hash checked, moved in, the old file gone."""
+    """The queue runs: the bytes from a mirror (HTTPS first), the hash checked, moved in, the old file gone, nothing
+    left to remove."""
     root, context = world
     root.mkdir(parents=True)
     (root / "zimgit-water_en_2023-01.zim").write_bytes(b"old")
@@ -143,13 +145,14 @@ def test_a_pack_is_fetched_checked_installed_and_its_older_version_removed(world
     assert lib.run_queue(context, root, get=kiwix) == {"fetched": 1, "failed": 0}
     assert (root / "zimgit-water_en_2024-08.zim").read_bytes() == BODY
     assert not (root / "zimgit-water_en_2023-01.zim").exists()
-    assert lib._read_queue(root) == {"waiting": [], "state": {"zimgit-water_en": "fetched"}}
+    assert lib._read_queue(root) == {"waiting": [], "state": {"zimgit-water_en": "fetched"}, "remove": []}
     mirrors = [u for u, _h in kiwix.asked if u.endswith(".zim")]
     assert mirrors[0].startswith("https://mirror-a.example/")
 
 
 def test_a_dropped_download_resumes_where_it_stopped(world, monkeypatch):
-    """The partial file is kept and the next mirror is asked for the rest (Range)."""
+    """The partial file is kept and the next mirror is asked for the rest (Range); mirrors that won't resume never
+    overwrite it; one larger than the file is thrown away."""
     root, context = world
     meta = lib.parse_metalink(_metalink("p.zim", BODY))
     partial = tmp = root / "p.partial"
@@ -159,7 +162,11 @@ def test_a_dropped_download_resumes_where_it_stopped(world, monkeypatch):
     lib.download(meta, partial, kiwix)
     assert partial.read_bytes() == BODY and kiwix.asked[-1][1] == {"Range": "bytes=300-"}
     partial.write_bytes(BODY[:300])
-    lib.download(meta, partial, _Kiwix(ranges=False))  # a mirror that sends it all again: started over
+    with pytest.raises(OSError, match="won't resume"):  # mirrors that send it all again: what's here is kept
+        lib.download(meta, partial, _Kiwix(ranges=False))
+    assert partial.read_bytes() == BODY[:300]
+    partial.write_bytes(BODY + b"extra")  # more than the file: thrown away and fetched again
+    lib.download(meta, partial, _Kiwix())
     assert partial.read_bytes() == BODY
 
 
@@ -273,3 +280,57 @@ def test_fetching_is_his_yes_and_looking_up_needs_none():
     assert tiers["library.fetch"] == tiers["fetch_reference_packs"] == "act_with_approval"
     assert tiers["look_up_offline"] == "observe" and "library.fetch" in ACTION_TYPES
     assert effect_of("library.fetch") == ("device", "compensable")
+
+
+def test_fable_review_metalinks_only_from_kiwix_mirrors_only_public_and_the_file_it_names():
+    """Fable's review (2026-11-22): a catalog metalink elsewhere is left out; a mirror on this computer or the home
+    network is never asked; a metalink naming another file is refused."""
+    assert lib._kiwix("https://lb.download.kiwix.org/x.meta4") and not lib._kiwix("https://evil.example/x.meta4")
+    assert not lib._kiwix("http://download.kiwix.org/x.meta4")
+    meta = lib.parse_metalink(_metalink("p.zim", BODY).replace("https://mirror-b.example/p.zim",
+                                                                "http://127.0.0.1/p.zim"))
+    assert all("127.0.0.1" not in u for u in meta["urls"]) and not lib._public("http://192.168.1.5/x")
+
+
+def test_fable_review_an_update_whose_old_file_is_held_open_is_installed_and_the_old_one_goes_later(world,
+                                                                                                    monkeypatch):
+    """The new version is fetched (never marked failed); the old one waits in the queue's remove list."""
+    root, context = world
+    root.mkdir(parents=True)
+    old = root / "zimgit-water_en_2023-01.zim"
+    old.write_bytes(b"old")
+    real_unlink = Path.unlink
+
+    def held(self, missing_ok=False):
+        """Windows: a file someone has open can't be deleted."""
+        if self.name == old.name:
+            raise PermissionError("in use")
+        return real_unlink(self, missing_ok=missing_ok)
+
+    monkeypatch.setattr(Path, "unlink", held)
+    lib.fetch(context, root, keys=["zimgit-water_en"], start=False)
+    assert lib.run_queue(context, root, get=_Kiwix()) == {"fetched": 1, "failed": 0}
+    assert lib._read_queue(root)["remove"] == [old.name] and old.exists()
+    monkeypatch.setattr(Path, "unlink", real_unlink)
+    lib._remove_old(context, root)
+    assert not old.exists() and lib._read_queue(root)["remove"] == []
+
+
+def test_fable_review_a_queue_being_read_is_waited_for_never_taken_as_empty(tmp_path, monkeypatch):
+    """A read that fails for a moment is tried again; a corrupt file starts afresh."""
+    (tmp_path / ".fetch").mkdir()
+    queue = tmp_path / ".fetch" / "queue.json"
+    queue.write_text('{"waiting": ["a"], "state": {}}', encoding="utf-8")
+    calls = []
+    real = Path.read_text
+
+    def flaky(self, *a, **k):
+        """Locked twice, then readable."""
+        calls.append(1)
+        if self.name == "queue.json" and len(calls) <= 2:
+            raise PermissionError("locked")
+        return real(self, *a, **k)
+
+    monkeypatch.setattr(Path, "read_text", flaky)
+    assert lib._read_queue(tmp_path)["waiting"] == ["a"]
+
