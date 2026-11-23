@@ -136,7 +136,8 @@ kitchen/pantry, inventory, the homestead system, `core/safety_floor.py`.
 
 **4.2 First aid with a safety floor.** M, no decision needed (the floor follows the canning one). *First part built
 2026-11-23 (`core/first_aid_floor.py`): an emergency happening now gets the emergency number and the first steps in
-fixed words before any model. Next: the library's first-aid answers checked the same way.*
+fixed words before any model. Second part, the same day: a first-aid answer from her library always ends with when to call and the number
+(`library_floor`).*
 Step-by-step first aid from the library's medical packs (wilderness and field medicine), with a floor in code that
 always says when to call emergency services (by his country, `core/region.py`) and never gives a dose the page
 doesn't. Builds on: the canning floor's pattern in `core/reference_reader.py`, `core/safety_floor.py`.
@@ -202,7 +203,9 @@ goes outward or can't be undone). Builds on: `core/workflows.py`, grants (`grant
 
 **7.2 "When this, do that."** M, no decision needed. *Half there: `core/workflows.py` runs his workflows every
 day, week or month (read, count, compare, tell, add) under a grant; what's missing is a trigger on an event ("when a
-bill comes in") and the homestead's controls as a step.*
+bill comes in") and the homestead's controls as a step. *Needs Zac first:* an event can come from something she
+reads (an email, a page), and nothing she reads may grant her anything, so which events may start a workflow is his
+call.*
 Rules he says out loud: "when the greenhouse goes over 90, tell me and open the vents", "when a bill comes in, add
 it to the budget". Each a workflow with its tier from the manifest; the risky ones ask. Builds on: workflows, the event
 bus, the homestead's controls, grants.

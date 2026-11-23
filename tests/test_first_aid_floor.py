@@ -5,7 +5,8 @@ tests.test_first_aid_floor
 The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed
 first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of
 speech goes on as usual. The corpus lists both what must trigger (the review of 2026-11-23 added the panicked,
-pronoun-less and missing kinds) and what must not.
+pronoun-less and missing kinds) and what must not; and a first-aid answer from the library always ends with when
+to call for help.
 """
 
 from types import SimpleNamespace
@@ -156,3 +157,13 @@ def test_the_floor_answers_before_the_model_and_without_one():
         "from core.connections import notice")
     for gui in ("gui/character_panel.py", "gui/home_dashboard.py", "modules/assistant/module.py"):
         assert "and not emergency_now(prompt)" in (root / gui).read_text(encoding="utf-8"), gui
+
+
+def test_a_first_aid_answer_from_the_library_says_when_to_call():
+    said = faf.library_floor("how do you treat a snakebite?", "Keep the limb still and below the heart.")
+    assert said.endswith("not instead of it.") and "call 911 first" in said
+    assert faf.library_floor("how do you treat a snakebite?", "Call 911, then keep it still.") == \
+        "Call 911, then keep it still."  # already says it
+    assert faf.library_floor("how do I can green beans?", "Use a pressure canner.") == "Use a pressure canner."
+    assert faf.library_floor("my dog was bit by a snake", "See a vet.") == "See a vet."  # an animal: the vet's
+    assert "call 999" in faf.library_floor("what to do for a deep cut", "Press on it.", REGIONS["GB"])

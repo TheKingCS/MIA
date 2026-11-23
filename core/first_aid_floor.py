@@ -20,6 +20,10 @@ time-critical first (choking before CPR, so "she's choking and can't breathe" ge
 first-aid guidance (American Red Cross and American Heart Association). No medicine doses: those come from the
 emergency operator. Then that she'll stay with him.
 
+**A first-aid answer from her library** (`library_floor`, core/tool_loop.py): when the question is about one of
+these emergencies (`topic_kinds`, happening now or not), the answer ends with when to call and the number, unless it
+already gives it.
+
 **After it** (`floor_kind_of`): his next words in the same emergency go on to the model, which reads the conversation
 with the floor's reply in it; the fixed words are said again only for a different emergency.
 
@@ -203,6 +207,32 @@ def reply(kind, where=None) -> str:
                                               "poison", "seizure"):
         steps.append(_CPR_SHORT)  # the kinds whose own words don't already say when to start CPR
     return f"Call {region.emergency} now, {MARK} " + " ".join(steps) + " Tell me what's happening and I'll stay with you and help."
+
+
+def topic_kinds(prompt: str) -> list[str]:
+    """Pure logic. The emergencies a question is about, happening now or not ("how do you treat a snakebite?" is
+    snakebite), leaving out figures of speech and animals: for `library_floor`."""
+    text = " ".join(str(prompt or "").lower().replace("\u2019", "'").split())
+    if not text or _FIGURE.search(text) or (_ANIMAL.search(text) and not _PERSON.search(text)):
+        return []
+    return [kind for kind, words, _do in KINDS if words.search(text)]
+
+
+def library_floor(prompt: str, answer: str, where=None) -> str:
+    """Pure logic. A first-aid answer from her library (brainstorm 4.2): when the question is about one of the
+    emergencies here, the answer ends with when to call for help and the number (his country's), unless it already
+    gives the number. Every other answer is left as it is."""
+    from core.region import DEFAULT, REGIONS
+
+    found = topic_kinds(prompt)
+    if not found:
+        return answer
+    region = where or REGIONS[DEFAULT]
+    number = region.emergency
+    if number.split()[0] in str(answer or ""):
+        return answer
+    return (str(answer or "").rstrip() + f" If it's happening now, or it's severe, call {number} first; this is "
+            "first aid until help comes, not instead of it.")
 
 
 def floor_kind_of(text: str) -> Optional[str]:

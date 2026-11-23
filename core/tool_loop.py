@@ -412,7 +412,8 @@ def _finish(context, prompt: str, asked: str, results: list, text: str) -> ChatR
     (core/reference_reader.floor: canning a low-acid food is never told as a water bath), what the library was asked
     beside the question (a follow-up names its food there). When the floor must replace the answer and this turn's
     reading holds no guide page to give instead (the model asked in its own words and missed it), the person's own
-    question is looked up in code for it."""
+    question is looked up in code for it. A first-aid answer from the library ends with when to call for help
+    (core/first_aid_floor.library_floor)."""
     if any(name in LIBRARY_TOOLS for name, _t in results):
         from core.reference_reader import NO_PAGE, floor
 
@@ -427,4 +428,8 @@ def _finish(context, prompt: str, asked: str, results: list, text: str) -> ChatR
             except Exception:  # noqa: BLE001 - the rule alone stands
                 log.exception("The floor's own look-up failed.")
         text = said
+        from core.first_aid_floor import library_floor  # a first-aid answer says when to call for help (4.2)
+        from core.region import region_for
+
+        text = library_floor(prompt, text, region_for(context))
     return ChatReply(content=text, tool_calls=[])
