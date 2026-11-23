@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1616 files, 356,102 lines; 1616 files describe themselves; 19,603 of 19,720 classes and functions are documented.
+1617 files, 356,208 lines; 1617 files describe themselves; 19,609 of 19,727 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-633 files, 181,055 lines; 9,298 of 9,384 classes and functions documented
+633 files, 181,106 lines; 9,301 of 9,387 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -931,7 +931,7 @@
 
 ## tests/: the test suite: what each part must do
 
-580 files, 94,580 lines; 7,942 of 7,973 classes and functions documented
+581 files, 94,625 lines; 7,945 of 7,977 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1156,6 +1156,7 @@
 - `tests/test_interview_form.py`: Unit tests for gui.widgets.interview_form's pure functions, same style as every other *_module.py test file in this project (no Qt event loop, no fixtures).
 - `tests/test_inventory_manager.py`: Unit tests for core.inventory_manager. Isolates _DATA_DIR/_ITEMS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_inventory_tool.py`: Unit test for modules.toolbox.tools.inventory_tool.format_item_row — pure formatting logic, no Qt event loop needed.
+- `tests/test_invoice_email.py`: An order's invoice (core/business_actions.invoice_email, brainstorm 5.1): what, the price, what's been paid, the balance and when it's due, drafted for his Send, never sent; a paid-up order's is a receipt. *(1 undocumented)*
 - `tests/test_job_manager.py`: Unit tests for core.job_manager. Isolates _DATA_DIR/_JOBS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. consume_material() total_cost()/produce_product() also need core.material_manager core.product_manager isolated in the same tmp_path, s
 - `tests/test_journal_manager.py`: Unit tests for core.journal_manager. Isolates _DATA_DIR/_ENTRIES_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_journal_reflection.py`: The opt-in weekly journal reflection (core/journal_reflection.py): when it's due, the content-free notice, the reflection itself, and that asking for it is a private turn.
@@ -1516,7 +1517,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 22,011 lines
+117 files, 22,021 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

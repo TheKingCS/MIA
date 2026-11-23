@@ -12,6 +12,8 @@ approved, run, undoable.
   tied to the order's build when there is one.
 - `order.build`: starts the recipe's build for the order (craft.start)
   and ties the payments so far to it.
+- `order.invoice`: the order's invoice (what's paid, what's left, when it's due; a receipt once paid) drafted as an
+  email (`invoice_email`), never sent: he presses Send (brainstorm 5.1).
 - `order.status`: Ready / Delivered / Cancelled.
 - `portfolio.feature`: feature a finished build first in the portfolio (or stop).
 """
@@ -324,6 +326,54 @@ def _email(context, params) -> str:
     return "Drafted. Check it, then Send, Copy or open it in your mail app."
 
 
+def invoice_email(context, order) -> tuple[list[str], str, str]:
+    """The invoice for an order, from the person (they press Send; brainstorm 5.1): who it's to, the subject and the
+    body: what, how many, the price, what's been paid, what's left and when it's due. Only what the customer needs."""
+    from datetime import date
+
+    book = _book(context)
+    customer = book.get_customer(order.customer_id) if order.customer_id else None
+    paid = round(_paid(context, order), 2)
+    left = round(max(0.0, order.price - paid), 2)
+    profiles = getattr(context, "profiles", None)
+    me = profiles.get_active_profile() if profiles is not None else None
+    first = customer.name.split(" ")[0] if customer is not None and customer.name else ""
+    lines = [f"Hi {first}," if first else "Hi,", "", f"Here's the invoice for {order.title}:", ""]
+    lines.append(f"- {order.title}" + (f" ({order.quantity} ×)" if order.quantity > 1 else ""))
+    lines.append(f"- Price: {_money(order.price)}")
+    if paid:
+        lines.append(f"- Paid so far: {_money(paid)}")
+    lines.append(f"- Balance due: {_money(left)}" if left else "- Paid in full: thank you!")
+    if left and order.due_date:
+        try:
+            due = date.fromisoformat(order.due_date)
+            lines.append(f"- Due {due:%B} {due.day}")
+        except ValueError:
+            pass
+    lines += ["", "Thank you for your business.", "", getattr(me, "name", "") or ""]
+    to = [customer.email] if customer is not None and customer.email else []
+    subject = f"Invoice: {order.title}" if left else f"Receipt: {order.title}"
+    return to, subject, "\n".join(lines).rstrip() + "\n"
+
+
+def _invoice_describe(context, params) -> str:
+    """The sentence the approval card shows for `order.invoice` (Propose): MIA only drafts; the person presses Send."""
+    o = _order(context, params)
+    if getattr(context, "email_drafts", None) is None:
+        raise ActionError("Email drafts aren't available here.")
+    to, subject, _b = invoice_email(context, o)
+    who = f" to {to[0]}" if to else " (add the customer's email, or put it in when you send)"
+    return f"Draft the {subject.split(':')[0].lower()} email for {o.title}{who}. You press Send"
+
+
+def _invoice(context, params) -> str:
+    """Does `order.invoice` once approved: the draft is made, never sent."""
+    o = _order(context, params)
+    to, subject, body = invoice_email(context, o)
+    context.email_drafts.create(to, subject, body)
+    return "Drafted. Check it, then Send, Copy or open it in your mail app."
+
+
 def _feature_describe(context, params) -> str:
     """The sentence the approval card shows for `portfolio.feature` (Propose); raises ActionError when it can't be done."""
     job = _need(context, "jobs").get_job(str(params.get("job_id") or ""))
@@ -342,7 +392,7 @@ def _feature(context, params) -> str:
 
 def _register() -> None:
     """Adds the customer, quote and order record kinds (an edit checks its customer and recipe still exist) and the
-    send, decline, email, accept, pay, build, status and feature kinds to ACTION_TYPES. Runs once, when this module
+    send, decline, email, accept, pay, build, invoice (drafted only), status and feature kinds to ACTION_TYPES. Runs once, when this module
     is imported.
     """
     kinds = list(record_kinds(CUSTOMER))
@@ -359,6 +409,7 @@ def _register() -> None:
         ActionType("quote.accept", "Accepted", {"quote_id": "the quote", "due_date": "when it's due"}, _accept_describe, _accept),
         ActionType("order.pay", "Payment", {"order_id": "the order", "amount": "what they paid"}, _pay_describe, _pay),
         ActionType("order.build", "Start Build", {"order_id": "the order"}, _build_describe, _build),
+        ActionType("order.invoice", "Email Invoice", {"order_id": "the order"}, _invoice_describe, _invoice),
         ActionType("order.status", "Status", {"order_id": "the order", "status": "Ready, Delivered or Cancelled"},
                    _status_describe, _status),
         ActionType("portfolio.feature", "Feature", {"job_id": "the build"}, _feature_describe, _feature),

@@ -166,7 +166,8 @@ a scanner feed she listens to for weather alerts. Builds on: MIA OS, the device 
 already (checked 2026-11-23): `core/business_book.py` has customers, quotes priced from a recipe's materials, hours,
 labor rate and margin, orders whose payments go to the ledger, and market days. What's left: a quote from a Planner
 build's own material list, and the invoice drafted from an order.* *The first built 2026-11-23 (`core/plan_price.py`,
-"what should I charge for the shed?"): the build's materials priced from his workshop, his hours, rate and margin.*
+"what should I charge for the shed?"): the build's materials priced from his workshop, his hours, rate and margin.
+The invoice too (an order's Email Invoice: what's paid, what's left, when it's due; drafted, he presses Send).*
 For a build or repair job: a quote from the materials and hours (worked out in `core/build_calcs.py`, priced from his
 own records), the job as a mission, the customer and what was promised, the invoice drafted (never sent without his
 press), and paid or not. Builds on: business book, Trade Master, build calcs, email drafts.

@@ -51,6 +51,7 @@
       "order.build",
       "order.delete",
       "order.edit",
+      "order.invoice",
       "order.pay",
       "order.status",
       "portfolio.feature",
@@ -84,7 +85,8 @@
       "quote.delete": "act_with_approval",
       "quote.edit": "act_within_grant",
       "quote.email": "act_with_approval",
-      "quote.send": "act_with_approval"
+      "quote.send": "act_with_approval",
+      "order.invoice": "act_with_approval"
     },
     "outside": []
   },

@@ -44,6 +44,15 @@
     if (v) act({ kind: "quote.accept", params: { quote_id: q.id, due_date: v.due_date } });
   }
   const status = (o, s) => act({ kind: "order.status", params: { order_id: o.id, status: s } });
+  // MIA drafts an order's invoice the same way (what's paid, what's left); you press Send.
+  async function emailInvoice(o) {
+    if (!(await act({ kind: "order.invoice", params: { order_id: o.id } }))) return;
+    try {
+      const all = await MIA.emailDrafts();
+      const d = all.drafts.find((x) => x.subject.endsWith(": " + o.title)) || all.drafts[0];
+      if (d) MIAShell.showDraft(d, all.can_send);
+    } catch (e) { MIAShell.say(e.message); }
+  }
   // MIA drafts the quote email; you check it and press Send (never sent by itself).
   async function emailQuote(q) {
     if (!(await act({ kind: "quote.email", params: { quote_id: q.id } }))) return;
@@ -73,6 +82,7 @@
         el("a", { href: "workshop.html#builds" }, "open it")) : null,
       o.open ? el("div", { class: "row-buttons ord-more" },
         o.left_value > 0 && !(step && step.opens === "payment") ? btn("Payment", "btn-ghost btn-small", () => pay(o)) : null,
+        btn("Email Invoice", "btn-ghost btn-small", () => emailInvoice(o)),
         btn("Edit", "btn-ghost btn-small", () => edit("order", o, o.title)),
         btn("Cancel Order", "btn-ghost btn-small", () => status(o, "Cancelled"))) : null);
   }
