@@ -193,7 +193,8 @@ day-by-day picture it stands on: the next 90 days from bills, income, debt payme
 lowest point and when, and what a purchase pushes back. Worked in code. Builds on: budget, debts, ledger,
 `core/question_plans.py`'s afford plan, `net_worth_history.py`.
 
-**6.2 Debt payoff and savings plans as missions.** S-M. *Debts built 2026-11-23 (`core/debt_missions.py`, the Money page's Debts "Make It A Mission", or "make my payoff plan a mission"): a step a debt in payoff order with its month, ticked as each balance reaches zero. Savings next.* A payoff plan (avalanche or snowball, his pick) whose monthly
+**6.2 Debt payoff and savings plans as missions.** S-M. *Debts built 2026-11-23 (`core/debt_missions.py`, the Money page's Debts "Make It A Mission", or "make my payoff plan a mission"): a step a debt in payoff order with its month, ticked as each balance reaches zero (by the debt's id; completed when all are). Savings were already there: the Freedom
+plan (`core/freedom.py`, DEC-0038) saves toward a date, worked out in code.* A payoff plan (avalanche or snowball, his pick) whose monthly
 steps are missions with real progress. Builds on: debts, missions, learning paths' stats.
 
 **6.3 Bank linking.** Deferred by Zac (Plaid, until MIA is further along and secure).
