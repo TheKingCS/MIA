@@ -9,7 +9,8 @@ it needs, run by code at once, the arithmetic between them done by code,
 and every line of the result marked as a **fact** (from the records), a
 **calculation**, an **estimate** or **missing**. The model then writes
 one answer from that sheet, following Zac's answer protocol, and an
-answer that states a number the sheet doesn't hold is replaced by the
+answer that states a number the sheet doesn't hold (`invented_numbers`; for a reference, strictly, a number it
+spells out counting as said: `spelled_numbers`) is replaced by the
 sheet in plain words (`answer()`). The model never gathers, plans or
 adds up; it phrases.
 
@@ -1112,16 +1113,38 @@ _UNITS = (r"(?:drops?|teaspoons?|tsp|tablespoons?|tbsp|cups?|quarts?|gallons?|li
           r"foot|ft|yards?|meters?|metres?|cm|mm|percent|degrees?|ppm|parts|psi|volts?|amps?|watts?|times)")
 
 
+_SPELLED = {"one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6", "seven": "7", "eight": "8",
+            "nine": "9", "ten": "10", "eleven": "11", "twelve": "12", "fifteen": "15", "twenty": "20", "thirty": "30",
+            "forty": "40", "fifty": "50", "hundred": "100", "half": "1/2", "third": "1/3", "quarter": "1/4",
+            "dozen": "12"}
+
+
+def spelled_numbers(text: str) -> set[str]:
+    """Pure logic. The numbers a text writes as words ("two feet", "a third", "one-half"), as digits ("2", "1/3"), so
+    an answer saying them in digits isn't taken as making them up."""
+    out = set()
+    for word in re.findall(r"[a-z]+", (text or "").lower()):
+        value = _SPELLED.get(word) or _SPELLED.get(word[:-1] if word.endswith("s") else "")
+        if value:
+            out.add(value)
+    return out
+
+
 def invented_numbers(answer: str, sheet_text: str, prompt: str, strict: bool = False) -> set[str]:
     """Pure logic. Numbers in the answer that are in neither the sheet
     nor the question. Small counts (up to 12) are allowed: the model may
     count the sheet's own lines ("3 bills"). `strict` (a reference's
     figures): a small number is allowed only as a count ("2 methods"),
     never before a unit ("2 drops", `_UNITS`); a list's own step numbers
-    ("1.", "**2.**", "Step 3") aren't figures."""
+    ("1.", "**2.**", "Step 3") aren't figures, and one the text spells out ("a third", "two feet") may be said
+    in digits."""
     allowed = numbers_in(sheet_text) | numbers_in(prompt)
     if not strict:
         return {n for n in numbers_in(answer) if n not in allowed and not (n.isdigit() and int(n) <= 12)}
+    spelled = spelled_numbers(sheet_text)  # "a third of its length" may be said "1/3"
+    allowed |= {n for n in spelled if "/" not in n}
+    for fraction in (n for n in spelled if "/" in n):
+        answer = re.sub(rf"(?<![\d/]){re.escape(fraction)}(?![\d/])", " ", answer or "")
     answer = re.sub(r"(?mi)^\s*(\**\s*)?\d{1,2}[.)]\s|\bstep\s+\d{1,2}\b|\*\*\d{1,2}[.)]\*\*", " ",
                     answer or "")
     # "2 methods" is a count, taken out; "2 drops" is a figure, kept (by its place, not its value)

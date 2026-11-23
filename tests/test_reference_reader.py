@@ -7,7 +7,9 @@ How she reads her offline library and talks about it (core/reference_reader.py, 
 article that answers is found, not its opening; the best passages win; a source is read further by its ref; a
 question for the library is read from it even when the model didn't ask; and a figure the text doesn't hold is
 never said (small ones too), while the rest of a natural answer stays. Fable's review (2026-11-22): every pack
-searched, spoken how-tos read first, "tell me more" left to the model.
+searched, spoken how-tos read first, "tell me more" left to the model. Then, from live answers on the whole
+library (2026-11-23): numbers spelled out, each index's own best, canning as the word that matters, rare words over
+common ones, meaning over words, and the rarer words together before any word.
 """
 from types import SimpleNamespace
 
@@ -145,3 +147,104 @@ def test_fable_review_spoken_how_tos_are_read_from_the_library_and_tell_me_more_
     plain = ChatReply(content="From memory", tool_calls=[])
     assert tool_loop._read_first(context, tools, "how do I purify water", plain).tool_calls
     assert tool_loop._read_first(context, tools, "tell me more about that?", plain) is plain
+
+
+def test_a_figure_the_text_spells_out_may_be_said_in_digits():
+    """'Sink a third of the post, about two feet' allows 1/3 and 2; 'four feet' still isn't 3."""
+    text = "Sink a third of the post's length, about two feet for a six-foot post."
+    assert invented_numbers("Set 1/3 of it in the ground, about 2 feet for a 6-foot post.", text, "", strict=True) == set()
+    assert invented_numbers("About 3 feet.", text, "", strict=True) == {"3"}
+
+
+def test_each_index_keeps_its_own_best_so_a_small_guide_isnt_drowned_by_a_big_one(tmp_path):
+    """per_index: every index's best few come back, whatever their bm25 next to a big index's."""
+    from core import pack_index
+
+    def index(name, rows):
+        """One index with these pages."""
+        pack = tmp_path / f"{name}.zim"
+        out = pack_index.index_path(tmp_path, pack)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        import sqlite3
+
+        db = sqlite3.connect(out)
+        db.execute("CREATE VIRTUAL TABLE docs USING fts5(path UNINDEXED, title, page UNINDEXED, body)")
+        db.executemany("INSERT INTO docs VALUES (?, ?, ?, ?)", rows)
+        db.commit()
+        db.close()
+
+    index("big", [(f"p{i}", f"Bean town {i}", 0, "bean " * 50) for i in range(30)])
+    index("usda", [("g.pdf", "Home canning guide", 4, "Green beans: pressure can them; never water-bath can beans.")])
+    library = SimpleNamespace(list_packs=lambda: [SimpleNamespace(file_path=str(tmp_path / "big.zim"), pack_id="big",
+                                                                  title="Big"),
+                                                  SimpleNamespace(file_path=str(tmp_path / "usda.zim"), pack_id="usda",
+                                                                  title="USDA")])
+    hits = pack_index.search(tmp_path, library, "canning green beans", full=True, per_index=2)
+    assert "USDA" in {h.pack_title for h in hits} and sum(h.pack_title == "Big" for h in hits) <= 2
+
+
+def test_canning_is_the_word_that_matters_and_rare_words_outweigh_common_ones():
+    """'safely can green beans' keeps canning; the canning guide's page outranks a pet answer that holds the common
+    words (green, safely, home) and a bean word."""
+    assert rr.terms("How do I safely can green beans at home?")[0] == "canning"
+    assert "canning" not in rr.terms("Can I plant beans in shade?")
+    wanted = rr.terms("How do I safely can green beans at home?")
+    guide = {"pack": "USDA", "article": "Guide 4", "ref": "u|1|4", "distinct": 3,
+             "text": "Canning snap beans: pressure can green beans; beans are low-acid."}
+    others = [{"pack": f"Q&A {i}", "article": "What green things can I safely feed at home?", "ref": f"q|{i}|0",
+               "distinct": 3, "text": "Green leaves are safe at home; beans too, safely cooked."} for i in range(4)]
+    for p in [guide, *others]:
+        p["score"] = rr.score(wanted, p["article"], p["text"])
+    ranked = rr.rank([*others, guide], keep=5, wanted=len(wanted), words=wanted)
+    assert "USDA" in [p["pack"] for p in ranked]  # kept among them; meaning settles the order (below)
+
+
+def test_passages_closest_in_meaning_come_first_when_her_embedding_model_answers(monkeypatch):
+    """by_meaning embeds the question and the best passages; rank then puts the nearest first, words breaking ties;
+    with no embedding model it says so (None) and the words' ranking stands."""
+    from core import meaning
+
+    found = [{"pack": "Cooking", "article": "Prickly pears", "text": "how to cut prickly pears", "ref": "c|1|0",
+              "score": 50, "distinct": 2},
+             {"pack": "Outdoors", "article": "Treating a wound", "text": "press on the cut to stop bleeding",
+              "ref": "o|1|0", "score": 30, "distinct": 2}]
+
+    class Backend:
+        """A pretend embedding model: the wound passage is near the question, the pears far."""
+
+        def __init__(self, *a):
+            """Nothing."""
+
+        def embed(self, model, texts, timeout):
+            """Vectors by their words."""
+            return [[1.0, 0.0] if ("deep cut" in t or "wound" in t) else [0.0, 1.0] for t in texts]
+
+    monkeypatch.setattr(meaning, "_base_url", lambda c: "http://127.0.0.1:11434")
+    monkeypatch.setattr("core.llm_manager.OllamaBackend", Backend)
+    meant = rr.by_meaning(SimpleNamespace(config=None), "How do I treat a deep cut?", found)
+    assert rr.rank(meant, keep=2, wanted=2)[0]["pack"] == "Outdoors"
+    monkeypatch.setattr(meaning, "_base_url", lambda c: None)
+    assert rr.by_meaning(SimpleNamespace(config=None), "How do I treat a deep cut?", found) is None
+
+
+def test_when_no_page_holds_every_word_the_rarer_words_together_come_before_any_word(tmp_path):
+    """'canning safely green beans home': no page has all five; the green-bean page (canning, green, beans) beats the
+    introduction that only says canning and home a lot."""
+    import sqlite3
+
+    from core import pack_index
+
+    pack = tmp_path / "usda.zim"
+    out = pack_index.index_path(tmp_path, pack)
+    out.parent.mkdir(parents=True)
+    db = sqlite3.connect(out)
+    db.execute("CREATE VIRTUAL TABLE docs USING fts5(path UNINDEXED, title, page UNINDEXED, body)")
+    rows = [("i.pdf", "Intro", n, "home canning home canning home canning guide " * 5) for n in range(1, 8)]
+    rows.append(("g.pdf", "Guide 4", 3, "Canning green beans: pressure can snap beans; green beans are low-acid."))
+    db.executemany("INSERT INTO docs VALUES (?, ?, ?, ?)", rows)
+    db.commit()
+    db.close()
+    library = SimpleNamespace(list_packs=lambda: [SimpleNamespace(file_path=str(pack), pack_id="usda", title="USDA")])
+    hits = pack_index.search(tmp_path, library, "canning safely green beans home", full=True, per_index=2)
+    assert hits[0].article_title == "Guide 4, page 3"
+

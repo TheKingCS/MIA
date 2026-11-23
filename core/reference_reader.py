@@ -10,7 +10,9 @@ pack is searched first; then the best few articles found are read whole (each pa
 at most READS, inside SECONDS) (core/reference_library_manager.article_text), and so
 are the pages her own index finds (core/pack_index.py: the PDFs and the packs Kiwix didn't index); from each, the
 window of text where the question's words gather most, cut at sentence ends. `rank` then keeps the windows that hold
-the most of the question (all of its words beat one of them repeated; the title counts too).
+the most of the question (all of its words beat one of them repeated, rare words beat common ones; the title
+counts too), and, where her embedding model answers, the best of those are ranked by how close they are in meaning to
+the question (`by_meaning`): words alone can't tell a deep cut from a fruit to cut.
 
 **Reading further** (`read`): a passage carries its `ref` (pack, entry, page); asked for more ("tell me more about
 that", "what does it say about hardening off?"), she reads that source at length, around what's asked.
@@ -50,12 +52,22 @@ HOW_TO_TALK = (
     "a passage's ref) if there's more worth knowing.")
 
 
+_CANNING = re.compile(r"\b(?:safely|properly|to|and|or|should|we'll|i'll)\s+can\b|\bcan\s+(?:my|our|the|some|fresh|"
+                      r"green|home|tomato|tomatoes|beans|corn|peaches|pears|apples|jam|jelly|meat|chicken|fish|soup|"
+                      r"stock|salsa|pickles|vegetables|veggies|fruit|peppers|carrots|potatoes)\b")
+
+
 def terms(text: str) -> list[str]:
-    """Pure logic. The words of a question worth matching, in order, once each (a simple plural matched too)."""
+    """Pure logic. The words of a question worth matching, in order, once each (a simple plural matched too). "can"
+    as preserving food ("safely can green beans", "to can tomatoes") is the word that matters: it's kept as
+    "canning", never thrown away with "can I"."""
+    lowered = (text or "").lower()
     out = []
-    for w in _WORD.findall((text or "").lower()):
+    for w in _WORD.findall(lowered):
         if w not in _STOP and w not in out:
             out.append(w)
+    if _CANNING.search(lowered) and "canning" not in out:
+        out.insert(0, "canning")
     return out
 
 
@@ -106,7 +118,8 @@ def score(question_terms: list[str], title: str, window: str) -> float:
 
 def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
     """Every pack searched, then the best articles read whole and cut to their best window: [{pack, article, text,
-    ref, score, distinct}]. Kiwix's index and hers both; at most READS articles read, within SECONDS."""
+    ref, score, distinct}]. Kiwix's index and hers (each index's own best two: `pack_index.search` per_index) both;
+    at most READS articles read, within SECONDS."""
     from core import pack_index
 
     wanted = terms(question)
@@ -131,7 +144,7 @@ def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
                       "distinct": distinct})
     root = getattr(library, "root_path", None)
     if root is not None:
-        for hit in pack_index.search(Path(root), library, question, limit=8, full=True, packs=packs):
+        for hit in pack_index.search(Path(root), library, question, full=True, packs=packs, per_index=2):
             window, distinct = best_window(hit.snippet, wanted)
             found.append({"pack": hit.pack_title, "article": hit.article_title, "text": window,
                           "ref": f"{hit.pack_id}|{hit.path}|{hit.page}", "score": score(wanted, hit.article_title, window),
@@ -139,17 +152,73 @@ def gather(library, question: str, per_pack: int = PER_PACK) -> list[dict]:
     return found
 
 
-def rank(found: list[dict], keep: int = 4, wanted: int = 0) -> list[dict]:
-    """Pure logic. The best passages, one per article, best first; only those holding about half the question's
-    words (`wanted` of them, at least one), so one word repeated doesn't fill the places."""
+def weighed(found: list[dict], wanted: list[str]) -> list[dict]:
+    """Pure logic. Each passage scored again with every question word weighed by how rare it is among the passages
+    found (a word most of them hold, like "green" or "home", counts for less than "canning" or "beans"), its title
+    counting too: the same passages, each with its new `score`."""
+    import math
+
+    stems = [_stem(w) for w in wanted]
+    words_of = [set(_stem(w) for w in _WORD.findall((p["article"] + " " + p["text"]).lower())) for p in found]
+    n = max(len(found), 1)
+    weight = {s: 1 + math.log(n / max(1, sum(1 for ws in words_of if s in ws))) for s in stems}
+    out = []
+    for p, ws in zip(found, words_of):
+        title = set(_stem(w) for w in _WORD.findall(p["article"].lower()))
+        count = sum(_hits(p["text"], [s])[1] for s in stems)
+        new = sum(weight[s] for s in stems if s in ws) * 10 + min(count, 20) * 0.5 + \
+            sum(weight[s] for s in stems if s in title) * 3
+        out.append({**p, "score": new})
+    return out
+
+
+def rank(found: list[dict], keep: int = 4, wanted: int = 0, words: Optional[list] = None) -> list[dict]:
+    """Pure logic. The best passages, one per article, best first (weighed by how rare each question word is among
+    them, when the question's `words` are given); only those holding about half the question's words (`wanted` of
+    them, at least one), so one word repeated doesn't fill the places."""
     need = max(1, (wanted + 1) // 2)
+    if words:
+        found = weighed(found, words)
+    if found and all("meaning" in p for p in found):  # ranked by meaning first, the words breaking ties
+        order = sorted(found, key=lambda p: (round(p["meaning"], 3), p["score"]), reverse=True)
+    else:
+        order = sorted(found, key=lambda p: p["score"], reverse=True)
     seen, out = set(), []
-    for p in sorted(found, key=lambda p: p["score"], reverse=True):
+    for p in order:
         key = (p["pack"], p["article"])
         if p["score"] >= 10 and p.get("distinct", need) >= need and key not in seen:
             seen.add(key)
             out.append(p)
     return out[:keep]
+
+
+MEANING_TOP = 24  # passages, best by their words, that are then ranked by meaning
+
+
+def by_meaning(context, question: str, found: list[dict], top: int = MEANING_TOP) -> Optional[list[dict]]:
+    """The best `top` passages by their words, ranked again by how close each is in meaning to the question (her
+    embedding model, core/meaning.py: the question as a search query, each passage as a document), each with its
+    `meaning` (cosine, 0 to 1). None when there's no embedding model here: the words' ranking stands. Words alone
+    can't tell "a deep cut" from prickly pears to cut, or canning beans from feeding a cat beans."""
+    from core import meaning
+
+    url = meaning._base_url(context)
+    if url is None or not found:
+        return None
+    from core.llm_manager import OllamaBackend
+
+    model = meaning._model(context)
+    query, document = ("search_query: ", "search_document: ") if model.startswith("nomic") else ("", "")
+    pool = sorted(found, key=lambda p: p["score"], reverse=True)[:top]
+    try:
+        vectors = OllamaBackend(url, model, "5m").embed(
+            model, [query + question] + [document + (p["article"] + ". " + p["text"])[:2000] for p in pool], 30)
+    except Exception:  # noqa: BLE001 - no meaning: the words decide
+        vectors = None
+    if not vectors or len(vectors) != len(pool) + 1:
+        return None
+    asked = vectors[0]
+    return [{**p, "meaning": meaning.cosine(asked, v)} for p, v in zip(pool, vectors[1:])]
 
 
 def read(library, ref: str, focus: str = "", size: int = 6000) -> Optional[dict]:

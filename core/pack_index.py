@@ -16,7 +16,8 @@ the packs, `.fetch/index/<pack file>.sqlite`, built under a temporary name and m
 again) and removes any whose pack is gone; a pack over BIG_PACK that Kiwix indexed (Wikipedia, the Q&A sites: pages,
 no PDFs) is left to Kiwix's index.
 
-**Searching** (`search`): the question's words, all of them first, then any of them, ranked by FTS5's bm25, each hit
+**Searching** (`search`): the question's words, all of them first, then the rarer ones together (the commonest in
+that index dropped one at a time, `_queries`), then any of them, ranked by FTS5's bm25, each hit
 with its page (for a PDF) and a passage around the words (or the page's whole text, for core/reference_reader.py to
 cut its best window from); `page_text` gives one page to read further. The indexes hold the packs' own published text, never
 anything of his.
@@ -334,10 +335,32 @@ def page_text(root: Path, pack_file: Path, path: str, page: int) -> tuple[str, s
     return (row[0], row[1]) if row else ("", "")
 
 
-def search(root: Path, library, query: str, limit: int = 20, full: bool = False, packs=None) -> list[Hit]:
+def _queries(db, terms: list[str]) -> list[str]:
+    """The FTS5 queries to try in order: all the words; then, dropping the word most common in this index one at a
+    time (while two are left), the rarer ones together ("canning green beans" before "canning OR safely OR home");
+    then any of them."""
+    counts = {}
+    for t in terms:
+        try:
+            counts[t] = db.execute("SELECT count(*) FROM docs WHERE docs MATCH ?", (_match([t], "AND"),)).fetchone()[0]
+        except sqlite3.Error:
+            counts[t] = 0
+    present = [t for t in terms if counts[t]]
+    out = [_match(terms, "AND")]
+    kept = sorted(present, key=lambda t: counts[t])
+    while len(kept) > 2:
+        kept = kept[:-1]  # the commonest goes
+        out.append(_match([t for t in terms if t in kept], "AND"))
+    out.append(_match(terms, "OR"))
+    return list(dict.fromkeys(out))
+
+
+def search(root: Path, library, query: str, limit: int = 20, full: bool = False, packs=None,
+           per_index: int = 0) -> list[Hit]:
     """The question's words in every index here: all of them first, then any; best first, at most `limit`. With
     `full`, each hit carries its page's whole text instead of a passage around the words (`limit` from each index,
-    so keep it small). `packs` is the library's list when the caller has it already."""
+    so keep it small). `packs` is the library's list when the caller has it already. With `per_index`, each index's
+    own best that many, unranked against each other (their bm25 scores aren't one scale): the caller ranks them."""
     terms = [t.lower() for t in _WORD.findall(query or "")][:12]
     folder = index_folder(root)
     if not terms or not folder.is_dir():
@@ -352,11 +375,12 @@ def search(root: Path, library, query: str, limit: int = 20, full: bool = False,
         except sqlite3.Error:
             continue
         try:
-            for joiner in ("AND", "OR"):
-                body = "body" if full else "snippet(docs, 3, '', '', ' ... ', 40)"
+            body = "body" if full else "snippet(docs, 3, '', '', ' ... ', 40)"
+            rows = []
+            for query in _queries(db, terms):
                 rows = db.execute(f"SELECT path, title, page, {body}, bm25(docs) "
                                   "FROM docs WHERE docs MATCH ? ORDER BY bm25(docs) LIMIT ?",
-                                  (_match(terms, joiner), limit)).fetchall()
+                                  (query, per_index or limit)).fetchall()
                 if rows:
                     break
             for path, title, page, snip, score in rows:
@@ -366,6 +390,8 @@ def search(root: Path, library, query: str, limit: int = 20, full: bool = False,
             log.info("An offline index couldn't be searched (%s): %s", db_file.name, problem)
         finally:
             db.close()
+    if per_index:  # each index's own best few: bm25 from different indexes isn't one scale (a big one wins)
+        return [h for _s, h in hits]
     return [h for _s, h in sorted(hits, key=lambda sh: sh[0])][:limit]
 
 
