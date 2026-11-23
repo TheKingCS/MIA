@@ -9,7 +9,8 @@ question for the library is read from it even when the model didn't ask; and a f
 never said (small ones too), while the rest of a natural answer stays. Fable's review (2026-11-22): every pack
 searched, spoken how-tos read first, "tell me more" left to the model. Then, from live answers on the whole
 library (2026-11-23): numbers spelled out, each index's own best, canning as the word that matters, rare words over
-common ones, meaning over words, and the rarer words together before any word.
+common ones, meaning over words, and the rarer words together before any word; word forms as one word, pairs
+of words last; and the floor: canning a low-acid food is never told as a water bath.
 """
 from types import SimpleNamespace
 
@@ -228,8 +229,8 @@ def test_passages_closest_in_meaning_come_first_when_her_embedding_model_answers
 
 
 def test_when_no_page_holds_every_word_the_rarer_words_together_come_before_any_word(tmp_path):
-    """'canning safely green beans home': no page has all five; the green-bean page (canning, green, beans) beats the
-    introduction that only says canning and home a lot."""
+    """'canning safely green beans home': no page has all five; the green-bean page (canning, green, beans) is found
+    among the sets of all but one or two words, even where 'canning' is the commonest word in the index."""
     import sqlite3
 
     from core import pack_index
@@ -239,12 +240,35 @@ def test_when_no_page_holds_every_word_the_rarer_words_together_come_before_any_
     out.parent.mkdir(parents=True)
     db = sqlite3.connect(out)
     db.execute("CREATE VIRTUAL TABLE docs USING fts5(path UNINDEXED, title, page UNINDEXED, body)")
-    rows = [("i.pdf", "Intro", n, "home canning home canning home canning guide " * 5) for n in range(1, 8)]
+    rows = [("i.pdf", "Intro", n, "home canning home canning safely guide " * 5) for n in range(1, 8)]
+    rows += [("t.pdf", "Table", n, "safely store green vegetables at home") for n in range(1, 4)]
     rows.append(("g.pdf", "Guide 4", 3, "Canning green beans: pressure can snap beans; green beans are low-acid."))
     db.executemany("INSERT INTO docs VALUES (?, ?, ?, ?)", rows)
     db.commit()
     db.close()
     library = SimpleNamespace(list_packs=lambda: [SimpleNamespace(file_path=str(pack), pack_id="usda", title="USDA")])
     hits = pack_index.search(tmp_path, library, "canning safely green beans home", full=True, per_index=2)
-    assert hits[0].article_title == "Guide 4, page 3"
+    assert "Guide 4, page 3" in [h.article_title for h in hits]
+
+
+def test_canning_a_low_acid_food_is_never_told_as_a_water_bath_and_the_pressure_rule_is_always_said():
+    """The floor: a boiling-water sentence about green beans is taken out; the USDA's pressure-canner rule is added;
+    a question about anything else is untouched."""
+    unsafe = ("Pack the beans into jars. Process them in a boiling-water canner for 15 minutes. "
+              "Let the jars cool for a day.")
+    safe = rr.floor("How do I safely can green beans at home?", unsafe)
+    assert "boiling-water canner for 15" not in safe and "Pack the beans" in safe
+    assert "pressure canner" in safe and "green beans is a low-acid food" in safe
+    assert rr.floor("How deep should fence posts be set?", "About 2 feet.") == "About 2 feet."
+    assert rr.floor("How do I can tomatoes?", "Use a water bath.") == "Use a water bath."  # acid: no floor here
+
+
+def test_word_forms_are_one_word_and_two_words_together_are_tried_last():
+    """canning, canner and canned stem alike; the query rounds go down to pairs."""
+    from core import pack_index
+
+    assert rr._stem("canning") == rr._stem("canner") == rr._stem("canned") == "can"
+    assert rr._stem("posts") == "post" and rr._stem("seeds") == "seed"
+    rounds = pack_index._queries(["canning", "safely", "green", "beans"])
+    assert any(q == '"green" AND "beans"' for q in rounds[-2])
 

@@ -16,8 +16,8 @@ the packs, `.fetch/index/<pack file>.sqlite`, built under a temporary name and m
 again) and removes any whose pack is gone; a pack over BIG_PACK that Kiwix indexed (Wikipedia, the Q&A sites: pages,
 no PDFs) is left to Kiwix's index.
 
-**Searching** (`search`): the question's words, all of them first, then the rarer ones together (the commonest in
-that index dropped one at a time, `_queries`), then any of them, ranked by FTS5's bm25, each hit
+**Searching** (`search`): the question's words, all of them first, then every set of all but one or two (the word left out
+each left out in turn, `_queries`), then any of them, ranked by FTS5's bm25, each hit
 with its page (for a PDF) and a passage around the words (or the page's whole text, for core/reference_reader.py to
 cut its best window from); `page_text` gives one page to read further. The indexes hold the packs' own published text, never
 anything of his.
@@ -335,24 +335,19 @@ def page_text(root: Path, pack_file: Path, path: str, page: int) -> tuple[str, s
     return (row[0], row[1]) if row else ("", "")
 
 
-def _queries(db, terms: list[str]) -> list[str]:
-    """The FTS5 queries to try in order: all the words; then, dropping the word most common in this index one at a
-    time (while two are left), the rarer ones together ("canning green beans" before "canning OR safely OR home");
-    then any of them."""
-    counts = {}
-    for t in terms:
-        try:
-            counts[t] = db.execute("SELECT count(*) FROM docs WHERE docs MATCH ?", (_match([t], "AND"),)).fetchone()[0]
-        except sqlite3.Error:
-            counts[t] = 0
-    present = [t for t in terms if counts[t]]
-    out = [_match(terms, "AND")]
-    kept = sorted(present, key=lambda t: counts[t])
-    while len(kept) > 2:
-        kept = kept[:-1]  # the commonest goes
-        out.append(_match([t for t in terms if t in kept], "AND"))
-    out.append(_match(terms, "OR"))
-    return list(dict.fromkeys(out))
+def _queries(terms: list[str]) -> list[list[str]]:
+    """Pure logic. The FTS5 queries to try, in rounds: all the words; then every set of all but one; then all but
+    two, and so on down to two words together; then any of them. A round's results are gathered together and the first round
+    that finds any is used: which word to leave out can't be told from how common it is (in a canning guide
+    "canning" is everywhere, yet it's the word that matters), so each is left out in turn and meaning picks."""
+    from itertools import combinations
+
+    rounds = [[_match(terms, "AND")]]
+    for size in range(len(terms) - 1, 1, -1):  # down to two words together
+        if size >= 2:
+            rounds.append([_match(list(c), "AND") for c in combinations(terms, size)])
+    rounds.append([_match(terms, "OR")])
+    return rounds
 
 
 def search(root: Path, library, query: str, limit: int = 20, full: bool = False, packs=None,
@@ -360,7 +355,8 @@ def search(root: Path, library, query: str, limit: int = 20, full: bool = False,
     """The question's words in every index here: all of them first, then any; best first, at most `limit`. With
     `full`, each hit carries its page's whole text instead of a passage around the words (`limit` from each index,
     so keep it small). `packs` is the library's list when the caller has it already. With `per_index`, each index's
-    own best that many, unranked against each other (their bm25 scores aren't one scale): the caller ranks them."""
+    own best that many from each query of the first round that finds any (`_queries`), unranked against other
+    indexes (their bm25 scores aren't one scale): the caller ranks them."""
     terms = [t.lower() for t in _WORD.findall(query or "")][:12]
     folder = index_folder(root)
     if not terms or not folder.is_dir():
@@ -377,10 +373,14 @@ def search(root: Path, library, query: str, limit: int = 20, full: bool = False,
         try:
             body = "body" if full else "snippet(docs, 3, '', '', ' ... ', 40)"
             rows = []
-            for query in _queries(db, terms):
-                rows = db.execute(f"SELECT path, title, page, {body}, bm25(docs) "
-                                  "FROM docs WHERE docs MATCH ? ORDER BY bm25(docs) LIMIT ?",
-                                  (query, per_index or limit)).fetchall()
+            for queries in _queries(terms):
+                found: dict = {}
+                for query in queries:
+                    for row in db.execute(f"SELECT path, title, page, {body}, bm25(docs) "
+                                          "FROM docs WHERE docs MATCH ? ORDER BY bm25(docs) LIMIT ?",
+                                          (query, per_index or limit)).fetchall():
+                        found.setdefault((row[0], row[2]), row)
+                rows = sorted(found.values(), key=lambda r: r[4])[:(per_index or limit) * max(1, len(queries))]
                 if rows:
                     break
             for path, title, page, snip, score in rows:

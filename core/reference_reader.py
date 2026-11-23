@@ -21,6 +21,10 @@ that", "what does it say about hardening off?"), she reads that source at length
 how to use it: in her own words and naturally, as someone who has read it, but every fact, number and step from the
 text, the source named in passing, and what it doesn't cover said plainly. The facts are found in code; the model
 only phrases them.
+
+**The floor** (`floor`): like core/safety_floor.py for a crisis, a rule in code under every library answer about one
+thing a source must never be read as leaving out: canning a low-acid food (green beans, corn, meat...) is only in a
+pressure canner. A sentence telling it to go in a boiling-water bath is taken out, and the USDA's rule is said.
 """
 
 from __future__ import annotations
@@ -72,8 +76,43 @@ def terms(text: str) -> list[str]:
 
 
 def _stem(word: str) -> str:
-    """Pure logic. A word without a plain plural ending, so 'posts' finds 'post'."""
-    return word[:-1] if len(word) > 4 and word.endswith("s") and not word.endswith("ss") else word
+    """Pure logic. A word without its plain endings, so 'posts' finds 'post' and 'canning', 'canner' and 'canned'
+    are one word ('can'): a plural s, then -ing, -ed or -er on a longer word (a doubled last letter undone)."""
+    if len(word) > 4 and word.endswith("s") and not word.endswith("ss"):
+        word = word[:-1]
+    for end in ("ing", "ed", "er"):
+        if len(word) > len(end) + 3 and word.endswith(end):
+            word = word[:-len(end)]
+            if len(word) > 2 and word[-1] == word[-2] and word[-1] not in "lsz":
+                word = word[:-1]
+            break
+    return word
+
+
+# The floor under her library answers (like core/safety_floor.py for a crisis): what a source must never be read as
+# leaving out. Canning a low-acid food in a boiling-water bath can grow botulism; the USDA Complete Guide to Home
+# Canning (Guide 1 and Guide 4) processes every one of these only in a pressure canner.
+LOW_ACID = ("green beans", "snap beans", "beans", "peas", "corn", "carrots", "potatoes", "beets", "asparagus",
+            "okra", "pumpkin", "squash", "mushrooms", "meat", "beef", "pork", "venison", "chicken", "poultry", "fish",
+            "salmon", "tuna", "soup", "stock", "broth", "vegetables")
+_CAN_WORDS = re.compile(r"\b(can|canning|canned|canner|jars?)\b")
+_BATH = re.compile(r"boiling[- ]water|water[- ]bath|open[- ]kettle", re.I)
+
+
+def floor(question: str, answer: str) -> str:
+    """Pure logic. A library answer with its safety floor: about canning a low-acid food (green beans, corn, meat...),
+    any sentence telling it to go in a boiling-water bath is taken out, and the USDA's rule is always said: a pressure
+    canner, never a water bath. Anything else is returned as it was."""
+    asked = (question or "").lower()
+    food = next((f for f in LOW_ACID if re.search(rf"\b{re.escape(f)}\b", asked)), "")
+    if not food or not (_CAN_WORDS.search(asked) or "canning" in terms(question)):
+        return answer
+    sentences = re.split(r"(?<=[.!?])\s+|\n+", (answer or "").strip())
+    kept = [s for s in sentences if s.strip() and not _BATH.search(s)]
+    rule = (f"One thing the USDA's canning guide is firm about: {food} is a low-acid food, canned only in a pressure "
+            "canner, at the pressure and time it gives for your altitude; a boiling-water bath can't make it safe "
+            "(botulism).")
+    return (" ".join(kept) + "\n\n" + rule).strip()
 
 
 def _hits(chunk: str, wanted: list[str]) -> tuple[int, int]:

@@ -244,7 +244,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     (`_read_first`); a library answer's figures are held to its text
     strictly (when every result is the library's), and one still
     stating its own after the retry loses just those sentences
-    (`without_figures`)."""
+    (`without_figures`); every library answer passes her safety floor
+    (`_finish`, core/reference_reader.floor)."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -321,14 +322,14 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             f"without them: only the numbers {where} gives, exactly; where it gives none, say so in words.")}], [])
         again = (retry.content if retry is not None else "") or ""
         if again.strip() and not invented_numbers(again, sources, prompt, strict):
-            return ChatReply(content=again.strip(), tool_calls=[])
+            return _finish(prompt, results, again.strip())
         trimmed = without_figures(again or said, invented_numbers(again or said, sources, prompt, strict)) \
             if strict else ""
         if trimmed:  # a library answer: only the sentences with a figure of its own go (2026-11-22, live)
             log.warning("Tool loop: a library answer stated figures the text didn't; those sentences left out.")
             from core.plain_words import strip_markdown
 
-            return ChatReply(content=strip_markdown(trimmed), tool_calls=[])
+            return _finish(prompt, results, strip_markdown(trimmed))
         log.warning("Tool loop answer had numbers the lookups didn't (%s); saying the results instead.",
                     ", ".join(sorted(wrong)))
         failures = getattr(context, "failures", None)
@@ -338,7 +339,17 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             except Exception:
                 log.exception("Couldn't note the invented number.")
     if not said.strip() or wrong:
-        return ChatReply(content=_plain(results), tool_calls=[])
+        return _finish(prompt, results, _plain(results))
     from core.plain_words import strip_markdown
 
-    return ChatReply(content=strip_markdown(said), tool_calls=[])
+    return _finish(prompt, results, strip_markdown(said))
+
+
+def _finish(prompt: str, results: list, text: str) -> ChatReply:
+    """The answer, with her library's safety floor under it when it was read from the library
+    (core/reference_reader.floor: canning a low-acid food is never told as a water bath)."""
+    if any(name in LIBRARY_TOOLS for name, _t in results):
+        from core.reference_reader import floor
+
+        text = floor(prompt, text)
+    return ChatReply(content=text, tool_calls=[])
