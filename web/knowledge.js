@@ -13,7 +13,7 @@
   let query = new URLSearchParams(location.search).get("q") || "";  // ?q= from the frame's search (Ctrl+K)
 
   async function read(hit) {
-    const a = await MIA.knowledgeArticle(hit.pack_id, hit.path);
+    const a = await MIA.knowledgeArticle(hit.pack_id, hit.path, hit.page);
     $("panel").replaceChildren(
       el("section", { class: "glass money-section" },
         el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => draw() }, "← Back")),
@@ -179,5 +179,13 @@
     ].filter(Boolean));
   }
 
-  MIAShell.start(draw);
+  // ?ref=pack|path|page (core/show_source.py): "show me where it says that" opens the article her answer came from.
+  const ref = new URLSearchParams(location.search).get("ref");
+  if (ref) {
+    const [packId, path, page] = ref.split("|");
+    MIAShell.start(() => read({ pack_id: packId, path: path || "", page: Number(page || 0), pack_title: "" })
+      .catch(() => { draw(); MIAShell.say("That source isn't in the library now."); }));
+  } else {
+    MIAShell.start(draw);
+  }
 })();

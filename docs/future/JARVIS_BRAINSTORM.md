@@ -110,7 +110,10 @@ reference packs first, its own safety floor, its vocabulary, the questions a pro
 library's per-pack index, Trade Master. The specialists should all read his own records (his plans, tools,
 inventory, budget) so an answer is about his place, not a textbook's.
 
-**3.2 Ask the library like an expert friend.** S-M, no decision needed.
+**3.2 Ask the library like an expert friend.** S-M, no decision needed. *"Show me where it says that" built
+2026-11-23 (`core/show_source.py`): the article (or PDF page) her last library answer came from opens on the Knowledge
+page. Following up on the same passage already works ("tell me more about that": `read_reference`). Next: sources
+compared when they disagree.*
 Follow-up questions about the same passage ("and if it's a pressure canner without a gauge?"), "show me where it says
 that" (the page opened at the passage), and a comparison across sources when they disagree ("the USDA says 25
 minutes; this older guide says 20; go by the USDA, it's newer and tested"). Builds on: `core/reference_reader.py`.

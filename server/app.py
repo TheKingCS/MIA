@@ -569,7 +569,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); a page that asks (/api/voice/turn?split=1) gets the reply's first part voiced and the rest as text to voice while it plays (core/speech_split.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); a page that asks (/api/voice/turn?split=1) gets the reply's first part voiced and the rest as text to voice while it plays (core/speech_split.py); /api/knowledge/article also reads a PDF's page (`page`, from a source her answer named, core/show_source.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
@@ -1600,10 +1600,21 @@ def create_app(context: AppContext) -> FastAPI:
         return FileResponse(path)
 
     @app.get("/api/knowledge/article")
-    def knowledge_article(pack: str, path: str, profile_id: str = Depends(require_profile_id)) -> dict:
+    def knowledge_article(pack: str, path: str, page: int = 0, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One article of a pack, or one page of a PDF in it (`page`, from a ref her answer named: core/show_source.py),
+        as {title, text, ...}; 404 when it isn't in the library."""
         library = getattr(context, "reference_library", None)
+        found = None
+        if library is not None and (page or path.lower().endswith(".pdf")):
+            from core import pack_index
+
+            got = library.get_pack(pack)
+            if got is not None:
+                with app.state.turn_lock:
+                    text, title = pack_index.page_text(Path(library.root_path), Path(got.file_path), path, page)
+                found = {"title": f"{title}, page {page + 1}", "text": text} if text else None
         with app.state.turn_lock:
-            found = library.article_text(pack, path) if library is not None else None
+            found = found or (library.article_text(pack, path) if library is not None else None)
         if found is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That article isn't in the library.")
         return found

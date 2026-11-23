@@ -245,7 +245,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # never waits on.
     """One turn, in order: the lockdown phrase (core/lockdown.py), "stop", "stop everything" and "carry on"
     (core/stop.py), in code, first, then mode switches and the safety floor (before anything is stored or the model asked), then
-    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a taught skill being shown, started or answered (core/taught_skills.take_turn), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
+    show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show me where it says that" (the library article her last answer came from, core/show_source.py), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a taught skill being shown, started or answered (core/taught_skills.take_turn), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
@@ -287,6 +287,13 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             said = f"Opening {going[1]}."
             add_message(conversation, "assistant", said)
             return AssistantTurn(replies=[said], open=going[0], route="area")
+        from core import show_source
+        from core.person_settings import person_id
+
+        source = show_source.reply(person_id(context), prompt)  # "show me where it says that" (brainstorm 3.2)
+        if source is not None:
+            add_message(conversation, "assistant", source[0])
+            return AssistantTurn(replies=[source[0]], open=source[1], route="source")
         from core.id_wallet import wants_card
 
         card = wants_card(context, prompt)  # "show my driver's license": the card opens on screen, its number never said

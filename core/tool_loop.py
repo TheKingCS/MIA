@@ -26,6 +26,9 @@ While a round of lookups runs and the model reads what they found, her orb says 
 domains (`DOING`, `round_doing`, through core/orb_state.doing: "Thinking · Reading your library"), so the wait is never
 a blank (brainstorm 1.1); each lookup itself shows as working.
 
+The sources a library lookup names are kept for the person (core/show_source.py), so "show me where it says that"
+opens the very article.
+
 A change (anything that writes records) is never run inside the loop:
 the reply goes back to the caller as before, through the usual path.
 Two checks (2026-11-10): a lookup the model names that wasn't offered
@@ -65,6 +68,17 @@ DOING = {"library": "Reading your library", "budget": "Checking your money", "de
          "memory": "Remembering", "browser": "Looking online", "maps": "Checking the map", "music": "Checking music",
          "inventory": "Checking what's on hand", "materials": "Checking materials", "jobs": "Checking jobs",
          "learning": "Checking your learning", "journal": "Reading your journal"}
+
+
+def _remember_sources(context, text: str) -> None:
+    """Keeps the sources a library lookup named, for "show me where it says that" (core/show_source.py)."""
+    from core import show_source
+    from core.person_settings import person_id
+
+    try:
+        show_source.remember(person_id(context), show_source.sources_in(text))
+    except Exception:  # noqa: BLE001 - remembering never breaks a turn
+        log.exception("Couldn't keep the library's sources")
 
 
 def round_doing(registry, names: list) -> str:
@@ -262,7 +276,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         budget: Optional[float] = None) -> Optional[ChatReply]:
     """One turn with the loop: the model's reply when it isn't only
     lookups (unchanged, for the caller's usual path); else one answer
-    built from what it looked up, her orb saying what each round is for
+    built from what it looked up (the library's sources kept for "show me
+    where it says that", core/show_source.py), her orb saying what each round is for
     until the model's follow-up is back (`round_doing`). A lookup that brings outside text
     (OUTSIDE_WHAT) is framed as information before the model reads it
     (WP-03). Only lookups offered in `tools` run,
@@ -331,6 +346,7 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                 results.append((call.name, text))
                 if call.name in LIBRARY_TOOLS:
                     asked += " " + " ".join(str(v) for v in (call.arguments or {}).values())
+                    _remember_sources(context, text)  # "show me where it says that" (core/show_source.py)
                 shown = _short(text, call.name)
                 if call.name in OUTSIDE_WHAT:  # outside text, marked as information before the model reads it (WP-03)
                     from core.browser_safety import outside

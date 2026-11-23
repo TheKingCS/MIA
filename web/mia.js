@@ -345,9 +345,10 @@
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],
       hits: q ? [{ pack_id: "wikipedia_en_medicine", pack_title: "Wikipedia: Medicine", path: "A/Hypothermia", title: "Hypothermia", snippet: "Hypothermia is a body core temperature below 35.0 °C. Shivering and confusion come first…" }] : [] })
       : call("GET", "/api/knowledge?q=" + encodeURIComponent(q)),
-    knowledgeArticle: (pack, path) => demo ? Promise.resolve({ title: "Hypothermia",
+    knowledgeArticle: (pack, path, page) => demo ? Promise.resolve({ title: "Hypothermia",
       text: "Hypothermia is defined as a body core temperature below 35.0 °C. Symptoms depend on the temperature..." })
-      : call("GET", "/api/knowledge/article?pack=" + encodeURIComponent(pack) + "&path=" + encodeURIComponent(path)),
+      : call("GET", "/api/knowledge/article?pack=" + encodeURIComponent(pack) + "&path=" + encodeURIComponent(path)
+        + (page ? "&page=" + encodeURIComponent(page) : "")),
     // MIA's own browser (core/web_browser.py): what it's on, steps waiting with their screenshots (MIA.download
     // "/api/browser/shot?id="), and the tasks she was taught.
     browser: () => demo ? Promise.resolve({ available: true, open: { title: "County Tax Office", url: "https://tax.example.gov/pay" },
