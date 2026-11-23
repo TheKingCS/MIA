@@ -6,7 +6,8 @@ Her offline library (core/offline_library.py, core/pack_index.py; Zac, 2026-11-2
 Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a wrong one never installed), one
 runner at a time, the older version replaced, her own index for packs Kiwix didn't index, and look_up's passages
 framed as outside text. A pretend Kiwix answers; the suite never reaches the network. Fable's review (2026-11-22): metalinks only from
-Kiwix, mirrors only public, an update whose old file is held open, a queue being read.
+Kiwix, mirrors only public, an update whose old file is held open, a queue being read. The fastest mirror first, a
+crawling one left for the next.
 """
 import hashlib
 import io
@@ -333,4 +334,41 @@ def test_fable_review_a_queue_being_read_is_waited_for_never_taken_as_empty(tmp_
 
     monkeypatch.setattr(Path, "read_text", flaky)
     assert lib._read_queue(tmp_path)["waiting"] == ["a"]
+
+
+def test_the_fastest_mirror_is_used_first_and_a_crawling_one_is_left_for_the_next(tmp_path, monkeypatch):
+    """fastest orders mirrors by what each sends in a few seconds; a download slower than SLOW for STALL seconds
+    moves to the next mirror and resumes there."""
+    now = [0.0]
+    clock = lambda: now[0]  # noqa: E731
+
+    class Mirrors:
+        """mirror-a crawls (one byte a tick), mirror-b is quick."""
+
+        def __call__(self, url, timeout=60, headers=None):
+            """A pretend answer whose reads advance the clock by how slow this mirror is."""
+            start = int((headers or {}).get("Range", "bytes=0-")[6:].split("-")[0] or 0)
+            body = BODY[start:]
+            slow = "mirror-a" in url
+
+            class Answer(io.BytesIO):
+                """Reads cost time on a slow mirror."""
+                status = 206 if start else 200
+                headers = {}
+
+                def read(self, n=-1):
+                    """One small block, slowly or quickly."""
+                    now[0] += 100.0 if slow else 0.01
+                    return super().read(min(n if n > 0 else 64, 64))
+            return Answer(body)
+
+    monkeypatch.setattr(lib, "PROBE", 128)
+    order = lib.fastest(["https://mirror-a.example/p", "https://mirror-b.example/p"], Mirrors(), clock)
+    assert order[0].startswith("https://mirror-b")
+    meta = {"name": "p.zim", "size": len(BODY), "sha256": hashlib.sha256(BODY).hexdigest(),
+            "urls": ["https://mirror-a.example/p", "https://mirror-b.example/p"]}
+    partial = tmp_path / "p.partial"
+    monkeypatch.setattr(lib, "fastest", lambda urls, get, clock: urls)  # crawl first, to see it left
+    lib.download(meta, partial, Mirrors(), clock=clock)
+    assert partial.read_bytes() == BODY
 
