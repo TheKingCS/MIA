@@ -43,6 +43,13 @@ holds how and what went wrong. Worth a reviewer's eye: the two lock-order fixes 
 `security_log.writing`, K-0325; the RLock, K-0321), the lost device's erase (`home_link.erase_here` wipes the
 device's data folder on a 410 with X-MIA-Erase, K-0329), `lab_push` (pushes only her own commits, K-0330), the
 model queue (every model call now waits its turn, K-0333), and the capability registry's write path (K-0327).
+**New 2026-11-23: the Jarvis brainstorm** (Zac: "polished and extremely intelligent, conversational, and aware ...
+please brainstorm"): `docs/future/JARVIS_BRAINSTORM.md`, 30-odd ideas in eight areas, each with what it builds on,
+its size and whether it needs him, and a recommended order. First built: 2.2, the weather against his plans
+(`core/weather_watch.py`: frost against crops in the ground, seedlings hardening off, heat and freezing water for
+the flock; a daily check, the tool `weather_for_my_plans`, lines on Home's weather card). Next in the recommended
+order: 2.1 (the status report made whole), 1.1 (barge-in and spoken acknowledgements), 4.1 grid-down mode, 4.2
+first aid with a floor. Three questions for Zac at its end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**

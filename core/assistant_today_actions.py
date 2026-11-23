@@ -63,8 +63,16 @@ def _action_set_weather_place(context, arguments: dict) -> str:
         return str(problem)
 
 
+def _action_weather_for_my_plans(context, arguments: dict) -> str:
+    """What the weather means for his garden and flock (core/weather_watch.say)."""
+    from core import weather_watch
+
+    return weather_watch.say(context)
+
+
 def register_today_actions(registry: AssistantActionRegistry) -> None:
-    """Registers get_today, get_week, get_weather and set_weather_place (domain today: the Dashboard's)."""
+    """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
+    core/weather_watch.py) and set_weather_place (domain today: the Dashboard's)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -91,6 +99,17 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_get_weather,
         trigger_phrases=("weather", "how hot", "how cold", "is it going to rain", "will it rain", "temperature outside",
                          "forecast"),
+    ))
+    registry.register(AssistantAction(
+        name="weather_for_my_plans", domain="today",
+        description="What the forecast means for what the user has going: frost tonight against the crops his "
+                    "confirmed garden plans have in the ground, a cold night for seedlings hardening off, heat or "
+                    "freezing water for his flock; or that nothing in it threatens them.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_weather_for_my_plans,
+        trigger_phrases=("frost tonight", "will it frost", "going to frost", "freeze tonight", "will it freeze",
+                         "cover the garden", "cover my plants", "weather for my garden", "weather mean for",
+                         "too hot for the chickens", "too cold for the chickens", "hens' water"),
     ))
     registry.register(AssistantAction(
         name="set_weather_place", domain="today",

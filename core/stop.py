@@ -59,7 +59,8 @@ JOBS_THAT_RUN = frozenset({"alarms", "power", "daily_occasions", "online", "self
 # The rest only notice something and offer a message, which the gate holds until he resumes.
 CHECKS_THAT_WAIT = frozenset({"workflows", "night_school", "good_news", "chronicle", "chronicle_issue",
                               "vault_captions", "dependency_audit", "system_map", "self_report", "capability_gaps",
-                              "seasons_of_memory", "loops", "fix_report", "findings", "rewards", "momentum"})
+                              "seasons_of_memory", "loops", "fix_report", "findings", "rewards", "momentum",
+                              "weather_watch"})
 # Never waiting, by name, because the definition says so: backups and their monthly restore check, the greenhouse's
 # watch, reminders he set.
 CHECKS_THAT_ALWAYS_RUN = frozenset({"auto_backup", "restore_drill", "greenhouse", "grow_alert", "obligation_reminders", "loop",

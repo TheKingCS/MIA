@@ -428,6 +428,10 @@
   "check:update_waiting": {
    "status": "none",
    "why": "says once, through the gate, that an MIA OS update is staged for his restart (Q-114); a fact about the machine, paced by the gate like every message: no judgement of MIA's in it to improve"
+  },
+  "check:weather_watch": {
+   "status": "none",
+   "why": "the forecast against his garden plans and flock, worked out in code from fixed thresholds (frost advisory, hard freeze, heat); each message paced by the gate, whose pacing already learns from what he opens or dismisses"
   }
  }
 }

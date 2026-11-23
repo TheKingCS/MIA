@@ -1866,6 +1866,8 @@ a.comms-row:hover .row-title { color: var(--accent); }
 .week-day .focus-list li { display: flex; align-items: center; gap: 12px; }
 .life-weather-row { display: flex; gap: 6px; }
 .life-weather-row input { flex: 1; min-width: 0; }
+/* what the weather means for his garden and flock (core/weather_watch.py): amber, it needs him tonight */
+.life-weather-watch { color: var(--attention); font-size: 0.9em; line-height: 1.35; }
 .life-mission .xpbar { margin-top: 4px; }
 .home-activity { margin-top: var(--gap); }
 .activity-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }

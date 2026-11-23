@@ -84,7 +84,8 @@
       "withdraw_workspace_entry",
       "propose_team",
       "start_team",
-      "stop_team"
+      "stop_team",
+      "weather_for_my_plans"
     ],
     "actions": [
       "direction.add",
@@ -170,7 +171,8 @@
       "teamwork.withdraw": "act_within_grant",
       "team.propose": "suggest",
       "team.start": "act_with_approval",
-      "team.stop": "act_within_grant"
+      "team.stop": "act_within_grant",
+      "weather_for_my_plans": "observe"
     },
     "outside": [
       "whats_in_the_workspace"
@@ -195,7 +197,8 @@
     },
     "background": [
       "chronicle",
-      "chronicle_issue"
+      "chronicle_issue",
+      "weather_watch"
     ]
   }
 }

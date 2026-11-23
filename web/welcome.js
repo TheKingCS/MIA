@@ -66,7 +66,9 @@
     const t = w.tomorrow;
     return el("div", { class: "glass life-card life-weather" }, el("span", { class: "pw-label" }, "Weather · " + w.place),
       el("strong", {}, w.text), el("span", { class: "dim" }, "Today " + w.high + "° / " + w.low + "°"
-        + (t ? " · Tomorrow " + t.words.toLowerCase() + ", " + t.high + "°" : "")));
+        + (t ? " · Tomorrow " + t.words.toLowerCase() + ", " + t.high + "°" : "")),
+      // what it means for his garden and flock (core/weather_watch.py): frost, a cold night, heat, freezing water
+      ...(w.watch || []).map((line) => el("span", { class: "life-weather-watch" }, line)));
   }
 
   function missionCard(m) {

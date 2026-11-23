@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1591 files, 352,683 lines; 1591 files describe themselves; 19,406 of 19,505 classes and functions are documented.
+1593 files, 353,025 lines; 1593 files describe themselves; 19,428 of 19,529 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-621 files, 178,987 lines; 9,201 of 9,287 classes and functions documented
+622 files, 179,219 lines; 9,212 of 9,298 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -560,6 +560,7 @@
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/weather.py`: The weather on the Dashboard (DEC-0153, Zac 2026-11-11: "yes", she may fetch it online). MIA had no weather source; this is it.
+- `core/weather_watch.py`: The forecast read against what he's actually got going (brainstorm 2.2, `docs/future/JARVIS_BRAINSTORM.md`; Zac, 2026-11-23: "aware"): a frost tonight against the crops his confirmed garden plans have in the ground, seedlings out hardening off on a cold night, heat and a freezing waterer against his
 - `core/web_about.py`: About MIA (web/about.html, DEC-0142): what MIA can honestly say about herself, on one page, every line from the facts and never from the model: what she is and her real scale (the system map, DEC-0139: files of code, tools, improvement loops, decisions on record, what's sealed on disk, what she's le
 - `core/web_account.py`: The web's Profile and Settings screens (2026-10-07, Zac: the gear's Profile and Settings). Profile is who you are: name, email, country, what MIA helps with, household, password and recovery code. Settings is how MIA behaves for you: the person's own settings from the PC app's Settings (core/person_
 - `core/web_areas.py`: MIA's eight destinations, their subdashboards and their hubs (DEC-0153, Zac 2026-11-11, superseding DEC-0129's fifteen areas): Dashboard, Home, Garage, Finances, Health + Fitness, AI Tools, Missions and Settings. A subdashboard is an area with a `parent` (Home's Kitchen, Smart Devices, Homestead, Re
@@ -919,7 +920,7 @@
 
 ## tests/: the test suite: what each part must do
 
-567 files, 93,387 lines; 7,842 of 7,855 classes and functions documented
+568 files, 93,495 lines; 7,853 of 7,868 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1424,6 +1425,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
+- `tests/test_weather_watch.py`: The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening off, heat and freezing water against the hens; in °F and °C; through t *(2 undocumented)*
 - `tests/test_web_about.py`: About MIA (DEC-0142, DEC-0057): the page reads every line from the facts, a missing source is a quiet gap, and how her apps are doing is counted by status on the asking device.
 - `tests/test_web_areas.py`: MIA's eight destinations and their subdashboards (DEC-0153, core/web_areas.py; the area hues from DEC-0130): the eight in Zac's order, every app and page with exactly one owner, every web page owned or listed as part of the frame, old area ids still opening, a hub listing its subdashboards, what the
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
@@ -1491,7 +1493,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 21,886 lines
+117 files, 21,888 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

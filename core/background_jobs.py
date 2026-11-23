@@ -138,6 +138,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("auto_backup", "_check_auto_backup"),
     ("restore_drill", "_check_restore_drill"),
     ("update_waiting", "_check_update_waiting"),
+    ("weather_watch", "_check_weather_watch"),
 )
 
 
@@ -385,6 +386,17 @@ class BackgroundJobs:
         from core import update_notice
 
         self._offers.extend(update_notice.offer(self.context, now))
+
+    def _check_weather_watch(self, now: datetime, today_iso: str) -> None:
+        """Tonight's frost against the crops in the ground, a cold night against seedlings hardening off, heat and a
+        freezing waterer against the flock (core/weather_watch.py): through the gate, once per concern per day. The
+        forecast is fetched here when none is kept (never from a test run)."""
+        import os
+
+        from core import weather, weather_watch
+
+        fetch = None if os.environ.get("PYTEST_CURRENT_TEST") else weather._fetch_json
+        self._offers.extend(weather_watch.offer(self.context, now, fetch))
 
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a

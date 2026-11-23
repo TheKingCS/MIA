@@ -336,11 +336,16 @@ def _display(context) -> dict:
 
 
 def _weather(context) -> dict:
-    """The weather card (core/weather.card); PLANNED when it can't be put together."""
+    """The weather card (core/weather.card) with what it means for his garden and flock (`watch`, each a sentence,
+    core/weather_watch.py); PLANNED when it can't be put together."""
     try:
         from core.weather import card
+        from core.weather_watch import watch
 
-        return card(context)
+        got = card(context)
+        if got.get("text"):
+            got = dict(got, watch=[c["text"] for c in watch(context, forecast=got)])
+        return got
     except Exception:
         log.exception("Weather failed")
         return {"status": "PLANNED", "text": None}
