@@ -67,7 +67,7 @@ REGISTRY: dict[str, Retention] = {
         properties.json questlines.json record_sets.json recreation.json recurring_mission_templates.json
         relationships_people.json relationships_pets.json response_styles.json revenue.json reward_shop.json
         saga_moments.json scripts.json seasons.json sensors.json shelf.json skill_definitions.json
-        skill_progress.json smart_closet.json step_plans.json tasks.json taught_skills.json teamwork.json
+        skill_progress.json smart_closet.json step_plans.json project_plans.json tasks.json taught_skills.json teamwork.json
         textbooks.json trade_session.json trail_maps.json training_session.json trips.json user_memories.json
         vocab.json waypoints.json why_checkpoints.json work_dungeon.json workout_exercises.json
         workout_sessions.json workout_templates.json world_map.json game.json good_news_following.json

@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from core.avatar_manager import AvatarManager
     from core.browser import Browsers
     from core.plan_library import PlanLibrary
+    from core.project_plans import ProjectPlanBook
     from core.budget_manager import BudgetManager
     from core.plaid_manager import PlaidManager
     from core.net_worth_history import NetWorthHistory
@@ -149,7 +150,8 @@ class AppContext:
     """Shared services passed to modules and GUI components (the device's own among them: the model, the voice, the
     sensors that send readings), the one store lock the server and the background schedule share, each person's
     stores, the skills they taught her among them (core/taught_skills.py) and the record of everything she runs in
-    steps (core/runs.py), what he's working on (core/activity_watch.py) and his recall index (core/recall_index.py),
+    steps (core/runs.py), what he's working on (core/activity_watch.py), his recall index (core/recall_index.py) and
+    the plans made together (core/project_plans.py),
     and, when MIA runs with no window, the
     runtime she belongs to and its schedule (core/runtime.py)."""
 
@@ -177,6 +179,7 @@ class AppContext:
     browsers: Optional["Browsers"] = field(default=None, repr=False)
     # The Library's plans shelf (core/plan_library.py).
     plans: Optional["PlanLibrary"] = field(default=None, repr=False)
+    project_plans: Optional["ProjectPlanBook"] = field(default=None, repr=False)  # plans made together (T-0060)
     # How things relate (core/links.py): the household's stated links.
     links: Optional["LinkStore"] = field(default=None, repr=False)
     # "Undo that" for MIA's changes (core/undo_log.py).

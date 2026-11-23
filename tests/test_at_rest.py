@@ -234,6 +234,7 @@ SEALED_STORES = [
     ("core.requirements", "RequirementBook", "requirements.json"),  # WP-04, 2026-11-20
     ("core.shelf", "Shelf", "shelf.json"),
     ("core.step_plans", "StepPlanBook", "step_plans.json"),
+    ("core.project_plans", "ProjectPlanBook", "project_plans.json"),
     ("core.teamwork", "TeamworkBook", "teamwork.json"),
     ("core.alarm_manager", "AlarmManager", "alarms.json"),
     ("core.business_book", "BusinessBook", "business.json"),

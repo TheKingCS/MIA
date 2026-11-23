@@ -30,7 +30,8 @@ pack) is indexed by her, so all of it can be searched; `resume` also indexes pac
 
 **Asking her** (`look_up`): the person's question searched in every pack (Kiwix's index and hers), the best passages
 kept by how many of the question's words they hold, each named by pack and article so she can say where it came from; framed as outside text
-(core/browser_safety.outside), so a pack's words are information, never instructions to her.
+(core/browser_safety.outside), so a pack's words are information, never instructions to her. `passages` gives
+the same passages as data ({pack, article, text}) for a screen: a plan's mission guide shows them (T-0060).
 
 Fetching is the action `library.fetch` (his yes; it downloads gigabytes); looking things up needs none.
 """
@@ -614,9 +615,25 @@ def rank(question: str, snippets: list, keep: int = 4) -> list:
     return [s for s in sorted(snippets, key=score, reverse=True) if score(s) > 0][:keep]
 
 
+def passages(library, question: str, keep: int = 4) -> list[dict]:
+    """The best passages in the offline library for a question (Kiwix's index and hers, ranked): [{pack, article,
+    text}]; [] with no packs or nothing matching. Raises on a search that fails (look_up says so)."""
+    question = " ".join(str(question or "").split())[:300]
+    if not question or library is None or not library.list_packs():
+        return []
+    from core import pack_index
+
+    candidates = list(library.search_all_packs(question, limit=200))
+    root = getattr(library, "root_path", None)
+    if root is not None:
+        candidates += pack_index.search(Path(root), library, question, limit=40)
+    return [{"pack": s.pack_title, "article": s.article_title, "text": " ".join(s.snippet.split())}
+            for s in rank(question, candidates, keep)]
+
+
 def look_up(library, question: str, keep: int = 4) -> str:
-    """Her answer's material from the offline library: the best passages for the question, each named by pack and
-    article, framed as outside text; or a plain sentence when there are no packs or nothing matches."""
+    """Her answer's material from the offline library: the best passages for the question (`passages`), each named
+    by pack and article, framed as outside text; or a plain sentence when there are no packs or nothing matches."""
     from core.browser_safety import outside
 
     question = " ".join(str(question or "").split())[:300]
@@ -625,17 +642,13 @@ def look_up(library, question: str, keep: int = 4) -> str:
     if library is None or not library.list_packs():
         return "Her offline library has no packs yet: they can be fetched on the Knowledge page."
     try:
-        from core import pack_index
-
-        candidates = list(library.search_all_packs(question, limit=200))
-        candidates += pack_index.search(Path(library.root_path), library, question, limit=40)
-        found = rank(question, candidates, keep)
+        found = passages(library, question, keep)
     except Exception as problem:  # noqa: BLE001 - a damaged pack never breaks the turn
         log.warning("The offline library's search failed: %s", problem)
         return "Her offline library couldn't be searched just now."
     if not found:
         return f"Nothing in her offline library matches \"{question}\"."
-    text = "\n\n".join(f"From {s.pack_title}, \"{s.article_title}\":\n{' '.join(s.snippet.split())}" for s in found)
+    text = "\n\n".join(f"From {p['pack']}, \"{p['article']}\":\n{p['text']}" for p in found)
     return outside(text, "From her offline library") + ("\nSay which pack and article each part came from; "
                                                         "where the passages don't cover it, say so.")
 

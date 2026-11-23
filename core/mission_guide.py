@@ -15,6 +15,8 @@ mission is worked from its own screen, with or without voice.
   Start that begins it. Its stop rules still end it at once by voice. `steps` lists the phase's steps, done and to
   come, for the sheet's step list.
 - `greenhouse`: the greenhouse setup (core/greenhouse_setup.py): the step, why, what it needs and what to say.
+- `plan`: a stage of a plan made together and confirmed (core/project_plans.py): the next step with why, what to watch
+  for and its check, Done for it, and what her offline library says about the stage (looked up once).
 
 A new kind of guided mission (a workout, a learning path's stage) is one more function in `GUIDES`, not a new
 system: the sheet and the voice side already read from here. Guides only read; every change is an action.
@@ -93,7 +95,49 @@ def _greenhouse(context, mission) -> Optional[dict]:
                                                                   "it's done, or say “done”."}
 
 
-GUIDES: tuple[Callable, ...] = (_trade, _greenhouse)
+_LIBRARY: dict = {}  # (plan, stage) -> what her offline library says, looked up once
+
+
+def _from_library(context, key: tuple, question: str) -> list:
+    """What her offline library says about a stage (core/offline_library.passages: [{pack, article, text}]), looked
+    up once; [] without packs, a match, or a search that works."""
+    if key not in _LIBRARY:
+        from core.offline_library import passages
+
+        try:
+            _LIBRARY[key] = passages(getattr(context, "reference_library", None), question, keep=2)
+        except Exception:  # noqa: BLE001 - a guide never fails for the library
+            _LIBRARY[key] = []
+    return _LIBRARY[key]
+
+
+def _plan(context, mission) -> Optional[dict]:
+    """A stage of a plan made together (core/project_plans.py): its next step with why, what to watch for and the
+    check, the stage's steps, and what her offline library says about it."""
+    book = getattr(context, "project_plans", None)
+    plan = book.for_mission(mission.mission_id) if book is not None else None
+    if plan is None or mission.status != "active":
+        return None
+    index = plan.mission_ids.index(mission.mission_id)
+    if index >= len(plan.stages):
+        return None
+    stage = plan.stages[index]
+    steps = stage["steps"]
+    done = [i < len(mission.objectives) and mission.objectives[i].progress >= 1 for i in range(len(steps))]
+    at = next((i for i, d in enumerate(done) if not d), len(steps) - 1)
+    step = steps[at]
+    listed = [{"n": i + 1, "title": s["do"], "done": done[i], "current": i == at} for i, s in enumerate(steps)]
+    library = _from_library(context, (plan.plan_id, index), stage.get("ask") or stage["name"])
+    return {"source": "plan", "live": True, "title": f"{plan.title}: {stage['name']}", "step": at + 1,
+            "of": len(steps), "steps": listed, "do": step["do"] + (f" ({step['when']})" if step.get("when") else ""),
+            "why": step.get("why", ""), "watch": list(step.get("watch") or []), "check": step.get("check", ""),
+            "drafted": False, "library": library,
+            "actions": [_act("objective.tick", "Done", {"mission_id": mission.mission_id, "index": at})]
+            if not all(done) else [],
+            "say": "Say “done” when it's done, or ask “why?” or “how do I…” about this step."}
+
+
+GUIDES: tuple[Callable, ...] = (_trade, _greenhouse, _plan)
 
 
 def guide_for(context, mission) -> Optional[dict]:

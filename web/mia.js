@@ -483,6 +483,14 @@
     suggestMission: () => demo ? demoOnly() : call("POST", "/api/missions/idea", {}),
     checkCaptures: () => demo ? demoOnly() : call("POST", "/api/journal/captures/check", {}),
     deletePack: (id, confirm) => demo ? demoOnly() : call("POST", "/api/knowledge/pack/delete", { id, confirm }),
+    // Plans made together (core/project_plans.py, T-0060): drafts and confirmed, builds, crops, frost dates.
+    planner: () => demo ? Promise.resolve({ available: true, plans: [{ plan_id: "p1", kind: "garden", title: "Garden: Bed 1", status: "draft",
+      shelf_plan: "", sizes: {}, beds: [{ name: "Bed 1", length_ft: 8, width_ft: 4, depth_in: 12 }], crops: [{ crop: "tomato", bed: "Bed 1", sqft: 8 }],
+      last_frost: "April 20", first_frost: "October 10", left_out: [], warnings: ["General planting-chart figures: the seed packet's own dates and spacing come first."],
+      stages: [{ name: "Prepare the beds", steps: [{ do: "Test the soil for pH and nutrients.", why: "Most vegetables want a pH of about 6 to 7.", when: "the week of February 2" }] },
+        { name: "Start seeds indoors", steps: [{ do: "Start tomatoes indoors: 8 for Bed 1, plus a few spares.", why: "It needs a head start: about 7 weeks before your last frost.", when: "the week of March 2" }] }] }], builds: [{ id: "raised_bed", title: "Raised garden bed", walked: true }],
+      crops: [{ id: "tomato", name: "Tomatoes", per_sqft: 1, days: 75 }, { id: "lettuce", name: "Lettuce", per_sqft: 4, days: 50 }],
+      last_frost: "", first_frost: "", sources: [] }) : call("GET", "/api/planner"),
     // Her offline library's shelves (core/offline_library.py): what she should have, what's here, downloads.
     knowledgeLibrary: () => demo ? Promise.resolve({ available: true, free_gb: 500, packs: [
       { key: "appropedia_en_all_maxi", title: "Appropedia", shelf: "Homestead and growing", set: "essential", why: "appropriate technology", size_gb: 0.58, here: true, newer: false, published: true, state: "" },

@@ -93,6 +93,8 @@
         el("div", { class: "row-buttons" },
           d.sizes.length || !d.kept ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.keep", params }) },
             d.sized ? "Keep This Size" : "Keep It") : null,
+          el("button", { type: "button", class: "btn btn-amber", onclick: () => MIAShell.act({ kind: "projectplan.draft",
+            params: { kind: "build", shelf_plan: d.id, sizes: planSizes || {} } }).then(() => { location.href = "planner.html"; }) }, "Plan It With MIA"),
           el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.project", params }) }, "Start A Project"),
           d.kept ? el("button", { type: "button", class: "btn btn-ghost", onclick: () => MIAShell.act({ kind: "plan.delete", params: { plan_id: d.id } }) }, "Let It Go") : null),
         el("p", { class: "dim" }, "Or say \"what would a 10 by 12 one need?\" or \"what do I still need to buy for it?\"")));
@@ -130,6 +132,8 @@
     if (!shelf.available) return null;
     return el("section", { class: "glass money-section" }, el("h2", {}, "Plans"),
       el("p", { class: "dim" }, "Woodworking plans, structure blueprints and material lists. Built-in plans work out for any size; save your own PDFs and drawings into " + shelf.folder + "."),
+      el("div", { class: "row-buttons" }, el("a", { class: "btn btn-amber btn-small", href: "planner.html" }, "Open The Planner"),
+        el("span", { class: "dim" }, "Plan a build or a garden together; confirmed, every step becomes a mission.")),
       el("div", { class: "sync-rows" }, shelf.plans.map((p) => el("div", { class: "sync-row" },
         el("div", {}, el("p", { class: "council-text" }, p.title), el("p", { class: "dim" }, p.where + (p.summary ? " · " + p.summary : ""))),
         el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => openPlan(p) }, "Open")))),

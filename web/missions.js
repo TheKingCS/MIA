@@ -81,6 +81,8 @@
       g.actions.length ? el("div", { class: "row-buttons" }, g.actions.map((a, i) =>
         btn(a.label, i === 0 ? "btn-green" : "btn-ghost btn-small", () => { close(); act({ kind: a.kind, params: a.params }); }))) : null,
       g.say ? el("p", { class: "dim" }, g.say) : null,
+      g.library && g.library.length ? el("details", { class: "ms-library" }, el("summary", {}, "From Her Offline Library"),
+        ...g.library.map((p) => el("p", { class: "dim" }, el("strong", {}, p.pack + ", " + p.article + ": "), p.text))) : null,
       g.steps && g.steps.length ? el("ol", { class: "quest-path ms-steps" }, g.steps.map((st) =>
         el("li", { class: "quest-step " + (st.done ? "done" : st.current ? "current" : "") },
           el("span", { class: "quest-node", "aria-hidden": "true" }, st.done ? "✓" : String(st.n)),

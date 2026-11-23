@@ -95,6 +95,8 @@ ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, wh
 ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
 TRADES = Page("trades", "Trade Master", "workshop", "Any job or diagnosis, walked through step by step.", "trades.html")
+PLANNER = Page("planner", "Planner", "workshop", "Plan a build or a garden together; confirmed, its steps are missions.",
+               "planner.html")
 LOOKUP = Page("lookup", "Look It Up Online", "search", "Search the web through your own search engine.", "lookup.html")
 SHELF = Page("shelf", "Your Shelf", "assistant", "What you sent to keep for a week: use it together.", "shelf.html")
 SPECIALISTS = Page("specialists", "Specialists", "assistant", "Her specialists: which are ready, which are coming.",
@@ -155,7 +157,7 @@ AREAS: tuple[Area, ...] = (
          ("calendar", "notes", "life_notes", "operating_journal", "memories", "vault", "closet", "files", "relationships",
           CHECKIN, "observations", CONNECTIONS), hue="#ff8ad8", parent="home"),
     Area("learning", "Learning", "classroom", "Study, the library and what you're learning.",
-         ("classroom", "knowledge", "world_intel", GUITAR, TRADES), hue="#6a5cff", parent="home",
+         ("classroom", "knowledge", "world_intel", GUITAR, TRADES, PLANNER), hue="#6a5cff", parent="home",
          shortcuts=("skills",)),
     # ---- Finances' subdashboard
     Area("businesses", "Businesses", "business", "Each business: its money, its work, its customers.",

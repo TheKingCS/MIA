@@ -38,6 +38,7 @@ from core.assistant_asset_part_actions import register_asset_part_actions
 from core.assistant_backup_actions import register_backup_actions
 from core.assistant_desktop_actions import register_desktop_actions
 from core.assistant_library_actions import register_library_actions
+from core.assistant_project_plan_actions import register_project_plan_actions
 from core.assistant_browser_actions import register_browser_actions
 from core.assistant_business_view_actions import register_business_view_actions
 from core.assistant_camera_actions import register_camera_actions
@@ -174,7 +175,7 @@ class AssistantTools:
         """
         Register the built-in actions the Assistant can invoke via
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
-        milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py). Registered here (not in modules/assistant/) for
+        milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py; plans made together, core/assistant_project_plan_actions.py). Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
         the one place independent core services get wired together
         (tools in their own files register here too, such as
@@ -236,6 +237,7 @@ class AssistantTools:
         register_backup_actions(self.context.assistant_actions)  # when MIA was last backed up (DEC-0125)
         register_desktop_actions(self.context.assistant_actions)  # MIA OS's settings pages and Linux apps (FW-11)
         register_library_actions(self.context.assistant_actions)  # her offline library: look up, fetch packs
+        register_project_plan_actions(self.context.assistant_actions)  # plans made together, then missions
         register_voice_choice_actions(self.context.assistant_actions)  # MIA's own voice, effect and volume (DEC-0125)
         register_subscription_actions(self.context.assistant_actions)  # "still using it?" on subscriptions (DEC-0054)
         register_proposal_actions(self.context.assistant_actions)  # mission ideas and field recordings (DEC-0125)

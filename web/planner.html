@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Planner — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="knowledge" class="mod-knowledge">
+  <!--
+    Planner: plans made together, then missions (core/project_plans.py, T-0060). A build from the Library's shelf at
+    your size, walked by Trade Master, or a garden from your beds, crops and frost dates; a draft until Confirm, which
+    makes the project and one mission a stage. MIA.planner(), MIAShell.act(projectplan.*). Formatting only (claude,
+    2026-11-22); the look is muse's.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1>Planner</h1>
+        <p class="tagline" id="plan-sub">Plan it together; confirm it; every step becomes a mission.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js?v=17"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="planner.js"></script>
+</body>
+</html>

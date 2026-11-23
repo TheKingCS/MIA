@@ -96,6 +96,7 @@ from core.pathway_manager import PathwayManager
 from core.personal_data import PersonalData
 from core.plaid_manager import PlaidManager
 from core.plan_library import PlanLibrary
+from core.project_plans import ProjectPlanBook
 from core.power_manager import PowerManager
 from core.private_journal import PrivateJournalManager
 from core.product_manager import ProductManager
@@ -137,7 +138,8 @@ log = get_logger(__name__)
 def build_services(context: AppContext) -> AppContext:
     """Puts every core service on the context, in dependency order (a store that reaches into another is built after
     it), ending with each person's own stores, the module manager (nothing discovered yet), search and the usage
-    and help services; a download of her offline packs left waiting goes on (core/offline_library.resume). The
+    and help services (the plans made together among the stores, core/project_plans.py); a download of her
+    offline packs left waiting goes on (core/offline_library.resume). The
     same for the desktop and the headless runtime; returns the context."""
     # ProfileManager needs the context to already exist (it reads/
     # writes config through it), so it's attached right after
@@ -219,6 +221,7 @@ def build_services(context: AppContext) -> AppContext:
         pass
     # The Library's plans shelf: built-in plans, kept ones, and plan files (core/plan_library.py).
     context.plans = PlanLibrary(context)
+    context.project_plans = ProjectPlanBook(context)  # plans made together, then missions (T-0060)
     context.llm = LLMManager(context)
     # Online/offline awareness — first check starts now in the
     # background; see core/connectivity.py.

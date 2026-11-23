@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1581 files, 349,276 lines; 1581 files describe themselves; 19,235 of 19,334 classes and functions are documented.
+1586 files, 350,433 lines; 1586 files describe themselves; 19,290 of 19,389 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-616 files, 176,720 lines; 9,096 of 9,182 classes and functions documented
+619 files, 177,607 lines; 9,141 of 9,227 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -76,6 +76,7 @@
 - `core/assistant_playlist_actions.py`: Playlists by voice (DEC-0125, 2026-11-08): Music could play a playlist out loud but not make or change one; the screen's five playlist kinds had no voice twin. Five tools, each through the screen's own action (core/assistant_correction_actions.py `_run`, so "undo that" works):
 - `core/assistant_price_actions.py`: Prices and comparisons by voice (Procurement P2, DEC-0172, DEC-0125): "Lowe's has 2x4 studs at $3.98" (`record_price`). "Is $3.98 a good price for 2x4 studs?" (`check_price`): against the prices seen, never a guess. "Compare prices for the greenhouse fans" (`compare_need`): each store's latest price
 - `core/assistant_progress_actions.py`: Her game layer by voice (DEC-0125, full use both ways): the Character, Skills and Reward Shop screens had nothing to say when asked. Four tools, each phrased from the same data its screen draws (core/web_progress.py, core/game_layer.py), so voice and screen never disagree:
+- `core/assistant_project_plan_actions.py`: Plans made together, by voice (core/project_plans.py, T-0060): "let's plan a 4 by 8 raised bed", "plan my garden: tomatoes and peppers in bed one", "make it 10 by 12", "leave out the materials stage", "confirm the plan". Drafting and changing a draft write only the draft (undoable); confirming makes
 - `core/assistant_proposal_actions.py`: Mission ideas and field recordings by voice (DEC-0125; the screens are the Missions page's idea card and the Journal's From the Field, core web_proposals.py). "Suggest a mission" asks the model for one idea (checked in code before it's kept); "accept it" / "set it aside" decide it. "Any field record
 - `core/assistant_records_actions.py`: Asking about what she keeps (DEC-0125, full use both ways): Insurance, Kept, the Operating Journal, Play and Files could be changed by voice or only seen on a screen, never asked about. Five read-only tools, each phrased from its screen's own data so voice and screen agree:
 - `core/assistant_requirement_actions.py`: What each project needs, by voice (Procurement P1, DEC-0172, DEC-0125): "What do I still need for the greenhouse?" (`project_needs`). "The greenhouse needs four ventilation fans" (`add_need`). "I got the fans for the greenhouse" (`got_need`), "the greenhouse doesn't need the fans" (`drop_need`).
@@ -240,6 +241,7 @@
 - `core/game_master.py`: MIA as Game Master (DEC-0046): the real day's trouble, reframed as the game the person is playing, without pretending the trouble isn't real.
 - `core/gamification.py`: Shared "grant XP for a real completion" helper — docs/VISION.md's Missions/Gamification concept, extended 2026-09-11 from the dedicated Missions module out to routine completion moments in other domains (Kitchen/Workout/Maintenance/Budget), at the user's own explicit request to make MIA feel more li
 - `core/gap_actions.py`: Capability gaps (core/capability_gaps.py, build plan step 9) through the action contract (core/actions.py): `gap.build` (the person says yes to a new ability being built: a development task naming the gap, never their words) and `gap.dismiss` (not wanted: never offered again).
+- `core/garden_plans.py`: A garden worked out in code (T-0060; Zac, 2026-11-22: "auto generated missions for plans we confirm together for different builds or gardens"), the way core/build_calcs.py works out lumber: never by the model.
 - `core/generate_worker.py`: Runs a single `AppContext.llm.generate()` call off the GUI thread — same reasoning as `core/chat_worker.py`, a separate class only because `generate()` and `chat_with_tools()` have different signatures/return types (`Optional[str]` vs `Optional[ChatReply]`), not because the threading concern itself 
 - `core/geo_grid.py`: Grid references (build plan step 14, DEC-0099): UTM and MGRS, the Military Grid Reference System that maps, search-and-rescue teams and TAK apps use ("18S UJ 23396 06441"), worked out in code from latitude and longitude on the WGS84 ellipsoid. No dependency, no network. Accurate to well under a metr
 - `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the
@@ -409,6 +411,7 @@
 - `core/profile_manager.py`: Manages MIA user profiles — distinct from ConfigManager, which holds app-wide settings (theme, kiosk mode, etc.) that apply regardless of who's using the device. A "profile" is a person: their display name, when they were created, an optional password, and (going forward) the namespace their persona
 - `core/progress_history.py`: A prestige reached or a reward unlocked, kept in that person's history (2026-11-09, from the self-audit's unheard events). The profile manager publishes `profile.prestiged` and `profile.reward_unlocked`, and until now nothing heard either: a toast said it, and then it was gone, so the Chronicle and 
 - `core/project_manager.py`: Project Manager — the v1.0+-bucket "Project Manager" tool listed in docs/ROADMAP.md's Toolbox section, buildable with zero real hardware (same rationale as Activity Log/Navigation/Field Kit/Expedition Mode before it). Top-level container for a Project; each Project can hold multiple core.task_manage
+- `core/project_plans.py`: Plans made together, then missions (T-0060; Zac, 2026-11-22: "making MIA super capable for teaching homestead and construction thoroughly step by step offline ... I want to be able to have auto generated missions for plans we confirm together for different builds or gardens, projects, etc"; his answ
 - `core/protected_list.py`: What MIA can never change about herself, in words (DEC-0225; Zac, 2026-11-17, Q-78: "show me the list, and add grants, the stop, browser safety and her inspection to it"). The list itself is `core.dev_lab.PROTECTED`: a lab change that touches any of it is refused before it's tested, whoever wrote it
 - `core/push_subscription_manager.py`: Persists the Web Push subscriptions a profile's browser/PWA has registered — the endpoint URL + keys `PushManager.subscribe()` returns, per the standard Web Push API. One profile can have more than one subscription (a phone and a laptop, say), so this is a list keyed by profile_id, not a single fiel
 - `core/push_to_talk_source.py`: The headless counterpart to `core/push_to_talk_trigger.py` — that module is a `QObject` (needs Qt signals to marshal a GPIO interrupt back onto the GUI thread), which `core/voice_loop.py` deliberately avoids so a Core deployment never needs PySide6/Qt installed at all (see `core/core_runtime.py`'s d
@@ -627,7 +630,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,688 lines; 57 of 57 classes and functions documented
+2 files, 4,697 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -914,7 +917,7 @@
 
 ## tests/: the test suite: what each part must do
 
-563 files, 92,402 lines; 7,776 of 7,789 classes and functions documented
+564 files, 92,554 lines; 7,786 of 7,799 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1274,6 +1277,7 @@
 - `tests/test_profile_manager.py`: Unit tests for the birthday field added to core.profile_manager.Profile (2026-07-14 aesthetic pass part 5) — not a full ProfileManager test suite (none existed before this addition; out of scope to backfill here). Isolates config_manager's _CONFIG_FILE into a tmp_path scratch area, same "config.save
 - `tests/test_progress_history.py`: A prestige reached or a reward unlocked is kept in that person's history (core/progress_history.py, 2026-11-09): heard on the bus, recorded in their own folder, the reward named from its tier, and nothing for a profile that's gone.
 - `tests/test_project_manager.py`: Unit tests for core.project_manager. Isolates _DATA_DIR/_PROJECTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_expedition_manager.py's isolated_paths).
+- `tests/test_project_plans.py`: Plans made together, then missions (core/project_plans.py, core/garden_plans.py, T-0060; Zac, 2026-11-22: builds and gardens both together): a garden's dates worked out from his frosts, plants and soil worked out in code, a build from the Library's shelf walked by Trade Master, a draft changed, then
 - `tests/test_project_tool.py`: Unit tests for modules.toolbox.tools.project_tool's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_property_module.py`: Unit tests for modules.property.module's pure functions — same style and, deliberately, near-identical cases to tests/test_garage_module.py, since the two modules share the same logic shape and differ only in which Maintenance categories they filter to.
 - `tests/test_property_photo.py`: A property's photo (Q-0014, 2026-11-07): kept in the household's own folder, linked with a name that changes with the file, and never served from outside that folder.
@@ -1482,7 +1486,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-116 files, 21,753 lines
+117 files, 21,862 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
@@ -1561,6 +1565,7 @@
 - `web/places-watch.js`: places-watch.js — location quests (claude, 2026-10-17, DEC-0028 #13). When the person switched them on (Settings → Location quests), MIA.shell() lists their places; while MIA is open this watches the device's position and compares it here, on the device. Nothing about where you are is sent anywhere.
 - `web/places.js`: places.js — My Places (claude, 2026-10-17, DEC-0028 #13). Renders MIA.places() (core/places.py): each place, what arriving there does, Add Place (where you are now, or typed in), Remove, and the switch that lets this device notice when you arrive (Settings → Location quests). Formatting only; the wa
 - `web/plan.js`: plan.js — My plan (claude, 2026-10-14, DEC-0020, Muse's H-0028): one screen, reached from both Kitchen and Workout. Goals, the training week (which days, and what each training day is), skills to practice, meals and preferences, milestones. Renders MIA.fitness() (plan, plan_text); every save is a fi
+- `web/planner.js`: planner.js — plans made together, then missions (claude, 2026-11-22, T-0060; core/project_plans.py). Reads MIA.planner(): the plans (drafts and confirmed), the Library's builds (marked when Trade Master walks them), the crops and the frost dates. Every change is an action (MIAShell.act): projectplan
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
 - `web/player.js`: player.js — the one music player every page shares (claude, 2026-11-10; Zac: a song has to keep playing with the Music app closed and while moving through the other apps). A song used to live in the Music page's own <audio>, so it stopped the moment another page opened. Now whoever can keep playing 
 - `web/portals.js`: portals.js — Portal Pictures (claude, 2026-11-08, DEC-0140 / DEC-0130). Renders MIA.portals() (core/portal_pictures.py): each area's portal in the Nexus with the picture it shows (your painting, the original, or none yet), and three ways to change it: Paint One (MIA paints it on the PC's graphics ca

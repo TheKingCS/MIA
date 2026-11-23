@@ -122,6 +122,7 @@ from core.shelf import Shelf
 from core.teamwork import TeamworkBook
 from core.step_plans import StepPlanBook
 from core.plan_library import PlanLibrary
+from core.project_plans import ProjectPlanBook
 from core.life_notes import LifeNotes
 from core.gps_tracks import GpsTracks
 from core.health_manager import HealthStore
@@ -234,6 +235,7 @@ HOUSEHOLD_STORES: tuple[tuple[str, type], ...] = (
     ("alarms", AlarmManager),
     ("inventory", InventoryManager),
     ("plans", PlanLibrary),  # the Library's plans shelf: plans the household kept (core/plan_library.py)
+    ("project_plans", ProjectPlanBook),  # plans made together, then missions (core/project_plans.py, T-0060)
     ("data_logger", DataLoggerManager),
     ("components", ComponentManager),
     ("materials", MaterialManager),

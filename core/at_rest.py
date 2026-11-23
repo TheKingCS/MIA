@@ -133,6 +133,7 @@ SEALED = frozenset({
     "requirements.json",  # what each project needs
     "shelf.json",  # what he set aside for later
     "step_plans.json",  # plans worked step by step
+    "project_plans.json",  # plans made together, then missions (T-0060)
     "teamwork.json",  # a project's workspace and teams
     # 2026-11-20 (WP-04): the household's records, their readers moved to open_text
     "alarms.json",

@@ -13,8 +13,9 @@ from the plan, each step taught on its own screen and by voice. It builds on the
 learning paths and the specialists; T-0060 lists what's there and the order. Ask him first: a build or a garden
 first, and which offline references to fetch. He answered: both together, and as many offline resources as
 help. Built: her offline library (core/offline_library.py, core/pack_index.py: 74 Kiwix packs on 14 shelves, fetched
-with Kiwix's own hash, her own index where Kiwix has none, the look_up_offline tool, Knowledge's Get More); next,
-the plan-together flow and the garden planner (T-0060).
+with Kiwix's own hash, her own index where Kiwix has none, the look_up_offline tool, Knowledge's Get More), and the Planner (core/project_plans.py, core/garden_plans.py,
+web/planner.html): a build or a garden drafted together, Confirm makes the project and a mission a stage, each mission
+guided step by step with what her library says. For Zac: try it on a real build and his garden (his frost dates).
 
 **New 2026-11-22, Fable reviewed Opus's work WP-01 to FW-12** with three independent reviewers (the backlog, the
 data and sync paths, MIA OS). Every serious finding was checked against the code first, then fixed in one

@@ -16,14 +16,16 @@
     "plans",
     "plan_buying",
     "plan_saving",
-    "library"
+    "library",
+    "project_plans"
   ],
   "entry": "web:knowledge.html",
   "components": {
     "interface": {
       "web": [
         "knowledge.html",
-        "specialists.html"
+        "specialists.html",
+        "planner.html"
       ],
       "qt": [
         "modules/knowledge"
@@ -34,7 +36,8 @@
     },
     "services": [],
     "data": [
-      "plans"
+      "plans",
+      "project_plans"
     ],
     "agents": [],
     "workflows": [],
@@ -43,7 +46,10 @@
   "capabilities": {
     "tools": [
       "ask_specialist",
+      "change_plan",
+      "confirm_plan",
       "cut_list",
+      "drop_plan",
       "fetch_reference_packs",
       "find_plans",
       "forget_plan",
@@ -54,7 +60,9 @@
       "model_inspections",
       "plan_shopping_list",
       "plan_sources",
+      "plan_with_me",
       "show_plan",
+      "show_plans",
       "specialist_roster",
       "start_plan_project",
       "work_it_out"
@@ -64,7 +72,11 @@
       "plan.delete",
       "plan.import",
       "plan.keep",
-      "plan.project"
+      "plan.project",
+      "projectplan.change",
+      "projectplan.confirm",
+      "projectplan.draft",
+      "projectplan.drop"
     ],
     "tiers": {
       "ask_specialist": "act_within_grant",
@@ -87,13 +99,23 @@
       "model_inspections": "observe",
       "look_up_offline": "observe",
       "fetch_reference_packs": "act_with_approval",
-      "library.fetch": "act_with_approval"
+      "library.fetch": "act_with_approval",
+      "plan_with_me": "act_within_grant",
+      "change_plan": "act_within_grant",
+      "show_plans": "observe",
+      "confirm_plan": "act_with_approval",
+      "drop_plan": "act_with_approval",
+      "projectplan.draft": "act_within_grant",
+      "projectplan.change": "act_within_grant",
+      "projectplan.confirm": "act_with_approval",
+      "projectplan.drop": "act_with_approval"
     },
     "outside": []
   },
   "uses": [],
   "permissions": [
-    "stores.write:plans"
+    "stores.write:plans",
+    "stores.write:project_plans"
   ],
   "dependencies": [],
   "runtime": {
