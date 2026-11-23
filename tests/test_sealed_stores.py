@@ -30,10 +30,12 @@ def test_the_not_sealed_list_only_shrinks():
 
 def test_each_sealed_store_reads_through_open_text():
     """A module that names a SEALED file reads files through open_text (or open_bytes, open_lines): a store that read
-    it plainly would see the sealed envelope, not its records."""
+    it plainly would see the sealed envelope, not its records. The registries that name every file (at_rest itself,
+    retention...) don't count as its reader (Fable's review, 2026-11-22: at_rest alone made every name pass)."""
     sources = {p: p.read_text(encoding="utf-8") for p in list((ROOT / "core").glob("*.py"))}
+    registries = {"at_rest.py", "retention.py", "your_data.py", "personal_data.py", "app_ecosystem.py"}
     for name in at_rest.SEALED:
-        mods = [p.name for p, text in sources.items() if f'"{name}"' in text]
+        mods = [p.name for p, text in sources.items() if f'"{name}"' in text and p.name not in registries]
         readers = [m for m in mods if re.search(r"open_text\(|open_bytes\(|open_lines\(",
                                                  sources[ROOT / "core" / m])]
         assert readers, f"{name}: no module that names it reads through open_text"

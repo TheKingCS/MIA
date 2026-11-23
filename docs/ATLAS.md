@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1588 files, 351,323 lines; 1588 files describe themselves; 19,340 of 19,439 classes and functions are documented.
+1589 files, 351,472 lines; 1589 files describe themselves; 19,348 of 19,447 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-620 files, 178,208 lines; 9,168 of 9,254 classes and functions documented
+620 files, 178,241 lines; 9,170 of 9,256 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -631,7 +631,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,697 lines; 57 of 57 classes and functions documented
+2 files, 4,707 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -918,7 +918,7 @@
 
 ## tests/: the test suite: what each part must do
 
-565 files, 92,841 lines; 7,809 of 7,822 classes and functions documented
+566 files, 92,931 lines; 7,815 of 7,828 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1316,6 +1316,7 @@
 - `tests/test_review_2026_11_20_data.py`: Fable's review of Opus's work, 2026-11-20, batch B (data, sync, learning): an older phone's sync isn't ended by a file that stays on one device now; the homestead's snapshots sync; a sync conflict's kept copy is sealed, never swept into another undo, and its note quotes nothing; the daily budget is 
 - `tests/test_review_2026_11_20_low.py`: The review of 2026-11-20's low findings, fixed: code beyond Python needs the lab's proof; a taught skill's hold is refused; the phone removes the PC's greenhouse link once; a summer date gets summer time; a pick with no offer is learned; a busy port is tried again; a site opens in his browser, not t
 - `tests/test_review_2026_11_22.py`: Fable's review of 2026-11-22 (three independent reviewers over WP-01 to FW-12): each fixed finding held by a test of the behaviour it described.
+- `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths.
 - `tests/test_runs.py`: The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record for anything MIA runs in steps. A run moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off run looking alive or calls it done (shown with a real process killed m
@@ -1488,7 +1489,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 21,864 lines
+117 files, 21,880 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign

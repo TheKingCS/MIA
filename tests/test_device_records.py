@@ -123,8 +123,8 @@ def test_the_device_erases_mias_data_when_told_and_only_then(tmp_path, monkeypat
 
 
 def test_the_server_refuses_a_lost_key_with_erase_and_a_household_key_outside_its_routes(tmp_path, monkeypatch):
-    """Through the real server: a lost device is answered 410 with X-MIA-Erase and logged once; a household device's
-    key is refused for a person's records."""
+    """Through the real server: a lost device is answered 410 with X-MIA-Erase and logged once (the report says it
+    ended the account's other sign-ins); a household device's key is refused for a person's records."""
     from fastapi.testclient import TestClient
 
     import server.app as server_app
@@ -144,7 +144,7 @@ def test_the_server_refuses_a_lost_key_with_erase_and_a_household_key_outside_it
     me = {"Authorization": "Bearer " + token}
     [row] = client.get("/api/security/log", headers=me).json()["linked_devices"]
     assert row["kind"] == "phone" and row["scope"] == "person" and "·" not in row["name"]
-    assert client.post("/api/security/devices/lost", json={"device": row["id"]}, headers=me).json() == {"lost": True}
+    assert client.post("/api/security/devices/lost", json={"device": row["id"]}, headers=me).json()["lost"] is True
     gone = client.get("/api/shell", headers=phone)
     assert gone.status_code == 410 and gone.headers.get("X-MIA-Erase") == "1"
     client.get("/api/shell", headers=phone)

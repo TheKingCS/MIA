@@ -84,13 +84,14 @@ def _tests_index() -> dict:
 
 
 def covering_tests(app_id: str, operations: list[str], index: Optional[dict] = None) -> list[str]:
-    """Pure logic over the test files. The tests that cover a capability: a file named after it, or one that names one
-    of its tools or action kinds (in quotes, as tests call them)."""
+    """Pure logic over the test files. The tests that cover a capability: the file named exactly after it, or one that
+    names one of its tools or action kinds (in quotes, as tests call them). Never a file whose name only starts like
+    it (test_home_link.py isn't the home app's)."""
     index = _tests_index() if index is None else index
     names = [f'"{op}"' for op in operations if op]
     out = []
     for name, text in index.items():
-        if name.startswith(f"test_{app_id}") or any(n in text for n in names):
+        if name in (f"test_{app_id}.py", f"test_{app_id}") or any(n in text for n in names):
             out.append(name)
     return sorted(out)
 
@@ -123,24 +124,41 @@ def _devices(manifest: dict, gaps: dict, app_id: str) -> dict:
     return out
 
 
-def _use(context, operations: set, days: int) -> tuple[Optional[str], Optional[str]]:
+def _read_use(context, days: int) -> tuple[list, list]:
+    """The turn traces and the Fix-It Log's events of the last `days` days, read once for every capability."""
+    traces = getattr(context, "traces", None)
+    book = getattr(context, "failures", None)
+    try:
+        recent = list(traces.recent(2000)) if traces is not None else []
+    except Exception:  # noqa: BLE001 - traces that won't read say nothing
+        recent = []
+    try:
+        events = list(book.events(days=days)) if book is not None else []
+    except Exception:  # noqa: BLE001 - a log that won't read says nothing
+        events = []
+    return recent, events
+
+
+def _use(context, operations: set, days: int, read: Optional[tuple] = None) -> tuple[Optional[str], Optional[str]]:
     """(the last turn that used one of these tools, the last tool error of one of them) in the last `days` days, from
-    the turn traces and the Fix-It Log; None for either that isn't there."""
+    the turn traces and the Fix-It Log (`read`: both as `_read_use` gave them, so they're read once); None for either
+    that isn't there."""
     since = _now() - timedelta(days=days)
     used = failed = None
-    traces = getattr(context, "traces", None)
+    recent, events = read if read is not None else _read_use(context, days)
     try:
-        for t in (traces.recent(2000) if traces is not None else []):
+        for t in recent:
             if operations & set(t.get("tools_called") or []):
                 at = _when(t.get("at", ""))
                 if at and at >= since and (used is None or t["at"] > used):
                     used = t["at"]
     except Exception:  # noqa: BLE001 - traces that won't read say nothing
         used = None
-    book = getattr(context, "failures", None)
     try:
-        for e in (book.events(days=days) if book is not None else []):
-            if e.get("kind") == "tool_error" and e.get("tool") in operations and (failed is None or e.get("at", "") > failed):
+        for e in events:
+            at = _when(e.get("at", ""))
+            if (e.get("kind") == "tool_error" and e.get("tool") in operations and at and at >= since
+                    and (failed is None or e.get("at", "") > failed)):
                 failed = e.get("at")
     except Exception:  # noqa: BLE001 - a log that won't read says nothing
         failed = None
@@ -195,7 +213,7 @@ def _decide(status: dict, tests: list, used: Optional[str], failed: Optional[str
 def records(context=None, here: str = "pc") -> list[dict]:
     """Every capability's record, built now from its sources (never from a kept copy): {id, name, owner, needs:
     {services, permissions}, operations: {tools, actions}, devices, state, evidence, confidence, verification: {tests},
-    last_success, last_failure, limits}; the tool failures are read once, over FAILED_DAYS. Retired apps are kept as
+    last_success, last_failure, limits}; the turn traces and tool failures are read once for all of them (`_read_use`). Retired apps are kept as
     retired; a planned piece (a parity gap to do) is a
     record of its own."""
     from core import capabilities
@@ -205,6 +223,7 @@ def records(context=None, here: str = "pc") -> list[dict]:
     statuses = {r["id"]: r for r in capabilities.capability_status(context, here)}
     index = _tests_index()
     offline = _offline()
+    read = _read_use(context, max(RECENT_DAYS, FAILED_DAYS))  # once, not twice for every app
     out = []
     for app_id, m in sorted(manifests.items()):
         caps = m.get("capabilities") or {}
@@ -219,8 +238,8 @@ def records(context=None, here: str = "pc") -> list[dict]:
                         "verification": {"tests": []}, "last_success": None, "last_failure": None})
             continue
         tests = covering_tests(app_id, tools + actions, index)
-        used, _ = _use(context, set(tools), RECENT_DAYS)
-        _, failed = _use(context, set(tools), FAILED_DAYS)  # a failure counts for a week (FAILED_DAYS)
+        used, _ = _use(context, set(tools), RECENT_DAYS, read)
+        _, failed = _use(context, set(tools), FAILED_DAYS, read)  # a failure counts for a week (FAILED_DAYS)
         state, evidence, confidence = _decide(statuses.get(app_id, {}), tests, used, failed, bool(tools), offline)
         out.append({**record, "state": state, "evidence": evidence, "confidence": confidence,
                     "verification": {"tests": tests}, "last_success": used, "last_failure": failed})

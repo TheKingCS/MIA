@@ -255,7 +255,8 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None, config=N
     (zip archives don't record empty directories, so this case is
     indistinguishable from "predates the feature") — restore favors
     never wiping real content over faithfully reproducing "this was
-    empty," the safer default for a destructive operation. The
+    empty," the safer default for a destructive operation. What
+    couldn't be read is cleared (core/data_recovery.recovered). The
     restored config notes when (`sync.restored_at`, `_mark_restored`), so a
     linked phone's next sync takes this computer's copies (REQ-IMP-005).
     """
@@ -308,6 +309,9 @@ def restore_backup(source_path: Path, passphrase: Optional[str] = None, config=N
         _CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(staged_config, _CONFIG_FILE)
         _mark_restored(_CONFIG_FILE)
+        from core import data_recovery
+
+        data_recovery.recovered()  # what couldn't be read is back
 
         staged_data = staging_dir / "data"
         if _DATA_DIR.exists():

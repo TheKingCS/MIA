@@ -221,6 +221,7 @@
     cancelled = false;
     recorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
+      micShown(false);
       if (cancelled) { cancelled = false; return; }
       orbState("thinking");
       try {
@@ -235,14 +236,29 @@
       } catch (err) { answer(err.message); }
     };
     recorder.start();
+    micShown(true);
     orbState("listening");
     setTimeout(() => { if (recorder && recorder.state === "recording") recorder.stop(); }, 8000);
+  }
+  // The microphone in use (FW-11, REQ-DSK-025): shown while it records, never hidden, with Stop (nothing is sent).
+  let micPill = null;
+  function micShown(on) {
+    if (!on) { if (micPill) { micPill.remove(); micPill = null; } return; }
+    if (micPill) return;
+    micPill = document.createElement("button");
+    micPill.type = "button";
+    micPill.className = "g-mic";
+    micPill.setAttribute("aria-label", "Microphone on: stop listening");
+    micPill.textContent = "● Mic on · Stop";
+    micPill.onclick = () => stopListening();
+    document.body.append(micPill);
   }
   // Move away while she listens: stop without sending anything.
   let cancelled = false, demoTimer = null;
   function stopListening() {
     clearTimeout(demoTimer); clearTimeout(captionTimer);
     if (recorder && recorder.state === "recording") { cancelled = true; recorder.stop(); }
+    micShown(false);
     orbState("idle");
   }
 

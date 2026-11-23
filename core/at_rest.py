@@ -772,7 +772,8 @@ def seal_history(folders: list[Path]) -> int:
 
 def seal_now(folders: list[Path]) -> int:
     """Seals every plain SEALED file in these folders now (`python -m tools.data_key seal`) rather than at its
-    store's next save; returns how many. Each goes through atomic_write_text."""
+    store's next save, sync's base copies of them too (`.sync/<scope>/`); returns how many. Each goes through
+    atomic_write_text."""
     from core.atomic_write import atomic_write_text
 
     if _current_key() is None:
@@ -780,10 +781,10 @@ def seal_now(folders: list[Path]) -> int:
     done = 0
     for folder in folders:
         for name in sorted(SEALED):
-            path = Path(folder) / name
-            if path.is_file():
-                text = path.read_text(encoding="utf-8")
-                if not is_sealed(text):
-                    atomic_write_text(path, text)
-                    done += 1
+            for path in [Path(folder) / name, *sorted((Path(folder) / ".sync").glob(f"*/{name}"))]:
+                if path.is_file():
+                    text = path.read_text(encoding="utf-8")
+                    if not is_sealed(text):
+                        atomic_write_text(path, text)
+                        done += 1
     return done

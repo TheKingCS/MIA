@@ -58,9 +58,12 @@ def test_the_state_comes_from_evidence_and_says_which():
 
 
 def test_tests_cover_a_capability_by_its_name_or_its_operations():
-    """A test file named after the app, or one naming one of its tools or action kinds in quotes, covers it."""
-    index = {"test_greenhouse_x.py": "", "test_other.py": 'propose(context, "batch.add")', "test_none.py": "batch.add"}
-    assert reg.covering_tests("greenhouse", ["batch.add"], index) == ["test_greenhouse_x.py", "test_other.py"]
+    """A test file named exactly after the app, or one naming one of its tools or action kinds in quotes, covers it;
+    one whose name only starts like the app's doesn't."""
+    index = {"test_greenhouse.py": "", "test_greenhouse_x.py": "", "test_other.py": 'propose(context, "batch.add")',
+             "test_none.py": "batch.add"}
+    assert reg.covering_tests("greenhouse", ["batch.add"], index) == ["test_greenhouse.py", "test_other.py"]
+    # a file whose name only starts like the app's isn't its (Fable's review, 2026-11-22)
 
 
 def test_last_success_and_failure_come_from_the_traces_and_the_fix_it_log():

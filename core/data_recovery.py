@@ -21,7 +21,8 @@ out immediately, rather than only if they ever thought to go looking
 for a stray `.corrupted-<timestamp>` file.
 
 Each file that couldn't be read is also kept for the run (`unreadable`), so her answers name the
-records they couldn't read rather than treating them as empty (REQ-FUN-221).
+records they couldn't read rather than treating them as empty (REQ-FUN-221), until a restore brings
+them back (`recovered`).
 """
 
 from __future__ import annotations
@@ -33,6 +34,12 @@ log = get_logger(__name__)
 
 
 _unreadable: dict[str, float] = {}  # this run's stores that couldn't be read, by file name (REQ-FUN-221)
+
+
+def recovered() -> None:
+    """A restore brought the records back (core/backup_manager.restore_backup): nothing is unreadable any more, so
+    her answers stop naming files as missing."""
+    _unreadable.clear()
 
 
 def unreadable() -> list[str]:
@@ -48,7 +55,8 @@ def notify_data_corruption(context: AppContext, filename: str) -> None:
     failure via log.exception()), so this must never itself become a
     new crash. Graceful no-op with no notifications service, same
     stance as every other optional-service check in this codebase. The file's name is also kept for this run
-    (`unreadable`), so her answers say which of his records they couldn't read."""
+    (`unreadable`), so her answers say which of his records they couldn't read; the note says the way back (last
+    night's backup), never a log file."""
     import time
 
     _unreadable.setdefault(str(filename), time.time())
@@ -63,7 +71,8 @@ def notify_data_corruption(context: AppContext, filename: str) -> None:
     try:
         context.notifications.notify(
             title="⚠️ Data file recovered",
-            message=f"'{filename}' couldn't be read and has been reset to empty. See logs/mia.log for detail.",
+            message=(f"'{filename}' couldn't be read, so MIA started it empty; the unreadable copy was kept aside. "
+                     "Restoring last night's backup (Settings, Backups) brings its records back."),
             level="warning",
             source="system",
         )

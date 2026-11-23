@@ -520,3 +520,7 @@ body.hud-on #stage::before { display: none; }  /* truly clear: black is see-thro
 .nexus-ring .n-big { margin: 0 0 6px; font-weight: 300; font-size: 26px; color: var(--ink);
   text-shadow: 0 0 16px color-mix(in srgb, var(--hue, var(--accent)) 70%, transparent); }
 @media (prefers-reduced-motion: reduce) { .nexus-ring .n-name { transition: none; } }
+/* The microphone in use (FW-11, REQ-DSK-025): on top while it records; pressing it stops without sending. */
+.g-mic { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 20; padding: 4px 12px;
+  border-radius: 999px; border: 1px solid var(--attention); background: transparent; color: var(--attention);
+  font: inherit; font-size: 14px; }

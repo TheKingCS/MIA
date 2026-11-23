@@ -573,7 +573,7 @@ def create_app(context: AppContext) -> FastAPI:
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
-    core/home_link.erase_proof, WP-10). /api/knowledge/library is her offline library's shelves (core/offline_library.py); /api/planner the plans made together (core/project_plans.py, on the person's own view). /api/desktop lists MIA OS's Linux apps and System
+    core/home_link.erase_proof, WP-10). /api/live also takes a linked device's key as its token (a household device's one route), and a device reported lost ends the account's other sign-ins too. /api/knowledge/library is her offline library's shelves (core/offline_library.py); /api/planner the plans made together (core/project_plans.py, on the person's own view). /api/desktop lists MIA OS's Linux apps and System
     Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), and /api/models/store her models
     (core/model_store.py, REQ-HW-014). The Sign-ins page says whether the security log is intact
     and still holds the newest link the asking device kept (WP-05, `_chain_of`), and lists the phones linked to this
@@ -3396,15 +3396,22 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(problem)) from None
 
     @app.post("/api/security/devices/lost")
-    def lost_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
+    def lost_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id),
+                    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_bearer_scheme)) -> dict:
         """Reports one of this person's linked devices lost (the Sign-ins page, WP-10, Q-90): its key is refused at once,
-        and when it next reaches this computer it's told to erase MIA's data on it."""
+        and when it next reaches this computer it's told to erase MIA's data on it. A sign-in in its browser can't be
+        told from another device's, so every other sign-in of the account ends too (this one stays)."""
         from core import linked_devices
 
         if not linked_devices.mark_lost(context.config, profile_id, str((body or {}).get("device", ""))):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No linked device of yours by that id.")
-        _security("device_lost", profile_id, request)
-        return {"lost": True}
+        this = credentials.credentials if credentials is not None else ""
+        ended = [t for t, pid in list(app.state.sessions.items()) if pid == profile_id and t != this
+                 and t in app.state.session_started]
+        for token in ended:
+            _end_session(token)
+        _security("device_lost", profile_id, request, f"{len(ended)} other sign-in{'s' if len(ended) != 1 else ''} ended")
+        return {"lost": True, "ended": len(ended)}
 
     @app.post("/api/security/devices/unlink")
     def unlink_device(body: dict, request: Request, profile_id: str = Depends(require_profile_id)) -> dict:
@@ -4527,7 +4534,10 @@ def create_app(context: AppContext) -> FastAPI:
         from core import live
 
         if app.state.sessions.get(token) is None:
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
+            from core import linked_devices  # a linked device's key may follow it too (HOUSEHOLD_ROUTES)
+
+            if not token or linked_devices.for_key(context.config, token) is None:
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session.")
 
         from core import orb_state
 
