@@ -4,8 +4,8 @@ tests.test_weather_watch
 
 The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost
 against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening
-off, heat and freezing water against the hens, rain likely tomorrow against a build in progress; in °F and °C;
-through the gate once per concern per day.
+off, heat and freezing water against the hens, rain likely tomorrow (by its chance, else its words) against a build
+in progress; in °F and °C; through the gate once per concern per day; a gap in tomorrow's figures never loses today.
 """
 
 from datetime import date, datetime
@@ -129,3 +129,20 @@ def test_only_confirmed_builds_with_an_active_mission_count():
     ctx = SimpleNamespace(project_plans=SimpleNamespace(listed=lambda: plans),
                           missions=SimpleNamespace(all_missions=lambda: missions))
     assert ww._builds(ctx) == ("Coop",)
+
+
+def test_rain_in_tomorrows_words_counts_when_no_chance_is_given():
+    forecast = _forecast(50, high=60)
+    forecast["tomorrow"]["words"] = "Thunderstorm"
+    [rain] = ww.concerns(forecast, {}, 0, ("Coop",))
+    assert "says thunderstorm" in rain["text"]
+
+
+def test_a_gap_in_tomorrows_figures_keeps_today():
+    from core import weather
+
+    raw = {"current": {"temperature_2m": 50, "weather_code": 0},
+           "daily": {"time": ["d0", "d1"], "temperature_2m_max": [60, None], "temperature_2m_min": [40, None],
+                     "weather_code": [0, 61]}}
+    got = weather.read(raw, "fahrenheit")
+    assert got["high"] == 60 and got["tomorrow"] is None

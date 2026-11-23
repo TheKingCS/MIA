@@ -97,7 +97,8 @@ def forecast_url(lat: float, lon: float, unit: str) -> str:
 
 def read(raw: dict, unit: str) -> Optional[dict]:
     """Pure logic. Open-Meteo's answer as {temp, words, high, low, tomorrow: {high, low, words, rain?}, unit: "°F"},
-    every temperature rounded, tomorrow's chance of rain when it's given; None when it isn't a forecast."""
+    every temperature rounded, tomorrow's chance of rain when it's given (tomorrow None when its figures have a gap);
+    None when it isn't a forecast."""
     try:
         now, daily = raw["current"], raw["daily"]
         sign = "°F" if unit == "fahrenheit" else "°C"
@@ -112,9 +113,12 @@ def read(raw: dict, unit: str) -> Optional[dict]:
             return got
 
         today = day(0)
+        try:  # a gap in tomorrow's figures leaves tomorrow out, never today (review 2026-11-23)
+            tomorrow = day(1) if len(daily.get("time") or []) > 1 else None
+        except (KeyError, IndexError, TypeError, ValueError):
+            tomorrow = None
         return {"temp": round(now["temperature_2m"]), "words": CODES.get(int(now["weather_code"]), ""),
-                "high": today["high"], "low": today["low"],
-                "tomorrow": day(1) if len(daily.get("time") or []) > 1 else None, "unit": sign}
+                "high": today["high"], "low": today["low"], "tomorrow": tomorrow, "unit": sign}
     except (KeyError, IndexError, TypeError, ValueError):
         return None
 

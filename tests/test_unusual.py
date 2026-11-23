@@ -4,7 +4,7 @@ tests.test_unusual
 
 Noticing what's unusual (core/unusual.py, brainstorm 2.3): the hens' laying against their own normal, judged only
 on days he logged before today (today's count is still coming in), said once a week through the gate with the
-causes worth checking; and a spending category already far past its usual whole month.
+causes worth checking; and a spending category already far past its usual whole month, said once a month.
 """
 
 from datetime import date, datetime, timedelta
@@ -94,3 +94,10 @@ def test_spending_with_too_little_history_or_a_small_overrun_is_not():
 def test_month_bounds_cross_the_year():
     assert unusual._month_bounds(date(2026, 1, 15), 1) == (date(2025, 12, 1), date(2025, 12, 31))
     assert unusual._month_bounds(date(2026, 3, 31), 1) == (date(2026, 2, 1), date(2026, 2, 28))
+
+
+def test_a_spending_overrun_is_said_once_a_month():
+    budget = SimpleNamespace(total_expenses_by_category=lambda start, end, entity_id=None:
+                             {"Feed": 300} if start.startswith("2026-11") else {"Feed": 100})
+    [found] = unusual.findings(SimpleNamespace(budget=budget, flock=None), TODAY)
+    assert found["key"] == "spend-feed-2026-11"

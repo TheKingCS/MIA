@@ -40,7 +40,8 @@ def _recent(stamp: str, since: datetime) -> bool:
 
 
 def missions_in_motion(context, since: datetime) -> list[dict]:
-    """Active missions changed since then, newest first: each {name, next} (next "" when every objective is done)."""
+    """Active missions changed since then, newest first: each {name, next, steps} (next "" when every objective is
+    done, or there are none)."""
     manager = getattr(context, "missions", None)
     if manager is None:
         return []
@@ -53,7 +54,7 @@ def missions_in_motion(context, since: datetime) -> list[dict]:
             if not manager.is_objective_complete(m.mission_id, i):
                 nxt = objective.description
                 break
-        out.append({"name": m.name, "next": nxt, "at": m.updated_at or m.created_at})
+        out.append({"name": m.name, "next": nxt, "steps": len(m.objectives), "at": m.updated_at or m.created_at})
     return sorted(out, key=lambda x: x["at"], reverse=True)
 
 
@@ -66,14 +67,25 @@ def drafts(context, since: datetime) -> list[str]:
 
 
 def notes(context, since: datetime) -> dict:
-    """{"promises": [open promises, oldest first], "decisions": [decisions kept since then]}, each said in a line."""
-    from core.life_notes import describe
-
+    """{"promises": [open promises], "decisions": [decisions kept since then]}, newest first, each said in a line."""
     store = getattr(context, "life_notes", None)
     if store is None:
         return {"promises": [], "decisions": []}
-    return {"promises": [describe(n) for n in store.of_kind("commitment", open_only=True)],
-            "decisions": [describe(n) for n in store.of_kind("decision") if _recent(n.get("at", ""), since)]}
+    newest = lambda notes: sorted(notes, key=lambda n: n.get("at", ""), reverse=True)  # noqa: E731
+    return {"promises": [_promise(n) for n in newest(store.of_kind("commitment", open_only=True))],
+            "decisions": [_decision(n) for n in newest(store.of_kind("decision"))
+                          if _recent(n.get("at", ""), since)]}
+
+
+def _promise(note: dict) -> str:
+    """Pure logic. An open promise in a line, without a label: "fix the gate, for Sam, by Saturday"."""
+    return note.get("what", "") + (f", for {note['who']}" if note.get("who") else "") + \
+        (f", by {note['by']}" if note.get("by") else "")
+
+
+def _decision(note: dict) -> str:
+    """Pure logic. A decision in a line, without a label: "2x8 joists, because the span is 12 feet"."""
+    return note.get("what", "") + (f", because {note['why']}" if note.get("why") else "")
 
 
 def gather(context, now: Optional[datetime] = None) -> dict:
@@ -91,11 +103,14 @@ def gather(context, now: Optional[datetime] = None) -> dict:
 
 
 def describe(found: dict) -> str:
-    """Pure logic. Where he left off in words ("" with nothing to pick up)."""
+    """Pure logic. Where he left off in words ("" with nothing to pick up): each mission with its next step (or
+    ready to finish when every step of one that has steps is done), drafts, then promises and decisions, newest
+    first, each without its label said twice."""
     parts = []
     missions = found.get("missions") or []
     if missions:
-        lines = [m["name"] + (f" (next: {m['next']})" if m["next"] else " (every step done: ready to finish)")
+        lines = [m["name"] + (f" (next: {m['next']})" if m["next"] else
+                              " (every step done: ready to finish)" if m.get("steps") else "")
                  for m in missions[:SHOWN]]
         parts.append("Lately you've been on " + "; ".join(lines) + ".")
     plans = found.get("drafts") or []

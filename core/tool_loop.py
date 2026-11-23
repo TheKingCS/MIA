@@ -22,8 +22,9 @@ up*:
    the library's look-up was offered for, answered without it, is read from
    the library first (`_read_first`).
 
-While a lookup runs, her orb says what it's for, from the tool's domain (`DOING`, `doing_words`, through
-core/orb_state.doing: "Reading your library"), so the wait is never a blank (brainstorm 1.1).
+While a round of lookups runs and the model reads what they found, her orb says what it's for, from the tools'
+domains (`DOING`, `round_doing`, through core/orb_state.doing: "Thinking · Reading your library"), so the wait is never
+a blank (brainstorm 1.1); each lookup itself shows as working.
 
 A change (anything that writes records) is never run inside the loop:
 the reply goes back to the caller as before, through the usual path.
@@ -64,6 +65,14 @@ DOING = {"library": "Reading your library", "budget": "Checking your money", "de
          "memory": "Remembering", "browser": "Looking online", "maps": "Checking the map", "music": "Checking music",
          "inventory": "Checking what's on hand", "materials": "Checking materials", "jobs": "Checking jobs",
          "learning": "Checking your learning", "journal": "Reading your journal"}
+
+
+def round_doing(registry, names: list) -> str:
+    """Pure logic. What a round of lookups is for, in her orb's few words: the library's when it reads the library,
+    else the first lookup's (`doing_words`)."""
+    if any(n in LIBRARY_TOOLS for n in names):
+        return DOING["library"]
+    return doing_words(registry, names[0]) if names else "Looking it up"
 
 
 def doing_words(registry, name: str) -> str:
@@ -253,8 +262,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         budget: Optional[float] = None) -> Optional[ChatReply]:
     """One turn with the loop: the model's reply when it isn't only
     lookups (unchanged, for the caller's usual path); else one answer
-    built from what it looked up, her orb saying what each lookup is for
-    while it runs (`doing_words`). A lookup that brings outside text
+    built from what it looked up, her orb saying what each round is for
+    until the model's follow-up is back (`round_doing`). A lookup that brings outside text
     (OUTSIDE_WHAT) is framed as information before the model reads it
     (WP-03). Only lookups offered in `tools` run,
     and a change asked for after a lookup that brought in outside text
@@ -299,34 +308,41 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
             break  # the first round always runs
         talk.append({"role": "assistant", "content": reply.content or "",
                      "tool_calls": [{"function": {"name": c.name, "arguments": c.arguments or {}}} for c in fresh]})
-        for call in fresh:
-            seen.add(f"{call.name}:{sorted((call.arguments or {}).items())}")
-            if call.name not in offered:
-                log.warning("Tool loop: the model named %s, which wasn't offered this turn; not run.", call.name)
-                results.append((call.name, f"(The {call.name} lookup isn't available for this question.)"))
-                talk.append({"role": "tool", "content": results[-1][1], "tool_name": call.name})
-                continue
-            try:
-                from core import orb_state
+        from core import orb_state
 
-                with orb_state.doing(doing_words(registry, call.name)):  # her orb says what the wait is for (1.1)
-                    text = registry.execute(context, call.name, call.arguments or {})
-            except Exception:
-                log.exception("Lookup %s failed in the tool loop", call.name)
-                text = f"(The {call.name} lookup failed.)"
-            results.append((call.name, text))
-            if call.name in LIBRARY_TOOLS:
-                asked += " " + " ".join(str(v) for v in (call.arguments or {}).values())
-            shown = _short(text, call.name)
-            if call.name in OUTSIDE_WHAT:  # outside text, marked as information before the model reads it (WP-03)
-                from core.browser_safety import outside
+        # Her orb says what this round is for (1.1) from its first lookup until the model's follow-up is back: the
+        # lookups take milliseconds, the wait is the model reading what they found (review 2026-11-23).
+        round_words = orb_state.doing(round_doing(registry, [c.name for c in fresh]))
+        round_words.__enter__()
+        try:
+            for call in fresh:
+                seen.add(f"{call.name}:{sorted((call.arguments or {}).items())}")
+                if call.name not in offered:
+                    log.warning("Tool loop: the model named %s, which wasn't offered this turn; not run.", call.name)
+                    results.append((call.name, f"(The {call.name} lookup isn't available for this question.)"))
+                    talk.append({"role": "tool", "content": results[-1][1], "tool_name": call.name})
+                    continue
+                try:
+                    with orb_state.active("working"):  # the lookup itself
+                        text = registry.execute(context, call.name, call.arguments or {})
+                except Exception:
+                    log.exception("Lookup %s failed in the tool loop", call.name)
+                    text = f"(The {call.name} lookup failed.)"
+                results.append((call.name, text))
+                if call.name in LIBRARY_TOOLS:
+                    asked += " " + " ".join(str(v) for v in (call.arguments or {}).values())
+                shown = _short(text, call.name)
+                if call.name in OUTSIDE_WHAT:  # outside text, marked as information before the model reads it (WP-03)
+                    from core.browser_safety import outside
 
-                shown = outside(shown, OUTSIDE_WHAT[call.name])
-            talk.append({"role": "tool", "content": shown, "tool_name": call.name})
-        step += 1
-        last = step >= MAX_STEPS or time.monotonic() - started > budget
-        reply = llm.chat_with_tools(talk + [{"role": "system", "content": LAST_WORD if last else FOLLOW_UP}],
-                                    [] if last else tools)
+                    shown = outside(shown, OUTSIDE_WHAT[call.name])
+                talk.append({"role": "tool", "content": shown, "tool_name": call.name})
+            step += 1
+            last = step >= MAX_STEPS or time.monotonic() - started > budget
+            reply = llm.chat_with_tools(talk + [{"role": "system", "content": LAST_WORD if last else FOLLOW_UP}],
+                                        [] if last else tools)
+        finally:
+            round_words.__exit__(None, None, None)
     log.info("Tool loop: %d round(s), %s, %.1fs", step, ", ".join(n for n, _ in results), time.monotonic() - started)
     if reply is not None and reply.tool_calls and not _lookups_only(context, reply.tool_calls):
         if _brought_outside_text(results):

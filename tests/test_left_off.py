@@ -3,7 +3,8 @@ tests.test_left_off
 =====================
 
 Where he left off (core/left_off.py, brainstorm 1.2): missions changed lately with their next step, Planner drafts not
-yet confirmed, open promises and recent decisions, from the records only.
+yet confirmed, open promises and recent decisions (newest first, without their label said twice), from the records
+only.
 """
 
 from datetime import datetime
@@ -59,3 +60,20 @@ def test_a_source_that_fails_never_stops_the_rest():
     ctx = SimpleNamespace(missions=broken, project_plans=SimpleNamespace(listed=lambda: [
         SimpleNamespace(title="Coop floor", status="draft", updated_at="2026-11-21T10:00:00")]), life_notes=None)
     assert left_off.gather(ctx, NOW)["drafts"] == ["Coop floor"]
+
+
+def test_promises_and_decisions_come_newest_first_without_a_label_said_twice():
+    notes = [{"kind": "decision", "what": f"d{i}", "at": f"2026-11-1{i}T09:00:00"} for i in range(6)]
+    notes += [{"kind": "commitment", "what": "fix the gate", "who": "Sam", "by": "Saturday", "status": "open",
+               "at": "2026-11-20T09:00:00"}]
+    store = SimpleNamespace(of_kind=lambda kind, open_only=False: [n for n in notes if n["kind"] == kind])
+    got = left_off.notes(SimpleNamespace(life_notes=store), datetime(2026, 11, 9))
+    assert got["decisions"][:3] == ["d5", "d4", "d3"] and got["promises"] == ["fix the gate, for Sam, by Saturday"]
+    said = left_off.describe({"missions": [], "drafts": [], **got})
+    assert "a promise" not in said and "a decision" not in said
+
+
+def test_a_mission_with_no_steps_isnt_called_ready_to_finish():
+    said = left_off.describe({"missions": [{"name": "Tidy the shop", "next": "", "steps": 0, "at": ""}],
+                              "drafts": [], "promises": [], "decisions": []})
+    assert "ready to finish" not in said and "Tidy the shop" in said

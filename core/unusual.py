@@ -108,16 +108,18 @@ def spending_over(by_month: list, this_month: dict) -> list[dict]:
 
 
 def _spending(context, today: date) -> list[dict]:
-    """His budget's categories already far past their usual month, from his own expenses."""
+    """His budget's categories already far past their usual month, from his own household expenses (a business's
+    are its own)."""
     budget = getattr(context, "budget", None)
     if budget is None:
         return []
     months = []
     for back in range(1, SPEND_MONTHS + 1):
         start, end = _month_bounds(today, back)
-        months.append(budget.total_expenses_by_category(start.isoformat(), end.isoformat()))
+        months.append(budget.total_expenses_by_category(start.isoformat(), end.isoformat(), entity_id=""))
     start, _end = _month_bounds(today, 0)
-    return spending_over(months, budget.total_expenses_by_category(start.isoformat(), today.isoformat()))
+    return spending_over(months, budget.total_expenses_by_category(start.isoformat(), today.isoformat(),
+                                                                   entity_id=""))
 
 
 def _egg_words(name: str, found: dict) -> str:
@@ -130,7 +132,7 @@ def _egg_words(name: str, found: dict) -> str:
 
 def findings(context, today: date) -> list[dict]:
     """Every unusual thing found in his records today, spending first, then each flock's eggs: each {kind, title,
-    text, key}; a record that can't be read leaves its check out."""
+    text, key (naming the period it's said once in)}; a record that can't be read leaves its check out."""
     from core.region import money
 
     out = []
@@ -139,7 +141,7 @@ def findings(context, today: date) -> list[dict]:
             out.append({"kind": "spending", "title": f"{f['category']}: more than usual",
                         "text": (f"You've spent {money(f['so_far'])} on {f['category']} so far this month; a usual "
                                  f"whole month is about {money(f['usual'])}. Worth a look at what's different."),
-                        "key": f"spend-{f['category'].lower()}"})
+                        "key": f"spend-{f['category'].lower()}-{today:%Y-%m}"})  # once a month
     except Exception:  # noqa: BLE001 - the budget that can't be read never stops the rest
         log.exception("Unusual: the budget couldn't be read")
     book = getattr(context, "flock", None)
@@ -152,20 +154,19 @@ def findings(context, today: date) -> list[dict]:
             log.exception("Unusual: the flock log couldn't be read")
             continue
         if found:
+            year, week, _ = today.isocalendar()
             out.append({"kind": "eggs", "title": f"{flock.name}: fewer eggs", "text": _egg_words(flock.name, found),
-                        "key": f"eggs-{flock.flock_id}"})
+                        "key": f"eggs-{flock.flock_id}-{year}-W{week:02d}"})  # once a week
     return out
 
 
 def offer(context, now: datetime) -> list:
-    """The daily check's messages through the gate: AMBIENT (worth knowing, never urgent), once per finding per
-    week (its fingerprint names the week), so a drop that lasts isn't said every day."""
+    """The daily check's messages through the gate: AMBIENT (worth knowing, never urgent), each once in its own
+    period (its key names it: an egg drop's week, a spending overrun's month), so what lasts isn't said every day."""
     from core.communication_gate import AMBIENT, Candidate
 
-    year, week, _ = now.date().isocalendar()
     return [Candidate(topic="unusual", title=f["title"], message=f["text"], urgency=AMBIENT, source="system",
-                      fingerprint=f"{f['key']}-{year}-W{week:02d}")
-            for f in findings(context, now.date())]
+                      fingerprint=f["key"]) for f in findings(context, now.date())]
 
 
 def say(context) -> str:

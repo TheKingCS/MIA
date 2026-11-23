@@ -3,7 +3,8 @@ tests.test_preparedness
 ======================
 
 How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a
-day against his target, what expires soon, and what isn't counted yet, said plainly.
+day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water
+or a filter), what expires soon, and what isn't counted yet, said plainly.
 """
 
 from datetime import date
@@ -51,3 +52,18 @@ def test_with_no_water_logged_she_says_how_much_the_target_takes(monkeypatch):
     monkeypatch.setattr(rd, "_setting", lambda context, key, default: default)
     said = rd.say(SimpleNamespace(kitchen=None), TODAY)
     assert "none logged" in said and "14 gallons" in said
+
+
+def test_the_ways_water_is_really_stored_are_counted():
+    assert round(rd.gallons_of(_item("Water", 24, "16.9 fl oz bottles")), 2) == 3.17
+    assert rd.gallons_of(_item("Water", 4, "5-gallon jugs")) == 20
+    assert rd.gallons_of(_item("Water 5 gal jug", 3, "")) == 15
+    assert rd.gallons_of(_item("Water", 128, "oz")) == 1
+    assert rd.gallons_of(_item("Water", 2, "gal.")) == 2
+
+
+def test_water_that_isnt_for_drinking_is_left_out_and_never_asked_about():
+    for name in ("Coconut water", "Tonic water", "Rose water", "Water filter cartridges", "Water bath canner"):
+        assert rd.gallons_of(_item(name, 4, "liters")) is None, name
+    days, unread = rd.water_days([_item("Water filter cartridges", 3, "packs"), _item("Water", 6, "bottles")], 1)
+    assert unread == ["Water"]

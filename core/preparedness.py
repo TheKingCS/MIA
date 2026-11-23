@@ -5,8 +5,9 @@ core.preparedness
 How ready he is if things go wrong (Jarvis brainstorm 4.3, first part; Zac, 2026-11-23: "survival skills, homestead
 skills ... offline"), worked out in code from his own pantry (core/kitchen_manager.py), never guessed:
 
-- **Water** (`water_days`): the drinking water he's logged in the pantry (an item named water, in gallons, liters,
-  quarts or bottles of a stated size) against the Red Cross and FEMA guide of one gallon a person a day, for the
+- **Water** (`water_days`): the drinking water he's logged in the pantry (an item named water and meant for drinking,
+  `is_drinking_water`: not coconut or tonic water, a water filter or a canner; in gallons, liters, quarts, ounces or
+  containers of a stated size: "16.9 fl oz bottles", "5-gallon jugs") against the Red Cross and FEMA guide of one gallon a person a day, for the
   people he says (`prepared.people`, 1 unless he says otherwise; said in the answer). Against his target of days
   (`prepared.target_days`, 14 unless set: FEMA's two weeks at home).
 - **Rotate** (`rotate`): what's in the pantry and expires in the next ROTATE_DAYS days, soonest first, so it's eaten
@@ -27,37 +28,54 @@ GALLON_A_DAY = 1.0  # a person, drinking and a little washing (Red Cross, FEMA)
 TARGET_DAYS = 14
 ROTATE_DAYS = 30
 TO_GALLONS = {"gallon": 1.0, "gallons": 1.0, "gal": 1.0, "liter": 0.264172, "liters": 0.264172, "litre": 0.264172,
-              "litres": 0.264172, "l": 0.264172, "quart": 0.25, "quarts": 0.25, "qt": 0.25}
-_BOTTLE = re.compile(r"(\d+(?:\.\d+)?)\s*(oz|ounce|ounces|ml|l|liter|litre)\b", re.I)
+              "litres": 0.264172, "l": 0.264172, "quart": 0.25, "quarts": 0.25, "qt": 0.25, "oz": 1 / 128,
+              "fl oz": 1 / 128, "floz": 1 / 128, "ounce": 1 / 128, "ounces": 1 / 128, "ml": 0.000264172,
+              "cup": 1 / 16, "cups": 1 / 16, "pint": 0.125, "pints": 0.125}
+# A container's size in its name or unit: "16.9 fl oz bottles", "5-gallon jugs", "1 gal jug", "water 5 gal".
+_SIZE = re.compile(r"(\d+(?:\.\d+)?)\s*-?\s*(fl\.?\s*oz|oz|ounces?|ml|liters?|litres?|l|gal(?:lons?)?|quarts?|qt)\b",
+                   re.I)
+# Not water you drink, though the name says water.
+_NOT_DRINKING = ("chestnut", "cress", "melon", "softener", "heater", "coconut", "tonic", "rose water", "rosewater",
+                 "filter", "canner", "bath", "pitcher", "hose", "pump", "kefir", "bottle opener", "repellent")
+# A unit that's a container of some size: worth asking for the size when it isn't given.
+_CONTAINER = re.compile(r"\b(?:bottles?|jugs?|cases?|packs?|cans?|totes?|barrels?|drums?|containers?|jerry ?cans?)\b"
+                        r"|^$", re.I)
 
 
 def gallons_of(item) -> Optional[float]:
-    """Pure logic. How many gallons of drinking water a pantry item holds, or None when it isn't water or its unit
-    can't be read ("24 bottles" needs the bottle's size: "16.9 oz bottles")."""
-    name = str(getattr(item, "name", "")).lower()
-    if "water" not in name or any(w in name for w in ("chestnut", "cress", "melon", "softener", "heater")):
+    """Pure logic. How many gallons of drinking water a pantry item holds, or None when it isn't drinking water or
+    its unit can't be read ("24 bottles" needs the bottle's size: "16.9 fl oz bottles", "5-gallon jugs")."""
+    if not is_drinking_water(item):
         return None
+    name = str(getattr(item, "name", "")).lower()
     qty = float(getattr(item, "quantity", 0) or 0)
-    unit = str(getattr(item, "unit", "")).lower().strip()
+    unit = " ".join(re.sub(r"\.(?!\d)", " ", str(getattr(item, "unit", "")).lower()).split())  # "gal." not "16.9"
     if unit in TO_GALLONS:
         return qty * TO_GALLONS[unit]
-    size = _BOTTLE.search(f"{name} {unit}")
+    size = _SIZE.search(f"{name} {unit}")
     if size:
-        amount, what = float(size.group(1)), size.group(2).lower()
-        each = amount / 128 if what in ("oz", "ounce", "ounces") else amount / 1000 * 0.264172 if what == "ml" \
-            else amount * 0.264172
-        return qty * each
+        what = size.group(2).lower().replace(".", "").replace(" ", "")
+        what = "fl oz" if what == "floz" else what
+        factor = TO_GALLONS.get(what) or TO_GALLONS.get(what.rstrip("s")) or (1.0 if what.startswith("gal") else None)
+        return qty * float(size.group(1)) * factor if factor else None
     return None
 
 
+def is_drinking_water(item) -> bool:
+    """Pure logic. Whether a pantry item is water to drink (named water, and none of `_NOT_DRINKING`)."""
+    name = str(getattr(item, "name", "")).lower()
+    return "water" in name and not any(w in name for w in _NOT_DRINKING)
+
+
 def water_days(items: list, people: int) -> tuple[float, list]:
-    """Pure logic. (days of water for that many people, the water items it couldn't read)."""
+    """Pure logic. (days of water for that many people, the drinking water in containers whose size it couldn't
+    read)."""
     total, unread = 0.0, []
     for item in items:
         got = gallons_of(item)
         if got is None:
-            if "water" in str(getattr(item, "name", "")).lower():
-                unread.append(item.name)
+            if is_drinking_water(item) and _CONTAINER.search(str(getattr(item, "unit", "")).strip().lower()):
+                unread.append(item.name)  # water in containers of an unknown size: ask for it
             continue
         total += got
     return round(total / (GALLON_A_DAY * max(1, people)), 1), unread

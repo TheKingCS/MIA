@@ -18,7 +18,8 @@ the forecast (core/weather.py); the model only says it.
 - **The flock** (any flock with birds): a high of 90°F (32°C) or over, shade, cool water and air; a low of 32°F
   (0°C) or under, the waterer may freeze by morning.
 - **A build in progress** (a confirmed Planner build with a mission still active): rain RAIN_LIKELY% likely or more
-  tomorrow, plan the outside steps around it and cover what's out.
+  tomorrow (or, where the forecast gives no chance, its words say rain, showers, drizzle or thunder), plan the outside
+  steps around it and cover what's out.
 
 The night that matters is tonight: the forecast's low for tomorrow (its coldest hour is early tomorrow morning). The
 heat is today's high and tomorrow's.
@@ -90,7 +91,8 @@ def _names(names: list) -> str:
 def concerns(forecast: dict, growing: dict, birds: int, builds: tuple = ()) -> list[dict]:
     """Pure logic. What tonight's and the next days' weather means for what he's growing, keeping and building: each
     {kind, text}, the most pressing first. `forecast` is core/weather.card's (high, low, unit, tomorrow); `builds` the
-    titles of builds in progress; [] without a forecast."""
+    titles of builds in progress (rain from tomorrow's chance, or its words when no chance is given); [] without a
+    forecast."""
     if not forecast or forecast.get("high") is None or not forecast.get("unit"):
         return []
     unit = forecast["unit"]
@@ -126,9 +128,12 @@ def concerns(forecast: dict, growing: dict, birds: int, builds: tuple = ()) -> l
                 f"The hens' water may freeze by morning (a low of {said_low}): a heated base, or fresh water first "
                 "thing.")})
     rain = tomorrow.get("rain")
-    if builds and rain is not None and rain >= RAIN_LIKELY:
+    words = str(tomorrow.get("words") or "").lower()
+    wet = rain >= RAIN_LIKELY if rain is not None else any(w in words for w in ("rain", "shower", "thunder", "drizzle"))
+    if builds and wet:
+        chance = f"Rain is {rain}% likely tomorrow" if rain is not None else f"Tomorrow's forecast says {words}"
         out.append({"kind": "rain_build", "text": (
-            f"Rain is {rain}% likely tomorrow: for {', '.join(builds)}, "
+            f"{chance}: for {', '.join(builds)}, "
             "keep the outside steps (concrete, roofing, paint, framing) for a dry day and cover lumber and tools left "
             "out.")})
     return out

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1606 files, 354,924 lines; 1606 files describe themselves; 19,534 of 19,642 classes and functions are documented.
+1606 files, 355,085 lines; 1606 files describe themselves; 19,547 of 19,655 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-628 files, 180,383 lines; 9,264 of 9,350 classes and functions documented
+628 files, 180,442 lines; 9,268 of 9,354 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -926,7 +926,7 @@
 
 ## tests/: the test suite: what each part must do
 
-575 files, 94,143 lines; 7,907 of 7,929 classes and functions documented
+575 files, 94,245 lines; 7,916 of 7,938 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1165,7 +1165,7 @@
 - `tests/test_learned.py`: Tests for what MIA learned on her own (DEC-0282, LS-10, core/learned.py): each habit with its evidence and its own reset, which never touches what he set himself or a break he asked for; and the daily budget for her own work.
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte
-- `tests/test_left_off.py`: Where he left off (core/left_off.py, brainstorm 1.2): missions changed lately with their next step, Planner drafts not yet confirmed, open promises and recent decisions, from the records only. *(2 undocumented)*
+- `tests/test_left_off.py`: Where he left off (core/left_off.py, brainstorm 1.2): missions changed lately with their next step, Planner drafts not yet confirmed, open promises and recent decisions (newest first, without their label said twice), from the records only. *(2 undocumented)*
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has, and the homestead area reads its snapshots' critical alerts.
 - `tests/test_life_events.py`: Life events (core/life_events.py), Engine Phase 1 step 1, 2026-10-05: the append-only history beside the stores. What happened, who did it and how, in the folder the data lives in. A decorated method that answers False changed nothing and records nothing. Each line is sealed on its own as it's appen
@@ -1250,7 +1250,7 @@
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online".
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate ..
 - `tests/test_opportunity.py`: Opportunity scoring and recommendations (Procurement P3, core/opportunity.py; the proposal's section 17 rows it covers): a find is linked to the right need; every opportunity names all nine dimensions with reasons; a price is called a saving only when it's verified against prices seen, and "bargain"
-- `tests/test_orb_doing.py`: What her orb says she's doing while a lookup runs (core/orb_state.doing, core/tool_loop.doing_words; brainstorm 1.1): only while the tool really runs, from its domain, and sent with the state on the live stream.
+- `tests/test_orb_doing.py`: What her orb says she's doing while a lookup runs (core/orb_state.doing, core/tool_loop.doing_words; brainstorm 1.1): from the tool's domain (the library's for a round that reads it), kept up through the model's follow-up where the real wait is, and sent with the state on the live stream.
 - `tests/test_orb_presence.py`: MIA's floating desktop orb (gui/orb_presence.py, Zac 2026-11-08): a frameless, transparent, always-on-top window that reuses the presence orb with no label, bobs where it stands, and wakes her (emits `activated`) on Enter or a plain click but not a drag.
 - `tests/test_orb_states.py`: WP-07 (REQ-VIS-009, REQ-VIS-010, DEC-0255): every state the orb can show has its own words and its own still glyph, and its own style on the page; with reduced motion the page shows the glyph and the words; "offline" comes only from the model really not answering, and the next answer clears it; "spe
 - `tests/test_os_image.py`: FW-01's checks on how the MIA OS image is made (DEC-0263, DEC-0279; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): the base pinned by digest, MIA's Python packages hash-locked and the locks covering `requirements.txt`, the reference PC's model set in the image, the GPU bench measuring tha
@@ -1282,7 +1282,7 @@
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
-- `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target, what expires soon, and what isn't counted yet, said plainly. *(1 undocumented)*
+- `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water or a filter), what expires soon, and what isn't counted yet, said pla *(1 undocumented)*
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again.
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).
@@ -1438,7 +1438,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
-- `tests/test_weather_watch.py`: The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening off, heat and freezing water against the hens, rain likely tomorrow ag *(2 undocumented)*
+- `tests/test_weather_watch.py`: The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening off, heat and freezing water against the hens, rain likely tomorrow (b *(2 undocumented)*
 - `tests/test_web_about.py`: About MIA (DEC-0142, DEC-0057): the page reads every line from the facts, a missing source is a quiet gap, and how her apps are doing is counted by status on the asking device.
 - `tests/test_web_areas.py`: MIA's eight destinations and their subdashboards (DEC-0153, core/web_areas.py; the area hues from DEC-0130): the eight in Zac's order, every app and page with exactly one owner, every web page owned or listed as part of the frame, old area ids still opening, a hub listing its subdashboards, what the
 - `tests/test_web_backups.py`: Backups from the web's Settings (core/web_backups.py) and by voice (core/assistant_backup_actions.py): the PC owner's backups folder, the newest backups, Back Up Now with or without a passphrase, and the status said aloud.
