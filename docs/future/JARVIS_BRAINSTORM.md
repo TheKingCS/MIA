@@ -354,6 +354,9 @@ New ideas, each checked against what's there first:
   confirmed builds still need from the store, against the stock now.
 - **What can I build with what I have?** (no decision): built (`core/buildable.py`): the Library's builds closest
   to done from the workshop's stock, what's left to buy and its cost.
+- **Harvests by voice** (no decision): built (`core/harvest_log.py`): "I harvested 5 pounds of tomatoes" goes on his
+  grow lab batch of that crop (one added when there isn't), and "what has the garden produced this year?" adds it up
+  by crop, valued at store prices he recorded in the same unit.
 
 ## Round 6 (2026-11-24): the bigger steps, each needing Zac's say
 

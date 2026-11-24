@@ -13,7 +13,8 @@
   "ask": "What needs doing in the greenhouse?",
   "domains": [
     "maintenance",
-    "development"
+    "development",
+    "harvest"
   ],
   "entry": "web:greenhouse.html",
   "components": {
@@ -39,7 +40,9 @@
   },
   "capabilities": {
     "tools": [
-      "get_homestead_next_step"
+      "get_homestead_next_step",
+      "harvest_this_year",
+      "log_harvest"
     ],
     "actions": [
       "batch.add",
@@ -59,6 +62,8 @@
     ],
     "tiers": {
       "get_homestead_next_step": "observe",
+      "harvest_this_year": "observe",
+      "log_harvest": "act_within_grant",
       "batch.add": "act_within_grant",
       "batch.delete": "act_with_approval",
       "batch.edit": "act_within_grant",
