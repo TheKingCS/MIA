@@ -6,7 +6,8 @@ Approve Once or Approve From Now On (DEC-0215 as amended by Zac, 2026-11-17; cor
 stay in his records and can be undone may be approved from now on, never paying, sending, plans or grants; Approve
 From Now On keeps a standing yes once the change ran; MIA's own later proposal of that kind runs at once with an Undo
 and is marked `auto`, while his own presses are unchanged; the standing yes is listed with his grants, taken back
-there, and lapses after 90 days unused; and the card says whether it may offer the second button.
+there, and lapses after 90 days unused; and the card says whether it may offer the second button; a held
+proposal (from something MIA read) waits on its card even then.
 """
 
 from __future__ import annotations
@@ -106,3 +107,10 @@ def test_from_now_on_on_a_kind_that_always_asks_is_refused_before_anything_runs(
     with pytest.raises(ActionError, match="always asks first"):
         center.approve(world, p.proposal_id, from_now_on=True)
     assert p.status == "proposed"
+
+
+def test_a_held_proposal_waits_on_its_card_even_with_a_standing_yes(world):
+    """A change started by something MIA read (DEC-0293) never runs on a standing yes for its kind."""
+    kind_grants.give(world, "mission.add")
+    held = world.actions.propose(world, "mission.add", {"name": "From an email"}, proposed_by="mia", hold=True)
+    assert held.status == "proposed" and not held.auto

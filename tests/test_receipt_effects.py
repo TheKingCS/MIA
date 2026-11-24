@@ -7,7 +7,7 @@ mailbox they come from (core/inbox_mail.fetch_receipts): a grocery receipt
 stocks the pantry and ticks the grocery list, an oil change is marked done
 on the truck at the receipt's mileage, a Lowe's receipt adds to the
 materials at the price paid; an emailed receipt files itself (unless it
-looks logged already, or that's turned off), and Undo, on screen or by
+looks logged already, or that's turned off; its history says it came from an email), and Undo, on screen or by
 voice, takes back exactly what it did; HTML e-receipts are read line by
 line; the mailbox is read without marking anything read, taking only
 receipts; and it's set up from the web with its password only in the
@@ -311,3 +311,12 @@ def test_setting_up_email_from_the_web(ctx, tmp_path, monkeypatch):
         unlock(ctx, "wrong passphrase")
     assert unlock(ctx, "a long passphrase")["unlocked"] and ctx.inbox_mail.vault.password == "app-pass"
     assert check(ctx)["configured"] and len(checks) == 3
+
+
+def test_an_emailed_receipt_filed_on_its_own_is_in_the_history_as_from_an_email(ctx):
+    """So a workflow it starts waits for his yes (DEC-0293), and it's never counted as a habit of his."""
+    from core import life_events
+
+    drop(ctx, "message.eml", emailed(GROCERY, "Your Kroger receipt", "receipts@kroger.com"), source="email")
+    filed = [e for e in life_events.events_for(ctx) if e.type == "document_filed"]
+    assert filed and {e.source for e in filed} == {"email"}

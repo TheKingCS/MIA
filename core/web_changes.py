@@ -83,7 +83,8 @@ def _summaries(context, ids: set) -> dict:
 
 def changes_page(context, now: Optional[datetime] = None) -> dict:
     """The Recent Changes screen: the undoable changes (newest first, the first one undoable), the times Undo By Time
-    offers (`when_choices`, UI-3), and the last fortnight's history by day."""
+    offers (`when_choices`, UI-3), and the last fortnight's history by day, each line saying whether MIA did it
+    (her proposal he approved, or a standing yes she ran on her own)."""
     from core.life_events import events_for, reversed_ids
     from core.person_settings import person_id
 
@@ -104,7 +105,7 @@ def changes_page(context, now: Optional[datetime] = None) -> dict:
     days: dict[str, list] = {}
     for e in events:
         days.setdefault(e.at[:10], []).append({"what": e.summary, "when": clock(e.at),
-                                               "undone": e.event_id in undone, "by_mia": e.source == "assistant"})
+                                               "undone": e.event_id in undone, "by_mia": e.source in ("assistant", "mia")})
     today = now.date()
     return {"undoable": undoable, "when_choices": [{"id": i, "name": n} for i, n in WHEN_CHOICES], "history": [
         {"day": "Today" if d == today.isoformat() else "Yesterday" if d == (today - timedelta(days=1)).isoformat()

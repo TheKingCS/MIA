@@ -101,8 +101,12 @@ more: the erase test removed the checkout's own content folders (only in a workt
   8 more (the orb's words never showed; water in 16.9 fl oz bottles wasn't counted); all fixed (K-0357). Several
   brainstorm items turned out to exist already (quotes and orders, profit per hour, what to bring to market,
   scheduled workflows, the wall view): marked in the brainstorm, not built twice.
+  Evening, on his answers (DEC-0289 to 0294): learning programs for his four hobbies, the Picture of You, the evening
+  wrap, the model test (no switch; the answers side by side for him), workflows started by events (from something
+  she read, each change waits for his yes) and routines offered once from his habits.
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
-  recovery-key envelope, picking from the brainstorm (`docs/WAITING_ON.md` 0zg).
+  recovery-key envelope, which model after reading the comparison, unblocking libzim from Windows Application
+  Control (`docs/WAITING_ON.md` 0zh).
 
 **2026-11-18 (Claude on Opus, at the PC). MIA OS planning is complete through Prompt 17.**
 - **Prompts 12 to 16** (devices, security, reliability, development, the roadmap): written, and Zac answered each

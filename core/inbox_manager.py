@@ -526,8 +526,9 @@ class InboxManager:
     def auto_file(self, item: InboxItem) -> bool:
         """Files an emailed receipt on MIA's own, when it's safe to: inbox.auto_file is on (the default), it's a
         receipt (not an invoice: a bill still to pay) with a total, and it isn't logged already (`_logged_already`: a
-        forwarded copy, or an order email and its receipt). Its ticked effects are done. Returns whether it
-        filed; one it can't is left waiting, with why."""
+        forwarded copy, or an order email and its receipt). Its ticked effects are done, recorded in the history
+        as from an email (so a workflow they start waits for his yes, DEC-0293). Returns whether it filed; one it
+        can't is left waiting, with why."""
         config = getattr(self.context, "config", None)
         if config is not None and config.get("inbox.auto_file", True) is False:
             return False
@@ -537,7 +538,8 @@ class InboxManager:
             item.note = "Not filed on its own: an expense like it is already logged (an order and its receipt?)."
             return False
         try:
-            self.file_item(item.item_id)
+            with life_events.acting("email"):  # what it did came from an email she read (DEC-0293)
+                self.file_item(item.item_id)
         except ValueError as problem:
             item.note = f"Not filed on its own: {problem}"
             return False

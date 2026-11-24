@@ -648,13 +648,16 @@ class ActionCenter:
             if proposal.status == PROPOSED and proposal.created_at < cutoff:
                 proposal.status = EXPIRED
 
-    def propose(self, context, kind: str, params: Optional[dict] = None, proposed_by: str = "person") -> Proposal:
+    def propose(self, context, kind: str, params: Optional[dict] = None, proposed_by: str = "person",
+                hold: bool = False) -> Proposal:
         """Step 1. Checks it and says what would happen (that it can't be undone, for an irreversible kind:
         core/action_effects.py); changes nothing. Except: when MIA herself proposes a kind he approved from now on
         (core/kind_grants.py, DEC-0215), it's approved at once and comes back executed (or failed), marked `auto`;
         unless the grants check holds it (a stop-everything), when it stays a card like any other. It carries the
         trace id of what proposed it, or a new one for a press on a screen (core/trace.py), and its binding: the
-        card exactly as it's shown (WP-02)."""
+        card exactly as it's shown (WP-02). `hold` (DEC-0293): it waits on its card for a
+        person even when its kind was approved from now on (a change started by something MIA read).
+        """
         from core.child_accounts import is_child
 
         action = ACTION_TYPES.get(kind)
@@ -680,7 +683,7 @@ class ActionCenter:
         with self._lock:
             self._expire()
             self._proposals[proposal.proposal_id] = proposal
-        if proposal.proposed_by == "mia" and _granted_ahead(context, kind) and _may_run_now(kind):
+        if not hold and proposal.proposed_by == "mia" and _granted_ahead(context, kind) and _may_run_now(kind):
             # He approved this kind from now on (DEC-0215): done at once, with an Undo, never waiting on a card.
             proposal.auto = True  # set first, so a caller that then approves gets this result back, done or failed
             self.approve(context, proposal.proposal_id, _auto=True)
@@ -729,7 +732,9 @@ class ActionCenter:
         fails part way puts back every file it had written and takes back its
         history lines (`_put_back`), and says so when it couldn't.
         It runs under the proposal's trace id, so what it changes and
-        records names the same cause (DEC-0280)."""
+        records names the same cause (DEC-0280). Its history says who: "mia" for a
+        standing yes run on her own, "assistant" for her proposal he approved, "manual"
+        for his own press (so a habit is never made of what she did herself, DEC-0294)."""
         from core import life_events
         from core.main_thread import publish
         from core.profile_manager import crediting
@@ -759,7 +764,7 @@ class ActionCenter:
                 raise ActionError("That one is already being done.")
             proposal._deciding = True
         action = ACTION_TYPES[proposal.kind]
-        source = "assistant" if proposal.proposed_by == "mia" else "manual"
+        source = "mia" if _auto else "assistant" if proposal.proposed_by == "mia" else "manual"
         before = _moment(context, proposal)
         from core import orb_state
 

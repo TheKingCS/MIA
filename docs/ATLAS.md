@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1638 files, 358,427 lines; 1638 files describe themselves; 19,705 of 19,838 classes and functions are documented.
+1638 files, 358,553 lines; 1638 files describe themselves; 19,718 of 19,848 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-644 files, 182,566 lines; 9,345 of 9,431 classes and functions documented
+644 files, 182,612 lines; 9,347 of 9,433 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -942,7 +942,7 @@
 
 ## tests/: the test suite: what each part must do
 
-590 files, 95,309 lines; 7,997 of 8,044 classes and functions documented
+590 files, 95,389 lines; 8,008 of 8,052 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1138,7 +1138,7 @@
 - `tests/test_greenhouse_setup.py`: The greenhouse's setup as one sequence (core/greenhouse_setup.py, DEC-0150): "let's set up the greenhouse" and "what's next?" say the step you're on, with its device, what it needs and what to say; each step is done from what's recorded (a job finished, the MCU flashed, the node pushed, PlatformIO f
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known.
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
-- `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself. *(2 undocumented)*
+- `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself or an email brought; one counts as offered only once the gate let it through, trie
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks).
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
@@ -1523,7 +1523,7 @@
 - `tests/test_work_review.py`: Independent review and Zac's approval (DEC-0069, core/work_review.py): never reviewed by its author, approved only by a person at the keyboard, and only after a review that approves it.
 - `tests/test_work_runner.py`: Missions and the runner (DEC-0076, DEC-0079; core/work_runner.py): the council works a mission by itself, within its scope and budget, handing work to whoever has time, and never approving anything.
 - `tests/test_work_tasks.py`: Development tasks as records (DEC-0068, core/work_tasks.py): files that round-trip, ready only after their dependencies, claims that can't overlap, and done only with evidence.
-- `tests/test_workflow_events.py`: Workflows started by events in his history (core/workflows.py, DEC-0293; Zac, 2026-11-23: "Records and email, with approval"): the trigger {"on": an event type} is checked, never runs on the calendar, runs once for each new event of its type, and an event from something MIA read (an email, a page) r *(6 undocumented)*
+- `tests/test_workflow_events.py`: Workflows started by events in his history (core/workflows.py, DEC-0293; Zac, 2026-11-23: "Records and email, with approval"): the trigger {"on": an event type} is checked, never runs on the calendar, runs once for each new event of its type (each workflow from its own first look, none lost or run t *(5 undocumented)*
 - `tests/test_workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092, core/workflows.py): a trigger and steps from a fixed vocabulary, approved once for exactly what they list, messages only through the gate, adds through actions, every run logged, and a real run (never a dry one) kept in the run book (UI-1).
 - `tests/test_workout_manager.py`: Unit tests for core.workout_manager. Isolates _DATA_DIR/the three per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_kitchen_manager.py's isolated_paths.
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why).

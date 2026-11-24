@@ -4,11 +4,20 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-18*
+*Last updated: 2026-11-23*
 
 ## Zac
 
 ### From the Jarvis brainstorm (2026-11-23, `docs/future/JARVIS_BRAINSTORM.md`)
+0zi. [ ] **Which model, after reading the comparison** (DEC-0291): `pc-check/model-compare.md` on the PC has your
+   Intelligence Benchmark answered by five models side by side. By MIA's own checks qwen2.5:14b (today's) and
+   qwen3:14b tied; the bigger ones were slower and no better. Say "keep it" or "switch to qwen3"; nothing changes
+   until you do.
+0zh. [ ] **Let Windows run libzim again**: since 2026-11-23 Windows' Application Control (Smart App Control) blocks
+   the libzim library MIA uses to read her offline library packs (Kiwix). Until it's allowed she can't search those
+   packs on the PC (the rest of MIA is fine). Windows Security, App and browser control, shows the block. If it's
+   Smart App Control, it has no allow-one-file setting, and once turned off it can't be turned back on without
+   reinstalling Windows, so don't flip it in a hurry: Claude can look for another way with you at the PC.
 0zg. [x] (Zac, 2026-11-23: all four hobbies, the picture of him, test a bigger model, the evening wrap: DEC-0289 to
    DEC-0292. Then the last two: event triggers with email waiting for his yes, DEC-0293; habit routines offered once,
    DEC-0294. Nothing from the brainstorm waits on him now.)

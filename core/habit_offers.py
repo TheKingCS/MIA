@@ -9,7 +9,8 @@ Monday to ...", the reminder tool he already has); anything else, and it's never
 reminder: it never changes a record by itself.
 
 `habits(events, today)` finds them (pure: his own history only, nothing MIA did herself); `offer(context, now)` is the
-daily check's message, each habit offered once ever (`OFFERED_KEY` keeps which).
+daily check's message, tried once a day, each habit counted as offered (`OFFERED_KEY`, never again) only once
+the gate's log shows it reached him.
 """
 
 from __future__ import annotations
@@ -23,13 +24,15 @@ log = get_logger(__name__)
 
 WEEKS = 3
 OFFERED_KEY = "habits.offered"  # "<type>@<weekday>" already offered: never again
+TRIED_KEY = "habits.tried_on"  # the day an offer was last put to the gate: one try a day
 DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-_NOT_HIS = ("mia", "system", "workflow", "sync", "import")  # what MIA or a machine did is no habit of his
+# what MIA did on her own (a standing yes records "mia"), a machine did, or an email brought is no habit of his
+_NOT_HIS = ("mia", "system", "workflow", "sync", "import", "email", "inbox", "browser")
 
 
 def habits(events: list, today: date) -> list[tuple[str, int]]:
     """Pure logic. The (event type, weekday) pairs that happened on that weekday in each of the last WEEKS weeks
-    (counting back from yesterday), from his own doing only, the oldest habit first."""
+    (counting back from yesterday), from his own doing only, by weekday (Monday first), then kind."""
     start = today - timedelta(days=7 * WEEKS)
     seen: dict = {}
     for e in events:
@@ -44,8 +47,28 @@ def habits(events: list, today: date) -> list[tuple[str, int]]:
     return sorted((k for k, weeks in seen.items() if len(weeks) >= WEEKS), key=lambda k: (k[1], k[0]))
 
 
+def _title(kind: str, weekday: int) -> str:
+    """Pure logic. One habit's message title, which is also how its delivery is found in the gate's log."""
+    from core.life_events import TYPES
+
+    return f"Every {DAYS[weekday]}: {TYPES.get(kind, kind.replace('_', ' '))}"
+
+
+def _told(context, today) -> set:
+    """The titles of habit offers the gate let through in the last 60 days (its log), so one counts as offered only
+    once he could actually see it."""
+    gate = getattr(context, "communication", None)
+    try:
+        entries = gate.entries_since((today - timedelta(days=60)).isoformat()) if gate is not None else []
+    except Exception:  # noqa: BLE001 - a log that can't be read only means it tries again tomorrow
+        return set()
+    return {e.get("title", "") for e in entries if e.get("topic") == "habit_offer" and e.get("action") == "act"}
+
+
 def offer(context, now: datetime) -> list:
-    """The daily check's message: the first habit not offered yet, once ever, through the gate (AMBIENT)."""
+    """The daily check's message: the first habit not offered yet, through the gate (AMBIENT), tried once a day. A
+    habit counts as offered (never again) only once the gate's log shows it went through, so one held back for
+    spacing or a busy moment is tried again another day, never lost."""
     from core import life_events
     from core.communication_gate import AMBIENT, Candidate
 
@@ -61,14 +84,19 @@ def offer(context, now: datetime) -> list:
         return []
     offered = list(config.get(OFFERED_KEY, []) or [])
     fresh = [(t, d) for t, d in habits(events, today) if f"{t}@{d}" not in offered]
-    if not fresh:
-        return []
+    told = _told(context, today)
+    reached = [(t, d) for t, d in fresh if _title(t, d) in told]
+    if reached:  # the gate let it through: offered once, whatever he says, never again
+        offered += [f"{t}@{d}" for t, d in reached]
+        config.set(OFFERED_KEY, offered)
+        fresh = [h for h in fresh if h not in reached]
+    if not fresh or config.get(TRIED_KEY, "") == today.isoformat():
+        return []  # one try a day: the gate may have held it back for now, never burning it
+    config.set(TRIED_KEY, today.isoformat())
     kind, weekday = fresh[0]
-    offered.append(f"{kind}@{weekday}")
-    config.set(OFFERED_KEY, offered)  # offered once: whatever he says, never again
     what = life_events.TYPES.get(kind, kind.replace("_", " "))
     day = DAYS[weekday]
-    return [Candidate(topic="habit_offer", title=f"Every {day}: {what}", urgency=AMBIENT, source="system",
+    return [Candidate(topic="habit_offer", title=_title(kind, weekday), urgency=AMBIENT, source="system",
                       fingerprint=f"habit-{kind}-{weekday}",
                       message=(f"Three {day}s running there were {what}. Want a reminder every {day}? Say \"remind me "
                                f"every {day} to ...\" and I'll set it. If not, I won't bring this one up again."))]

@@ -74,8 +74,12 @@ the model itself answers, qwen2.5:14b and qwen3:14b tied (1 flagged, 4.8 s typic
 mistral-small:24b (4, 10.7 s) and qwen2.5:32b (2, 27.1 s) were slower and no better by MIA's own checks. No switch
 made: Zac reads the answers side by side in pc-check/model-compare.md (on the PC, not in the repository) and
 decides; qwen3:14b is the one worth a look. A sixth review fixed the batch (K-0361). Everything in the brainstorm that needs no decision is
-now built or found already there; what's left waits on Zac (WAITING_ON 0zg): hobby companions, the picture of him,
-a bigger model, event triggers (an event can come from something she reads), routines from his habits. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
+now built or found already there. His last two answers are built too: workflows started by events in his history,
+anything from an email or page waiting for his yes (DEC-0293, `workflows.run_on_events`), and a routine offered once
+from a habit of his (DEC-0294, `core/habit_offers.py`). Nothing from the brainstorm waits on him. Note: Windows
+Application Control now blocks libzim's DLL on the PC, so run the suite with
+`--ignore=tests/test_reference_library_manager.py` there (CI on Linux runs it); her offline library reader needs it
+unblocked (WAITING_ON 0zh).
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built
 (DEC-0287: MIA says when an update waits, never restarts by herself; DEC-0288: the Daylight theme).
 **Later the same day: FW-06 (passed in the VM), FW-11's first part, FW-07b's phone part, FW-09's procedure**
