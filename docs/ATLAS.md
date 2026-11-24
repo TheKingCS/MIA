@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1655 files, 361,309 lines; 1655 files describe themselves; 19,871 of 20,001 classes and functions are documented.
+1657 files, 361,442 lines; 1657 files describe themselves; 19,878 of 20,008 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-651 files, 184,425 lines; 9,418 of 9,504 classes and functions documented
+652 files, 184,523 lines; 9,422 of 9,508 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -231,6 +231,7 @@
 - `core/finance_manager.py`: Watched-folder ingestion for MIA Home's external financial snapshot exports — the Kraken trading agent and the real estate portfolio dashboard (both built as separate projects, per `docs/VISION.md`'s "MIA Home's expanded scope" section), each producing the same shared JSON export shape documented th
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app.
 - `core/findings.py`: Findings (DEC-0052 step 3; docs/REASONING_PLAN.md section 4): what MIA notices by putting two apps together, worked out in code, never by the model. Each one says what it noticed, the records it came from (`refs`, "kind:id"), why it matters, one suggested next step, how sure it is (REAL from records
+- `core/firewood.py`: Firewood for the winter (Jarvis brainstorm, round 4: homestead). "Do I have enough firewood?" says the cords in his inventory against what a winter takes him: his own figure (`prepared.firewood_cords`, set by voice with set_preparedness), never a guess; without it, the usual range said as only that 
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo
 - `core/first_aid_floor.py`: A floor for emergencies happening now (Jarvis brainstorm 4.2; Zac, 2026-11-23: "the ultimate tool offline and online for survival skills"), the same idea as core/safety_floor.py: a deterministic check before the model, so the first words he gets in an emergency never wait on a model that may be slow
 - `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the
@@ -949,7 +950,7 @@
 
 ## tests/: the test suite: what each part must do
 
-600 files, 96,332 lines; 8,090 of 8,134 classes and functions documented
+601 files, 96,367 lines; 8,093 of 8,137 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1120,6 +1121,7 @@
 - `tests/test_finance_manager.py`: Unit tests for core.finance_manager. parse_snapshot_content() is tested directly (pure, no filesystem I/O). FinanceManager itself is tested against a real tmp_path watched folder (isolating both the persisted-storage _DATA_DIR/_SNAPSHOTS_FILE, same monkeypatch pattern as test_journal_manager.py's is
 - `tests/test_finance_summary.py`: Finance #4, money on the phone: core/finance_summary.py's numbers, the /api/finance/summary endpoint, and the phone's money.js drawing the real Python output (under Node, skipped without it).
 - `tests/test_findings.py`: Findings (DEC-0052 step 3, core/findings.py): what MIA notices by putting apps together, with the records it came from, why it matters, a next step, and only Zac's chosen kinds unprompted.
+- `tests/test_firewood.py`: Firewood for the winter (core/firewood.py): cords read from his inventory (full cords, face cords and ricks at about a third), against his own winter figure (set with set_preparedness), what's short said; without his figure the usual range said as only that and his number asked for; a pile with no m
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).

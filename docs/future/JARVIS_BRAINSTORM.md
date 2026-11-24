@@ -312,7 +312,8 @@ New ideas, each checked against what's there first:
   days, duck and turkey 28, goose 30, guinea 27, quail 17); "how's the hatch going?" says the day and what's next.
 - **Firewood for the winter** (S-M, no decision): cords on hand (inventory) against what a winter takes, from his
   own burn record (logged loads, the stove's use) once there's a season of it; until then a stated estimate he can
-  correct. Not built yet.
+  correct. *Built 2026-11-24 (`core/firewood.py`, "do I have enough firewood?"): cords and face cords from his
+  inventory against his own winter figure ("I burn 4 cords a winter"); without it the usual range is said as only that.*
 - **Seed saving** (S, no decision): seeds saved from his own plants (which bed, the year, how many), kept with the
   pantry or inventory seeds so the seed check (`core/seed_check.py`) counts them, with how many years each kind
   stays viable. *Built 2026-11-24 (`core/seed_life.py`, "are my tomato seeds still good?"): each kind's usual span,
