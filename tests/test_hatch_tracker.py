@@ -20,10 +20,12 @@ SET = date(2026, 11, 24)
 
 
 def test_a_chicken_hatch_is_dated_from_the_day_set():
+    """Candle 7 and 14, lockdown 18, hatch 21, then the brooder; ducks' brooder starts cooler."""
     steps = ht.plan("chicken", 12, SET)
-    assert [s["day"] for s in steps] == [7, 14, 18, 21]
-    assert steps[-1]["on"] == "2026-12-15" and steps[2]["step"].startswith("Lockdown on day 18")
-    assert [s["day"] for s in ht.plan("duck", 6, SET)] == [7, 14, 25, 28]
+    assert [s["day"] for s in steps] == [7, 14, 18, 21, 22]
+    assert steps[-2]["on"] == "2026-12-15" and steps[2]["step"].startswith("Lockdown on day 18")
+    assert [s["day"] for s in ht.plan("duck", 6, SET)] == [7, 14, 25, 28, 29]
+    assert "about 95 F (35 C)" in steps[-1]["step"] and "about 90 F" in ht.plan("duck", 6, SET)[-1]["step"]
 
 
 def test_birds_are_read_from_how_hes_say_them():
@@ -60,13 +62,13 @@ def _ctx():
 
 
 def test_the_mission_has_a_step_a_milestone_and_the_hatch_is_followed(monkeypatch):
-    """Four dated steps, the hatch saved inside the change, and the day and what's next said."""
+    """Five dated steps (the brooder last), the hatch saved inside the change, and the day and what's next said."""
     import core.person_settings as ps
 
     monkeypatch.setattr(ps, "person_id", lambda context: None)
     ctx = _ctx()
     said = ht._make(ctx, {"bird": "chicken", "eggs": 12, "set": SET.isoformat()})
-    assert "Hatch: 12 chicken eggs, due Dec 15" in said and len(ctx.missions.steps) == 4
+    assert "Hatch: 12 chicken eggs, due Dec 15" in said and len(ctx.missions.steps) == 5
     assert ctx.config.get("_saved") == 1  # saved inside the change: a restart keeps it
     assert ht.say(ctx, date(2026, 12, 10)).startswith("The 12 chicken eggs are on day 16; next, lockdown on day 18 in 2")
 
@@ -91,5 +93,6 @@ def test_the_day_set_is_read_looking_back():
 
 
 def test_muscovy_and_bobwhite_have_their_own_days():
-    assert ht.bird_of("muscovy duck") == "muscovy duck" and ht.plan("muscovy duck", 6, SET)[-1]["day"] == 35
-    assert ht.bird_of("bobwhite quail eggs") == "bobwhite quail" and ht.plan("bobwhite quail", 6, SET)[-1]["day"] == 23
+    """Their hatch day (the step before the brooder) is their own: 35 and 23 days."""
+    assert ht.bird_of("muscovy duck") == "muscovy duck" and ht.plan("muscovy duck", 6, SET)[-2]["day"] == 35
+    assert ht.bird_of("bobwhite quail eggs") == "bobwhite quail" and ht.plan("bobwhite quail", 6, SET)[-2]["day"] == 23

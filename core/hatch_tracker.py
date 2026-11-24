@@ -5,7 +5,8 @@ core.hatch_tracker
 Eggs in the incubator, as a mission (Jarvis brainstorm, round 4: homestead). "I set 12 chicken eggs in the incubator
 today" makes one mission whose steps are the dated milestones of that bird's incubation: candling, lockdown (stop
 turning, raise the humidity) and hatch day, each with its date worked out in code from the day they were set, never by
-the model. "How's the hatch going?" says what day it is and what's next. His guided steps live in Missions, never on
+the model, then the brooder's heat once they're out (about 95 F the first week for chicks, 90 F for waterfowl, 5 F
+cooler each week until feathered). "How's the hatch going?" says what day it is and what's next. His guided steps live in Missions, never on
 Today (Zac, 2026-11-09).
 
 How: `BIRDS` holds each bird's days (the common extension figures: chicken 21, duck and turkey 28, goose 30, guinea
@@ -38,6 +39,10 @@ SAID_AS = {"chickens": "chicken", "hen": "chicken", "hens": "chicken", "ducks": 
            "muscovy": "muscovy duck", "muscovies": "muscovy duck", "bobwhite": "bobwhite quail",
            "bobwhites": "bobwhite quail"}
 LOCKDOWN_BEFORE = 3
+# The brooder's first-week heat (the common extension figures): chicks, turkey poults, keets and quail start near
+# 95 F, waterfowl near 90 F; then about 5 F cooler each week until they're feathered (about six weeks).
+BROODER_START_F = {"duck": 90, "goose": 90, "muscovy duck": 90}
+BROODER_WEEKS = 6
 
 
 def bird_of(said: str) -> str:
@@ -50,7 +55,8 @@ def bird_of(said: str) -> str:
 
 
 def plan(bird: str, eggs: int, set_on: date) -> list[dict]:
-    """Pure logic. The milestones for eggs of `bird` set on `set_on`: [{day, on (ISO), step}], in order."""
+    """Pure logic. The milestones for eggs of `bird` set on `set_on`: [{day, on (ISO), step}], in order: candling,
+    lockdown, hatch day, then the brooder's heat once they're out (`BROODER_START_F`, waterfowl a little cooler)."""
     days, candles = BIRDS[bird]
     lockdown = days - LOCKDOWN_BEFORE
     out = [{"day": d, "on": (set_on + timedelta(days=d)).isoformat(),
@@ -60,6 +66,11 @@ def plan(bird: str, eggs: int, set_on: date) -> list[dict]:
                 "step": f"Lockdown on day {lockdown}: stop turning, raise the humidity, keep the lid shut"})
     out.append({"day": days, "on": (set_on + timedelta(days=days)).isoformat(),
                 "step": f"Hatch day {days}: leave them in until they're dry and fluffy"})
+    start = BROODER_START_F.get(bird, 95)
+    out.append({"day": days + 1, "on": (set_on + timedelta(days=days + 1)).isoformat(),
+                "step": f"Brooder: about {start} F ({round((start - 32) * 5 / 9)} C) under the heat the first week, "
+                        f"5 F cooler each week until they're feathered (about {BROODER_WEEKS} weeks); watch them: "
+                        f"huddled means too cold, spread to the edges means too hot"})
     return out
 
 

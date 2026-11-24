@@ -317,6 +317,6 @@ New ideas, each checked against what's there first:
   pantry or inventory seeds so the seed check (`core/seed_check.py`) counts them, with how many years each kind
   stays viable. Not built yet.
 - **The brooder** (S, after the hatch): chicks' temperature by week (start near 95 F, down about 5 F a week), as the
-  hatch mission's next steps once they're out. Not built yet.
+  hatch mission's next steps once they're out. *Built 2026-11-24: the hatch mission's last step.*
 - **The offline library on Windows** (needs Zac, WAITING_ON 0zh): Smart App Control blocks its reader; the options
   are written there.
