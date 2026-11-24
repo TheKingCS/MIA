@@ -18,7 +18,8 @@
   "components": {
     "interface": {
       "web": [
-        "skills.html"
+        "skills.html",
+        "achievements.html"
       ],
       "qt": [
         "modules/skills"
@@ -33,11 +34,16 @@
   },
   "capabilities": {
     "tools": [
-      "get_skills"
+      "get_skills",
+      "my_achievements"
     ],
-    "actions": [],
+    "actions": [
+      "achievement.seen"
+    ],
     "tiers": {
-      "get_skills": "observe"
+      "get_skills": "observe",
+      "my_achievements": "observe",
+      "achievement.seen": "act_within_grant"
     },
     "outside": []
   },

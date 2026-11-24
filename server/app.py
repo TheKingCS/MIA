@@ -589,7 +589,9 @@ def create_app(context: AppContext) -> FastAPI:
     lock, because the song is handed to the window's thread. Taught skills (DEC-0123) are read at
     /api/taught-skills and run one move at a time through /api/taught-skills/run, /answer and /stop.
     /api/runtime/health says how MIA is running: her schedule's jobs, and under the headless runtime (DEC-0155) its
-    uptime, the model and the phone server."""
+    uptime, the model and the phone server.
+    /api/achievements and /api/achievements/new serve the achievements log and the cards not yet seen
+    (core/achievement_cards.py)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3137,6 +3139,26 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import skills_page
 
         return _screen(profile_id, "skills", skills_page)
+
+    @app.get("/api/achievements")
+    def web_achievements(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Achievements page (core/achievement_cards.page): the log, the chains' progress, the structures."""
+        from core.achievement_cards import page
+
+        return _screen(profile_id, "skills", page)
+
+    @app.get("/api/achievements/new")
+    def web_achievements_new(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The unlocks the person hasn't seen a card for (core/achievement_cards.unseen), for the frame to show; the
+        card's Close is the action achievement.seen. Nothing for a child account, which has no Skills app."""
+        from core.achievement_cards import unseen
+        from core.child_accounts import app_allowed
+
+        view = view_for(context, profile_id)
+        if not app_allowed(view, "skills"):
+            return {"cards": [], "more": 0, "upto": ""}
+        with app.state.turn_lock:
+            return unseen(view)
 
     @app.get("/api/profile")
     def web_profile(profile_id: str = Depends(require_profile_id)) -> dict:

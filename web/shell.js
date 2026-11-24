@@ -243,6 +243,7 @@
       }
       const done = await MIA.approve(proposal.proposal_id, answer === "always");
       if (window.MIASound && done.status === "executed") MIASound.celebrate(done.reward);  // DEC-0028 #11
+      if (done.status === "executed") cards.reward(done.reward);
       say((opts && opts.quick ? proposal.summary + "." : done.result) || "Done.", done.undoable ? async () => {
         try { await MIA.undo(done.proposal_id); say("Undone."); refresh(); } catch (e) { say(e.message); }
       } : null);
@@ -253,6 +254,80 @@
       return null;
     }
   }
+
+  // ---------------------------------------------------------------- achievement cards
+  /**
+   * The card that congratulates him (core/achievement_cards.py): each unlock he hasn't seen, one at a time, in the
+   * order earned, with its rarity's glow and sound; Close on the last marks them seen (the action achievement.seen,
+   * pressed, so no confirm box). A finished mission or a level reached from an action gets its own card here too.
+   */
+  const cards = (() => {
+    const RARITY = ["r-common", "r-uncommon", "r-rare", "r-epic", "r-legendary"];
+    const queue = [];
+    const shown = new Set();
+    let open = false, upto = "", checking = false;
+    async function markSeen() {
+      const when = upto;
+      upto = "";
+      if (!when || MIA.demo) return;
+      try {
+        const proposal = await MIA.propose("achievement.seen", { upto: when });
+        await MIA.approve(proposal.proposal_id);
+      } catch (e) { /* shown again next time: nothing lost */ }
+    }
+    function next() {
+      if (open) return;
+      const c = queue.shift();
+      if (!c) { markSeen(); return; }
+      open = true;
+      const close = el("button", { type: "button", class: "btn btn-primary" }, "Nice");
+      const dialog = el("dialog", { class: "ach-card " + (RARITY[c.rarity || 0] || RARITY[0]), "aria-label": c.headline },
+        el("p", { class: "ach-headline" }, c.headline),
+        el("div", { class: "ach-icon", "aria-hidden": "true" }, c.icon || "🏆"),
+        el("h2", { class: "ach-name" }, c.name),
+        el("p", { class: "ach-what" }, c.description || ""),
+        c.rarity_name ? el("p", { class: "rarity-tag" }, c.rarity_name) : null,
+        c.more ? el("p", { class: "ach-more" }, "And " + c.more + " more in your achievements log.") : null,
+        close);
+      close.addEventListener("click", () => dialog.close());
+      dialog.addEventListener("close", () => { dialog.remove(); open = false; next(); });
+      document.body.append(dialog);
+      dialog.showModal();
+      close.focus();
+      if (window.MIASound) MIASound.play((c.rarity || 0) >= 3 ? "fanfare" : "quest");
+    }
+    function add(c) {
+      if (c.id && shown.has(c.id)) return;
+      if (c.id) shown.add(c.id);
+      queue.push(c);
+      next();
+    }
+    async function check() {
+      if (checking || !MIA.achievementsNew || MIA.demo || !MIA.signedIn) return;
+      checking = true;
+      try {
+        const got = await MIA.achievementsNew();
+        const fresh = (got.cards || []).filter((c) => !shown.has(c.id));
+        if (fresh.length) {
+          if (got.more) fresh[fresh.length - 1] = Object.assign({}, fresh[fresh.length - 1], { more: got.more });
+          upto = got.upto || upto;
+          fresh.forEach(add);
+        }
+      } catch (e) { /* a card can wait for the next page */ }
+      finally { checking = false; }
+    }
+    // A mission finished or a level reached by an action just taken.
+    function reward(r) {
+      if (!r) return;
+      if (r.headline === "Mission Complete") {
+        add({ headline: "Mission Complete", name: r.name || "Mission", icon: "🏆", rarity: 2, rarity_name: "",
+          description: [r.xp ? "+" + r.xp + " XP" : "", r.credits ? "+" + r.credits + " credits" : ""].filter(Boolean).join(" · ") });
+      }
+      if (r.level_up) add({ headline: "Level Up", name: "Level " + r.level, icon: "⬆", rarity: 3, rarity_name: "",
+        description: "Every level is real work done." });
+    }
+    return { check, reward, show: add };
+  })();
 
   // ---------------------------------------------------------------- forms
   /**
@@ -1142,10 +1217,12 @@
       loading();
       await refresh();
       backToPlace();  // the scroll and Talk you left, after the phone locked or the app was closed
+      cards.check();  // an achievement earned while away (by voice, on the phone) gets its card here
       if (!options || options.refreshOnChange !== false) {
         MIA.onChange(async () => {
           try { renderNav(await MIA.shell()); } catch (e) { /* keep the old one */ }
           refreshFromChange();
+          cards.check();
         });
       }
       if (MIA.demo) say("Demo: placeholder data. Actions and Talk need MIA running.");
@@ -1417,6 +1494,8 @@
 
   window.MIAShell = { askedHere, look, theme, roomLight, previewTheme: (t) => applyTheme(t, true), start, act, say, el, refresh, frame, form, search: openSearch, levelCard, conditionBar, buffChips, showDraft, confirm: confirmBox, talk: toggleTalk, copy, copyButton,
     notRight, voiceRecorder, playReply, stopSpeaking, currentVoice, twoWays, capture };
+  // An achievement's card shown again (the Achievements log's rows): never counted as a new one seen.
+  window.MIAShell.achievementCard = (c) => cards.show(Object.assign({}, c, { id: "" }));
 
   // <script src="shell.js" data-frame="garage">: frame an existing page as soon
   // as someone is signed in (now, or when its own sign-in form succeeds).

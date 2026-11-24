@@ -214,7 +214,7 @@ class FlockBook:
 
     def log(self, flock_id: str, kind: str, on: str = "", **fields) -> Entry:
         """Adds a line to a flock's log (eggs, feed, birds or use; today unless a day is given). Birds change the hen count;
-        eggs are recorded in the history.
+        eggs are recorded in the history, and said as activity.logged so an egg achievement crossed unlocks at once.
         """
         if self.get_flock(flock_id) is None:
             raise ValueError("That flock isn't there anymore.")
@@ -235,6 +235,9 @@ class FlockBook:
 
             life_events.record(self, "eggs_collected", f"Collected {entry.count:g} eggs",
                                [f"flock:{flock_id}"], {"eggs": entry.count})
+            events = getattr(self.context, "events", None)
+            if events is not None:  # the egg achievements (core/life_milestones.py) count it at once
+                events.publish("activity.logged", source="flock", category="eggs")
         return entry
 
     def delete_entry(self, entry_id: str) -> None:

@@ -1131,6 +1131,7 @@ class BackgroundJobs:
         # waiting up to a day.
         """The daily rewards check: once a day, unlocks any reward and hidden achievement the signed-in person has earned
         (both scans are idempotent; Skills also runs them on refresh so an unlock is immediate).
+        Structures built (core/life_milestones.py) are scanned with them.
         """
         config = self.context.config
         if should_run_once_daily(config.get("system.last_rewards_check_date"), today_iso):
@@ -1142,6 +1143,7 @@ class BackgroundJobs:
                     # scan (see core/rewards_manager.py's own docstring),
                     # called alongside scan_for_new_unlocks() everywhere.
                     self.context.rewards.scan_for_new_hidden_achievements(active_profile.profile_id)
+                    self.context.rewards.scan_for_new_structures(active_profile.profile_id)
             config.set("system.last_rewards_check_date", today_iso)
             config.save()
 

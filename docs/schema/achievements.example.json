@@ -1,0 +1,128 @@
+{
+  "available": true,
+  "earned": [
+    {
+      "id": "built_greenhouse",
+      "kind": "structure",
+      "headline": "Milestone Reached",
+      "name": "Glass and Green",
+      "description": "Built the greenhouse.",
+      "icon": "🌿",
+      "chain": "",
+      "rarity": 4,
+      "rarity_name": "Legendary",
+      "when": "2026-11-20T16:02:11"
+    },
+    {
+      "id": "grower_kitchen_gardener",
+      "kind": "tier",
+      "headline": "Achievement Unlocked",
+      "name": "Kitchen Gardener",
+      "description": "Grow 100 pounds of produce.",
+      "icon": "🥕",
+      "chain": "grower",
+      "rarity": 1,
+      "rarity_name": "Uncommon",
+      "when": "2026-09-02T18:40:00"
+    },
+    {
+      "id": "eggs_ten_dozen",
+      "kind": "tier",
+      "headline": "Achievement Unlocked",
+      "name": "Ten Dozen",
+      "description": "Collect 10 dozen eggs.",
+      "icon": "🍳",
+      "chain": "egg_basket",
+      "rarity": 1,
+      "rarity_name": "Uncommon",
+      "when": "2026-08-14T07:15:30"
+    }
+  ],
+  "counts": {
+    "earned": 3,
+    "total": 66
+  },
+  "chains": [
+    {
+      "stat": "Produce Grown",
+      "icon": "🥕",
+      "unit": "lb",
+      "value": 312.4,
+      "earned": {
+        "name": "Kitchen Gardener",
+        "icon": "🥕",
+        "rarity": 1,
+        "rarity_name": "Uncommon"
+      },
+      "next": {
+        "name": "Market Gardener",
+        "icon": "🥬",
+        "description": "Grow 500 pounds of produce.",
+        "threshold": 500.0,
+        "percent": 62,
+        "rarity": 2,
+        "rarity_name": "Rare"
+      },
+      "maxed": false
+    },
+    {
+      "stat": "Eggs Collected",
+      "icon": "🥚",
+      "unit": "",
+      "value": 431.0,
+      "earned": {
+        "name": "Ten Dozen",
+        "icon": "🍳",
+        "rarity": 1,
+        "rarity_name": "Uncommon"
+      },
+      "next": {
+        "name": "Fifty Dozen",
+        "icon": "🐓",
+        "description": "Collect 50 dozen eggs.",
+        "threshold": 600.0,
+        "percent": 72,
+        "rarity": 2,
+        "rarity_name": "Rare"
+      },
+      "maxed": false
+    },
+    {
+      "stat": "Jars Canned",
+      "icon": "🫙",
+      "unit": "",
+      "value": 0.0,
+      "earned": null,
+      "next": {
+        "name": "First Batch",
+        "icon": "🫙",
+        "description": "Put up 7 jars.",
+        "threshold": 7.0,
+        "percent": 0,
+        "rarity": 0,
+        "rarity_name": "Common"
+      },
+      "maxed": false
+    }
+  ],
+  "structures": [
+    {
+      "id": "built_greenhouse",
+      "name": "Glass and Green",
+      "icon": "🌿",
+      "description": "Built the greenhouse.",
+      "earned": true,
+      "rarity": 4,
+      "rarity_name": "Legendary"
+    },
+    {
+      "id": "built_chicken_coop",
+      "name": "Rule the Roost",
+      "icon": "🐔",
+      "description": "Built the chicken coop.",
+      "earned": false,
+      "rarity": 3,
+      "rarity_name": "Epic"
+    }
+  ]
+}

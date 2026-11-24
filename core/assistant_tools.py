@@ -76,6 +76,7 @@ from core.assistant_link_actions import register_link_actions
 from core.assistant_lookup import resolve_by_name
 from core.assistant_more_twins_actions import register_more_twins_actions
 from core.assistant_notification_actions import register_notification_actions
+from core.assistant_achievement_actions import register_achievement_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_path_actions import register_path_actions
 from core.assistant_plan_actions import register_plan_actions
@@ -206,6 +207,7 @@ class AssistantTools:
         Taught skills' tools (DEC-0123) are registered here too.
         Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
         (list_inventory and list_materials, list_trips and get_trip_route...).
+        my_achievements, the achievements log by voice, comes from core/assistant_achievement_actions.py.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -250,6 +252,7 @@ class AssistantTools:
         register_asset_part_actions(self.context.assistant_actions)  # the parts an asset uses
         register_health_actions(self.context.assistant_actions)  # sleep, visits, medications, records (DEC-0129)
         register_notification_actions(self.context.assistant_actions)  # read out and mark notifications read (DEC-0125)
+        register_achievement_actions(self.context.assistant_actions)  # the achievements log by voice (2026-11-24)
         register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_closet_actions(self.context.assistant_actions)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

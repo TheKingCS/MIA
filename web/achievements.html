@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Achievements — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="skills" class="mod-skills" data-say="What are my achievements?">
+  <!--
+    Achievements (claude, 2026-11-24, the game layer): the log of everything
+    unlocked, newest first and dated; each chain's progress toward its next
+    tier (produce grown, eggs, jars, missions, workouts...); the structures
+    built and still to build. From MIA.achievements() (core/achievement_cards.py).
+    The congratulation card itself is the frame's (web/shell.js).
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true">🏆</span> <span>Achievements</span></h1>
+        <p class="tagline">Everything you've built, grown and earned.</p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="achievements.js"></script>
+</body>
+</html>

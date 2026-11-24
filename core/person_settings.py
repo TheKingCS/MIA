@@ -41,6 +41,7 @@ PERSONAL_SETTINGS = (
     "first_boot.progress",
     "user_sync.progress",
     "welcome.progress",
+    "achievements.seen_at",  # the last achievement card they saw (core/achievement_cards.py)
     "character.crest",  # the painting on the Character portrait card (core/art_studio.py "crest", 2026-11-09)
     "email.send.address",
     "email.send.host",

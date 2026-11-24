@@ -515,7 +515,8 @@ class SkillsModule(ModuleBase):
         self._refresh_rewards_card()
 
     def _refresh_rewards_card(self) -> None:
-        """Rebuilds the rewards card (its title kept), after checking for new unlocks: each challenge chain's earned title (or that it's maxed) and its progress toward the next tier, then the hidden achievements found."""
+        """Rebuilds the rewards card (its title kept), after checking for new unlocks: each challenge chain's earned title (or that it's maxed) and its progress toward the next tier, then the hidden achievements found.
+        Structures built are scanned with the rewards."""
         while self._rewards_layout.count() > 1:  # keep the eyebrow title (index 0)
             item = self._rewards_layout.takeAt(1)
             widget = item.widget()
@@ -539,6 +540,7 @@ class SkillsModule(ModuleBase):
         # also calls this so it fires even if this page is never opened.
         self.context.rewards.scan_for_new_unlocks(active.profile_id)
         self.context.rewards.scan_for_new_hidden_achievements(active.profile_id)
+        self.context.rewards.scan_for_new_structures(active.profile_id)
         stat_values = self.context.rewards.all_stat_values(active.profile_id)
         stat_by_id = {definition.stat_id: definition for definition in STAT_DEFINITIONS}
         unlocked_ids = set(self.context.rewards.unlocked_reward_ids(active.profile_id))

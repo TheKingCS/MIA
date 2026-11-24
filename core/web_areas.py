@@ -87,6 +87,8 @@ TRACKS = Page("tracks", "Tracks", "expeditions", "Your walks, rides and drives f
 WORLD = Page("worldmap", "World Map", "memories", "Everywhere you've been.", "worldmap.html")
 CHECKIN = Page("checkin", "Sunday Check-In", "calendar", "The week, looked back on.", "checkin.html")
 PARTY = Page("party", "Party", "missions", "Raids and quests.", "party.html")
+ACHIEVEMENTS = Page("achievements", "Achievements", "skills", "Everything you've built, grown and earned.",
+                    "achievements.html")
 CHRONICLE = Page("chronicle", "The Chronicle", "character", "Your story, told back.", "chronicle.html")
 WALLET = Page("id_wallet", "ID Wallet", "passwords", "IDs, passports, insurance cards and registrations.", "wallet.html")
 SIGNINS = Page("signins", "Sign-Ins", "passwords", "Who signed in, from where.", "signins.html")
@@ -141,7 +143,7 @@ AREAS: tuple[Area, ...] = (
     Area("ai_tools", "AI Tools", "assistant", "What MIA does with you: look, browse, read and write.",
          ("sight", "browser", "taught_skills", STEPS, SPECIALISTS, LOOKUP, SHELF, "inbox", COMMS, "assistant", MADE), hue="#6fc6ff"),
     Area("missions", "Missions", "missions", "Goals, projects, levels and rewards.",
-         ("missions", PROJECTS, "dungeon", "skills", "character", "reward_shop", PARTY, CHRONICLE, WHY, DIRECTIONS),
+         ("missions", PROJECTS, "dungeon", "skills", "character", "reward_shop", PARTY, ACHIEVEMENTS, CHRONICLE, WHY, DIRECTIONS),
          hue="#c86bff"),
     Area("settings", "Settings", "settings", "Make MIA yours, keep it safe, see how she's doing.",
          ("settings", STUDIO, YOU, ANSWERS, ABOUT, "module_browser"), hue="#dfe9f2"),

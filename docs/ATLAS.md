@@ -2,16 +2,17 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1694 files, 367,586 lines; 1694 files describe themselves; 20,202 of 20,332 classes and functions are documented.
+1699 files, 368,376 lines; 1699 files describe themselves; 20,233 of 20,363 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-668 files, 188,767 lines; 9,581 of 9,667 classes and functions documented
+671 files, 189,263 lines; 9,604 of 9,690 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
 - `core/account_actions.py`: What the web's Profile and Settings screens change (2026-10-07, core/web_account.py): your name, email, country and interests (`profile.edit`), one of your own settings (`setting.set`), and ending a break MIA took from a kind of message (`communication.resume`). All are the person's own and undoable
 - `core/account_data.py`: Your data is yours to take or remove (2026-10-01, accounts stage 5).
+- `core/achievement_cards.py`: The achievements log and the card that congratulates him (the game layer, Zac 2026-11-24: "keep an achievements log and reward me with unlocking those, have cards that pop up congratulating me and showing me the achievement").
 - `core/achievements.py`: The deterministic "you unlocked something" narration layer — the "Achievements/Milestones" piece flagged as a real gap across both the "My Hero's Path" plan and the "connective infrastructure" architecture review that followed the whole-codebase audit (see docs/ROADMAP.md's dated entry).
 - `core/action_effects.py`: What each kind of action reaches, and whether it can be undone (REQ-AUT-006, REQ-AUT-007; DEC-0181; prompt 23's review, UI-3). Every action kind is one of four reaches and three reversibilities:
 - `core/actions.py`: The action contract (2026-10-05, Phase 2 foundation, DEC-0013): how any surface (the web Home, the phone, the glasses, later MIA herself) changes something in a person's life. Always in five steps:
@@ -32,6 +33,7 @@
 - `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
+- `core/assistant_achievement_actions.py`: Achievements by voice and from the screen (the game layer, 2026-11-24; DEC-0125, both ways). The tool `my_achievements` says what the Achievements page shows (core/achievement_cards.say): how many he's unlocked, the latest, and the next he's closest to. The action `achievement.seen` is the card's Cl
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_answer_style_actions.py`: How MIA answers, by voice (DEC-0138, DEC-0125's both-ways rule; the screen is web/answers.html): "keep your answers short", "use bullet points", "be more direct", "lead with the answer", "how do I like answers?", "forget how I like answers", "stop asking which I prefer". The person's words are mappe
 - `core/assistant_app_registry_actions.py`: MIA about her own apps, by voice (migration phase M2, DEC-0178; answers from `core/app_ecosystem.py`, never the model's guess): "What apps do I have?" (`list_my_apps`). "What can Greenhouse do?", "what depends on Home?" (`describe_app`). "Which app can monitor energy?", "which app has add_watch?" (`
@@ -323,6 +325,7 @@
 - `core/library_course.py`: Courses from her offline library (Zac, 2026-11-24: "I want to be able to say MIA, I want to learn about x and have offline coursework and instruction about any subject and it be quality information"). The knowledge comes from the packs she keeps offline (core/offline_library.py: Wikipedia, the homes
 - `core/life_areas.py`: The rest of a life, at a glance: the life state's `areas` section (DEC-0108's interconnection audit, 2026-11-07). `core/context_assembler.py` has full sections for money, property, assets, the kitchen, workouts, projects, goals and missions; the other stores were missing from her picture of a life e
 - `core/life_events.py`: Life events (2026-10-05, Engine Phase 1, docs/ENGINE_PHASE1_PLAN.md): an append-only history of the meaningful things that happen in a person's life: a bill paid, a mission completed (and the skill evidence it earned), a workout or meal logged, maintenance done, rent received, an import, a starter s
+- `core/life_milestones.py`: What his homestead life has added up to, read from the records, for the achievements (the game layer, Zac 2026-11-24: "grow 1000 pounds of produce, built the greenhouse, built the chicken coop, harvested 100 dozen eggs"). Nothing here is kept twice: each number is worked out now from the store that 
 - `core/life_note_actions.py`: What someone said they'd do, decided, want to try and set aside (core/life_notes.py, DEC-0054) through the action contract (core/actions.py): `life_note.done` (a promise kept, an idea tried) and `life_note.forget`. The notes write through atomic_write_text, so "undo that" takes either back. Said out
 - `core/life_notes.py`: Remembering what you say you'll do, decide and want to try (DEC-0054, T-0018). Four kinds of note MIA picks up from normal conversation, never a form, each shown back for a yes before it's kept (Propose → Approve):
 - `core/linked_devices.py`: The phones linked to MIA on this computer (DEC-0022, `core/home_link.py`), seen and withdrawn from the computer's side (2026-11-10).
@@ -679,7 +682,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,750 lines; 57 of 57 classes and functions documented
+2 files, 4,772 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -816,7 +819,7 @@
 
 ## modules/: the desktop's apps, one folder each
 
-93 files, 22,635 lines; 1,025 of 1,025 classes and functions documented
+93 files, 22,639 lines; 1,025 of 1,025 classes and functions documented
 
 - `modules/__init__.py`: Every feature of MIA (Assistant, Files, Notes, Maps, etc.) lives here as an independent package. Each module package must:
 - `modules/assistant/__init__.py`: The assistant app's package: its screen and behaviour are in module.py (Assistant Chat UI — docs/ROADMAP.md milestones 5.2 (text chat), 5.3 (voice), 5.4 (device-help grounding), and 5.5 (tool use / action execution). A chat screen (). core/module_manager.py finds it by that file.
@@ -966,7 +969,7 @@
 
 ## tests/: the test suite: what each part must do
 
-622 files, 98,232 lines; 8,258 of 8,302 classes and functions documented
+623 files, 98,357 lines; 8,266 of 8,310 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -980,6 +983,7 @@
 - `tests/run_module.py`: tests/run_module.py
 - `tests/test_accessibility.py`: Accessibility (core/accessibility.py, gui/theme_manager.py, gui/read_aloud.py), 2026-10-01: text size, high contrast, and reading a screen aloud; each person's own.
 - `tests/test_accounts_households.py`: Accounts and households (2026-10-01): sign in with an email, recover a forgotten password with a recovery code, and share household things only after joining a household with a current member's approval (core/profile_manager.py, core/household_manager.py, core/personal_data.py).
+- `tests/test_achievement_cards.py`: The game layer's achievements (2026-11-24): pounds of produce, eggs and jars counted from the records (core/life_milestones.py), structures built from Complete projects, unlocked at once when the record is logged, kept in the log with their dates and shown once as a card (core/achievement_cards.py),
 - `tests/test_achievements.py`: Unit tests for core.achievements' pure functions — no Qt, no persistence, same style as tests/test_leveling.py tests/test_skill_leveling.py.
 - `tests/test_action_effects.py`: What each action kind reaches and whether it can be undone (REQ-AUT-006, REQ-AUT-007; core/action_effects.py): every declared effect is a real kind with a known reach and reversibility; a kind whose code deletes or moves files, uses the network, talks to a device, runs a program or merges code is de
 - `tests/test_actions.py`: The action contract and live updates (Phase 2 foundation, DEC-0013, 2026-10-05): Propose → Approve → Execute → Record → Undo, the endpoints the web front end uses, and the state version that tells it to refresh.
@@ -1410,7 +1414,7 @@
 - `tests/test_review_2026_11_22.py`: Fable's review of 2026-11-22 (three independent reviewers over WP-01 to FW-12): each fixed finding held by a test of the behaviour it described.
 - `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
-- `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths.
+- `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths. The homestead stats (produce, eggs, jars) are among every stat listed; their own tests are tests/test_ac
 - `tests/test_runs.py`: The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record for anything MIA runs in steps. A run moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off run looking alive or calls it done (shown with a real process killed m
 - `tests/test_runtime.py`: The MIA Runtime (core/runtime.py, DEC-0155): the whole MIA built with no window, the same services and tools the desktop has, her schedule on a thread, and how she says she's doing.
 - `tests/test_safety_escalation.py`: Q-0002 (approved 2026-10-05, H-0011): when a child triggers the safety floor, the child gets the safety reply and is told plainly that a parent will be told; each guardian gets a minimal, direct alert (who and when, never what was written); it's recorded for audit in the child's and the guardians' o
@@ -1593,9 +1597,10 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-118 files, 22,112 lines
+119 files, 22,255 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
+- `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
 - `web/answers.js`: answers.js — How MIA Answers (claude, 2026-11-08, DEC-0138). Renders MIA.answers() (core/answer_compare.py): for each part of how she answers (how long, how it's laid out, the tone, what comes first) the way she leans, how settled that is, and every option to choose outright (style.set); whether she
 - `web/apps.js`: apps.js — the Apps page (claude, 2026-10-06, DEC-0017). Renders MIA.apps(); filtering is only matching the words typed against what the engine sent. Laid out as the design canvas's Apps (DEC-0113): find, favorites as tiles (your glasses cards too), then every app by life area as a list.

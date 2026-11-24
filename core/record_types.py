@@ -55,6 +55,7 @@ TYPES: dict[str, RecordType] = {k.kind: k for k in (
     RecordType("person", "person", "relationships", "all_people", "person_id"),
     RecordType("pet", "pet", "relationships", "all_pets", "pet_id"),
     RecordType("recipe", "recipe", "kitchen", "all_recipes", "recipe_id"),
+    RecordType("pantry", "pantry item", "kitchen", "all_pantry_items", "item_id"),  # a batch of jars put up
     RecordType("profile", "account", "profiles", "list_profiles", "profile_id"),
     # 2026-11-07 (DEC-0108's interconnection audit): the rest of the records a life is made of, so they can depend
     # on, serve, block or belong to each other. The kind names match the refs their stores' life events carry.

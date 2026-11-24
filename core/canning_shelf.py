@@ -85,7 +85,9 @@ def put_up(kitchen, food: str, jars: float, size: str = "", day: Optional[date] 
     """Adds one batch of home-canned jars to the pantry (the jar count as its quantity, a year on as its date, `MARK`
     and the day in its notes) and returns the new pantry item. The food is read from what he said (`food_of`:
     "7 quart jars of tomatoes" is tomatoes, in quarts). A second batch of the same food the same month is added to
-    that batch instead of making a twin."""
+    that batch instead of making a twin.
+    Each batch is also a `canned` life event with its jar count (`_record`), so the jars ever canned count toward
+    the achievements after they're eaten."""
     day = day or date.today()
     if not food_of(str(food or "")):
         raise ValueError("What did you put up?")
@@ -96,10 +98,27 @@ def put_up(kitchen, food: str, jars: float, size: str = "", day: Optional[date] 
     same = next((p for p in kitchen.all_pantry_items() if p.name.lower() == name.lower()), None)
     if same is not None:
         kitchen.update_pantry_item(same.item_id, quantity=(same.quantity or 0) + jars)
-        return kitchen.get_pantry_item(same.item_id)
-    return kitchen.add_pantry_item(name, quantity=jars, unit="jars", category="Pantry/Dry Goods",
-                                   expiration_date=(day + timedelta(days=BEST_DAYS)).isoformat(),
-                                   notes=f"{MARK}, put up {day.isoformat()}.")
+        item = kitchen.get_pantry_item(same.item_id)
+    else:
+        item = kitchen.add_pantry_item(name, quantity=jars, unit="jars", category="Pantry/Dry Goods",
+                                       expiration_date=(day + timedelta(days=BEST_DAYS)).isoformat(),
+                                       notes=f"{MARK}, put up {day.isoformat()}.")
+    _record(kitchen, item, jars, food_of(food))
+    return item
+
+
+def _record(kitchen, item, jars: float, food: str) -> None:
+    """A `canned` life event for the jars just put up (their count and food), so the jars he has ever canned are
+    counted after they're eaten (core/life_milestones.jars_canned), and the achievements hear of it."""
+    from core import life_events
+
+    jar_word = "jar" if jars == 1 else "jars"
+    life_events.record(kitchen, "canned", f"Put up {jars:g} {jar_word} of {food}",
+                       refs=[f"pantry:{item.item_id}"] if item is not None else [],
+                       payload={"jars": jars, "food": food})
+    events = getattr(getattr(kitchen, "context", None), "events", None)
+    if events is not None:
+        events.publish("activity.logged", source="canning", category="jars_put_up")
 
 
 def shelf(items: list, today: date) -> list[dict]:

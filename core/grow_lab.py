@@ -318,7 +318,8 @@ class GrowLab:
 
     def harvest(self, batch_id: str, amount: float, unit: str = "", note: str = "", done: bool = False,
                 on: Optional[str] = None) -> Batch:
-        """Records a harvest from a batch (marking it harvested when done) and records it in the history."""
+        """Records a harvest from a batch (marking it harvested when done) and records it in the history; says
+        activity.logged so a produce achievement crossed unlocks at once."""
         b = self.get_batch(batch_id)
         if b is None:
             raise ValueError("That batch isn't there anymore.")
@@ -330,6 +331,9 @@ class GrowLab:
             b.status = "Harvested"
         self._save()
         self._record("harvest", f"Harvested {amount:g} {unit.strip()} of {b.crop}".replace("  ", " "), [f"batch:{b.batch_id}"])
+        events = getattr(self.context, "events", None)
+        if events is not None:  # the produce achievements (core/life_milestones.py) count it at once
+            events.publish("activity.logged", source="grow_lab", category="harvest")
         return b
 
     def lose(self, batch_id: str, how_many: int, why: str = "", all_of_it: bool = False) -> Batch:

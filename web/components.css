@@ -486,6 +486,53 @@ dialog.confirm .confirm-actions {
   margin-top: var(--gap);
 }
 
+/* ---------- achievement card (web/shell.js MIACards, core/achievement_cards.py) ---------- */
+dialog.ach-card {
+  --card-glow: var(--rarity-common);
+  background: var(--glass-strong);
+  border: 1px solid var(--card-glow);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: calc(var(--gap) * 2) calc(var(--gap) * 1.5) calc(var(--gap) * 1.5);
+  width: min(380px, calc(100vw - 32px));
+  text-align: center;
+  box-shadow: 0 0 48px color-mix(in srgb, var(--card-glow) 45%, transparent);
+  animation: ach-in 420ms cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+dialog.ach-card::backdrop { background: rgba(var(--rgb-shadow), 0.7); }
+dialog.ach-card.r-uncommon { --card-glow: var(--rarity-uncommon); }
+dialog.ach-card.r-rare { --card-glow: var(--rarity-rare); }
+dialog.ach-card.r-epic { --card-glow: var(--rarity-epic); }
+dialog.ach-card.r-legendary { --card-glow: var(--rarity-legendary); }
+.ach-card .ach-headline {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  color: var(--card-glow);
+  margin: 0;
+}
+.ach-card .ach-icon {
+  font-size: var(--text-2xl);
+  line-height: 1.2;
+  margin: calc(var(--gap) * 0.75) auto;
+  width: 2.2em;
+  height: 2.2em;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--card-glow);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--card-glow) 55%, transparent) inset;
+}
+.ach-card .ach-name { font-size: var(--text-xl); margin: 0 0 6px; }
+.ach-card .ach-what { color: var(--text-dim); margin: 0 0 var(--gap); }
+.ach-card .ach-more { color: var(--text-dim); font-size: var(--text-xs); margin: 0 0 var(--gap); }
+@keyframes ach-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { dialog.ach-card { animation: none; } }
+
 /* ---------- focus ---------- */
 :focus-visible {
   outline: 2px solid var(--accent);

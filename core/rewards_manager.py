@@ -177,6 +177,10 @@ whoever logged it. `None` (readings logged before this field existed,
 or with no active profile) stays shared, same convention as
 everywhere else — this reduces to the exact old single-value
 computation for any task only one person has ever logged against.
+**The homestead (2026-11-24, the game layer)**: produce grown, eggs collected and jars canned are stats with their
+own chains (Grower, Egg Basket, Canner), read from core/life_milestones.py; and each structure built (a Complete
+project naming it) is a one-time milestone shown before it's earned (`built_structures`, `scan_for_new_structures`).
+The log and the congratulation card are core/achievement_cards.py.
 """
 
 from __future__ import annotations
@@ -261,6 +265,11 @@ STAT_DEFINITIONS: list[StatDefinition] = [
     StatDefinition("vehicle_miles_logged", "Vehicle Miles Logged", "mi", "🚗"),
     StatDefinition("meals_cooked", "Meals Cooked", "", "🍳"),
     StatDefinition("projects_completed", "Projects Completed", "", "🛠️"),
+    # The homestead's own (2026-11-24, core/life_milestones.py): read from the grow lab, the flock book and the
+    # canning shelf's history.
+    StatDefinition("produce_pounds", "Produce Grown", "lb", "🥕"),
+    StatDefinition("eggs_collected", "Eggs Collected", "", "🥚"),
+    StatDefinition("jars_canned", "Jars Canned", "", "🫙"),
 ]
 
 #: v2 reward set — real escalating chains against the real stats above,
@@ -334,6 +343,40 @@ CHALLENGE_CHAINS: list[ChallengeChain] = [
             ChallengeTier("builder_craftsman", "Craftsman", "Complete 15 real projects.", "🛠️", 15.0, 2),
             ChallengeTier("builder_master_builder", "Master Builder", "Complete 30 real projects.", "🏗️", 30.0, 3),
             ChallengeTier("builder_legendary_maker", "Legendary Maker", "Complete 50 real projects.", "🏆", 50.0, 4),
+        ),
+    ),
+    # 2026-11-24 (the game layer): the homestead's harvests, eggs and jars.
+    ChallengeChain(
+        chain_id="grower",
+        stat_id="produce_pounds",
+        tiers=(
+            ChallengeTier("grower_first_basket", "First Basket", "Grow 10 pounds of produce.", "🧺", 10.0, 0),
+            ChallengeTier("grower_kitchen_gardener", "Kitchen Gardener", "Grow 100 pounds of produce.", "🥕", 100.0, 1),
+            ChallengeTier("grower_market_gardener", "Market Gardener", "Grow 500 pounds of produce.", "🥬", 500.0, 2),
+            ChallengeTier("grower_half_ton", "Half-Ton Harvest", "Grow 1,000 pounds of produce.", "🚜", 1000.0, 3),
+            ChallengeTier("grower_breadbasket", "Breadbasket", "Grow 5,000 pounds of produce.", "🌾", 5000.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="egg_basket",
+        stat_id="eggs_collected",
+        tiers=(
+            ChallengeTier("eggs_first_dozen", "First Dozen", "Collect 12 eggs.", "🥚", 12.0, 0),
+            ChallengeTier("eggs_ten_dozen", "Ten Dozen", "Collect 10 dozen eggs.", "🍳", 120.0, 1),
+            ChallengeTier("eggs_fifty_dozen", "Fifty Dozen", "Collect 50 dozen eggs.", "🐓", 600.0, 2),
+            ChallengeTier("eggs_hundred_dozen", "Hundred Dozen", "Collect 100 dozen eggs.", "🐔", 1200.0, 3),
+            ChallengeTier("eggs_egg_baron", "Egg Baron", "Collect 500 dozen eggs.", "👑", 6000.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="canner",
+        stat_id="jars_canned",
+        tiers=(
+            ChallengeTier("canner_first_batch", "First Batch", "Put up 7 jars.", "🫙", 7.0, 0),
+            ChallengeTier("canner_pantry_keeper", "Pantry Keeper", "Put up 50 jars.", "🥫", 50.0, 1),
+            ChallengeTier("canner_preserver", "Preserver", "Put up 150 jars.", "🍅", 150.0, 2),
+            ChallengeTier("canner_root_cellar", "Root Cellar Royalty", "Put up 500 jars.", "🏺", 500.0, 3),
+            ChallengeTier("canner_master", "Master Canner", "Put up 1,000 jars.", "🏆", 1000.0, 4),
         ),
     ),
 ]
@@ -511,7 +554,8 @@ class RewardsManager:
         event's own payload and just rescans the active profile, same
         "safe to call as often as convenient" idempotent scans this
         module already exposes. A future hardware sensor publishing
-        "activity.logged" needs no new code here to plug in."""
+        "activity.logged" needs no new code here to plug in.
+        Structures built are scanned with the rest."""
         if self.context.profiles is None:
             return
         active = self.context.profiles.get_active_profile()
@@ -519,13 +563,15 @@ class RewardsManager:
             return
         self.scan_for_new_unlocks(active.profile_id)
         self.scan_for_new_hidden_achievements(active.profile_id)
+        self.scan_for_new_structures(active.profile_id)
 
     # ------------------------------------------------------------------
     # Stat values — each one derived live from real data elsewhere.
     # ------------------------------------------------------------------
 
     def stat_value(self, stat_id: str, profile_id: str) -> float:
-        """One stat's value for a person, worked out now from the records (0 for an unknown stat)."""
+        """One stat's value for a person, worked out now from the records (0 for an unknown stat).
+        Produce, eggs and jars are read from core/life_milestones.py."""
         if stat_id == "engine_hours_logged":
             return self._compute_engine_hours_logged(profile_id)
         if stat_id == "workout_hours_logged":
@@ -538,6 +584,10 @@ class RewardsManager:
             return self._compute_meals_cooked()
         if stat_id == "projects_completed":
             return self._compute_projects_completed()
+        if stat_id in ("produce_pounds", "eggs_collected", "jars_canned"):
+            from core import life_milestones
+
+            return float(getattr(life_milestones, stat_id)(self.context))
         return 0.0
 
     def all_stat_values(self, profile_id: str) -> dict[str, float]:
@@ -762,6 +812,36 @@ class RewardsManager:
 
         if newly_unlocked and self.context.notifications is not None:
             self._notify_unlocked_hidden_achievements(newly_unlocked)
+        return newly_unlocked
+
+    # ------------------------------------------------------------------
+    # Structures built (core/life_milestones.py): one-time milestones, shown before they're earned.
+    # ------------------------------------------------------------------
+
+    def built_structures(self, profile_id: str) -> list:
+        """The structures whose milestone this person has unlocked (core.life_milestones.STRUCTURES order)."""
+        from core.life_milestones import STRUCTURES
+
+        unlocked = set(self.unlocked_reward_ids(profile_id))
+        return [s for s in STRUCTURES if s.reward_id in unlocked]
+
+    def scan_for_new_structures(self, profile_id: str) -> list:
+        """Idempotent, like the scans above: unlocks each structure a Complete project names, one notification for
+        the lot."""
+        from core.life_milestones import STRUCTURES, built
+
+        if self.context.profiles is None:
+            return []
+        newly_unlocked = [s for s in STRUCTURES if not self.is_unlocked(profile_id, s.reward_id)
+                          and built(self.context, s.reward_id)
+                          and self.context.profiles.unlock_reward(profile_id, s.reward_id)]
+        if newly_unlocked and self.context.notifications is not None:
+            if len(newly_unlocked) == 1:
+                s = newly_unlocked[0]
+                title, message = f"{s.icon} Milestone unlocked!", f"\"{s.name}\" — {s.description}"
+            else:
+                title, message = format_multi_unlock_notification([s.name for s in newly_unlocked], "milestones")
+            self.context.notifications.notify(title=title, message=message, level="info", source="achievements")
         return newly_unlocked
 
     def _notify_unlocked_hidden_achievements(self, achievements: list[HiddenAchievement]) -> None:

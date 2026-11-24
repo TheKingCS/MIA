@@ -22,12 +22,17 @@ log = get_logger(__name__)
 
 
 def reward_name(reward_id: str) -> str:
-    """Pure logic. A reward's name from its challenge tier or hidden achievement, or "" for one not known."""
+    """Pure logic. A reward's name from its challenge tier or hidden achievement, or "" for one not known.
+    A structure built (core/life_milestones.STRUCTURES) is named too."""
+    from core.life_milestones import STRUCTURES
     from core.rewards_manager import HIDDEN_ACHIEVEMENTS, all_tiers
 
     for tier in all_tiers():
         if tier.reward_id == reward_id:
             return tier.name
+    for structure in STRUCTURES:
+        if structure.reward_id == reward_id:
+            return structure.name
     return next((a.name for a in HIDDEN_ACHIEVEMENTS if a.achievement_id == reward_id), "")
 
 

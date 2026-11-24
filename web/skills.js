@@ -4,7 +4,8 @@
  * (your interests first), each skill's level, XP and capability, what a
  * locked one needs, the next honest step, each skill's pathways (Start),
  * challenge chains with their rarity, hidden achievements found, recent
- * achievements and prestige. Changes: pathway.start, character.prestige.
+ * achievements and prestige (Rewards links to the Achievements log, achievements.html).
+ * Changes: pathway.start, character.prestige.
  * 2026-11-07 (DEC-0113, the design canvas): the capability status (level,
  * XP to the next) and the next honest step lead the page.
  */
@@ -63,7 +64,7 @@
   function rewardsCard() {
     const r = page.rewards;
     if (!r.available) return null;
-    return section("Rewards", null,
+    return section("Rewards", el("a", { class: "btn btn-ghost btn-small", href: "achievements.html" }, "Achievements log"),
       el("div", { class: "rows" }, r.chains.map((c) => el("div", { class: "row chain-row rarity " + RARITY[(c.earned || c.next || {}).rarity || 0] },
         el("div", {},
           el("div", { class: "row-title" }, c.icon + " " + c.stat),
