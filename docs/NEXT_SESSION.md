@@ -7,6 +7,13 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-24 (Opus on the PC: one intelligence, the project picture, harvests, what can I build)*
 
+**Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
+orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
+printed parts and slicing for his P1P built). Next build: phase B, the greenhouse node's command interface in
+simulation (read homestead/CLAUDE.md first; DEC-0185 is the authority). Waiting: 0zn to 0zt. At the PC: try "make me
+an enclosure 80 by 50 by 30 mm" and open the sliced project; and "how's the homestead?" once a tree, a tank level and
+the battery are told to her.
+
 **Also 2026-11-24:** "what can I build with what I have?" (core/buildable.py) and harvests by voice ("I harvested
 5 pounds of tomatoes"; "what has the garden produced this year?", core/harvest_log.py). At the PC, try both on his
 real stock and garden.

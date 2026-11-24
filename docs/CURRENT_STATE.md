@@ -2,8 +2,23 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-24 (Opus at the PC: the Jarvis brainstorm's builds, then Zac's "one intelligence"),
-by claude.*
+session. Last updated: 2026-11-24, late (Opus at the PC: one intelligence, the homestead's brain, the hub and the
+engineer), by claude.*
+
+**Later 2026-11-24: the homestead's brain, the hub and the engineer.** Zac widened the vision: MIA as the brain of
+the aquaponics greenhouse, orchard, garden, water and power (`docs/future/SMART_AG_PLAN.md`), and as the hub of his
+devices and his engineer for firmware, 3D printing and PCBs, toward a business selling smart homestead tech
+(`docs/future/HUB_AND_ENGINEER_PLAN.md`). Built: the smart-ag plan's phase A (the orchard, core/orchard.py; the
+property's water, core/water_budget.py; its power, core/power_picture.py; "how's the homestead?" as one morning
+sheet), and the first engineering pieces (enclosures and spacers as STL made in code with posts and a cable hole,
+core/print_parts.py; sliced for his Bambu Lab P1P by Bambu Studio's command line, core/slicing.py). Also: courses
+from her offline library ("I want to learn about X", core/library_course.py; blocked on this Windows PC by Smart App
+Control, 0zh), "how does this connect?" (a UAL action), "who are my best customers?", "what do I really make an
+hour?", product prices against his rate, rain catchment, the weekend and winter plans, "what if I quit by...",
+trigger-phrase hygiene with a ratchet test, and the live model check (tests/live_model_check.py) rerun on the PC's
+qwen2.5:14b: 264 of 271 before today's new cases, every new case added and passing. A mistake of mine wiped an old
+uncommitted DEC-0042 change (WAITING_ON 0zt). Next: phase B of the smart-ag plan (the greenhouse node's command
+interface, in simulation, following homestead/CLAUDE.md); the printer's send waits on 0zr; device discovery on 0zq.
 
 **2026-11-24: one intelligence** (Zac: "connecting all these capabilities into a unified intelligence layer").
 The plan is `docs/future/UNIFIED_INTELLIGENCE.md`. Built: "I'm planning to build a greenhouse" gathers everything it
