@@ -228,7 +228,8 @@ def test_a_world_how_to_on_the_tools_path_is_told_to_explain_not_act(registry):
     assert "Don't add, log or change anything" not in messages[0]["content"]  # a request to do it is done
 
 
-@pytest.mark.parametrize("prompt", ["teach me how to sharpen a chainsaw", "teach me about rotational grazing",
+@pytest.mark.parametrize("prompt", ["teach me how to sharpen a chainsaw", "teach me about rotational grazing", "teach me about solar power",
+                                    "teach me about raising chickens",
                                     "how do I sharpen the chainsaw"])
 def test_teaching_and_how_to_about_the_world_or_his_own_things_are_not_held_to_her_pages(registry, prompt):
     from types import SimpleNamespace
@@ -240,7 +241,10 @@ def test_teaching_and_how_to_about_the_world_or_his_own_things_are_not_held_to_h
 
 
 @pytest.mark.parametrize("prompt", ["walk me through the budget page", "teach me how to add a recipe",
-                                    "how do I set an alarm", "teach me how to use the mission board"])
+                                    "how do I set an alarm", "teach me how to use the mission board",
+                                    "teach me how quests work", "teach me about the budget",
+                                    "teach me about the journal", "teach me how alarms work",
+                                    "how do I see the chainsaw's hours?", "teach me about the reward shop"])
 def test_teaching_about_using_her_still_is(registry, prompt):
     from types import SimpleNamespace
 

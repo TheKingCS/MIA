@@ -290,14 +290,11 @@ class AssistantActionRegistry:
 
     def matched_domains_by_words(self, prompt: str, context: Optional["AppContext"] = None) -> set[str]:
         """The domains a message reaches by an app's own words: a tool's trigger phrase or a domain's keywords,
-        never only by naming one of the person's records (that's `_entity_domains`)."""
+        never only by naming one of the person's records (that's `_entity_domains`); keywords as whole words, the
+        same test the router uses (`_keyword_domains`)."""
         lowered = f" {prompt.lower().strip()} "
         found = {a.domain for a in self._actions.values() if any(p in lowered for p in a.trigger_phrases)}
-        words = set(re.findall(r"[a-z0-9'-]+", lowered))
-        for domain, keywords in self._domain_keywords.items():
-            if any((k in lowered) if " " in k else (k in words) for k in keywords):
-                found.add(domain)
-        return found
+        return found | self._keyword_domains(lowered)  # the same whole-word test the router uses
 
     def named_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
         """The domains whose records `prompt` names, as the keyword router sees them; for a model that needs to know

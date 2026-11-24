@@ -383,9 +383,31 @@ WORLD_DOMAINS = ("library", "knowledge", "learning", "plans")  # tools for the w
 # Something done in an app, right after "how do I" or "teach me how to": the sign a record's tool is meant
 _APP_VERB = re.compile(r"(?:add|log|record|enter|delete|remove|edit|rename|undo|set up|set an?|track|export|import|"
                        r"mark|schedule|cancel|archive|pin|make an? (?:note|mission|reminder|alarm|list|budget|quote|"
-                       r"order|project|task)|use the|see my|find my|change my)\b")
+                       r"order|project|task)|use the|see (?:my|the)|view|update|get to|look up|find my|change my|"
+                       r"remind (?:me|myself)|(?:get|put) .+ on (?:a |the )?schedule)\b")
 _TEACH_LEADS = ("teach me how to", "teach me how", "teach me about", "teach me", "walk me through", "show me how to",
                 "explain how to")
+# Her parts' names that are also everyday words ("solar power", "the world"): naming one isn't asking about her
+_PLAIN_NAMES = {"home", "play", "look", "world", "power", "people", "property", "knowledge", "skills", "kept", "music",
+                "maps", "navigation", "freedom", "character", "chickens", "greenhouse", "kitchen", "garage", "insurance",
+                "real estate", "compliance", "observations", "files", "workout", "workshop", "toolbox", "field kit",
+                "browser", "money", "household", "maintenance", "cameras", "passwords", "memories", "calendar", "mia"}
+# Her features a teach-me names without an app's name ("teach me how quests work")
+_FEATURE_WORDS = ("quest", "quests", "alarm", "alarms", "reminder", "reminders", "budget", "budgets", "streak",
+                  "streaks", "xp", "level", "levels", "reward", "rewards", "mission", "missions", "journal", "inbox")
+
+
+def _names_her_part(text: str) -> bool:
+    """Whether `text` names one of MIA's parts: an app's name from its manifest ("the reward shop", "the fix-it log"),
+    leaving out names that are everyday words (`_PLAIN_NAMES`), or one of `_FEATURE_WORDS`; whole words only."""
+    names = set(_FEATURE_WORDS)
+    try:
+        from core import app_registry
+
+        names |= {m.get("name", "").lower() for m in app_registry.load().manifests.values()} - _PLAIN_NAMES - {""}
+    except Exception:  # noqa: BLE001 - without the manifests, her features alone
+        pass
+    return any(re.search(rf"(?<![a-z0-9]){re.escape(n)}(?![a-z0-9])", text) for n in names)
 
 
 def about_mia(prompt: str, context=None) -> bool:
@@ -393,10 +415,14 @@ def about_mia(prompt: str, context=None) -> bool:
     (`_ABOUT_MIA`, after its lead so "how do you purify water?" isn't), or a tool for something she keeps matches
     it by its own phrase or with an app verb ("how do I set an alarm", "teach me how to add a recipe"). A tool brought
     only by one of his records being named ("how do I sharpen a chainsaw": he has a chainsaw) doesn't make it hers.
-    Every match a world tool (her library, learning, plans): the world's ("teach me about rotational grazing"
-    reaches her library). Nothing matched, or no registry to ask: hers (the safe side)."""
+    Every match a world tool (her library, learning, plans): the world's. A teach-me request is hers only when it
+    names one of her parts (`_names_her_part`: "teach me how quests work") or starts with an app verb, never because
+    a topic's tools matched ("teach me about solar power", "teach me about rotational grazing": the world's). A how-to that matches nothing, or no registry to ask:
+    hers (the safe side)."""
     lowered = prompt.lower().strip()
-    rest = next((lowered[len(p):] for p in (*_WORLD_PREFIXES, *_TEACH_LEADS) if lowered.startswith(p)), lowered)
+    lead = next((p for p in (*_WORLD_PREFIXES, *_TEACH_LEADS) if lowered.startswith(p)), "")
+    rest = lowered[len(lead):]
+    teaching = lead in _TEACH_LEADS
     if _ABOUT_MIA.search(rest):
         return True
     registry = getattr(context, "assistant_actions", None) if context is not None else None
@@ -407,7 +433,7 @@ def about_mia(prompt: str, context=None) -> bool:
     except Exception:  # noqa: BLE001 - when in doubt it's hers, as before
         return True
     if not matched:
-        return True
+        return _names_her_part(rest) if teaching else True
 
     def domain(a):
         """A matched tool's domain."""
@@ -415,7 +441,9 @@ def about_mia(prompt: str, context=None) -> bool:
 
     kept = [a for a in matched if domain(a) not in WORLD_DOMAINS]
     if not kept:
-        return False  # only her library, learning or plans: the world's
+        return teaching and _names_her_part(rest)  # only her library, learning or plans: the world's
+    if teaching:  # a topic's words ("solar", "the hens") don't make a teach-me hers; naming her part or app use does
+        return _names_her_part(rest) or bool(_APP_VERB.match(rest.strip(" ,")))
     try:  # the apps brought only because one of his records was named ("the chainsaw"), not by their own words
         named_only = registry._entity_domains(prompt, context) - registry.matched_domains_by_words(prompt, context)
     except Exception:  # noqa: BLE001 - a registry without the split: as before, hers
@@ -782,8 +810,9 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     `_TEACHING_INSTRUCTION` framing instead of `GROUNDING_INSTRUCTION`,
     and — like any other info question — never get tools attached.
     Both checks ask her tool registry whether the question is about her
-    (`about_mia`): "how do I tie a bowline?" is about the world, so it gets
-    her library's tools, with a line telling her to explain, not act.
+    (`about_mia`): "how do I tie a bowline?" or "teach me about solar
+    power" is about the world, so it gets her tools, with a line telling her
+    to explain, not act.
     """
     mode = getattr(conversation, "mode", COMPANION) if conversation is not None else COMPANION
     if mode in PERSONAL_MODES or getattr(conversation, "journal", False):
@@ -829,7 +858,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         earlier = earlier_topics(conversation.messages, len(history))
         if earlier:
             system += "\n\n" + earlier
-    if is_action_request and prompt.lower().strip().startswith(_WORLD_PREFIXES) and not agreed:
+    if is_action_request and prompt.lower().strip().startswith((*_WORLD_PREFIXES, *_TEACH_LEADS)) and not agreed:
         # "How do I start a fire without matches?" went to her tools as a question about the world: she explains,
         # and changes nothing unless they ask her to.
         system += ("\n\nThey asked how to do something: explain how, from what you know and the tools' answers. "
