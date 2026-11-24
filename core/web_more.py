@@ -289,7 +289,8 @@ def duration_text(seconds) -> str:
 def music_page(context) -> dict:
     """The data the Music screen shows, assembled here (the web only draws it); {"available": False} when there's no music library. Tracks by artist, album and track number (uploaded or
     not; a YouTube song carries its video id), playlists (only tracks still there), artists with counts, the library
-    folder and how long it all is, his songbook (the songs he can play, core/repertoire.py), whether YouTube search
+    folder and how long it all is, his songbook (the songs he can play, core/repertoire.py, each with the saved
+    YouTube song whose title names it, to play along with), whether YouTube search
     has its key, and the song MIA picked to play on YouTube
     (core/youtube_actions.play_on_youtube) while it's still in the library.
     """
@@ -319,8 +320,12 @@ def music_page(context) -> dict:
     picked = picked if isinstance(picked, dict) and picked.get("track_id") in known else None
     from core.repertoire import INSTRUMENTS, songs
 
+    # Play along: a songbook song gets the saved YouTube song whose title names it (first match), by its track id.
+    saved = [t for t in tracks if t.get("youtube")]
+    songbook = [{**s, "play_along": next((t["id"] for t in saved if s["song"] and s["song"].lower() in
+                                          t["title"].lower()), "")} for s in songs(context)]
     return {"available": True, "tracks": tracks, "playlists": playlists, "youtube_key": has_key(),
-            "songbook": songs(context), "instruments": list(INSTRUMENTS),
+            "songbook": songbook, "instruments": list(INSTRUMENTS),
             "youtube_next": picked,
             "artists": [{"name": a, "count": n} for a, n in sorted(artists.items(), key=lambda kv: kv[0].lower())],
             "library": {"folder": root_text, "found": root_found, "count": len(tracks),

@@ -359,7 +359,8 @@ Checked against today's code; each says whether it needs Zac's say.
   the greenhouse's readings beside the targets MIA now reads
   from the node (`mia_directions.targets`), said as inside, drifting or outside, with how long; awareness, read only.
 - **A song reward fills the songbook** (no decision: a reply to his own action): *built 2026-11-24
-  (`core/mission_trophies.songbook_offer`; the YouTube link for play-along is still to do).* finishing a mission whose reward is
+  (`core/mission_trophies.songbook_offer`; Play Along on Music's Can Play tab plays the saved YouTube song named
+  like it). Both seen working in the real app (a throwaway MIA in Edge).* finishing a mission whose reward is
   a song asks "can you play it now?" and adds it on yes; a saved YouTube song can be linked to a songbook song for
   play-along practice.
 - **Canning as a skill** (no decision): *built 2026-11-24 (Preserving (Canning), under Food Production; each batch

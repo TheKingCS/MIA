@@ -229,7 +229,7 @@
       ].filter(Boolean);
     },
     // His songbook (core/repertoire.py): the songs he can play all the way through, which count toward the Songbook
-    // achievements and missions. Taking one back is "undo that".
+    // achievements and missions. Taking one back is "undo that". Play Along: the saved YouTube song named like it.
     canplay: () => {
       const add = async () => {
         const v = await form("I Learned A Song", [
@@ -241,7 +241,8 @@
       return section("Songs I Can Play", btn("I Learned A Song", "btn-amber", add),
         page.songbook.length ? el("div", { class: "rows" }, page.songbook.map((s) => el("div", { class: "row money-row" },
           el("div", {}, el("div", { class: "row-title" }, "🎵 " + s.song), el("div", { class: "row-sub" },
-            [s.artist, s.instrument, s.when ? new Date(s.when).toLocaleDateString() : ""].filter(Boolean).join(" · "))))))
+            [s.artist, s.instrument, s.when ? new Date(s.when).toLocaleDateString() : ""].filter(Boolean).join(" · "))),
+          s.play_along ? btn("Play Along", "btn-ghost btn-small", () => play([s.play_along])) : null)))
           : el("p", { class: "empty" }, "When you can play a song all the way through, add it here: each one counts toward your Songbook achievements."));
     },
     artists: () => {

@@ -6,6 +6,7 @@ YouTube in Music (core/youtube_music.py, core/youtube_actions.py): links read to
 player only, a search only with his key and only his scrubbed words sent, songs saved as links (never a file) that
 playlists hold and a library scan never removes, and MIA's pick by voice waiting on the Music page.
 A pasted link is named by YouTube's oEmbed, and saved all the same without it.
+And a songbook song plays along with the saved YouTube song named like it.
 """
 
 from __future__ import annotations
@@ -153,3 +154,18 @@ def test_a_pasted_link_is_named_by_youtubes_oembed_and_still_saved_without_it(ct
     ctx.connectivity = SimpleNamespace(status="offline")
     ACTION_TYPES["youtube.save"].execute(ctx, {"video": "https://youtu.be/ddddddddddd"})
     assert "YouTube song" in [t.title for t in ctx.music.all_tracks()]
+
+
+def test_a_songbook_song_plays_along_with_the_saved_youtube_song_named_like_it(ctx, monkeypatch):
+    """The Music page's songbook entry carries the saved YouTube song whose title names it; one with none has ""."""
+    from core import repertoire
+    from core.web_more import music_page
+
+    rows = [{"song": "Wagon Wheel", "artist": "", "instrument": "guitar", "when": "", "event_id": "a"},
+            {"song": "Jolene", "artist": "", "instrument": "guitar", "when": "", "event_id": "b"}]
+    monkeypatch.setattr(repertoire, "songs", lambda context: rows)
+    ACTION_TYPES["youtube.save"].execute(ctx, {"video": "https://youtu.be/eeeeeeeeeee",
+                                               "title": "Old Crow Medicine Show - Wagon Wheel (live)"})
+    book = {s["song"]: s["play_along"] for s in music_page(ctx)["songbook"]}
+    saved = next(t for t in ctx.music.all_tracks() if t.youtube_id == "eeeeeeeeeee")
+    assert book == {"Wagon Wheel": saved.track_id, "Jolene": ""}
