@@ -29,7 +29,11 @@ A question that joins domains gathers several plans onto one sheet
 (`composed_with`). A purchase asked against the debts ("can I buy a $900
 welder and still pay off the loan?", `buying`) is worked out as what the
 same money would do on the debt instead (`instead`, brainstorm 1.4),
-never as that much more a month.
+never as that much more a month. A project he's planning ("I'm planning to
+build a greenhouse") gathers everything it touches (the plan "project
+picture", core/project_ripple.py), using the month's money (`money_now`)
+and the freedom date with a cost (`freedom_with`), both shared with the
+money and afford plans.
 """
 
 from __future__ import annotations
@@ -194,15 +198,14 @@ def _time(context, sheet, prompt, today):
                         "is against what they said they want, not a measure of everything.", "how this was worked out")
 
 
-def _money_month(context, sheet, prompt, today):
-    """Plan gatherer (money this month): in, out and net so far this month and last month, the five biggest
-    spending categories, how much came from the bank sync against by hand, the bills, and untagged charges.
-    """
+def money_now(context, sheet, today: Optional[date] = None) -> bool:
+    """This month so far and last month, in, out and net, on the sheet; False (said as missing) with no budget."""
     budget = getattr(context, "budget", None)
     if budget is None:
         sheet.add(MISSING, "No budget is set up.", "Money")
-        return
-    first, last = _month_bounds(today)
+        return False
+    today = today or date.today()
+    first, _last = _month_bounds(today)
     prev_first, prev_last = _month_bounds(first - timedelta(days=1))
     came_in, went_out = budget.total_income(first.isoformat(), today.isoformat()), \
         budget.total_expenses(first.isoformat(), today.isoformat())
@@ -213,6 +216,18 @@ def _money_month(context, sheet, prompt, today):
     if p_in or p_out:
         sheet.add(CALCULATION, f"Last month ({prev_first:%B}): {_money(context, p_in)} in, {_money(context, p_out)} out, "
                                f"net {_money(context, p_in - p_out)}.", "Money")
+    return True
+
+
+def _money_month(context, sheet, prompt, today):
+    """Plan gatherer (money this month): in, out and net so far this month and last month (`money_now`), the five biggest
+    spending categories, how much came from the bank sync against by hand, the bills, and untagged charges.
+    """
+    budget = getattr(context, "budget", None)
+    if not money_now(context, sheet, today):
+        return
+    first, _last = _month_bounds(today)
+    went_out = budget.total_expenses(first.isoformat(), today.isoformat())
     spent = [e for e in budget.all_expenses() if first.isoformat() <= (e.date or "")[:10] <= today.isoformat()]
     by_category: dict[str, float] = {}
     for e in spent:
@@ -410,11 +425,7 @@ def _noticed(context, sheet, prompt, today):
 
 def _afford(context, sheet, prompt, today):
     """Cross-domain (build plan step 8): a purchase against the month's money and the freedom date, worked out
-    by core/freedom.plan() twice, as things stand and with the purchase."""
-    from dataclasses import replace
-
-    from core import freedom
-
+    by core/freedom.plan() twice, as things stand and with the purchase (`freedom_with`)."""
     amount = _amount_in(prompt)
     monthly = bool(re.search(r"\b(a|per|each|every) month\b|\bmonthly\b", prompt.lower()))
     if amount:
@@ -423,6 +434,16 @@ def _afford(context, sheet, prompt, today):
     else:
         sheet.add(MISSING, "The question doesn't say how much it costs.", "your question")
     _money_month(context, sheet, prompt, today)
+    freedom_with(context, sheet, amount, monthly, today)
+
+
+def freedom_with(context, sheet, amount: Optional[float], monthly: bool, today: date) -> None:
+    """The freedom date as things stand and with a cost (`amount` once, or a month when `monthly`), both worked out
+    by core/freedom.plan(); used by the afford plan and the project picture (core/project_ripple.py)."""
+    from dataclasses import replace
+
+    from core import freedom
+
     try:
         inputs, _history = freedom.gather(context, today)
         now = freedom.plan(inputs, today)
@@ -602,6 +623,14 @@ def _resources(context, sheet, prompt, today):
     _progress(context, sheet, prompt, today)
     sheet.add(ESTIMATE, "Ideas from these records are starting points, not market research: what sells where they "
                         "live isn't on the sheet.", "general guidance")
+
+
+def _project_picture(context, sheet, prompt, today):
+    """Cross-domain (Zac, 2026-11-24): a project he's planning and everything it touches, money, materials, growing,
+    water, power, time and goals (core/project_ripple.py)."""
+    from core import project_ripple
+
+    project_ripple.gather(context, sheet, prompt, today)
 
 
 def _owned(context, tool: str) -> bool:
@@ -1020,6 +1049,15 @@ PLANS: tuple[Plan, ...] = (
           "What tools does the job take?"),
          r"\b(this job|the job|what step|this step)\b",
          _the_job),
+    Plan("project picture", "What a project touches",
+         ("I'm planning to build a greenhouse.", "I want to build a chicken coop this spring.",
+          "I'm thinking about putting up a hoop house.", "How would building a greenhouse affect everything else?",
+          "What would a new shed mean for the rest of my life?", "We're going to start a big garden next year.",
+          "If I build a cold room, what does it touch?", "I'm planning to add solar panels.",
+          "What would a greenhouse take?", "I want to put in rain barrels."),
+         r"\b(planning|plan|thinking about|thinking of|want|going|gonna|hoping|like) (to )?(build|put up|set up|start|"
+         r"add|install|put in)\b|\b(what would|how would|how will|what will) .{0,40}\b(affect|mean for|touch|take|"
+         r"change)\b", _project_picture),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -1077,7 +1115,8 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
-CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time")  # build plan step 8: plans over several apps
+CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time",
+                "project picture")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan

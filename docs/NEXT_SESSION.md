@@ -7,6 +7,14 @@ docs/NEXT_SESSION.md". Update it at the end of each session.
 
 *Last updated: 2026-11-22 (Opus on the PC: the Windows backlog, FW-06 to FW-12's parts, Fable's review fixed)*
 
+**New 2026-11-24, Zac: one intelligence** ("connecting all these capabilities into a unified intelligence layer
+... it understands how the project affects the rest of your life"). Plan: `docs/future/UNIFIED_INTELLIGENCE.md`. Step 1
+built: the project picture (core/project_ripple.py; "I'm planning to build a greenhouse" gathers the build's materials
+and cost against stock, money and the freedom date, growing, water, power, the flock, time, goals and research onto
+one sheet). Steps 2 to 5 (a confirmed plan's links, other answers counting it, ripples on change, "also touches" on
+every sheet, the Planner showing it) wait on WAITING_ON 0zl and 0zm. At the PC: say "I'm planning to build a
+greenhouse" to her and read what she makes of the sheet on the 14b model.
+
 **New 2026-11-22, Zac: MIA as the teacher and guide for homestead and construction, offline** (T-0060): any
 build, garden or project planned with him and confirmed by his press becomes a project whose missions are made
 from the plan, each step taught on its own screen and by voice. It builds on the plans shelf, the mission guides,

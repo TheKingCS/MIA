@@ -4,9 +4,21 @@
 agents or I need to do and I will address those later"). Claude adds to it as work needs someone, and strikes an
 item when it's done. Newest first within each person. Read with `docs/NEXT_SESSION.md`.*
 
-*Last updated: 2026-11-23*
+*Last updated: 2026-11-24*
 
 ## Zac
+
+### One intelligence (2026-11-24, `docs/future/UNIFIED_INTELLIGENCE.md`)
+
+0zl. [ ] **When you confirm a plan, may MIA record what it touches?** "I'm planning to build a greenhouse" now gets
+   a picture of everything it touches: the build's materials and cost against what's on hand, your money and
+   freedom date, garden plans, water, power, time, goals and research. The next step is for a *confirmed* plan to
+   keep those connections (the greenhouse uses these materials, depends on water at the site, supports your growing
+   goal), so your money, garden, materials and week answers start counting it. Recommended: yes, worked out from the
+   plan itself and undone with the plan. The other choice is that you state each connection yourself.
+0zm. [ ] **Should MIA bring up the picture on her own?** Today you get it when you say you're planning something.
+   She could also offer it when a plan comes up in conversation without your asking, once, through the usual
+   pacing. Recommended: offer once per project, never repeat it.
 
 ### From the Jarvis brainstorm (2026-11-23, `docs/future/JARVIS_BRAINSTORM.md`)
 0zk. [ ] **Read the safety floor's new phrases** (`core/safety_floor.py`, 2026-11-24): besides "kill myself" and

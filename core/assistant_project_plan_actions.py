@@ -130,9 +130,20 @@ def _what_to_plant(context, arguments: dict) -> str:
     return planting_now.say_crop(context, crop) if crop else planting_now.say_now(context)
 
 
+def _picture(context, arguments: dict) -> str:
+    """Tool project_picture: what a project he's planning touches (core/project_ripple.py, through the question
+    plan "project picture"), in plain words; the model phrases the sheet when the plan reaches it first."""
+    from core import question_plans as qp
+
+    said = str(arguments.get("project") or "").strip()
+    sheet = qp.gather(context, qp.PLAN_BY_NAME["project picture"], f"planning to build {said}" if said else "")
+    return sheet.plain()
+
+
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
+    chosen when drafted), project_picture (what a project touches, core/project_ripple.py), price_build
+    (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
     show_plans,
     confirm_plan and drop_plan, seed_viability (how long his seeds keep, core/seed_life.py) and what_to_plant (what's
     due to plant now, or one crop's dates, core/planting_now.py; for crops not in a confirmed plan). Their trigger
@@ -157,6 +168,18 @@ def register_project_plan_actions(registry) -> None:
         description="Change a draft plan: its size, beds, crops, frost dates, a stage left out or put back, notes.",
         parameters={"type": "object", "properties": changed, "required": ["plan_id"]},
         handler=_do("projectplan.change"), trigger_phrases=("change the plan", "make it", "leave out the"),
+    ))
+    registry.register(AssistantAction(
+        name="project_picture", domain=DOMAIN,
+        description="Everything a project he's planning touches, from his records: the build's materials and cost "
+                    "against what's on hand, his money and freedom date, garden plans, water, power, the flock, his "
+                    "time, goals and research. Plans nothing.",
+        parameters={"type": "object", "properties": {
+            "project": {"type": "string", "description": "the project, e.g. 'a greenhouse'"}}, "required": ["project"]},
+        handler=_picture, trigger_phrases=("planning to build", "thinking about building", "planning to put up",
+                                           "thinking about putting up", "want to build a", "going to build a",
+                                           "planning a greenhouse", "affect everything", "mean for everything",
+                                           "what does it touch", "what would it take to build"),
     ))
     registry.register(AssistantAction(
         name="price_build", domain=DOMAIN,
