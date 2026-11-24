@@ -108,7 +108,8 @@ by a local vision model, with the offline library behind the answer. Builds on: 
 
 ## 3. Knowledge of his hobbies and interests
 
-**3.1 A specialist for each of his worlds.** M each, no decision needed for the first.
+**3.1 A specialist for each of his worlds.** M each, no decision needed for the first. *In progress in another session
+(`docs/specialists/`): not built twice here.*
 When he talks about the homestead, construction, the businesses, money, she answers as that specialist: the right
 reference packs first, its own safety floor, its vocabulary, the questions a pro would ask back. Builds on:
 `docs/specialists/` (being started now in another session: construction, homesteading, strategy), the offline
@@ -123,7 +124,9 @@ Follow-up questions about the same passage ("and if it's a pressure canner witho
 that" (the page opened at the passage), and a comparison across sources when they disagree ("the USDA says 25
 minutes; this older guide says 20; go by the USDA, it's newer and tested"). Builds on: `core/reference_reader.py`.
 
-**3.3 Hobby companions.** S each.
+**3.3 Hobby companions.** S each. *Built 2026-11-23 on his answer (DEC-0289): learning programs for woodworking,
+gardening and homesteading, fitness, and survival and bushcraft (`core/woodworking.py`, `gardening_path.py`,
+`fitness_path.py`, `bushcraft.py`), beside guitar.*
 Guitar already has a learning path (`core/guitar.py`). The same shape for each hobby he names: a practice log, the
 next stage, weekly homework missions, her honest read on progress. Needs his list of hobbies to start.
 
@@ -298,3 +301,6 @@ New ideas, each checked against what's there first:
 - **Power in "how prepared am I?"** (S, no decision): built 2026-11-23 (`core/power_ready.py`): gasoline, diesel,
   kerosene and propane from his inventory and pantry, in gallons, and his generator's days on it at his burn rate and
   hours a day; the people, target days and generator are set by voice (`set_preparedness`).
+- **Who owes me** (S, no decision): built 2026-11-24 (`core/receivables.py`, "who owes me?"): what's still unpaid on
+  his orders (price less payments taken), oldest due first, the overdue and the delivered-but-unpaid named as the
+  ones to chase, with the invoice draft he already has as the next step. Read-only.

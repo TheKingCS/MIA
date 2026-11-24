@@ -697,6 +697,14 @@ def _list(description: str) -> dict:
     return {"type": "array", "items": {"type": "string"}, "description": description}
 
 
+def _action_who_owes_me(context, arguments: dict) -> str:
+    """Assistant tool `who_owes_me`: what's still unpaid on his orders, oldest due first, the overdue and the
+    delivered-but-unpaid named (core/receivables.say)."""
+    from core import receivables
+
+    return receivables.say(context)
+
+
 def _action_draft_invoice(context, arguments: dict) -> str:
     """A card to draft an order's invoice (`order.invoice`): the order the words name, else the newest open one."""
     from core.actions import ActionError
@@ -745,7 +753,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
-    mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and put_up_jars and canning_shelf, his home-canned
+    mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py).
     """
     registry.register(AssistantAction(
@@ -844,6 +852,14 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_money_ahead,
         trigger_phrases=("next 90 days", "next few months", "next three months", "money ahead", "cash flow",
                          "tight weeks", "tight week", "money coming up", "can i cover", "short this month"),
+    ))
+    registry.register(AssistantAction(
+        name="who_owes_me", domain="business",
+        description="Who owes the user money: what's still unpaid on his orders (price less payments taken), oldest "
+                    "due first, the overdue and the delivered-but-unpaid named, and the total.",
+        parameters=_NO_PARAMS, handler=_action_who_owes_me,
+        trigger_phrases=("who owes me", "owes me money", "still owed", "unpaid orders", "outstanding invoices",
+                         "money owed to me", "who hasn't paid"),
     ))
     registry.register(AssistantAction(
         name="draft_invoice", domain="business",

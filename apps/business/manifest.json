@@ -39,6 +39,7 @@
   "capabilities": {
     "tools": [
       "draft_invoice",
+      "who_owes_me",
       "get_business",
       "get_businesses",
       "get_ledger_summary",
@@ -89,7 +90,8 @@
       "quote.email": "act_with_approval",
       "quote.send": "act_with_approval",
       "order.invoice": "act_with_approval",
-      "draft_invoice": "act_with_approval"
+      "draft_invoice": "act_with_approval",
+      "who_owes_me": "observe"
     },
     "outside": []
   },
