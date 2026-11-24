@@ -9,14 +9,17 @@ the model. "How's the hatch going?" says what day it is and what's next. His gui
 Today (Zac, 2026-11-09).
 
 How: `BIRDS` holds each bird's days (the common extension figures: chicken 21, duck and turkey 28, goose 30, guinea
-27, coturnix quail 17; lockdown three days before hatch); `plan(bird, eggs, set_on)` is the dated milestones (pure);
+27, coturnix quail 17, muscovy duck 35, bobwhite quail 23; lockdown three days before hatch); `plan(bird, eggs, set_on)` is the dated milestones (pure);
 the action `hatch.start` (act_within_grant, undoable like any mission) makes the mission, its steps ticked by him as
-he does them, and keeps the bird and the day set in the settings (`MAP_KEY`) so `say` can count the days.
+he does them, and keeps the bird and the day set in the settings (`MAP_KEY`, saved inside the change, so "undo that"
+takes both back; a finished hatch's entry is dropped) so `say` can count the days. A day set is read looking back
+(`set_day`: "yesterday", "Sunday" is the last one, "3 days ago"); a hatch that would be long over is refused.
 `MISSION_PREFIX` marks the mission.
 """
 
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
 from typing import Optional
 
@@ -28,9 +31,12 @@ MAP_KEY = "modules.flock.hatches"  # mission id -> {"bird", "eggs", "set"}
 BIRDS = {
     "chicken": (21, (7, 14)), "duck": (28, (7, 14)), "turkey": (28, (7, 14)), "goose": (30, (7, 14)),
     "guinea": (27, (7, 14)), "quail": (17, (5, 10)),
+    "muscovy duck": (35, (7, 14)), "bobwhite quail": (23, (7, 14)),
 }
 SAID_AS = {"chickens": "chicken", "hen": "chicken", "hens": "chicken", "ducks": "duck", "turkeys": "turkey",
-           "geese": "goose", "guineas": "guinea", "guinea fowl": "guinea", "coturnix": "quail"}
+           "geese": "goose", "guineas": "guinea", "guinea fowl": "guinea", "coturnix": "quail",
+           "muscovy": "muscovy duck", "muscovies": "muscovy duck", "bobwhite": "bobwhite quail",
+           "bobwhites": "bobwhite quail"}
 LOCKDOWN_BEFORE = 3
 
 
@@ -64,7 +70,9 @@ def _title(bird: str, eggs: int, set_on: date) -> str:
 
 
 def _params(params) -> tuple[str, int, date]:
-    """The bird, the count and the day set, from the action's params; ActionError for what's missing or wrong."""
+    """The bird (chickens unless he names another), the count and the day set, from the action's params;
+    ActionError for what's missing or wrong: no eggs, a bird it doesn't know, a day in the future, or one so long
+    ago the hatch would be over."""
     bird = bird_of(str(params.get("bird") or "chicken"))  # chickens unless he names another bird
     if not bird:
         raise ActionError(f"Which bird? I know {', '.join(BIRDS)}.")
@@ -80,7 +88,50 @@ def _params(params) -> tuple[str, int, date]:
         raise ActionError("Which day were they set?") from None
     if set_on > date.today():
         raise ActionError("They can't have been set in the future.")
+    if (date.today() - set_on).days > BIRDS[bird][0] + 7:
+        raise ActionError("That hatch would be over by now. Which day were they set?")
     return bird, eggs, set_on
+
+
+_WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+_MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov",
+                                         "dec"), start=1)}
+
+
+def set_day(said: str, today: Optional[date] = None) -> Optional[str]:
+    """Pure logic. The day eggs were set, looking back: "today", "yesterday", "N days ago", a weekday (the most recent
+    one, today counting; "last" allowed), an ISO date, or a month and day ("Nov 20", "11/20") this year or last;
+    None when it isn't a day."""
+    today = today or date.today()
+    text = " ".join(str(said or "").lower().replace(",", " ").split()).removeprefix("on ")
+    if text in ("", "today", "this morning", "tonight"):
+        return today.isoformat()
+    if text in ("yesterday", "last night"):
+        return (today - timedelta(days=1)).isoformat()
+    ago = re.fullmatch(r"(\d{1,2}) days? ago", text)
+    if ago:
+        return (today - timedelta(days=int(ago.group(1)))).isoformat()
+    weekday = text.removeprefix("last ").removeprefix("this past ")
+    if weekday in _WEEKDAYS:
+        back = (today.weekday() - _WEEKDAYS.index(weekday)) % 7
+        return (today - timedelta(days=back)).isoformat()
+    try:
+        return date.fromisoformat(text[:10]).isoformat()
+    except ValueError:
+        pass
+    m = re.fullmatch(r"([a-z]{3})[a-z]*\.? (\d{1,2})(?:st|nd|rd|th)?", text)
+    n = re.fullmatch(r"(\d{1,2})/(\d{1,2})", text)
+    month, day = (_MONTHS.get(m.group(1)), int(m.group(2))) if m else (int(n.group(1)), int(n.group(2))) if n else (0, 0)
+    if not month:
+        return None
+    for year in (today.year, today.year - 1):
+        try:
+            when = date(year, month, day)
+        except ValueError:
+            return None
+        if when <= today:
+            return when.isoformat()
+    return None
 
 
 def _describe(context, params) -> str:
@@ -92,8 +143,15 @@ def _describe(context, params) -> str:
                         for s in steps) + ".")
 
 
+def _active(missions, mission_id: str) -> bool:
+    """Whether a hatch's mission is still under way."""
+    mission = missions.get_mission(mission_id) if missions is not None else None
+    return mission is not None and getattr(mission, "status", "active") == "active"
+
+
 def _make(context, params) -> str:
-    """Does `hatch.start`: one mission, a step for each milestone with its date, the hatch kept in `MAP_KEY`."""
+    """Does `hatch.start`: one mission, a step for each milestone with its date, the hatch kept in `MAP_KEY` (saved
+    inside the change; entries of hatches no longer under way dropped)."""
     from core.person_settings import person_id
 
     bird, eggs, set_on = _params(params)
@@ -110,8 +168,11 @@ def _make(context, params) -> str:
     config = getattr(context, "config", None)
     if config is not None:
         kept = dict(config.get(MAP_KEY, {}) or {})
+        kept = {k: v for k, v in kept.items() if _active(missions, k)}  # a finished or deleted hatch's entry goes
         kept[mission.mission_id] = {"bird": bird, "eggs": eggs, "set": set_on.isoformat()}
         config.set(MAP_KEY, kept)
+        if hasattr(config, "save"):
+            config.save()  # inside the change: a restart keeps it, and "undo that" puts it back with the mission
     return f"Made the mission “{title}” with {len(steps)} steps. Next: {steps[0]['step'].split(':')[0].lower()}."
 
 

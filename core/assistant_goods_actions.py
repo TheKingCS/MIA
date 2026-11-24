@@ -173,15 +173,15 @@ def _get_deadlines(context, arguments: dict) -> str:
 
 def _action_start_hatch(context, arguments: dict) -> str:
     """Tool start_hatch: eggs set in the incubator (hatch.start, core/hatch_tracker.py): a mission with the bird's
-    dated candling, lockdown and hatch-day steps."""
-    from core.assistant_correction_actions import _run, day_of
+    dated candling, lockdown and hatch-day steps; the day set read looking back ("yesterday", "Sunday"), and always
+    named, so a card approved later keeps it."""
+    from core import hatch_tracker
+    from core.assistant_correction_actions import _run
 
-    params = {"bird": str(arguments.get("bird") or "chicken"), "eggs": arguments.get("eggs")}
-    if arguments.get("set"):
-        when = day_of(str(arguments["set"]))
-        if when is None:
-            return "Which day were they set?"
-        params["set"] = when
+    when = hatch_tracker.set_day(str(arguments.get("set") or "today"))
+    if when is None:
+        return "Which day were they set?"
+    params = {"bird": str(arguments.get("bird") or "chicken"), "eggs": arguments.get("eggs"), "set": when}
     return _run(context, "hatch.start", params)
 
 
@@ -215,7 +215,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         name="hatch_status", domain="flock",
         description="How each hatch in the incubator is going: what day it is and what's next.",
         parameters=none, handler=_action_hatch_status,
-        trigger_phrases=("the hatch", "hatch going", "incubator", "when do they hatch", "lockdown", "candle the"),
+        trigger_phrases=(" the hatch ", " the hatch?", "hatch going", "hatch status", "eggs in the incubator",
+                         "incubator eggs", "lockdown day", "candle the eggs", "when do they hatch", "when will they hatch"),
     ))
     registry.register(AssistantAction(
         name="get_eggs", domain="flock",

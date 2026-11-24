@@ -102,7 +102,7 @@ def _extra(params) -> float:
 
 def _make(context, params) -> str:
     """Does `debts.missions`: one mission, an objective for each debt in payoff order, each step's debt id kept in
-    the settings (`MAP_KEY`) for the tick."""
+    the settings (`MAP_KEY`, saved inside the change) for the tick."""
     from core.person_settings import person_id
 
     found = plan(context, str(params.get("strategy") or "hybrid"), _extra(params))
@@ -122,6 +122,8 @@ def _make(context, params) -> str:
         kept = dict(config.get(MAP_KEY, {}) or {})
         kept[mission.mission_id] = [s["debt_id"] for s in found["steps"]]
         config.set(MAP_KEY, kept)
+        if hasattr(config, "save"):
+            config.save()  # inside the change: a restart keeps the step map, and "undo that" takes it back too
     return f"Made the mission “{title}” with {len(found['steps'])} steps, one for each debt in order."
 
 

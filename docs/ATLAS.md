@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1653 files, 361,059 lines; 1653 files describe themselves; 19,858 of 19,988 classes and functions are documented.
+1653 files, 361,142 lines; 1653 files describe themselves; 19,862 of 19,992 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-650 files, 184,230 lines; 9,410 of 9,496 classes and functions documented
+650 files, 184,294 lines; 9,412 of 9,498 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -948,7 +948,7 @@
 
 ## tests/: the test suite: what each part must do
 
-599 files, 96,277 lines; 8,085 of 8,129 classes and functions documented
+599 files, 96,296 lines; 8,087 of 8,131 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1150,7 +1150,7 @@
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
 - `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself or an email brought; one counts as offered only once the gate let it through, trie
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks).
-- `tests/test_hatch_tracker.py`: Eggs in the incubator as a mission (core/hatch_tracker.py): each bird's milestones dated from the day set (chicken: candle days 7 and 14, lockdown 18, hatch 21), the mission made with a step for each, "how's the hatch going?" saying the day and what's next, and a future day, no eggs or an unknown bi
+- `tests/test_hatch_tracker.py`: Eggs in the incubator as a mission (core/hatch_tracker.py): each bird's milestones dated from the day set (chicken: candle days 7 and 14, lockdown 18, hatch 21), the mission made with a step for each, "how's the hatch going?" saying the day and what's next (saved inside the change), a day set read l
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
