@@ -147,6 +147,17 @@ def _buildable(context, arguments: dict) -> str:
     return buildable.say(context)
 
 
+def _catchment(context, arguments: dict) -> str:
+    """Tool rain_catchment: a roof's gallons from rain, his logged rain and his beds' needs (core/rain_catchment)."""
+    from core import rain_catchment
+
+    try:
+        beds = float(arguments["beds_sqft"]) if arguments.get("beds_sqft") not in (None, "") else None
+    except (TypeError, ValueError):
+        beds = None
+    return rain_catchment.say(context, str(arguments.get("roof") or ""), beds)
+
+
 def _log_harvest(context, arguments: dict) -> str:
     """Tool log_harvest: a harvest kept on his grow lab batch of that crop, with when it was planted for a crop not
     there yet (core/harvest_log.log)."""
@@ -167,7 +178,8 @@ def _harvest_year(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), log_harvest and harvest_this_year (harvests by voice and what the garden produced,
+    chosen when drafted), rain_catchment (a roof's gallons, core/rain_catchment.py), log_harvest and
+    harvest_this_year (harvests by voice and what the garden produced,
     core/harvest_log.py; reached by "harvested" and the garden's words, never a bare "harvest" or "dug up"),
     what_can_i_build (the builds closest to done from his stock, core/buildable.py; reached by
     "build with what I have" or his lumber, never a bare "what could I build", which is often about something else),
@@ -209,6 +221,18 @@ def register_project_plan_actions(registry) -> None:
         handler=_picture, trigger_phrases=("planning to build", "thinking about building", "planning to put up",
                                            "thinking about putting up", "planning a greenhouse", "affect everything", "mean for everything",
                                            "what does it touch", "what would it take to build"),
+    ))
+    registry.register(AssistantAction(
+        name="rain_catchment", domain=DOMAIN,
+        description="How much rainwater a roof would catch: gallons an inch for its footprint, what his logged rain "
+                    "in the last 30 days would have given, and against his beds' watering when he gives their size.",
+        parameters={"type": "object", "properties": {
+            "roof": {"type": "string", "description": "the roof's footprint: '400 square feet' or '12 by 20'"},
+            "beds_sqft": {"type": "number", "description": "square feet of beds it would water, if he said"}},
+            "required": ["roof"]},
+        handler=_catchment, trigger_phrases=("rain catchment", "catch off", "catch from the roof", "off the roof",
+                                             "off a roof", "off my roof", "collect rain", "catch rain",
+                                             "rainwater", "rain barrels", "how much rain could"),
     ))
     registry.register_domain_keywords("harvest", ("harvested",))
     registry.register(AssistantAction(

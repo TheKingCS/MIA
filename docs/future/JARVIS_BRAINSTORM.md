@@ -359,7 +359,8 @@ Checked against the code first; each says whether it needs Zac's say.
 - **What if I quit at the end of next year?** (no decision, a read): the freedom plan run with a date he names
   against his debts, the homestead's goods, the business's real hourly and who owes him: what's covered, what
   isn't, and the gap a month. Read-only; the biggest "one intelligence" question there is.
-- **Rain catchment** (no decision): a roof's square feet and his logged rain into gallons a month (0.6 gallons a
+- **Rain catchment** (no decision): *built 2026-11-24 (`core/rain_catchment.py`, "how much rain could I catch off a
+  400 square foot roof?").* a roof's square feet and his logged rain into gallons a month (0.6 gallons a
   square foot an inch), against what the greenhouse and garden drink; the project picture's water line gets a
   number instead of guidance.
 - **A follow-up to a quiet customer, drafted** (his say: drafted only, never sent): from "who are my best
