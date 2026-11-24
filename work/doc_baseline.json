@@ -10,6 +10,7 @@
   "tests/test_evening_wrap.py": 1,
   "tests/test_feed_runway.py": 1,
   "tests/test_garden_week.py": 1,
+  "tests/test_habit_offers.py": 2,
   "tests/test_hobby_programs.py": 1,
   "tests/test_homestead_year.py": 1,
   "tests/test_invoice_email.py": 1,
@@ -26,6 +27,7 @@
   "tests/test_spoken_approval.py": 1,
   "tests/test_ual.py": 1,
   "tests/test_unusual.py": 1,
-  "tests/test_weather_watch.py": 2
+  "tests/test_weather_watch.py": 2,
+  "tests/test_workflow_events.py": 6
  }
 }

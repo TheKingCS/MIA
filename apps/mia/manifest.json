@@ -74,7 +74,8 @@
       "smart_suggestion",
       "system_map",
       "walkthrough_suggestion",
-      "workflows"
+      "workflows",
+      "habit_offer"
     ]
   }
 }

@@ -18,7 +18,7 @@ THE_DAILY_CHECKS = (
     "walkthrough_suggestion journal_reflection warranty chronicle memory_callback grow_alert season "
     "insurance_renewal findings obligation_reminders loop fix_report workflows loops night_school self_report "
     "self_changes capability_gaps seasons_of_memory operating_journal good_news chronicle_issue promises vault_captions "
-    "dependency_audit system_map direction_nudge capability_reminder momentum greenhouse auto_backup restore_drill update_waiting weather_watch unusual garden_week market_eve evening_wrap").split()
+    "dependency_audit system_map direction_nudge capability_reminder momentum greenhouse auto_backup restore_drill update_waiting weather_watch unusual garden_week market_eve evening_wrap habit_offer").split()
 
 
 def test_every_timer_the_desktop_had_is_a_job_with_the_same_interval():
@@ -29,10 +29,10 @@ def test_every_timer_the_desktop_had_is_a_job_with_the_same_interval():
 def test_every_daily_check_is_still_there_in_the_same_order():
     """The daily checks, in order: the 43 the desktop had, the summary of her own changes (DEC-0225) and the monthly
     restore drill (WP-09), the update waiting for his restart (Q-114), the weather against his plans, what's
-    unusual, this week in the garden, the day before a market and the evening wrap."""
-    assert [name for name, _ in DAILY_CHECKS] == THE_DAILY_CHECKS and len(DAILY_CHECKS) == 51
+    unusual, this week in the garden, the day before a market, the evening wrap and routines offered from his habits."""
+    assert [name for name, _ in DAILY_CHECKS] == THE_DAILY_CHECKS and len(DAILY_CHECKS) == 52
     assert all(callable(getattr(BackgroundJobs, method)) for _, method in DAILY_CHECKS)
-    assert len({method for _, method in DAILY_CHECKS}) == 51  # no check listed twice under two names
+    assert len({method for _, method in DAILY_CHECKS}) == 52  # no check listed twice under two names
 
 
 def test_the_jobs_need_no_qt_and_nothing_from_the_gui_or_the_modules():

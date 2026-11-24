@@ -4,7 +4,9 @@ core.workflows
 
 Workflows MIA makes (ACAF step 3, DEC-0092; `docs/ACAF_REVIEW.md` section 6):
 something done again and again, written as a specification, not code. A
-trigger (every day, week or month) and steps from a fixed vocabulary:
+trigger (every day, week or month, or, DEC-0293, an event in his history: `{"on": "bill_paid"}`, run for each new
+one by `run_on_events`; one from something she read, an email or a page, runs with every change held for his yes) and
+steps from a fixed vocabulary:
 
 - `read`: records from a source (core/creation_sources.py: `history:spending`)
   or one of the person's published screens (`creation:C-0001`), optionally
@@ -59,7 +61,8 @@ def _sources(context, child: bool) -> dict:
 
 
 def check(spec: dict, context=None, child: bool = False) -> list[str]:
-    """Every problem with a workflow spec; an empty list passes."""
+    """Every problem with a workflow spec (its trigger a schedule, or an event type in the history, DEC-0293); an empty
+    list passes."""
     if not isinstance(spec, dict):
         return ["A workflow is a JSON object."]
     allowed = {"kind", "title", "about", "owner", "trigger", "steps", "limits"}
@@ -71,7 +74,12 @@ def check(spec: dict, context=None, child: bool = False) -> list[str]:
     if spec.get("owner") not in ("personal", "household"):
         problems.append("It's personal or the household's.")
     trigger = spec.get("trigger") or {}
-    if not isinstance(trigger, dict) or trigger.get("every") not in EVERY or set(trigger) - {"every", "weekday", "day"}:
+    if isinstance(trigger, dict) and "on" in trigger:  # an event from his history (DEC-0293)
+        from core.life_events import TYPES
+
+        if set(trigger) != {"on"} or trigger["on"] not in TYPES:
+            problems.append("An event trigger is {\"on\": a kind of event in the history} (life_events.TYPES).")
+    elif not isinstance(trigger, dict) or trigger.get("every") not in EVERY or set(trigger) - {"every", "weekday", "day"}:
         problems.append("Its trigger is {\"every\": \"day\" | \"week\" | \"month\"} (a week may add \"weekday\", 0-6; "
                         "a month \"day\", 1-28).")
     elif "weekday" in trigger and not (isinstance(trigger["weekday"], int) and 0 <= trigger["weekday"] <= 6):
@@ -178,9 +186,15 @@ def may(spec: dict) -> list[str]:
 
 
 def describe(spec: dict) -> list[str]:
-    """Pure logic. The workflow in plain sentences, for its screen and its approval."""
+    """Pure logic. The workflow in plain sentences, for its screen and its approval (an event trigger says so, and
+    that a change from something MIA read waits for his yes)."""
     t = spec.get("trigger", {})
-    when = {"day": "Every day", "week": "Every week", "month": "Every month"}.get(t.get("every"), "")
+    if "on" in t:
+        from core.life_events import TYPES
+
+        when = f"Whenever there are new {TYPES.get(t['on'], t['on'])} (from something MIA read: each change waits for your yes)"
+    else:
+        when = {"day": "Every day", "week": "Every week", "month": "Every month"}.get(t.get("every"), "")
     if "weekday" in t:
         when += " on " + ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")[t["weekday"]]
     if "day" in t:
@@ -210,8 +224,11 @@ def describe(spec: dict) -> list[str]:
 # ------------------------------------------------------------------ running
 
 def due(spec: dict, last_run: str, now: datetime) -> bool:
-    """Pure logic. Whether the trigger has come round since the last run."""
+    """Pure logic. Whether the trigger has come round since the last run (never for an event trigger: those run on
+    their events, `run_on_events`)."""
     t, today = spec.get("trigger", {}), now.date()
+    if "on" in t:
+        return False  # an event trigger runs on its events (`run_on_events`), never on the calendar
     if last_run and last_run[:10] == today.isoformat():
         return False
     if t.get("every") == "day":
@@ -247,12 +264,13 @@ def _records(context, source: str, within: Optional[int], now: datetime) -> tupl
     return rows, fields
 
 
-def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = None) -> dict:
+def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = None, held: bool = False) -> dict:
     """Run a published workflow (or, `dry`, show what it would do). Returns {"lines", "offers", "added"}. A real
     run is kept in the person's run book (core/runs.py): started, what it did, and done, or failed with the error.
     Offers are Candidates for the communication gate; the caller offers them. Each add goes through the grant check
     first (core/grants.py: the published workflow is its grant) and is held back, and said so in the lines, when the
-    check says no."""
+    check says no. `held` (a run started by an event from something MIA read, DEC-0293): each add is proposed as a
+    card for the person's yes, never approved by the workflow."""
     from core.communication_gate import Candidate
     from core.region import money
 
@@ -325,10 +343,13 @@ def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = 
 
                     try:  # her own initiative: the grant check, with this published workflow as the grant (DEC-0156)
                         grants.require("records.add", grants.MIA, granted=True)
-                    except ActionError as held:
-                        lines.append(f"add held back: {held}")
+                    except ActionError as refused:
+                        lines.append(f"add held back: {refused}")
                         continue
                     proposal = context.actions.propose(context, "records.add", params, proposed_by="mia")
+                    if held:  # started by something she read: it waits for his yes, never the workflow's (DEC-0293)
+                        lines.append(f"add waits for your yes: {proposal.summary}")
+                        continue
                     result = context.actions.approve(context, proposal.proposal_id)  # its standing approval (DEC-0092)
                     lines.append(f"add: {result.result}")
                     if result.status == "executed":
@@ -349,6 +370,57 @@ def run(context, creation_id: str, dry: bool = False, now: Optional[datetime] = 
         runs.step(record, "all", "; ".join(lines)[:300])
         runs.finish(record, "done")
     return {"lines": lines, "offers": offers, "added": added}
+
+
+SEEN_KEY = "workflows.events_seen_at"  # the newest event an event-triggered workflow has seen
+READ_SOURCES = ("inbox", "email", "mail", "browser", "web", "lookup", "feed")  # what she read, not what he recorded
+MAX_EVENT_RUNS = 10  # a burst of events runs at most this many workflows a tick; the rest wait for the next
+
+
+def from_reading(event) -> bool:
+    """Pure logic. Whether an event came from something MIA read (an email, a web page), not from his own records."""
+    source = str(getattr(event, "source", "") or "").lower()
+    return any(source == s or source.startswith(s + ":") or source.startswith(s + "_") for s in READ_SOURCES)
+
+
+def run_on_events(context, now: Optional[datetime] = None) -> list:
+    """Every published workflow whose trigger is an event type (DEC-0293), run once for each new event of that type
+    since the last look (the first look only marks where it starts: nothing from before runs). An event from something
+    she read runs `held`: its changes wait for his yes. Returns the offers for the gate."""
+    from core import life_events
+
+    now = now or datetime.now()
+    store, config = getattr(context, "creations", None), getattr(context, "config", None)
+    if store is None or config is None:
+        return []
+    watching = {}
+    for c in store.published():
+        spec = store.shown(c["id"])["spec"]
+        if spec.get("kind") == "workflow" and "on" in (spec.get("trigger") or {}):
+            watching.setdefault(spec["trigger"]["on"], []).append(c["id"])
+    seen = str(config.get(SEEN_KEY, "") or "")
+    if not seen:
+        config.set(SEEN_KEY, now.isoformat(timespec="seconds"))
+        return []
+    if not watching:
+        config.set(SEEN_KEY, now.isoformat(timespec="seconds"))
+        return []
+    fresh = sorted((e for e in life_events.events_for(context, since=seen[:10], types=list(watching))
+                    if e.at > seen), key=lambda e: e.at)
+    offers, ran = [], 0
+    for event in fresh:
+        if ran >= MAX_EVENT_RUNS:
+            break
+        for creation_id in watching.get(event.type, []):
+            try:
+                offers += run(context, creation_id, now=now, held=from_reading(event))["offers"]
+            except Exception as problem:  # one broken workflow never stops the others; its log says why
+                store.log_run(creation_id, {"at": now.isoformat(timespec="seconds"),
+                                            "lines": [f"stopped: {problem}"[:300]]})
+        ran += 1
+        seen = event.at
+    config.set(SEEN_KEY, seen)
+    return offers
 
 
 def run_due(context, now: Optional[datetime] = None) -> list:

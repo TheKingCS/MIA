@@ -202,7 +202,8 @@ steps are missions with real progress. Builds on: debts, missions, learning path
 
 ## 7. Automation: "she just handles it"
 
-**7.1 Routines she proposes from what he does.** M. *Worth designing with Zac first (2026-11-23): what she may infer from his habits, and what a yes turns into, so it's never a guess.*
+**7.1 Routines she proposes from what he does.** M. *Built 2026-11-23 on his answer (DEC-0294,
+`core/habit_offers.py`): the same thing on the same weekday three weeks running is offered as a weekly reminder, once.*
 She notices a repeat (every Sunday he checks the budget and plans meals) and offers a routine for it; once he says yes,
 it runs with an exact undo (his rule: routine actions run on their own with a precise Undo; approval only for what
 goes outward or can't be undone). Builds on: `core/workflows.py`, grants (`grants.standing`), routines, the undo log.
@@ -211,7 +212,8 @@ goes outward or can't be undone). Builds on: `core/workflows.py`, grants (`grant
 day, week or month (read, count, compare, tell, add) under a grant; what's missing is a trigger on an event ("when a
 bill comes in") and the homestead's controls as a step. *Needs Zac first:* an event can come from something she
 reads (an email, a page), and nothing she reads may grant her anything, so which events may start a workflow is his
-call.*
+call.* *Built 2026-11-23 on his answer (DEC-0293): a workflow may start on an event in his history; one from something
+she read runs with every change waiting for his yes. The homestead's controls as a step are still to come.*
 Rules he says out loud: "when the greenhouse goes over 90, tell me and open the vents", "when a bill comes in, add
 it to the budget". Each a workflow with its tier from the manifest; the risky ones ask. Builds on: workflows, the event
 bus, the homestead's controls, grants.

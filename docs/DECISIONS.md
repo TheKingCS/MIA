@@ -4177,3 +4177,17 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Decision: Once an evening, through the communication gate (paced, mutable like any of her messages): what got done today, tomorrow's first thing and tomorrow's weather, in two sentences, from the hour he sets (8 pm unless he sets another: `evening_wrap.hour`). Facts from his records, worked out in code.
 - Record: core/evening_wrap.py
 - Related: DEC-0171
+
+### DEC-0293: Workflows started by events, an email's waiting for his yes
+- Status: APPROVED (Zac, 2026-11-23: "Records and email, with approval")
+- Proposed by: claude (Opus), 2026-11-23, brainstorm 7.2
+- Decision: A workflow's trigger may be an event in his history ({"on": a life event type}), run once for each new one. An event from something MIA read (the inbox, email, a web page: `workflows.READ_SOURCES`) runs with every change held as a card for his yes, never approved by the workflow's standing grant; nothing she reads grants her anything.
+- Record: core/workflows.py (`run_on_events`, `from_reading`)
+- Related: DEC-0092, DEC-0156
+
+### DEC-0294: Routines offered from his habits, once
+- Status: APPROVED (Zac, 2026-11-23: "Offer once, I decide")
+- Proposed by: claude (Opus), 2026-11-23, brainstorm 7.1
+- Decision: When the same kind of thing (from his own doing, never MIA's) shows on the same weekday three weeks running, MIA offers one weekly reminder for it, once ever; his yes sets it in his own words; it never changes a record by itself.
+- Record: core/habit_offers.py
+- Related: DEC-0171

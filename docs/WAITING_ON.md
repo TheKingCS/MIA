@@ -10,7 +10,8 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ### From the Jarvis brainstorm (2026-11-23, `docs/future/JARVIS_BRAINSTORM.md`)
 0zg. [x] (Zac, 2026-11-23: all four hobbies, the picture of him, test a bigger model, the evening wrap: DEC-0289 to
-   DEC-0292. Still his: which events may start an automation, and how routines are suggested from his habits.)
+   DEC-0292. Then the last two: event triggers with email waiting for his yes, DEC-0293; habit routines offered once,
+   DEC-0294. Nothing from the brainstorm waits on him now.)
    **Pick from the brainstorm** (or say "go in your order"): 30-odd ideas for a smarter, more aware MIA. Three
    need you: which hobbies get a companion first (3.3); may she build a "picture of you" page you can correct (1.3);
    try a bigger local model on your PC, a 10 to 20 GB download (1.5). Claude keeps building the ones that need no

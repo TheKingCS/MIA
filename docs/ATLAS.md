@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1635 files, 358,153 lines; 1635 files describe themselves; 19,693 of 19,818 classes and functions are documented.
+1638 files, 358,427 lines; 1638 files describe themselves; 19,705 of 19,838 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-643 files, 182,407 lines; 9,340 of 9,426 classes and functions documented
+644 files, 182,566 lines; 9,345 of 9,431 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -270,6 +270,7 @@
 - `core/grow_lab.py`: The grow lab (DEC-0030 phase D): running a greenhouse, aquaponics tanks and growing beds like a scientist. Record what's planted, measure the water, compare what works, learn from the results.
 - `core/guitar.py`: Guitar, the first program on MIA's learning paths (DEC-0111, DEC-0112; Zac, 2026-11-07: "I want to learn guitar and would like for MIA to be able to help teach me as well as track my progress and assign missions like homework ... being able to verify and test a user's skills just like it would do fo
 - `core/guitar_ear.py`: How MIA hears a guitar (DEC-0111): a recording, worked out in code, so a skill check can be passed by playing it, not only by saying so. The same rule she keeps for herself: a skill counts when it's shown.
+- `core/habit_offers.py`: Routines offered from his habits (DEC-0294; Zac, 2026-11-23: "Offer once, I decide"): when the same kind of thing shows in his history on the same weekday three weeks running (workouts logged on Mondays, the budget checked on Sundays), MIA offers one routine for it, a weekly reminder, once. His yes 
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det
 - `core/health_actions.py`: Every change to Health (core/health_manager.py) as an action, so the page, the phone, the glasses and voice agree and undo takes each one back, and the Health page's data (`health_page`) with its forms.
 - `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
@@ -642,7 +643,7 @@
 - `core/work_review.py`: Independent review, then Zac's approval (DEC-0069, step 4 of `docs/DEV_ECOSYSTEM_AUDIT.md`). After the loop (`core/work_loop.py`) brings a task to review:
 - `core/work_runner.py`: Missions, and the runner that works them (DEC-0076 and DEC-0079; Zac, 2026-11-03: "set the council on the mission to develop MIA and let them run at it autonomously" and "delegating tasks based on time available to use each model so that the dev team doesnt have to sit idle when one model is unavail
 - `core/work_tasks.py`: Development tasks as records (DEC-0068, step 1 of `docs/DEV_ECOSYSTEM_AUDIT.md`): one Markdown file per task in `work/tasks/`, so the team's to-do list is in the repo, in git's history, readable by every session and by a program. `tools/work.py` is the command line over it.
-- `core/workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092; `docs/ACAF_REVIEW.md` section 6): something done again and again, written as a specification, not code. A trigger (every day, week or month) and steps from a fixed vocabulary:
+- `core/workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092; `docs/ACAF_REVIEW.md` section 6): something done again and again, written as a specification, not code. A trigger (every day, week or month, or, DEC-0293, an event in his history: `{"on": "bill_paid"}`, run for each new one by `run_on_events`; one from som
 - `core/workout_actions.py`: Every change the Workout screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: exercises (add, edit, delete) and logging a session the way the concept's form does (an exercise, reps, sets, weight, how long, notes). Workout templates are gone (Zac, 2026-10-16):
 - `core/workout_manager.py`: MIA's Workout Module — an exercise library, named workout templates, logged sessions (sets/reps/weight, real elapsed time from a live session's own stopwatch), personal records, and per-exercise progress.
 - `core/workshop_machine.py`: WorkshopMachine: the interface every controllable workshop-hardware device (laser engraver, CNC, 3D printer, ...) implements, plus WorkshopMachineRegistry holding whichever machines are actually registered. This reconciles a real architecture question from MIA Home's expanded-scope handoff doc (`doc
@@ -941,7 +942,7 @@
 
 ## tests/: the test suite: what each part must do
 
-588 files, 95,194 lines; 7,990 of 8,029 classes and functions documented
+590 files, 95,309 lines; 7,997 of 8,044 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1137,6 +1138,7 @@
 - `tests/test_greenhouse_setup.py`: The greenhouse's setup as one sequence (core/greenhouse_setup.py, DEC-0150): "let's set up the greenhouse" and "what's next?" say the step you're on, with its device, what it needs and what to say; each step is done from what's recorded (a job finished, the MCU flashed, the node pushed, PlatformIO f
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known.
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
+- `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself. *(2 undocumented)*
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks).
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
@@ -1521,6 +1523,7 @@
 - `tests/test_work_review.py`: Independent review and Zac's approval (DEC-0069, core/work_review.py): never reviewed by its author, approved only by a person at the keyboard, and only after a review that approves it.
 - `tests/test_work_runner.py`: Missions and the runner (DEC-0076, DEC-0079; core/work_runner.py): the council works a mission by itself, within its scope and budget, handing work to whoever has time, and never approving anything.
 - `tests/test_work_tasks.py`: Development tasks as records (DEC-0068, core/work_tasks.py): files that round-trip, ready only after their dependencies, claims that can't overlap, and done only with evidence.
+- `tests/test_workflow_events.py`: Workflows started by events in his history (core/workflows.py, DEC-0293; Zac, 2026-11-23: "Records and email, with approval"): the trigger {"on": an event type} is checked, never runs on the calendar, runs once for each new event of its type, and an event from something MIA read (an email, a page) r *(6 undocumented)*
 - `tests/test_workflows.py`: Workflows MIA makes (ACAF step 3, DEC-0092, core/workflows.py): a trigger and steps from a fixed vocabulary, approved once for exactly what they list, messages only through the gate, adds through actions, every run logged, and a real run (never a dry one) kept in the run book (UI-1).
 - `tests/test_workout_manager.py`: Unit tests for core.workout_manager. Isolates _DATA_DIR/the three per-record-type file constants into a tmp_path scratch area, same monkeypatch pattern as test_kitchen_manager.py's isolated_paths.
 - `tests/test_workout_module.py`: Unit tests for modules.workout.module's pure formatters — no Qt event loop needed, same shape as tests/test_kitchen_module.py. format_elapsed()'s own tests mirror tests/test_stopwatch_format.py's exact shape (a deliberately-duplicated, independently-owned copy — see module docstring for why).

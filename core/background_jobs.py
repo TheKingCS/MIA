@@ -143,6 +143,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("garden_week", "_check_garden_week"),
     ("market_eve", "_check_market_eve"),
     ("evening_wrap", "_check_evening_wrap"),
+    ("habit_offer", "_check_habit_offer"),
 )
 
 
@@ -429,6 +430,13 @@ class BackgroundJobs:
 
         self._offers.extend(evening_wrap.offer(self.context, now))
 
+    def _check_habit_offer(self, now: datetime, today_iso: str) -> None:
+        """A routine offered from a habit of his (core/habit_offers.py, DEC-0294): the same kind of thing on the same
+        weekday three weeks running, offered as a weekly reminder once ever, through the gate."""
+        from core import habit_offers
+
+        self._offers.extend(habit_offers.offer(self.context, now))
+
     def _check_loops(self, now: datetime, today_iso: str) -> None:
         """MIA's improvement loops (core/loops.py, DEC-0094): the person's use and the PC's, measured once a
         day; a loop below its floor opens a task, and what's for the person joins this tick's offers."""
@@ -573,11 +581,13 @@ class BackgroundJobs:
             chronicle_issue.launch()
 
     def _check_workflows(self, now: datetime, today_iso: str) -> None:
-        """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092): run them;
-        what they'd tell the person joins this tick's offers, through the gate like the rest."""
-        from core.workflows import run_due
+        """Workflows MIA made whose trigger has come round (core/workflows.py, DEC-0092), and those started by new
+        events in his history (DEC-0293; from something she read, each change waits for his yes): run them; what
+        they'd tell the person joins this tick's offers, through the gate like the rest."""
+        from core.workflows import run_due, run_on_events
 
         self._offers.extend(run_due(self.context, now))
+        self._offers.extend(run_on_events(self.context, now))  # those started by events in his history (DEC-0293)
 
     def _offer(self, topic: str, title: str, message: str, urgency: str, source: str = "system",
                daily: bool = False, fingerprint: str = "") -> None:
