@@ -1,7 +1,7 @@
 """Question plans (DEC-0052 step 2a, core/question_plans.py): the right
 plan for a question, lookups gathered by code onto a marked sheet, and an
 answer that never states a number MIA didn't look up; and the weekend's
-plan with each day's forecast."""
+plan with each day's forecast, reached only by a weekend ahead."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -115,13 +115,29 @@ def test_what_we_decided_also_looks_in_her_own_decision_record_and_says_whose_it
     assert not any(tool == "get_mia_docs" for tool, _ in looked)
 
 
-def test_the_weekend_is_this_saturday_and_sunday_or_what_is_left_of_it():
+def test_the_weekend_is_this_saturday_and_sunday_or_what_is_left_of_it_or_next_or_one_day_named():
     assert qp.weekend_days(date(2026, 11, 24)) == [date(2026, 11, 28), date(2026, 11, 29)]  # a Tuesday
     assert qp.weekend_days(date(2026, 11, 28)) == [date(2026, 11, 28), date(2026, 11, 29)]  # Saturday
     assert qp.weekend_days(date(2026, 11, 29)) == [date(2026, 11, 29)]  # Sunday
+    assert qp.weekend_days(date(2026, 11, 24), "next weekend?") == [date(2026, 12, 5), date(2026, 12, 6)]
+    assert qp.weekend_days(date(2026, 11, 28), "what about next weekend") == [date(2026, 12, 5), date(2026, 12, 6)]
+    assert qp.weekend_days(date(2026, 11, 29), "how should I spend Saturday?") == [date(2026, 12, 5)]
 
 
-def test_asking_about_the_weekend_reaches_its_plan_with_each_days_forecast(life, monkeypatch):
+@pytest.mark.parametrize("said, plan", [
+    ("how was my weekend?", None), ("how did the weekend go?", None), ("what did I do this weekend?", None),
+    ("is the store open on sunday?", None), ("what's for dinner on sunday?", None),
+    ("what should I do saturday?", "weekend"), ("what are my plans saturday?", "weekend"),
+    ("what should I do next weekend?", "weekend"), ("how should I spend Sunday?", "weekend"),
+])
+def test_only_a_weekend_ahead_reaches_its_plan(life, said, plan):
+    found = qp.match(life, said)
+    assert (found.name if found else None) in ((plan,) if plan else (None, "week review", "recall", "discussed")), said
+    if plan is None:
+        assert found is None or found.name != "weekend", said
+
+
+def test_asking_about_the_weekend_reaches_its_plan_with_each_days_forecast_and_one_day_compares_nothing(life, monkeypatch):
     from core import weather
 
     assert qp.match(life, "What should I do this weekend?").name == "weekend"
@@ -130,7 +146,7 @@ def test_asking_about_the_weekend_reaches_its_plan_with_each_days_forecast(life,
         {"date": "2026-11-28", "high": 52, "low": 31, "words": "Clear", "rain": 5}]})
     text = qp.gather(life, qp.PLAN_BY_NAME["weekend"], "What should I do this weekend?", date(2026, 11, 24)).as_text()
     assert "Saturday: Clear, high 52°F, low 31°F, 5% chance of rain." in text
-    assert "No forecast for Sunday yet." in text and "suits the drier" in text
+    assert "No forecast for Sunday yet." in text and "suits the drier" not in text  # one day: nothing to compare
 
 
 def test_a_forecast_carries_each_whole_day_by_its_date():

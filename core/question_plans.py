@@ -660,9 +660,17 @@ def _project_picture(context, sheet, prompt, today):
     project_ripple.gather(context, sheet, prompt, today)
 
 
-def weekend_days(today: date) -> list[date]:
-    """Pure logic. The weekend a question means: this Saturday and Sunday; on a Saturday, today and tomorrow; on a
-    Sunday, today."""
+def weekend_days(today: date, prompt: str = "") -> list[date]:
+    """Pure logic. The days a weekend question means: this Saturday and Sunday (on a Saturday, today and tomorrow; on
+    a Sunday, today); "next weekend" the one after this week's (on a Sunday, the coming one); one day named alone
+    ("how should I spend Saturday?"), its next one, today if it's today."""
+    said = (prompt or "").lower()
+    names = [d for d, word in ((5, "saturday"), (6, "sunday")) if re.search(rf"\b{word}", said)]
+    if len(names) == 1 and "weekend" not in said:
+        return [today + timedelta(days=(names[0] - today.weekday()) % 7)]
+    if re.search(r"\bnext weekend\b", said):  # the weekend after the one this week
+        saturday = today + timedelta(days=(5 - today.weekday()) % 7 + (7 if today.weekday() <= 5 else 0))
+        return [saturday, saturday + timedelta(days=1)]
     if today.weekday() == 6:
         return [today]
     saturday = today + timedelta(days=(5 - today.weekday()) % 7)
@@ -672,10 +680,10 @@ def weekend_days(today: date) -> list[date]:
 def _weekend(context, sheet, prompt, today):
     """Cross-domain (Jarvis brainstorm round 7): the weekend: each day's forecast (core/weather.py), what's due this
     week, the garden's week, his learning paths and his projects, with a line of guidance on fitting outdoor work to
-    the better day. The model suggests; nothing is scheduled."""
+    the better day when two days have a forecast. The model suggests; nothing is scheduled."""
     from core import weather
 
-    days = weekend_days(today)
+    days = weekend_days(today, prompt)
     try:
         card = weather.card(context)
     except Exception:  # noqa: BLE001 - the forecast is one part of the sheet
@@ -683,10 +691,12 @@ def _weekend(context, sheet, prompt, today):
         card = {}
     forecast = {d["date"]: d for d in (card.get("days") or [])}
     unit = card.get("unit", "")
+    known = 0
     for day in days:
         f = forecast.get(day.isoformat())
         if f:
-            sheet.add(FACT, f"{day:%A}: {f['words'] or 'forecast'}, high {f['high']}{unit}, low {f['low']}{unit}"
+            known += 1
+            sheet.add(FACT, f"{day:%A}: " + (f"{f['words']}, " if f["words"] else "") + f"high {f['high']}{unit}, low {f['low']}{unit}"
                       + (f", {f['rain']}% chance of rain" if f.get("rain") is not None else "") + ".", "the forecast")
         else:
             sheet.add(MISSING, f"No forecast for {day:%A} yet" + ("" if card.get("place") else
@@ -696,8 +706,9 @@ def _weekend(context, sheet, prompt, today):
     _look(context, sheet, "garden_this_week", "the garden")
     _look(context, sheet, "learning_progress", "learning paths")
     _look(context, sheet, "list_projects", "Projects")
-    sheet.add(ESTIMATE, "Outdoor work (a build, the garden) suits the drier, milder day; practice and indoor jobs fit "
-                        "the wetter one. Rest counts too.", "general guidance")
+    if known >= 2:  # a comparison only when there are two days to compare
+        sheet.add(ESTIMATE, "Outdoor work (a build, the garden) suits the drier, milder day; practice and indoor jobs "
+                            "fit the wetter one. Rest counts too.", "general guidance")
 
 
 def _owned(context, tool: str) -> bool:
@@ -1119,7 +1130,8 @@ PLANS: tuple[Plan, ...] = (
     Plan("weekend", "The weekend",
          ("What should I do this weekend?", "Plan my weekend.", "What's on for the weekend?",
           "What should I get done on Saturday?", "How should I spend Sunday?", "Is the weekend good for building?"),
-         r"\b(this weekend|the weekend|my weekend|weekend plans?|on saturday|on sunday|saturday's|sunday's)\b", _weekend),
+         r"\b(this weekend|the weekend|my weekend|next weekend|weekend plans?)\b"
+         r"|\b(do|spend|get done|plans?|build|work on|going on)\b[^?]{0,20}\b(saturday|sunday)\b", _weekend),
     Plan("project picture", "What a project touches",
          ("I'm planning to build a greenhouse.", "I want to build a chicken coop this spring.",
           "I'm thinking about putting up a hoop house.", "How would building a greenhouse affect everything else?",
@@ -1188,7 +1200,7 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
-CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time")  # build plan step 8: plans over several apps
+CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time", "weekend")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -1258,6 +1270,9 @@ NOT_FOR = {
     "today": re.compile(r"\b(on your own|you been up to|while i was (out|gone|away))\b"
                         r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
+    # a weekend gone is a conversation or recall; a shop's hours, a meal or a meeting on a weekend day isn't the plan
+    "weekend": re.compile(r"\b(was|were|did|went|go|last|spent|happened|open|close[sd]?|hours|dinner|lunch|breakfast|"
+                          r"meals?|remind|meeting|appointment)\b", re.I),
     # the build's own questions are its tools' (material_list, cut_list, price_build, plan_with_me), and a plan
     # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"
     "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
