@@ -3906,6 +3906,45 @@ def scenario_mia_command_nan_huge_and_odd_types_are_refused_not_raised():
     ]
 
 
+
+def scenario_mia_command_outcomes_and_targets_are_in_the_export_mia_reads():
+    """Step 3: dashboard_state.json carries each cell's current adjustable targets and MIA's latest directions with
+    what became of each: refused, waiting, then applied once someone approves it here."""
+    import json
+    import tempfile
+
+    from core.experiment_manager import ExperimentManager
+
+    sys.path.insert(0, str(Path(__file__).parent.parent / "viewer"))
+    from export_dashboard_state import export_dashboard_state
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "node.db"
+        conn = sqlite3.connect(db_path)
+        conn.executescript(SCHEMA_PATH.read_text())
+        cell_id = setup_demo_cell(conn)
+        commands = _mia_commands(conn, "node", tmp)
+        current = commands._current(cell_id, "ph_target_min")
+        refused = commands.submit(_direction(commands, cell_id, "ph_target_min", 5.0))
+        staged = commands.submit(_direction(commands, cell_id, "ph_target_min", round(current - 0.1, 2)))
+        out = Path(tmp) / "dashboard_state.json"
+        export_dashboard_state(str(db_path), str(out))
+        before = json.loads(out.read_text())["mia_directions"]
+        ExperimentManager(conn).approve_parameter_change(staged["proposal_id"])
+        conn.close()
+        export_dashboard_state(str(db_path), str(out))
+        after = json.loads(out.read_text())["mia_directions"]
+    outcome = lambda d, cid: next(r["outcome"] for r in d["recent"] if r["id"] == cid)  # noqa: E731
+    return [
+        ("each cell's current targets are in the export", abs(before["targets"][str(cell_id)]["ph_target_min"] - current) < 1e-9),
+        ("a refused direction reads as refused, with why", outcome(before, refused["command_id"]) == "refused"),
+        ("a staged one reads as waiting for approval", outcome(before, staged["command_id"]) == "waiting for approval"),
+        ("once approved here it reads as applied", outcome(after, staged["command_id"]) == "applied"),
+        ("and the export's target is the new value",
+         abs(after["targets"][str(cell_id)]["ph_target_min"] - round(current - 0.1, 2)) < 1e-9),
+    ]
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -4006,6 +4045,7 @@ SCENARIOS = {
     "mia_command_staged_changes_never_cross_and_approval_rechecks": scenario_mia_command_staged_changes_never_cross_and_approval_rechecks,
     "mia_command_two_at_once_are_decided_one_after_the_other": scenario_mia_command_two_at_once_are_decided_one_after_the_other,
     "mia_command_nan_huge_and_odd_types_are_refused_not_raised": scenario_mia_command_nan_huge_and_odd_types_are_refused_not_raised,
+    "mia_command_outcomes_and_targets_are_in_the_export_mia_reads": scenario_mia_command_outcomes_and_targets_are_in_the_export_mia_reads,
 }
 
 

@@ -155,6 +155,11 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
+**MIA's directions, step 3, the node's half (2026-11-24):** `viewer/export_dashboard_state.py`'s `mia_directions`
+puts each cell's current pH/EC targets and MIA's latest directions with their outcome (refused, waiting for approval,
+denied, applied) into `dashboard_state.json`, so MIA reports a change only once she sees it applied here. It also
+now closes its database connection (it never did; harmless on the Pi, but it held the file open). One scenario.
+
 **MIA's directions, step 2: the signed endpoint (2026-11-24, DEC-0185):** `viewer/serve_exports.py` takes one write,
 `POST /mia/command` (only with `--db`), and passes it to `core/mia_commands.py` only when `core/command_auth.py`
 finds it signed with this node's key (`config/mia_command_key`, git-ignored, sent by MIA at provisioning over SSH on

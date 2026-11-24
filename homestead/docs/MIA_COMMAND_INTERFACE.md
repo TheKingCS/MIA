@@ -75,5 +75,9 @@ signed approval applies at once or waits for his press on the node differs (one 
    any unexpected error is answered as a refusal. The node's limits are its own copy (`config/command_limits.yaml`,
    git-ignored, seeded from `command_limits.default.yaml`), which a push from MIA's PC never overwrites, and the
    push never carries the node's key. MIA's free text never reaches the node's assistant.
-3. The command's state in the exports, and MIA's side (`greenhouse.adjust`, its card, the read-back, undo).
+3. **The node's half built 2026-11-24.** `dashboard_state.json` (which MIA already reads) carries `mia_directions`:
+   each cell's current adjustable targets (what MIA sends as the value she believes) and her latest directions with
+   what became of each (`outcome`: refused with why, waiting for approval, denied, or applied once its change is a
+   live target). Scenario `mia_command_outcomes_and_targets_are_in_the_export_mia_reads`. MIA's side
+   (`greenhouse.adjust`, its card, the read-back, undo) is next.
 4. Live against the simulator (`main.py` plus `drivers/simulator.py --run`): a change applied, read back, undone.

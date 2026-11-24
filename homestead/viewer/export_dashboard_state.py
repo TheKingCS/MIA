@@ -25,6 +25,7 @@ Usage:
 import argparse
 import json
 import sqlite3
+import sys
 from pathlib import Path
 
 
@@ -34,6 +35,35 @@ def sparkline_points(conn: sqlite3.Connection, sensor_id: int, limit: int = 8) -
         (sensor_id, limit),
     ).fetchall()
     return [r["value"] for r in reversed(rows)]
+
+
+ADJUSTABLE = ("ph_target_min", "ph_target_max", "ec_target_min", "ec_target_max")
+
+
+def mia_directions(conn) -> dict:
+    """What MIA reads back about her directions (DEC-0185, docs/MIA_COMMAND_INTERFACE.md step 3): each cell's current
+    adjustable targets (as the cell reads them: an active override, else config/modules.yaml), so she sends the value
+    she believes from what the node says; and her latest directions with what became of each (staged, applied or
+    refused, why, and its proposal's status once someone approved or denied it), so she reports a change only once
+    she sees it applied here. Nothing from before the table existed: empty."""
+    root = Path(__file__).resolve().parent.parent
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from core.experiment_manager import ExperimentManager
+
+    manager, modules = ExperimentManager(conn), str(root / "config" / "modules.yaml")
+    targets = {str(cell[0]): {p: manager._current_target(cell[0], p, modules) for p in ADJUSTABLE}
+               for cell in conn.execute("SELECT id FROM cells").fetchall()}
+    has_table = conn.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'mia_commands'").fetchone()
+    recent = [] if not has_table else [dict(r) for r in conn.execute(
+        "SELECT c.id, c.received_at, c.cell_id, c.param_name, c.value, c.believed_current, c.state, c.reason, "
+        "c.proposal_id, p.status AS proposal_status, p.decided_at FROM mia_commands c "
+        "LEFT JOIN parameter_change_proposals p ON p.id = c.proposal_id ORDER BY c.id DESC LIMIT 20").fetchall()]
+    for row in recent:  # what it came to: applied only once the change is a live target
+        row["outcome"] = ("applied" if row["state"] == "applied" or row.get("proposal_status") == "approved" else
+                          "denied" if row.get("proposal_status") == "denied" else
+                          "waiting for approval" if row["state"] == "staged" else "refused")
+    return {"targets": targets, "recent": recent}
 
 
 def export_dashboard_state(db_path: str, out_path: str) -> None:
@@ -158,8 +188,11 @@ def export_dashboard_state(db_path: str, out_path: str) -> None:
         ).fetchall()
     ]
 
+    output["mia_directions"] = mia_directions(conn)
+
     output["generated_at"] = conn.execute("SELECT datetime('now')").fetchone()[0]
 
+    conn.close()  # main.py exports every cycle: never leave a connection behind
     Path(out_path).write_text(json.dumps(output, indent=2, default=str))
     print(f"Exported dashboard state -> {out_path}")
 
