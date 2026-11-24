@@ -135,7 +135,7 @@ def register_project_plan_actions(registry) -> None:
     chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
     show_plans,
     confirm_plan and drop_plan, seed_viability (how long his seeds keep, core/seed_life.py) and what_to_plant (what's
-    due to plant now, or one crop's dates, core/planting_now.py). Their trigger
+    due to plant now, or one crop's dates, core/planting_now.py; for crops not in a confirmed plan). Their trigger
     phrases cover the everyday ways he'd ask ("what should I plant this
     week", "what needs doing in the garden", "how much should I charge for a picnic table":
     tests/test_everyday_phrasing_routing.py)."""
@@ -183,13 +183,13 @@ def register_project_plan_actions(registry) -> None:
     ))
     registry.register(AssistantAction(
         name="what_to_plant", domain=DOMAIN,
-        description="What's due to plant now (start indoors, transplant or sow) from his last frost, or, with a crop, "
-                    "when to plant that one.",
+        description="For crops not in a confirmed garden plan: what's due to plant now (start indoors, transplant or "
+                    "sow) from his last frost, or, with a crop, when to plant that one.",
         parameters={"type": "object", "properties": {
             "crop": {"type": "string", "description": "one crop, if he named one"}}, "required": []},
         handler=_what_to_plant, trigger_phrases=("what can i plant", "what should i plant", "what should i be planting",
                                                  "when should i plant", "when do i plant", "too late to plant",
-                                                 "too late for", "time to plant", "when to plant", "plant now"),
+                                                 "time to plant", "when to plant", "plant now"),
     ))
     registry.register(AssistantAction(
         name="seed_viability", domain=DOMAIN,

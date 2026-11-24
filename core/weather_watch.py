@@ -231,32 +231,43 @@ _WET_WORDS = ("rain", "shower", "drizzle", "thunder")
 
 
 def watering(forecast: dict, in_ground: list) -> str:
-    """Pure logic. Whether to water the garden today, from the forecast core/weather.py keeps (today's words and high,
-    tomorrow's chance of rain) and what's in the ground (`crops_now`): rain now or likely tomorrow says hold off, a hot
-    dry day says water deeply in the morning, otherwise check the soil. Always ends with the soil check, the one sure
-    test."""
+    """Pure logic. Whether to water the garden today, from the forecast core/weather.py keeps (today's words, the
+    day's and the current, and high; tomorrow's chance of rain, or its words when no chance is given) and what's in
+    the ground (`crops_now`): freezing or snow says no watering; rain now or likely tomorrow says hold off; a hot day
+    says water deeply in the morning; rain is never said as "none" when it isn't known; nothing planted out is said
+    first. Ends with the soil check, the one sure test."""
     soil = "Push a finger in 1 to 2 inches: water if it's dry there, and aim for about an inch a week, rain included."
     growing = f" for the {_names([n for n, _f in in_ground])}" if in_ground else ""
     if not forecast or forecast.get("high") is None or not forecast.get("unit"):
         return f"I don't have today's forecast. {soil}"
-    words = f"{forecast.get('words') or ''} {forecast.get('text') or ''}".lower()
-    tomorrow = forecast.get("tomorrow") or {}
-    rain = tomorrow.get("rain")
-    hot = forecast["high"] >= (HOT_F if forecast["unit"] == "°F" else HOT_C)
+    unit = forecast["unit"]
+    words = f"{forecast.get('words') or ''} {forecast.get('today_words') or ''} {forecast.get('text') or ''}".lower()
+    tomorrow = forecast.get("tomorrow")
+    rain = (tomorrow or {}).get("rain")
+    later = str((tomorrow or {}).get("words") or "").lower()
+    if _f(forecast["high"], unit) <= 32 or any(w in words for w in ("snow", "sleet", "freezing")):
+        return "No watering today: it's freezing or snowing, and frozen ground can't take it in."
+    if not in_ground:
+        lead = "Nothing's planted out that I know of. "
+    else:
+        lead = ""
     if any(w in words for w in _WET_WORDS):
-        return f"It's wet out today, so you can likely skip watering{growing}. {soil}"
-    if rain is not None and rain >= RAIN_LIKELY:
-        return (f"Rain is {rain}% likely tomorrow, so hold off{growing} unless the soil's dry or the plants are "
-                f"wilting. {soil}")
+        return f"{lead}It's wet today, so you can likely skip watering{growing}. {soil}"
+    wet_tomorrow = rain >= RAIN_LIKELY if rain is not None else any(w in later for w in _WET_WORDS)
+    if wet_tomorrow:
+        chance = f"Rain is {rain}% likely tomorrow" if rain is not None else f"Tomorrow's forecast says {later}"
+        return f"{lead}{chance}, so hold off{growing} unless the soil's dry or the plants are wilting. {soil}"
+    hot = forecast["high"] >= (HOT_F if unit == "°F" else HOT_C)
+    chance = f"only a {rain}% chance of rain tomorrow" if rain is not None else ""
     if hot:
-        return (f"It's hot today ({forecast['high']}{forecast['unit']}) and no rain is coming, so water{growing} "
-                f"deeply, early in the morning, at the base of the plants. {soil}")
-    return f"No rain in the forecast{', ' + f'{rain}% tomorrow' if rain is not None else ''}. {soil}"
+        return (f"{lead}It's hot today ({forecast['high']}{unit}){', ' + chance if chance else ''}, so water"
+                f"{growing} deeply, early in the morning, at the base of the plants. {soil}")
+    return f"{lead}{(chance[0].upper() + chance[1:] + '. ') if chance else ''}{soil}"
 
 
 def say_watering(context, today: Optional[date] = None) -> str:
     """For "should I water the garden today?": `watering`, from the kept forecast and what his confirmed garden plans
-    have in the ground."""
+    have in the ground; while the forecast is still coming, says so and to ask again."""
     from core import weather
 
     today = today or date.today()
@@ -264,6 +275,8 @@ def say_watering(context, today: Optional[date] = None) -> str:
     if got.get("set"):
         return ("I don't know your town for the forecast yet. Push a finger in 1 to 2 inches: water if it's dry there, "
                 "about an inch a week, rain included.")
+    if got.get("loading"):
+        return f"I'm getting the weather for {got.get('place') or 'your town'}; ask me again in a moment."
     try:
         in_ground = _growing(context, today).get("in_ground", [])
     except Exception:  # noqa: BLE001 - plans that can't be read never stop the answer

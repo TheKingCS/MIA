@@ -132,7 +132,9 @@ def test_self_worth_and_other_peoples_worth_never_get_his_figure(registry, said)
                                                                                 "log_workout"),
                                         ("is the fish tank done cycling?", "log_workout"),
                                         ("the truck has 120000 miles on it", "log_workout"),
-                                        ("I ran out of milk", "log_workout")])
+                                        ("I ran out of milk", "log_workout"),
+                                        ("should I water the houseplants?", "should_i_water"),
+                                        ("do I need to water the chickens?", "should_i_water")])
 def test_everyday_talk_never_reaches_a_tool_it_isnt_for(registry, said, never):
     assert never not in offered_tools(registry, said, demo_context()), said
 

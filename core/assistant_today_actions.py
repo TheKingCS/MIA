@@ -208,7 +208,8 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
-    """Registers get_today, get_week, get_weather, should_i_water (core/weather_watch.say_watering), weather_for_my_plans (the forecast against his garden and flock,
+    """Registers get_today, get_week, get_weather, should_i_water (core/weather_watch.say_watering, heard only of the
+    garden, never houseplants or the hens), weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
@@ -247,8 +248,9 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         description="Whether to water the garden today: rain now or likely tomorrow, a hot dry day, and the soil check.",
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_should_i_water,
-        trigger_phrases=("should i water", "do i need to water", "water the garden", "water the plants",
-                         "need watering", "need to be watered", "watering today"),
+        # garden words only: never "should I water the houseplants?" or "do I need to water the chickens?"
+        trigger_phrases=("water the garden", "water the beds", "water the vegetables", "garden need water",
+                         "garden need watering", "need watering", "need to be watered", "watering the garden"),
     ))
     registry.register(AssistantAction(
         name="weather_for_my_plans", domain="today",

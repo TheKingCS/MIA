@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1660 files, 361,770 lines; 1660 files describe themselves; 19,898 of 20,028 classes and functions are documented.
+1660 files, 361,896 lines; 1660 files describe themselves; 19,906 of 20,036 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-653 files, 184,763 lines; 9,434 of 9,520 classes and functions documented
+653 files, 184,844 lines; 9,436 of 9,522 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -951,7 +951,7 @@
 
 ## tests/: the test suite: what each part must do
 
-603 files, 96,455 lines; 8,101 of 8,145 classes and functions documented
+603 files, 96,500 lines; 8,107 of 8,151 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1320,7 +1320,7 @@
 - `tests/test_plan_import.py`: "Paste a plan" (core/plan_import.py, 2026-10-14): a whole plan and its recipes as text, the way a chat writes it, into MIA in one undoable action. Placeholder values only (DEC-0002).
 - `tests/test_plan_library.py`: The Library's plans shelf (core/plan_library.py) and the material lists behind it (core/build_calcs.py): boards packed into stock lengths, each calculator's counts checked by hand, plans found by name, kept and read from files, a shopping list against the workshop's stock, the tools, the homestead, 
 - `tests/test_plan_price.py`: What a Planner build costs and what to charge (core/plan_price.py, brainstorm 5.1): its materials priced from his workshop (whole quantities: what's on hand gets used too), those with no price named, his hours at his rate, his margin, through his quotes' own arithmetic; without his labor in it, a fl *(1 undocumented)*
-- `tests/test_planting_now.py`: What to plant now and when to plant one crop (core/planting_now.py), from his last spring frost: each crop's next step (start indoors, transplant or sow) and its date, a step just past still fine, a window long past said so, the coming spring used once this one is well behind, and his frost date ask
+- `tests/test_planting_now.py`: What to plant now and when to plant one crop (core/planting_now.py), from his last spring frost: each crop's next step (start indoors, transplant or sow) and its date, a step just past still fine, a window long past said so, the coming spring used once this one is well behind (a date saved with its 
 - `tests/test_port_scanner.py`: Unit tests for core.port_scanner. Uses a real local TCP server bound to an ephemeral port (socket.bind(("127.0.0.1", 0))) rather than mocking sockets or reaching out to a real remote host — deterministic (no network/internet dependency) while still exercising the real connect_ex() path, not a hand-c
 - `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140; the Nexus's portals are the person's stories since DEC-0153): the person puts one of their own paintings in a story's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the 
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
@@ -1486,7 +1486,7 @@
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces
 - `tests/test_volume_quick_control.py`: Unit tests for gui.widgets.volume_quick_control's pure format_volume_line() — moved here 2026-09-11 from tests/test_home_dashboard.py, alongside removing gui/home_dashboard.py's own dead copy of this function (and the entire dashboard-grid Volume widget it only ever served) — see that module's 2026-
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py).
-- `tests/test_watering.py`: "Should I water the garden today?" (core/weather_watch.watering): rain now or likely tomorrow says hold off, a hot dry day says water deeply in the morning, the crops in the ground named, every answer ending with the soil check, and no forecast still giving the soil check.
+- `tests/test_watering.py`: "Should I water the garden today?" (core/weather_watch.watering): rain now or likely tomorrow says hold off, a hot dry day says water deeply in the morning, the crops in the ground named, every answer ending with the soil check, no forecast still giving the soil check; tomorrow's words read when the
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.

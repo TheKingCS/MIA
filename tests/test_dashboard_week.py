@@ -57,9 +57,11 @@ def test_a_day_in_your_week_is_named_plainly():
 
 
 def test_the_forecast_is_read_into_words_and_rounded():
+    """Now, today, tomorrow and the unit; the whole day's words kept beside the current ones."""
     got = weather.read(FORECAST, "fahrenheit")
     assert got == {"temp": 48, "words": "Partly cloudy", "high": 54, "low": 39,
-                   "tomorrow": {"high": 51, "low": 36, "words": "Light rain"}, "unit": "°F"}
+                   "tomorrow": {"high": 51, "low": 36, "words": "Light rain"}, "unit": "°F",
+                   "today_words": "Overcast"}
     assert weather.read({"nothing": 1}, "celsius") is None
     assert "temperature_unit=celsius" in weather.forecast_url(51.5, -0.12, "celsius")
 
