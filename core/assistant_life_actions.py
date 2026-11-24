@@ -574,8 +574,9 @@ def _action_get_learning_progress(context: AppContext, arguments: dict) -> str:
 def register_life_actions(registry: AssistantActionRegistry) -> None:
     # -- workout -------------------------------------------------------------
     """Registers every tool above with the Assistant's registry, with descriptions, parameters and trigger
-    phrases, plus each domain's everyday words and the names of the person's own records (exercises, people, pets,
-    routines, courses and lessons).
+    phrases, plus each domain's everyday words (a workout's include cardio and lifts said plainly: "I ran 3 miles",
+    "I benched 185") and the names of the person's own records (exercises, people, pets, routines, courses and
+    lessons).
     """
     registry.register(AssistantAction(
         name="log_workout", domain="workout",
@@ -604,6 +605,9 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     registry.register_domain_keywords("workout", (
         "workout", "workouts", "worked out", "reps", "squats", "squat", "bench press", "deadlift", "deadlifts",
         "push-ups", "pushups", "pull-ups", "pullups", "curls", "gym",
+        # cardio and lifts said the everyday way ("I ran 3 miles", "did 45 minutes on the bike", "I benched 185")
+        "miles", "mile", "jogged", "jog", "biked", "cycling", "on the bike", "rowing", "laps", "benched", "bench pressed",
+        "weight trend", "my weight",
     ))
     registry.register_entity_names("workout", lambda ctx: [e.name for e in ctx.workout.all_exercises()] if ctx.workout else [])
 

@@ -88,7 +88,12 @@ and all four hobby programs unreachable on the phone, and every "how do I...?" a
 bowline) held to her help pages; fixed, and `tests/test_everyday_phrasing_routing.py` keeps about 70 phrasings. A
 how-to is now about MIA unless the tools that match it are all library, learning or plans tools
 (`assistant_chat.about_mia`). Fresh reviews ten to twelve (K-0369, K-0371, K-0377). The restore drill's own clock fix
-(its test broke once the date passed 2026-11-23). Add a new tool's everyday phrasings to that routing test. Note: Windows
+(its test broke once the date passed 2026-11-23). Add a new tool's everyday phrasings to that routing test.
+Later the same night: everyday money, homestead, business, kitchen and fitness phrasings probed and fixed; his
+business by voice (`core/assistant_business_voice_actions.py`: quotes, orders, customers); a thirteenth review made
+the tool loop count a tool its app marks `observe` as read-only (`main_thread.changes_records`: 24 read-only tools
+were being treated as changes), record names match as whole words, and business is a child's blocked domain
+(K-0379 to K-0384). Note: Windows
 Application Control now blocks libzim's DLL on the PC, so run the suite with
 `--ignore=tests/test_reference_library_manager.py` there (CI on Linux runs it); her offline library reader needs it
 unblocked (WAITING_ON 0zh).

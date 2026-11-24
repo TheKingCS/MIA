@@ -60,6 +60,8 @@ SAID = [
     ("list_quotes", "what quotes are still out?"), ("order_paid", "Lee paid the deposit on the bench"),
     ("add_customer", "add a new customer named Sam Ortiz"), ("get_customer_details", "what's my customer's phone number for Sam"),
     ("list_orders", "what orders are due this week?"),
+    ("log_workout", "I ran 3 miles this morning"), ("log_workout", "did 45 minutes on the bike"),
+    ("log_workout", "I benched 185 for 5"), ("plan_meal", "what's for dinner this week"),
 ]
 
 
