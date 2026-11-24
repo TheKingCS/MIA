@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1711 files, 370,279 lines; 1711 files describe themselves; 20,332 of 20,462 classes and functions are documented.
+1712 files, 370,430 lines; 1712 files describe themselves; 20,340 of 20,470 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-678 files, 190,518 lines; 9,675 of 9,761 classes and functions documented
+678 files, 190,545 lines; 9,677 of 9,763 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -689,7 +689,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,834 lines; 59 of 59 classes and functions documented
+2 files, 4,853 lines; 59 of 59 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -976,7 +976,7 @@
 
 ## tests/: the test suite: what each part must do
 
-627 files, 98,771 lines; 8,292 of 8,336 classes and functions documented
+628 files, 98,859 lines; 8,298 of 8,342 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1324,7 +1324,7 @@
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut.
 - `tests/test_ohms_law.py`: Unit tests for Ohm's law solve() (core/toolbox_calcs.py; modules.toolbox.calculators.ohms_law re-exports it).
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
-- `tests/test_online_lookup.py`: Looking things up online, when asked (core/online_lookup.py, DEC-0053, T-0017): only the search words leave the computer, only to the person's own SearXNG, never when offline, off or on a child's account, and every result is said with its source and date as content from the web.
+- `tests/test_online_lookup.py`: Looking things up online, when asked (core/online_lookup.py, DEC-0053, T-0017): only the search words leave the computer, only to the person's own SearXNG, never when offline, off or on a child's account, and every result is said with its source and date as content from the web. And the real connect
 - `tests/test_online_watch.py`: Offline awareness follow-ups (core/online_watch.py): noticing a settled change of connection, telling the owner through the communication gate, and "remind me when I'm back online".
 - `tests/test_operating_journal.py`: The Operating Journal (DEC-0097, core/operating_journal.py): lines in the person's words, each read by code for what the records can check; self-rated otherwise; how they did as plain numbers by week (and each line's meter), never a judgment; talked to with "add to my operating journal" and "rate ..
 - `tests/test_opportunity.py`: Opportunity scoring and recommendations (Procurement P3, core/opportunity.py; the proposal's section 17 rows it covers): a find is linked to the right need; every opportunity names all nine dimensions with reasons; a price is called a saving only when it's verified against prices seen, and "bargain"
@@ -1449,6 +1449,7 @@
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.
 - `tests/test_sensors.py`: tests/test_sensors.py — sensors that send their own readings (core/sensors.py): a sensor added by a person gets a key shown once and kept as a hash; its readings go through its app's own reading action (the Lab, Power, the Greenhouse) as that person; a key does nothing else, a reading must be a numb
 - `tests/test_server_app.py`: Unit tests for server.app (the Sign-ins page's chain check among them, WP-05) — exercised via FastAPI's TestClient, a real in-process HTTP client that needs no running server, no real network, and no HTTPS (see the Mobile Phase 1 plan's verification section for why this is a legitimate, complete way
+- `tests/test_server_game_layer.py`: The game layer's routes on the real server (server/app.py): the Achievements page and the cards not yet seen, a card closed (POST /api/achievements/seen, refused with no ids), YouTube search without a key saying how to get one, the key refused when it can't be one and never echoed back, and the page
 - `tests/test_service_map.py`: What MIA runs on (core/service_map.py, T-0007): each service's dependencies as derived DEPENDS_ON links, what stops when one does (through a chain: the vision model with Ollama), what each needs, the words that name each, checks that only look, and her answers in a turn.
 - `tests/test_shelf.py`: The shelf (UI-4, core/shelf.py; the review's acceptance row): the same thing captured from the phone, the palette and a drop lands on the shelf the same way; a planted instruction in something shelved changes nothing; an entry is gone after its time; nothing shelved becomes a memory by itself. Also:
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
@@ -1608,7 +1609,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-120 files, 22,427 lines
+120 files, 22,444 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

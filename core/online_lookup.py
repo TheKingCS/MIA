@@ -78,7 +78,8 @@ def own_engine(url: str) -> bool:
 
 
 def allowed(context) -> tuple[bool, str]:
-    """Whether a lookup may happen now, and if not, why: not known to be offline, not a child, not turned off."""
+    """Whether a lookup may happen now, and if not, why: not known to be offline, not a child, not turned off.
+    The connectivity monitor's status is read as the property it is (calling it had raised, failing every lookup)."""
     config = getattr(context, "config", None)
     try:
         on = config.get("online.lookup", True) if config is not None else True
@@ -97,9 +98,10 @@ def allowed(context) -> tuple[bool, str]:
     if connectivity is not None:
         from core.connectivity import OFFLINE
 
-        try:
-            state = connectivity.status()
-        except (AttributeError, OSError):
+        try:  # a property on the real monitor (core/connectivity.py); a method on older stand-ins
+            state = connectivity.status
+            state = state() if callable(state) else state
+        except (AttributeError, OSError, TypeError):
             state = ""
         if state == OFFLINE:  # unknown isn't offline: the search itself will say if it can't reach the engine
             return False, "I'm not online right now."

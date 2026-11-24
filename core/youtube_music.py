@@ -134,21 +134,21 @@ def results_from(payload: dict) -> list[dict]:
 
 
 def search(context, words: str, fetch: Optional[Callable[[str], bytes]] = None, limit: int = LIMIT) -> list[dict]:
-    """Songs on YouTube for his words (see the module's opening). NeedsKey without a key; RuntimeError when it isn't
-    allowed now or YouTube can't be reached, with why."""
+    """Songs on YouTube for his words (see the module's opening). NeedsKey without a key (said first, online or not);
+    RuntimeError when it isn't allowed now or YouTube can't be reached, with why."""
     from core.online_lookup import allowed, scrub
 
+    key = _key()  # asked about first: setting it up is worth knowing even while offline
+    if not key:
+        raise NeedsKey("YouTube search needs a YouTube Data API key of your own (free, from Google Cloud Console: "
+                       "make a project, turn on YouTube Data API v3, create an API key), entered in Music → "
+                       "YouTube. A YouTube link you paste plays without one.")
     ok, why = allowed(context)
     if not ok:
         raise RuntimeError(why)
     words = scrub(words)[:150]
     if not words:
         raise RuntimeError("What should I look for?")
-    key = _key()
-    if not key:
-        raise NeedsKey("YouTube search needs a YouTube Data API key of your own (free, from Google Cloud Console: "
-                       "make a project, turn on YouTube Data API v3, create an API key), entered in Music → "
-                       "YouTube. A YouTube link you paste plays without one.")
     url = SEARCH_URL + "?" + urlencode({"part": "snippet", "type": "video", "videoCategoryId": "10",
                                          "maxResults": max(1, min(limit, 25)), "q": words, "key": key,
                                          "safeSearch": "moderate"})

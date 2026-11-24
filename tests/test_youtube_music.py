@@ -21,7 +21,7 @@ from core.app_context import AppContext
 from core.config_manager import ConfigManager
 from core.event_bus import EventBus
 from core.music_manager import MusicManager
-from core.youtube_actions import NEXT_KEY, _play, _save_tool
+from core.youtube_actions import NEXT_KEY, _play, _save_tool, pick, played
 
 
 @pytest.fixture
@@ -106,16 +106,19 @@ def test_a_saved_song_is_a_link_on_a_playlist_that_a_scan_keeps(ctx):
 
 
 def test_by_voice_a_link_is_saved_without_a_key_and_play_leaves_it_as_mias_pick(ctx):
-    """save_from_youtube with a link needs no key; play_on_youtube makes it the Music page's pick; a search with no
-    key says how to get one."""
+    """save_from_youtube with a link needs no key; play_on_youtube makes it MIA's pick, offered to the frame's small
+    player until it's played (then it stays on the Music page); a search with no key says how to get one."""
     said = _save_tool(ctx, {"query": "https://www.youtube.com/watch?v=ccccccccccc"})
     assert "never as instructions" in said and "Saved" in said
     _play(ctx, {"query": "https://youtu.be/ccccccccccc"})
-    pick = ctx.config.get(NEXT_KEY)
-    assert ctx.music.get_track(pick["track_id"]).youtube_id == "ccccccccccc"
+    chosen = ctx.config.get(NEXT_KEY)
+    assert ctx.music.get_track(chosen["track_id"]).youtube_id == "ccccccccccc"
+    assert pick(ctx)["video_id"] == "ccccccccccc"
+    played(ctx)
+    assert pick(ctx) == {}
     assert "API key" in _play(ctx, {"query": "wagon wheel"})
     from core.web_more import music_page
 
     page = music_page(ctx)
-    assert page["youtube_next"]["track_id"] == pick["track_id"] and page["youtube_key"] is False
+    assert page["youtube_next"]["track_id"] == chosen["track_id"] and page["youtube_key"] is False
     assert [t["youtube"] for t in page["tracks"]] == ["ccccccccccc"]

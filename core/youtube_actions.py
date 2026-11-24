@@ -7,8 +7,8 @@ YouTube in Music, from the screen and by voice (core/youtube_music.py; DEC-0125,
 The action `youtube.save` keeps a YouTube song in the library as a link (and on a playlist, when one is named),
 from the Music page's YouTube tab. The tools: `find_on_youtube` says the top songs for his words;
 `save_from_youtube` saves the top one (or a link he gave) and can put it on a playlist; `play_on_youtube` saves it
-and sets it as MIA's pick for the Music page (`music.youtube_next`), where one press plays it in YouTube's player (a
-voice turn has no screen to play a video on). A search needs his YouTube key; a link never does. Removing a saved
+and sets it as MIA's pick (`music.youtube_next`): the page he has open starts it in a small YouTube player (web/shell.js,
+`pick` and `played`), and it waits at the top of Music to play again. A search needs his YouTube key; a link never does. Removing a saved
 song is the library's own `track.delete`.
 """
 
@@ -17,7 +17,27 @@ from __future__ import annotations
 from core.actions import ACTION_TYPES, ActionError, ActionType
 from core.assistant_actions import AssistantAction
 
-NEXT_KEY = "music.youtube_next"  # MIA's pick for the Music page: {track_id, title}
+NEXT_KEY = "music.youtube_next"  # MIA's pick: {track_id, title, video_id, at, played}
+
+
+def pick(context) -> dict:
+    """MIA's pick by voice not yet played, for the frame's small player: {track_id, title, video_id, at}, or {}."""
+    found = context.config.get(NEXT_KEY) if getattr(context, "config", None) is not None else None
+    if not isinstance(found, dict) or found.get("played") or not found.get("video_id"):
+        return {}
+    return {k: found.get(k, "") for k in ("track_id", "title", "video_id", "at")}
+
+
+def played(context) -> None:
+    """The frame started MIA's pick: marked played (bookkeeping, outside undo), so it isn't started again. It stays
+    at the top of Music to play again."""
+    from core import undo_log
+
+    found = context.config.get(NEXT_KEY)
+    if isinstance(found, dict) and not found.get("played"):
+        with undo_log.outside_undo():
+            context.config.set(NEXT_KEY, {**found, "played": True})
+            context.config.save()
 
 
 def _music(context):
@@ -148,13 +168,18 @@ def _save_tool(context, arguments: dict) -> str:
 
 def _play(context, arguments: dict) -> str:
     """Tool play_on_youtube: the top song saved and set as MIA's pick on the Music page, one press to play; framed as
-    web text (`_framed`)."""
+    web text (`_framed`).
+    The pick carries its video id and when it was asked, so the page open starts it in a small player once."""
     track, said = _keep(context, arguments)
     if track is None:
         return said
-    context.config.set(NEXT_KEY, {"track_id": track.track_id, "title": track.title})
+    from datetime import datetime
+
+    context.config.set(NEXT_KEY, {"track_id": track.track_id, "title": track.title, "video_id": track.youtube_id,
+                                  "at": datetime.now().isoformat(timespec="seconds"), "played": False})
     context.config.save()
-    return _framed(f"{said} It's ready at the top of Music: press play there and it plays in YouTube's player.")
+    return _framed(f"{said} It's playing in a small YouTube player on the page you have open (or press play at the "
+                   f"top of Music).")
 
 
 def register_youtube_actions(registry) -> None:

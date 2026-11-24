@@ -6,6 +6,7 @@ Looking things up online, when asked (core/online_lookup.py, DEC-0053,
 T-0017): only the search words leave the computer, only to the person's
 own SearXNG, never when offline, off or on a child's account, and every
 result is said with its source and date as content from the web.
+And the real connectivity monitor's status, a property, read as one.
 """
 
 import json
@@ -95,3 +96,10 @@ def test_a_child_account_never_searches(monkeypatch):
 
     monkeypatch.setattr(child_accounts, "is_child", lambda context, profile_id=None: True)
     assert ol.allowed(SimpleNamespace()) == (False, "Looking things up online is off on a child's account.")
+
+
+def test_the_real_monitors_status_is_read_as_the_property_it_is():
+    """core/connectivity.py's monitor has `status` as a property, not a method: offline is refused, online allowed
+    (2026-11-24: calling it raised TypeError, so every real lookup failed)."""
+    assert not ol.allowed(SimpleNamespace(connectivity=SimpleNamespace(status="offline")))[0]
+    assert ol.allowed(SimpleNamespace(connectivity=SimpleNamespace(status="online")))[0]

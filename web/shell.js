@@ -262,7 +262,7 @@
    * closed (/api/achievements/seen: bookkeeping, never an undoable change), so leaving the page mid-way loses none
    * and repeats none. Checks are spaced (`GAP` ms) and a change during one is checked after it, never dropped. A
    * finished mission or a level reached from an action gets its own card too, without a second sound (the action
-   * already played one).
+   * already played one). The same check starts a song MIA was asked to play on YouTube, in a small player.
    */
   const cards = (() => {
     const RARITY = ["r-common", "r-uncommon", "r-rare", "r-epic", "r-legendary"];
@@ -314,10 +314,24 @@
         if (fresh.length && got.more) fresh[fresh.length - 1] = Object.assign({}, fresh[fresh.length - 1], { more: got.more });
         fresh.forEach(add);
       } catch (e) { /* a card can wait for the next page */ }
+      try { if (MIA.youtubeNext) miniYouTube(await MIA.youtubeNext()); } catch (e) { /* the Music page still has it */ }
       finally {
         checking = false;
         if (again) { again = false; check(); }
       }
+    }
+    // MIA's pick by voice ("play Wagon Wheel on YouTube", core/youtube_actions.py): a small YouTube player on whatever
+    // page is open, started at once (the browser may ask for one press), marked played so it isn't started twice.
+    function miniYouTube(p) {
+      if (!p || !/^[A-Za-z0-9_-]{11}$/.test(p.video_id || "") || document.getElementById("yt-mini")) return;
+      const box = el("aside", { class: "yt-mini glass", id: "yt-mini", "aria-label": "Playing from YouTube" },
+        el("div", { class: "yt-mini-head" }, el("span", {}, "▶ " + (p.title || "YouTube")),
+          el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => box.remove() }, "Close")),
+        el("div", { class: "yt-frame" }, el("iframe", { title: "YouTube player", allow: "autoplay; encrypted-media; picture-in-picture",
+          allowfullscreen: true, referrerpolicy: "strict-origin-when-cross-origin",
+          src: "https://www.youtube-nocookie.com/embed/" + p.video_id + "?autoplay=1&rel=0&modestbranding=1" })));
+      document.body.append(box);
+      MIA.youtubeNextPlayed().catch(() => { /* it may start once more on the next page: harmless */ });
     }
     // A mission finished or a level reached by an action just taken (the action played its sound already).
     function reward(r) {

@@ -772,6 +772,9 @@
     youtubeSearch: (q) => demo ? Promise.resolve({ songs: [], problem: "The demo can't search YouTube.", needs_key: false })
       : call("GET", "/api/music/youtube/search?q=" + encodeURIComponent(q)),
     youtubeKey: (key) => demo ? demoOnly() : call("POST", "/api/music/youtube/key", { key }),
+    // MIA's pick by voice (play_on_youtube) for the frame's small player, and that it was started.
+    youtubeNext: () => demo ? Promise.resolve({}) : call("GET", "/api/music/youtube/next"),
+    youtubeNextPlayed: () => demo ? Promise.resolve({}) : call("POST", "/api/music/youtube/next/played"),
     files: (folder) => read("/api/files" + (folder ? "?path=" + encodeURIComponent(folder) : ""), "files"),
     money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),

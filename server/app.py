@@ -609,7 +609,8 @@ def create_app(context: AppContext) -> FastAPI:
     /api/achievements and /api/achievements/new serve the achievements log and the cards not yet seen
     (core/achievement_cards.py).
     POST /api/achievements/seen marks cards seen by id, outside undo.
-    /api/music/youtube/search and /api/music/youtube/key are YouTube in Music's (core/youtube_music.py)."""
+    /api/music/youtube/search and /api/music/youtube/key are YouTube in Music's (core/youtube_music.py).
+    /api/music/youtube/next and /next/played hand MIA's pick by voice to the frame's small player."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2625,6 +2626,24 @@ def create_app(context: AppContext) -> FastAPI:
             return {"songs": [], "problem": str(problem), "needs_key": True}
         except RuntimeError as problem:
             return {"songs": [], "problem": str(problem), "needs_key": False}
+
+    @app.get("/api/music/youtube/next")
+    def web_youtube_next(profile_id: str = Depends(require_profile_id)) -> dict:
+        """MIA's pick by voice not yet played (core/youtube_actions.pick), for the frame's small YouTube player."""
+        from core.child_accounts import app_allowed
+        from core.youtube_actions import pick
+
+        view = view_for(context, profile_id)
+        return pick(view) if app_allowed(view, "music") else {}
+
+    @app.post("/api/music/youtube/next/played")
+    def web_youtube_next_played(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The frame started MIA's pick: marked played, outside undo (core/youtube_actions.played)."""
+        from core.youtube_actions import played
+
+        with app.state.turn_lock:
+            played(view_for(context, profile_id))
+        return {"ok": True}
 
     @app.post("/api/music/youtube/key")
     def web_youtube_key(body: YouTubeKeyRequest, profile_id: str = Depends(require_profile_id)) -> dict:

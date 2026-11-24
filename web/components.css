@@ -539,6 +539,10 @@ dialog.ach-card.r-legendary { --card-glow: var(--rarity-legendary); }
 .yt-row { align-items: center; }
 .yt-thumb { width: 96px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); flex: none; }
 .yt-key input { flex: 1 1 220px; min-width: 0; }
+.yt-mini { position: fixed; right: 16px; bottom: 16px; width: min(360px, calc(100vw - 32px)); z-index: 40;
+  padding: 8px; border-radius: var(--radius); display: grid; gap: 6px; }
+.yt-mini-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--text-sm); }
+.yt-mini-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- focus ---------- */
 :focus-visible {
