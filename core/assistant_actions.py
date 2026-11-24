@@ -166,8 +166,10 @@ def _summary_of(name: str, arguments: dict) -> str:
 
 
 
-# A question's own words: "can you add milk?" is a request, never one of these
-_ASKS = re.compile(r"\b(?:how|what|when|why|which|who|is|are|do|does|did|should|would)\b")
+# A question starts with its own word, after at most a short "Topic," lead ("Broilers, how much feed..."): a tag
+# question ("add a task to call the vet, would you?") and dictated words ("add a note that says what is the wifi
+# password?") stay commands, and "can you add milk?" is a request
+_ASKS = re.compile(r"^(?:[\w' ]{1,24},\s*)?(?:how|what|when|why|which|who|is|are|do|does|did|should|would)\b")
 
 def _whole(name: str, text: str) -> bool:
     """Pure logic. Whether a record's name is in the text as whole words, a plural or possessive ending allowed:

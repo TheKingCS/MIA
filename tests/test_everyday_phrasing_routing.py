@@ -155,5 +155,10 @@ def test_a_real_today_question_still_reaches_todays_plan():
 
 
 def test_a_question_never_forces_a_change(registry):
+    """A question starting with a tool's phrase isn't forced; a tag question or dictated words stay a command."""
     assert registry.named_action("Broilers, how much feed do 25 need?", ["start_broilers", "broilers_status"]) is None
     assert registry.named_action("got broilers today, 25 of them", ["start_broilers"]) == "start_broilers"
+    # a tag question or dictated words stay a command
+    assert registry.named_action("add a recipe for venison chili, would you?", ["add_recipe"]) == "add_recipe"
+    assert registry.named_action("add a note that says what is the wifi password?", ["add_note"]) == "add_note"
+    assert registry.named_action("add a task: the gate is broken?", ["add_task"]) == "add_task"
