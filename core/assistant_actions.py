@@ -21,7 +21,10 @@ Same pluggable-registry shape as core/calculator_engine.py: register()
 here, core/application.py wires the built-in actions in
 (`_register_assistant_actions()`, mirroring `_register_calculators()`),
 so this file doesn't need to know about ModuleManager or any specific
-manager directly.
+manager directly. A message reaches a domain by an app's own words
+(`matched_domains_by_words`: trigger phrases and keywords) or by naming
+one of the person's records (`_entity_domains`); the difference lets a
+how-to about his own chainsaw be the world's, not a question about MIA.
 
 A handler receives the AppContext and the LLM's parsed arguments dict,
 and returns a short human-readable confirmation string. There is
@@ -284,6 +287,17 @@ class AssistantActionRegistry:
                     domains.add(domain)
                     break
         return domains
+
+    def matched_domains_by_words(self, prompt: str, context: Optional["AppContext"] = None) -> set[str]:
+        """The domains a message reaches by an app's own words: a tool's trigger phrase or a domain's keywords,
+        never only by naming one of the person's records (that's `_entity_domains`)."""
+        lowered = f" {prompt.lower().strip()} "
+        found = {a.domain for a in self._actions.values() if any(p in lowered for p in a.trigger_phrases)}
+        words = set(re.findall(r"[a-z0-9'-]+", lowered))
+        for domain, keywords in self._domain_keywords.items():
+            if any((k in lowered) if " " in k else (k in words) for k in keywords):
+                found.add(domain)
+        return found
 
     def named_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
         """The domains whose records `prompt` names, as the keyword router sees them; for a model that needs to know

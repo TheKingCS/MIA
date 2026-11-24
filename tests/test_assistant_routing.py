@@ -6,7 +6,8 @@ Enforces tests/assistant_routing_corpus.py against the real desktop
 action registry: every realistic request reaches its tool, how-to
 questions about using MIA reach the help docs (and how-to questions about
 the world, "how do I tie a bowline?", don't: they get her library, told to
-explain, not act), and small talk stays tool-free. Plus unit
+explain, not act; nor teach-me requests about the world or about his own
+things, "teach me how to sharpen a chainsaw"), and small talk stays tool-free. Plus unit
 tests for the pieces that make that work (record-name lookup, quantity
 parsing, keyword/record-name matching).
 """
@@ -225,3 +226,25 @@ def test_a_world_how_to_on_the_tools_path_is_told_to_explain_not_act(registry):
     assert tools and "Don't add, log or change anything" in messages[0]["content"]
     messages, tools = build_chat_request(context, talk, "log 20 minutes of knot practice")
     assert "Don't add, log or change anything" not in messages[0]["content"]  # a request to do it is done
+
+
+@pytest.mark.parametrize("prompt", ["teach me how to sharpen a chainsaw", "teach me about rotational grazing",
+                                    "how do I sharpen the chainsaw"])
+def test_teaching_and_how_to_about_the_world_or_his_own_things_are_not_held_to_her_pages(registry, prompt):
+    from types import SimpleNamespace
+
+    from core.assistant_chat import looks_like_teaching_request
+
+    asking = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    assert not looks_like_teaching_request(prompt, asking) and not looks_like_how_to_question(prompt, asking), prompt
+
+
+@pytest.mark.parametrize("prompt", ["walk me through the budget page", "teach me how to add a recipe",
+                                    "how do I set an alarm", "teach me how to use the mission board"])
+def test_teaching_about_using_her_still_is(registry, prompt):
+    from types import SimpleNamespace
+
+    from core.assistant_chat import looks_like_teaching_request
+
+    asking = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    assert looks_like_teaching_request(prompt, asking) or looks_like_how_to_question(prompt, asking), prompt

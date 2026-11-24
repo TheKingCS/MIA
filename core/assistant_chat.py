@@ -337,9 +337,10 @@ _TEACHING_TRIGGER_PHRASES = (
 
 
 def looks_like_teaching_request(prompt: str, context=None) -> bool:
-    """A teach-me request about MIA ("walk me through the budget"): one of `_TEACHING_TRIGGER_PHRASES`, and, when
-    `context` has a tool registry to ask, about her (`about_mia`): "teach me how to butcher a chicken" is about the
-    world, so it isn't held to her own pages."""
+    """A teach-me request about MIA ("walk me through the budget page"): one of `_TEACHING_TRIGGER_PHRASES`, and, when
+    `context` has a tool registry to ask, about her (`about_mia`): "teach me how to butcher a chicken", "teach me
+    about rotational grazing" (her library's) and "teach me how to sharpen a chainsaw" (his chainsaw named, no app
+    verb) are about the world, so they aren't held to her own pages."""
     prompt_lower = prompt.lower()
     if not any(phrase in prompt_lower for phrase in _TEACHING_TRIGGER_PHRASES):
         return False
@@ -379,13 +380,23 @@ _WORLD_PREFIXES = ("how do i", "how do you", "how can i", "how would i", "how sh
 WORLD_DOMAINS = ("library", "knowledge", "learning", "plans")  # tools for the world, not for something she keeps
 
 
+# Something done in an app, right after "how do I" or "teach me how to": the sign a record's tool is meant
+_APP_VERB = re.compile(r"(?:add|log|record|enter|delete|remove|edit|rename|undo|set up|set an?|track|export|import|"
+                       r"mark|schedule|cancel|archive|pin|make an? (?:note|mission|reminder|alarm|list|budget|quote|"
+                       r"order|project|task)|use the|see my|find my|change my)\b")
+_TEACH_LEADS = ("teach me how to", "teach me how", "teach me about", "teach me", "walk me through", "show me how to",
+                "explain how to")
+
+
 def about_mia(prompt: str, context=None) -> bool:
-    """Whether a how-to question is about using MIA: it names her or a part of her (`_ABOUT_MIA`, after the "how do
-    I" so "how do you purify water?" isn't), or a tool for something she keeps matches it (any tool outside
-    `WORLD_DOMAINS` in `context.assistant_actions`). It's about the world only when tools matched and every one is
-    for the world (her library, learning, plans); with nothing matched, or no registry to ask, it's hers."""
+    """Whether a how-to question or teach-me request is about using MIA: it names her or a part of her
+    (`_ABOUT_MIA`, after its lead so "how do you purify water?" isn't), or a tool for something she keeps matches
+    it by its own phrase or with an app verb ("how do I set an alarm", "teach me how to add a recipe"). A tool brought
+    only by one of his records being named ("how do I sharpen a chainsaw": he has a chainsaw) doesn't make it hers.
+    Every match a world tool (her library, learning, plans): the world's ("teach me about rotational grazing"
+    reaches her library). Nothing matched, or no registry to ask: hers (the safe side)."""
     lowered = prompt.lower().strip()
-    rest = next((lowered[len(p):] for p in _WORLD_PREFIXES if lowered.startswith(p)), lowered)
+    rest = next((lowered[len(p):] for p in (*_WORLD_PREFIXES, *_TEACH_LEADS) if lowered.startswith(p)), lowered)
     if _ABOUT_MIA.search(rest):
         return True
     registry = getattr(context, "assistant_actions", None) if context is not None else None
@@ -395,8 +406,23 @@ def about_mia(prompt: str, context=None) -> bool:
         matched = registry.matching_actions(prompt, context)
     except Exception:  # noqa: BLE001 - when in doubt it's hers, as before
         return True
-    domains = [a.get("domain") if isinstance(a, dict) else getattr(a, "domain", None) for a in matched]
-    return not domains or any(d not in WORLD_DOMAINS for d in domains)  # nothing matched: hers, as before
+    if not matched:
+        return True
+
+    def domain(a):
+        """A matched tool's domain."""
+        return a.get("domain") if isinstance(a, dict) else getattr(a, "domain", None)
+
+    kept = [a for a in matched if domain(a) not in WORLD_DOMAINS]
+    if not kept:
+        return False  # only her library, learning or plans: the world's
+    try:  # the apps brought only because one of his records was named ("the chainsaw"), not by their own words
+        named_only = registry._entity_domains(prompt, context) - registry.matched_domains_by_words(prompt, context)
+    except Exception:  # noqa: BLE001 - a registry without the split: as before, hers
+        named_only = set()
+    if any(domain(a) not in named_only for a in kept):
+        return True  # an app's own words ("missions", "a bill", "set an alarm")
+    return bool(_APP_VERB.match(rest.strip(" ,")))  # "teach me how to add the chainsaw": hers; "sharpen" it: the world's
 
 
 def looks_like_how_to_question(prompt: str, context=None) -> bool:
