@@ -4172,6 +4172,6 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 ### DEC-0292: An evening wrap
 - Status: APPROVED (Zac, 2026-11-23: "Yes")
 - Proposed by: claude (Opus), 2026-11-23, the brainstorm's round 2
-- Decision: Once an evening, through the communication gate (paced, mutable like any of her messages): what got done today, tomorrow's first thing and tomorrow's weather, in two sentences, at the hour he usually winds down (his own activity, else 8 pm). Facts from his records, worked out in code.
+- Decision: Once an evening, through the communication gate (paced, mutable like any of her messages): what got done today, tomorrow's first thing and tomorrow's weather, in two sentences, from the hour he sets (8 pm unless he sets another: `evening_wrap.hour`). Facts from his records, worked out in code.
 - Record: core/evening_wrap.py
 - Related: DEC-0171

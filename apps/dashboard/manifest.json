@@ -88,7 +88,8 @@
       "weather_for_my_plans",
       "anything_unusual",
       "where_were_we",
-      "how_prepared"
+      "how_prepared",
+      "evening_wrap"
     ],
     "actions": [
       "direction.add",
@@ -178,7 +179,8 @@
       "weather_for_my_plans": "observe",
       "anything_unusual": "observe",
       "where_were_we": "observe",
-      "how_prepared": "observe"
+      "how_prepared": "observe",
+      "evening_wrap": "observe"
     },
     "outside": [
       "whats_in_the_workspace"
@@ -204,7 +206,8 @@
     "background": [
       "chronicle",
       "chronicle_issue",
-      "weather_watch"
+      "weather_watch",
+      "evening_wrap"
     ]
   }
 }

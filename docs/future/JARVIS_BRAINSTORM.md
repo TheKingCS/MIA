@@ -47,7 +47,8 @@ device. Builds on: `core/life_notes.py` (promises, decisions, ideas, offered aft
 `core/links.py`. The new part: a conversation's open threads, picked up next time ("Last time you were deciding
 between the 2x6 and the 2x8 for the coop floor; did you settle it?"), paced by the gate.
 
-**1.3 Her picture of him, kept current and his to see.** M, needs Zac's go (it's the parked "self-knowledge map",
+**1.3 Her picture of him, kept current and his to see.** *Built 2026-11-23 on his yes (DEC-0290): the You page
+(`core/picture_of_you.py`, `web/you.html`), and "what do you know about me?" says it.* M, needs Zac's go (it's the parked "self-knowledge map",
 personality phase 3). One page: what she believes about him (hobbies, projects, skills and their level, what he
 likes in an answer), each belief with where it came from and a button to correct or forget it. Every answer reads
 it, so she stops asking what she should already know. Builds on: memory, `core/person_settings.py`, the skills
@@ -275,6 +276,7 @@ New ideas, each checked against what's there first:
   said once a bag when it's down to five days.
 - **The day before a market** (S, no decision): built 2026-11-23 (`core/market_eve.py`): what to bring from what
   usually sells (his own closed markets), beside what's on hand and what's short, the day before a market day he set.
-- **A quiet evening wrap** (M, his say: it's a new daily message): what got done today, tomorrow's first thing, the
+- **A quiet evening wrap**: *built 2026-11-23 on his yes (DEC-0292, `core/evening_wrap.py`), and "wrap up my
+  day".* (M, his say: it's a new daily message): what got done today, tomorrow's first thing, the
   weather for it, in two sentences, at the hour he usually winds down.
 

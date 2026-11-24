@@ -569,7 +569,7 @@ SECURITY_HEADERS = {
 
 
 def create_app(context: AppContext) -> FastAPI:
-    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); a page that asks (/api/voice/turn?split=1) gets the reply's first part voiced and the rest as text to voice while it plays (core/speech_split.py; only when this computer has a voice of its own for the rest); /api/knowledge/article also reads a PDF's page (`page`, from a source her answer named, core/show_source.py); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
+    """MIA's web server (FastAPI) for the phone, the glasses and the desktop's web view: sign-in sessions by bearer token (or a linked phone's device key), the access switch that turns away forwarded requests when phone access is off, every /api route (each runs on the signed-in person's own view, view_for), and the web front end served fresh at /web/. Your Data (/api/your-data, export and delete) and the sealed-files recovery key sit beside the security log here; the Theme Studio (now Appearance, with "Your look") reads /api/themes and asks /api/themes/design and /api/themes/picture for a theme from words or a picture (DEC-0136, DEC-0184, A7); the live stream (/api/live) also says what MIA is doing for her orb (a presence event: the state, and in a few words what a lookup is for, core/orb_state.py); a page that asks (/api/voice/turn?split=1) gets the reply's first part voiced and the rest as text to voice while it plays (core/speech_split.py; only when this computer has a voice of its own for the rest); /api/knowledge/article also reads a PDF's page (`page`, from a source her answer named, core/show_source.py); /api/picture is the Picture of You (core/picture_of_you.py, DEC-0290); MIA paints through /api/art (DEC-0140), Portal Pictures is /api/portals, Look It Up Online is /api/lookup (DEC-0053), Trade Master is /api/trades (DEC-0149), Tracks is /api/tracks (DEC-0099), the second monitor's ambient view reads /api/ambient (core/ambient.py, DEC-0231), sensors send their readings to
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
@@ -3002,6 +3002,16 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return screen(view_for(context, profile_id), campaign)
+
+    @app.get("/api/picture")
+    def web_picture(profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Picture of You (core/picture_of_you.picture, DEC-0290): what MIA remembers about the person, grouped, each
+        with how she knows it and where from; their skills, learning and answer style. Fix and Forget are memory.*
+        actions."""
+        from core.picture_of_you import picture
+
+        with app.state.turn_lock:
+            return picture(view_for(context, profile_id))
 
     @app.get("/api/answers")
     def web_answers(profile_id: str = Depends(require_profile_id)) -> dict:

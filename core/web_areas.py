@@ -93,6 +93,8 @@ SIGNINS = Page("signins", "Sign-Ins", "passwords", "Who signed in, from where.",
 CONNECT = Page("connect", "Connect Apps", "settings", "Your accounts, linked.", "connect.html")
 ABOUT = Page("about", "About MIA", "assistant", "What she is, what she's for, what she knows.", "about.html")
 ANSWERS = Page("answers", "How MIA Answers", "assistant", "How long, laid out how, the tone: your way.", "answers.html")
+YOU = Page("you", "The Picture of You", "assistant", "What she knows about you, how she knows it, and fixing it.",
+           "you.html")
 STUDIO = Page("studio", "Theme Studio", "settings", "Make MIA look like you: themes, colours, light.", "studio.html")
 TRADES = Page("trades", "Trade Master", "workshop", "Any job or diagnosis, walked through step by step.", "trades.html")
 PLANNER = Page("planner", "Planner", "workshop", "Plan a build or a garden together; confirmed, its steps are missions.",
@@ -142,7 +144,7 @@ AREAS: tuple[Area, ...] = (
          ("missions", PROJECTS, "dungeon", "skills", "character", "reward_shop", PARTY, CHRONICLE, WHY, DIRECTIONS),
          hue="#c86bff"),
     Area("settings", "Settings", "settings", "Make MIA yours, keep it safe, see how she's doing.",
-         ("settings", STUDIO, ANSWERS, ABOUT, "module_browser"), hue="#dfe9f2"),
+         ("settings", STUDIO, YOU, ANSWERS, ABOUT, "module_browser"), hue="#dfe9f2"),
     # ---- Home's subdashboards
     Area("kitchen", "Kitchen", "kitchen", "Meals, recipes and the pantry.", ("kitchen",), hue="#e9d4a8", parent="home",
          shortcuts=("plan",)),

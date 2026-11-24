@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1630 files, 357,637 lines; 1630 files describe themselves; 19,666 of 19,789 classes and functions are documented.
+1635 files, 358,086 lines; 1635 files describe themselves; 19,688 of 19,813 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-641 files, 182,119 lines; 9,325 of 9,411 classes and functions documented
+643 files, 182,383 lines; 9,339 of 9,425 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -216,6 +216,7 @@
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), "trac
+- `core/evening_wrap.py`: The evening wrap (DEC-0292; Zac, 2026-11-23: "Yes"): once an evening, two sentences: what got done today, then tomorrow's first thing and tomorrow's weather. Everything from his records, worked out in code: today's wins from the history (core/life_events.py), tomorrow's list (core/today.py, overdue 
 - `core/event_bus.py`: A minimal publish/subscribe event bus.
 - `core/event_catalog.py`: The event catalogue (build plan step 7, the module contract's first piece; Part 1's gap: "no catalogue of the events modules emit and consume"). Read from the code itself, never written by hand: every event a file publishes on the event bus (core/event_bus.py: `events.publish("x", ...)`, or core's `
 - `core/expedition_manager.py`: Top-level container for an Expedition Mode outing — docs/ROADMAP.md milestone 12.1. A single Expedition (e.g. a long weekend spent in one area) can hold multiple core.trip_manager.Trip records — one per activity/leg (e.g. Saturday's hike-in, Sunday's fishing trip, both under one Expedition). Same pe
@@ -402,6 +403,7 @@
 - `core/personality.py`: MIA's personality in one place (DEC-0067; the guide is docs/design/MIA_VOICE.md). Every prompt that speaks as her takes who she is from here: IDENTITY and CHARACTER. Zac's picks (2026-11-03): a companion, natural humor, independent initiative, with JARVIS's composure, EDITH's capability and Cortana'
 - `core/phone_link.py`: When a linked phone last reached this PC (build plan step 3's `phone.link`; the server kept it only in memory, so a restart forgot it). `seen()` is called when a linked phone's device key signs a request in (server/app.py); it writes at most once every `EVERY` per person, so a busy phone costs nothi
 - `core/phone_server.py`: Turning phone access on and off from Settings (2026-09-28), instead of hand-editing `server.enabled` in config/config.json (one missing comma there and MIA won't read its config).
+- `core/picture_of_you.py`: The picture of him (DEC-0290; Zac, 2026-11-23: "Yes, build it"; the personality plan's parked phase 3, the self-knowledge map): one page of what MIA believes about him, each belief with where it came from and how she knows it, and a way to correct or forget it. Nothing new is collected: it lays out 
 - `core/places.py`: Location quests (DEC-0028, the game layer's thirteenth idea; Zac, 2026-10-17): arrive at the gym and your workout opens; walk into the store and your grocery list is up.
 - `core/plaid_manager.py`: Bank/brokerage connectivity via Plaid — the one credible third-party path found after real research (2026-09-08): Robinhood has no public stocks API (crypto-only officially; everything else is unofficial and ToS-violating), Chime's own API is a B2B "Partner API," not self service for an individual.  *(21 undocumented)*
 - `core/plain_words.py`: Markdown out of what MIA says (2026-10-30). Models write **bold**, headings and `code`, which the desktop's chat bubbles show as asterisks and hashes and the voice reads as noise. Pure logic.
@@ -652,7 +654,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,731 lines; 57 of 57 classes and functions documented
+2 files, 4,741 lines; 57 of 57 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -939,7 +941,7 @@
 
 ## tests/: the test suite: what each part must do
 
-586 files, 95,038 lines; 7,978 of 8,015 classes and functions documented
+588 files, 95,151 lines; 7,986 of 8,025 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1092,6 +1094,7 @@
 - `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators; a thinking model's working is left out, and only a readable value for a missi
 - `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing input named, never guessed, and no input's description offering a value a model co
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
+- `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
 - `tests/test_expedition_manager.py`: Unit tests for core.expedition_manager. Isolates _DATA_DIR _EXPEDITIONS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths).
@@ -1292,6 +1295,7 @@
 - `tests/test_phone_ready.py`: DEC-0019 (2026-10-07): MIA's engine runs on the phone. The phone has no Qt, no desktop voice, no Plaid, no psutil, no offline library and no Web Push sender, so the engine and server must start, serve every screen and take an action without any of them. This builds both in a fresh process with those
 - `tests/test_phone_server.py`: Phone access from Settings (core/phone_server.py): starting and stopping the real server live, the Tailscale checks, and the status checklist.
 - `tests/test_phone_voice_js.py`: Runs server/static/voice.js (the phone's microphone/end-of-speech/WAV code) under Node via tests/js/voice_harness.js, and checks the WAV it produces against the server's own validator — so the phone and the computer at home are proven to agree on the audio format. Skipped when Node isn't installed.
+- `tests/test_picture_of_you.py`: The picture of him (core/picture_of_you.py, DEC-0290): his memories grouped with how each is known and where from, his skills by level, what he's learning, how he likes answers; said in a few sentences for "what do you know about me?", and the page wired in. *(1 undocumented)*
 - `tests/test_places.py`: Location quests (DEC-0028 #13): places with what arriving does; the phone only gets them when the person switched noticing on; arriving records it and clears the map's fog there; and the same by voice (core/assistant_game_actions.py).
 - `tests/test_plaid_manager.py`: Unit tests for core.plaid_manager — the vault encrypt/decrypt round trip (real core.secrets_manager calls, no network) and poll_for_public_token()'s/extract_completed_public_token()'s stopping logic against fake, duck-typed response objects (SimpleNamespace, not real plaid.model classes — those requ
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).
@@ -1530,7 +1534,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-117 files, 22,024 lines
+118 files, 22,086 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/ambient.js`: ambient.js: the ambient view (claude, 2026-11-17, DEC-0231, Zac's Q-80). Renders MIA.ambient() (core/ambient.py): the clock (this device's own, once a second), the date and weather, what's due now and the next thing, what's playing, the mission in play and what MIA is doing. Re-read on the live sign
@@ -1648,6 +1652,7 @@
 - `web/workshop.js`: workshop.js — the Workshop screen (claude, 2026-10-16; Zac: the app only opened a chat). Renders MIA.workshop() (core/web_more.py) in tabs: Recipes and Builds (crafting recipes, DEC-0030: what a recipe needs and what's short, the shopping list, Bought It, Start Build, steps, Finish, photos, Sold It 
 - `web/worldmap.js`: worldmap.js — the World Map with fog of war (claude, 2026-10-17, DEC-0028). Renders MIA.worldmap() (core/world_map.py): the cleared tiles over the fog on a canvas, pins (photos where they were taken, places you reached, "?" for waypoints nobody has reached yet), how much ground that is, and the achi
 - `web/worlds.js`: worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phases 1 and 2). Renders MIA.worlds(campaign) (core/web_worlds.py): your character and who they are in each world; the worlds, each with its campaigns; one campaign opened with the character's version in it (stats, skills, what they carry) and 
+- `web/you.js`: you.js — The Picture of You (DEC-0290, claude, 2026-11-23). Renders MIA.picture() (core/picture_of_you.py): what MIA remembers about you, grouped, each with how she knows it and where it came from, with Fix and Forget (memory.fix, memory.forget: undoable); your skills by level; what you're learning 
 - `web/yourdata.js`: yourdata.js — Your Data (claude, 2026-11-08; docs/SECURITY.md step 8). Renders MIA.yourData() (core/your_data.py): the person's own files and their household's shared ones, each with what it is, how many records, its size and whether it's sealed on disk (DEC-0126); her latest answers with the tools 
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link

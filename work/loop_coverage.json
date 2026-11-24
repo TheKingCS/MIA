@@ -444,6 +444,10 @@
   "check:market_eve": {
    "status": "none",
    "why": "his market days and goods, with how much to bring worked out in code from his own closed markets (core/goods.demand, already a figure that learns from each market); said once per market day, paced by the gate"
+  },
+  "check:evening_wrap": {
+   "status": "none",
+   "why": "his own records said once an evening; the gate's pacing learns from whether he opens or dismisses it (topic evening_wrap), and he can mute it from the message"
   }
  }
 }

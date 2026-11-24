@@ -33,16 +33,18 @@ def test_my_focus_reflects_the_night_school_directive(monkeypatch):
 
 
 def test_what_i_know_about_you_is_grounded_and_honest():
+    """Honest with nothing known; with directions and memories, the picture of him and where to fix it."""
     # nothing known yet
     assert "still getting to know you" in self_knowledge.what_i_know_about_you(SimpleNamespace())
-    # with directions, memories and learned style
+    # with directions and memories: the picture of him (core/picture_of_you.py, DEC-0290) says what she holds
     directions = SimpleNamespace(active=lambda: [SimpleNamespace(title="From consumer to producer"),
                                                  SimpleNamespace(title="Whimsy, art & tranquility")])
-    memories = SimpleNamespace(all_memories=lambda: [1, 2, 3])
-    style = SimpleNamespace(picks=[1])
-    ctx = SimpleNamespace(direction=directions, user_memories=memories, response_style=style)
+    memory = lambda i: SimpleNamespace(memory_id=str(i), text=f"fact {i}", category="Projects", how="said",  # noqa: E731
+                                       source="", source_conversation_id=None, confirmed_at="", created_at="")
+    memories = SimpleNamespace(all_memories=lambda: [memory(1), memory(2), memory(3)])
+    ctx = SimpleNamespace(direction=directions, user_memories=memories)
     text = self_knowledge.what_i_know_about_you(ctx)
-    assert "From consumer to producer" in text and "3 things" in text and "how you like me to answer" in text
+    assert "From consumer to producer" in text and "3 things" in text and "You page" in text
 
 
 def test_a_missing_source_is_a_quiet_gap_not_a_crash():

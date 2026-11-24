@@ -73,7 +73,7 @@ CHECKS_THAT_ONLY_OFFER = frozenset({"self_changes", "checkin", "budget_nudge", "
                                     "skill_decline_insight", "skill_momentum_insight", "walkthrough_suggestion",
                                     "journal_reflection", "memory_callback", "season", "operating_journal",
                                     "direction_nudge", "capability_reminder", "update_waiting", "unusual",
-                                    "garden_week", "market_eve"})
+                                    "garden_week", "market_eve", "evening_wrap"})
 # The gate's topics (core/communication_gate.py) of what the checks in CHECKS_THAT_ALWAYS_RUN offer: reminders he set
 # and the greenhouse's alerts, which "stop everything" never holds (as she says in `report`).
 TOPICS_NEVER_HELD = frozenset({"birthday", "calendar_digest", "warranty", "grow_alert", "greenhouse", "weather_watch",

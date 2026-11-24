@@ -87,20 +87,19 @@ def my_focus() -> str:
 
 
 def what_i_know_about_you(context) -> str:
-    """A grounded sketch of what MIA understands about the person — from their stored directions, memories and the
-    answer-style she's learned. Honest about how much (or little) she knows."""
+    """A grounded sketch of what MIA understands about the person — from their stored directions and the picture of
+    them (core/picture_of_you.py: memories by category, skills, learning, answer style). Honest about how much (or
+    little) she knows."""
     bits = []
     book = getattr(context, "direction", None)
     live = _safe(lambda: book.active(), []) if book is not None else []
     if live:
         bits.append("You're steering your life by: " + "; ".join(d.title for d in live) + ".")
-    memories = getattr(context, "user_memories", None)
-    count = _safe(lambda: len(memories.all_memories()), 0) if memories is not None else 0
-    if count:
-        bits.append(f"I'm holding {count} thing{'s' if count != 1 else ''} I remember about you.")
-    style = getattr(context, "response_style", None)
-    if style is not None and _safe(lambda: bool(style.picks), False):
-        bits.append("And I'm learning how you like me to answer.")
+    from core import picture_of_you  # what she remembers, his skills, learning and answer style (DEC-0290)
+
+    picture = _safe(lambda: picture_of_you.say(context), "")
+    if picture and not picture.startswith("I don't hold much"):
+        bits.append(picture)
     return " ".join(bits) or "Honestly, I'm still getting to know you — tell me what matters, and I'll remember."
 
 

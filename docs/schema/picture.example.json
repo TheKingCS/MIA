@@ -1,0 +1,58 @@
+{
+  "memories": [
+    {
+      "category": "Projects",
+      "items": [
+        {
+          "id": "m1",
+          "text": "Building a chicken coop this spring",
+          "how": "you told me",
+          "source": "a conversation",
+          "confirmed": true,
+          "since": "2026-10-02"
+        }
+      ]
+    },
+    {
+      "category": "Fitness",
+      "items": [
+        {
+          "id": "m2",
+          "text": "Likes to train in the mornings",
+          "how": "my guess from what you said",
+          "source": "a conversation",
+          "confirmed": false,
+          "since": "2026-11-01"
+        }
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Woodworking",
+      "level": 4,
+      "xp": 1250
+    },
+    {
+      "name": "Gardening",
+      "level": 2,
+      "xp": 300
+    }
+  ],
+  "learning": [
+    {
+      "id": "guitar",
+      "name": "Guitar",
+      "stage": 2,
+      "of": 5
+    }
+  ],
+  "answers": [
+    {
+      "name": "How long",
+      "lean": "Short",
+      "word": "Settled"
+    }
+  ],
+  "count": 2
+}

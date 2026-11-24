@@ -52,6 +52,7 @@
         el("p", { class: "ab-you-line" }, you.line || ""),
         el("div", { class: "row-buttons" },
           el("a", { class: "btn btn-ghost btn-small", href: "directions.html" }, you.directions && you.directions.length ? "Your Directions (" + you.directions.length + ")" : "Set a Direction"),
+          el("a", { class: "btn btn-ghost btn-small", href: "you.html" }, "The Picture of You"),
           el("a", { class: "btn btn-ghost btn-small", href: "answers.html" }, "How She Answers" + (you.style_picks ? " (" + you.style_picks + " picks)" : "")),
           el("a", { class: "btn btn-ghost btn-small", href: "yourdata.html" }, "Everything She Keeps"))),
       el("p", { class: "dim ab-say" }, "Say \"what are you?\", \"what are you trained for?\" or \"what do you know about me?\" any time."),

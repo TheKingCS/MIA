@@ -256,6 +256,7 @@
     art: () => read("/api/art", "art"),  // MIA's paintings (DEC-0140)
     directions: () => read("/api/directions", "directions"),  // My Directions (DEC-0141)
     answers: () => read("/api/answers", "answers"),  // How MIA Answers (DEC-0138)
+    picture: () => read("/api/picture", "picture"),  // The Picture of You (DEC-0290, core/picture_of_you.py)
     about: (here) => read("/api/about?here=" + encodeURIComponent(here || "pc"), "about"),  // About MIA (DEC-0142), how her apps are on this device (DEC-0057)
     trailMaps: () => read("/api/trail-maps", "trail_maps"),  // Trail Maps (core/web_trails.py)
     connections: () => read("/api/connections", "connections"),  // Connections (DEC-0146)
