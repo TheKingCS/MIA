@@ -137,8 +137,9 @@ _MODULE_NAME_MATCH_BONUS = 10
 #: with actual conversation content.
 GROUNDING_INSTRUCTION = (
     "Answer the user's question from the reference material below when it covers it. If it's about MIA "
-    "herself and the material doesn't cover it, say honestly that it may not be something MIA does yet and "
-    "offer the closest thing she can do; never invent a feature. For anything else, use your own knowledge "
+    "herself and the material doesn't cover it, say plainly in one sentence that it isn't something you can do yet, "
+    "then in another what you can do that comes closest, from the material; never invent a feature or a general "
+    "limit, and never answer with \"I don't have information\" or \"I'm not sure\". For anything else, use your own knowledge "
     "and say when you're not sure. Never just say you don't know. Answer in plain conversational text, no "
     "markdown links, citations, or bracketed source names."
 )
