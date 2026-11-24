@@ -8,6 +8,22 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### The hub and the engineer (2026-11-24, `docs/future/HUB_AND_ENGINEER_PLAN.md`)
+
+0zq. [ ] **May MIA find what's on your home network?** Read-only, your network only: she'd list your devices by make
+   and model (the device fabric's first layer, DEC-0128, still a proposal). Nothing is changed or controlled.
+   Recommended: yes, read-only first.
+0zr. [ ] **Your printer and devices.** Which 3D printer, smart plugs, ESP32 or Tasmota devices you have or will buy.
+   Recommended: a printer with a local connection (Klipper or Moonraker, OctoPrint, or a Bambu in LAN mode), and
+   devices that talk MQTT or ESPHome on your network, not through a company's cloud.
+0zs. [ ] **The order.** Recommended: finding and listening to your devices first (read-only), the 3D printer
+   second, writing firmware and designing printable parts third, circuit boards after. The other way: design tools
+   first, before connecting anything.
+0zt. [ ] **Unfinished work lost (my mistake, 2026-11-24).** An unfinished change from 2026-11-08 (transfers between
+   your own accounts kept as transfers, DEC-0042) sat uncommitted in budget_manager.py and plaid_manager.py; a
+   careless restore of mine wiped it. The plaid half is recovered (in the private audit folder); the budget half has
+   to be redone. Plaid is on hold anyway; nothing you use broke. Nothing to do unless you want it rebuilt now.
+
 ### The homestead's brain (2026-11-24, `docs/future/SMART_AG_PLAN.md`)
 
 0zn. [ ] **What's in your orchard?** MIA has nothing for an orchard yet, and it's being built now. Tell her which
