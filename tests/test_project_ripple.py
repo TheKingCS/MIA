@@ -1,7 +1,8 @@
 """What a project touches (core/project_ripple.py, Zac 2026-11-24): "I'm planning to build a greenhouse" reaches the
 project picture, whose sheet carries the build's materials and cost against the workshop's stock, his money and
 freedom date, and each area a greenhouse touches (growing, water, power, time, goals, research), every one from his
-records or said as missing, with general guidance marked as such."""
+records or said as missing, with general guidance marked as such. And it never takes a question that's another plan's or a tool's (debts, a
+bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing."""
 
 from datetime import date
 
@@ -39,9 +40,34 @@ def test_the_project_and_its_kind_are_read_from_the_words(said, kind, what):
     assert pr.planned(said) == what
 
 
-def test_a_project_of_no_known_kind_still_names_itself():
+@pytest.mark.parametrize("said, kind", [
+    ("I'm planning to build a shed next to the chicken coop", "shed"),
+    ("I want to pour a slab for the greenhouse? planning to build a slab", "slab"),
+    ("planning to build a deck to the shed", "deck"),
+])
+def test_the_kind_is_the_projects_own_not_a_thing_it_sits_by(said, kind):
+    assert pr.kind_of(said).name == kind
+
+
+def test_a_project_of_no_known_kind_still_names_itself_and_a_fort_is_the_fort():
     assert pr.kind_of("I'm planning to build a sauna") is None
     assert pr.planned("I'm planning to build a sauna") == "sauna"
+    assert pr.planned("I'm planning to build the kids a fort") == "fort"
+
+
+def test_a_record_counts_as_started_only_when_its_name_holds_the_whole_project():
+    assert pr._same_words("Hoop-house greenhouse", "hoop house")
+    assert not pr._same_words("Chicken feed", "chicken coop")
+    assert not pr._same_words("Power washing", "solar power")
+
+
+def test_a_project_with_no_library_plan_still_gets_its_money_and_files_no_projection(life, monkeypatch):
+    from core import calibration
+
+    filed = []
+    monkeypatch.setattr(calibration, "project", lambda *a, **k: filed.append(a))
+    sheet = qp.gather(life, qp.PLAN_BY_NAME["project picture"], "I'm planning to add solar panels?", TODAY)
+    assert "This month so far" in sheet.as_text() and not filed
 
 
 def test_a_greenhouse_picture_carries_every_area_it_touches_from_records_or_said_missing(life):
@@ -59,6 +85,18 @@ def test_planning_a_greenhouse_reaches_the_picture_and_afford_stays_afford(life)
     assert qp.match(life, "I'm planning to build a greenhouse?").name == "project picture"
     assert qp.match(life, "What would building a shed mean for everything else?").name == "project picture"
     assert qp.match(life, "Can I afford a chicken coop?").name == "afford"
+
+
+@pytest.mark.parametrize("said", [
+    "how would that affect my debts?", "what will it take to pay off my truck loan?", "I want to add a bill?",
+    "what will the weather take?", "I'm planning to start a workout?", "how will the frost affect my tomatoes?",
+    "what would it take to save $5000?", "I want to set up a budget?", "I want to start learning guitar?",
+    "I want to build a picnic table, how much should I charge?", "how will skipping the gym affect my goals?",
+    "I want to build a 10 by 12 shed, what materials do I need?",
+])
+def test_the_picture_never_takes_another_plans_or_tools_question(life, said):
+    found = qp.match(life, said)
+    assert found is None or found.name != "project picture", said
 
 
 def test_the_picture_tool_names_the_project_and_plans_nothing(life):

@@ -142,7 +142,8 @@ def _picture(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), project_picture (what a project touches, core/project_ripple.py), price_build
+    chosen when drafted), project_picture (what a project touches, core/project_ripple.py; reached by planning words,
+    never by "want to build a", which is the material list's), price_build
     (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
     show_plans,
     confirm_plan and drop_plan, seed_viability (how long his seeds keep, core/seed_life.py) and what_to_plant (what's
@@ -177,8 +178,7 @@ def register_project_plan_actions(registry) -> None:
         parameters={"type": "object", "properties": {
             "project": {"type": "string", "description": "the project, e.g. 'a greenhouse'"}}, "required": ["project"]},
         handler=_picture, trigger_phrases=("planning to build", "thinking about building", "planning to put up",
-                                           "thinking about putting up", "want to build a", "going to build a",
-                                           "planning a greenhouse", "affect everything", "mean for everything",
+                                           "thinking about putting up", "planning a greenhouse", "affect everything", "mean for everything",
                                            "what does it touch", "what would it take to build"),
     ))
     registry.register(AssistantAction(

@@ -9,7 +9,9 @@ individual questions. It understands how the project affects the rest of your li
 unified layer (docs/future/UNIFIED_INTELLIGENCE.md).
 
 **What it does.** "I'm planning to build a greenhouse" reaches the question plan "project picture"
-(core/question_plans.py), whose gatherer is `gather`: it works out which of his areas the project touches (`kind_of`:
+(core/question_plans.py; its own words are a build verb before one of `PROJECT_WORDS`, and a question about the
+build's materials, cuts or price is its tools', never the plan's), whose gatherer is `gather`: it works out which of
+his areas the project touches (`kind_of`, from the project's own words first:
 a greenhouse touches money, materials, growing, water, power, time, goals and research; a shed money, materials,
 time and goals) and puts each one's facts on one sheet, from the records and calculators MIA already has:
 
@@ -17,8 +19,8 @@ time and goals) and puts each one's facts on one sheet, from the records and cal
   he already has, with what's still to buy against the workshop's stock and its known cost;
 - **already started**: a project or a Planner draft by that name, and a project's budget against what's spent on it
   (core/homestead_costs.py);
-- **money**: this month in and out, and the freedom date with the known cost and without
-  (`question_plans.freedom_with`);
+- **money**: this month in and out, and the freedom date, with the known cost when there is one
+  (`question_plans.freedom_with`, filing nothing: a picture is only read);
 - **materials**: what's on hand for it already;
 - **growing, water, power, animals, time, goals, research**: his garden plans and what's due to plant, the rain he's
   logged and watering, the power system, the flock, his open projects and this week's calendar, his reasons, his grow
@@ -75,6 +77,9 @@ KINDS: tuple[Kind, ...] = (
     Kind("slab", r"slabs?|concrete pad", "shed-slab", BASIC),
 )
 
+# Every kind's words, for the plan's own words (core/question_plans.py: a build verb, then one of these)
+PROJECT_WORDS = "|".join(k.words for k in KINDS)
+
 # General guidance for an area, by kind: what such a project asks of it (said as guidance, never as his facts).
 NEEDS = {
     ("greenhouse", WATER): "A greenhouse needs water at it every day in summer: a hose run, a line, or rain caught off "
@@ -101,18 +106,25 @@ _PLANNING = re.compile(
     r"with | out back| behind)", re.I)
 
 
-def kind_of(prompt: str) -> Optional[Kind]:
-    """Pure logic. The kind of project the words name (the first of `KINDS` whose words appear, whole), or None."""
-    lowered = (prompt or "").lower()
+def _kind_in(text: str) -> Optional[Kind]:
+    """Pure logic. The first of `KINDS` whose words appear in `text`, whole, or None."""
+    lowered = (text or "").lower()
     return next((k for k in KINDS if re.search(rf"(?<![a-z])(?:{k.words})(?![a-z])", lowered)), None)
 
 
+def kind_of(prompt: str) -> Optional[Kind]:
+    """Pure logic. The kind of project the words plan: from the project itself (`planned`: "a shed next to the
+    chicken coop" is a shed), else from anywhere in the words, or None."""
+    return _kind_in(planned(prompt)) or _kind_in(prompt)
+
+
 def planned(prompt: str) -> str:
-    """Pure logic. The project the words plan ("a greenhouse" from "I'm planning to build a greenhouse next spring"),
-    or "" when no planning words are there."""
+    """Pure logic. The project the words plan ("greenhouse" from "I'm planning to build a greenhouse next spring",
+    "fort" from "build the kids a fort": the thing after the last article), or "" when no planning words are there."""
     found = ""
     for match in _PLANNING.finditer(prompt or ""):
         what = _LEAD.sub("", match.group("what").strip(" -'")).strip(" -'")
+        what = re.split(r"\s(?:a|an|the)\s", f" {what} ")[-1].strip()  # "the kids a fort": the fort
         if what and what not in ("to", "on", "it", "that", "this", "something", "build", "put", "set"):
             return what
     return found
@@ -128,10 +140,12 @@ def _fact(sheet, kind: str, text: str, source: str) -> None:
     sheet.add(kind, text, source)
 
 
-def _same_words(a: str, b: str) -> bool:
-    """Pure logic. Whether two names share a word of four letters or more ("hoop house" and "the hoop-house plan")."""
-    words = lambda s: {w.rstrip("s") for w in re.findall(r"[a-z]{4,}", s.lower())}  # noqa: E731
-    return bool(words(a) & words(b))
+def _same_words(name: str, project: str) -> bool:
+    """Pure logic. Whether a record's name holds every word of the project ("Hoop-house greenhouse" holds "hoop
+    house"; "Chicken feed" doesn't hold "chicken coop"), plurals and hyphens aside."""
+    words = lambda s: {w.rstrip("s") for w in re.findall(r"[a-z]+", s.lower().replace("-", " "))}  # noqa: E731
+    want = words(project) - {"a", "an", "the", "my", "new"}
+    return bool(want) and want <= words(name)
 
 
 def _started(context, sheet, kind: Kind, what: str):
@@ -162,9 +176,9 @@ def _started(context, sheet, kind: Kind, what: str):
     return None
 
 
-def _build(context, sheet, kind: Kind, draft) -> None:
+def _build(context, sheet, kind: Kind, draft) -> float:
     """The build: the Library plan at its size, what's still to buy against the workshop's stock, what's on hand,
-    and its known cost (then the freedom date with it)."""
+    and its known cost, returned (0 when nothing's priced or there's no plan)."""
     from core import question_plans as qp
     from core.plan_library import detail
     from core.region import money
@@ -177,7 +191,7 @@ def _build(context, sheet, kind: Kind, draft) -> None:
     if page is None:
         _fact(sheet, qp.MISSING, f"No plan on the Library's shelf builds a {kind.name}, so its materials and cost "
                                  "aren't worked out.", "the Library")
-        return
+        return 0.0
     sizes = ", ".join(f"{s['label'].lower()} {s['value']:g}{(' ' + s['unit']) if s['unit'] else ''}"
                       for s in page.get("sizes", []) if isinstance(s.get("value"), (int, float)))
     _fact(sheet, qp.CALCULATION, f"The Library's \"{page['title']}\" plan" + (f" at {sizes}" if sizes else "")
@@ -199,10 +213,7 @@ def _build(context, sheet, kind: Kind, draft) -> None:
         line += f", {money(cost)} for the {shopping.get('priced', 0)} with a price" if cost else ""
         line += f"; {unpriced} have no price in the workshop yet, so the cost is a floor." if unpriced else "."
         _fact(sheet, qp.CALCULATION, line, "the Workshop's materials")
-    if MONEY in kind.touches:
-        qp.money_now(context, sheet)
-        if cost:
-            qp.freedom_with(context, sheet, cost, False, date.today())
+    return cost
 
 
 # The part of MIA each looked-up tool reads, so a missing one is said, not a failure
@@ -211,7 +222,8 @@ _SERVICE = {"get_power_status": "power", "list_lab_series": "data_logger", "get_
 
 
 def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
-    """One area of his life the project touches, through what already answers for it, and its guidance line."""
+    """One area of his life the project touches, through what already answers for it (water: only the rain he's
+    logged and whether to water, nothing claimed about a system that wasn't checked), and its guidance line."""
     from core import question_plans as qp
 
     def look(context, sheet, tool: str, source: str) -> None:
@@ -230,8 +242,7 @@ def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
 
         rain = rain_this_week(context, today)
         if rain is None:
-            _fact(sheet, qp.MISSING, "No rain logged this week, and no water system (tank, line, catchment) is "
-                                     "recorded.", "the rain gauge")
+            _fact(sheet, qp.MISSING, "No rain logged this week.", "the rain gauge")
         else:
             _fact(sheet, qp.FACT, f"His gauge logged {rain:g} inches of rain over the last seven days.",
                   "the rain gauge")
@@ -265,7 +276,9 @@ def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
 
 def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
     """The project picture's gatherer: the project and what it touches (`kind_of`), each area's facts on the sheet,
-    then the offer to draft the plan. A project of no known kind gets money, materials, time and goals."""
+    with the month's money and the freedom date gathered here for every kind that touches money (a project with no
+    Library plan too), then the offer to draft the plan. A project of no known kind gets money, materials, time and
+    goals."""
     from core import question_plans as qp
 
     today = today or date.today()
@@ -274,10 +287,17 @@ def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
     _fact(sheet, qp.FACT, f"The project he's planning: {what} (a {kind.name}). It touches: {', '.join(kind.touches)}.",
           "your words")
     draft = _started(context, sheet, kind, what)
+    cost = 0.0
     try:
-        _build(context, sheet, kind, draft)
+        cost = _build(context, sheet, kind, draft)
     except Exception:  # noqa: BLE001 - one area failing leaves the rest
         log.exception("The project picture couldn't work out the build")
+    if MONEY in kind.touches:  # the month, and the freedom date (with the known cost, when there is one)
+        try:
+            if qp.money_now(context, sheet, today):
+                qp.freedom_with(context, sheet, cost or None, False, today, check=False)
+        except Exception:  # noqa: BLE001
+            log.exception("The project picture couldn't gather the money")
     for area in kind.touches:
         if area in (MONEY, MATERIALS):
             continue  # with the build

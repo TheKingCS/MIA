@@ -44,6 +44,7 @@ from datetime import date, timedelta
 from typing import Callable, Optional
 
 from core.logger import get_logger
+from core.project_ripple import PROJECT_WORDS
 
 log = get_logger(__name__)
 
@@ -437,9 +438,10 @@ def _afford(context, sheet, prompt, today):
     freedom_with(context, sheet, amount, monthly, today)
 
 
-def freedom_with(context, sheet, amount: Optional[float], monthly: bool, today: date) -> None:
+def freedom_with(context, sheet, amount: Optional[float], monthly: bool, today: date, check: bool = True) -> None:
     """The freedom date as things stand and with a cost (`amount` once, or a month when `monthly`), both worked out
-    by core/freedom.plan(); used by the afford plan and the project picture (core/project_ripple.py)."""
+    by core/freedom.plan(); used by the afford plan and the project picture (core/project_ripple.py). With `check`,
+    the date is filed to be checked when it comes (core/calibration.py); the project picture doesn't file one."""
     from dataclasses import replace
 
     from core import freedom
@@ -455,7 +457,8 @@ def freedom_with(context, sheet, amount: Optional[float], monthly: bool, today: 
         return
     from core.calibration import project
 
-    project(context, "freedom", now["date"], "afford")  # checked when it comes (step 8)
+    if check:
+        project(context, "freedom", now["date"], "afford")  # checked when it comes (step 8)
     sheet.add(CALCULATION, f"Freedom date as things stand: {now['date']} ({_money(context, now['left'] or 0)} to go, "
                            f"saving about {_money(context, inputs.pace)} a month).", "Freedom")
     if not amount:
@@ -1055,9 +1058,9 @@ PLANS: tuple[Plan, ...] = (
           "What would a new shed mean for the rest of my life?", "We're going to start a big garden next year.",
           "If I build a cold room, what does it touch?", "I'm planning to add solar panels.",
           "What would a greenhouse take?", "I want to put in rain barrels."),
-         r"\b(planning|plan|thinking about|thinking of|want|going|gonna|hoping|like) (to )?(build|put up|set up|start|"
-         r"add|install|put in)\b|\b(what would|how would|how will|what will) .{0,40}\b(affect|mean for|touch|take|"
-         r"change)\b", _project_picture),
+         rf"\b(?:build|put up|set up|start|add|install|put in|building|putting up|starting|adding|installing)\b"
+         rf"[^,.?!]{{0,30}}?(?<![a-z])(?:{PROJECT_WORDS})(?![a-z])"
+         r"|\b(?:affect|mean for|touch)\b[^?]{0,20}\b(?:everything|the rest)\b", _project_picture),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",
           "What have I left unfinished?", "What's still open?"),
@@ -1115,8 +1118,7 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
-CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time",
-                "project picture")  # build plan step 8: plans over several apps
+CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -1186,6 +1188,10 @@ NOT_FOR = {
     "today": re.compile(r"\b(on your own|you been up to|while i was (out|gone|away))\b"
                         r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
+    # the build's own questions are its tools' (material_list, cut_list, price_build, plan_with_me), and a plan
+    # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"
+    "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
+                                  r"let's plan|plan the|debts?|loans?|bills?|weather|frost)\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),
