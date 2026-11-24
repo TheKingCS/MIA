@@ -67,7 +67,9 @@ def business_page(context, today: Optional[date] = None, business: Optional[str]
     """The Business screen's data: customers, quotes (with their figures) and orders, each with its customer, its
     business (DEC-0153), the build or recipe it's for, its revenue entry, its stage and next step, and its form, plus
     the craft section (builds and recipes). `business`: only that business's orders and quotes ("none": the ones with no
-    business yet); the customers stay everyone's. Not available without a business book."""
+    business yet); the customers stay everyone's. What's paid on an order is `business_actions._paid` (its payments
+    and a sale on its build), and "owed" counts every order not cancelled, delivered ones too, as "who owes me"
+    does. Not available without a business book."""
     from core.business_actions import CUSTOMER, ORDER, QUOTE, quote_figures
     from core.record_actions import record_form
     from core.web_craft import craft_section
@@ -91,7 +93,9 @@ def business_page(context, today: Optional[date] = None, business: Optional[str]
 
     orders = []
     for o in sorted([o for o in book.orders if mine(o)], key=lambda o: (o.status in ("Delivered", "Cancelled"), o.due_date or "9999", o.created_at)):
-        paid = round(sum(revenue[i].amount for i in o.payment_ids if i in revenue), 2)
+        from core.business_actions import _paid
+
+        paid = _paid(context, o)  # its payments and a sale on its build, as the invoice and "who owes me" count
         build = builds.get(o.job_ids[0]) if o.job_ids else None
         orders.append({
             "id": o.order_id, "title": o.title, "customer": names.get(o.customer_id, ""), "status": o.status,
@@ -144,7 +148,7 @@ def business_page(context, today: Optional[date] = None, business: Optional[str]
                           "photos": b["photos"], "finished": b["started"]})
     portfolio.sort(key=lambda p: (not p["featured"], book.featured.index(p["id"]) if p["featured"] else 0))
 
-    owed = sum(o["left_value"] for o in orders if o["open"])
+    owed = sum(o["left_value"] for o in orders if o["status"] != "Cancelled")  # delivered and unpaid is owed too
     return {
         "available": True, "as_of": today.isoformat(),
         "orders": orders, "quotes": quotes, "customers": customers, "portfolio": portfolio,

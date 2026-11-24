@@ -44,14 +44,18 @@ def _action_remember_this(context, arguments: dict) -> str:
 
 
 def _action_order_paid(context, arguments: dict) -> str:
-    """Tool order_paid: a payment on an order (order.pay), found by its title or its customer's name; the amount
-    said, else what's still owed on it."""
+    """Tool order_paid: a payment on an order (order.pay), found by its title or its customer's name among the
+    orders with money still on them (delivered ones too); the amount said, else what's still owed on it."""
     book = getattr(context, "business", None)
     if book is None:
         return "There are no orders here."
     said = " ".join(str(arguments.get("order") or "").lower().split())
     customers = {c.customer_id: c.name for c in getattr(book, "customers", [])}
-    open_orders = [o for o in book.orders if o.status not in ("Delivered", "Cancelled")] or list(book.orders)
+    from core.business_actions import _paid
+
+    # any order with money still on it, delivered ones too (they're the ones "who owes me" says to chase)
+    open_orders = [o for o in book.orders if o.status != "Cancelled" and (o.price or 0) - _paid(context, o) > 0.005] \
+        or list(book.orders)
     order = _one(open_orders, said, lambda o: f"{o.title} {customers.get(o.customer_id, '')}".strip(), "order")
     if isinstance(order, str):
         return order

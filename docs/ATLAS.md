@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1646 files, 359,689 lines; 1646 files describe themselves; 19,778 of 19,908 classes and functions are documented.
+1646 files, 359,735 lines; 1646 files describe themselves; 19,781 of 19,911 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-648 files, 183,408 lines; 9,377 of 9,463 classes and functions documented
+648 files, 183,432 lines; 9,378 of 9,464 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -946,7 +946,7 @@
 
 ## tests/: the test suite: what each part must do
 
-594 files, 95,729 lines; 8,038 of 8,082 classes and functions documented
+594 files, 95,751 lines; 8,040 of 8,084 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1343,7 +1343,7 @@
 - `tests/test_recall_index.py`: Recall by meaning: refs and vectors only, every hit re-read from its store (core/recall_index.py, DEC-0210).
 - `tests/test_receipt_effects.py`: Receipts that do things (core/receipt_effects.py) and the everyday mailbox they come from (core/inbox_mail.fetch_receipts): a grocery receipt stocks the pantry and ticks the grocery list, an oil change is marked done on the truck at the receipt's mileage, a Lowe's receipt adds to the materials at th
 - `tests/test_receipt_match.py`: A scanned receipt fills in a recipe's Bought It: store-receipt names matched to recipe materials, each line used once, nothing guessed, and the money never counted twice (it's already in the Budget).
-- `tests/test_receivables.py`: Who owes him money (core/receivables.py): each order's price less what's been paid, never a cancelled or paid-up one, oldest due first with the overdue days, the delivered-but-unpaid named as the one to chase, orders with no price said apart, and nothing owed said plainly.
+- `tests/test_receivables.py`: Who owes him money (core/receivables.py): each order's price less what's been paid, never a cancelled or paid-up one, oldest due first with the overdue days, the delivered-but-unpaid named as the one to chase, orders with no price said apart, nothing owed said plainly; an undelivered order past its 
 - `tests/test_record_types.py`: Tests for the record-type registry (LS-05, core/record_types.py): one table links and the history share, and a kind the history names is either readable or listed with why it isn't.
 - `tests/test_recreation.py`: Recreation in the health cluster (DEC-0098, core/recreation.py): games and sports logged by voice or on a screen, counted as training load (minutes × effort), skill XP by the sport, a life event for the history, the seasons, the Operating Journal and the Chronicle; never mistaking a song for a game;
 - `tests/test_recurring_mission_manager.py`: Unit tests for core.recurring_mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE/_TEMPLATES_FILE plus core.calendar_manager's own file constants (ensure_current_missions() creates a real CalendarEvent) into a tmp_path scratch area, same monkeypatch pattern as tests/test_pathway_manager.py.

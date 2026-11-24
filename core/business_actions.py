@@ -184,11 +184,15 @@ def _amount(params) -> float:
 
 
 def _paid(context, order) -> float:
-    """How much has been paid on an order so far (its payments in the ledger)."""
+    """How much has been paid on an order so far: its payments in the ledger, and a sale recorded on its build ("Sold
+    It" on the finished build adds revenue with the build's job id, never to the order's payments). Each ledger entry
+    counts once (a deposit re-tagged with the build's id is both)."""
     ledger = getattr(context, "ledger", None)
     if ledger is None:
         return 0.0
-    return round(sum(r.amount for r in ledger.all_revenue() if r.entry_id in order.payment_ids), 2)
+    jobs = set(getattr(order, "job_ids", []) or [])
+    return round(sum(r.amount for r in ledger.all_revenue()
+                     if r.entry_id in order.payment_ids or (jobs and r.job_id in jobs)), 2)
 
 
 def _pay_describe(context, params) -> str:
