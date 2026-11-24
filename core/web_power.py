@@ -79,7 +79,8 @@ def _battery(context) -> dict:
 
 def power_page(context, now: Optional[datetime] = None) -> dict:
     """The Power screen's data: the battery, and each energy source with its latest reading per meter (value, unit,
-    when, a meter for percent readings, its Lab series for the history chart), most needing attention first; the forms."""
+    when, a meter for percent readings, its Lab series for the history chart), most needing attention first; the forms;
+    and the outage clock (`outage`: whether the power's out, since when, and what it means now, core/outage.py)."""
     from core.power_actions import forms
 
     now = now or datetime.now()
@@ -107,5 +108,11 @@ def power_page(context, now: Optional[datetime] = None) -> dict:
                         "needs_you": low < LOW_PERCENT,
                         "values": {"name": s.name, "source_type": s.source_type, "notes": s.notes}})
     sources.sort(key=lambda x: (not x["needs_you"], x["name"].lower()))
+    from core import outage
+
+    out_since = outage.since(context)
     return {"available": energy is not None, "battery": _battery(context), "sources": sources, "forms": forms(),
-            "low_percent": LOW_PERCENT}
+            "low_percent": LOW_PERCENT,
+            # The outage clock (core/outage.py): what it means now while the power's out.
+            "outage": {"out": out_since is not None, "since": out_since.isoformat(timespec="minutes") if out_since else "",
+                       "status": outage.status(context, now) if out_since else ""}}

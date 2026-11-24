@@ -710,6 +710,11 @@ GOLDEN_CASES = [
     ("canning: a new batch is not a fix", "I put up 7 quarts of tomatoes today", "put_up_jars"),
     ("missions: a reward beyond XP", "Make my canning mission reward the canning skill", "add_mission_reward"),
     ("missions: counted from records", "Count 20 jars toward my canning mission", "count_toward_mission"),
+    # The power outage clock (brainstorm round 10), and the neighbours it must not take from.
+    ("outage: it went out", "The power went out at 6 am", "power_outage"),
+    ("outage: the freezer", "How long is the food in the freezer still good?", "power_outage"),
+    ("outage: it's back", "The power's back on", "power_outage"),
+    ("outage: what's in the freezer is the pantry", "What food is in the freezer?", "list_pantry"),
     ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),
     # ("How long will my water last?" is answered in code, direct_lookup, before any model: tests/test_water_budget.py)
     ("water: the budget", "What's my water budget?", "water_budget"),

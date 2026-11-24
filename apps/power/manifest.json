@@ -39,13 +39,16 @@
       "get_power_status",
       "log_energy_reading",
       "power_picture",
-      "set_power_load"
+      "set_power_load",
+      "power_outage"
     ],
     "actions": [
       "energy.reading",
       "energy_source.add",
       "energy_source.delete",
-      "energy_source.edit"
+      "energy_source.edit",
+      "outage.start",
+      "outage.end"
     ],
     "tiers": {
       "get_energy": "observe",
@@ -56,7 +59,10 @@
       "energy.reading": "act_within_grant",
       "energy_source.add": "act_within_grant",
       "energy_source.delete": "act_with_approval",
-      "energy_source.edit": "act_within_grant"
+      "energy_source.edit": "act_within_grant",
+      "power_outage": "act_within_grant",
+      "outage.start": "act_within_grant",
+      "outage.end": "act_within_grant"
     },
     "outside": []
   },

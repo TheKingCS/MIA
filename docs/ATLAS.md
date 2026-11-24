@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1714 files, 371,348 lines; 1714 files describe themselves; 20,381 of 20,511 classes and functions are documented.
+1717 files, 371,668 lines; 1717 files describe themselves; 20,399 of 20,529 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-679 files, 191,097 lines; 9,700 of 9,786 classes and functions documented
+681 files, 191,339 lines; 9,714 of 9,800 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -407,6 +407,8 @@
 - `core/opportunity.py`: Opportunity scoring and recommendations (Procurement P3, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 8). A find from World Intelligence that meets one of a project's needs becomes an **opportunity**: the find, the need it meets, nine dimensions each with its value and the reason f
 - `core/orb_state.py`: What MIA is really doing right now, for her orb (not to be confused with `core/presence.py`, the "what matters now" list, DEC-0044) (prompt 24 A5, DEC-0184 §8: "these states should communicate actual system activity rather than simulate activity that is not occurring"). One state for the whole runti
 - `core/orchard.py`: The orchard (Zac, 2026-11-24: "will manage my orchard"; docs/future/SMART_AG_PLAN.md phase A1). Before this MIA had nothing for fruit trees.
+- `core/outage.py`: The power's out (Jarvis brainstorm, round 10): a clock from when it went out, and what that means for him right now, worked out in code from the hours gone and his own records. Survival at home, offline: it needs nothing but this PC on a battery, or the phone.
+- `core/outage_actions.py`: The power outage clock from the screen and by voice (core/outage.py; DEC-0125, both ways). The actions `outage.start` (the Power page's "The Power's Out", with an optional time) and `outage.end` ("The Power's Back"), and the tool `power_outage` ("the power went out at 6 am", "how long is the food go
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
 - `core/pack_index.py`: Her own search index for the offline packs Kiwix didn't index (core/offline_library.py). Many of the most useful ones have no full-text index of their own: iFixit's repair guides, the USDA canning guide, the LibreTexts textbooks, and the preppers' collections, which are PDFs inside the pack (water t
 - `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
@@ -977,7 +979,7 @@
 
 ## tests/: the test suite: what each part must do
 
-629 files, 99,192 lines; 8,316 of 8,360 classes and functions documented
+630 files, 99,255 lines; 8,320 of 8,364 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1336,6 +1338,7 @@
 - `tests/test_orchard.py`: The orchard (core/orchard.py): his fruit trees read from Maintenance by the fruit in their names, the year's work dated from his last spring frost (stone fruit pruned near bloom, dormant oil before bud break, thinning, harvest by each kind's days from bloom, fall cleanup), a kind alone without its p
 - `tests/test_os_image.py`: FW-01's checks on how the MIA OS image is made (DEC-0263, DEC-0279; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): the base pinned by digest, MIA's Python packages hash-locked and the locks covering `requirements.txt`, the reference PC's model set in the image, the GPU bench measuring tha
 - `tests/test_os_session.py`: FW-03, MIA's own desktop session on MIA OS (DEC-0227, DEC-0278): her runtime writes where her shell finds her (`core/desktop_session.py`), owner-only, and removes it when it stops; the shell (`gui/os_shell.py`) opens her front end when she answers and a recovery page when she doesn't, whose links ac
+- `tests/test_outage.py`: The power outage clock (core/outage.py): when he said it went out read in code, the fridge's 4 hours and the freezer's 24 or 48 said as time left or past, the fish, hens and well only when they apply, and the end said with what to throw out; by voice and from the Power page.
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones.
 - `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current. Each app's ask (its screen's "Say: …") reaches that app's own too
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins.
@@ -1611,7 +1614,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-120 files, 22,468 lines
+120 files, 22,483 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 
@@ -1695,7 +1698,7 @@
 - `web/play.js`: play.js — games and sports (claude, 2026-11-07, DEC-0098). Renders MIA.play() (core/recreation.py): the training load by week as bars and the latest games, as the design canvas has them (DEC-0113). Logging and taking one out go through actions (play.log, play.delete). Formatting only; the look is mu
 - `web/player.js`: player.js — the one music player every page shares (claude, 2026-11-10; Zac: a song has to keep playing with the Music app closed and while moving through the other apps). A song used to live in the Music page's own <audio>, so it stopped the moment another page opened. Now whoever can keep playing 
 - `web/portals.js`: portals.js — Portal Pictures (claude, 2026-11-08, DEC-0140 / DEC-0130). Renders MIA.portals() (core/portal_pictures.py): each area's portal in the Nexus with the picture it shows (your painting, the original, or none yet), and three ways to change it: Paint One (MIA paints it on the PC's graphics ca
-- `web/power.js`: power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power, DEC-0113). Renders MIA.power() (core/web_power.py): Energy Sources (each with its latest reading per meter, a meter for a percent, when it was logged, Log Reading) and Battery (this device's). Adding a source, logging a readi
+- `web/power.js`: power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power, DEC-0113). Renders MIA.power() (core/web_power.py): the outage clock on top (core/outage.py: The Power's Out The Power's Back, and what it means for the food, the generator, fish, hens and water), Energy Sources (each with it
 - `web/profile.js`: profile.js — the Profile screen (claude, 2026-10-07; Zac: the gear's Profile). Renders MIA.profile() (core/web_account.py) as the design canvas has it (DEC-0113): your name, email, country, what MIA helps with, the password and the recovery code; no household (DEC-0119). Name, email, country and int
 - `web/projects.js`: projects.js — Projects (claude, 2026-11-07; DEC-0125: projects and their tasks were voice-only). Renders MIA.projects() (core/web_projects.py): underway first, each with its status, due date, budget, spent and left (a meter, amber when over), what the money went on, tools bought, the reason it serve
 - `web/real-estate.js`: real-estate.js — the Real Estate screen (claude, 2026-10-06, DEC-0017/0018). Renders MIA.realEstate() (core/web_screens.py): each property with its status, where it is, rent, what's owed, equity and cash flow, its upkeep (its own Maintenance asset, opened on asset.html) and related missions. Since Z

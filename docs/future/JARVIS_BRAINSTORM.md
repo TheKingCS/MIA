@@ -344,6 +344,23 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 10 (2026-11-24, night): survival at home, money and automation, checked against the code
+
+- **The power's out** (no decision): *built 2026-11-24 (`core/outage.py`, "the power went out at 6 am", the Power
+  page's The Power's Out).* A clock from when it went out: the fridge's 4 safe hours and the freezer's 24 or 48 as
+  time left (FoodSafety.gov), the generator's fuel days, the fish tank's air pump first, the hens' water, the well;
+  "the power's back" says what to throw out.
+- **A boil-water or no-water day** (no decision): the same shape for water: stored water against his household's
+  gallons a day (one a person, more for the animals), the rain barrels and cistern (core/water_budget.py), and how to
+  make water safe offline (boil one minute; the library's pages when it runs).
+- **A storm coming** (his say: an unprompted heads-up through the gate): the forecast's wind, ice or heavy rain two
+  days out turned into one checklist from his records: fuel for the generator, the greenhouse's battery, the flock
+  shut in, the outage kit, what to pick before a frost.
+- **The monthly bills that change** (no decision): electric, propane and fuel bills read against the same month last
+  year and his meter readings, so "why was power so high?" has an answer from his own numbers.
+- **Automation he can see** (his say on each): routines that already run on their own (core/routines) listed with
+  what they did this week and what they'd do next, so "what's MIA handling for me?" has one honest answer.
+
 ## Round 9 (2026-11-24, evening): after the game layer and the greenhouse's command path
 
 Checked against today's code; each says whether it needs Zac's say.

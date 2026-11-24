@@ -1,6 +1,7 @@
 /*
  * power.js — Power (claude, 2026-11-07, DEC-0125; the design canvas's Power,
- * DEC-0113). Renders MIA.power() (core/web_power.py): Energy Sources (each
+ * DEC-0113). Renders MIA.power() (core/web_power.py): the outage clock on top (core/outage.py: The Power's Out /
+ * The Power's Back, and what it means for the food, the generator, fish, hens and water), Energy Sources (each
  * with its latest reading per meter, a meter for a percent, when it was
  * logged, Log Reading) and Battery (this device's). Adding a source, logging
  * a reading and taking one out are actions (core/power_actions.py). Readings
@@ -65,6 +66,20 @@
       el("p", { class: "dim" }, b.plugged_in ? "Plugged in." : b.minutes_left ? "About " + b.minutes_left + " minutes left." : "On battery."))];
   }
 
+  // The outage clock (core/outage.py): "The Power's Out" starts it; while it's out, what it means now and "The
+  // Power's Back".
+  function outageCard() {
+    const o = page.outage || {};
+    if (!o.out) return el("div", { class: "row-buttons" }, btn("The Power's Out", "btn-amber", async () => {
+      const v = await MIAShell.form("When did it go out?", [{ name: "when", label: "Time (leave empty for now)", type: "text",
+        required: false, options: [], default: null }], {});
+      if (v) act({ kind: "outage.start", params: { when: v.when || "" } });
+    }));
+    return el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, "The Power's Out"),
+      btn("The Power's Back", "btn-green", () => act({ kind: "outage.end", params: {} }))),
+      el("p", {}, o.status));
+  }
+
   function draw() {
     if (window.MIAIcons) MIAIcons.badge($("hero-icon"), "power");
     $("power-sub").textContent = page.sources.length ? page.sources.length + (page.sources.length === 1 ? " source" : " sources") + " tracked."
@@ -72,7 +87,7 @@
     $("tabs").hidden = false;
     $("tabs").replaceChildren(...TABS.map(([id, l]) => el("button", { type: "button", role: "tab", "aria-selected": String(id === tab),
       onclick: () => { tab = id; history.replaceState(null, "", "#" + id); draw(); } }, l)));
-    $("panel").replaceChildren(...(tab === "battery" ? battery() : sources()));
+    $("panel").replaceChildren(outageCard(), ...(tab === "battery" ? battery() : sources()));
   }
 
   MIAShell.start(async () => {
