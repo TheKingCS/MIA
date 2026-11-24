@@ -8,6 +8,19 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 
 ## Zac
 
+### The homestead's brain (2026-11-24, `docs/future/SMART_AG_PLAN.md`)
+
+0zn. [ ] **What's in your orchard?** MIA has nothing for an orchard yet, and it's being built now. Tell her which
+   trees you have or plan (apples, peaches, pears...), roughly how many, and where, and she'll date the year's work
+   (pruning, spraying, thinning, harvest) from your frost dates.
+0zo. [ ] **Your water and power hardware.** Which well pump, tank or cistern, inverter or charge controller you
+   have or will buy. Their makes decide how she can read them; open, local ones (Modbus, MQTT, a local web page)
+   are recommended over cloud-only ones.
+0zp. [ ] **The order of the homestead work.** Recommended: MIA's side now (the orchard, whole-property water and
+   power, a homestead morning sheet: it needs nothing), then the greenhouse taking her directions in simulation
+   (DEC-0185, the node's command interface), then the 55-gallon pilot when you're ready to buy parts (about $263),
+   then outdoor irrigation, the well and house power. The other way: the pilot hardware first.
+
 ### One intelligence (2026-11-24, `docs/future/UNIFIED_INTELLIGENCE.md`)
 
 0zl. [ ] **When you confirm a plan, may MIA record what it touches?** "I'm planning to build a greenhouse" now gets
