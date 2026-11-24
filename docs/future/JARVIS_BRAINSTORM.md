@@ -344,6 +344,17 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 7 (2026-11-24): one intelligence (Zac: "connecting all these capabilities into a unified intelligence layer")
+
+- **What a project touches** (no decision): built (`core/project_ripple.py`): "I'm planning to build a greenhouse"
+  gathers the build's materials and cost against stock, money and the freedom date, growing, water, power, the flock,
+  time, goals and research onto one sheet; each Planner draft shows the same as "What It Touches". The plan for the
+  rest of the layer: `docs/future/UNIFIED_INTELLIGENCE.md` (WAITING_ON 0zl, 0zm).
+- **Confirmed builds in money answers** (no decision): built: "can I afford it?", priorities and projects say what
+  confirmed builds still need from the store, against the stock now.
+- **What can I build with what I have?** (no decision): built (`core/buildable.py`): the Library's builds closest
+  to done from the workshop's stock, what's left to buy and its cost.
+
 ## Round 6 (2026-11-24): the bigger steps, each needing Zac's say
 
 Checked first and already there: business miles and a tool's business use (`core/business_use.py`), feed cost per

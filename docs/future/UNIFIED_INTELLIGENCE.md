@@ -53,6 +53,13 @@ water at it every day in summer"), so the model can say how the areas connect wi
 of MIA that isn't set up is said as missing. Nothing is planned, bought or changed: the sheet ends with the offer to
 draft the plan, which waits for his Confirm (`core/project_plans.py`).
 
+## Built since (2026-11-24)
+
+- **Step 5, the Planner page shows it**: each draft's "What It Touches" (`for_plan`, /api/planner/touches).
+- **Step 2, in part**: what confirmed builds still need from the store is on the afford, priorities and projects
+  sheets (`still_to_buy`), read from the plans themselves, so it needs no stored links.
+- **His stock against every plan**: "what can I build with what I have?" (`core/buildable.py`).
+
 ## The next steps
 
 Each is the same principle applied one layer further. They're in order: each uses the one before.

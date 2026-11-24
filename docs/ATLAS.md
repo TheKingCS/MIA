@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1669 files, 363,612 lines; 1669 files describe themselves; 20,000 of 20,130 classes and functions are documented.
+1671 files, 363,757 lines; 1671 files describe themselves; 20,008 of 20,138 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-656 files, 186,033 lines; 9,481 of 9,567 classes and functions documented
+657 files, 186,127 lines; 9,484 of 9,570 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -121,6 +121,7 @@
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
 - `core/build_calcs.py`: Material lists worked out in code (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Each calculator takes a structure's size and gives what to buy and what to cut: a stud wall, a floor or deck frame, a raised garden bed, a fence run,
 - `core/build_media.py`: Photos and videos of a workshop build (DEC-0030 phase B): the before and after of a furniture flip, the build in progress, the finished piece for the portfolio. They live with the household's workshop data, in `<jobs folder>/workshop_media/<job_id>/`; a name starting "before-" or "after-" is shown a
+- `core/buildable.py`: What he could build with what he has (Jarvis brainstorm round 7, 2026-11-24; one intelligence: his stock read against the Library's plans, docs/future/UNIFIED_INTELLIGENCE.md): "what can I build with what I have?", "what could I build with the lumber in the shop?".
 - `core/bushcraft.py`: Survival and bushcraft, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Survival bushcraft"): priorities and the kit, fire and water, shelter and navigation. Stages of lessons with why and what to watch for, checks said, counted or read from his own records (a GPS track for
 - `core/business_actions.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C, core/business_book.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.
@@ -954,7 +955,7 @@
 
 ## tests/: the test suite: what each part must do
 
-609 files, 96,999 lines; 8,156 of 8,200 classes and functions documented
+610 files, 97,050 lines; 8,161 of 8,205 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1014,6 +1015,7 @@
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py.
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*
 - `tests/test_buffs.py`: Buffs (DEC-0028): good effects earned from what you really did, each lasting a while and lifting one attribute by +1. Never debuffs.
+- `tests/test_buildable.py`: What he could build with what he has (core/buildable.py): the Library's builds laid against the workshop's stock, the most covered first, each with what's left to buy and its cost (a floor while anything has no price), and plans with nothing on hand left out. Read-only.
 - `tests/test_business.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): a quote from a recipe, accepted into an order, a deposit, the build, the rest paid, delivered, and the build's real profit counting what the customer paid. Every step is an undoable action. Each order's place on the stage rail and the s
 - `tests/test_business_report.py`: Unit tests for core.business_report — no Qt, no manager instances, same shape as tests/test_budget_nudges.py. Asserts on the literal returned HTML string's real content rather than just "it doesn't crash."
 - `tests/test_business_tagging.py`: Sorting bank charges to businesses (core/business_tagging.py): learning from the owner's choices, auto-tagging after a sync, the review list, the voice tools and the review dialog.
