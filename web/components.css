@@ -533,6 +533,13 @@ dialog.ach-card.r-legendary { --card-glow: var(--rarity-legendary); }
 }
 @media (prefers-reduced-motion: reduce) { dialog.ach-card { animation: none; } }
 
+/* ---------- YouTube in Music (web/music.js) ---------- */
+.yt-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; }
+.yt-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.yt-row { align-items: center; }
+.yt-thumb { width: 96px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); flex: none; }
+.yt-key input { flex: 1 1 220px; min-width: 0; }
+
 /* ---------- focus ---------- */
 :focus-visible {
   outline: 2px solid var(--accent);

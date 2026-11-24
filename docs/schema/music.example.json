@@ -9,7 +9,8 @@
       "genre": "",
       "duration": "0:04",
       "seconds": 4.0,
-      "uploaded": false
+      "uploaded": false,
+      "youtube": ""
     }
   ],
   "playlists": [
@@ -30,5 +31,7 @@
     "found": false,
     "count": 1,
     "minutes": 0
-  }
+  },
+  "youtube_key": false,
+  "youtube_next": null
 }

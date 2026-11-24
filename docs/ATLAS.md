@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1702 files, 369,102 lines; 1702 files describe themselves; 20,273 of 20,403 classes and functions are documented.
+1705 files, 369,765 lines; 1705 files describe themselves; 20,305 of 20,435 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-673 files, 189,781 lines; 9,631 of 9,717 classes and functions documented
+675 files, 190,183 lines; 9,656 of 9,742 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -681,10 +681,12 @@
 - `core/world_map.py`: The world map with fog of war (DEC-0028, the game layer's sixth idea; Zac, 2026-10-17): the places you've actually been clear the fog, photos are pinned where they were taken, and new ground earns achievements.
 - `core/world_sources.py`: Where World Intelligence reads (DEC-0170, `docs/mia_os/MIA_OS_WORLD_INTELLIGENCE_PROPOSAL.md` sections 5 and 5b): the source adapters and the starting catalog.
 - `core/your_data.py`: Your Data (docs/SECURITY.md step 8, "beyond"): exactly what MIA keeps about a person, and what she read to answer them, for the web page Settings → Your Data (web/yourdata.html) beside export and delete (core/account_data.py).
+- `core/youtube_actions.py`: YouTube in Music, from the screen and by voice (core/youtube_music.py; DEC-0125, both ways).
+- `core/youtube_music.py`: YouTube in MIA's Music app (the game layer's step 3, docs/future/GAME_LAYER_PLAN.md; Zac 2026-11-24: "look things up on YouTube and stream them... build playlists, play music or a specific song").
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,792 lines; 58 of 58 classes and functions documented
+2 files, 4,834 lines; 59 of 59 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -971,7 +973,7 @@
 
 ## tests/: the test suite: what each part must do
 
-624 files, 98,527 lines; 8,278 of 8,322 classes and functions documented
+625 files, 98,649 lines; 8,284 of 8,328 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1596,11 +1598,12 @@
 - `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP, and the closest one not earned is shown next.
 - `tests/test_your_data.py`: Your Data (core/your_data.py, docs/SECURITY.md step 8): every file in the person's folder listed with what it is, how many records and whether it's sealed (DEC-0126), never the temporary or set-aside copies; records counted for lists, objects of lists and JSON lines; her latest answers with the tool
 - `tests/test_your_data_and_undo.py`: Accounts stage 5 (2026-10-01): export and delete your account (core/account_data.py), "undo that" (core/undo_log.py), "why did you tell me that?" / "stop telling me about ..." (core/message_reasons.py), and the setup checker (core/system_check.py).
+- `tests/test_youtube_music.py`: YouTube in Music (core/youtube_music.py, core/youtube_actions.py): links read to their video id, YouTube's embedded player only, a search only with his key and only his scrubbed words sent, songs saved as links (never a file) that playlists hold and a library scan never removes, and MIA's pick by vo
 - `tests/test_zim_url.py`: Unit tests for modules.knowledge.zim_url's pure QUrl <-> (pack_id, entry_path) conversion. QUrl needs no QApplication/event loop to construct or parse, so — unlike modules.knowledge.zim_text_browser's QTextBrowser subclass — this is safe to cover with plain pytest rather than deferring to tests/run_
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-119 files, 22,273 lines
+119 files, 22,370 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

@@ -93,6 +93,8 @@ Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
 screen; /api/taught-skills/run, /answer and /stop move a run one step at a
 time, each step through its own gate.
 An achievement card closed is marked seen by POST /api/achievements/seen (AchievementsSeenRequest).
+YouTube in Music: GET /api/music/youtube/search and POST /api/music/youtube/key (YouTubeKeyRequest); the
+Content-Security-Policy allows YouTube's privacy-enhanced player and its thumbnails, nothing else from outside.
 """
 
 from __future__ import annotations
@@ -418,6 +420,11 @@ class MusicPlayRequest(BaseModel):
     at: int = Field(0, ge=0, le=499)
 
 
+class YouTubeKeyRequest(BaseModel):
+    """His YouTube Data API key for search (core/youtube_music.set_key); empty removes it."""
+    key: str = Field("", max_length=100)
+
+
 class MusicControlRequest(BaseModel):
     """One word for the player (pause, resume, next, previous, stop), or seconds to jump to in the song."""
     do: str = Field("", max_length=12)
@@ -560,10 +567,13 @@ def describe_timings(timings: dict) -> str:
     return " · ".join(f"{words[k]} {v:.1f}s" for k, v in timings.items())
 
 
-# Every response's browser protections (security_headers in create_app; docs/SECURITY.md).
+# Every response's browser protections (security_headers in create_app; docs/SECURITY.md). The one outside frame is
+# YouTube's privacy-enhanced player and the one outside image host its thumbnails (Music's YouTube tab,
+# core/youtube_music.py); nothing else from another site loads.
 SECURITY_HEADERS = {
     "Content-Security-Policy": ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-                                "img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self'; "
+                                "img-src 'self' data: blob: https://i.ytimg.com; media-src 'self' data: blob:; "
+                                "frame-src https://www.youtube-nocookie.com; connect-src 'self'; "
                                 "font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; "
                                 "frame-ancestors 'self'"),
     "X-Frame-Options": "SAMEORIGIN",
@@ -598,7 +608,8 @@ def create_app(context: AppContext) -> FastAPI:
     uptime, the model and the phone server.
     /api/achievements and /api/achievements/new serve the achievements log and the cards not yet seen
     (core/achievement_cards.py).
-    POST /api/achievements/seen marks cards seen by id, outside undo."""
+    POST /api/achievements/seen marks cards seen by id, outside undo.
+    /api/music/youtube/search and /api/music/youtube/key are YouTube in Music's (core/youtube_music.py)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -2597,6 +2608,37 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_more import music_play
 
         return _player(profile_id, lambda view: music_play(view, body.ids, body.at))
+
+    @app.get("/api/music/youtube/search")
+    def web_youtube_search(q: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """Songs on YouTube for his words (core/youtube_music.search): {songs} or {problem} (no key, offline, turned
+        off), never an error page. Outside the turn lock: it waits on YouTube, not on MIA."""
+        from core.child_accounts import app_allowed
+        from core.youtube_music import NeedsKey, search
+
+        view = view_for(context, profile_id)
+        if not app_allowed(view, "music"):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Music isn't on this account.")
+        try:
+            return {"songs": search(view, q[:150]), "problem": "", "needs_key": False}
+        except NeedsKey as problem:
+            return {"songs": [], "problem": str(problem), "needs_key": True}
+        except RuntimeError as problem:
+            return {"songs": [], "problem": str(problem), "needs_key": False}
+
+    @app.post("/api/music/youtube/key")
+    def web_youtube_key(body: YouTubeKeyRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Keeps his YouTube key (sealed at rest), never as an action: a proposal would show and keep the key. Only
+        the device's first account sets it (it's this computer's)."""
+        from core.person_settings import _is_first_account
+        from core.youtube_music import set_key
+
+        if not _is_first_account(context, profile_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Only this computer's owner sets the YouTube key.")
+        try:
+            return {"said": set_key(body.key)}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
 
     @app.post("/api/music/control")
     def web_music_control(body: MusicControlRequest, profile_id: str = Depends(require_profile_id)) -> dict:

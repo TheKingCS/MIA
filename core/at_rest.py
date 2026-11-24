@@ -81,6 +81,7 @@ SEALED = frozenset({
     "gps_tracks.json",  # walks, rides and drives
     "operating_journal.json",  # how they mean to operate, and how they do
     "turn_traces.jsonl",  # what they asked and what she said, turn by turn
+    "youtube_key.json",  # his YouTube Data API key (core/youtube_music.py)
     # 2026-11-08 (DEC-0129): health is sealed from its first save
     "health.json",  # sleep, doctor and dentist visits, medications, health records
     "id_wallet.json",  # IDs, passports, insurance cards, registrations (their photos are sealed one by one)

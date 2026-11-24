@@ -330,6 +330,7 @@ SEALED_READERS = [
     ("core.seasons", "kept", "seasons.json", "context"),
     ("core.why_graph", "load_checkpoints", "why_checkpoints.json", "context"),
     ("core.sync", "SyncState.game", "game.json", "folder"),
+    ("core.youtube_music", "key_in", "youtube_key.json", "path"),
 ]
 
 

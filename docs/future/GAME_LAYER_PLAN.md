@@ -38,12 +38,16 @@ every unlock is in his history with its date.
   the evidence MISSION_SYSTEM.md section 9 asks for.
 - Achievements that a mission chain leads to are named on its missions ("this one is 3 of 5 toward Rule the Roost").
 
-## Step 3: music, smart and online
+## Step 3 (built 2026-11-24): music, smart and online
 
-- YouTube search and playback inside MIA through YouTube's own embedded player (allowed by its terms), with
-  playlists that mix his files and YouTube links. Search needs a YouTube Data API key of his own (WAITING_ON).
-- Offline saving only for audio he has the rights to: his own files, Creative Commons or public domain, and
-  purchases that come with files (Bandcamp and the like). Ripping YouTube to MP3 breaks YouTube's terms and usually
-  copyright, so MIA won't; YouTube Music Premium is the legitimate offline route for its catalogue.
-- "Play some bluegrass", "play Wagon Wheel", "make a workshop playlist" by voice, on the PC and the phone.
-- Songs learned on the guitar path become achievements and mission rewards (step 2's **song**).
+- Music has a YouTube tab (`core/youtube_music.py`, `web/music.js`): search YouTube with a YouTube Data API key of
+  his own (entered once on that tab, sealed at rest, never in a proposal), or paste a link (no key needed). Songs play
+  in YouTube's own embedded player (the privacy-enhanced youtube-nocookie.com host, the only outside frame the
+  page's security policy allows), and are saved as links (`youtube.save`): a library track with a video id and no
+  file, so playlists mix his files and YouTube songs. Nothing is downloaded.
+- By voice: `find_on_youtube`, `save_from_youtube` (onto a playlist he names) and `play_on_youtube` (saved and left
+  as MIA's pick at the top of Music, one press to play: a voice turn has no screen for a video).
+- Offline: his own files, Creative Commons or public-domain audio and purchases with files. Ripping YouTube to MP3
+  breaks YouTube's terms and usually copyright, so MIA won't; YouTube Music Premium is the legitimate offline route.
+- Still to do: a YouTube song keeps playing only while the Music page is open (the shared player plays files);
+  started by voice it waits for a press; songs learned on the guitar path as achievements and mission rewards.

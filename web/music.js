@@ -5,13 +5,19 @@
  * 2026-11-10: it has to keep playing with this page closed), so it carries
  * on in the other apps; the next one in the list follows. Playlists and
  * Scan Library are actions.
+ * YouTube (2026-11-24, core/youtube_music.py): its tab searches YouTube (with
+ * his key) or takes a pasted link, plays in YouTube's own embedded player (a
+ * YouTube song plays here, on this page, never through the file player), and
+ * saves songs as links (youtube.save) that sit in playlists beside his files.
+ * MIA's pick by voice (play_on_youtube) waits at the top for one press.
  */
 (function () {
   "use strict";
   const { el, act, form, say } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["songs", "Songs"], ["playlists", "Playlists"], ["artists", "Artists"]];
+  const TABS = [["songs", "Songs"], ["playlists", "Playlists"], ["artists", "Artists"], ["youtube", "YouTube"]];
   let page = null, query = "", openList = null, artist = null;
+  let ytWords = "", ytFound = null, ytProblem = "", ytNeedsKey = false, ytNow = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "songs";
   // What's playing is the shared player's (player.js), not this page's: it keeps going when the page closes.
   let now = MIAPlayer.now(), shown = "";
@@ -26,7 +32,39 @@
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title), actions), ...body);
   const byId = (id) => (page ? page.tracks.find((t) => t.id === id) : null);
 
-  const play = (ids, start) => MIAPlayer.play(ids.map((id) => byId(id) || id), start || 0).catch((e) => say(e.message));
+  // A list may hold YouTube songs: one of those plays the list's YouTube songs in YouTube's player here; a song
+  // from a file plays the list's files through the shared player.
+  const isYt = (id) => !!(byId(id) || {}).youtube;
+  function play(ids, start) {
+    start = start || 0;
+    const chosen = ids[start];
+    if (chosen && isYt(chosen)) {
+      const yt = ids.filter(isYt);
+      const from = yt.indexOf(chosen);
+      ytPlay(yt.slice(from).concat(yt.slice(0, from)).map((id) => ({ video_id: byId(id).youtube, title: byId(id).title })));
+      return;
+    }
+    const files = ids.filter((id) => !isYt(id));
+    if (!files.length) return;
+    MIAPlayer.play(files.map((id) => byId(id) || id), Math.max(0, files.indexOf(chosen))).catch((e) => say(e.message));
+  }
+  // YouTube's own player, embedded (the privacy-enhanced host). Starting it pauses a song from a file.
+  function ytPlay(songs) {
+    if (!songs.length) return;
+    if (now.playing) control("pause");
+    ytNow = songs;
+    const ids = songs.map((s) => s.video_id).filter((v) => /^[A-Za-z0-9_-]{11}$/.test(v));
+    const src = "https://www.youtube-nocookie.com/embed/" + ids[0] + "?autoplay=1&rel=0&modestbranding=1" +
+      (ids.length > 1 ? "&playlist=" + ids.slice(1, 50).join(",") : "");
+    let box = $("yt-player");
+    if (!box) { box = el("section", { class: "glass yt-player", id: "yt-player", "aria-label": "Playing from YouTube" }); $("panel").before(box); }
+    box.replaceChildren(
+      el("div", { class: "sect" }, el("h2", {}, "▶ " + (songs[0].title || "YouTube")),
+        btn("Close", "btn-ghost btn-small", () => { box.remove(); ytNow = null; })),
+      el("div", { class: "yt-frame" }, el("iframe", { src, title: "YouTube player", allow: "autoplay; encrypted-media; picture-in-picture",
+        allowfullscreen: true, referrerpolicy: "strict-origin-when-cross-origin" })),
+      songs.length > 1 ? el("p", { class: "dim" }, songs.length - 1 + " more after this one.") : null);
+  }
   const control = (what) => MIAPlayer.control(what).catch((e) => say(e.message));
 
   // The canvas's Now Playing bar (DEC-0113): the song, its controls, and a progress line that follows it.
@@ -79,6 +117,23 @@
     input.click();
   }
 
+  async function saveTo(s) {
+    const v = await form("Save " + s.title + " To…", [{ name: "playlist_id", label: "Playlist", type: "pick", required: true, options: ["playlists"], default: null }],
+      {}, { playlists: page.playlists.map((p) => ({ id: p.id, name: p.name })) });
+    if (v) act({ kind: "youtube.save", params: { video: s.video_id, title: s.title, channel: s.channel, playlist_id: v.playlist_id } });
+  }
+  // His YouTube key, for search: sent once to MIA (kept sealed there), never shown again or kept in a proposal.
+  function keyForm() {
+    const input = el("input", { type: "password", id: "yt-key", autocomplete: "off", placeholder: "YouTube Data API key", "aria-label": "YouTube API key" });
+    return el("div", { class: "yt-key" },
+      el("p", {}, "Search needs a free YouTube Data API key of your own: in Google Cloud Console make a project, turn on " +
+        "“YouTube Data API v3”, then Credentials → Create API key. A pasted YouTube link plays without one."),
+      el("div", { class: "row-buttons" }, input, btn("Save Key", "btn-amber", async () => {
+        try { say((await MIA.youtubeKey(input.value)).said); page = await MIA.music(); ytNeedsKey = false; draw(); }
+        catch (e) { say(e.message); }
+      })));
+  }
+
   async function newPlaylist() {
     const v = await form("New Playlist", [{ name: "name", label: "Name", type: "text", required: true, options: [], default: null }], {});
     if (v) act({ kind: "playlist.add", params: v });
@@ -126,6 +181,44 @@
           buttons(x.track_ids.length ? btn("Play", "btn-green btn-small", () => play(x.track_ids)) : null, btn("Open", "btn-ghost btn-small", () => { openList = x.id; draw(); })))))
           : el("p", { class: "empty" }, "No playlists yet."));
     },
+    youtube: () => {
+      const saved = page.tracks.filter((t) => t.youtube);
+      const go = async () => {
+        ytWords = ($("yt-q") || {}).value || "";
+        ytProblem = ""; ytNeedsKey = false;
+        const link = /youtu\.?be/.test(ytWords) ? ytWords.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/) : null;
+        if (link) { ytFound = [{ video_id: link[1], title: "The song from your link", channel: "" }]; draw(); return; }
+        if (!ytWords.trim()) return;
+        say("Looking on YouTube…");
+        try {
+          const got = await MIA.youtubeSearch(ytWords);
+          ytFound = got.songs; ytProblem = got.problem; ytNeedsKey = got.needs_key;
+        } catch (e) { ytFound = []; ytProblem = e.message; }
+        draw();
+      };
+      const box = el("input", { type: "search", id: "yt-q", class: "journal-search", placeholder: "Search YouTube, or paste a YouTube link…",
+        value: ytWords, "aria-label": "Search YouTube", onkeydown: (ev) => { if (ev.key === "Enter") go(); } });
+      const pick = page.youtube_next && byId(page.youtube_next.track_id);
+      const results = ytFound === null ? null : (ytFound.length ? el("div", { class: "rows" }, ytFound.map((s) => el("div", { class: "row money-row yt-row" },
+        s.thumb ? el("img", { src: s.thumb, alt: "", class: "yt-thumb", loading: "lazy" }) : null,
+        el("div", {}, el("div", { class: "row-title" }, s.title), el("div", { class: "row-sub" }, s.channel || "YouTube")),
+        buttons(btn("Play", "btn-green btn-small", () => ytPlay([s])),
+          btn("Save", "btn-ghost btn-small", () => act({ kind: "youtube.save", params: { video: s.video_id, title: s.title, channel: s.channel } })),
+          page.playlists.length ? btn("+ Playlist", "btn-ghost btn-small", () => saveTo(s)) : null))))
+        : el("p", { class: "empty" }, ytProblem || "Nothing found."));
+      return [
+        pick ? section("MIA's Pick", btn("Play", "btn-green", () => play([pick.id])),
+          el("p", {}, pick.title + (pick.artist ? " · " + pick.artist : ""))) : null,
+        section("YouTube", btn("Search", "btn-green", go), box, results,
+          ytNeedsKey || !page.youtube_key ? keyForm() : null,
+          el("p", { class: "dim music-library" }, "Songs play in YouTube's own player and are saved as links; nothing is downloaded.")),
+        section("Saved From YouTube", saved.length ? btn("Play All", "btn-green", () => play(saved.map((t) => t.id))) : null,
+          saved.length ? songRows(saved.map((t) => t.id), (t) => buttons(el("button", { type: "button", class: "btn btn-ghost btn-small mu-add",
+            "aria-label": "Add " + t.title + " to a playlist", onclick: () => toPlaylist(t) }, "+"),
+            btn("Remove", "btn-ghost btn-small", () => act({ kind: "track.delete", params: { track_id: t.id } }))))
+            : el("p", { class: "empty" }, "Songs you save from YouTube show here and can go on any playlist.")),
+      ].filter(Boolean);
+    },
     artists: () => {
       if (artist) {
         const ids = page.tracks.filter((t) => (t.artist || "Unknown artist") === artist).map((t) => t.id);
@@ -154,7 +247,7 @@
         (lib.found ? ", or put them in MIA's music folder and Scan Library." : ". On the PC you can also point MIA at your music folder in Settings.")),
       phoneAsks() ? buttons(btn("Find The Songs On This Phone", "btn-amber", () => window.MIAPhonePermissions.ask("music"))) : null,
       !lib.found && lib.folder ? el("p", { class: "dim music-library" }, "Looking in: " + lib.folder) : null) : null;
-    $("panel").replaceChildren(...[empty, ...[].concat(lib.count ? VIEWS[tab]() : []),
+    $("panel").replaceChildren(...[tab === "youtube" ? null : empty, ...[].concat(lib.count || tab === "youtube" ? VIEWS[tab]() : []),
       lib.count ? el("p", { class: "dim music-library" }, "Library: " + lib.folder + " · ", el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); act({ kind: "music.scan", params: {} }); } }, "Scan For New Music")) : null].filter(Boolean));
   }
 

@@ -288,14 +288,16 @@ def duration_text(seconds) -> str:
 
 def music_page(context) -> dict:
     """The data the Music screen shows, assembled here (the web only draws it); {"available": False} when there's no music library. Tracks by artist, album and track number (uploaded or
-    not), playlists (only tracks still there), artists with counts, and the library folder and how long it all is.
+    not; a YouTube song carries its video id), playlists (only tracks still there), artists with counts, the library
+    folder and how long it all is, whether YouTube search has its key, and the song MIA picked to play on YouTube
+    (core/youtube_actions.play_on_youtube) while it's still in the library.
     """
     music = getattr(context, "music", None)
     if music is None:
         return {"available": False}
     tracks = [{"id": t.track_id, "title": t.title or "Untitled", "artist": t.artist or "", "album": t.album or "",
                "genre": t.genre or "", "duration": duration_text(t.duration_seconds), "seconds": t.duration_seconds or 0,
-               "uploaded": music.uploaded(t)}
+               "uploaded": music.uploaded(t), "youtube": getattr(t, "youtube_id", "") or ""}
               for t in sorted(music.all_tracks(), key=lambda t: ((t.artist or "~").lower(), (t.album or "").lower(),
                                                                 t.track_number or 0, (t.title or "").lower()))]
     known = {t["id"] for t in tracks}
@@ -309,7 +311,13 @@ def music_page(context) -> dict:
         root_text, root_found = str(root), root.exists()
     except Exception:
         root_text, root_found = "", False
-    return {"available": True, "tracks": tracks, "playlists": playlists,
+    from core.youtube_actions import NEXT_KEY
+    from core.youtube_music import has_key
+
+    picked = context.config.get(NEXT_KEY) if getattr(context, "config", None) is not None else None
+    picked = picked if isinstance(picked, dict) and picked.get("track_id") in known else None
+    return {"available": True, "tracks": tracks, "playlists": playlists, "youtube_key": has_key(),
+            "youtube_next": picked,
             "artists": [{"name": a, "count": n} for a, n in sorted(artists.items(), key=lambda kv: kv[0].lower())],
             "library": {"folder": root_text, "found": root_found, "count": len(tracks),
                         "minutes": round(sum(t["seconds"] for t in tracks) / 60)}}
@@ -356,7 +364,7 @@ def music_play(context, ids: list, at: int = 0) -> dict:
     ValueError when she can't play here or none of the songs is in the library."""
     if not music_plays_here(context):
         raise ValueError("This MIA doesn't play music herself; the page plays it.")
-    if not context.music.play_queue([str(i) for i in ids][:500], int(at or 0)):
+    if not context.music.play_queue([str(i) for i in ids][:500], int(at or 0)):  # YouTube songs: the page's
         raise ValueError("Couldn't play that: the song isn't in the library anymore.")
     return music_now(context)
 

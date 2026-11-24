@@ -47,7 +47,10 @@
       "rename_playlist",
       "resume_music",
       "set_music_volume",
-      "stop_music"
+      "stop_music",
+      "find_on_youtube",
+      "save_from_youtube",
+      "play_on_youtube"
     ],
     "actions": [
       "music.scan",
@@ -56,7 +59,8 @@
       "playlist.delete",
       "playlist.remove_track",
       "playlist.rename",
-      "track.delete"
+      "track.delete",
+      "youtube.save"
     ],
     "tiers": {
       "add_to_playlist": "act_within_grant",
@@ -80,9 +84,17 @@
       "playlist.delete": "act_with_approval",
       "playlist.remove_track": "act_within_grant",
       "playlist.rename": "act_within_grant",
-      "track.delete": "act_with_approval"
+      "track.delete": "act_with_approval",
+      "find_on_youtube": "observe",
+      "save_from_youtube": "act_within_grant",
+      "play_on_youtube": "act_within_grant",
+      "youtube.save": "act_within_grant"
     },
-    "outside": []
+    "outside": [
+      "find_on_youtube",
+      "save_from_youtube",
+      "play_on_youtube"
+    ]
   },
   "uses": [],
   "permissions": [],

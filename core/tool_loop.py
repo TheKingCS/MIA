@@ -126,7 +126,8 @@ def _lookups_only(context, calls: list[ToolCall]) -> bool:
 # Intelligence's finds (titles as feeds and search results gave them), a receipt's lines as read from a scan, and a
 # team's workspace (notes written from what they read). Their results are framed before the model sees them.
 OUTSIDE_WHAT = {"list_inbox": "Mail and letters in the inbox", "world_finds": "Finds from feeds and searches",
-                "get_receipt": "A receipt read from a scan", "whats_in_the_workspace": "A project's workspace notes"}
+                "get_receipt": "A receipt read from a scan", "whats_in_the_workspace": "A project's workspace notes",
+                "find_on_youtube": "Song titles and channels from YouTube"}
 OUTSIDE_TOOLS = frozenset(OUTSIDE_WHAT)
 
 

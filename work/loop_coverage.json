@@ -1,6 +1,10 @@
 {
  "about": "core/loop_coverage.py (DEC-0101): every process MIA has, with a loop or a reason. status: todo (needs a loop), proposed (a task drafts it), none (why: no loop needed).",
  "processes": {
+  "action:youtube": {
+   "status": "none",
+   "why": "youtube.save keeps a link to a song he chose; which songs he likes is his taste, nothing of MIA's to improve"
+  },
   "action:activity": {
    "status": "none",
    "why": "turning noting on or off and erasing what was noted are his own choices about his privacy (DEC-0197); nothing of MIA's to improve in them"

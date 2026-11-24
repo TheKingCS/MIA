@@ -768,6 +768,10 @@
     workshop: () => read("/api/workshop", "workshop"),
     expeditions: () => read("/api/expeditions", "expeditions"),
     music: () => read("/api/music", "music"),
+    // YouTube in Music (core/youtube_music.py): a search ({songs} or {problem, needs_key}) and his key, set once.
+    youtubeSearch: (q) => demo ? Promise.resolve({ songs: [], problem: "The demo can't search YouTube.", needs_key: false })
+      : call("GET", "/api/music/youtube/search?q=" + encodeURIComponent(q)),
+    youtubeKey: (key) => demo ? demoOnly() : call("POST", "/api/music/youtube/key", { key }),
     files: (folder) => read("/api/files" + (folder ? "?path=" + encodeURIComponent(folder) : ""), "files"),
     money: (strategy) => read("/api/money" + (strategy ? "?strategy=" + encodeURIComponent(strategy) : ""), "money"),
     kinds: () => call("GET", "/api/actions/kinds"),

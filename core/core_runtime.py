@@ -102,6 +102,7 @@ from core.assistant_lab_actions import register_lab_actions
 from core.assistant_notification_actions import register_notification_actions
 from core.assistant_achievement_actions import register_achievement_actions
 from core.mission_trophy_actions import register_mission_trophy_actions
+from core.youtube_actions import register_youtube_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
@@ -335,7 +336,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     (core/assistant_screen_tools.py), taught skills (core/assistant_taught_skill_actions.py, DEC-0123), and her own apps from
     their manifests (core/assistant_app_registry_actions.py, DEC-0178).
     my_achievements (core/assistant_achievement_actions.py) is among them.
-    add_mission_reward and count_toward_mission (core/mission_trophy_actions.py) are among them."""
+    add_mission_reward and count_toward_mission (core/mission_trophy_actions.py) are among them.
+    The YouTube tools (core/youtube_actions.py) are among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -363,6 +365,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_notification_actions(registry)  # read out and mark notifications read (DEC-0125)
     register_achievement_actions(registry)  # the achievements log by voice (2026-11-24)
     register_mission_trophy_actions(registry)  # mission rewards beyond XP, counted objectives
+    register_youtube_actions(registry)  # YouTube in Music: find, save, play
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

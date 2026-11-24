@@ -85,7 +85,7 @@ REGISTRY: dict[str, Retention] = {
     **_many("""security_cameras.json security_logins.json activity_log.json communication_log.json
         model_bench_cases.json push_subscriptions.json memory_vault.json activity.json recall_index.json runs.json
         turn_traces.jsonl phone_link.json module_usage.json page_usage.json vapid_keys.json update_manifest.json
-        auth.json data_key.json greenhouse_link.json dashboard_state.json status.json
+        auth.json data_key.json greenhouse_link.json dashboard_state.json status.json youtube_key.json
         files.json manifest.json index.json card.json conversation_cases.json engineering_bench.json
         user_sync_cases.json changes.jsonl capability_states.json queue.json""",
             "device", _DEVICE, False),

@@ -62,6 +62,9 @@ plays on the window's: every playback method is wrapped in
 `_on_gui_thread`, which hands the work to `context.main_thread_call`
 and waits a few seconds for the answer (None when the window was too
 busy to give one; the work still runs when it gets there).
+**YouTube songs (2026-11-24)**: a song saved from YouTube is a Track with a youtube_id and no file (`add_youtube`,
+core/youtube_music.py): it sits in playlists and search like any song, a scan never removes it, and it plays in a
+page's embedded YouTube player, never through the file player.
 """
 
 from __future__ import annotations
@@ -121,6 +124,7 @@ class Track:
     """One song in the library: the real file it points at (never copied), its tags (title, artist, album, genre,
     track number), duration, and the file's size and modified time at the last scan (so an unchanged file's tags
     aren't read again).
+    A song saved from YouTube has its video id and no file.
     """
     track_id: str
     file_path: str  # absolute path — the real, referenced file, never copied
@@ -134,20 +138,25 @@ class Track:
     file_mtime: float = 0.0
     added_at: str = ""
     last_scanned_at: str = ""
+    # A song saved from YouTube (core/youtube_music.py, 2026-11-24): its video id, no file (file_path ""). It plays
+    # through YouTube's embedded player on a page, never through the file player, and a scan never removes it.
+    youtube_id: str = ""
 
     def to_dict(self) -> dict:
-        """The record as the plain dict saved in its JSON file."""
+        """The record as the plain dict saved in its JSON file (a YouTube song's video id included)."""
         return {
             "track_id": self.track_id, "file_path": self.file_path, "title": self.title,
             "artist": self.artist, "album": self.album, "genre": self.genre,
             "track_number": self.track_number, "duration_seconds": self.duration_seconds,
             "file_size": self.file_size, "file_mtime": self.file_mtime,
             "added_at": self.added_at, "last_scanned_at": self.last_scanned_at,
+            "youtube_id": self.youtube_id,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Track":
-        """A record from its saved dict; a missing field takes its default, so older files load."""
+        """A record from its saved dict; a missing field takes its default, so older files load (a song from a file
+        has no YouTube id)."""
         return Track(
             track_id=data.get("track_id", uuid.uuid4().hex[:10]),
             file_path=data.get("file_path", ""),
@@ -161,6 +170,7 @@ class Track:
             file_mtime=data.get("file_mtime", 0.0),
             added_at=data.get("added_at", ""),
             last_scanned_at=data.get("last_scanned_at", ""),
+            youtube_id=data.get("youtube_id", "") or "",
         )
 
 
@@ -389,7 +399,8 @@ class MusicManager:
         currently exist — a temporarily-unmounted drive must never
         look like "the whole library vanished"; the caller sees
         ScanResult(root_missing=True) instead. `as_of` (a later time) takes in
-        files MIA just wrote whole, like an upload, without the wait."""
+        files MIA just wrote whole, like an upload, without the wait.
+        A song saved from YouTube (no file) is never removed by a scan."""
         root = self._resolve_root_path()
         # Folders the library also reads, like a phone's own Music folder.
         extras = [Path(f).expanduser() for f in self.context.config.get("music.extra_folders", []) or []]
@@ -449,7 +460,7 @@ class MusicManager:
                 self._tracks.append(new_track)
                 added += 1
 
-        removed_ids = {t.track_id for t in self._tracks if t.file_path not in found
+        removed_ids = {t.track_id for t in self._tracks if not t.youtube_id and t.file_path not in found
                        and not any(t.file_path.startswith(s) for s in silent)}
         if removed_ids:
             self._tracks = [t for t in self._tracks if t.track_id not in removed_ids]
@@ -515,8 +526,29 @@ class MusicManager:
         partial.replace(target)
         return target
 
+    def add_youtube(self, video_id: str, title: str, channel: str = "") -> Track:
+        """Saves a YouTube song into the library as a link (no file; core/youtube_music.py), or returns the one
+        already saved with that video id. ValueError for an id that isn't one."""
+        from core.youtube_music import video_id as id_of
+
+        vid = id_of(video_id)
+        if not vid:
+            raise ValueError("That isn't a YouTube video.")
+        same = next((t for t in self._tracks if t.youtube_id == vid), None)
+        if same is not None:
+            return same
+        now = datetime.now().isoformat(timespec="seconds")
+        track = Track(track_id=uuid.uuid4().hex[:10], file_path="", title=" ".join(str(title or "").split())[:150]
+                      or "YouTube song", artist=" ".join(str(channel or "").split())[:80], album="YouTube",
+                      added_at=now, last_scanned_at=now, youtube_id=vid)
+        self._tracks.append(track)
+        self._save_tracks()
+        return track
+
     def uploaded(self, track: "Track") -> bool:
-        """A song that was uploaded into MIA (its own copy, safe to delete)."""
+        """A song that was uploaded into MIA (its own copy, safe to delete); never a YouTube link."""
+        if track.youtube_id or not track.file_path:
+            return False
         try:
             return Path(track.file_path).resolve().parent == (self._resolve_root_path() / "Uploads").resolve()
         except OSError:
@@ -644,9 +676,12 @@ class MusicManager:
         log.warning("Music playback error: %s", error_string)
 
     def _load_track_into_player(self, track: Track) -> bool:
-        """Starts playing a song's file; False (logged) when the file is no longer there."""
+        """Starts playing a song's file; False (logged) when the file is no longer there, or it's a YouTube link
+        (those play in a page's embedded YouTube player)."""
         from PySide6.QtCore import QUrl
 
+        if track.youtube_id or not track.file_path:
+            return False
         path = Path(track.file_path)
         if not path.exists():
             log.warning("Track file no longer exists: '%s'", track.file_path)
@@ -659,8 +694,9 @@ class MusicManager:
     @_on_gui_thread
     def play_queue(self, track_ids: list[str], start_index: int = 0) -> bool:
         """Plays a list of songs from a position, the rest following (a page's list: every song, an artist's, a
-        search). Songs no longer in the library are left out; False when none is left or the position isn't there."""
-        known = [i for i in track_ids if self.get_track(i) is not None]
+        search). Songs no longer in the library are left out, and YouTube ones (a page plays those); False when none
+        is left or the position isn't there."""
+        known = [i for i in track_ids if self.get_track(i) is not None and not self.get_track(i).youtube_id]
         if not known or not (0 <= start_index < len(track_ids)):
             return False
         started = track_ids[start_index]
