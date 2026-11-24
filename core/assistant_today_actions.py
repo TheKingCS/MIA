@@ -162,7 +162,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
-    generator run?", "do I need to cover the tomatoes", "what was I in the middle of":
+    generator run?", "do I need to cover the tomatoes", "what was I in the middle of",
+    "have I been spending more than normal?", "what's first tomorrow":
     tests/test_everyday_phrasing_routing.py)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
@@ -210,7 +211,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_anything_unusual,
         trigger_phrases=("anything unusual", "anything off", "anything weird", "anything out of the ordinary",
-                         "notice anything", "anything wrong"),
+                         "notice anything", "anything wrong", "more than normal", "more than usual", "than usual",
+                         "than normal"),
     ))
     registry.register(AssistantAction(
         name="where_were_we", domain="today",
@@ -263,7 +265,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         description="The evening wrap now: what got done today, then tomorrow's first thing and tomorrow's weather.",
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_evening_wrap,
-        trigger_phrases=("wrap up my day", "evening wrap", "how did today go", "what's tomorrow", "end of day"),
+        trigger_phrases=("wrap up my day", "evening wrap", "how did today go", "what's tomorrow", "end of day",
+                         "first tomorrow", "first thing tomorrow", "tomorrow first"),
     ))
     registry.register(AssistantAction(
         name="set_weather_place", domain="today",

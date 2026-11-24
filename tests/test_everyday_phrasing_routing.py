@@ -6,7 +6,7 @@ The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by t
 embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his
 generator and preparedness settings, how long the generator runs, the weather against his plans, where he left
 off, money ahead, an invoice, the garden's week and year, a build's price and the flock's feed; and a plan whose words
-catch a weather, garden or flock question (the evening's, the week's, what's coming up) leaves it to those tools.
+catch a weather, garden or flock question (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
 """
 
 import pytest
@@ -31,6 +31,7 @@ SAID = [
     ("homestead_year", "what's coming up on the homestead this spring"),
     ("price_build", "how much should I charge for a picnic table"),
     ("get_eggs", "how long will the feed last?"), ("get_eggs", "when do I need more chicken feed"),
+    ("anything_unusual", "have I been spending more than normal?"), ("evening_wrap", "what's first tomorrow"),
 ]
 
 
@@ -47,7 +48,8 @@ def test_each_everyday_phrasing_is_offered_its_tool(registry, tool, said):
 
 @pytest.mark.parametrize("said", ["is it going to frost tonight?", "what should I plant this week",
                                   "what's coming up on the homestead this spring", "will I be short next month?",
-                                  "when do I need more chicken feed tonight"])
+                                  "when do I need more chicken feed tonight", "have I been spending more than normal?",
+                                  "what's first tomorrow"])
 def test_a_plan_leaves_a_weather_garden_or_flock_question_to_its_tool(said):
     from core import question_plans
 
