@@ -4,7 +4,8 @@ freedom date, and each area a greenhouse touches (growing, water, power, time, g
 records or said as missing, with general guidance marked as such. And it never takes a question that's another plan's or a tool's (debts, a
 bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing. A
 Planner draft's "What It Touches" is the same picture at the draft's own size, and a confirmed build's materials
-still to buy reach the money answers, and one used on something else is said once."""
+still to buy reach the money answers (stock counted once across builds), one used on something else is said while
+it's short, and his own page speaks to him."""
 
 from datetime import date
 
@@ -144,7 +145,7 @@ def test_a_confirmed_builds_materials_still_to_buy_reach_the_afford_answer_and_d
     assert "Confirmed builds still to buy: " + draft.title in sheet.as_text()
 
 
-def test_a_confirmed_builds_material_used_elsewhere_is_said_once_and_the_first_look_only_remembers(life, tmp_path):
+def test_a_confirmed_builds_material_used_elsewhere_is_said_while_short_and_the_first_look_only_remembers(life, tmp_path):
     from core import project_plans
     from core.material_manager import MaterialManager
     from core.project_plans import ProjectPlanBook
@@ -159,5 +160,30 @@ def test_a_confirmed_builds_material_used_elsewhere_is_said_once_and_the_first_l
     assert pr.gone_short(life, TODAY) == []  # nothing changed
     life.materials.update_material(boards.material_id, quantity_on_hand=2)
     found = pr.gone_short(life, TODAY)
-    assert len(found) == 1 and "2x6 x 8 ft (2 on hand, it needs 6)" in found[0]["text"]
-    assert pr.gone_short(life, TODAY) == []  # said once: now it's what's covered
+    assert len(found) == 1 and "2x6 x 8 ft (2 on hand for it, it needs 6)" in found[0]["text"]
+    again = pr.gone_short(life, TODAY)  # still short: still said (the gate says each key once), never used up
+    assert [f["key"] for f in again] == [found[0]["key"]]
+    life.materials.update_material(boards.material_id, quantity_on_hand=6)
+    assert pr.gone_short(life, TODAY) == []  # bought back: nothing to say
+
+
+def test_stock_one_confirmed_build_counts_on_isnt_counted_again_for_the_next(life, tmp_path):
+    from core import project_plans
+    from core.material_manager import MaterialManager
+    from core.project_plans import ProjectPlanBook
+
+    life.project_plans = ProjectPlanBook(life, data_dir=tmp_path / "pp")
+    life.materials = MaterialManager(life, data_dir=tmp_path / "mat")
+    life.materials.add_material("2x6 x 8 ft", unit="board", unit_cost=10, quantity_on_hand=6)
+    for _ in range(2):
+        plan = project_plans.draft(life, {"kind": "build", "shelf_plan": "builtin:raised-bed"})
+        plan.status = "confirmed"
+        life.project_plans.put(plan)
+    first, second = pr.still_to_buy(life)
+    assert first["items"] < second["items"]  # the first has the six boards; the second buys its own
+    assert second["cost"] >= 60
+
+
+def test_his_own_page_speaks_to_him_not_about_him():
+    assert pr.to_you("His gauge logged 1 inches of rain over the last seven days.").startswith("Your gauge logged")
+    assert "until you say yours" in pr.to_you("14 materials, at its own size until he says his.")

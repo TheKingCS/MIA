@@ -23,7 +23,7 @@ SPEND_MARGIN over in money; so a month half gone is never compared with a whole 
 flock eats, once for each bag.
 
 **Builds** (core/project_ripple.gone_short): a confirmed build's material that was fully on hand and isn't any more
-(used on something else), once.
+(used on something else), while it's short; the gate says each shortage once.
 
 More checks belong here as their records allow (a bill that didn't come): each its own pure function, its own
 fingerprint.

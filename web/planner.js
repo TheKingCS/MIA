@@ -28,9 +28,16 @@
     const panel = el("details", { ontoggle: async (e) => {
       if (!e.target.open || box.dataset.read) return;
       box.dataset.read = "1";
-      const data = await MIA.plannerTouches(plan.plan_id);
+      let data;
+      try { data = await MIA.plannerTouches(plan.plan_id); } catch (err) {
+        delete box.dataset.read;  // open it again to try again
+        box.replaceChildren(el("p", { class: "dim" }, "Couldn't read your records just now. Close this and open it again to retry."));
+        return;
+      }
+      // after a label the line goes on in lower case: "Not recorded: no rain logged this week"
+      const after = (label, text) => label && text ? text.charAt(0).toLowerCase() + text.slice(1) : text;
       box.replaceChildren(...(data.lines || []).map((l) => el("p", { class: l.kind === "fact" || l.kind === "calculation" ? "" : "dim" },
-        (LABEL[l.kind] || "") + l.text + (l.source ? " (" + l.source + ")" : ""))));
+        (LABEL[l.kind] || "") + after(LABEL[l.kind], l.text) + (l.source ? " (" + l.source + ")" : ""))));
     } }, el("summary", {}, "What It Touches"), box);
     return panel;
   }

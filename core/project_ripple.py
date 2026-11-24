@@ -34,7 +34,10 @@ or changed: the sheet ends by offering to draft the plan, which waits for his Co
 on the afford, priorities and projects sheets, so "can I afford it?" knows the greenhouse's lumber is still to come.
 
 **When it changes** (`gone_short`, step 3): a material a confirmed build had fully on hand that isn't any more is
-said once, through the daily check of what's unusual (core/unusual.py) and the communication gate.
+offered through the daily check of what's unusual (core/unusual.py), the gate saying each shortage once; stock is
+counted once across the builds (`_allotted`), so two builds never both count the same boards.
+
+**On his own page** lines are said to him (`to_you`), not about him.
 
 **On the Planner page** (`for_plan`, /api/planner/touches): each plan's "What It Touches" is the same picture, at the
 plan's own size (a garden plan's beds and crops in place of a build), opened when he asks for it.
@@ -336,78 +339,93 @@ def _picture(context, sheet, kind: Kind, draft, today: date) -> None:
             log.exception("The project picture couldn't gather %s", area)
 
 
-def still_to_buy(context) -> list[dict]:
-    """What his confirmed builds still need from the store, each {title, cost, unpriced, items}: its Library plan at
-    the plan's size against the workshop's stock now (core/plan_library.detail), so what he's bought and put in
-    stock drops off. Drafts aren't counted (nothing's decided); a build already finished (its project Complete) isn't
-    either. [] without plans."""
-    from core.plan_library import detail
+def _allotted(context) -> list[tuple]:
+    """Each confirmed build still under way (not a draft, not one whose project is Complete) with its materials laid
+    against the workshop's stock in turn, oldest plan first, so stock one build counts on isn't counted again for
+    the next: [(plan, rows)], each row {item, need, have, buy, cost (None without a price)}. A plan that can't be
+    read is logged and left out."""
+    from core.plan_library import _match, detail
 
     book = getattr(context, "project_plans", None)
     projects = getattr(context, "projects", None)
+    stock = list(getattr(getattr(context, "materials", None), "all_materials", lambda: [])())
+    left = {id(m): float(m.quantity_on_hand or 0) for m in stock}
     out = []
-    for plan in (book.listed() if book is not None else []):
+    plans = sorted((book.listed() if book is not None else []), key=lambda p: p.created_at or "")
+    for plan in plans:
         if plan.status != "confirmed" or plan.kind != "build" or not plan.shelf_plan:
             continue
         project = projects.get_project(plan.project_id) if projects is not None and plan.project_id else None
         if project is not None and project.status == "Complete":
             continue
         try:
-            page = detail(context, plan.shelf_plan, plan.sizes or None)
+            items = (detail(context, plan.shelf_plan, plan.sizes or None) or {}).get("items", [])
         except Exception:  # noqa: BLE001 - one plan that can't be read leaves the rest
             log.exception("Couldn't read %s's materials", plan.title)
             continue
-        shopping = (page or {}).get("shopping") or {}
-        to_buy = shopping.get("to_buy", [])
-        if to_buy:
-            out.append({"title": plan.title, "cost": float(shopping.get("known_cost") or 0),
-                        "unpriced": len(to_buy) - int(shopping.get("priced") or 0), "items": len(to_buy)})
+        rows = []
+        for item in items:
+            need = float(item.get("qty") or 0)
+            match = _match(item["name"], stock)
+            have = min(need, left[id(match)]) if match is not None else 0.0
+            if match is not None:
+                left[id(match)] -= have
+            buy = max(0.0, need - have)
+            cost = round(buy * float(match.unit_cost), 2) if match is not None and match.unit_cost and buy else None
+            rows.append({"item": item["name"], "need": need, "have": have, "buy": buy, "cost": cost})
+        out.append((plan, rows))
     return out
 
 
-COVERED_KEY = "planner.covered"  # {plan_id: [materials fully on hand at the last check]}
+def still_to_buy(context) -> list[dict]:
+    """What his confirmed builds still need from the store, each {title, cost, unpriced, items}: each build's Library
+    plan at its size against the workshop's stock now, stock counted once across them (`_allotted`), so what he's
+    bought and put in stock drops off. Drafts aren't counted (nothing's decided); a finished build isn't either."""
+    out = []
+    for plan, rows in _allotted(context):
+        to_buy = [r for r in rows if r["buy"] > 0]
+        if to_buy:
+            out.append({"title": plan.title, "cost": round(sum(r["cost"] or 0 for r in to_buy), 2),
+                        "unpriced": sum(1 for r in to_buy if r["cost"] is None), "items": len(to_buy)})
+    return out
+
+
+COVERED_KEY = "planner.covered"  # {plan_id: [materials it has had fully on hand]}
 
 
 def gone_short(context, today: date) -> list[dict]:
-    """Step 3 of the plan (a change ripples): each confirmed build with a material it had fully on hand at the last
-    check that it doesn't now (used on something else, or the count corrected), {kind, title, text, key} for
-    core/unusual.py, said once a material a day at most. The first check for a plan only remembers what's covered.
-    What's covered is kept in the config (`COVERED_KEY`), per plan."""
-    from core.plan_library import detail
-
-    book = getattr(context, "project_plans", None)
+    """Step 3 of the plan (a change ripples): each confirmed build with a material it once had fully on hand that it
+    doesn't now (used on something else, gone into the build, or the count corrected), {kind, title, text, key} for
+    core/unusual.py. Said for as long as it's short ("anything unusual?" always says what's short now); the gate
+    says each once, its key naming the plan, the material and how many are on hand. What's been covered only grows
+    (`COVERED_KEY`, merged plan by plan, never a plan dropped), so reading it never uses a notice up; the first check
+    for a plan only remembers."""
     config = getattr(context, "config", None)
-    if book is None or config is None:
+    if config is None:
         return []
-    projects = getattr(context, "projects", None)
     before = dict(config.get(COVERED_KEY, {}) or {})
-    now, out = {}, []
-    for plan in book.listed():
-        if plan.status != "confirmed" or plan.kind != "build" or not plan.shelf_plan:
-            continue
-        project = projects.get_project(plan.project_id) if projects is not None and plan.project_id else None
-        if project is not None and project.status == "Complete":
-            continue
-        page = detail(context, plan.shelf_plan, plan.sizes or None)
-        rows = ((page or {}).get("shopping") or {}).get("rows", [])
-        covered = sorted(r["item"] for r in rows if r["have"] and r["buy"] <= 0)
-        now[plan.plan_id] = covered
-        lost = [r for r in rows if r["item"] in set(before.get(plan.plan_id, covered)) - set(covered)]
+    after, out = dict(before), []
+    for plan, rows in _allotted(context):
+        covered = {r["item"] for r in rows if r["need"] and r["buy"] <= 0}
+        seen = set(before.get(plan.plan_id, covered))
+        after[plan.plan_id] = sorted(seen | covered)
+        lost = [r for r in rows if r["item"] in seen - covered]
         if lost:
-            said = "; ".join(f"{r['item']} ({r['have']:g} on hand, it needs {r['need']:g})" for r in lost)
+            said = "; ".join(f"{r['item']} ({r['have']:g} on hand for it, it needs {r['need']:g})" for r in lost)
             out.append({"kind": "build", "title": f"{plan.title}: materials short again",
                         "text": f"What you had on hand for {plan.title} isn't all there any more: {said}. If it went "
-                                "to something else, it's back on that build's list to buy.",
-                        "key": f"build-{plan.plan_id}-{'-'.join(sorted(r['item'] for r in lost))}-{today.isoformat()}"})
-    if now != before:
-        config.set(COVERED_KEY, now)
+                                "into this build, there's nothing to do; if it went to something else, it's back on "
+                                "that build's list to buy.",
+                        "key": f"build-{plan.plan_id}-" + "-".join(f"{r['item']}:{r['have']:g}" for r in lost)})
+    if after != before:
+        config.set(COVERED_KEY, after)
         config.save()
     return out
 
 
 def add_still_to_buy(context, sheet) -> None:
-    """The line money answers carry for his confirmed builds (`still_to_buy`), one calculation for them all; nothing
-    when none has anything left to buy."""
+    """The line money answers carry for his confirmed builds (`still_to_buy`), one calculation for them all, said as
+    not counted in the freedom date beside it; nothing when none has anything left to buy."""
     from core.question_plans import CALCULATION
     from core.region import money
 
@@ -420,7 +438,8 @@ def add_still_to_buy(context, sheet) -> None:
     total = sum(r["cost"] for r in rows)
     floor = any(r["unpriced"] for r in rows)
     sheet.add(CALCULATION, "Confirmed builds still to buy: " + "; ".join(parts) + "."
-              + (f" That's {'at least ' if floor else ''}{money(total)} already spoken for." if total else ""),
+              + (f" That's {'at least ' if floor else ''}{money(total)} already spoken for (not counted in the "
+                 "freedom date)." if total else ""),
               "the Planner, against the workshop's stock")
 
 
@@ -436,7 +455,8 @@ def _kind_of_plan(plan) -> Kind:
 
 def for_plan(context, plan_id: str, today: Optional[date] = None) -> list[dict]:
     """The Planner page's "What It Touches" for one plan: the same picture as asking about it (`_picture`, at the
-    plan's own size), each line {kind, text, source}; [] for a plan that isn't there. Plans nothing."""
+    plan's own size), each line {kind, text, source}, said to him (`to_you`); [] for a plan that isn't there. Plans
+    nothing."""
     from core.question_plans import Sheet
 
     book = getattr(context, "project_plans", None)
@@ -445,4 +465,19 @@ def for_plan(context, plan_id: str, today: Optional[date] = None) -> list[dict]:
         return []
     sheet = Sheet("project picture", "What it touches")
     _picture(context, sheet, _kind_of_plan(plan), plan, today or date.today())
-    return [{"kind": f.kind, "text": f.text, "source": f.source} for f in sheet.facts]
+    return [{"kind": f.kind, "text": to_you(f.text), "source": f.source} for f in sheet.facts]
+
+
+# The sheet speaks of him to the model; his own page speaks to him
+_YOU = ((r"\bHis gauge\b", "Your gauge"), (r"\buntil he says his\b", "until you say yours"),
+        (r"\bwhen he says\b", "when you say"), (r"\bHe can say\b", "You can say"),
+        (r"\bthe build takes him\b", "the build takes you"), (r"\bfrom rain or from him\b", "from rain or from you"),
+        (r"\bhis week\b", "your week"), (r"\bhe's planning\b", "you're planning"),
+        (r"\bhe confirms\b", "you confirm"), (r"\bat his size\b", "at your size"))
+
+
+def to_you(text: str) -> str:
+    """Pure logic. A sheet line as said to him on his own page: "His gauge logged" is "Your gauge logged"."""
+    for pattern, said in _YOU:
+        text = re.sub(pattern, said, text)
+    return text

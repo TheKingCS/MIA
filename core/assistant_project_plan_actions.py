@@ -149,7 +149,8 @@ def _buildable(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), what_can_i_build (the builds closest to done from his stock, core/buildable.py),
+    chosen when drafted), what_can_i_build (the builds closest to done from his stock, core/buildable.py; reached by
+    "build with what I have" or his lumber, never a bare "what could I build", which is often about something else),
     project_picture (what a project touches, core/project_ripple.py; reached by planning words,
     never by "want to build a", which is the material list's), price_build
     (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
@@ -194,9 +195,10 @@ def register_project_plan_actions(registry) -> None:
         description="Which of the Library's builds he's closest to having the materials for, from his workshop's "
                     "stock: how many of each plan's materials are on hand, what's left to buy and its cost.",
         parameters={"type": "object", "properties": {}},
-        handler=_buildable, trigger_phrases=("what can i build", "what could i build", "build with what i have",
-                                             "build with what i've got", "use up my lumber", "use up my scrap",
-                                             "use up the lumber", "with what's in the shop", "with the lumber i have"),
+        handler=_buildable, trigger_phrases=("build with what i have", "build with what i've got",
+                                             "use up my lumber", "use up my scrap", "use up the lumber",
+                                             "build with the lumber", "build with my lumber", "with the lumber i have",
+                                             "build with my stock", "build from my stock"),
     ))
     registry.register(AssistantAction(
         name="price_build", domain=DOMAIN,
