@@ -62,6 +62,7 @@ SAID = [
     ("list_orders", "what orders are due this week?"),
     ("log_workout", "I ran 3 miles this morning"), ("log_workout", "did 45 minutes on the bike"),
     ("log_workout", "I benched 185 for 5"), ("plan_meal", "what's for dinner this week"),
+    ("get_net_worth", "what's my net worth?"), ("get_net_worth", "how much am I worth"),
 ]
 
 

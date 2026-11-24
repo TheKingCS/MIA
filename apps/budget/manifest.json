@@ -68,6 +68,7 @@
       "log_business_use",
       "mark_bill_paid",
       "mark_income_received",
+      "get_net_worth",
       "money_ahead",
       "record_debt_payment",
       "record_tool_purchase",
@@ -156,6 +157,7 @@
       "income_source.add": "act_within_grant",
       "income_source.delete": "act_with_approval",
       "income_source.edit": "act_within_grant",
+      "get_net_worth": "observe",
       "money_ahead": "observe",
       "debt_payoff_mission": "act_with_approval",
       "debts.missions": "act_with_approval"

@@ -93,7 +93,10 @@ Later the same night: everyday money, homestead, business, kitchen and fitness p
 business by voice (`core/assistant_business_voice_actions.py`: quotes, orders, customers); a thirteenth review made
 the tool loop count a tool its app marks `observe` as read-only (`main_thread.changes_records`: 24 read-only tools
 were being treated as changes), record names match as whole words, and business is a child's blocked domain
-(K-0379 to K-0384). Note: Windows
+(K-0379 to K-0384). Two more reviews fixed what that change broke (K-0385, K-0386): a web search or page read
+keeps a change's path (`main_thread.OUTWARD`: after outside text it's held), and a direct lookup is never taken
+from a question naming another app's record, past the lookup's own words. Then "what's my net worth?"
+(`get_net_worth`, K-0387). Routing heuristics are fragile: send a fresh reviewer over every change to them. Note: Windows
 Application Control now blocks libzim's DLL on the PC, so run the suite with
 `--ignore=tests/test_reference_library_manager.py` there (CI on Linux runs it); her offline library reader needs it
 unblocked (WAITING_ON 0zh).

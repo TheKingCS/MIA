@@ -747,12 +747,36 @@ def _action_money_ahead(context, arguments: dict) -> str:
     return money_ahead.say(context)
 
 
+def _action_get_net_worth(context, arguments: dict) -> str:
+    """Assistant tool `get_net_worth`: his net worth as the Money page works it out (core/finance_summary._net_worth:
+    linked accounts' latest totals and the equity in his properties), each part named, and, since his other debts
+    (cards, loans) aren't taken off that figure, the figure with them too; what isn't known is said, never a made-up
+    zero."""
+    from core.finance_summary import _net_worth
+
+    found = _net_worth(context)
+    budget = getattr(context, "budget", None)
+    debts = [d for d in (budget.all_debts() if budget is not None else []) if float(d.balance or 0) > 0]
+    owed = round(sum(float(d.balance or 0) for d in debts), 2)
+    if found["total"] is None:
+        said = ("I can't work out a net worth yet: no linked accounts or properties are tracked, so there's nothing "
+                "to add up.")
+        return said + (f" Your debts come to {money(owed, ',.2f')}." if debts else "")
+    parts = "; ".join(f"{s['label']} {money(s['value'], ',.2f')}" for s in found["sources"])
+    said = f"From what I track, your net worth is {money(found['total'], ',.2f')} ({parts})."
+    if debts:
+        said += (f" That doesn't take off your other debts, {money(owed, ',.2f')} across {len(debts)} "
+                 f"(cards and loans); with them it's {money(round(found['total'] - owed, 2), ',.2f')}.")
+    return said + " Savings or cash in accounts that aren't linked aren't counted."
+
+
 def register_domain_actions(registry: AssistantActionRegistry) -> None:
     # -- maintenance (assets incl. greenhouse/garden plants) --------------
     """Registers every tool above with the Assistant's registry, with its description, parameters and trigger
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
-    them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
+    them money_ahead, the next 13 weeks of money (core/money_ahead.py), get_net_worth (the Money page's figure, each
+    part named, and with his other debts taken off), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
     not paid me?", "which canned stuff should I use first?", "send Lee a bill for the bench", "what subscriptions am I paying
@@ -846,6 +870,14 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         }, ["debt_name", "amount"]),
         handler=_action_record_debt_payment,
         trigger_phrases=("paid toward", "toward my", "toward the", "payment on my", "loan payment", "card payment", "paid down", "paid off"),
+    ))
+    registry.register(AssistantAction(
+        name="get_net_worth", domain="budget",
+        description="His net worth from what MIA tracks (linked accounts and property equity), each part named, and "
+                    "with his other debts taken off too.",
+        parameters=_NO_PARAMS, handler=_action_get_net_worth,
+        trigger_phrases=("net worth", "how much am i worth", "what am i worth", "own minus what i owe",
+                         "assets minus debts"),
     ))
     registry.register(AssistantAction(
         name="money_ahead", domain="budget",
