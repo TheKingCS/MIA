@@ -327,4 +327,7 @@ New ideas, each checked against what's there first:
 
 - **Should I water today?** (S, no decision): built 2026-11-24 (`core/weather_watch.watering`): rain now or likely
   tomorrow says hold off, a hot dry day says water deeply in the morning, every answer ends with the soil check.
+- **What can I plant now?** (S, no decision): built 2026-11-24 (`core/planting_now.py`): from his last spring frost,
+  what's due to start indoors, transplant or sow now, and one crop's next step and date ("when do I plant
+  potatoes?"); his frost date is asked for, never assumed.
 - *Found already there:* feed cost per dozen eggs (`core/flock.py`, on the Chickens page and in "how are the hens?").

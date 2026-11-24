@@ -70,7 +70,8 @@
       "specialist_roster",
       "start_plan_project",
       "work_it_out",
-      "seed_viability"
+      "seed_viability",
+      "what_to_plant"
     ],
     "actions": [
       "library.fetch",
@@ -118,7 +119,8 @@
       "price_build": "observe",
       "homestead_year": "observe",
       "garden_this_week": "observe",
-      "seed_viability": "observe"
+      "seed_viability": "observe",
+      "what_to_plant": "observe"
     },
     "outside": []
   },

@@ -121,11 +121,21 @@ def _seed_life(context, arguments: dict) -> str:
     return seed_life.say(context, str(arguments.get("seeds") or ""))
 
 
+def _what_to_plant(context, arguments: dict) -> str:
+    """Tool what_to_plant: with a crop, when to plant it; without, what's due to plant now, from his last frost
+    (core/planting_now.py)."""
+    from core import planting_now
+
+    crop = str(arguments.get("crop") or "").strip()
+    return planting_now.say_crop(context, crop) if crop else planting_now.say_now(context)
+
+
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
     chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
     show_plans,
-    confirm_plan and drop_plan, and seed_viability (how long his seeds keep, core/seed_life.py). Their trigger
+    confirm_plan and drop_plan, seed_viability (how long his seeds keep, core/seed_life.py) and what_to_plant (what's
+    due to plant now, or one crop's dates, core/planting_now.py). Their trigger
     phrases cover the everyday ways he'd ask ("what should I plant this
     week", "what needs doing in the garden", "how much should I charge for a picnic table":
     tests/test_everyday_phrasing_routing.py)."""
@@ -170,6 +180,16 @@ def register_project_plan_actions(registry) -> None:
                                                "plant this week", "seeds do i still need", "seeds i still need",
                                                "seeds do i need", "doing in the garden", "to do in the garden",
                                                "needs done in the garden"),
+    ))
+    registry.register(AssistantAction(
+        name="what_to_plant", domain=DOMAIN,
+        description="What's due to plant now (start indoors, transplant or sow) from his last frost, or, with a crop, "
+                    "when to plant that one.",
+        parameters={"type": "object", "properties": {
+            "crop": {"type": "string", "description": "one crop, if he named one"}}, "required": []},
+        handler=_what_to_plant, trigger_phrases=("what can i plant", "what should i plant", "what should i be planting",
+                                                 "when should i plant", "when do i plant", "too late to plant",
+                                                 "too late for", "time to plant", "when to plant", "plant now"),
     ))
     registry.register(AssistantAction(
         name="seed_viability", domain=DOMAIN,
