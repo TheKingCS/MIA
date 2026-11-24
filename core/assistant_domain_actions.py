@@ -755,7 +755,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
-    not paid me?", "which canned stuff should I use first?": tests/test_everyday_phrasing_routing.py).
+    not paid me?", "which canned stuff should I use first?", "send Lee a bill for the bench",
+    "will I be short next month?": tests/test_everyday_phrasing_routing.py).
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -852,7 +853,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         parameters=_obj({}, []),
         handler=_action_money_ahead,
         trigger_phrases=("next 90 days", "next few months", "next three months", "money ahead", "cash flow",
-                         "tight weeks", "tight week", "money coming up", "can i cover", "short this month"),
+                         "tight weeks", "tight week", "money coming up", "can i cover", "short this month",
+                         "be short", "short next month"),
     ))
     registry.register(AssistantAction(
         name="who_owes_me", domain="business",
@@ -869,7 +871,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
                     "receipt once paid). Only drafted: he presses Send.",
         parameters=_obj({"order": _s("words from the order's name; empty for the newest open one")}, []),
         handler=_action_draft_invoice,
-        trigger_phrases=("draft the invoice", "invoice for", "send an invoice", "bill the customer", "make an invoice"),
+        trigger_phrases=("draft the invoice", "invoice for", "send an invoice", "bill the customer", "make an invoice",
+                         "a bill for the", "an invoice", "bill them for", "bill him for", "bill her for"),
     ))
     registry.register(AssistantAction(
         name="debt_payoff_mission", domain="debts",

@@ -162,7 +162,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
-    generator run?": tests/test_everyday_phrasing_routing.py)."""
+    generator run?", "do I need to cover the tomatoes", "what was I in the middle of":
+    tests/test_everyday_phrasing_routing.py)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -199,7 +200,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_weather_for_my_plans,
         trigger_phrases=("frost tonight", "will it frost", "going to frost", "freeze tonight", "will it freeze",
                          "cover the garden", "cover my plants", "weather for my garden", "weather mean for",
-                         "too hot for the chickens", "too cold for the chickens", "hens' water"),
+                         "too hot for the chickens", "too cold for the chickens", "hens' water", "need to cover",
+                         "rain tomorrow", "rain mess", "rain on the", "rain for the build"),
     ))
     registry.register(AssistantAction(
         name="anything_unusual", domain="today",
@@ -217,7 +219,7 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_where_were_we,
         trigger_phrases=("where were we", "where did we leave off", "where did i leave off", "what was i working on",
-                         "pick up where", "what was i doing", "remind me where i was"),
+                         "pick up where", "what was i doing", "remind me where i was", "in the middle of"),
     ))
     registry.register(AssistantAction(
         name="how_prepared", domain="today",

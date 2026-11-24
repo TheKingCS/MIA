@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1647 files, 359,776 lines; 1647 files describe themselves; 19,783 of 19,913 classes and functions are documented.
+1647 files, 359,840 lines; 1647 files describe themselves; 19,786 of 19,916 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-648 files, 183,438 lines; 9,378 of 9,464 classes and functions documented
+648 files, 183,474 lines; 9,379 of 9,465 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -946,7 +946,7 @@
 
 ## tests/: the test suite: what each part must do
 
-595 files, 95,786 lines; 8,042 of 8,086 classes and functions documented
+595 files, 95,814 lines; 8,044 of 8,088 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1103,7 +1103,7 @@
 - `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
-- `tests/test_everyday_phrasing_routing.py`: The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by their trigger phrases, without the embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his generator and preparedness settings, and how long the generator runs.
+- `tests/test_everyday_phrasing_routing.py`: The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by their trigger phrases, without the embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his generator and preparedness settings, how long the generator runs, the weather
 - `tests/test_expedition_manager.py`: Unit tests for core.expedition_manager. Isolates _DATA_DIR _EXPEDITIONS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths).
 - `tests/test_expedition_sync.py`: Unit tests for core.expedition_sync. Isolates _DATA_DIR/_TRIP_PHOTOS_DIR into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/ or trip_photos/ directories.
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).

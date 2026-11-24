@@ -173,7 +173,8 @@ def _get_deadlines(context, arguments: dict) -> str:
 
 def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
-    sell_goods, get_freedom_progress and get_deadlines.
+    sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
+    will the feed last?": its answer says how long the feed lasts, core/feed_runway.py).
     """
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
@@ -181,7 +182,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         description="The chickens: eggs today and this week, lay rate, loose eggs, cartons on hand, feed cost per dozen.",
         parameters=none, handler=_get_eggs,
         trigger_phrases=("how many eggs", "eggs this week", "eggs today", "lay rate", "are the hens laying",
-                         "how are the chickens", "how are the hens", "egg count"),
+                         "how are the chickens", "how are the hens", "egg count", "feed last", "chicken feed",
+                         "more feed", "out of feed"),
         subjects=("egg", "hen", "chicken", "flock"),
     ))
     registry.register(AssistantAction(

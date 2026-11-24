@@ -1095,7 +1095,8 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
     a request to change something. Spoken questions have no "?", so by
     meaning anything that isn't a change can match (small talk's nearest
     example is in NOT_A_PLAN); by words only (no embedding model) it must
-    look like a question."""
+    look like a question. Either way, a plan never takes a question its `NOT_FOR` words give to a tool (the
+    evening's plan never answers "will it frost tonight?")."""
     from core.assistant_actions import looks_like_question
     from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
 
@@ -1111,7 +1112,9 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
         name, score = found
         if how_to and score < EXAMPLE_AT:  # "how do I add a bill?" is the help docs'; "how can I quit faster?" is a plan's
             return None
-        return (PLAN_BY_NAME[name], score) if name in PLAN_BY_NAME and score >= MATCH_AT else None
+        if name in PLAN_BY_NAME and score >= MATCH_AT and not _not_for(name, said):
+            return PLAN_BY_NAME[name], score
+        return None
     if how_to:
         return None
     # No embedding model here (the phone): the plan's own words, when exactly one plan's match.
@@ -1120,9 +1123,30 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
     lowered = said.lower()
     hits = [p for p in PLANS if re.search(p.words, lowered)]
     across = [p for p in hits if p.name in CROSS_DOMAIN]  # the more specific: it gathers the others' facts too
+    hits = [p for p in hits if not _not_for(p.name, said)]
+    across = [p for p in across if p in hits]
     if len(across) == 1:
         return across[0], None
     return (hits[0], None) if len(hits) == 1 else None
+
+
+_WEATHER = r"frost|freez\w*|rain\w*|snow\w*|storms?|forecast|weather|windy|too (cold|hot)|cover the"
+_GROWING = r"plant(ing)?|seeds?|sow(ing)?|transplant\w*|garden\w*|homestead"
+_FLOCK = r"feed|hens?|chickens?|flock|coop"
+# A plan's own words can catch a question it can't answer: "is it going to frost tonight?" isn't the evening's plan,
+# "what should I plant this week" isn't the week's review. Such a question goes on to the tool that answers it
+# (the weather against his plans, the garden's week, the flock's feed).
+NOT_FOR = {
+    "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK})\b", re.I),
+    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK})\b", re.I),
+    "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow)\b", re.I),
+}
+
+
+def _not_for(name: str, said: str) -> bool:
+    """Pure logic. Whether a question is one plan `name` mustn't take (NOT_FOR): its topic is another tool's."""
+    words = NOT_FOR.get(name)
+    return bool(words and words.search(said or ""))
 
 
 _JOINED = re.compile(r"\b(and|still|while|if|but|also|plus)\b")
