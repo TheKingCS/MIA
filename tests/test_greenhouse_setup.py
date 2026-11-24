@@ -107,15 +107,18 @@ def test_bare_what_s_next_is_left_alone_until_the_setup_has_started(world):
 
 
 def test_a_flash_and_a_push_that_finish_are_recorded(world, monkeypatch):
-    """"yes, flash it" and "yes, push it" that succeed put mcu_flashed and node_pushed in the history."""
+    """"yes, flash it" and "yes, push it" that succeed put mcu_flashed and node_pushed in the history (the push's
+    key for MIA's directions sent by a stand-in, into a temporary folder)."""
     link = world.greenhouse_link
     link.pending = {"kind": "flash", "port": "COM5"}
     monkeypatch.setattr(gp, "platformio", PIO)
     assert gp.reply(world, "yes, flash it", run=lambda cmd, timeout: (0, "ok")).startswith("Flashed")
     gp.KEY.parent.mkdir(parents=True)
     gp.KEY.write_text("key")
+    monkeypatch.setattr(gp, "COMMAND_KEY", gp.KEY.parent / "command_key")  # the directions key, never the real one
     link.pending = {"kind": "push", "host": "mia-greenhouse", "user": "pi"}
-    assert gp.reply(world, "yes, push it", run=lambda cmd, timeout: (0, "ok")).startswith("The greenhouse node is on")
+    assert gp.reply(world, "yes, push it", run=lambda cmd, timeout: (0, "ok"),
+                    run_input=lambda cmd, data, timeout: (0, "")).startswith("The greenhouse node is on")
     types = {e.type for e in life_events.events_for(world, types=("mcu_flashed", "node_pushed"))}
     assert types == {"mcu_flashed", "node_pushed"}
 

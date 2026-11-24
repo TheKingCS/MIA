@@ -3657,6 +3657,150 @@ def scenario_mia_command_with_mia_approval_reaches_the_control_loop():
     ]
 
 
+
+# ============ MIA's directions, step 2: the signed endpoint (DEC-0185, docs/MIA_COMMAND_INTERFACE.md) ============
+
+def _command_server(tmp_dir, with_key=True):
+    """The export server on a real port, over a real database file with the demo cell, and a key file (or none):
+    (base url, key, db path, server)."""
+    import secrets
+    import threading
+    from http.server import ThreadingHTTPServer
+
+    sys.path.insert(0, str(Path(__file__).parent.parent / "viewer"))
+    import serve_exports
+
+    db_path = Path(tmp_dir) / "node.db"
+    conn = sqlite3.connect(db_path)
+    conn.executescript(SCHEMA_PATH.read_text())
+    setup_demo_cell(conn)
+    conn.close()
+    key = secrets.token_bytes(32)
+    key_path = Path(tmp_dir) / "mia_command_key"
+    if with_key:
+        key_path.write_text(key.hex())
+    server = ThreadingHTTPServer(("127.0.0.1", 0), serve_exports.make_handler(Path(tmp_dir), str(db_path), key_path))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return f"http://127.0.0.1:{server.server_address[1]}", key, db_path, server
+
+
+def _post(url, body, headers):
+    """POSTs and returns (status, parsed answer or {})."""
+    import json
+    import urllib.error
+    import urllib.request
+
+    request = urllib.request.Request(url, data=body, method="POST", headers={"Content-Type": "application/json",
+                                                                              **headers})
+    try:
+        with urllib.request.urlopen(request, timeout=10) as answer:
+            return answer.status, json.loads(answer.read() or b"{}")
+    except urllib.error.HTTPError as problem:
+        try:
+            return problem.code, json.loads(problem.read() or b"{}")
+        except ValueError:
+            return problem.code, {}
+
+
+def _signed(key, body, stamp=None, nonce=None):
+    """The three headers for a signed request."""
+    import secrets
+    import time
+
+    from core.command_auth import sign
+
+    stamp = str(int(stamp if stamp is not None else time.time()))
+    nonce = nonce or secrets.token_hex(16)
+    return {"X-MIA-Timestamp": stamp, "X-MIA-Nonce": nonce, "X-MIA-Signature": sign(key, stamp, nonce, body)}
+
+
+def _direction_body(db_path):
+    """A pH minimum 0.1 below the demo cell's current one, as MIA would send it."""
+    import json
+
+    from core.experiment_manager import ExperimentManager
+    conn = sqlite3.connect(db_path)
+    cell_id = conn.execute("SELECT id FROM cells LIMIT 1").fetchone()[0]
+    current = ExperimentManager(conn)._current_target(cell_id, "ph_target_min")
+    conn.close()
+    return json.dumps({"cell_id": cell_id, "param_name": "ph_target_min", "value": round(current - 0.1, 2),
+                       "believed_current": current, "approved_by": "zac",
+                       "approved_at": "2026-11-24T12:00:00"}).encode()
+
+
+def scenario_mia_command_endpoint_takes_a_signed_direction():
+    """A signed, fresh direction over real HTTP reaches the node's check and is staged for the press here."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base, key, db_path, server = _command_server(tmp)
+        try:
+            body = _direction_body(db_path)
+            status, answer = _post(base + "/mia/command", body, _signed(key, body))
+        finally:
+            server.shutdown()
+            server.server_close()
+        conn = sqlite3.connect(db_path)
+        staged = conn.execute("SELECT COUNT(*) FROM parameter_change_proposals WHERE status = 'proposed'").fetchone()[0]
+        conn.close()
+    return [
+        ("a signed, fresh direction is answered 200", status == 200),
+        ("it reaches the node's check and is staged", answer.get("state") == "staged" and staged == 1),
+    ]
+
+
+def scenario_mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed():
+    """Unsigned, signed with another key, too old, replayed, a body changed after signing, and any other path or
+    method: each refused, and nothing is proposed."""
+    import secrets
+    import tempfile
+    import time
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base, key, db_path, server = _command_server(tmp)
+        try:
+            body = _direction_body(db_path)
+            unsigned = _post(base + "/mia/command", body, {})
+            wrong = _post(base + "/mia/command", body, _signed(secrets.token_bytes(32), body))
+            old = _post(base + "/mia/command", body, _signed(key, body, stamp=time.time() - 3600))
+            changed = _post(base + "/mia/command", body.replace(b"zac", b"eve"), _signed(key, body))
+            good = _signed(key, body)
+            first = _post(base + "/mia/command", body, good)
+            replay = _post(base + "/mia/command", body, good)
+            elsewhere = _post(base + "/dashboard_state.json", body, _signed(key, body))
+        finally:
+            server.shutdown()
+            server.server_close()
+        conn = sqlite3.connect(db_path)
+        proposals = conn.execute("SELECT COUNT(*) FROM parameter_change_proposals").fetchone()[0]
+        conn.close()
+    return [
+        ("an unsigned direction is refused", unsigned[0] == 401),
+        ("one signed with another key is refused", wrong[0] == 401 and wrong[1].get("reason") == "bad signature"),
+        ("one an hour old is refused", old[0] == 401),
+        ("a body changed after signing is refused", changed[0] == 401),
+        ("the genuine one goes through once", first[0] == 200),
+        ("the same request sent again is refused as a replay", replay[0] == 401 and replay[1].get("reason") == "replayed"),
+        ("a POST anywhere else is still refused", elsewhere[0] == 405),
+        ("only the genuine one was proposed", proposals == 1),
+    ]
+
+
+def scenario_mia_command_endpoint_without_a_key_refuses_everything():
+    """A node that was never given its key refuses every direction, however it's signed."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base, key, db_path, server = _command_server(tmp, with_key=False)
+        try:
+            body = _direction_body(db_path)
+            status, answer = _post(base + "/mia/command", body, _signed(key, body))
+        finally:
+            server.shutdown()
+            server.server_close()
+    return [("with no key file every direction is refused", status == 401 and "no key" in answer.get("reason", ""))]
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -3751,6 +3895,9 @@ SCENARIOS = {
     "mia_command_second_change_within_the_hour_is_refused": scenario_mia_command_second_change_within_the_hour_is_refused,
     "mia_command_off_the_list_or_crossing_its_band_is_refused": scenario_mia_command_off_the_list_or_crossing_its_band_is_refused,
     "mia_command_with_mia_approval_reaches_the_control_loop": scenario_mia_command_with_mia_approval_reaches_the_control_loop,
+    "mia_command_endpoint_takes_a_signed_direction": scenario_mia_command_endpoint_takes_a_signed_direction,
+    "mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed": scenario_mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed,
+    "mia_command_endpoint_without_a_key_refuses_everything": scenario_mia_command_endpoint_without_a_key_refuses_everything,
 }
 
 

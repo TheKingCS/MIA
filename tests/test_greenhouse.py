@@ -185,19 +185,31 @@ def test_the_pi_gets_preloaded_configs_with_every_comment_and_never_a_password(t
 
 def test_pushing_to_the_pi_waits_for_a_yes_and_stops_at_the_first_failure(world, tmp_path, monkeypatch):
     """The commands pack the node without its database, copy it and the configs, and install it; "yes, push it"
-    runs them in order; a failed step says which."""
+    runs them in order, then sends the key for MIA's directions on standard input; a failed step says which, never
+    the key."""
     monkeypatch.setattr(gp, "KEY", tmp_path / "key")
     (tmp_path / "key").write_text("private", encoding="utf-8")
     monkeypatch.setattr(gp, "BUNDLE", tmp_path / "bundle")
+    monkeypatch.setattr(gp, "COMMAND_KEY", tmp_path / "command_key")
+    sent = []
+    run_input = lambda cmd, data, timeout=0: sent.append((cmd, data)) or (0, "")  # noqa: E731
     cmds = gp.push_commands("mia-greenhouse", "zac", tmp_path / "n.tgz", tmp_path / "key", tmp_path / "bundle")
     assert cmds[0][0] == "tar" and "--exclude=mia_homestead.db" in cmds[0] and "install_service.sh" in cmds[-1][-1]
     ran = []
     run = lambda cmd, timeout=0: ran.append(cmd[0]) or (0, "")  # noqa: E731
     assert "zac@mia-greenhouse" in gp.reply(world, "push the greenhouse to mia-greenhouse as zac", run) and not ran
-    assert gp.reply(world, "yes, push it", run).startswith("The greenhouse node is on mia-greenhouse")
+    assert gp.reply(world, "yes, push it", run, run_input).startswith("The greenhouse node is on mia-greenhouse")
     assert ran == ["tar", "scp", "ssh", "scp", "ssh"]
+    # Then its key for MIA's directions, on standard input only (DEC-0185): never in the command.
+    [(key_cmd, key_hex)] = sent
+    assert key_hex == (tmp_path / "command_key").read_text(encoding="utf-8") and len(bytes.fromhex(key_hex)) == 32
+    assert "mia_command_key" in key_cmd[-1] and key_hex not in " ".join(key_cmd)
     failing = lambda cmd, timeout=0: (1, "no route to host") if cmd[0] == "scp" else (0, "")  # noqa: E731
-    assert gp.push_node("mia-greenhouse", "zac", failing).startswith("Stopped at copying it to the Pi")
+    assert gp.push_node("mia-greenhouse", "zac", failing, run_input).startswith("Stopped at copying it to the Pi")
+    refused = lambda cmd, data, timeout=0: (1, "denied " + data)  # noqa: E731
+    said = gp.push_node("mia-greenhouse", "zac", run, refused)
+    assert said.startswith("Stopped at giving it the key") and key_hex not in said
+    assert gp.command_key().hex() == key_hex  # made once, kept
 
 
 def test_the_node_s_export_server_serves_its_two_files_and_nothing_else():

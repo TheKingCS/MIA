@@ -155,6 +155,13 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
+**MIA's directions, step 2: the signed endpoint (2026-11-24, DEC-0185):** `viewer/serve_exports.py` takes one write,
+`POST /mia/command` (only with `--db`), and passes it to `core/mia_commands.py` only when `core/command_auth.py`
+finds it signed with this node's key (`config/mia_command_key`, git-ignored, sent by MIA at provisioning over SSH on
+standard input), fresh (5 minutes) and never seen before (nonces kept in `mia_command_nonces`). Every other method
+and path is still refused; no key file refuses every direction. Three `mia_command_endpoint_*` scenarios over real
+HTTP; 273 passed, the three rsync scenarios fail on Windows only.
+
 **MIA's directions, step 1: the node's check (2026-11-24, DEC-0185, docs/MIA_COMMAND_INTERFACE.md):**
 `core/mia_commands.py` checks a target change MIA directs against `config/command_limits.yaml` (only the pH/EC
 target bands, hard limits, band kept, current value as MIA believed, one change an hour), records every decision in

@@ -58,7 +58,12 @@ signed approval applies at once or waits for his press on the node differs (one 
    refused, anything off the list (a dose, a pump) or crowding its band or unapproved is refused. 262 scenarios pass
    (the three rsync ones fail on Windows only), self_audit's coverage is 41/41. Water temperature, irrigation
    intervals, light hours and modes join the list once the control loop reads them from an override.
-2. The signed endpoint on the export server (POST one command; everything else still refused), with its key from
-   provisioning, and scenarios for an unsigned, wrongly signed or replayed request.
+2. **Built 2026-11-24.** The signed endpoint on the export server: `POST /mia/command` only (everything else still
+   refused), with `--db`; `core/command_auth.py` checks a timestamp within 5 minutes, a one-time nonce (kept in
+   `mia_command_nonces`) and an HMAC-SHA256 signature over both and the body, with the key in
+   `config/mia_command_key` (git-ignored). MIA makes the key once (`data/.keys/greenhouse_command_key`) and sends it at
+   the end of "push the greenhouse to ..." over SSH on standard input (MIA's core/greenhouse_provision.py). Three
+   `mia_command_endpoint_*` scenarios over real HTTP: a signed direction is staged; unsigned, another key, an hour
+   old, a body changed after signing and a replay are refused; a node with no key refuses everything.
 3. The command's state in the exports, and MIA's side (`greenhouse.adjust`, its card, the read-back, undo).
 4. Live against the simulator (`main.py` plus `drivers/simulator.py --run`): a change applied, read back, undone.

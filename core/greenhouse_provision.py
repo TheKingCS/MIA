@@ -18,6 +18,10 @@ internal info able to be pushed by MIA").
 - **Pushing it** (`push_node`): the node's code and the preloaded configs copied to the Pi over SSH with that key,
   then its own install steps run there (a Python environment, the schema, the service with its rollback,
   homestead/deploy/README.md). Only on the person's yes. No secret goes into those files.
+- **The key for MIA's directions** (`command_key`, `push_command_key`, DEC-0185): 32 random bytes made once in
+  `data/.keys/`, sent to the node at the end of `push_node` over SSH on standard input (never on a command line or in
+  a reply) into its `config/mia_command_key`, owner-readable only. The node refuses any direction not signed with it
+  (homestead/core/command_auth.py); until it has it, every direction is refused.
 - **The node's email password** (`push_secret`, DEC-0150: "secrets from the vault and never typed by a model"): the
   SMTP app password the node sends its alerts with, read in code from the person's own password vault (it must be
   unlocked by them; MIA never unlocks it), sent to the Pi over SSH on standard input (never on a command line, in a
@@ -50,6 +54,8 @@ NODE = ROOT / "homestead"
 FIRMWARE = NODE / "firmware" / "safety_mcu"
 BUNDLE = DATA_DIR / "provisioning" / "greenhouse"
 KEY = DATA_DIR / ".keys" / "greenhouse_node_ed25519"
+# The key MIA signs her directions to the node with (DEC-0185, homestead/core/command_auth.py): 32 random bytes, hex.
+COMMAND_KEY = DATA_DIR / ".keys" / "greenhouse_command_key"
 HOSTNAME = "mia-greenhouse"
 REMOTE_DIR = "~/mia-homestead"
 FLASH_TIMEOUT = 900
@@ -246,9 +252,9 @@ def push_commands(host: str, user: str, archive: Path, key: Path = KEY, bundle: 
     ]
 
 
-def push_node(host: str, user: str, run: Optional[Callable] = None) -> str:
-    """Copies the node and its preloaded configs to the Pi and installs it; stops at the first step that fails and
-    says which."""
+def push_node(host: str, user: str, run: Optional[Callable] = None, run_input: Optional[Callable] = None) -> str:
+    """Copies the node and its preloaded configs to the Pi and installs it, then gives it the key MIA signs her
+    directions with (`push_command_key`); stops at the first step that fails and says which."""
     if not KEY.exists():
         return "There's no key for the node yet: ask me to prepare the Pi first."
     archive = BUNDLE / "mia-homestead.tgz"
@@ -259,9 +265,53 @@ def push_node(host: str, user: str, run: Optional[Callable] = None) -> str:
         code, said = (run or _run)(cmd, 900)
         if code != 0:
             return f"Stopped at {name} (exit {code}): {said[-300:]}"
+    keyed = push_command_key(host, user, run_input)
+    if keyed:
+        return keyed
     return (f"The greenhouse node is on {host} with its configs, and its service is installed. Start it there "
             "(systemctl --user start mia-homestead.service), then its export server, and tell me “take over the "
             f"greenhouse at {host}”.")
+
+
+# ------------------------------------------------------------------ the key for MIA's directions
+
+def command_key() -> bytes:
+    """The key MIA signs her directions to the node with (DEC-0185, homestead/core/command_auth.py), made once on
+    this PC (32 random bytes, in data/.keys, beside the node's SSH key) and kept."""
+    import secrets
+
+    try:
+        found = bytes.fromhex(COMMAND_KEY.read_text(encoding="utf-8").strip())
+        if len(found) >= 32:
+            return found
+    except (OSError, ValueError):
+        pass
+    COMMAND_KEY.parent.mkdir(parents=True, exist_ok=True)
+    key = secrets.token_bytes(32)
+    COMMAND_KEY.write_text(key.hex(), encoding="utf-8")
+    try:
+        COMMAND_KEY.chmod(0o600)
+    except OSError:
+        pass
+    return key
+
+
+def command_key_command(host: str, user: str, key: Path = KEY) -> list:
+    """Pure logic. The SSH command that writes the directions key from standard input into the node's
+    config/mia_command_key, readable by its owner only. The key is never in it."""
+    remote = (f"cd {REMOTE_DIR} && umask 077 && cat > config/mia_command_key && chmod 600 config/mia_command_key")
+    return ["ssh", "-i", str(key), "-o", "StrictHostKeyChecking=accept-new", f"{user}@{host}", remote]
+
+
+def push_command_key(host: str, user: str, run_input: Optional[Callable] = None) -> str:
+    """Sends the node its key for MIA's directions over SSH on standard input (`command_key_command`); "" when it
+    went, else what went wrong (never the key)."""
+    key = command_key().hex()
+    code, said = (run_input or _run_input)(command_key_command(host, user), key, 60)
+    said, key = (said or "").replace(key, "[hidden]"), ""
+    if code != 0:
+        return f"Stopped at giving it the key for my directions (exit {code}): {said[-200:]}"
+    return ""
 
 
 # ------------------------------------------------------------------ the node's email password
@@ -388,7 +438,8 @@ def reply(context, text: str, run: Optional[Callable] = None, run_input: Optiona
     """What MIA says, in code, to setting up the greenhouse's hardware: "flash the safety MCU" (the plan, then
     "yes, flash it"), "prepare the Pi" (the configs and the Imager steps), "push the greenhouse to <host>" (then "yes,
     push it"), "send the greenhouse its email password" (then "yes, send it"); None otherwise. Each device step waits for its yes, and one that finishes is recorded in the history
-    (`mcu_flashed`, `node_pushed`) for the setup sequence."""
+    (`mcu_flashed`, `node_pushed`) for the setup sequence.
+    Pushing the node also gives it the key for MIA directions, through run_input like the email password."""
     link = getattr(context, "greenhouse_link", None)
     if link is None:
         return None
@@ -409,7 +460,7 @@ def reply(context, text: str, run: Optional[Callable] = None, run_input: Optiona
         return said
     if pending.get("kind") == "push" and _YES_PUSH.match(low):
         link.pending = {}
-        said = push_node(pending["host"], pending["user"], run)
+        said = push_node(pending["host"], pending["user"], run, run_input)
         if said.startswith("The greenhouse node is on"):
             _record(link, "node_pushed", f"Pushed the greenhouse node to {pending['host']}")
         return said

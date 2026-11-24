@@ -21,8 +21,9 @@ control loop reads. Either way the safety MCU's hard limits still apply on top. 
 pump or valve, sends a notification or touches the MCU: those stay with the control loop and the existing approval
 queues (CLAUDE.md rules 5 and 6).
 
-Not built yet (steps 2-4): the signed endpoint MIA sends to, the command's state in the exports she reads, and
-MIA's side. Until then nothing outside this process can call submit().
+It's reached from outside only through viewer/serve_exports.py's `POST /mia/command` (step 2, built 2026-11-24),
+which refuses anything not signed with the node's key, stale or replayed (core/command_auth.py) before calling
+submit(). Not built yet (steps 3-4): the command's state in the exports MIA reads, and MIA's side.
 """
 
 from __future__ import annotations
@@ -181,8 +182,8 @@ class MiaCommands(Describable):
                 "Never doses, switches an actuator, sends a notification, rolls back config or touches the safety "
                 "MCU. Only the parameters in config/command_limits.yaml, which MIA can't edit; a missing file "
                 "refuses everything. The default approval (node) waits for a press on this node. The safety MCU's "
-                "hard limits still apply on top. Not reachable from outside this process until the signed "
-                "endpoint (step 2) is built."),
+                "hard limits still apply on top. Reached from outside only by a request signed with this node's "
+                "key, fresh and never seen before (core/command_auth.py); no key, nothing is accepted."),
             example_questions=["What has MIA asked to change?", "Why was MIA's pH change refused?"],
             verification_evidence=[
                 "scenarios.py::scenario_mia_command_inside_limits_is_staged_for_the_node",
@@ -191,6 +192,9 @@ class MiaCommands(Describable):
                 "scenarios.py::scenario_mia_command_second_change_within_the_hour_is_refused",
                 "scenarios.py::scenario_mia_command_off_the_list_or_crossing_its_band_is_refused",
                 "scenarios.py::scenario_mia_command_with_mia_approval_reaches_the_control_loop",
+                "scenarios.py::scenario_mia_command_endpoint_takes_a_signed_direction",
+                "scenarios.py::scenario_mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed",
+                "scenarios.py::scenario_mia_command_endpoint_without_a_key_refuses_everything",
             ],
         )
 
