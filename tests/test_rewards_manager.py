@@ -8,6 +8,7 @@ as tests/test_kitchen_manager.py's own isolated_paths.
 The homestead stats (produce, eggs, jars) are among every stat listed; their own tests are
 tests/test_achievement_cards.py.
 Songs learned (core/repertoire.py) are a stat too.
+Sales made and debts paid off are stats too (core/life_milestones.py).
 """
 
 from __future__ import annotations
