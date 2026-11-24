@@ -36,7 +36,8 @@ so the things that keep fish and plants alive come first.
 
 ### Phase A: MIA knows the whole homestead (no hardware, no decision needed)
 
-1. **The orchard** (complete gap). His trees by kind, variety, rootstock, where and when planted. Each kind's
+1. **The orchard** (complete gap). *Built 2026-11-24 (`core/orchard.py`: his trees from Maintenance by the fruit in
+   their names, each kind's needs, the year dated from his frost, "what does the orchard need this month?").* His trees by kind, variety, rootstock, where and when planted. Each kind's
    chill hours, years to bearing, pollination partners, spacing, pruning season and harvest window. A year of
    orchard work dated from his frost dates: dormant pruning, dormant oil, bloom and frost watch, thinning, summer
    pruning, harvest. And "what does the orchard need this month?"

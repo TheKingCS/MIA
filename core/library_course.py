@@ -103,7 +103,7 @@ def outline(library, subject: str) -> list[dict]:
 
 def make(context, said: str) -> str:
     """Makes the course in Classroom from the library (see the module's opening) and says what it holds; or why
-    there's none."""
+    there's none, or that a course on it is already there (never made twice)."""
     subject = subject_of(said)
     if not subject:
         return "What would you like to learn about?"

@@ -14,7 +14,8 @@
   "domains": [
     "maintenance",
     "development",
-    "harvest"
+    "harvest",
+    "orchard"
   ],
   "entry": "web:greenhouse.html",
   "components": {
@@ -41,8 +42,10 @@
   "capabilities": {
     "tools": [
       "get_homestead_next_step",
+      "fruit_tree_facts",
       "harvest_this_year",
-      "log_harvest"
+      "log_harvest",
+      "orchard_this_month"
     ],
     "actions": [
       "batch.add",
@@ -63,6 +66,8 @@
     "tiers": {
       "get_homestead_next_step": "observe",
       "harvest_this_year": "observe",
+      "orchard_this_month": "observe",
+      "fruit_tree_facts": "observe",
       "log_harvest": "act_within_grant",
       "batch.add": "act_within_grant",
       "batch.delete": "act_with_approval",

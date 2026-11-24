@@ -147,6 +147,21 @@ def _buildable(context, arguments: dict) -> str:
     return buildable.say(context)
 
 
+def _orchard_month(context, arguments: dict) -> str:
+    """Tool orchard_this_month: the orchard's jobs in the next 30 days from his frost date (core/orchard.say_month)."""
+    from core import orchard
+
+    return orchard.say_month(context)
+
+
+def _fruit_facts(context, arguments: dict) -> str:
+    """Tool fruit_tree_facts: one fruit's chill hours, bearing, pollination, spacing, pruning and ripening
+    (core/orchard.say_kind)."""
+    from core import orchard
+
+    return orchard.say_kind(str(arguments.get("fruit") or ""))
+
+
 def _catchment(context, arguments: dict) -> str:
     """Tool rain_catchment: a roof's gallons from rain, his logged rain and his beds' needs (core/rain_catchment)."""
     from core import rain_catchment
@@ -178,7 +193,8 @@ def _harvest_year(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), rain_catchment (a roof's gallons, core/rain_catchment.py), log_harvest and
+    chosen when drafted), orchard_this_month and fruit_tree_facts (the orchard, core/orchard.py), rain_catchment (a
+    roof's gallons, core/rain_catchment.py), log_harvest and
     harvest_this_year (harvests by voice and what the garden produced,
     core/harvest_log.py; reached by "harvested" and the garden's words, never a bare "harvest" or "dug up"),
     what_can_i_build (the builds closest to done from his stock, core/buildable.py; reached by
@@ -221,6 +237,28 @@ def register_project_plan_actions(registry) -> None:
         handler=_picture, trigger_phrases=("planning to build", "thinking about building", "planning to put up",
                                            "thinking about putting up", "planning a greenhouse", "affect everything", "mean for everything",
                                            "what does it touch", "what would it take to build"),
+    ))
+    registry.register_domain_keywords("orchard", ("orchard", "fruit trees", "fruit tree"))
+    registry.register(AssistantAction(
+        name="orchard_this_month", domain="orchard",
+        description="What his orchard needs in the next 30 days (pruning, dormant oil, bloom and frost watch, "
+                    "thinning, harvest, fall cleanup), dated from his frost date for the fruit trees in his records, "
+                    "and any that lack a pollination partner.",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_orchard_month,
+        trigger_phrases=("the orchard", "my orchard", "fruit trees need", "prune the apple", "prune my apple",
+                         "prune the peach", "when do i prune", "when should i prune", "spray the trees",
+                         "dormant oil", "thin the fruit", "thin the apples", "thin the peaches"),
+    ))
+    registry.register(AssistantAction(
+        name="fruit_tree_facts", domain="orchard",
+        description="What one kind of fruit tree needs: chill hours, years to fruit, whether it needs a pollination "
+                    "partner, spacing, when to prune and how long from bloom to ripe. Use this, before the offline "
+                    "library, for any of those about apple, pear, peach, plum, cherry, apricot, fig and the like.",
+        parameters={"type": "object", "properties": {"fruit": {"type": "string",
+                    "description": "the fruit, e.g. 'peach'"}}, "required": ["fruit"]}, handler=_fruit_facts,
+        trigger_phrases=("chill hours", "need a pollinator", "need two apple", "need another tree", "how far apart",
+                         "years to fruit", "years to bear", "when will my", "self-fertile", "self fertile",
+                         "self-pollinating"),
     ))
     registry.register(AssistantAction(
         name="rain_catchment", domain=DOMAIN,

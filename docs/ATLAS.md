@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1684 files, 366,027 lines; 1684 files describe themselves; 20,121 of 20,251 classes and functions are documented.
+1686 files, 366,338 lines; 1686 files describe themselves; 20,139 of 20,269 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-663 files, 187,616 lines; 9,533 of 9,619 classes and functions documented
+664 files, 187,858 lines; 9,545 of 9,631 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -399,6 +399,7 @@
 - `core/operating_journal.py`: The Operating Journal (DEC-0097, build plan step 11; Zac, 2026-11-06: "a template that is essentially a journal entry for how I want to operate, and how I do operate so that MIA can learn my goals as well as my actual routine").
 - `core/opportunity.py`: Opportunity scoring and recommendations (Procurement P3, DEC-0172; `docs/mia_os/MIA_OS_PROCUREMENT_PROPOSAL.md` section 8). A find from World Intelligence that meets one of a project's needs becomes an **opportunity**: the find, the need it meets, nine dimensions each with its value and the reason f
 - `core/orb_state.py`: What MIA is really doing right now, for her orb (not to be confused with `core/presence.py`, the "what matters now" list, DEC-0044) (prompt 24 A5, DEC-0184 §8: "these states should communicate actual system activity rather than simulate activity that is not occurring"). One state for the whole runti
+- `core/orchard.py`: The orchard (Zac, 2026-11-24: "will manage my orchard"; docs/future/SMART_AG_PLAN.md phase A1). Before this MIA had nothing for fruit trees.
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
 - `core/pack_index.py`: Her own search index for the offline packs Kiwix didn't index (core/offline_library.py). Many of the most useful ones have no full-text index of their own: iFixit's repair guides, the USDA canning guide, the LibreTexts textbooks, and the preppers' collections, which are PDFs inside the pack (water t
 - `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
@@ -961,7 +962,7 @@
 
 ## tests/: the test suite: what each part must do
 
-617 files, 97,824 lines; 8,225 of 8,269 classes and functions documented
+618 files, 97,893 lines; 8,231 of 8,275 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1313,6 +1314,7 @@
 - `tests/test_orb_doing.py`: What her orb says she's doing while a lookup runs (core/orb_state.doing, core/tool_loop.doing_words; brainstorm 1.1): from the tool's domain (the library's for a round that reads it), kept up through the model's follow-up where the real wait is, and sent with the state on the live stream.
 - `tests/test_orb_presence.py`: MIA's floating desktop orb (gui/orb_presence.py, Zac 2026-11-08): a frameless, transparent, always-on-top window that reuses the presence orb with no label, bobs where it stands, and wakes her (emits `activated`) on Enter or a plain click but not a drag.
 - `tests/test_orb_states.py`: WP-07 (REQ-VIS-009, REQ-VIS-010, DEC-0255): every state the orb can show has its own words and its own still glyph, and its own style on the page; with reduced motion the page shows the glyph and the words; "offline" comes only from the model really not answering, and the next answer clears it; "spe
+- `tests/test_orchard.py`: The orchard (core/orchard.py): his fruit trees read from Maintenance by the fruit in their names, the year's work dated from his last spring frost (stone fruit pruned near bloom, dormant oil before bud break, thinning, harvest by each kind's days from bloom, fall cleanup), a kind alone without its p
 - `tests/test_os_image.py`: FW-01's checks on how the MIA OS image is made (DEC-0263, DEC-0279; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): the base pinned by digest, MIA's Python packages hash-locked and the locks covering `requirements.txt`, the reference PC's model set in the image, the GPU bench measuring tha
 - `tests/test_os_session.py`: FW-03, MIA's own desktop session on MIA OS (DEC-0227, DEC-0278): her runtime writes where her shell finds her (`core/desktop_session.py`), owner-only, and removes it when it stops; the shell (`gui/os_shell.py`) opens her front end when she answers and a recovery page when she doesn't, whose links ac
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones.

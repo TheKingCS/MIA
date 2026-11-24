@@ -696,6 +696,8 @@ GOLDEN_CASES = [
     ("library: a course", "I want to learn about beekeeping", "learn_about"),
     ("library: a course, said otherwise", "Teach me everything about soil fertility", "learn_about"),
     ("learning path: a skill", "I want to learn to play the banjo", "start_learning"),
+    ("orchard: this month", "What does the orchard need this month?", "orchard_this_month"),
+    ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),
 ]
 
 
