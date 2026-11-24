@@ -5,7 +5,7 @@ records or said as missing, with general guidance marked as such. And it never t
 bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing. A
 Planner draft's "What It Touches" is the same picture at the draft's own size, and a confirmed build's materials
 still to buy reach the money answers (stock counted once across builds), one used on something else is said while
-it's short, and his own page speaks to him."""
+it's short, his own page speaks to him, and the model is asked to go area by area."""
 
 from datetime import date
 
@@ -187,3 +187,15 @@ def test_stock_one_confirmed_build_counts_on_isnt_counted_again_for_the_next(lif
 def test_his_own_page_speaks_to_him_not_about_him():
     assert pr.to_you("His gauge logged 1 inches of rain over the last seven days.").startswith("Your gauge logged")
     assert "until you say yours" in pr.to_you("14 materials, at its own size until he says his.")
+
+
+def test_the_picture_asks_the_model_to_go_area_by_area_and_a_failed_tool_or_odd_record_never_spoils_it(life, monkeypatch):
+    from types import SimpleNamespace
+
+    messages, sheet = qp.request(life, None, "I'm planning to build a greenhouse?", TODAY)
+    assert messages[0]["content"].rstrip().endswith(qp.HOW["project picture"])  # last, where a small model reads it
+    life.projects = SimpleNamespace(all_projects=lambda: [SimpleNamespace(name="Greenhouse")])  # no status: odd
+    monkeypatch.setattr(life.assistant_actions, "execute",
+                        lambda c, tool, args: "Something on my side broke while I was doing that, sorry.")
+    text = qp.gather(life, qp.PLAN_BY_NAME["project picture"], "I'm planning to build a greenhouse?", TODAY).as_text()
+    assert "Hoop-house greenhouse" in text and "broke" not in text

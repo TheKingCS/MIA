@@ -166,13 +166,14 @@ def _same_words(name: str, project: str) -> bool:
 
 def _started(context, sheet, kind: Kind, what: str):
     """What's already started for it: a project by its name (its budget against what's spent) and a Planner plan.
-    Returns the Planner plan, when there is one, so the build is worked out at its size."""
+    Returns the Planner plan, when there is one, so the build is worked out at its size. A project with no status
+    counts as not finished."""
     from core.question_plans import CALCULATION, FACT
 
     names = (what, kind.name)
     projects = getattr(context, "projects", None)
     for project in (projects.all_projects() if projects is not None else []):
-        if project.status != "Complete" and any(_same_words(project.name, n) for n in names):
+        if getattr(project, "status", "") != "Complete" and any(_same_words(project.name, n) for n in names):
             line = f"There's already a project \"{project.name}\" ({project.status})."
             if getattr(project, "budget", None):
                 try:
@@ -294,7 +295,8 @@ def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
 
 def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
     """The project picture's gatherer: the project and what it touches (`kind_of`), each area's facts on the sheet
-    (`_picture`, shared with the Planner page's `for_plan`),
+    (`_picture`, shared with the Planner page's `for_plan`; what's already started read so that one odd record never
+    takes the whole picture),
     with the month's money and the freedom date gathered here for every kind that touches money (a project with no
     Library plan too), then the offer to draft the plan. A project of no known kind gets money, materials, time and
     goals."""
@@ -305,7 +307,11 @@ def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
     what = planned(prompt) or kind.name
     _fact(sheet, qp.FACT, f"The project he's planning: {what} (a {kind.name}). It touches: {', '.join(kind.touches)}.",
           "your words")
-    draft = _started(context, sheet, kind, what)
+    try:
+        draft = _started(context, sheet, kind, what)
+    except Exception:  # noqa: BLE001 - one record that can't be read never takes the whole picture
+        log.exception("The project picture couldn't read what's already started")
+        draft = None
     _picture(context, sheet, kind, draft, today)
     if draft is None and kind.shelf:
         _fact(sheet, qp.ESTIMATE, f"Nothing is planned or bought from this. He can say \"let's plan the {kind.name}\" "

@@ -121,7 +121,7 @@ _NOTHING = re.compile(r"^(you don't have|you have no|no |nothing|there (are|is) 
 
 def _look(context, sheet: Sheet, tool: str, source: str, said_as: str = "", **arguments) -> str:
     """Run one of MIA's own lookups and put what it says on the sheet (a fact after `said_as`, when given: whose
-    it is)."""
+    it is); a lookup that failed (its apology: it's logged) puts nothing on the sheet."""
     registry = getattr(context, "assistant_actions", None)
     if registry is None or tool not in getattr(registry, "_actions", {}):
         return ""
@@ -131,6 +131,8 @@ def _look(context, sheet: Sheet, tool: str, source: str, said_as: str = "", **ar
         log.exception("Question plan lookup %s failed", tool)
         return ""
     sheet.looked_up.append(tool)
+    if text.strip().startswith("Something on my side broke"):  # the tool failed (it's logged): not a fact
+        return ""
     found = not _NOTHING.match(text.strip())
     sheet.add(FACT if found else MISSING, said_as + text if found else text, source)
     return text
@@ -1350,6 +1352,19 @@ ANSWER_PROTOCOL = (
     "unsure, say so in a few plain words (\"if the pace holds\", \"I don't have your X recorded\"); when it's "
     "sure, just answer."
 )
+# How a plan's answer is shaped, where the one-thing rule above doesn't fit: added after it for that plan only.
+HOW = {
+    "project picture": (
+        "For this answer, instead of picking one thing: they're planning a project and want to see how it touches the "
+        "rest of their life. Write six to nine short sentences, one for each area on the sheet in its order: the "
+        "build (the plan named, how many materials, how many still to buy), money, materials on hand, then growing, "
+        "water, power, time, goals and research as the sheet has them, saying what their records show for each or "
+        "that it isn't recorded. Where one area leans on another, say so (water and power for a greenhouse, the "
+        "garden's year for its starts). End with the offer to draft the plan."),
+    "weekend": (
+        "Suggest how they could spend the weekend from the sheet: which day suits what, outdoor work on the better "
+        "forecast, what's due or in the garden on a day, practice or rest on the other. A short plan, not every line."),
+}
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 
@@ -1453,7 +1468,9 @@ def _personal(conversation) -> bool:
 def request(context, conversation, prompt: str, today: Optional[date] = None) -> Optional[tuple[list, Sheet]]:
     """The model request for a question a plan answers: (messages, the
     sheet), or None (then the normal turn runs). Never in a personal
-    mode or the journal: those stay a conversation."""
+    mode or the journal: those stay a conversation. A plan with its own
+    shape (`HOW`: the project picture area by area, the weekend as a
+    plan) has it last in the system message, after the sheet."""
     if conversation is not None and _personal(conversation):
         return None
     from core import conversation_state
@@ -1479,8 +1496,10 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
     from core.assistant_chat import trim_history
     from core.personality import CHARACTER, IDENTITY
 
+    how = f"\n\n{HOW[plan.name]}" if plan.name in HOW else ""  # a plan's own shape, last: a small model reads it
     system = (f"{IDENTITY}{CHARACTER}\n\n{ANSWER_PROTOCOL}\n\nFact sheet ({sheet.title}, today "
-              f"{(today or date.today()).isoformat()}):\n{sheet.as_text()}\n\nHow sure you can be: {sure} ({why}).")
+              f"{(today or date.today()).isoformat()}):\n{sheet.as_text()}\n\nHow sure you can be: {sure} ({why})."
+              f"{how}")
     messages = [{"role": "system", "content": system}]
     history = trim_history(conversation.messages) if conversation is not None else []
     # The question was just added to the conversation by the caller; the history before it.
