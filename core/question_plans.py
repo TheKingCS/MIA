@@ -35,7 +35,9 @@ picture", core/project_ripple.py), using the month's money (`money_now`)
 and the freedom date with a cost (`freedom_with`), both shared with the
 money and afford plans. "What should I do this weekend?" gathers each
 weekend day's forecast with what's due, the garden, learning and projects
-(the plan "weekend", `weekend_days`).
+(the plan "weekend", `weekend_days`); "am I ready for winter?" gathers
+the first frost, firewood, preparedness, the kit, the flock, the garden and
+the canning shelf (the plan "winter").
 """
 
 from __future__ import annotations
@@ -713,6 +715,39 @@ def _weekend(context, sheet, prompt, today):
                             "fit the wetter one. Rest counts too.", "general guidance")
 
 
+def _winter(context, sheet, prompt, today):
+    """Cross-domain (Jarvis brainstorm round 8): ready for winter: how far off his first fall frost is
+    (`garden.first_frost`, core/planting_now.py), firewood against his winter figure, fuel and the generator, the
+    72-hour kit, the flock (water freezes), what the garden still has due, and the canning shelf; each through the
+    tool that already answers it, with what a winter asks of the flock and the house as guidance."""
+    from core.planting_now import _first_frost
+
+    try:
+        frost = _first_frost(context, today)
+    except Exception:  # noqa: BLE001 - the frost date is one line of the sheet
+        log.exception("The winter plan couldn't read the first frost")
+        frost = None
+    if frost is None:
+        sheet.add(MISSING, "His first fall frost date isn't set (\"my first frost is October 15\").", "the garden")
+    elif frost >= today:
+        sheet.add(CALCULATION, f"His first fall frost is about {frost:%B} {frost.day}, {(frost - today).days} days "
+                               "from today.", "the garden")
+    else:
+        sheet.add(FACT, f"His usual first fall frost ({frost:%B} {frost.day}) has passed: winter's here.", "the garden")
+    _look(context, sheet, "firewood_check", "firewood")
+    _look(context, sheet, "how_prepared", "preparedness (water, food, fuel, power)")
+    _look(context, sheet, "emergency_kit", "the 72-hour kit")
+    if getattr(context, "flock", None) is not None and getattr(context.flock, "flocks", None):
+        _look(context, sheet, "get_eggs", "the flock")
+        sheet.add(ESTIMATE, "Hens need water that doesn't freeze (a heated waterer or changing it twice a day), a "
+                            "draft-free coop with ventilation up high, and lay less in the short days.",
+                  "general guidance")
+    _look(context, sheet, "garden_this_week", "the garden")
+    _look(context, sheet, "canning_shelf", "the canning shelf")
+    sheet.add(ESTIMATE, "Before a hard freeze: drain and store hoses, cover or drain outdoor taps and lines, and have "
+                        "the heat source and fuel checked.", "general guidance")
+
+
 def _owned(context, tool: str) -> bool:
     """Whether the household inventory holds a tool by its name (the part before any "and" or parenthesis)."""
     inventory = getattr(context, "inventory", None)
@@ -1134,6 +1169,11 @@ PLANS: tuple[Plan, ...] = (
           "What should I get done on Saturday?", "How should I spend Sunday?", "Is the weekend good for building?"),
          r"\b(this weekend|the weekend|my weekend|next weekend|weekend plans?)\b"
          r"|\b(do|spend|get done|plans?|build|work on|going on)\b[^?]{0,20}\b(saturday|sunday)\b", _weekend),
+    Plan("winter", "Ready for winter",
+         ("Am I ready for winter?", "What do I need to do before winter?", "Are we set for the cold?",
+          "Will I get through the winter?", "What's left to winterize?", "Is the homestead ready for winter?"),
+         r"\b(ready for (the )?winter|winter ready|before (the )?winter|winteriz\w*|through (the )?winter|"
+         r"set for (the )?(winter|cold)|ready for the cold)\b", _winter),
     Plan("project picture", "What a project touches",
          ("I'm planning to build a greenhouse.", "I want to build a chicken coop this spring.",
           "I'm thinking about putting up a hoop house.", "How would building a greenhouse affect everything else?",
@@ -1202,7 +1242,8 @@ CHANGE_VERBS = frozenset((
     "finish", "complete", "save", "track", "note", "write", "buy", "sell", "file", "tag", "link", "unlink",
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
-CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time", "weekend")  # build plan step 8: plans over several apps
+CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time", "weekend",
+                "winter")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -1347,8 +1388,8 @@ ANSWER_PROTOCOL = (
     "have, and do any comparing from the sheet's own numbers. Say which things are estimates or calculations when it "
     "matters. If something needed is marked missing, say what's missing and how they could add it. Point out the one "
     "thing that matters most rather than listing everything. End with one next step only if it follows from the "
-    "sheet; never suggest an app, feature or task the sheet doesn't mention. Each line names the app it came from: "
-    "the Dungeon is their paid job, not a game or a workout. "
+    "sheet; never suggest an app, feature or task the sheet doesn't mention. Each line names the app it came from "
+    "(where a line comes from an app called the Dungeon, that means their paid job, not a game or a workout). "
     "Talk like a person, not a report, in plain text: no headings, bold or symbols. Never give legal or tax "
     "rulings; say to check with a professional. The sheet ends with how sure you can be: when it's likely or "
     "unsure, say so in a few plain words (\"if the pace holds\", \"I don't have your X recorded\"); when it's "
@@ -1363,6 +1404,11 @@ HOW = {
         "water, power, time, goals and research as the sheet has them, saying what their records show for each or "
         "that it isn't recorded. Where one area leans on another, say so (water and power for a greenhouse, the "
         "garden's year for its starts). End with the offer to draft the plan."),
+    "winter": (
+        "For this answer, instead of picking one thing: start straight with the answer, no heading, then write five "
+        "to eight short sentences going through what winter asks, one each from the sheet: how long until the frost, "
+        "firewood, water and food, fuel and power, the kit, the flock, the garden, the canning shelf, saying what "
+        "their records show or that it isn't recorded. End with the two or three things to do first."),
     "weekend": (
         "Suggest how they could spend the weekend from the sheet: which day suits what, outdoor work on the better "
         "forecast, what's due or in the garden on a day, practice or rest on the other. A short plan, not every line."),

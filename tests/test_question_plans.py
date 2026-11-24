@@ -1,7 +1,8 @@
 """Question plans (DEC-0052 step 2a, core/question_plans.py): the right
 plan for a question, lookups gathered by code onto a marked sheet, and an
 answer that never states a number MIA didn't look up; and the weekend's
-plan with each day's forecast, reached only by a weekend ahead."""
+plan with each day's forecast, reached only by a weekend ahead; and the
+winter plan with the days to the first frost."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -159,3 +160,16 @@ def test_a_forecast_carries_each_whole_day_by_its_date():
     days = read(raw, "fahrenheit")["days"]
     assert [d["date"] for d in days] == ["2026-11-24", "2026-11-25"]  # the gap day left out
     assert days[1]["rain"] == 10
+
+
+def test_am_i_ready_for_winter_gathers_the_frost_firewood_preparedness_and_the_rest(life):
+    life.config.set("garden.first_frost", "October 20")
+    assert qp.match(life, "Am I ready for winter?").name == "winter"
+    assert qp.match(life, "What's left to winterize?").name == "winter"
+    sheet = qp.gather(life, qp.PLAN_BY_NAME["winter"], "Am I ready for winter?", date(2026, 9, 30))
+    text = sheet.as_text()
+    assert "first fall frost is about October 20, 20 days from today" in text
+    assert {"firewood_check", "how_prepared", "emergency_kit"} <= set(sheet.looked_up)
+    assert "drain and store hoses" in text
+    messages, _ = qp.request(life, None, "Am I ready for winter?", date(2026, 9, 30))
+    assert messages[0]["content"].rstrip().endswith(qp.HOW["winter"])

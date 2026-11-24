@@ -348,7 +348,8 @@ New ideas, each checked against what's there first:
 
 Checked against the code first; each says whether it needs Zac's say.
 
-- **Am I ready for winter?** (no decision): one sheet before his first fall frost: firewood against his winter
+- **Am I ready for winter?** (no decision): *built 2026-11-24 (the question plan "winter").* One sheet before his
+  first fall frost: firewood against his winter
   figure (core/firewood.py), fuel and the generator's days (core/power_ready.py), the 72-hour kit, the flock's
   water in a freeze, what's still in the garden and the canning shelf. The same shape as the project picture, for a
   season instead of a build.
