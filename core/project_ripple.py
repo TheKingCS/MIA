@@ -33,6 +33,9 @@ or changed: the sheet ends by offering to draft the plan, which waits for his Co
 **In money answers** (`add_still_to_buy`, step 2 of the plan): what his confirmed builds still need from the store,
 on the afford, priorities and projects sheets, so "can I afford it?" knows the greenhouse's lumber is still to come.
 
+**When it changes** (`gone_short`, step 3): a material a confirmed build had fully on hand that isn't any more is
+said once, through the daily check of what's unusual (core/unusual.py) and the communication gate.
+
 **On the Planner page** (`for_plan`, /api/planner/touches): each plan's "What It Touches" is the same picture, at the
 plan's own size (a garden plan's beds and crops in place of a build), opened when he asks for it.
 """
@@ -359,6 +362,46 @@ def still_to_buy(context) -> list[dict]:
         if to_buy:
             out.append({"title": plan.title, "cost": float(shopping.get("known_cost") or 0),
                         "unpriced": len(to_buy) - int(shopping.get("priced") or 0), "items": len(to_buy)})
+    return out
+
+
+COVERED_KEY = "planner.covered"  # {plan_id: [materials fully on hand at the last check]}
+
+
+def gone_short(context, today: date) -> list[dict]:
+    """Step 3 of the plan (a change ripples): each confirmed build with a material it had fully on hand at the last
+    check that it doesn't now (used on something else, or the count corrected), {kind, title, text, key} for
+    core/unusual.py, said once a material a day at most. The first check for a plan only remembers what's covered.
+    What's covered is kept in the config (`COVERED_KEY`), per plan."""
+    from core.plan_library import detail
+
+    book = getattr(context, "project_plans", None)
+    config = getattr(context, "config", None)
+    if book is None or config is None:
+        return []
+    projects = getattr(context, "projects", None)
+    before = dict(config.get(COVERED_KEY, {}) or {})
+    now, out = {}, []
+    for plan in book.listed():
+        if plan.status != "confirmed" or plan.kind != "build" or not plan.shelf_plan:
+            continue
+        project = projects.get_project(plan.project_id) if projects is not None and plan.project_id else None
+        if project is not None and project.status == "Complete":
+            continue
+        page = detail(context, plan.shelf_plan, plan.sizes or None)
+        rows = ((page or {}).get("shopping") or {}).get("rows", [])
+        covered = sorted(r["item"] for r in rows if r["have"] and r["buy"] <= 0)
+        now[plan.plan_id] = covered
+        lost = [r for r in rows if r["item"] in set(before.get(plan.plan_id, covered)) - set(covered)]
+        if lost:
+            said = "; ".join(f"{r['item']} ({r['have']:g} on hand, it needs {r['need']:g})" for r in lost)
+            out.append({"kind": "build", "title": f"{plan.title}: materials short again",
+                        "text": f"What you had on hand for {plan.title} isn't all there any more: {said}. If it went "
+                                "to something else, it's back on that build's list to buy.",
+                        "key": f"build-{plan.plan_id}-{'-'.join(sorted(r['item'] for r in lost))}-{today.isoformat()}"})
+    if now != before:
+        config.set(COVERED_KEY, now)
+        config.save()
     return out
 
 

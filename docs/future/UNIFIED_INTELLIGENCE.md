@@ -58,6 +58,8 @@ draft the plan, which waits for his Confirm (`core/project_plans.py`).
 - **Step 5, the Planner page shows it**: each draft's "What It Touches" (`for_plan`, /api/planner/touches).
 - **Step 2, in part**: what confirmed builds still need from the store is on the afford, priorities and projects
   sheets (`still_to_buy`), read from the plans themselves, so it needs no stored links.
+- **Step 3, for confirmed builds**: a material a confirmed build had fully on hand that isn't any more is said once,
+  through the daily check of what's unusual (`gone_short`, core/unusual.py). Other ripples wait on 0zl's links.
 - **His stock against every plan**: "what can I build with what I have?" (`core/buildable.py`).
 
 ## The next steps

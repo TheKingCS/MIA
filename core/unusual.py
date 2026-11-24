@@ -22,6 +22,9 @@ SPEND_MARGIN over in money; so a month half gone is never compared with a whole 
 **Feed** (core/feed_runway.py): a flock down to its last few days of feed, from the last bag and how fast his
 flock eats, once for each bag.
 
+**Builds** (core/project_ripple.gone_short): a confirmed build's material that was fully on hand and isn't any more
+(used on something else), once.
+
 More checks belong here as their records allow (a bill that didn't come): each its own pure function, its own
 fingerprint.
 """
@@ -135,7 +138,7 @@ def _egg_words(name: str, found: dict) -> str:
 
 def findings(context, today: date) -> list[dict]:
     """Every unusual thing found in his records today, spending first, then feed running low (core/feed_runway.py),
-    then each flock's eggs: each {kind, title, text, key (naming the period it's said once in)}; a record that can't be
+    a confirmed build's materials gone short (core/project_ripple.gone_short), then each flock's eggs: each {kind, title, text, key (naming the period it's said once in)}; a record that can't be
     read leaves its check out."""
     from core.region import money
 
@@ -154,6 +157,12 @@ def findings(context, today: date) -> list[dict]:
         out.extend(feed_runway.soon(context, today))
     except Exception:  # noqa: BLE001
         log.exception("Unusual: the feed couldn't be worked out")
+    try:  # a confirmed build's materials used on something else (core/project_ripple.py)
+        from core import project_ripple
+
+        out.extend(project_ripple.gone_short(context, today))
+    except Exception:  # noqa: BLE001
+        log.exception("Unusual: the builds' materials couldn't be read")
     book = getattr(context, "flock", None)
     for flock in getattr(book, "flocks", []) or []:
         if max(0, flock.hens) == 0:

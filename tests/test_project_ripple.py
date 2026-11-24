@@ -4,7 +4,7 @@ freedom date, and each area a greenhouse touches (growing, water, power, time, g
 records or said as missing, with general guidance marked as such. And it never takes a question that's another plan's or a tool's (debts, a
 bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing. A
 Planner draft's "What It Touches" is the same picture at the draft's own size, and a confirmed build's materials
-still to buy reach the money answers."""
+still to buy reach the money answers, and one used on something else is said once."""
 
 from datetime import date
 
@@ -142,3 +142,22 @@ def test_a_confirmed_builds_materials_still_to_buy_reach_the_afford_answer_and_d
     assert [r["title"] for r in rows] == [draft.title] and rows[0]["items"] > 0
     sheet = qp.gather(life, qp.PLAN_BY_NAME["afford"], "can I afford a $900 welder?", TODAY)
     assert "Confirmed builds still to buy: " + draft.title in sheet.as_text()
+
+
+def test_a_confirmed_builds_material_used_elsewhere_is_said_once_and_the_first_look_only_remembers(life, tmp_path):
+    from core import project_plans
+    from core.material_manager import MaterialManager
+    from core.project_plans import ProjectPlanBook
+
+    life.project_plans = ProjectPlanBook(life, data_dir=tmp_path / "pp")
+    life.materials = MaterialManager(life, data_dir=tmp_path / "mat")
+    boards = life.materials.add_material("2x6 x 8 ft", unit="board", quantity_on_hand=6)
+    plan = project_plans.draft(life, {"kind": "build", "shelf_plan": "builtin:raised-bed"})
+    plan.status = "confirmed"
+    life.project_plans.put(plan)
+    assert pr.gone_short(life, TODAY) == []  # the first look remembers the boards are covered
+    assert pr.gone_short(life, TODAY) == []  # nothing changed
+    life.materials.update_material(boards.material_id, quantity_on_hand=2)
+    found = pr.gone_short(life, TODAY)
+    assert len(found) == 1 and "2x6 x 8 ft (2 on hand, it needs 6)" in found[0]["text"]
+    assert pr.gone_short(life, TODAY) == []  # said once: now it's what's covered
