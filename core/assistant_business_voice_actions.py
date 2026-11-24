@@ -260,7 +260,8 @@ def _best_customers(context, arguments: dict) -> str:
 
 
 def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
-    """Registers best_customers (who's paid most, who's gone quiet, core/best_customers.py), earnings_per_hour (what
+    """Registers best_customers (who's paid most on orders, all time, who's gone quiet, core/best_customers.py; a
+    market's "regulars" aren't its), earnings_per_hour (what
     his work really makes an hour, core/hourly_earnings.py; the person's words
     passed so a day-job pay question is told it's the workshop's), list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
     (domain business; list_quotes also says which quotes are worth a follow-up), the words that reach them (`WORDS`), and his customers' names and open quotes' and orders'
@@ -286,7 +287,8 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
          "regulars who haven't ordered in six months.", {}, [], _best_customers,
          ("best customers", "top customers", "biggest customers", "best clients", "top clients",
           "customers haven't ordered", "customers gone quiet", "haven't heard from customers", "lapsed customers",
-          "who buys the most", "who spends the most with me", "repeat customers", "my regulars"))
+          "who buys the most", "who spends the most with me", "repeat customers", "best customer", "top customer",
+          "biggest customer"))
     tool("list_quotes", "The quotes still out (draft or sent), with customer and price.", {}, [],
          _action_list_quotes, ("quotes out", "quotes are out", "open quotes", "my quotes", "what quotes",
                                "quotes still out", "pending quotes", "quotes i've sent", "quotes to follow up",
