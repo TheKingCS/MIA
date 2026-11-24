@@ -30,7 +30,7 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 _UNITS = {"lb": ("lb", "lbs", "pound", "pounds"), "oz": ("oz", "ounce", "ounces"), "kg": ("kg", "kgs", "kilo", "kilos",
-          "kilogram", "kilograms"), "head": ("head", "heads"), "bunch": ("bunch", "bunches"), "quart": ("quart", "quarts",
+          "kilogram", "kilograms"), "g": ("g", "gr", "gram", "grams"), "head": ("head", "heads"), "bunch": ("bunch", "bunches"), "quart": ("quart", "quarts",
           "qt"), "bushel": ("bushel", "bushels"), "dozen": ("dozen",), "each": ("", "each", "piece", "pieces", "whole")}
 
 

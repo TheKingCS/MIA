@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1702 files, 368,947 lines; 1702 files describe themselves; 20,264 of 20,394 classes and functions are documented.
+1702 files, 369,102 lines; 1702 files describe themselves; 20,273 of 20,403 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-673 files, 189,706 lines; 9,627 of 9,713 classes and functions documented
+673 files, 189,781 lines; 9,631 of 9,717 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -33,7 +33,7 @@
 - `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
-- `core/assistant_achievement_actions.py`: Achievements by voice and from the screen (the game layer, 2026-11-24; DEC-0125, both ways). The tool `my_achievements` says what the Achievements page shows (core/achievement_cards.say): how many he's unlocked, the latest, and the next he's closest to. The action `achievement.seen` is the card's Cl
+- `core/assistant_achievement_actions.py`: Achievements by voice and from the screen (the game layer, 2026-11-24; DEC-0125, both ways). The tool `my_achievements` says what the Achievements page shows (core/achievement_cards.say): how many he's unlocked, the latest, and the next he's closest to. Closing a card isn't an action: marking it see
 - `core/assistant_actions.py`: The Assistant's tool-use/action-execution registry — docs/ROADMAP.md milestone 5.5. Lets the LLM actually DO things in MIA (open a module, add an alarm, a note, an inventory item), not just answer questions, via Ollama's structured tool-calling API (core/llm_manager.py's `chat_with_tools()`).
 - `core/assistant_answer_style_actions.py`: How MIA answers, by voice (DEC-0138, DEC-0125's both-ways rule; the screen is web/answers.html): "keep your answers short", "use bullet points", "be more direct", "lead with the answer", "how do I like answers?", "forget how I like answers", "stop asking which I prefer". The person's words are mappe
 - `core/assistant_app_registry_actions.py`: MIA about her own apps, by voice (migration phase M2, DEC-0178; answers from `core/app_ecosystem.py`, never the model's guess): "What apps do I have?" (`list_my_apps`). "What can Greenhouse do?", "what depends on Home?" (`describe_app`). "Which app can monitor energy?", "which app has add_watch?" (`
@@ -684,7 +684,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,772 lines; 57 of 57 classes and functions documented
+2 files, 4,792 lines; 58 of 58 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -971,7 +971,7 @@
 
 ## tests/: the test suite: what each part must do
 
-624 files, 98,471 lines; 8,274 of 8,318 classes and functions documented
+624 files, 98,527 lines; 8,278 of 8,322 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1600,7 +1600,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-119 files, 22,269 lines
+119 files, 22,273 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

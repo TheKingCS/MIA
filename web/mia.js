@@ -627,7 +627,8 @@
     skills: () => read("/api/skills", "skills"),
     // The achievements log (core/achievement_cards.py), and the unlocks not yet shown as a card (web/cards.js).
     achievements: () => read("/api/achievements", "achievements"),
-    achievementsNew: () => demo ? Promise.resolve({ cards: [], more: 0, upto: "" }) : call("GET", "/api/achievements/new"),
+    achievementsNew: () => demo ? Promise.resolve({ cards: [], more: 0 }) : call("GET", "/api/achievements/new"),
+    achievementsSeen: (ids) => demo ? Promise.resolve({}) : call("POST", "/api/achievements/seen", { ids }),
     character: () => read("/api/character", "character"),
     profile: () => read("/api/profile", "profile"),
     modelTest: () => demo ? Promise.resolve({ available: false, models: [] }) : call("GET", "/api/model-test"),

@@ -11,12 +11,17 @@ icon, its rarity (core/rarity.py) and its kind. A hidden achievement is in the c
 unlocked; `page` never lists a locked one.
 
 **The log** (`log`): what he has unlocked, newest first, dated from his history (core/progress_history.py records a
-`reward_unlocked` life event as each one unlocks). One unlocked before that history existed is listed undated.
+`reward_unlocked` life event as each one unlocks), and every reward a mission earned him beyond XP (a structure, a
+song, a recipe...: core/mission_trophies.py's `trophy_earned` events). One unlocked before that history existed is
+listed undated.
 
-**The cards** (`unseen`, `mark_seen`): the unlocks since he last saw one, oldest first, three at most with how many
-more, for the web frame to show as a card each (web/cards.js) and the action `achievement.seen` to mark them seen
-(the person's own `achievements.seen_at`, core/person_settings.py). The first time, only the last day's are shown,
-never his whole history at once.
+**The cards** (`unseen`, `mark_seen`): the ones he hasn't seen a card for, oldest first, three at most with how many
+more, for the web frame to show as a card each (web/shell.js). Each is marked seen by its id as its card is closed
+(POST /api/achievements/seen), kept in his own `achievements.seen` (core/person_settings.py): the ids seen, and
+`since`, before which nothing is offered, so the first time only the last day's show, never his whole history.
+Marking seen is bookkeeping, not a change of his: it's written outside undo (core/undo_log.outside_undo), so it never
+stands in the way of undoing the harvest that earned the card. The log is read again only when a history file has
+changed (`_cached`), since the frame asks on every live change.
 
 **The page and the voice twin** (`page`, `say`; /api/achievements, the tool `my_achievements`): the log, the chains'
 progress toward each next tier, and the structures built and still to build.
@@ -24,6 +29,7 @@ progress toward each next tier, and the structures built and still to build.
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -31,8 +37,10 @@ from core.logger import get_logger
 
 log_ = get_logger(__name__)
 
-SEEN_KEY = "achievements.seen_at"
+SEEN_KEY = "achievements.seen"
 CARDS_AT_ONCE = 3
+SEEN_KEPT = 400  # ids remembered as seen; past this the oldest go and `since` moves up to cover them
+_cache: dict = {}  # person id -> (the history files' state, their log)
 
 
 def _rarity(index: int) -> dict:
@@ -78,20 +86,68 @@ def _unlocked(context, pid: Optional[str]) -> list[str]:
     return rewards.unlocked_reward_ids(pid) if rewards is not None and pid else []
 
 
+def _trophy_card(event) -> dict:
+    """Pure logic. A mission's trophy_earned event as a card: its kind's headline, icon and rarity, the mission it came
+    from."""
+    from core.mission_trophies import KINDS
+
+    kind = KINDS.get(str(event.payload.get("kind", "")))
+    rarity = kind.rarity_index if kind is not None else 1
+    return {"id": f"trophy:{event.event_id}", "kind": "trophy", "headline": kind.headline if kind else "Reward Earned",
+            "name": str(event.payload.get("name", "")), "icon": kind.icon if kind else "🏆", "chain": "",
+            "description": f"From the mission {event.payload.get('mission', '')}.".replace(" .", "."),
+            "when": event.at, **_rarity(rarity)}
+
+
+def _files(context, pid) -> tuple:
+    """The state (path, size, modified) of the history files this person's log reads: the cache's key."""
+    from core.life_events import FILE_NAME
+
+    folders = [getattr(getattr(context, n, None), "data_dir", None) for n in ("life_events", "personal_life_events")]
+    state = []
+    for folder in folders:
+        try:
+            info = os.stat(os.path.join(str(folder), FILE_NAME)) if folder is not None else None
+        except OSError:
+            info = None
+        state.append((str(folder), info.st_size if info else -1, info.st_mtime_ns if info else -1))
+    return (pid, tuple(_unlocked(context, pid)), tuple(state))
+
+
+def _cached(context, pid) -> list[dict]:
+    """The log, read again only when a history file or the person's unlocks have changed."""
+    key = _files(context, pid)
+    held = _cache.get(pid)
+    if held is not None and held[0] == key:
+        return [dict(row) for row in held[1]]
+    rows = _read_log(context, pid)
+    _cache[pid] = (key, rows)
+    return [dict(row) for row in rows]
+
+
 def log(context) -> list[dict]:
-    """What the signed-in person has unlocked, newest first: each card with `when` (its date-time from the history,
-    or "" for one unlocked before that history was kept, listed last)."""
+    """What the signed-in person has unlocked and the trophies missions earned them, newest first: each card with
+    `when` (its date-time from the history, or "" for an unlock from before that history was kept, listed last)."""
+    pid = _person(context)
+    return _cached(context, pid) if pid else []
+
+
+def _read_log(context, pid) -> list[dict]:
+    """The log, read from the history (see `log`)."""
     from core import life_events
 
-    pid = _person(context)
     known, unlocked = catalog(), _unlocked(context, pid)
     try:
-        events = life_events.events_for(context, types=("reward_unlocked",))
+        events = life_events.events_for(context, types=("reward_unlocked", "trophy_earned"))
     except Exception:  # noqa: BLE001 - a history that can't be read leaves the log undated
         log_.exception("Couldn't read the unlock history")
         events = []
     rows, dated = [], set()
     for event in events:  # newest first
+        if event.type == "trophy_earned":
+            if event.profile_id in (None, pid):
+                rows.append(_trophy_card(event))
+            continue
         rid = str(event.payload.get("reward_id", ""))
         if rid in unlocked and rid in known and rid not in dated:
             dated.add(rid)
@@ -100,36 +156,53 @@ def log(context) -> list[dict]:
     return rows
 
 
+def _seen(context, now: datetime) -> dict:
+    """The person's seen record: {since (nothing before it is offered; a day ago until first set), ids}."""
+    from core import person_settings
+
+    held = person_settings.get(context, SEEN_KEY)
+    held = held if isinstance(held, dict) else {}
+    since = str(held.get("since") or (now - timedelta(days=1)).isoformat(timespec="seconds"))
+    return {"since": since, "ids": [str(i) for i in held.get("ids") or []]}
+
+
 def unseen(context, now: Optional[datetime] = None) -> dict:
-    """The unlocks he hasn't seen a card for, oldest first: {cards (three at most), more (how many beyond those),
-    upto (the newest one's time, for `mark_seen`)}. Before he has ever seen one, only the last day's count."""
-    from core import person_settings
-
-    now = now or datetime.now()
-    seen = person_settings.get(context, SEEN_KEY) or (now - timedelta(days=1)).isoformat(timespec="seconds")
-    fresh = [row for row in log(context) if row["when"] and row["when"] > str(seen)]
+    """The ones he hasn't seen a card for, oldest first: {cards (three at most, each with its id), more (how many
+    beyond those)}. Nothing from before `since` (the first time: the last day only)."""
+    seen = _seen(context, now or datetime.now())
+    ids = set(seen["ids"])
+    fresh = [row for row in log(context) if row["when"] and row["when"] >= seen["since"] and row["id"] not in ids]
     fresh.reverse()  # oldest first: they're shown in the order they were earned
-    return {"cards": fresh[:CARDS_AT_ONCE], "more": max(0, len(fresh) - CARDS_AT_ONCE),
-            "upto": fresh[-1]["when"] if fresh else ""}
+    return {"cards": fresh[:CARDS_AT_ONCE], "more": max(0, len(fresh) - CARDS_AT_ONCE)}
 
 
-def mark_seen(context, upto: str = "") -> str:
-    """Marks every unlock up to `upto` (a time from `unseen`, or now) as seen; returns what it did."""
-    from core import person_settings
+def mark_seen(context, ids, now: Optional[datetime] = None) -> str:
+    """Marks these cards seen (by id), outside undo: bookkeeping, never a change "undo that" takes back. Past
+    `SEEN_KEPT` ids, the oldest are let go and `since` moves up to the earliest card still remembered, so none of
+    them is offered again. ValueError for no ids."""
+    from core import person_settings, undo_log
 
-    when = str(upto or "").strip()[:19] or datetime.now().isoformat(timespec="seconds")
-    try:
-        datetime.fromisoformat(when)
-    except ValueError:
-        raise ValueError("That isn't a time.") from None
-    current = person_settings.get(context, SEEN_KEY) or ""
-    if when > current:
-        person_settings.put(context, SEEN_KEY, when)
+    ids = [str(i).strip()[:60] for i in (ids if isinstance(ids, (list, tuple)) else [ids]) if str(i or "").strip()]
+    if not ids:
+        raise ValueError("Which cards?")
+    now = now or datetime.now()
+    seen = _seen(context, now)
+    kept = seen["ids"] + [i for i in ids if i not in seen["ids"]]
+    since = seen["since"]
+    if len(kept) > SEEN_KEPT:
+        dropped, kept = kept[:-SEEN_KEPT], kept[-SEEN_KEPT:]
+        whens = {row["id"]: row["when"] for row in log(context)}
+        latest = max((whens.get(i, "") for i in dropped), default="")
+        if latest and latest >= since:
+            since = (datetime.fromisoformat(latest) + timedelta(seconds=1)).isoformat(timespec="seconds")
+    with undo_log.outside_undo():
+        person_settings.put(context, SEEN_KEY, {"since": since, "ids": kept})
     return "Seen."
 
 
 def page(context) -> dict:
-    """The Achievements page: {available, earned (the log), counts {earned, total (hidden ones only once found)},
+    """The Achievements page: {available, earned (the log, trophies included), counts {earned (achievements),
+    total (hidden ones only once found), trophies (rewards missions earned)},
     chains (core.web_progress.rewards_block's, with each next tier's progress), structures [{name, icon,
     description, earned, rarity...}]}."""
     from core.life_milestones import STRUCTURES
@@ -138,15 +211,18 @@ def page(context) -> dict:
     pid = _person(context)
     rewards = getattr(context, "rewards", None)
     if rewards is None or not pid:
-        return {"available": False, "earned": [], "counts": {"earned": 0, "total": 0}, "chains": [], "structures": []}
+        return {"available": False, "earned": [], "counts": {"earned": 0, "total": 0, "trophies": 0}, "chains": [],
+                "structures": []}
     earned = log(context)
+    trophies = sum(1 for row in earned if row["kind"] == "trophy")
     unlocked = set(_unlocked(context, pid))
     known = catalog()
     shown = [c for c in known.values() if c["kind"] != "hidden" or c["id"] in unlocked]
     block = rewards_block(context, pid)
     structures = [{"id": s.reward_id, "name": s.name, "icon": s.icon, "description": s.description,
                    "earned": s.reward_id in unlocked, **_rarity(s.rarity_index)} for s in STRUCTURES]
-    return {"available": True, "earned": earned, "counts": {"earned": len(earned), "total": len(shown)},
+    return {"available": True, "earned": earned,
+            "counts": {"earned": len(earned) - trophies, "total": len(shown), "trophies": trophies},
             "chains": block.get("chains", []), "structures": structures}
 
 
@@ -157,12 +233,14 @@ def _number(value: float) -> str:
 
 def say(context) -> str:
     """The voice twin of the page: how many he's earned, the latest three with their dates, and the next tier he's
-    closest to, with his number against it."""
+    closest to, with his number against it.
+    Rewards that missions earned are counted beside the achievements."""
     found = page(context)
     if not found["available"]:
         return "Achievements need a signed-in profile."
     counts = found["counts"]
-    parts = [f"You've unlocked {counts['earned']} of {counts['total']} achievements."]
+    parts = [f"You've unlocked {counts['earned']} of {counts['total']} achievements"
+             + (f", and missions have earned you {counts['trophies']} rewards." if counts["trophies"] else ".")]
     latest = found["earned"][:3]
     if latest:
         parts.append("Latest: " + "; ".join(f"{c['name']} ({c['description'].rstrip('.')}"
@@ -173,8 +251,7 @@ def say(context) -> str:
         unit = f" {best['unit']}" if best.get("unit") else ""
         parts.append(f"Closest next: {best['next']['name']}, {_number(best['value'])}{unit} of "
                      f"{_number(best['next']['threshold'])}{unit} ({best['stat'].lower()}).")
-    still = [s["name"] + " (" + s["description"].rstrip(".").lower() + ")" for s in found["structures"]
-             if not s["earned"]]
+    still = [s for s in found["structures"] if not s["earned"]]
     if still and len(still) < len(found["structures"]):
         parts.append(f"{len(still)} structure milestones still to build.")
     return " ".join(parts)

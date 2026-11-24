@@ -13,8 +13,11 @@ at), every egg logged in the flock book (core/flock.py), and every jar put up on
 (core/canning_shelf.py records a `canned` life event with its jar count, because a jar eaten leaves the pantry; an
 undone one is dropped by `life_events.reversed_ids`).
 
-**Structures built** (`STRUCTURES`, `built`): one-time milestones, each earned when a project whose name says that
-structure ("Greenhouse", "Build the chicken coop") is marked Complete in the Workshop (core/project_manager.py).
+**Structures built** (`STRUCTURES`, `built`, `structure_of`): one-time milestones, each earned when a project that
+built it is marked Complete in the Workshop (core/project_manager.py): its name is just the structure ("Greenhouse")
+or says it was built ("Build the chicken coop", "Install solar"), never one about mending, moving or a part of one
+("Painting the shed", "Greenhouse automation"), and one project builds one structure. An unlock is for good, so a
+name that doesn't say it plainly earns nothing.
 Read by core/rewards_manager.py, which unlocks and celebrates them like every other reward.
 """
 
@@ -27,7 +30,7 @@ from core.logger import get_logger
 
 log = get_logger(__name__)
 
-POUNDS = {"lb": 1.0, "oz": 1 / 16, "kg": 2.20462}  # a harvest's unit (core.harvest_log.unit_of) to pounds
+POUNDS = {"lb": 1.0, "oz": 1 / 16, "kg": 2.20462, "g": 0.00220462}  # a harvest's unit (core.harvest_log.unit_of) to pounds
 
 
 def produce_pounds(context) -> float:
@@ -88,39 +91,66 @@ class Structure:
 
 STRUCTURES: tuple[Structure, ...] = (
     Structure("built_greenhouse", "Glass and Green", "Built the greenhouse.", "🌿", 4,
-              r"greenhouse|hoop ?house|high tunnel|poly ?tunnel|grow tunnel"),
-    Structure("built_aquaponics", "Fish and Greens", "Built the aquaponics system.", "🐟", 4, r"aquaponics?"),
+              r"greenhouses?|glasshouses?|hoop ?houses?|high tunnels?|poly ?tunnels?|grow tunnels?"),
+    Structure("built_aquaponics", "Fish and Greens", "Built the aquaponics system.", "🐟", 4,
+              r"aquaponics?(?: system| setup)?"),
     Structure("built_chicken_coop", "Rule the Roost", "Built the chicken coop.", "🐔", 3,
-              r"chicken coop|coop|hen ?house|chicken house"),
-    Structure("built_barn", "Raised the Barn", "Built the barn.", "🏚️", 4, r"barn|pole barn"),
-    Structure("built_shed", "Shed Raiser", "Built a shed.", "🛖", 2, r"shed"),
-    Structure("built_garage", "Bay Builder", "Built the garage.", "🚘", 3, r"garage|carport"),
-    Structure("built_workshop", "The Workshop", "Built the workshop.", "🛠️", 3, r"workshop|shop building"),
+              r"(?:chicken )?coops?|hen ?houses?|chicken houses?|chicken tractors?"),
+    Structure("built_barn", "Raised the Barn", "Built the barn.", "🏚️", 4, r"(?:pole )?barns?"),
+    Structure("built_shed", "Shed Raiser", "Built a shed.", "🛖", 2, r"(?:storage |garden |tool )?sheds?"),
+    Structure("built_garage", "Bay Builder", "Built the garage.", "🚘", 3, r"garages?|carports?"),
+    Structure("built_workshop", "The Workshop", "Built the workshop.", "🛠️", 3, r"workshops?|shop buildings?"),
     Structure("built_cold_room", "Cold Keeper", "Built the cold room or root cellar.", "🧊", 3,
-              r"cold room|root cellar|walk-?in cooler"),
+              r"cold rooms?|root cellars?|walk-?in coolers?"),
     Structure("built_power_station", "Off the Grid", "Built the solar or power station.", "☀️", 4,
-              r"solar (?:array|panels?|system|power)|power station|battery bank|power system"),
+              r"solar(?: arrays?| panels?| systems?| power)?|power stations?|battery banks?|power systems?"),
     Structure("built_water_system", "Water Keeper", "Built the rain catchment or water system.", "💧", 3,
-              r"rain ?catchment|cistern|rain ?barrels?|water system|irrigation"),
-    Structure("built_well_pump", "Wellspring", "Put in the well pump.", "🚰", 3, r"well pump|water well|(?:drill|dig)(?:ing)? (?:a |the )?well"),
+              r"rain ?catchment|cisterns?|rain ?barrels?|water systems?|irrigation(?: systems?)?"),
+    Structure("built_well_pump", "Wellspring", "Put in the well pump.", "🚰", 3, r"well pumps?|water wells?|wells?"),
     Structure("built_raised_beds", "Bed Maker", "Built the raised beds.", "🪴", 1, r"raised beds?|garden beds?"),
-    Structure("built_orchard", "Orchardist", "Planted the orchard.", "🍎", 3, r"orchard"),
-    Structure("built_fence", "Good Fences", "Built the fence.", "🚧", 1, r"fence|fencing"),
+    Structure("built_orchard", "Orchardist", "Planted the orchard.", "🍎", 3, r"orchards?"),
+    Structure("built_fence", "Good Fences", "Built the fence.", "🚧", 1, r"fences?|fencing"),
 )
 
-# Words that mean the project is about the structure, not building it ("Repair the shed roof" built no shed).
-_NOT_A_BUILD = re.compile(r"\b(?:repair|fix|paint|clean|re-?roof|insulate|organi[sz]e|tear down|demolish|move|sell)\b",
-                          re.I)
+# A project that builds one says so: a build verb ("Build the chicken coop", "Install solar"), or its name is just
+# the structure ("Greenhouse", "The new barn").
+_BUILD = re.compile(r"\b(?:build|built|building|raise|raising|construct\w*|erect\w*|install\w*|put (?:in|up)|"
+                    r"set(?:ting)? up|plant\w*|dig\w*|drill\w*|frame|framing|pour\w*)\b", re.I)
+_JUST = r"^\s*(?:(?:the|a|an|my|our|new|first|second|big|small)\s+)*(?:{words})\s*$"
+# Words that make it about mending, moving or a part of one, never building it: "Painting the shed", "Greenhouse
+# automation", "Barn door hardware". Stem-aware, so "repairing" and "winterize" are caught.
+_NOT_A_BUILD = re.compile(r"\b(?:repair|fix|paint|clean|re-?roof|insulat|organi[sz]|tear\w* down|demolish|mov|sell|"
+                          r"sold|winteriz|replac|prun|weed|harvest|automat|sensor|controller|door|opener|hardware|"
+                          r"bench|roof|light|wiring|wire|shelv|shelf|join|upgrad|maintain|maintenance|inspect|"
+                          r"stain|seal|patch|empty|restock)\w*", re.I)
+
+
+def structure_of(name: str):
+    """Pure logic. The one structure a project's name says it builds, or None: its name is only the structure, or a
+    build verb is followed by one (the first named after the verb: "Install solar panels for the shed" built the
+    power, not the shed), and nothing in it says mending, moving or a part (`_NOT_A_BUILD`)."""
+    name = " ".join(str(name or "").split())
+    if not name or _NOT_A_BUILD.search(name):
+        return None
+    for s in STRUCTURES:
+        if re.match(_JUST.format(words=s.words), name, re.I):
+            return s
+    verb = _BUILD.search(name)
+    if verb is None:
+        return None
+    after = name[verb.end():]
+    found = [(m.start(), s) for s in STRUCTURES for m in [re.search(rf"\b(?:{s.words})\b", after, re.I)] if m]
+    return min(found, key=lambda f: f[0])[1] if found else None
 
 
 def _names(structure: Structure, name: str) -> bool:
-    """Pure logic. Whether a project's name says this structure (whole words) and isn't about mending or moving one."""
-    return bool(re.search(rf"\b(?:{structure.words})\b", name or "", re.I)) and not _NOT_A_BUILD.search(name or "")
+    """Pure logic. Whether a project's name says it built this structure (`structure_of`)."""
+    return structure_of(name) is structure
 
 
 def built(context, reward_id: str) -> bool:
-    """Whether a project naming this structure is marked Complete (the household's Workshop projects). False for a
-    reward id that isn't a structure, or without projects."""
+    """Whether a project that built this structure is marked Complete (the household's Workshop projects). False for
+    a reward id that isn't a structure, or without projects."""
     structure = next((s for s in STRUCTURES if s.reward_id == reward_id), None)
     projects = getattr(context, "projects", None)
     if structure is None or projects is None:

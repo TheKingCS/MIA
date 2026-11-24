@@ -23,7 +23,8 @@ every unlock is in his history with its date.
 - `core/achievement_cards.py`: the log (every unlock, dated), the cards not yet seen (three at most at once), the
   page (`web/achievements.html`, linked from Skills) and the voice twin (`my_achievements`).
 - The card (`web/shell.js`): every page shows each new unlock as a card in its rarity's colour with its sound, and
-  a finished mission or a level reached from an action gets one too. Closing it is `achievement.seen`.
+  a finished mission or a level reached from an action gets one too. Closing it marks that card seen by its id
+  (/api/achievements/seen), outside undo, so it never blocks undoing what earned it.
 
 ## Step 2: typed mission rewards and missions completed by evidence
 

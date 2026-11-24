@@ -528,7 +528,6 @@ import core.news_actions  # noqa: E402,F401  (Good News Radio's page: on, off, f
 import core.greenhouse_setup  # noqa: E402,F401  (the greenhouse setup's next step from Today, DEC-0150)
 import core.web_changes  # noqa: E402,F401  (undo.last: Recent Changes' Undo, as "undo that")
 import core.web_notifications  # noqa: E402,F401  (Notifications: read all, dismiss)
-import core.assistant_achievement_actions  # noqa: E402,F401  (achievement.seen: an achievement card closed)
 import core.web_tracks  # noqa: E402,F401  (Tracks: a GPX file kept, a track deleted, DEC-0099)
 import core.sensors  # noqa: E402,F401  (sensor.remove: a sensor that sends its own readings)
 import core.lab_actions  # noqa: E402,F401  (the development lab, DEC-0058)

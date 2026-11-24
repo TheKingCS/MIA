@@ -1,10 +1,6 @@
 {
  "about": "core/loop_coverage.py (DEC-0101): every process MIA has, with a loop or a reason. status: todo (needs a loop), proposed (a task drafts it), none (why: no loop needed).",
  "processes": {
-  "action:achievement": {
-   "status": "none",
-   "why": "achievement.seen only marks the congratulation cards he has seen; the achievements are read from his records, nothing of MIA's to improve in closing a card"
-  },
   "action:activity": {
    "status": "none",
    "why": "turning noting on or off and erasing what was noted are his own choices about his privacy (DEC-0197); nothing of MIA's to improve in them"

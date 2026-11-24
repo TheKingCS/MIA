@@ -37,13 +37,10 @@
       "get_skills",
       "my_achievements"
     ],
-    "actions": [
-      "achievement.seen"
-    ],
+    "actions": [],
     "tiers": {
       "get_skills": "observe",
-      "my_achievements": "observe",
-      "achievement.seen": "act_within_grant"
+      "my_achievements": "observe"
     },
     "outside": []
   },

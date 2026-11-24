@@ -92,6 +92,7 @@ desktop lock screen treats as open) is refused here.
 Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
 screen; /api/taught-skills/run, /answer and /stop move a run one step at a
 time, each step through its own gate.
+An achievement card closed is marked seen by POST /api/achievements/seen (AchievementsSeenRequest).
 """
 
 from __future__ import annotations
@@ -186,6 +187,11 @@ class PageErrorRequest(BaseModel):
 class NewsHeardRequest(BaseModel):
     """Good News Radio's page saying its episode was played, and in whose voice."""
     personality: str = Field(default="", max_length=40)
+
+
+class AchievementsSeenRequest(BaseModel):
+    """Achievement cards closed: their ids (core/achievement_cards.mark_seen)."""
+    ids: list[str] = Field(default_factory=list, max_length=50)
 
 
 class PageOpenedRequest(BaseModel):
@@ -591,7 +597,8 @@ def create_app(context: AppContext) -> FastAPI:
     /api/runtime/health says how MIA is running: her schedule's jobs, and under the headless runtime (DEC-0155) its
     uptime, the model and the phone server.
     /api/achievements and /api/achievements/new serve the achievements log and the cards not yet seen
-    (core/achievement_cards.py)."""
+    (core/achievement_cards.py).
+    POST /api/achievements/seen marks cards seen by id, outside undo."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3149,16 +3156,29 @@ def create_app(context: AppContext) -> FastAPI:
 
     @app.get("/api/achievements/new")
     def web_achievements_new(profile_id: str = Depends(require_profile_id)) -> dict:
-        """The unlocks the person hasn't seen a card for (core/achievement_cards.unseen), for the frame to show; the
-        card's Close is the action achievement.seen. Nothing for a child account, which has no Skills app."""
+        """The ones the person hasn't seen a card for (core/achievement_cards.unseen), for the frame to show; a card's
+        Close is /api/achievements/seen. Nothing for a child account, which has no Skills app."""
         from core.achievement_cards import unseen
         from core.child_accounts import app_allowed
 
         view = view_for(context, profile_id)
         if not app_allowed(view, "skills"):
-            return {"cards": [], "more": 0, "upto": ""}
+            return {"cards": [], "more": 0}
         with app.state.turn_lock:
             return unseen(view)
+
+    @app.post("/api/achievements/seen")
+    def web_achievements_seen(body: AchievementsSeenRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A card closed: its id marked seen (core/achievement_cards.mark_seen), bookkeeping outside undo, so it never
+        becomes the newest change "undo that" would take back."""
+        from core.achievement_cards import mark_seen
+
+        view = view_for(context, profile_id)
+        try:
+            with app.state.turn_lock:
+                return {"said": mark_seen(view, body.ids)}
+        except ValueError as problem:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(problem)) from None
 
     @app.get("/api/profile")
     def web_profile(profile_id: str = Depends(require_profile_id)) -> dict:
