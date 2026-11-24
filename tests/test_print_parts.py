@@ -2,7 +2,9 @@
 the size asked and whose lid's lip clears the walls, a spacer, sizes read in millimetres or inches, the files kept
 in his prints folder, and the request reaching the tool.
 Mounting posts at a board's spacing (or none when they wouldn't fit) and a cable hole; every shape faces outward, so
-a slicer reads it solid."""
+a slicer reads it solid.
+And the review's cases: only the part's own numbers are sizes, and a hole or posts are left out where they don't
+fit."""
 
 import struct
 from types import SimpleNamespace
@@ -77,3 +79,21 @@ def test_every_shape_faces_outward_so_a_slicer_reads_it_solid():
     assert volume(pp._box(0, 0, 0, 2, 3, 4)) == 24
     assert abs(volume(pp._tube(10, 10, 0, 5, 6, 2.5)) - math.pi * (9 - 1.5625) * 5) < 1.5
     assert abs(volume(pp._cylinder(3, 5)) - math.pi * 45) < 1.5
+
+
+def test_review_sizes_read_only_the_parts_own_numbers():
+    assert pp._sizes("80x50x30 mm in the garden") == [80, 50, 30]
+    assert pp._sizes("for an ESP32 board, 60 by 30 by 20") == [60, 30, 20]
+    assert pp._sizes("2 mm wall, 80x50x30") == [80, 50, 30]
+    assert pp._sizes("3 inches by 50 mm by 20 mm") == [76.2, 50, 20]
+    assert pp._sizes("for M3, 10 mm tall, 8 mm across") == [10, 8]
+
+
+def test_review_a_hole_and_posts_only_where_they_fit_and_nothing_overwritten(tmp_path):
+    assert not pp.enclosure(80, 50, 6, cable_hole=True)["cable_hole"]
+    assert pp.enclosure(80, 50, 6, posts=(58, 23))["posts"] == []
+    context = SimpleNamespace(home_dir=tmp_path)
+    pp.make(context, "enclosure", "80 by 50 by 30", "box a")
+    second = pp.make(context, "enclosure", "80 by 50 by 30", "box a")
+    assert "box-a-2-box.stl" in second
+    assert "narrower than the spacer" in pp.make(context, "spacer", "10 mm tall, 3 mm across, 8 mm bore")

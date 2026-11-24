@@ -94,10 +94,12 @@ def enclosure(length: float, width: float, height: float, wall: float = 2.0, lid
     plate the box's outside size with a lip inside the walls): {"box": triangles, "lid": triangles, "outside",
     "volume_cm3", "posts", "cable_hole"}. `posts` (spacing along, across, in mm: a board's mounting holes) puts four
     hollow posts on the floor, centred, `POST_OUTER` across with a `POST_BORE` bore for M3 screws; `cable_hole` opens
-    a `CABLE_HOLE` slot low in the first end wall, centred, the wall built around it."""
+    a `CABLE_HOLE` slot low in the first end wall, centred, the wall built around it.
+    A cable hole only where the box has room for one, and posts only where a board on them clears the lid's lip."""
     L, W, H, t = length + 2 * wall, width + 2 * wall, height + wall, wall
     box = _box(0, 0, 0, L, W, t)  # the floor
     box += _box(0, 0, 0, L, t, H) + _box(0, W - t, 0, L, W, H) + _box(L - t, 0, 0, L, W, H)
+    cable_hole = bool(cable_hole) and height >= CABLE_HOLE[1] + 3 and width >= CABLE_HOLE[0] + 2  # else no room
     if cable_hole:  # the end wall at x=0 in four pieces around a slot just above the floor
         hw, hh = CABLE_HOLE
         ya, yb, za, zb = (W - hw) / 2, (W + hw) / 2, t + 2.0, t + 2.0 + hh
@@ -106,6 +108,8 @@ def enclosure(length: float, width: float, height: float, wall: float = 2.0, lid
     else:
         box += _box(0, 0, 0, t, W, H)
     placed = []
+    if posts and height < POST_HEIGHT + min(4.0, height / 3) + 3:  # a board on posts must clear the lid's lip
+        posts = None
     if posts:
         along, across = posts
         for dx in (-along / 2, along / 2):
@@ -137,11 +141,26 @@ def spacer(height: float, outer: float, bore: float = 0.0) -> dict:
 
 
 def _sizes(said: str) -> list[float]:
-    """Pure logic. The millimetre sizes in his words ("80 by 50 by 30", "80x50x30 mm", "3 inches" as 76.2)."""
+    """Pure logic. The millimetre sizes in his words ("80 by 50 by 30", "80x50x30 mm", "3 inches" as 76.2, "3 inches
+    by 50 mm"): each number by its own unit (inches only when "in", "inch" or '"' follows the number itself; a
+    number with no unit takes the sentence's inches only when no number says mm), never a number glued to letters
+    ("ESP32", "M3") or a wall's thickness ("2 mm wall")."""
     text = (said or "").lower()
-    inches = bool(re.search(r"\b(inch|inches|in\b|\")", text))
-    numbers = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", text)]
-    return [round(n * 25.4, 1) for n in numbers] if inches else numbers
+    found = []
+    for m in re.finditer(r"(?<![a-wyz0-9.])(\d+(?:\.\d+)?)\s*(\"|inches|inch|in(?![a-z])|mm|cm)?", text):
+        glued = m.group(2) is None and re.match(r"[a-wyz]", text[m.end(1):m.end(1) + 1])  # "32gb"; never "80x50"
+        if re.match(r"\s*(?:mm\s*)?walls?\b", text[m.end():]) or glued:
+            continue
+        found.append((float(m.group(1)), (m.group(2) or "").strip()))
+    any_inch = any(u in ('"', "in", "inch", "inches") for _, u in found)
+    any_metric = any(u in ("mm", "cm") for _, u in found)
+    out = []
+    for n, u in found:
+        if u in ('"', "in", "inch", "inches") or (not u and any_inch and not any_metric):
+            out.append(round(n * 25.4, 1))
+        else:
+            out.append(round(n * 10, 1) if u == "cm" else n)
+    return out
 
 
 def _folder(context) -> Path:
@@ -152,6 +171,17 @@ def _folder(context) -> Path:
     folder = Path(base) / "prints"
     folder.mkdir(parents=True, exist_ok=True)
     return folder
+
+
+def _free(folder: Path, slug: str) -> str:
+    """A name no earlier part in the folder has ("soil-box", then "soil-box-2"), so nothing is overwritten."""
+    taken = {p.name.split(".")[0] for p in folder.glob("*.stl")}
+    if not any(t == slug or t.startswith(slug + "-box") or t.startswith(slug + "-lid") for t in taken):
+        return slug
+    n = 2
+    while any(t == f"{slug}-{n}" or t.startswith(f"{slug}-{n}-") for t in taken):
+        n += 1
+    return f"{slug}-{n}"
 
 
 def _slug(name: str) -> str:
@@ -171,14 +201,18 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
     board's hole spacing and a cable hole when asked), and says where they are, their outside size and their most
     plastic; or what it needs, or a post that wouldn't fit inside.
     Then sliced for his printer (core/slicing.slice_files) when Bambu Studio is on his PC, with the print time and
-    grams."""
+    grams.
+    A part never overwrites an earlier one of the same name (`_free`), and a spacer's bore must be narrower than it."""
     kind = (kind or "").lower()
     found = _sizes(sizes)
     if "spacer" in kind or "standoff" in kind:
         if len(found) < 2:
             return "A spacer needs its height and outside diameter, like \"a spacer 10 mm tall, 8 mm across\"."
-        part = spacer(found[0], found[1], found[2] if len(found) > 2 else 0.0)
-        path = _folder(context) / f"{_slug(name or 'spacer')}.stl"
+        bore = found[2] if len(found) > 2 else 0.0
+        if not 0 <= bore < found[1]:
+            return f"The bore ({bore:g} mm) has to be narrower than the spacer ({found[1]:g} mm across)."
+        part = spacer(found[0], found[1], bore)
+        path = _folder(context) / f"{_free(_folder(context), _slug(name or 'spacer'))}.stl"
         path.write_bytes(stl(part["part"], name or "spacer"))
         made = [path]
         said = (f"Made {path.name}: {part['outside'][0]:g} mm across, {part['outside'][2]:g} mm tall"
@@ -190,7 +224,7 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
                     "board or part that goes in, plus room for wires).")
         spacing = _spacing(posts) if posts else None
         part = enclosure(found[0], found[1], found[2], wall if wall else 2.0, posts=spacing, cable_hole=cable_hole)
-        slug = _slug(name or "enclosure")
+        slug = _free(_folder(context), _slug(name or "enclosure"))
         folder = _folder(context)
         (folder / f"{slug}-box.stl").write_bytes(stl(part["box"], f"{name or 'enclosure'} box"))
         (folder / f"{slug}-lid.stl").write_bytes(stl(part["lid"], f"{name or 'enclosure'} lid"))
@@ -201,9 +235,12 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
         if spacing:
             said += (f"; {len(part['posts'])} mounting posts {spacing[0]:g} x {spacing[1]:g} mm apart, {POST_HEIGHT:g} mm "
                      f"tall with {POST_BORE:g} mm bores for M3 screws" if len(part["posts"]) == 4 else
-                     f"; the posts {spacing[0]:g} x {spacing[1]:g} mm apart don't fit inside, so none were made")
-        if cable_hole:
+                     f"; the posts {spacing[0]:g} x {spacing[1]:g} mm apart don't fit inside (or the box is too low "
+                     f"for a board on posts under the lid), so none were made")
+        if cable_hole and part["cable_hole"]:
             said += f"; a cable hole, {CABLE_HOLE[0]:g} x {CABLE_HOLE[1]:g} mm, low in one end"
+        elif cable_hole:
+            said += "; no cable hole: the box is too small for one"
         grams = part["volume_cm3"] * PLA_G_PER_CM3
         path = folder / f"{slug}-box.stl"
     from core.slicing import slice_files

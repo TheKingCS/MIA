@@ -242,7 +242,8 @@ def register_project_plan_actions(registry) -> None:
     The water tools are reached by water tanks and the cistern, never a bare "tank is at" (a propane tank) or
     "enough water" (a fish tank); the orchard's by its fruit, never "when should I prune" alone (roses) or "when
     will my" (a package).
-    design_print_part takes a board's mounting-hole spacing for posts and a cable hole."""
+    design_print_part takes a board's mounting-hole spacing for posts and a cable hole.
+    design_print_part is never reached by "print me a" (an invoice) or a bare "a standoff"."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -288,9 +289,9 @@ def register_project_plan_actions(registry) -> None:
             "cable_hole": {"type": "boolean", "description": "true for a hole for a cable or wires"}},
             "required": ["kind", "sizes"]},
         handler=_print_part,
-        trigger_phrases=("3d print", "print me a", "print an enclosure", "make me an enclosure", "design an enclosure",
-                         "design a box for", "make a box for", "an enclosure for", "print a spacer", "make a spacer",
-                         "a standoff"),
+        trigger_phrases=("3d print", "print an enclosure", "make me an enclosure", "design an enclosure",
+                         "an enclosure for", "print a spacer", "make a spacer", "print a standoff",
+                         "make a standoff"),
     ))
     registry.register_domain_keywords("water", ("cistern", "water tank", "rain barrels", "water budget", "well water"))
     registry.register(AssistantAction(
