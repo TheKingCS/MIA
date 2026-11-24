@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1657 files, 361,442 lines; 1657 files describe themselves; 19,878 of 20,008 classes and functions are documented.
+1657 files, 361,503 lines; 1657 files describe themselves; 19,881 of 20,011 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-652 files, 184,523 lines; 9,422 of 9,508 classes and functions documented
+652 files, 184,566 lines; 9,424 of 9,510 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -950,7 +950,7 @@
 
 ## tests/: the test suite: what each part must do
 
-601 files, 96,367 lines; 8,093 of 8,137 classes and functions documented
+601 files, 96,385 lines; 8,094 of 8,138 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1394,7 +1394,7 @@
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only.
 - `tests/test_security_log.py`: The security log (core/security_log.py, docs/SECURITY.md step 3): devices said in words, events kept per account newest first, never a password; a sign-in from a new device and repeated wrong passwords alert the account's owner; and "sign out everywhere" ends every other session; a password or email
 - `tests/test_seed_check.py`: Seeds against the plan (core/seed_check.py): the crops his confirmed garden plans start in the next month, checked against the seeds he logged (pantry or inventory), said in the garden's weekly message when any have none logged. *(1 undocumented)*
-- `tests/test_seed_life.py`: How long his seeds keep (core/seed_life.py): each kind's usual span, his dated packets of it said good, worth a germination test or past it, a plural or another name for a crop understood, and a packet with no year asked to give one.
+- `tests/test_seed_life.py`: How long his seeds keep (core/seed_life.py): each kind's usual span, his dated packets of it said good, worth a germination test or past it, a plural or another name for a crop understood ("broccoli sprouts" never Brussels sprouts), a packet naming two crops counted for both, a "packed for" year cou
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's report and tasks, and the series written from the principles and
 - `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
 - `tests/test_self_merges.py`: MIA's own changes going in on Claude's pass, the daily summary and the Undo (core/self_merges.py, DEC-0225).

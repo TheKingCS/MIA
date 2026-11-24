@@ -6,8 +6,9 @@ Firewood for the winter (Jarvis brainstorm, round 4: homestead). "Do I have enou
 inventory against what a winter takes him: his own figure (`prepared.firewood_cords`, set by voice with
 set_preparedness), never a guess; without it, the usual range said as only that and his number asked for.
 
-How: `cords_on_hand(items)` (pure) reads inventory records named as firewood or wood with a cord measure: "cords"
-(full cords, 128 cubic feet), "face cord" or "rick" (about a third of a cord, the common 16-inch pieces); a record
+How: `cords_on_hand(items)` (pure) reads inventory records named as firewood (or a kind of wood with a cord measure;
+never bungee or extension cords), in "cords" (full cords, 128 cubic feet) or "face cords"/"ricks" (the piece length
+over 48 inches of a cord: a third for 16-inch pieces), with fractions and words ("1 1/2 cords", "half cord"); a record
 whose amount it can't read is named, never guessed. `say(context)` compares and says what's short.
 """
 
@@ -16,35 +17,72 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-FACE_CORD = 1 / 3  # a face cord (rick) of 16-inch pieces is about a third of a full cord
+FACE_CORD = 1 / 3  # a face cord (rick) of 16-inch pieces is about a third of a full cord (4 x 8 ft x the length)
+# Only wood: "bungee cords", "an extension cord" and "a cord of rope" are never firewood
 _WOOD = re.compile(r"\b(?:fire ?wood|split wood|wood ?pile|cord ?wood|seasoned wood)\b", re.I)
+# A kind of wood counts only with a cord measure ("oak, 2 cords"): never "an oak dining table" or "a log splitter"
+_KIND = re.compile(r"\b(?:hardwood|softwood|logs|oak|maple|hickory|ash|birch|cherry|locust|pine)\b", re.I)
 _FACE = re.compile(r"\b(?:face cords?|ricks?)\b", re.I)
-_CORD = re.compile(r"\bcords?\b", re.I)
-_NUMBER = re.compile(r"(\d+(?:\.\d+)?)\s*(?=(?:face )?cords?\b|ricks?\b)", re.I)
+_CORD = re.compile(r"\b(?:bush )?cords?\b", re.I)
+_LENGTH = re.compile(r"(\d{1,2})\s*(?:\"|in\b|inch(?:es)?)", re.I)
+# An amount of cords said in the name: "2 cords", "1.5 cords", ".5 cord", "1/2 cord", "1 1/2 cords", "half cord",
+# "a cord and a half"
+_AMOUNT = re.compile(r"(?:(\d+)\s+)?(\d+)/(\d+)\s*(?=(?:face |bush )?cords?\b|ricks?\b)"
+                     r"|(\d*\.\d+|\d+)\s*(?=(?:face |bush )?cords?\b|ricks?\b)", re.I)
+_WORD_AMOUNTS = (("a cord and a half", 1.5), ("cord and a half", 1.5), ("one and a half", 1.5), ("half a cord", 0.5),
+                 ("half cord", 0.5), ("quarter cord", 0.25))
+
+
+def _amount(name: str) -> Optional[float]:
+    """Pure logic. The cords (or face cords) said in a record's name, or None when it says no amount."""
+    low = name.lower()
+    for words, value in _WORD_AMOUNTS:
+        if words in low:
+            return value
+    m = _AMOUNT.search(low)
+    if not m:
+        return None
+    if m.group(3):
+        return float(m.group(1) or 0) + float(m.group(2)) / float(m.group(3))
+    return float(m.group(4))
+
+
+def _face_share(name: str) -> float:
+    """Pure logic. What one face cord is of a full cord: its piece length over 48 inches, 16 inches unless said."""
+    length = _LENGTH.search(name)
+    inches = int(length.group(1)) if length else 16
+    return inches / 48 if 6 <= inches <= 48 else FACE_CORD
 
 
 def cords_on_hand(items: list) -> tuple[float, list]:
-    """Pure logic. (full cords of firewood in his records, the firewood records whose amount couldn't be read). A
-    record counts its quantity in its measure ("Firewood (cords)" x 3 is 3 cords, "Face cord oak" x 3 is 1); a number
-    in the name stands when there's no quantity ("Firewood 2 cords")."""
+    """Pure logic. (full cords of firewood in his records, the firewood records whose amount couldn't be read). Only
+    records named as firewood count, or a kind of wood with a cord measure ("oak, 2 cords"). The amount is the one in
+    the name ("Firewood 1 1/2 cords", "half cord") times how many when the quantity is above one; with none in the
+    name, a record named in cords ("Firewood (cords)") counts its quantity. A face cord is its piece length over 48
+    inches of a full cord (16 inches, a third, unless said). A record that says no amount, one with an amount in its
+    name but a count of 0, or "cord wood" by the piece, is named, never guessed."""
     total, unread = 0.0, []
     for item in items:
         name = str(getattr(item, "name", "") or "")
-        if not _WOOD.search(name) and not (_CORD.search(name) or _FACE.search(name)):
+        face = bool(_FACE.search(name))
+        if not (_WOOD.search(name) or (_KIND.search(name) and (face or _CORD.search(name)))):
             continue
-        if not (_CORD.search(name) or _FACE.search(name) or _CORD.search(str(getattr(item, "unit", "") or ""))):
-            unread.append(name)
+        if not face and not _CORD.search(name):
+            unread.append(name)  # firewood with no cord measure
             continue
         try:
             qty = float(getattr(item, "quantity", 0) or 0)
         except (TypeError, ValueError):
             qty = 0.0
-        if qty <= 0:
-            found = _NUMBER.search(name)
-            qty = float(found.group(1)) if found else 0.0
-        if qty <= 0:
+        said = _amount(name)
+        if said is not None and qty > 0:
+            cords = said * (qty if qty > 1 else 1)
+        elif said is None and qty > 0 and not re.search(r"\bcord ?wood\b", name, re.I):
+            cords = qty
+        else:
+            unread.append(name)
             continue
-        total += qty * (FACE_CORD if _FACE.search(name) else 1.0)
+        total += cords * (_face_share(name) if face else 1.0)
     return round(total, 2), unread
 
 

@@ -25,10 +25,10 @@ YEARS = {
     "pumpkin": 4, "radish": 5, "spinach": 2, "squash": 4, "tomato": 4, "turnip": 4, "watermelon": 4, "basil": 5,
     "cilantro": 2, "dill": 3, "sunflower": 3, "zinnia": 3, "marigold": 2,
 }
-_PLURAL = {"tomatoes": "tomato", "potatoes": "potato", "beans": "bean", "peas": "pea", "peppers": "pepper",
+_PLURAL = {"tomatoes": "tomato", "beans": "bean", "peas": "pea", "peppers": "pepper",
            "onions": "onion", "carrots": "carrot", "beets": "beet", "radishes": "radish", "squashes": "squash",
            "cucumbers": "cucumber", "melons": "melon", "leeks": "leek", "turnips": "turnip", "pumpkins": "pumpkin",
-           "sprouts": "brussels sprout", "zucchini": "squash", "cukes": "cucumber"}
+           "brussels sprouts": "brussels sprout", "zucchini": "squash", "cukes": "cucumber"}
 _YEAR = re.compile(r"\b(20\d{2})\b")
 
 
@@ -51,18 +51,23 @@ def years_for(crop: str) -> Optional[int]:
 
 def packets(names: list, crop: str, today: date) -> list[dict]:
     """Pure logic. His seed packets of `crop` whose names give a year: [{name, year, age, state}], state "good"
-    (inside its span), "test" (its last year, or one past: worth a germination test) or "old"."""
+    (inside its span), "test" (its last year, or one past: worth a germination test) or "old". A name naming two
+    crops counts for both; a "packed for" year counts from the year before (the seed was grown then); a future year is
+    age 0."""
     span = YEARS.get(crop)
     out = []
     for name in names:
         low = str(name).lower()
-        if "seed" not in low or crop_of(low) != crop:
+        mentioned = re.search(rf"\b{re.escape(crop)}(?:e?s)?\b", low) or crop_of(low) == crop
+        if "seed" not in low or not mentioned:  # "tomato & pepper seeds" is both
             continue
         found = _YEAR.search(low)
         if not found or span is None:
             continue
         year = int(found.group(1))
-        age = today.year - year
+        if re.search(r"\b(?:packed for|sell by|for the|season)\b[^0-9]*" + found.group(1), low):
+            year -= 1  # a packed-for year is the season sold for: grown and tested about a year before
+        age = max(0, today.year - year)
         state = "good" if age < span else "test" if age <= span + 1 else "old"
         out.append({"name": str(name), "year": year, "age": age, "state": state})
     return out
