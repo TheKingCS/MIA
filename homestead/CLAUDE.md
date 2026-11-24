@@ -147,6 +147,9 @@ docs/            everything else - see index below
 - `FEATURES_AND_CAPABILITIES.md` — auto-generated proof document (never hand-edit)
 - `SUSTAINING_FEATURES.md` — brainstormed features not yet built, with effort sizing
 - `OFFLINE_ASSISTANT_PLAN.md` — converting the assistant off the cloud API to a fully local model; the tool-count/gating problem this needs to solve before local rollout
+- `MIA_COMMAND_INTERFACE.md` — the design for MIA's directions to this node (DEC-0185): the whitelist of targets,
+  schedules and modes she may set, the node's own checks, and the one decision waiting on Zac; read before adding any
+  write path to `viewer/serve_exports.py`
 - `MIA_HOME_SYNC_PLAN.md` — scoping for punch-list item #7 (pushing summarized state to MIA Home); what's real on the MIA-repo side, what's genuinely undecided (transport, hardware target), what's buildable here now vs. needs a session in `~/Projects/MIA`
 - `deploy/README.md` — the self-healing deploy/rollback mechanism (core/deploy_manager.py + systemd crash-loop layer); two real bugs found by actually testing it, not by reasoning about it — read before touching either the app-level watch or the unit files
 

@@ -19,6 +19,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 0zs. [ ] **The order.** Recommended: finding and listening to your devices first (read-only), the 3D printer
    second, writing firmware and designing printable parts third, circuit boards after. The other way: design tools
    first, before connecting anything.
+0zu. [ ] **Whose approval does the greenhouse trust?** (`homestead/docs/MIA_COMMAND_INTERFACE.md`) When MIA adjusts a
+   greenhouse target (DEC-0185), either (A) your yes in MIA counts and the node applies it within its hard limits, or
+   (B) the node also waits for your press on its own dashboard. Recommended: B for the pilot's first month, then A.
+   Either way MIA never doses, switches a pump or touches the safety limits; only targets, schedules and modes, each
+   checked by the node.
 0zt. [ ] **Unfinished work lost (my mistake, 2026-11-24).** An unfinished change from 2026-11-08 (transfers between
    your own accounts kept as transfers, DEC-0042) sat uncommitted in budget_manager.py and plaid_manager.py; a
    careless restore of mine wiped it. The plaid half is recovered (in the private audit folder); the budget half has

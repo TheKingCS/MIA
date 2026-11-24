@@ -54,6 +54,9 @@ so the things that keep fish and plants alive come first.
 
 ### Phase B: the node takes MIA's directions (in simulation; follows `homestead/CLAUDE.md`)
 
+*Designed 2026-11-24: `homestead/docs/MIA_COMMAND_INTERFACE.md` (the whitelist, the node's checks, one decision for
+Zac, WAITING_ON 0zu).*
+
 1. **The node's command interface** (DEC-0185). Set a target, a schedule or a mode, through a signed, local-only
    channel. The node checks each command against its limits, the MCU may refuse, and the node confirms what it
    applied. Every refusal is said, never retried around.
