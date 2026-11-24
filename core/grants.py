@@ -70,6 +70,8 @@ _SUGGEST_PREFIXES = ("draft_", "propose_", "suggest_", "plan_", "preview_")
 
 _would_refuse: dict = {}  # capability -> how many times enforcing would have stopped it (this run)
 _tiers: dict = {}  # capability -> tier, read once from the manifests
+_tiers_read = False  # whether the manifests have been read (even when they gave nothing)
+_tiers_lock = __import__("threading").Lock()
 
 
 @dataclass(frozen=True)
@@ -106,13 +108,14 @@ def default_action_tier(kind: str) -> str:
 def default_tool_tier(name: str, destructive: bool = False) -> str:
     """Pure logic. The tier a tool starts with: observe when it only reads, suggest when it only drafts, the person's
     yes each time when its name says it pays, sends, deletes or the like (or it's marked destructive), else within a
-    grant."""
+    grant. "Only reads" is judged by the name alone (`changes_records(by_tier=False)`), never by the tier it would
+    confirm."""
     from core.main_thread import changes_records
     from core.taught_skills import _TOOL_ALWAYS
 
     if destructive or _TOOL_ALWAYS.search(name):
         return WITH_APPROVAL
-    if not changes_records(name):
+    if not changes_records(name, by_tier=False):
         return OBSERVE
     if name.startswith(_SUGGEST_PREFIXES):
         return SUGGEST
@@ -120,12 +123,22 @@ def default_tool_tier(name: str, destructive: bool = False) -> str:
 
 
 def tiers() -> dict:
-    """Every capability's tier, from the manifests ({name: tier}), read once per process."""
-    if not _tiers:
-        from core import app_registry
+    """Every capability's tier, from the manifests ({name: tier}), read once per process: built in full, then kept at
+    once under a lock (another thread never sees it half filled), and kept even when there are no manifests to read
+    (never re-read on every call)."""
+    global _tiers_read
+    if _tiers_read:
+        return _tiers
+    with _tiers_lock:
+        if not _tiers_read:
+            from core import app_registry
 
-        for manifest in app_registry.load().manifests.values():
-            _tiers.update(manifest.get("capabilities", {}).get("tiers", {}))
+            found: dict = {}
+            for manifest in app_registry.load().manifests.values():
+                found.update(manifest.get("capabilities", {}).get("tiers", {}))
+            _tiers.clear()
+            _tiers.update(found)
+            _tiers_read = True
     return _tiers
 
 

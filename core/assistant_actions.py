@@ -167,9 +167,9 @@ def _summary_of(name: str, arguments: dict) -> str:
 
 
 def _whole(name: str, text: str) -> bool:
-    """Pure logic. Whether a record's name is in the text as whole words: "Sign" is in "the sign for the shop", never
-    in "redesign"; "Ann" never in "annual"."""
-    return bool(name) and re.search(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])", text) is not None
+    """Pure logic. Whether a record's name is in the text as whole words, a plural or possessive ending allowed:
+    "Sign" is in "the sign for the shop", never in "redesign"; "Ann" never in "annual"; "ATV" in "the ATVs"."""
+    return bool(name) and re.search(rf"(?<![a-z0-9]){re.escape(name)}(?:'?s|es)?(?![a-z0-9])", text) is not None
 
 
 class AssistantActionRegistry:
@@ -362,7 +362,8 @@ class AssistantActionRegistry:
         commonest miss was answering such questions from memory). Only
         when the message is a question, exactly one read-only action's own
         trigger phrase matches, it needs no arguments, and nothing that
-        changes records matches too; otherwise None and the model decides."""
+        changes records matches too, and it names no other app's record ("what's running on the pickup truck?" is
+        the truck's); otherwise None and the model decides."""
         from core.child_accounts import tool_allowed
 
         lowered = f" {prompt.lower().strip()} "
@@ -378,14 +379,19 @@ class AssistantActionRegistry:
         lookups = [a for a in matched if (not ((a.parameters or {}).get("properties"))
                                           or set((a.parameters or {}).get("properties")) == {a.prompt_arg})
                    and "journal" not in a.name and "journal" not in a.domain and _names_its_subject(a, prompt)]
-        return lookups[0] if len(lookups) == 1 and len(matched) == 1 else None
+        if len(lookups) != 1 or len(matched) != 1:
+            return None
+        if self._entity_domains(prompt, context) - {lookups[0].domain}:
+            return None  # "what's running on the pickup truck?" names the truck: the model decides, Maintenance offered
+        return lookups[0]
 
     def named_action(self, prompt: str, offered: Iterable[str]) -> Optional[str]:
         """The one tool the message names in its own words, for when the
         model doesn't use it (2026-10-19, the PC model's misses: "Add a note
         that says buy milk" answered with "what title?"). Exactly one offered
         action's trigger phrase matches and it isn't destructive; a lookup
-        only for a question, one that changes records only when the message
+        for a question or when the message starts with its phrase ("wrap up my day"), one that changes records only
+        when the message
         starts with that phrase ("Add a recipe for...", never "do I have a
         recipe for chili?"). And the message says what it's about ("do I
         have" alone never names list_inventory). Else None."""
@@ -395,9 +401,9 @@ class AssistantActionRegistry:
         if len(matched) != 1 or matched[0].destructive or not _names_its_subject(matched[0], prompt):
             return None
         action = matched[0]
-        if not changes_records(action.name):
-            return action.name if looks_like_question(prompt) else None
         request = _POLITE_START.sub("", prompt.lower().strip())
+        if not changes_records(action.name) and looks_like_question(prompt):
+            return action.name
         return action.name if any(request.startswith(p.strip()) for p in action.trigger_phrases) else None
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:

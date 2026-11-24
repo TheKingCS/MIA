@@ -39,20 +39,27 @@ _READ_ONLY_PREFIXES = ("get_", "list_", "search_", "check_", "what_", "find_", "
 # Tools whose name reads like a lookup but that change records (2026-11-10, found by scanning every lookup-named
 # tool's handler): they record an undo and refresh screens like any change. tests/test_tool_gate.py keeps this right.
 CHANGES_DESPITE_NAME = frozenset({"check_off_grocery_item"})
+# Read-only by tier but kept on a change's path (review 2026-11-24): a search sends words out of MIA and a page read
+# brings outside text in, so after outside text the next one is held for the person, and their whole answer is shown
+# (never cut to the tool loop's 1,500 characters: a page's controls come after its text).
+OUTWARD = frozenset({"look_up_online", "browser_read"})
 # And the other way: lookups whose names don't start like one (WP-03): they only read, so the tool loop treats them
 # as lookups (their outside text is framed, and a change asked for after them is held).
 READ_ONLY_DESPITE_NAME = frozenset({"world_finds", "whats_in_the_workspace", "look_up_offline"})
 
 
-def changes_records(action_name: str) -> bool:
+def changes_records(action_name: str, by_tier: bool = True) -> bool:
     """Whether a tool may change records: every tool except the read-only ones (get_, list_, search_, show_...),
     those named as read-only (READ_ONLY_DESPITE_NAME) and those whose app manifest gives them the `observe` tier
     (core/grants.py: it only reads; "who owes me?", "check my emergency kit" are lookups whatever they're called, so
     the tool loop never retries a question without them); those that only look like a lookup (CHANGES_DESPITE_NAME)
-    do."""
+    and those that reach outside MIA (OUTWARD) do. `by_tier=False` judges by the name alone, for working out a new
+    tool's starting tier (grants.default_tool_tier), so a tier can't confirm itself."""
     if action_name in READ_ONLY_DESPITE_NAME:
         return False
-    if action_name not in CHANGES_DESPITE_NAME:
+    if action_name in OUTWARD:
+        return True
+    if by_tier and action_name not in CHANGES_DESPITE_NAME:
         try:
             from core.grants import OBSERVE, tier_of
 

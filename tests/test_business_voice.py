@@ -6,7 +6,10 @@ His business by voice (core/assistant_business_voice_actions.py, DEC-0125): the 
 customer's details, adding a customer, making a quote for a customer he has, a quote accepted (it becomes an order,
 due when he says), an order marked delivered; each change through the Business page's own action, with "undo that".
 A record is found by its exact title or customer name first; dates like "December 5" are read; the read-only tools
-count as lookups by their observe tier; a record's name matches only as whole words; and none of it is a child's.
+count as lookups by their observe tier (but a web search or a page read keeps a change's path, and a new tool's tier
+is judged by its name); a record's name matches only as whole words, a plural allowed; a question naming another
+app's record is never answered without the model; a lookup is named when the message starts with its phrase; and
+none of it is a child's.
 """
 
 from datetime import date, timedelta
@@ -80,3 +83,32 @@ def test_business_is_never_a_childs():
     from core.child_accounts import CHILD_BLOCKED_DOMAINS
 
     assert "business" in CHILD_BLOCKED_DOMAINS
+
+
+def test_what_reaches_outside_mia_keeps_a_changes_path_and_a_new_tools_tier_is_by_its_name():
+    from core.grants import OBSERVE, default_tool_tier
+    from core.main_thread import changes_records
+
+    assert changes_records("look_up_online") and changes_records("browser_read")
+    assert default_tool_tier("who_owes_me") != OBSERVE  # judged by its name, never by the tier it would confirm
+
+
+def test_a_plural_of_a_records_name_still_matches():
+    from core.assistant_actions import _whole
+
+    assert _whole("atv", "the atvs need oil") and _whole("cow", "the cows got out")
+    assert not _whole("ann", "my annual checkup")
+
+
+def test_a_direct_lookup_never_takes_a_question_naming_another_apps_record():
+    from tests.assistant_registry import build_desktop_registry, demo_context
+
+    registry = build_desktop_registry()
+    assert registry.direct_lookup("what's running on the pickup truck?", demo_context()) is None
+
+
+def test_a_lookup_is_named_when_the_message_starts_with_its_phrase():
+    from tests.assistant_registry import build_desktop_registry
+
+    registry = build_desktop_registry()
+    assert registry.named_action("wrap up my day", ["evening_wrap", "get_today"]) == "evening_wrap"
