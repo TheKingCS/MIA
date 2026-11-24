@@ -54,7 +54,11 @@ likes in an answer), each belief with where it came from and a button to correct
 it, so she stops asking what she should already know. Builds on: memory, `core/person_settings.py`, the skills
 paths, answer style.
 
-**1.4 Thinking before she speaks on hard questions.** M, no decision needed.
+**1.4 Thinking before she speaks on hard questions.** M, no decision needed. *Mostly there (checked 2026-11-23): 33 question
+plans gather the facts by code, compose when a question joins domains, carry a follow-up, and say how sure they are
+(`core/question_plans.py`). The gap found and fixed: "can I buy a $900 welder and still pay off the loan?" now
+gathers both plans and works the purchase as the same money on the debt instead (`instead`), never as $900 more a
+month.*
 For a question with several steps ("can I afford the greenhouse expansion this spring and still pay down the card?")
 she plans first: which facts she needs, fetches them with her tools, works the numbers in code, then answers with
 the reasoning shown in two or three lines. Today the model chooses tools in one go. Builds on: `core/tool_loop.py`,

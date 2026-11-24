@@ -24,6 +24,12 @@ Without the embedding model (the phone) each plan's own words decide.
 Facts come from MIA's own lookups (the Assistant's registry), so a plan
 says exactly what the matching tool would, and a fix to a tool fixes
 the plan too.
+
+A question that joins domains gathers several plans onto one sheet
+(`composed_with`). A purchase asked against the debts ("can I buy a $900
+welder and still pay off the loan?", `buying`) is worked out as what the
+same money would do on the debt instead (`instead`, brainstorm 1.4),
+never as that much more a month.
 """
 
 from __future__ import annotations
@@ -227,7 +233,8 @@ def _money_month(context, sheet, prompt, today):
 def _debts(context, sheet, prompt, today):
     """Plan gatherer (debts and paying them off): the debts and payoff order, then a simulation at the minimums (each payoff
     date, debt-free date, interest; the date is recorded to be checked when it comes) and with extra a month (the amount
-    asked, else 200) to the first debt. Missing minimums are said.
+    asked, else 200) to the first debt. Missing minimums are said. A purchase asked about ("can I buy a $900 welder and still pay off the loan?", `buying`) is never taken as extra a
+    month: it's worked out as the same money put on the first debt instead (`instead`).
     """
     from core.debt_math import simulate
 
@@ -251,6 +258,10 @@ def _debts(context, sheet, prompt, today):
     sheet.add(CALCULATION, f"At the minimums ({_money(context, now.monthly)} a month), in the payoff order: "
                            + "; ".join(lines) + (f". Debt-free {now.debt_free}" if now.debt_free else "")
                            + f"; about {_money(context, now.interest)} in interest.", "a payoff calculation")
+    if buying(prompt) and _amount_in(prompt):  # "can I buy a $900 welder and still pay off the loan?" (1.4)
+        for kind, line in instead(ranked, _amount_in(prompt), _monthly(prompt), now, today, lambda a: _money(context, a)):
+            sheet.add(kind, line, "a payoff calculation")
+        return
     extra = _amount_in(prompt) or 200.0
     more = simulate(ranked, extra, today)
     if more.months is not None and (now.months is None or more.months < now.months):
@@ -438,6 +449,54 @@ def _afford(context, sheet, prompt, today):
         sheet.add(CALCULATION, "With it the fund stops growing: at that cost there's no freedom date.",
                   "a freedom calculation")
     sheet.add(ESTIMATE, "Both dates assume the last three months' saving pace holds.", "Freedom")
+
+
+_BUYING = re.compile(r"\b(afford|buy|buying|bought|purchase|spend|spending|get an? )\b", re.I)
+_TOWARD = re.compile(r"\b(toward|towards|extra|more)\b[^?]*\b(debt|loan|card|payment)", re.I)
+
+
+def buying(prompt: str) -> bool:
+    """Pure logic. Whether a question's amount is something he'd buy ("can I afford a $900 welder?"), not money he'd
+    put toward a debt ("what if I paid an extra $200 toward the card?")."""
+    said = prompt or ""
+    return bool(_BUYING.search(said)) and not _TOWARD.search(said)
+
+
+def _monthly(prompt: str) -> bool:
+    """Pure logic. Whether an amount asked about is a month's ("$150 a month", "monthly")."""
+    return bool(re.search(r"\b(a|per|each|every) month\b|\bmonthly\b", (prompt or "").lower()))
+
+
+def instead(ranked: list, amount: float, monthly: bool, now, today, money) -> list[tuple[str, str]]:
+    """Pure logic. What a purchase costs him in debt terms (brainstorm 1.4): the same money put on the first debt in
+    the payoff order instead, worked out by the payoff simulation, against `now` (the plan as things stand). A
+    purchase never changes the minimums, so it's said that way: "the debts are paid off on the same dates either
+    way; put toward X instead, ..." Returns (kind, line) pairs for the sheet."""
+    from types import SimpleNamespace
+
+    from core.debt_math import simulate
+
+    first = ranked[0]
+    if monthly:
+        other = simulate(ranked, amount, today)
+        what = f"{money(amount)} a month"
+    else:
+        copies = [SimpleNamespace(name=d.name, balance=float(d.balance or 0), interest_rate=d.interest_rate,
+                                  minimum_payment=d.minimum_payment, promo_apr=getattr(d, "promo_apr", None),
+                                  promo_expires_date=getattr(d, "promo_expires_date", None)) for d in ranked]
+        copies[0].balance = max(0.0, copies[0].balance - amount)
+        other = simulate(copies, 0, today)
+        what = f"{money(amount)} once"
+    lines = [("calculation", f"Buying it doesn't change the minimums, so the payoff dates above hold either way, as "
+                             f"long as the minimums are still paid.")]
+    if other.debt_free and (now.months is None or (other.months or 0) < now.months):
+        sooner = f", {now.months - other.months} months sooner" if now.months else ""
+        lines.append(("calculation", f"Put toward {first.name} instead, {what} would make you debt-free "
+                                     f"{other.debt_free}{sooner}, with about {money(now.interest - other.interest)} "
+                                     f"less interest. That's what buying it costs in debt terms."))
+    else:
+        lines.append(("calculation", f"Put toward {first.name} instead, {what} wouldn't move the debt-free date."))
+    return lines
 
 
 def _slipped(context, sheet, prompt, today):
@@ -785,7 +844,7 @@ PLANS: tuple[Plan, ...] = (
           "When will each of my debts be paid off at my current payment rate?",
           "What would happen if I increased my monthly debt payments?", "When will I be debt free?",
           "Which card should I pay off first?"),
-         r"\b(debts?|loans?|pay (it )?off|payoff|interest|credit cards?|debt.free)\b", _debts),
+         r"\b(debts?|loans?|pay (it |them |the \w+ )?(off|down)|payoff|interest|credit cards?|debt.free)\b", _debts),
     Plan("freedom", "Leaving the job",
          ("How much more income do I need to replace my job?", "How close am I to financial independence?",
           "What would my financial situation look like in one, three, and five years?",
@@ -859,7 +918,7 @@ PLANS: tuple[Plan, ...] = (
          ("Can I afford a $3,000 truck and still hit my freedom date?", "Can I afford this?",
           "If I buy a $1,200 trailer, how much does it push back my freedom date?",
           "Can I afford $150 a month for a gym?", "Will buying this set me back?"),
-         r"\b(afford|push(es)? (back|out)|set me back)\b", _afford),
+         r"\b(afford|push(es)? (back|out)|set me back|(if|should|can) i buy an? )", _afford),
     Plan("slipped", "What slipped this week",
          ("What slipped this week and why?", "What fell behind this week?", "What did I let slip?",
           "Why didn't I get everything done this week?", "What am I behind on?"),

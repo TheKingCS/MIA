@@ -1,6 +1,7 @@
 """Cross-domain reasoning (build plan step 8): questions that span apps gather several plans onto one sheet;
 "can I afford it and still hit my freedom date" is worked out by the freedom plan twice; every plan answer says
-how sure it can be, from the sheet, and answers.calibration checks that "sure" is earned."""
+how sure it can be, from the sheet, and answers.calibration checks that "sure" is earned; a purchase asked against
+the debts is worked out as the same money on the debt instead, never as that much more a month."""
 
 from datetime import date, datetime
 from types import SimpleNamespace
@@ -132,3 +133,23 @@ def test_the_debt_plan_keeps_its_projection(life, tmp_path):
     qp.gather(life, qp.PLAN_BY_NAME["debts"], "When will I be debt free?", TODAY)
     [kept] = calibration.projections(life)
     assert kept["kind"] == "debt_free" and kept["when"].startswith("20") and kept["outcome"] is None
+
+
+def test_a_purchase_asked_against_the_debts_is_worked_out_as_a_purchase(life):
+    """Brainstorm 1.4: "if I buy a $900 welder can I still pay off the loan?" gathers the afford facts too, and the
+    $900 is never taken as $900 more a month to the debt: it's what the same money would do on the debt instead."""
+    life.budget.add_debt(name="Truck loan", balance=6000, interest_rate=8, minimum_payment=250)
+    asked = "If I buy a $900 welder can I still pay off the truck loan by summer?"
+    plan = qp.match(life, asked)
+    also = qp.composed_with(plan, asked)
+    assert {plan.name, *(p.name for p in also)} >= {"afford", "debts"}
+    sheet = qp.gather(life, qp.PLAN_BY_NAME["debts"], asked, TODAY)
+    text = sheet.as_text()
+    assert "900 more a month" not in text and "$900.00 once would make you debt-free" in text
+    assert "payoff dates above hold either way" in text
+
+
+def test_money_toward_a_debt_is_still_extra_a_month():
+    assert not qp.buying("What if I put an extra $200 toward the card every month?")
+    assert qp.buying("Can I afford a $400 chainsaw and still pay down the card?")
+    assert qp.buying("Can I spend $150 a month on a gym and still pay off my debts?")
