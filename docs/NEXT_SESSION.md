@@ -5,7 +5,11 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-22 (Opus on the PC: the Windows backlog, FW-06 to FW-12's parts, Fable's review fixed)*
+*Last updated: 2026-11-24 (Opus on the PC: one intelligence, the project picture, harvests, what can I build)*
+
+**Also 2026-11-24:** "what can I build with what I have?" (core/buildable.py) and harvests by voice ("I harvested
+5 pounds of tomatoes"; "what has the garden produced this year?", core/harvest_log.py). At the PC, try both on his
+real stock and garden.
 
 **New 2026-11-24, Zac: one intelligence** ("connecting all these capabilities into a unified intelligence layer
 ... it understands how the project affects the rest of your life"). Plan: `docs/future/UNIFIED_INTELLIGENCE.md`. Step 1

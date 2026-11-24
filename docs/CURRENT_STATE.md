@@ -2,9 +2,19 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-23 (Opus at the PC: Zac's Q-114 and Q-115 built, then the Jarvis brainstorm and its
-first builds),
+session. Last updated: 2026-11-24 (Opus at the PC: the Jarvis brainstorm's builds, then Zac's "one intelligence"),
 by claude.*
+
+**2026-11-24: one intelligence** (Zac: "connecting all these capabilities into a unified intelligence layer").
+The plan is `docs/future/UNIFIED_INTELLIGENCE.md`. Built: "I'm planning to build a greenhouse" gathers everything it
+touches onto one sheet (core/project_ripple.py: the build against stock, money and the freedom date, growing,
+water, power, the flock, time, goals, research); each Planner draft shows it as "What It Touches"; money answers
+count what confirmed builds still need from the store (stock counted once across builds); a confirmed build's
+materials used elsewhere are said through the daily unusual check. Also new that day: "what can I build with what I
+have?" (core/buildable.py), harvests by voice and what the garden produced at his store prices (core/harvest_log.py),
+and teach-me routing (her own parts get her help pages; the world's get her knowledge). Every routing change had a
+fresh reviewer; each found real bugs, all fixed. Waiting on Zac: WAITING_ON 0zl (may a confirmed plan record what
+it touches?) and 0zm (may she offer the picture on her own?), plus 0zh to 0zk from before.
 
 **Later 2026-11-22: her offline library, the Planner, and reading references well** (T-0060, Zac's asks): 74 Kiwix
 packs chosen and downloading (core/offline_library.py, her own index core/pack_index.py), the Planner (builds and
