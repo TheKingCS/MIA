@@ -14,6 +14,9 @@ shown on the mission before it's done and earned once, with its other rewards, w
 with its date and its card pops up. A recipe whose ref is a Kitchen recipe id is unlocked there too
 (`KitchenManager.unlock_recipe`, as `recipe_unlocks` does); a skill whose ref is a skill id gets `SKILL_XP` in it.
 
+A song it rewarded is offered to his songbook when the mission completes (`songbook_offer`, core/repertoire.py), in
+the reply to his own Complete, never on its own.
+
 **Counted from records** (`STATS`, `stat_now`): an objective of the metric `records` reads a lifetime stat
 (core/rewards_manager.py's: produce grown, eggs, jars canned, meals cooked, workout hours, projects done...) and
 counts what's been added since the objective was set (its `baseline`), so "put up 20 jars this summer" finishes from
@@ -104,6 +107,19 @@ def award(context, mission, profile_ids: list[str]) -> list[dict]:
                                profile_id=pid)
         earned.append(t)
     return earned
+
+
+def songbook_offer(context, mission) -> str:
+    """After a mission completes: for each song it rewarded that isn't in his songbook yet (core/repertoire.py), the
+    words to add it, " Can you play Wagon Wheel all the way through now? Say ..."; "" when there's none. A reply to
+    his own action, never a message of its own."""
+    from core.repertoire import songs
+
+    have = {s["song"].lower() for s in songs(context)}
+    new = [t["name"] for t in getattr(mission, "trophies", None) or [] if t.get("kind") == "song"
+           and t.get("name") and t["name"].lower() not in have]
+    return "".join(f" Can you play {name} all the way through now? Say \"I learned {name} on guitar\" and it goes in "
+                   "your songbook." for name in new)
 
 
 def stat_now(context, stat_id: str, profile_id: Optional[str]) -> float:

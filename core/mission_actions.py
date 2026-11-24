@@ -132,14 +132,17 @@ def _describe_complete(context, params) -> str:
 
 def _complete(context, params) -> str:
     """Does `mission.complete` once approved, and says what happened. The store credits the rewards (once); a questline's next chapter opens
-    and its story is told.
+    and its story is told; a song it rewarded that isn't in his songbook yet is offered to it
+    (core/mission_trophies.songbook_offer).
     """
     mission = _mission(context, params, active=True)
     context.missions.update_mission(mission.mission_id, status="completed")
+    from core.mission_trophies import songbook_offer
     from core.questlines import advance
 
     story = advance(context)  # a questline chapter: the next one opens (core/questlines.py)
-    return f"{mission.name} is complete. Well done." + "".join(" " + line for line in story)
+    return (f"{mission.name} is complete. Well done." + "".join(" " + line for line in story)
+            + songbook_offer(context, mission))
 
 
 def _reason(params) -> str:

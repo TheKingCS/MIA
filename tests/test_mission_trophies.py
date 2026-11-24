@@ -6,6 +6,7 @@ A mission's rewards beyond XP and its objectives counted from records (core/miss
 step 2): a structure, song or skill earned once on completion and kept in the history, a recipe unlocked, and "put
 up 20 jars" counted from the jars logged after it was set, said ready to claim once, never completed for him.
 And a mission found when the model says "my canning mission".
+And completing a mission that rewards a song offers it to the songbook.
 """
 
 import pytest
@@ -123,3 +124,18 @@ def test_a_tally_tick_is_refused_on_an_objective_that_counts_from_records(tmp_pa
     world.missions.add_objective(mission.mission_id, "5 dozen eggs", "records", 60, stat_id="eggs_collected")
     with pytest.raises(ActionError):
         ACTION_TYPES["objective.tick"].describe(world, {"mission_id": mission.mission_id, "index": 0})
+
+
+def test_completing_a_mission_that_rewards_a_song_offers_it_to_the_songbook(tmp_path, monkeypatch):
+    """mission.complete's reply asks whether he can play the song now, with the words to add it; a song already in
+    his songbook isn't asked about."""
+    from core import repertoire
+
+    world = _world(tmp_path, monkeypatch)
+    mission = world.missions.add_mission("Campfire night", profile_id=world.me.profile_id)
+    world.missions.add_trophy(mission.mission_id, "song", "Wagon Wheel")
+    world.missions.add_trophy(mission.mission_id, "song", "Ring of Fire")
+    repertoire.learned(world, "Ring of Fire")
+    said = ACTION_TYPES["mission.complete"].execute(world, {"mission_id": mission.mission_id})
+    assert "Can you play Wagon Wheel all the way through now?" in said
+    assert "I learned Wagon Wheel on guitar" in said and "Ring of Fire all the way" not in said
