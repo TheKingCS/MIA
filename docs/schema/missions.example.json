@@ -1,5 +1,20 @@
 {
-  "idea": {"available": true, "idea": {"id": "idea-demo", "name": "Build a Seed-Starting Rack", "summary": "Three shelves of 2x4 and plywood with a shop light on each, sized for six flats.", "difficulty": "NORMAL", "why": "It uses the carpentry you have been practising and gets the garden started six weeks early.", "xp": 30, "credits": 15, "skills": ["🪚 Carpentry", "🌱 Gardening"]}},
+  "idea": {
+    "available": true,
+    "idea": {
+      "id": "idea-demo",
+      "name": "Build a Seed-Starting Rack",
+      "summary": "Three shelves of 2x4 and plywood with a shop light on each, sized for six flats.",
+      "difficulty": "NORMAL",
+      "why": "It uses the carpentry you have been practising and gets the garden started six weeks early.",
+      "xp": 30,
+      "credits": 15,
+      "skills": [
+        "🪚 Carpentry",
+        "🌱 Gardening"
+      ]
+    }
+  },
   "available": true,
   "forms": {
     "mission": {
@@ -171,6 +186,67 @@
           "name": "chapters",
           "label": "Chapters, one per line (Title: objective; objective)",
           "type": "textarea",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "trophy": {
+      "noun": "reward",
+      "id_param": "mission_id",
+      "fields": [
+        {
+          "name": "kind",
+          "label": "Kind of reward",
+          "type": "choice",
+          "required": true,
+          "options": [
+            "item",
+            "structure",
+            "song",
+            "knowledge",
+            "recipe",
+            "skill"
+          ],
+          "default": "structure"
+        },
+        {
+          "name": "name",
+          "label": "What it is (Chicken coop, Wagon Wheel, Canning...)",
+          "type": "text",
+          "required": true,
+          "options": [],
+          "default": null
+        }
+      ]
+    },
+    "count": {
+      "noun": "objective",
+      "id_param": "mission_id",
+      "fields": [
+        {
+          "name": "stat",
+          "label": "Count from your records",
+          "type": "choice",
+          "required": true,
+          "options": [
+            "lb of produce",
+            "eggs",
+            "jars put up",
+            "meals cooked",
+            "hours of workouts",
+            "projects done",
+            "missions done",
+            "engine hours",
+            "miles"
+          ],
+          "default": "jars put up"
+        },
+        {
+          "name": "target",
+          "label": "How many",
+          "type": "number",
           "required": true,
           "options": [],
           "default": null
@@ -597,7 +673,8 @@
           "target": 30.0,
           "done": false,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 0,
@@ -622,7 +699,14 @@
         "region": "",
         "reward_xp": 10,
         "reward_credits": 0
-      }
+      },
+      "trophies": [
+        {
+          "kind": "structure",
+          "name": "Chicken coop",
+          "said": "Structure: Chicken coop"
+        }
+      ]
     },
     {
       "id": "6ae7093bf6",
@@ -647,7 +731,8 @@
           "target": 7.0,
           "done": false,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 0,
@@ -672,7 +757,8 @@
         "region": "",
         "reward_xp": 0,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     }
   ],
   "active": [
@@ -699,7 +785,8 @@
           "target": 1.0,
           "done": true,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         },
         {
           "index": 1,
@@ -708,7 +795,8 @@
           "target": 1.0,
           "done": true,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 2,
@@ -733,7 +821,8 @@
         "region": "Home",
         "reward_xp": 60,
         "reward_credits": 5
-      }
+      },
+      "trophies": []
     },
     {
       "id": "b8509b0a7a",
@@ -765,7 +854,8 @@
           "target": 12.0,
           "done": false,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 0,
@@ -790,7 +880,8 @@
         "region": "Fitness",
         "reward_xp": 250,
         "reward_credits": 25
-      }
+      },
+      "trophies": []
     },
     {
       "id": "ef69cc8e82",
@@ -832,7 +923,8 @@
         "region": "",
         "reward_xp": 0,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     },
     {
       "id": "6b156b1396",
@@ -864,7 +956,8 @@
           "target": 4.0,
           "done": false,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         },
         {
           "index": 1,
@@ -873,7 +966,8 @@
           "target": 1.0,
           "done": true,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         },
         {
           "index": 2,
@@ -882,7 +976,8 @@
           "target": 1.0,
           "done": false,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 1,
@@ -907,7 +1002,8 @@
         "region": "Homestead",
         "reward_xp": 120,
         "reward_credits": 10
-      }
+      },
+      "trophies": []
     },
     {
       "id": "a50e715082",
@@ -954,7 +1050,8 @@
         "region": "",
         "reward_xp": 20,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     },
     {
       "id": "demo-quest-ch2",
@@ -979,7 +1076,8 @@
           "target": 1.0,
           "done": true,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         },
         {
           "index": 1,
@@ -988,7 +1086,8 @@
           "target": 1.0,
           "done": false,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 1,
@@ -1013,7 +1112,8 @@
         "region": "Fall 2026",
         "reward_xp": 75,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     }
   ],
   "completed": [
@@ -1047,7 +1147,8 @@
           "target": 3.0,
           "done": true,
           "counts_itself": false,
-          "for": null
+          "for": null,
+          "from_records": false
         }
       ],
       "done": 1,
@@ -1072,7 +1173,8 @@
         "region": "Mind",
         "reward_xp": 80,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     },
     {
       "id": "4b954d4aa4",
@@ -1119,7 +1221,8 @@
         "region": "",
         "reward_xp": 0,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     }
   ],
   "set_aside": [
@@ -1161,7 +1264,8 @@
         "region": "",
         "reward_xp": 40,
         "reward_credits": 0
-      }
+      },
+      "trophies": []
     }
   ],
   "counts": {

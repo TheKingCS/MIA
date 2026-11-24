@@ -77,6 +77,8 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     the project it's part of and, while something guides it, the step it's on: core/mission_projects.py and
     core/mission_guide.py, DEC-0152), the skills and projects to pick from, the forms, the person's level, and MIA's
     mission idea waiting for a yes or no (core/web_proposals.py).
+    Each mission carries its trophies (said in words) and whether an objective counts from records; the forms
+    include a reward and a counted objective.
     """
     from core.mission_actions import ABANDON_LABELS, RECORDS, form_spec, is_mine
 
@@ -105,12 +107,15 @@ def missions_page(context, today: Optional[date] = None) -> dict:
     recurring = getattr(context, "recurring_missions", None)
     maintenance, tasks, kitchen = (getattr(context, a, None) for a in ("maintenance", "tasks", "kitchen"))
 
+    from core.mission_trophies import said as trophy_said
+
     def card(m) -> dict:
         objectives = []
         for i, o in enumerate(m.objectives):
             progress = missions.objective_progress(m.mission_id, i) or 0.0
             objectives.append({"index": i, "description": o.description, "progress": round(progress, 2),
                                "target": o.target, "done": progress >= o.target, "counts_itself": o.metric_type != "tally",
+                               "from_records": o.metric_type == "records",
                                "for": names.get(o.assigned_profile_id) if o.assigned_profile_id else None})
         done, total = missions.group_objective_progress(m.mission_id)
         skill_rewards = []
@@ -140,6 +145,8 @@ def missions_page(context, today: Optional[date] = None) -> dict:
             "pathway": pathway_of.get(m.mission_id),
             "asset": {"id": asset.asset_id, "name": asset.name} if asset is not None else None,
             "task": task.title if task is not None else None, "unlocks_recipes": recipes,
+            "trophies": [{"kind": t.get("kind", ""), "name": t.get("name", ""), "said": trophy_said(t)}
+                         for t in m.trophies],
             "project": {"id": project.project_id, "name": project.name} if project is not None else None,
             "guide": guide_for(context, m) if m.status == "active" else None,
             "updated": (m.updated_at or m.created_at or "")[:10],
@@ -177,6 +184,17 @@ def missions_page(context, today: Optional[date] = None) -> dict:
         {"name": "icon", "label": "Icon (an emoji)", "type": "text", "required": False, "options": [], "default": "🗺️"},
         {"name": "chapters", "label": "Chapters, one per line (Title: objective; objective)", "type": "textarea",
          "required": True, "options": [], "default": None}]}
+    from core.mission_trophies import KINDS, STATS
+
+    page["forms"]["trophy"] = {"noun": "reward", "id_param": "mission_id", "fields": [
+        {"name": "kind", "label": "Kind of reward", "type": "choice", "required": True, "options": list(KINDS),
+         "default": "structure"},
+        {"name": "name", "label": "What it is (Chicken coop, Wagon Wheel, Canning...)", "type": "text",
+         "required": True, "options": [], "default": None}]}
+    page["forms"]["count"] = {"noun": "objective", "id_param": "mission_id", "fields": [
+        {"name": "stat", "label": "Count from your records", "type": "choice", "required": True,
+         "options": list(STATS.values()), "default": "jars put up"},
+        {"name": "target", "label": "How many", "type": "number", "required": True, "options": [], "default": None}]}
     page["forms"]["debt_payment"] = {"noun": "payment", "id_param": "debt_id", "fields": [
         {"name": "amount", "label": "How much you paid", "type": "money", "required": True, "options": [], "default": None}]}
     return page

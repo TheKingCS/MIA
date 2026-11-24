@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1699 files, 368,376 lines; 1699 files describe themselves; 20,233 of 20,363 classes and functions are documented.
+1702 files, 368,947 lines; 1702 files describe themselves; 20,264 of 20,394 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-671 files, 189,263 lines; 9,604 of 9,690 classes and functions documented
+673 files, 189,706 lines; 9,627 of 9,713 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -368,6 +368,8 @@
 - `core/mission_manager.py`: Missions/Gamification — docs/ROADMAP.md milestone v0.18, the second of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). Turns a stated goal/hobby into a tracked Mission with one or more Objectives (e.g. a "Master Angler" mission for a fishing trip: one 
 - `core/mission_patterns.py`: The first real "pattern inference" signal — core/pathway_manager.py's own docstring names this "Phase 6: MIA inferring a pattern from history," the one piece of the original "learns about itself" vision still missing after core/discovery_manager.py proved out generating from a snapshot of CURRENT st
 - `core/mission_projects.py`: Projects and Missions, connected (Zac's handoff, 2026-11-09, DEC-0152): "Projects represent what the user is working toward. Missions represent how MIA helps the user accomplish it."
+- `core/mission_trophies.py`: What a mission rewards besides XP and credits, and missions that count themselves from his records (the game layer, step 2, docs/future/GAME_LAYER_PLAN.md; Zac 2026-11-24: "Some times the mission reward is a crafted item and xp, sometimes its a structure built for the homestead, sometimes its a song
+- `core/mission_trophy_actions.py`: A mission's rewards beyond XP, and its objectives counted from records, from the screen and by voice (the game layer, step 2; DEC-0125, both ways). The actions `mission.trophy` (add an item, structure, song, knowledge, recipe or skill as a reward) and `objective.count` (an objective that counts a li
 - `core/model_bench.py`: "Can the model on this device do MIA's job?" (2026-10-07, DEC-0019, docs/PHONE_MODEL_TEST.md). Replays MIA's golden set (tests live_model_check.py) against a model and reports two things:
 - `core/model_forge.py`: MIA's model forge (DEC-0106, stage 1): where she trains small models of her own, measures them honestly, and keeps a card saying what each one is.
 - `core/model_inspection.py`: Claude inspects MIA's models before they're used (DEC-0200; Zac, 2026-11-17: "MIA should have the ability to have her models inspected by Claude to test and approve them. This is similar to the Night School detail we have discussed."). The Specialist Forge's F6 (`docs/mia_os/MIA_OS_SPECIALIST_FORGE.
@@ -969,7 +971,7 @@
 
 ## tests/: the test suite: what each part must do
 
-623 files, 98,357 lines; 8,266 of 8,310 classes and functions documented
+624 files, 98,471 lines; 8,274 of 8,318 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1279,6 +1281,7 @@
 - `tests/test_mission_manager.py`: Unit tests for core.mission_manager. Isolates _DATA_DIR/_MISSIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_expedition_manager.py's isolated_paths. objective_progress()'s trip_duration_hours resolution also needs core.trip_manager isolated, same pattern as test_memory_manag
 - `tests/test_mission_patterns.py`: Unit tests for core.mission_patterns — isolates _DATA_DIR for mission/insight/profile files into a tmp_path scratch area, same monkeypatch pattern as test_mission_insights.py's own isolated_paths.
 - `tests/test_mission_projects.py`: Projects and Missions, connected (core/mission_projects.py, core/mission_guide.py, DEC-0152): a mission joins or leaves a project through mission.project (recorded, refused when there's nothing to change), the project page lists the same missions with its progress worked out from tasks and missions 
+- `tests/test_mission_trophies.py`: A mission's rewards beyond XP and its objectives counted from records (core/mission_trophies.py, the game layer's step 2): a structure, song or skill earned once on completion and kept in the history, a recipe unlocked, and "put up 20 jars" counted from the jars logged after it was set, said ready t
 - `tests/test_missions_module.py`: Unit tests for modules.missions.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_model_bench.py`: The model test (core/model_bench.py) and the llama.cpp backend (core/llm_manager.OpenAIBackend), 2026-10-07, DEC-0019: scoring follows the live check's rules, the frozen cases match the golden set, and the backend speaks llama-server's chat API, tested against a tiny fake server on 127.0.0.1.
 - `tests/test_model_forge.py`: MIA's model forge (core/model_forge.py, DEC-0106): the features, a router that learns from its tools' own words and is scored honestly on requests it never saw, its card, and saving and loading it.
@@ -1597,7 +1600,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-119 files, 22,255 lines
+119 files, 22,269 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

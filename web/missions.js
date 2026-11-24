@@ -51,6 +51,15 @@
     const v = await form("Add an objective to " + m.name, page.forms.objective.fields, {});
     if (v) act({ kind: "objective.add", params: Object.assign({ mission_id: m.id }, v) });
   }
+  // The game layer (core/mission_trophies.py): a reward beyond XP, and an objective counted from his records.
+  async function addTrophy(m) {
+    const v = await form(m.name + " also rewards…", page.forms.trophy.fields, {});
+    if (v) act({ kind: "mission.trophy", params: Object.assign({ mission_id: m.id }, v) });
+  }
+  async function countFrom(m) {
+    const v = await form("Count toward " + m.name, page.forms.count.fields, {});
+    if (v) act({ kind: "objective.count", params: Object.assign({ mission_id: m.id }, v) });
+  }
   async function teaches(m) {
     const v = await form(m.name + " also teaches…", page.forms.skill_reward.fields, {}, { skills: page.skills });
     if (v) act({ kind: "mission.skill_reward", params: Object.assign({ mission_id: m.id }, v) });
@@ -108,17 +117,22 @@
       m.objectives.length ? el("ul", { class: "objective-list" }, m.objectives.map((o) => el("li", { class: o.done ? "done" : "" },
         el("span", { class: "objective-check", "aria-hidden": "true" }, o.done ? "✓" : ""),
         el("span", { class: "objective-text" }, o.description + (o.for ? " (" + o.for + ")" : ""),
-          o.target > 1 ? el("small", {}, " " + o.progress + "/" + o.target) : null),
+          o.target > 1 ? el("small", {}, " " + o.progress + "/" + o.target) : null,
+          o.from_records ? el("small", { class: "dim" }, " · counts from your records") : null),
         active && !o.done && !o.counts_itself ? btn("+1", "btn-green btn-small", () => { close(); tick(m, o); }) : null,
         active ? btn("✕", "btn-ghost btn-small", () => { close(); act({ kind: "objective.delete", params: { mission_id: m.id, index: o.index } }); }) : null)))
         : el("p", { class: "dim" }, "No objectives yet. Add one, like “Clean the gutters”."),
       m.my_part ? el("p", { class: "dim" }, "Your part: " + m.my_part.done + "/" + m.my_part.total) : null,
       rewards(m) ? el("p", { class: "mission-rewards" }, "Rewards: " + rewards(m) + (m.rewards_given ? " (earned)" : "")) : null,
+      m.trophies.length ? el("p", { class: "mission-rewards" }, "Also earns: " + m.trophies.map((t) => t.said).join(" · ")
+        + (m.rewards_given ? " (earned)" : "")) : null,
       m.unlocks_recipes.length ? el("p", { class: "dim" }, "Unlocks the recipe" + (m.unlocks_recipes.length > 1 ? "s " : " ") + m.unlocks_recipes.join(", ")) : null,
       m.asset ? el("p", { class: "dim" }, "For ", el("a", { href: "asset.html?id=" + encodeURIComponent(m.asset.id) }, m.asset.name)) : null,
       el("div", { class: "confirm-actions mission-actions" },
         active ? btn("Complete", "btn-green", then((x) => act({ kind: "mission.complete", params: { mission_id: x.id } }))) : null,
         active ? btn("Add objective", "btn-ghost", then(addObjective)) : null,
+        active ? btn("Count from records", "btn-ghost", then(countFrom)) : null,
+        active ? btn("Add reward", "btn-ghost", then(addTrophy)) : null,
         btn("Teaches a skill", "btn-ghost", then(teaches)),
         page.projects.length ? btn(m.project ? "Project" : "Part Of A Project", "btn-ghost", then(partOf)) : null,
         active ? null : btn("Pick back up", "btn-amber", then((x) => act({ kind: "mission.reopen", params: { mission_id: x.id } }))),

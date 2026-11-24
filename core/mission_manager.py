@@ -95,6 +95,11 @@ NOT built this pass: automatic per-objective reward splitting (there's
 no per-objective reward_xp field, only the Mission's own flat one) —
 a real, separate future refinement if the flat "everyone gets the same
 reward" model ever feels wrong in practice.
+**The game layer (2026-11-24, core/mission_trophies.py)**: a fourth metric, `records`, counts a lifetime stat (jars
+put up, pounds harvested...) from its baseline when set; a mission's `trophies` (an item, structure, song,
+knowledge, recipe or skill) are earned once with its other rewards (`_award_trophies`, `add_trophy`); and a mission
+counted from records is said ready to claim once (`_on_activity_logged`, `mark_ready_said`), its completion still
+his press.
 """
 
 from __future__ import annotations
@@ -121,7 +126,7 @@ log = get_logger(__name__)
 _DATA_DIR = DATA_DIR
 _MISSIONS_FILE = _DATA_DIR / "missions.json"
 
-METRIC_TYPES: tuple[str, ...] = ("tally", "trip_duration_hours", "task_done")
+METRIC_TYPES: tuple[str, ...] = ("tally", "trip_duration_hours", "task_done", "records")
 
 # check_for_auto_assignment()'s two rule thresholds — see this module's
 # own "2026-07-16 gamification pass" docstring section above.
@@ -165,6 +170,7 @@ class Objective:
     """One goal inside a mission: what it is, how it's measured (a tally counted up, trip hours worked out live from
     the trip, or a linked task done), the target, a tally's progress, and who it's for (None: shared, anyone on the
     mission can work it; a profile id: that person's own part of a group quest).
+    A fourth measure, records, counts a lifetime stat from its baseline (core/mission_trophies.py).
     """
     description: str  # e.g. "Catch 3 fish" or "Spend 2 hours fishing"
     metric_type: str  # one of METRIC_TYPES
@@ -180,26 +186,36 @@ class Objective:
     # (MissionManager.individual_objective_progress()) and the whole
     # mission's group progress (MissionManager.group_objective_progress()).
     assigned_profile_id: Optional[str] = None
+    # Counted from records (2026-11-24, core/mission_trophies.py): the lifetime stat a "records" objective reads, and
+    # its value when the objective was set, so only what's added after counts.
+    stat_id: str = ""
+    baseline: float = 0.0
 
     def to_dict(self) -> dict:
-        """The record as the plain dict saved in missions.json."""
+        """The record as the plain dict saved in missions.json, with the stat a records objective counts and its
+        baseline."""
         return {
             "description": self.description,
             "metric_type": self.metric_type,
             "target": self.target,
             "progress": self.progress,
             "assigned_profile_id": self.assigned_profile_id,
+            "stat_id": self.stat_id,
+            "baseline": self.baseline,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Objective":
-        """A record from its saved dict; a missing field takes its default, so older files load."""
+        """A record from its saved dict; a missing field takes its default, so older files load (an objective from
+        before records-counting has no stat and a 0 baseline)."""
         return Objective(
             description=data.get("description", ""),
             metric_type=data.get("metric_type", "tally"),
             target=float(data.get("target", 0.0)),
             progress=float(data.get("progress", 0.0)),
             assigned_profile_id=data.get("assigned_profile_id"),
+            stat_id=data.get("stat_id", "") or "",
+            baseline=float(data.get("baseline", 0.0) or 0.0),
         )
 
 
@@ -224,6 +240,8 @@ class Mission:
     what it's tied to (a trip, a task, a project, a maintenance task or asset, a recurring routine's occurrence), how
     it looks (icon, region label, summary, difficulty, type), what it rewards (XP, credits, skill XP, recipes it
     unlocks, credited once only), whose it is, and for a group quest everyone on it.
+    Its trophies (rewards beyond XP: core/mission_trophies.py) and whether it's been said ready to claim are kept
+    too.
     """
     mission_id: str
     name: str
@@ -342,9 +360,14 @@ class Mission:
     # every participant too — "the mission can have... group rewards,"
     # the user's own words.
     participant_profile_ids: list[str] = field(default_factory=list)
+    # The game layer (2026-11-24, core/mission_trophies.py): what else it rewards (an item, a structure, a song,
+    # knowledge, a recipe, a skill), each {kind, name, ref}, earned with its other rewards; and whether he's been told
+    # a mission counted from records is ready to claim (said once).
+    trophies: list[dict] = field(default_factory=list)
+    ready_said: bool = False
 
     def to_dict(self) -> dict:
-        """The record as the plain dict saved in missions.json."""
+        """The record as the plain dict saved in missions.json, its trophies and ready_said included."""
         return {
             "mission_id": self.mission_id,
             "name": self.name,
@@ -374,11 +397,14 @@ class Mission:
             "maintenance_asset_id": self.maintenance_asset_id,
             "profile_id": self.profile_id,
             "participant_profile_ids": list(self.participant_profile_ids),
+            "trophies": [dict(t) for t in self.trophies],
+            "ready_said": self.ready_said,
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Mission":
-        """A record from its saved dict; a missing field takes its default, so older files load."""
+        """A record from its saved dict; a missing field takes its default, so older files load (no trophies, not
+        said ready)."""
         return Mission(
             mission_id=data.get("mission_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -410,6 +436,8 @@ class Mission:
             maintenance_asset_id=data.get("maintenance_asset_id"),
             profile_id=data.get("profile_id"),
             participant_profile_ids=list(data.get("participant_profile_ids", [])),
+            trophies=[dict(t) for t in data.get("trophies", []) if isinstance(t, dict)],
+            ready_said=bool(data.get("ready_said", False)),
         )
 
 
@@ -420,12 +448,49 @@ class MissionManager:
     sat untouched.
     """
     def __init__(self, context: AppContext) -> None:
-        """Loads the missions; `path` tells undo which file to reload."""
+        """Loads the missions; `path` tells undo which file to reload. Listens for activity.logged, so a mission
+        counted from records is said ready to claim as soon as it is."""
         self.context = context
         # The file it reads, so undo (core/undo_log.py) knows to reload it.
         self.path = _MISSIONS_FILE
         self._missions: list[Mission] = []
         self._load()
+        # A mission counted from records is said ready to claim the moment the record that finishes it is logged.
+        if getattr(context, "events", None) is not None:
+            context.events.subscribe("activity.logged", self._on_activity_logged)
+
+    def _on_activity_logged(self, **_kwargs) -> None:
+        """Something was logged: each mission counted from records that it finished is said ready to claim
+        (core/mission_trophies.ready_to_claim). Never raises into the logging."""
+        from core.mission_trophies import ready_to_claim
+
+        try:
+            for mission in ready_to_claim(self.context):
+                self._notify_all_objectives_completed(mission)
+        except Exception:  # noqa: BLE001 - a check that fails leaves the mission to be claimed by hand
+            log.exception("Couldn't check the missions counted from records")
+
+    def mark_ready_said(self, mission_id: str) -> None:
+        """Records that he's been told this mission is ready to claim (so it's said once)."""
+        mission = self.get_mission(mission_id)
+        if mission is not None and not mission.ready_said:
+            mission.ready_said = True
+            self._save()
+
+    def add_trophy(self, mission_id: str, kind: str, name: str, ref: str = "") -> Mission:
+        """Adds a reward of a kind beyond XP (core/mission_trophies.KINDS) to a mission that isn't completed (ValueError
+        for an unknown mission, a completed one, or a bad kind or name)."""
+        from core.mission_trophies import trophy
+
+        mission = self.get_mission(mission_id)
+        if mission is None:
+            raise ValueError(f"No mission with id '{mission_id}'.")
+        if mission.status == "completed":
+            raise ValueError("That mission is already complete.")
+        mission.trophies.append(trophy(kind, name, ref))
+        self._bump_updated_at(mission)
+        self._save()
+        return mission
 
     # ------------------------------------------------------------------
     # Persistence
@@ -523,6 +588,7 @@ class MissionManager:
         celebrated, credits its rewards once, unlocks its recipes, is recorded in the history and publishes
         mission.completed. On the move to abandoned: it gets an owner the same way, is recorded in the history
         (mission_abandoned, with the reason) and publishes mission.abandoned with the reason.
+        Its trophies are earned with the rewards, once (`_award_trophies`), and can't be set here (`add_trophy`).
         """
         mission = self.get_mission(mission_id)
         if mission is None:
@@ -530,7 +596,7 @@ class MissionManager:
         was_completed = mission.status == "completed"
         was_abandoned = mission.status == "abandoned"
         for key, value in fields.items():
-            if key in ("created_at", "trip_id", "project_id", "rewards_credited"):
+            if key in ("created_at", "trip_id", "project_id", "rewards_credited", "trophies"):
                 raise ValueError(f"'{key}' can't be set through update_mission().")
             if not hasattr(mission, key):
                 raise ValueError(f"Mission has no field '{key}'.")
@@ -568,6 +634,7 @@ class MissionManager:
             # Recipe-unlock semantics that weren't part of this bug.
             if not mission.rewards_credited:
                 self._credit_mission_rewards(mission)
+                self._award_trophies(mission)
                 mission.rewards_credited = True
                 # A second save — the one above already ran before this
                 # block, so without this the flag would only ever live
@@ -676,6 +743,23 @@ class MissionManager:
                                        [f"skill:{weight.skill_id}", f"mission:{mission.mission_id}"],
                                        {"xp": weight.xp}, profile_id=profile_id)
 
+    def _award_trophies(self, mission: Mission) -> None:
+        """Earns the mission's trophies (core/mission_trophies.award) for everyone on it, or whoever completed it;
+        guarded by rewards_credited like the other rewards, so they're earned once."""
+        if not mission.trophies:
+            return
+        from core.mission_trophies import award
+
+        if mission.participant_profile_ids:
+            people = list(mission.participant_profile_ids)
+        else:
+            active = self.context.profiles.get_active_profile() if self.context.profiles is not None else None
+            people = [mission.profile_id or (active.profile_id if active is not None else None)]
+        try:
+            award(self.context, mission, [p for p in people if p])
+        except Exception:  # noqa: BLE001 - a trophy that can't be recorded never undoes the completion
+            log.exception("Couldn't award the trophies of %s", mission.name)
+
     def _unlock_mission_recipes(self, mission: Mission) -> None:
         """
         "Recipe Unlocked" (2026-09-12) — unlocks every real Recipe
@@ -773,17 +857,27 @@ class MissionManager:
 
     def add_objective(
         self, mission_id: str, description: str, metric_type: str, target: float,
-        assigned_profile_id: Optional[str] = None,
+        assigned_profile_id: Optional[str] = None, stat_id: str = "",
     ) -> Mission:
-        """Adds an objective to a mission (ValueError for an unknown mission or metric type)."""
+        """Adds an objective to a mission (ValueError for an unknown mission or metric type). A "records" objective
+        names its lifetime stat (core/mission_trophies.STATS) and starts from that stat's value now, so only what's
+        logged after counts."""
+        from core.mission_trophies import STATS, stat_now
+
         mission = self.get_mission(mission_id)
         if mission is None:
             raise ValueError(f"No mission with id '{mission_id}'.")
         if metric_type not in METRIC_TYPES:
             raise ValueError(f"Unknown metric_type '{metric_type}'.")
+        baseline = 0.0
+        if metric_type == "records":
+            if stat_id not in STATS:
+                raise ValueError(f"A records objective counts one of: {', '.join(STATS)}.")
+            baseline = stat_now(self.context, stat_id, assigned_profile_id or mission.profile_id)
         mission.objectives.append(Objective(
             description=description, metric_type=metric_type, target=target,
-            assigned_profile_id=assigned_profile_id,
+            assigned_profile_id=assigned_profile_id, stat_id=stat_id if metric_type == "records" else "",
+            baseline=baseline,
         ))
         self._bump_updated_at(mission)
         self._save()
@@ -890,8 +984,9 @@ class MissionManager:
         )
 
     def objective_progress(self, mission_id: str, index: int) -> Optional[float]:
-        """An objective's progress now: trip hours worked out live from the trip, 1 or 0 for a linked task done, else the
-        tally. None when the mission or objective isn't there.
+        """An objective's progress now: trip hours worked out live from the trip, 1 or 0 for a linked task done, what's
+        been logged since it was set for one counted from records, else the tally. None when the mission or objective
+        isn't there.
         """
         mission = self.get_mission(mission_id)
         if mission is None or not (0 <= index < len(mission.objectives)):
@@ -906,6 +1001,11 @@ class MissionManager:
                 return 0.0
             task = self.context.tasks.get_task(mission.task_id)
             return 1.0 if (task is not None and task.done) else 0.0
+        if objective.metric_type == "records":
+            from core.mission_trophies import stat_now
+
+            now = stat_now(self.context, objective.stat_id, objective.assigned_profile_id or mission.profile_id)
+            return round(max(0.0, now - objective.baseline), 2)
         return objective.progress
 
     def is_objective_complete(self, mission_id: str, index: int) -> bool:

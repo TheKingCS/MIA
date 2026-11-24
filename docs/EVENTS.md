@@ -6,7 +6,7 @@ change the code, then regenerate. `tests/test_event_catalog.py` fails when it's 
 | Event | Published by | Heard by |
 |---|---|---|
 | `accessibility.read_screen` | `core/assistant_accessibility_actions.py`, `modules/settings/module.py` | `gui/main_window.py` |
-| `activity.logged` | `core/canning_shelf.py`, `core/flock.py`, `core/grow_lab.py`, `core/kitchen_manager.py`, `core/maintenance_manager.py`, `core/project_manager.py`, `core/workout_manager.py` | `core/rewards_manager.py` |
+| `activity.logged` | `core/canning_shelf.py`, `core/flock.py`, `core/grow_lab.py`, `core/kitchen_manager.py`, `core/maintenance_manager.py`, `core/project_manager.py`, `core/workout_manager.py` | `core/mission_manager.py`, `core/rewards_manager.py` |
 | `apps.arrangement_changed` | `core/focus_presets.py` | `gui/main_window.py` |
 | `assistant.open_module_requested` | `core/assistant_tools.py`, `gui/home_dashboard.py`, `gui/today_card.py`, `gui/widgets/asset_missions_panel.py`, `modules/field_kit/module.py`, `modules/garage/module.py`, `modules/greenhouse/module.py`, `modules/household/module.py`, `modules/maintenance/module.py`, `modules/property/module.py`, `modules/web_home/module.py` | `gui/main_window.py` |
 | `capture.accepted` | `modules/toolbox/tools/lite_captures_tool.py` | `gui/home_dashboard.py` |

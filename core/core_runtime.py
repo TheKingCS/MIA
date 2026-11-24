@@ -101,6 +101,7 @@ from core.assistant_household_actions import register_household_actions
 from core.assistant_lab_actions import register_lab_actions
 from core.assistant_notification_actions import register_notification_actions
 from core.assistant_achievement_actions import register_achievement_actions
+from core.mission_trophy_actions import register_mission_trophy_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
@@ -333,7 +334,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     the screens that had no voice: look it up online, what isn't working, past conversations
     (core/assistant_screen_tools.py), taught skills (core/assistant_taught_skill_actions.py, DEC-0123), and her own apps from
     their manifests (core/assistant_app_registry_actions.py, DEC-0178).
-    my_achievements (core/assistant_achievement_actions.py) is among them."""
+    my_achievements (core/assistant_achievement_actions.py) is among them.
+    add_mission_reward and count_toward_mission (core/mission_trophy_actions.py) are among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -360,6 +362,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_health_actions(registry)  # sleep, visits, medications, records (DEC-0129)
     register_notification_actions(registry)  # read out and mark notifications read (DEC-0125)
     register_achievement_actions(registry)  # the achievements log by voice (2026-11-24)
+    register_mission_trophy_actions(registry)  # mission rewards beyond XP, counted objectives
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)
@@ -1062,6 +1065,8 @@ def _action_list_missions(context: AppContext, arguments: dict) -> str:
 def _action_add_objective(context: AppContext, arguments: dict) -> str:
     """Core's voice tool `add_objective`: adds an objective to a mission (an unknown metric type becomes a tally). The same behavior as core/application.py's handler, kept here so headless Core never
     imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    An objective counted from records is count_toward_mission's (it names what it counts), so a records metric here
+    becomes a tally.
     """
     mission_name = str(arguments.get("mission_name", "")).strip().lower()
     description = str(arguments.get("description", "")).strip()
@@ -1071,8 +1076,8 @@ def _action_add_objective(context: AppContext, arguments: dict) -> str:
     if mission is None:
         return f"I don't have a mission called '{arguments.get('mission_name', '')}'."
     metric_type = str(arguments.get("metric_type", "") or "tally").strip()
-    if metric_type not in MISSION_METRIC_TYPES:
-        metric_type = "tally"
+    if metric_type not in MISSION_METRIC_TYPES or metric_type == "records":
+        metric_type = "tally"  # one counted from records is count_toward_mission's, which names what it counts
     try:
         target = float(arguments.get("target", 1))
     except (TypeError, ValueError):

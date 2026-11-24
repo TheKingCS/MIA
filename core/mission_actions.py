@@ -225,12 +225,13 @@ def _objective_delete(context, params) -> str:
 def _describe_tick(context, params) -> str:
     """The sentence the approval card shows for `objective.tick` (Propose); raises ActionError when it can't be done. Only an active mission's tally counts by hand (a task's or trip's counts
     itself); a fitness-plan mission's tap logs it (a meal-plan one counts from the meals eaten).
+    One counted from records is refused too: only what's logged moves it.
     """
     mission, index, objective = _objective(context, params)
     if mission.status != "active":
         raise ActionError(f"{mission.name} is {mission.status}.")
     if objective.metric_type != "tally":
-        raise ActionError("That one counts itself (from its task or trip).")
+        raise ActionError("That one counts itself (from its task, trip or your records).")
     from core.fitness_missions import is_fitness
 
     if is_fitness(mission):  # made from the fitness plan: a tap logs it (core/fitness_missions.py)

@@ -47,7 +47,9 @@
       "rename_mission",
       "set_mission_project",
       "start_questline",
-      "suggest_mission"
+      "suggest_mission",
+      "add_mission_reward",
+      "count_toward_mission"
     ],
     "actions": [
       "mission.abandon",
@@ -63,7 +65,9 @@
       "objective.add",
       "objective.delete",
       "objective.tick",
-      "pathway.start"
+      "pathway.start",
+      "mission.trophy",
+      "objective.count"
     ],
     "tiers": {
       "add_mission": "act_within_grant",
@@ -94,7 +98,11 @@
       "objective.add": "act_within_grant",
       "objective.delete": "act_with_approval",
       "objective.tick": "act_within_grant",
-      "pathway.start": "act_within_grant"
+      "pathway.start": "act_within_grant",
+      "add_mission_reward": "act_within_grant",
+      "count_toward_mission": "act_within_grant",
+      "mission.trophy": "act_within_grant",
+      "objective.count": "act_within_grant"
     },
     "outside": []
   },
