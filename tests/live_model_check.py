@@ -715,6 +715,9 @@ GOLDEN_CASES = [
     ("outage: the freezer", "How long is the food in the freezer still good?", "power_outage"),
     ("outage: it's back", "The power's back on", "power_outage"),
     ("outage: what's in the freezer is the pantry", "What food is in the freezer?", "list_pantry"),
+    ("water: it's off", "Our water got shut off, what do I do?", "water_emergency"),
+    ("water: a boil notice", "There's a boil water notice in town", "water_emergency"),
+    ("water: a bleach dose is the calculator", "How much bleach do I add to 5 gallons of water?", "bleach_for_water"),
     ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),
     # ("How long will my water last?" is answered in code, direct_lookup, before any model: tests/test_water_budget.py)
     ("water: the budget", "What's my water budget?", "water_budget"),

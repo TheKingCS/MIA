@@ -5,6 +5,7 @@ tests.test_outage
 The power outage clock (core/outage.py): when he said it went out read in code, the fridge's 4 hours and the
 freezer's 24 or 48 said as time left or past, the fish, hens and well only when they apply, and the end said with
 what to throw out; by voice and from the Power page.
+And a day without safe water (core/water_day.py): what he has and how to make it safe.
 """
 
 from datetime import datetime, timedelta
@@ -56,3 +57,17 @@ def test_the_power_page_starts_and_ends_it(tmp_path, monkeypatch):
     assert page["outage"]["out"] and "The power's been out" in page["outage"]["status"]
     ACTION_TYPES["outage.end"].execute(world, {})
     assert not power_page(world)["outage"]["out"]
+
+
+def test_a_day_without_safe_water_says_what_he_has_and_how_to_make_it_safe(tmp_path, monkeypatch):
+    """His drinking water in days (or none), never his tanks as drinkable, the CDC's boil and bleach; a boil-water
+    notice adds no ice or toothbrushing from the tap."""
+    from core import water_day
+
+    world = build_world(tmp_path, monkeypatch)
+    said = water_day.say(world)
+    assert "I don't see drinking water in the pantry" in said and "rolling boil for 1 minute" in said
+    assert "8 drops a gallon" in said and "boil-water notice" not in said
+    world.kitchen.add_pantry_item("Drinking water", quantity=7, unit="gallons")
+    boil = water_day.say(world, boil=True)
+    assert boil.startswith("Under a boil-water notice") and "about 7 days of drinking water" in boil

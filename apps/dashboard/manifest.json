@@ -95,7 +95,8 @@
       "emergency_kit",
       "how_prepared",
       "set_preparedness",
-      "evening_wrap"
+      "evening_wrap",
+      "water_emergency"
     ],
     "actions": [
       "direction.add",
@@ -192,7 +193,8 @@
       "emergency_kit": "observe",
       "how_prepared": "observe",
       "set_preparedness": "act_within_grant",
-      "evening_wrap": "observe"
+      "evening_wrap": "observe",
+      "water_emergency": "observe"
     },
     "outside": [
       "whats_in_the_workspace"

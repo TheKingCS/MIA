@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1717 files, 371,668 lines; 1717 files describe themselves; 20,399 of 20,529 classes and functions are documented.
+1718 files, 371,776 lines; 1718 files describe themselves; 20,403 of 20,533 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-681 files, 191,339 lines; 9,714 of 9,800 classes and functions documented
+682 files, 191,429 lines; 9,717 of 9,803 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -613,6 +613,7 @@
 - `core/volume_manager.py`: System volume control for the Home Dashboard's volume widget (gui/home_dashboard.py). Same backend-agnostic shape as core/power_manager.py (`PowerBackend`/`PsutilBatteryBackend`) and core/llm_manager.py's `LLMBackend`: one `VolumeBackend` Protocol, one concrete implementation, `AmixerVolumeBackend`,
 - `core/warranty_watch.py`: A heads-up before a warranty runs out (2026-09-28). Machines got a "Warranty until" date (MaintenanceAsset.warranty_until), typed in or filled from a filed warranty/manual (core/inbox_classify.py). About a month before, and again a week before, MIA mentions it through the communication gate, so anyt
 - `core/water_budget.py`: The whole property's water (Zac, 2026-11-24: "will manage ... my water systems"; docs/future/SMART_AG_PLAN.md phase A2): what the place drinks a day and a month, what's stored, and what the roof brings in, from his own records.
+- `core/water_day.py`: A day without safe water (Jarvis brainstorm, round 10): the water's off, or there's a boil-water notice. What he has and how to make water safe, from his own records and the CDC's guidance, offline.
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/weather.py`: The weather on the Dashboard (DEC-0153, Zac 2026-11-11: "yes", she may fetch it online). MIA had no weather source; this is it.
@@ -979,7 +980,7 @@
 
 ## tests/: the test suite: what each part must do
 
-630 files, 99,255 lines; 8,320 of 8,364 classes and functions documented
+630 files, 99,273 lines; 8,321 of 8,365 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1338,7 +1339,7 @@
 - `tests/test_orchard.py`: The orchard (core/orchard.py): his fruit trees read from Maintenance by the fruit in their names, the year's work dated from his last spring frost (stone fruit pruned near bloom, dormant oil before bud break, thinning, harvest by each kind's days from bloom, fall cleanup), a kind alone without its p
 - `tests/test_os_image.py`: FW-01's checks on how the MIA OS image is made (DEC-0263, DEC-0279; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): the base pinned by digest, MIA's Python packages hash-locked and the locks covering `requirements.txt`, the reference PC's model set in the image, the GPU bench measuring tha
 - `tests/test_os_session.py`: FW-03, MIA's own desktop session on MIA OS (DEC-0227, DEC-0278): her runtime writes where her shell finds her (`core/desktop_session.py`), owner-only, and removes it when it stops; the shell (`gui/os_shell.py`) opens her front end when she answers and a recovery page when she doesn't, whose links ac
-- `tests/test_outage.py`: The power outage clock (core/outage.py): when he said it went out read in code, the fridge's 4 hours and the freezer's 24 or 48 said as time left or past, the fish, hens and well only when they apply, and the end said with what to throw out; by voice and from the Power page.
+- `tests/test_outage.py`: The power outage clock (core/outage.py): when he said it went out read in code, the fridge's 4 hours and the freezer's 24 or 48 said as time left or past, the fish, hens and well only when they apply, and the end said with what to throw out; by voice and from the Power page. And a day without safe w
 - `tests/test_ownership.py`: Whose is it (core/ownership.py), 2026-10-01: owner marks on vehicles, tools and appliances; Today shows your things and shared ones.
 - `tests/test_parity.py`: Full use both ways on every device (DEC-0125, core/parity.py): every app can be used by voice, on the PC, on the phone and on the glasses, or the gap is decided in work/parity.json; parity can only grow, and docs/PARITY.md is current. Each app's ask (its screen's "Say: …") reaches that app's own too
 - `tests/test_party.py`: Party and guild (DEC-0028): household raids share their jobs out and their reward; the leaderboard only shows people who joined, counting wins.

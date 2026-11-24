@@ -350,7 +350,9 @@ New ideas, each checked against what's there first:
   page's The Power's Out).* A clock from when it went out: the fridge's 4 safe hours and the freezer's 24 or 48 as
   time left (FoodSafety.gov), the generator's fuel days, the fish tank's air pump first, the hens' water, the well;
   "the power's back" says what to throw out.
-- **A boil-water or no-water day** (no decision): the same shape for water: stored water against his household's
+- **A boil-water or no-water day** (no decision): *built 2026-11-24 (`core/water_day.py`, the tool
+  `water_emergency`: his drinking water in days, his tanks never said as drinkable, the hens' share, the CDC's boil
+  and bleach).* the same shape for water: stored water against his household's
   gallons a day (one a person, more for the animals), the rain barrels and cistern (core/water_budget.py), and how to
   make water safe offline (boil one minute; the library's pages when it runs).
 - **A storm coming** (his say: an unprompted heads-up through the gate): the forecast's wind, ice or heavy rain two

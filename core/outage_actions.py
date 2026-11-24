@@ -4,7 +4,8 @@ core.outage_actions
 
 The power outage clock from the screen and by voice (core/outage.py; DEC-0125, both ways). The actions
 `outage.start` (the Power page's "The Power's Out", with an optional time) and `outage.end` ("The Power's Back"), and
-the tool `power_outage` ("the power went out at 6 am", "how long is the food good?", "the power's back").
+the tool `power_outage` ("the power went out at 6 am", "how long is the food good?", "the power's back"); and the
+tool `water_emergency` for a day without safe water (core/water_day.py, read only).
 """
 
 from __future__ import annotations
@@ -59,8 +60,27 @@ def _tool(context, arguments: dict) -> str:
     return status(context)
 
 
+def _water(context, arguments: dict) -> str:
+    """Tool water_emergency: what he has and how to make water safe (core/water_day.say); a boil-water notice when
+    he said so."""
+    from core.water_day import say
+
+    return say(context, boil=str(arguments.get("kind", "") or "").strip().lower().startswith("boil"))
+
+
 def register_outage_actions(registry) -> None:
-    """Registers power_outage."""
+    """Registers power_outage and water_emergency (a day without safe water, core/water_day.py)."""
+    registry.register(AssistantAction(
+        name="water_emergency", domain="today",
+        description="The water's off, or there's a boil-water notice: his drinking water in days, his tanks, the "
+                    "hens' share, and how to make water safe (boil, or bleach drops). bleach_for_water is a dose for "
+                    "a given amount.",
+        parameters={"type": "object", "properties": {
+            "kind": {"type": "string", "description": "off (no water) or boil (a boil-water notice)"}}},
+        handler=_water, trigger_phrases=("water's off", "water is off", "water got shut off", "no water",
+                                         "boil water", "boil-water", "water main", "water outage",
+                                         "water isn't safe", "water is not safe"),
+    ))
     registry.register(AssistantAction(
         name="power_outage", domain="power",
         description="How long food in the fridge or freezer stays good or safe without power, and the power outage "
