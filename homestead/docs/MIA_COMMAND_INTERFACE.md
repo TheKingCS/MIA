@@ -90,5 +90,7 @@ signed approval applies at once or waits for his press on the node differs (one 
    **Done 2026-11-24 on Windows** (a temporary copy: `drivers/simulator.py --run`, `main.py --interval 2` and the
    export server, approval `node`): MIA read the cell's pH minimum (6.6), said and sent 6.4 on "yes, set it"; the
    node staged it and refused a second change while it waited; approved through the node's own approval call, the
-   control loop took it and MIA read it back from the export as applied, the target 6.4. Setting it back waits on
-   the one-change-an-hour rule by design.
+   control loop took it and MIA read it back from the export as applied, the target 6.4. Set back the same way (with
+   the node's own limits copy at `min_minutes_between_changes: 0` for the run): "set the greenhouse pH minimum to
+   6.6" said "from 6.4 to 6.6", was approved and read back as applied, the target 6.6. The interface's four steps
+   are done; what's left is Zac's 0zu (whose approval the node trusts) and real hardware.
