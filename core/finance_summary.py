@@ -66,7 +66,7 @@ def _net_worth(context) -> dict:
 
 
 def build_finance_summary(context, today: Optional[date] = None) -> dict:
-    """The money picture for a day: this month's income, expenses and net, bills due and income expected (soonest first), budget targets (most spent first), debts, net worth, and builds and tools with money in them. Says available: False without a budget."""
+    """The money picture for a day: this month's income, expenses and net, bills due and income expected (soonest first), budget targets (the household's, against its spending this month to today, most spent first), debts, net worth, and builds and tools with money in them. Says available: False without a budget."""
     today = today or date.today()
     budget = getattr(context, "budget", None)
     summary: dict = {"generated_at": datetime.now().isoformat(timespec="seconds"), "as_of": today.isoformat(),
@@ -99,8 +99,10 @@ def build_finance_summary(context, today: Optional[date] = None) -> dict:
     summary["income_expected"] = sorted(paydays, key=lambda p: p["days"])
 
     targets = []
-    actual = budget.total_expenses_by_category(month_start, None)
-    for target in budget.all_budget_targets():
+    # The household's own targets (a business's are its own page's), against this month's household spending to
+    # today: an expense entered ahead for next month never counts against this one (review 2026-11-24).
+    actual = budget.total_expenses_by_category(month_start, today.isoformat(), entity_id="")
+    for target in budget.all_budget_targets(entity_id=""):
         spent = actual.get(target.category, 0.0)
         targets.append({"category": target.category, "budget": _r(target.monthly_amount), "spent": _r(spent)})
     summary["budget_targets"] = sorted(targets, key=lambda t: -(t["spent"] / t["budget"] if t["budget"] else 0))

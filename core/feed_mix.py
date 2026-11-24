@@ -17,8 +17,11 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-_PCT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
-_BATCH = re.compile(r"(\d+(?:\.\d+)?)\s*(lbs?|pounds?|kg|kilos?|kilograms?)\b", re.I)
+_PCT = re.compile(r"(\d+(?:\.\d+)?)\s*(?:%|percent\b|per cent\b)(?!\s*(?:\w+\s+)?(?:calcium|fat|fib(?:er|re)|"
+                  r"moisture|salt|phosphorus|off)\b)", re.I)  # a protein figure, never "5% calcium" or "10% off"
+_BATCH = re.compile(r"(\d+(?:\.\d+)?)\s*-?\s*(lbs?|pounds?|kg|kilos?|kilograms?)\b", re.I)
+_TARGET = re.compile(r"\b(?:get|make|reach|want|need|end up (?:with|at))\s+(?:a\s+|to\s+)?(\d+(?:\.\d+)?)\s*"
+                     r"(?:%|percent\b|per cent\b)", re.I)
 
 
 class MixError(ValueError):
@@ -42,23 +45,31 @@ def mix(low: float, high: float, target: float, batch: Optional[float] = None) -
 
 
 def read(said: str) -> Optional[tuple]:
-    """Pure logic. (feed one %, feed two %, the target %, batch, unit) from what he said: the target is the
-    percentage after "to", "get", "make" or "for", else the last one; None without three percentages."""
+    """Pure logic. (feed one %, feed two %, the target %, batch, unit) from what he said ("%" or "percent"; a
+    calcium, fat or fibre figure, or "10% off", is never a feed): the target is the one after get, make, reach, want
+    or need when it lies between the others, else the middle one (the only one a mix can reach); one figure removed
+    for the target by its place, never every copy of its value. None without three percentages."""
     text = str(said or "")
-    found = [float(x) for x in _PCT.findall(text)]
-    if len(found) < 3:
+    marks = list(_PCT.finditer(text))
+    if len(marks) < 3:
         return None
-    m = re.search(r"\b(?:to|get|make|for|at|reach)\s+(?:a\s+)?(\d+(?:\.\d+)?)\s*%", text, re.I)
-    target = float(m.group(1)) if m else found[-1]
-    feeds = [x for x in found if x != target][:2]
-    if len(feeds) < 2:
-        return None
+    values = [float(m.group(1)) for m in marks[:3]]
+    keyed = list(_TARGET.finditer(text))
+    pick = None
+    if keyed:  # the last get/make/want...; one before a figure he said as a feed is still that figure
+        start = keyed[-1].start(1)
+        pick = next((i for i, m in enumerate(marks[:3]) if m.start(1) == start), None)
+    if pick is None or not min(values) <= values[pick] <= max(values):
+        pick = sorted(range(3), key=lambda i: values[i])[1]  # the middle one: the only one a mix can reach
+    target = values[pick]
+    feeds = [v for i, v in enumerate(values) if i != pick]
     batch = _BATCH.search(text)
     return feeds[0], feeds[1], target, (float(batch.group(1)) if batch else None), (batch.group(2) if batch else "")
 
 
 def say(said: str) -> str:
-    """For "how do I mix 16% and 32% feed to get 20%?": the parts, the shares and any batch's amounts."""
+    """For "how do I mix 16% and 32% feed to get 20%?": the parts (one part said as one), the shares and any batch's
+    amounts."""
     got = read(said)
     if got is None:
         return ("Give me the two feeds' protein and the protein you want, like \"mix 16% layer and 32% supplement "
@@ -70,8 +81,9 @@ def say(said: str) -> str:
         return str(problem)
     p_low, p_high = found["parts"]
     s_low, s_high = found["shares"]
-    said_ = (f"For {found['target']:g}%: {p_low:g} parts of the {found['low']:g}% feed to {p_high:g} parts of the "
-             f"{found['high']:g}% ({s_low:g}% and {s_high:g}% of the mix)")
+    said_ = (f"For {found['target']:g}%: {p_low:g} part{'s' if p_low != 1 else ''} of the {found['low']:g}% feed to "
+             f"{p_high:g} part{'s' if p_high != 1 else ''} of the {found['high']:g}% ({s_low:g}% and {s_high:g}% of "
+             f"the mix)")
     if found["amounts"]:
         u = "lb" if unit.lower().startswith(("lb", "pound")) else "kg"
         said_ += (f"; in {batch:g} {u}: {found['amounts'][0]:g} {u} of the {found['low']:g}% and "

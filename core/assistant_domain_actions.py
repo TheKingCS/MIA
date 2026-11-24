@@ -747,10 +747,17 @@ def _action_money_ahead(context, arguments: dict) -> str:
     return money_ahead.say(context)
 
 
+# What he'd call a budget, to the categories budgets are kept in (core/budget_manager.EXPENSE_CATEGORIES)
+_BUDGET_WORDS = {"grocery": "groceries", "food": "groceries", "gas": "transportation", "fuel": "transportation",
+                 "car": "transportation", "truck": "transportation", "eating out": "entertainment",
+                 "dining": "entertainment", "restaurants": "entertainment", "fun": "entertainment",
+                 "power": "utilities", "electric": "utilities", "rent": "mortgage/rent", "mortgage": "mortgage/rent"}
+
+
 def _action_budget_left(context, arguments: dict) -> str:
     """Assistant tool `budget_left`: this month's budget targets, spent against each and what's left (the Money page's
-    own figures, core/finance_summary.py), the one he named or all of them, the most spent first; over a target said
-    plainly."""
+    own figures, core/finance_summary.py), the one he named (exact or whole words, with the words he'd use mapped
+    first: "grocery", "gas", "eating out") or all of them, the most spent first; over a target said plainly."""
     from core.finance_summary import build_finance_summary
 
     summary = build_finance_summary(context)
@@ -758,13 +765,16 @@ def _action_budget_left(context, arguments: dict) -> str:
     if not summary.get("available") or not targets:
         return ("You haven't set any monthly budgets yet. Say one, like \"set my grocery budget to $400\", and I'll "
                 "keep count against it.")
-    said = " ".join(str(arguments.get("category") or "").lower().split())
+    said = " ".join(str((arguments or {}).get("category") or "").lower().split())
     if said:
-        named = [t for t in targets if said in t["category"].lower() or t["category"].lower() in said]
-        if not named:
+        said = _BUDGET_WORDS.get(said, said)
+        # exact, or his words as whole words of the category: never "other" inside "brother"
+        found = next((t for t in targets if t["category"].lower() == said), None) or next(
+            (t for t in targets if re.search(rf"(?<![a-z]){re.escape(said)}(?![a-z])", t["category"].lower())), None)
+        if found is None:
             return (f"I don't have a budget for {said}. Your budgets are: "
                     + ", ".join(t["category"] for t in targets) + ".")
-        targets = named
+        targets = [found]
 
     def line(t) -> str:
         """One target in words."""
@@ -807,7 +817,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), budget_left (this month's budgets, spent and
-    left, from core/finance_summary.py), get_net_worth (the Money page's figure, each
+    left, from core/finance_summary.py; "over my budget", never a build's), get_net_worth (the Money page's figure, each
     part named, and with his other debts taken off; reached only by "my net worth", never "what am I worth?"), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
@@ -908,7 +918,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         description="This month's budget targets: spent against each and what's left, or the one category he named.",
         parameters=_obj({"category": _s("The budget's category, e.g. 'groceries', if he named one.")}, []),
         handler=_action_budget_left,
-        trigger_phrases=("left in my budget", "budget left", "left in the budget", "over budget", "under budget",
+        trigger_phrases=("left in my budget", "budget left", "left in the budget", "over my budget", "over budget this",
+                         "over budget on", "under budget",
                          "still spend on", "can i still spend", "my budgets", "grocery budget", "gas budget",
                          "food budget", "fuel budget", "feed budget"),
     ))

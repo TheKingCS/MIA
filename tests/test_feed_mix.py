@@ -3,8 +3,9 @@ tests.test_feed_mix
 =====================
 
 Two feeds mixed to a target protein, the Pearson square (core/feed_mix.py): the parts and shares of each, a batch's
-pounds of each, the three percentages and the batch read from what he said, and a target outside the two feeds (or
-two feeds the same) refused in words.
+pounds of each, the three percentages and the batch read from what he said ("percent", "a 50-lb bag", the target
+after want or get, a calcium figure never a feed), and a target outside the two feeds (or two feeds the same)
+refused in words.
 """
 
 import pytest
@@ -27,3 +28,12 @@ def test_a_target_outside_the_two_is_refused():
         fm.mix(16, 18, 22)
     assert "isn't between" in fm.say("mix 16% and 18% to get 22%")
     assert fm.say("mix some feed").startswith("Give me the two feeds' protein")
+
+
+def test_how_he_really_says_it_is_read():
+    assert fm.read("mix 16 percent and 32 percent to get 20 percent")[:3] == (16, 32, 20)
+    assert fm.read("I want 18% from 16% and 22%")[:3] == (16, 22, 18)
+    assert fm.read("add 32% to 16% to get 20%")[:3] == (32, 16, 20)
+    assert fm.read("mix 16% layer with 5% calcium and 32% supplement to get 20%")[:3] == (16, 32, 20)
+    assert fm.read("mix 16% and 32% to get 20% for a 50-lb bag")[3] == 50
+    assert "already" not in fm.say("mix 20% and 32% to get 20%") and "Give me" not in fm.say("mix 20% and 32% to get 20%")

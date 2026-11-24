@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1663 files, 362,100 lines; 1663 files describe themselves; 19,918 of 20,048 classes and functions are documented.
+1663 files, 362,150 lines; 1663 files describe themselves; 19,920 of 20,050 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-654 files, 184,983 lines; 9,442 of 9,528 classes and functions documented
+654 files, 185,011 lines; 9,442 of 9,528 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -952,7 +952,7 @@
 
 ## tests/: the test suite: what each part must do
 
-605 files, 96,565 lines; 8,113 of 8,157 classes and functions documented
+605 files, 96,587 lines; 8,115 of 8,159 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1006,7 +1006,7 @@
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP); and the same by voice (core/assistant_game_actions.py).
 - `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
-- `tests/test_budget_left.py`: "How much is left in my grocery budget?" by voice (budget_left): the Money page's own budget targets, spent and left for the one he named or all, over a target said plainly, an unknown one named with the ones he has, and none set yet said with how to set one.
+- `tests/test_budget_left.py`: "How much is left in my grocery budget?" by voice (budget_left): the Money page's own budget targets, spent and left for the one he named or all ("grocery" is Groceries, "gas" Transportation, never "Other" inside "brother"), over a target said plainly, an unknown one named with the ones he has, and 
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py.
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*
@@ -1118,7 +1118,7 @@
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_fact_owners.py`: One owner per fact (DEC-0052): a retired copy of a fact never comes back, and every owner named in core/fact_owners.py exists.
 - `tests/test_failure_log.py`: The Fix-It Log (DEC-0049): where MIA stumbles is recorded (privately, redacted), grouped into issues, turned into a fix report with a test to write first, and what the person confirms she learns herself.
-- `tests/test_feed_mix.py`: Two feeds mixed to a target protein, the Pearson square (core/feed_mix.py): the parts and shares of each, a batch's pounds of each, the three percentages and the batch read from what he said, and a target outside the two feeds (or two feeds the same) refused in words.
+- `tests/test_feed_mix.py`: Two feeds mixed to a target protein, the Pearson square (core/feed_mix.py): the parts and shares of each, a batch's pounds of each, the three percentages and the batch read from what he said ("percent", "a 50-lb bag", the target after want or get, a calcium figure never a feed), and a target outside
 - `tests/test_feed_runway.py`: How long the hens' feed will last (core/feed_runway.py): from the last bag, at his flock's own rate once two weeks of purchases show it (the last 90 days, after the flock last changed, never under half the usual), else the usual quarter pound a hen a day; said when it's down to a few days, once a ba *(1 undocumented)*
 - `tests/test_field_kit_module.py`: Unit test for modules.field_kit.module.format_script_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test: the widget-building (QTabWidget, device list, script list) and worker-thread wiring in FieldKitModule needs a real Qt event loo
 - `tests/test_file_operations.py`: Unit tests for modules.files_mod.file_operations. All filesystem operations run against pytest's tmp_path, never real project or user files.
