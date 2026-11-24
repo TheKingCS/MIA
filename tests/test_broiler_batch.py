@@ -4,8 +4,8 @@ tests.test_broiler_batch
 
 A batch of meat birds as a mission (core/broiler_batch.py): each breed's steps dated from the day they came (Cornish
 cross: off the heat week 3, a feeding schedule from week 2, pasture week 4, processing week 8), the feed the batch
-eats, the batch saved inside the change, and a breed it doesn't know, no birds, a future day or a long-done batch
-refused.
+eats, the batch saved inside the change, its first week said as week 1, water kept in on processing eve, each step
+named, and a breed it doesn't know, no birds, a future day or a long-done batch refused.
 """
 
 from datetime import date
@@ -53,6 +53,7 @@ class _Missions:
 
 
 def test_the_mission_is_made_and_saved_inside_the_change(monkeypatch):
+    """Five dated steps, the feed said, saved once, and its first days said as week 1."""
     import core.person_settings as ps
 
     monkeypatch.setattr(ps, "person_id", lambda context: None)
@@ -63,7 +64,7 @@ def test_the_mission_is_made_and_saved_inside_the_change(monkeypatch):
     said = bb._make(ctx, {"breed": "cornish cross", "birds": 25, "started": CAME.isoformat()})
     assert "25 cornish cross, processing about Jan 19" in said and "375 lb of feed" in said
     assert len(ctx.missions.steps) == 5 and kept["_saved"] == 1
-    assert "week 0" in bb.say(ctx, CAME)
+    assert "week 1" in bb.say(ctx, CAME)
 
 
 def test_whats_wrong_is_refused():
@@ -71,3 +72,9 @@ def test_whats_wrong_is_refused():
                    {"birds": 5, "started": "2020-01-01"}):
         with pytest.raises(ActionError):
             bb._params(params)
+
+
+def test_water_is_kept_in_and_each_step_is_named():
+    steps = bb.plan("cornish cross", 25, CAME)["steps"]
+    assert "keep water in" in steps[-1]["step"]
+    assert [s["step"].split(":")[0] for s in steps][1] == "Feed 12 hours on, 12 off"

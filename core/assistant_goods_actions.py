@@ -224,7 +224,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
     will the feed last?": its answer says how long the feed lasts, core/feed_runway.py). Also start_hatch and hatch_status: eggs in the incubator as a
     mission with dated steps (core/hatch_tracker.py), start_broilers and broilers_status (a batch of meat birds to
-    processing day, core/broiler_batch.py), and feed_mix (two feeds to a target protein, core/feed_mix.py, reached by "16% layer", "32% supplement" and the
+    processing day, core/broiler_batch.py; the start tool hears only a batch that came, "got 25 broiler chicks"), and feed_mix (two feeds to a target protein, core/feed_mix.py, reached by "16% layer", "32% supplement" and the
     like), hatch_status heard only of eggs ("how's the hatch going?",
     never "the business incubator" or "the lockdown drill").
     """
@@ -250,8 +250,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
             "birds": {"type": "number", "description": "how many"},
             "started": {"type": "string", "description": "the day they came, if not today"}}, "required": ["birds"]},
         handler=_action_start_broilers,
-        trigger_phrases=("meat birds", "cornish cross", "cornish rock", "broiler chicks", "broilers", "freedom ranger",
-                         "red ranger"),
+        trigger_phrases=("got meat birds", "meat bird chicks", "cornish cross chicks", "cornish rock chicks",
+                         "broiler chicks", "got broilers", "freedom ranger chicks", "red ranger chicks"),
     ))
     registry.register(AssistantAction(
         name="broilers_status", domain="flock",

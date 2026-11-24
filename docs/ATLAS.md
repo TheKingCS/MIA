@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1666 files, 362,541 lines; 1666 files describe themselves; 19,947 of 20,077 classes and functions are documented.
+1666 files, 362,615 lines; 1666 files describe themselves; 19,950 of 20,080 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-655 files, 185,289 lines; 9,455 of 9,541 classes and functions documented
+655 files, 185,345 lines; 9,456 of 9,542 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -953,7 +953,7 @@
 
 ## tests/: the test suite: what each part must do
 
-607 files, 96,700 lines; 8,129 of 8,173 classes and functions documented
+607 files, 96,718 lines; 8,131 of 8,175 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1006,7 +1006,7 @@
 - `tests/test_bleach_for_water.py`: How much bleach makes water safe to drink, by voice (bleach_for_water): the EPA's dose worked out in code (core/eng_calcs.py), the water read in gallons, liters or quarts, the strength when he says it, both common strengths when he doesn't, a strength that isn't for drinking water refused, and "how 
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP); and the same by voice (core/assistant_game_actions.py).
-- `tests/test_broiler_batch.py`: A batch of meat birds as a mission (core/broiler_batch.py): each breed's steps dated from the day they came (Cornish cross: off the heat week 3, a feeding schedule from week 2, pasture week 4, processing week 8), the feed the batch eats, the batch saved inside the change, and a breed it doesn't know
+- `tests/test_broiler_batch.py`: A batch of meat birds as a mission (core/broiler_batch.py): each breed's steps dated from the day they came (Cornish cross: off the heat week 3, a feeding schedule from week 2, pasture week 4, processing week 8), the feed the batch eats, the batch saved inside the change, its first week said as week
 - `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
 - `tests/test_budget_left.py`: "How much is left in my grocery budget?" by voice (budget_left): the Money page's own budget targets, spent and left for the one he named or all ("grocery" is Groceries, "gas" Transportation, never "Other" inside "brother"), over a target said plainly, an unknown one named with the ones he has, and 
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
@@ -1351,7 +1351,7 @@
 - `tests/test_question_plans.py`: Question plans (DEC-0052 step 2a, core/question_plans.py): the right plan for a question, lookups gathered by code onto a marked sheet, and an answer that never states a number MIA didn't look up.
 - `tests/test_questlines.py`: Questlines and seasons (DEC-0028): linked chapters, each one a mission; finishing a chapter opens the next with MIA's line for it; seasons follow the date and the hemisphere; and the same by voice (core/assistant_game_actions.py).
 - `tests/test_quick_capture.py`: Quick capture (core/quick_capture.py, gui/quick_capture_dialog.py), 2026-10-01: type anything, MIA files it; nothing is ever lost.
-- `tests/test_rain_gauge.py`: His rain gauge (core/weather_watch.py `rain_inches`, `rain_this_week`, tool log_rain): rainfall read as he says it (inches, "half an inch", millimeters), kept in the data logger in inches, the last seven days added up, and the watering answer led by the week's real rain against the inch a week the g
+- `tests/test_rain_gauge.py`: His rain gauge (core/weather_watch.py `rain_inches`, `rain_this_week`, tool log_rain): rainfall read as he says it (inches, fractions, "a quarter of an inch", millimeters, a bare number), kept in the data logger in inches, the last seven days added up, and the watering answer led by the week's real 
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
 - `tests/test_read_back.py`: Tests for the generic read-back after a change (DEC-0218, LS-05, core/read_back.py): the files a change wrote still hold what it left, and the records its history names still resolve, unless it removed them.
 - `tests/test_readiness.py`: Tests for FW-04's readiness and watchdog (core/sd_notify.py, core/runtime.py), the self-test's refusal of a folder with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/): staged at night, applied when he restarts, never by a restart of her own.

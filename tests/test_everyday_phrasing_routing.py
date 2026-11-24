@@ -11,7 +11,8 @@ programs (woodworking, gardening, fitness, bushcraft), her offline library for h
 ("how do I purify creek water?", never held to her own help pages); and a plan whose words
 catch a weather, garden, flock or bills question; and everyday talk never reaches a tool it isn't for (self-worth
 never gets his net worth, "where is my wife?" never the inventory, "I ran out of milk" never a workout, a house bought
-never the month's spending), while a real today question still gets today's plan (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
+never the month's spending), while a real today question still gets today's plan; and a question never forces a
+change, even one starting with a tool's phrase (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
 """
 
 import pytest
@@ -151,3 +152,8 @@ def test_a_real_today_question_still_reaches_todays_plan():
 
     found = question_plans.match(demo_context(), "did I miss anything I was supposed to do today?")
     assert found is not None and found.name == "today"
+
+
+def test_a_question_never_forces_a_change(registry):
+    assert registry.named_action("Broilers, how much feed do 25 need?", ["start_broilers", "broilers_status"]) is None
+    assert registry.named_action("got broilers today, 25 of them", ["start_broilers"]) == "start_broilers"

@@ -271,7 +271,8 @@ def watering(forecast: dict, in_ground: list) -> str:
 def say_watering(context, today: Optional[date] = None) -> str:
     """For "should I water the garden today?": `watering`, from the kept forecast and what his confirmed garden plans
     have in the ground, led by the inches his rain gauge logged this week (`rain_this_week`) against the inch a week
-    the garden wants; while the forecast is still coming, says so and to ask again."""
+    the garden wants (after "nothing's planted out"; with enough rain on a hot day, only the soil decides, never "skip
+    it" then "water deeply"); while the forecast is still coming, says so and to ask again."""
     from core import weather
 
     today = today or date.today()
@@ -288,39 +289,67 @@ def say_watering(context, today: Optional[date] = None) -> str:
         in_ground = []
     said = watering(got if got.get("text") else {}, in_ground)
     gauge = rain_this_week(context, today)
-    if gauge is not None and not said.startswith("No watering today"):
-        if gauge >= INCH_A_WEEK:
-            said = (f"Your gauge has {gauge:g} inches this week, the inch a week the garden wants, so you can likely "
-                    f"skip it. " + said)
-        else:
-            said = f"Your gauge has {gauge:g} inches this week, so the garden's short about {INCH_A_WEEK - gauge:g}. " + said
-    return said
+    if gauge is None or said.startswith("No watering today"):
+        return said
+    lead = "Nothing's planted out that I know of. "
+    rest = said[len(lead):] if said.startswith(lead) else said
+    first = lead if said.startswith(lead) else ""
+    if gauge >= INCH_A_WEEK:
+        if "It's hot today" in rest:  # enough rain, but a hot day dries beds: only the soil decides
+            line = f"Your gauge has {gauge:g} inches this week, enough for the week, so water only if the soil's dry. "
+            return first + line + rest[rest.index("Push a finger"):]
+        line = f"Your gauge has {gauge:g} inches this week, the inch a week the garden wants, so you can likely skip it. "
+    else:
+        short = round(INCH_A_WEEK - gauge, 2)
+        line = f"Your gauge has {gauge:g} inches this week, about {short:g} inch short of the garden's inch. "
+    return first + line + rest
 
 
 RAIN_SERIES = "weather:rain_gauge"  # his rain gauge, in inches (the data logger's series)
 INCH_A_WEEK = 1.0  # the garden's usual need, rain included
-_RAIN = re.compile(r"(\d+(?:\.\d+)?|\.\d+)\s*(?:\"|in\b|inch(?:es)?|mm|millimet(?:er|re)s?|cm|centimet(?:er|re)s?)",
-                   re.I)
-_RAIN_WORDS = (("an inch and a half", 1.5), ("inch and a half", 1.5), ("half an inch", 0.5), ("half inch", 0.5),
-               ("a quarter inch", 0.25), ("quarter inch", 0.25), ("an inch", 1.0), ("a tenth of an inch", 0.1))
+_UNIT = r"(?:\"|in\b|inch(?:es)?|mm|millimet(?:er|re)s?|cm|centimet(?:er|re)s?)"
+_MIXED = re.compile(r"(\d+)\s+(\d+)/(\d+)\s*(?:of an?\s+)?" + _UNIT, re.I)  # "1 1/2 inches"
+_FRACTION = re.compile(r"(?<![\d/])(\d+)/(\d+)\s*(?:of an?\s+)?" + _UNIT, re.I)  # "1/2 inch", "6/10 of an inch"
+_DECIMAL = re.compile(r"(\d+(?:\.\d+)?|\.\d+)\s*" + _UNIT, re.I)
+_BARE = re.compile(r"(?<![\d/])(\d*\.\d+|\d+)(?![\d/])")
+# Words, the longest first so "a quarter of an inch" is never "an inch"
+_RAIN_WORDS = tuple(sorted((
+    ("an inch and a half", 1.5), ("inch and a half", 1.5), ("an inch and a quarter", 1.25),
+    ("three quarters of an inch", 0.75), ("three quarters inch", 0.75), ("half an inch", 0.5), ("half inch", 0.5),
+    ("a quarter of an inch", 0.25), ("quarter of an inch", 0.25), ("a quarter inch", 0.25), ("quarter inch", 0.25),
+    ("a tenth of an inch", 0.1), ("tenth of an inch", 0.1), ("two inches", 2.0), ("an inch", 1.0), ("a trace", 0.0),
+), key=lambda w: -len(w[0])))
+
+
+def _unit_factor(text: str) -> float:
+    """Pure logic. Inches per one of the unit at the end of `text`."""
+    unit = text.lower()
+    if re.search(r"mm|millimet", unit):
+        return 1 / 25.4
+    if re.search(r"cm|centimet", unit):
+        return 1 / 2.54
+    return 1.0
 
 
 def rain_inches(said: str) -> Optional[float]:
-    """Pure logic. Rainfall he read off the gauge, in inches ("0.6 in", "half an inch", "15 mm"), or None."""
+    """Pure logic. Rainfall he read off the gauge, in inches: "0.6 in", "1 1/2 inches", "6/10 of an inch", "half an
+    inch", "a quarter of an inch", "15 mm", or a bare number when it's the only one ("gauge says .3"); None when it
+    says no amount."""
     text = " ".join(str(said or "").lower().split())
+    for pattern in (_MIXED, _FRACTION):  # written fractions first: "6/10 of an inch" is never "an inch"
+        m = pattern.search(text)
+        if m:
+            nums = [float(g) for g in m.groups()]
+            value = nums[0] + nums[1] / nums[2] if len(nums) == 3 else nums[0] / nums[1]
+            return round(value * _unit_factor(m.group(0)), 2)
     for words, value in _RAIN_WORDS:
         if words in text:
             return value
-    m = _RAIN.search(text)
-    if not m:
-        return None
-    value = float(m.group(1))
-    unit = m.group(0)[len(m.group(1)):].strip().lower()
-    if unit.startswith("mm") or unit.startswith("millimet"):
-        return round(value / 25.4, 2)
-    if unit.startswith("cm") or unit.startswith("centimet"):
-        return round(value / 2.54, 2)
-    return value
+    m = _DECIMAL.search(text)
+    if m:
+        return round(float(m.group(1)) * _unit_factor(m.group(0)), 2)
+    bare = _BARE.findall(text)
+    return float(bare[0]) if len(bare) == 1 else None
 
 
 def rain_this_week(context, today: Optional[date] = None) -> Optional[float]:

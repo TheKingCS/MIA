@@ -166,6 +166,9 @@ def _summary_of(name: str, arguments: dict) -> str:
 
 
 
+# A question's own words: "can you add milk?" is a request, never one of these
+_ASKS = re.compile(r"\b(?:how|what|when|why|which|who|is|are|do|does|did|should|would)\b")
+
 def _whole(name: str, text: str) -> bool:
     """Pure logic. Whether a record's name is in the text as whole words, a plural or possessive ending allowed:
     "Sign" is in "the sign for the shop", never in "redesign"; "Ann" never in "annual"; "ATV" in "the ATVs"."""
@@ -399,7 +402,8 @@ class AssistantActionRegistry:
         that says buy milk" answered with "what title?"). Exactly one offered
         action's trigger phrase matches and it isn't destructive; a lookup
         for a question or when the message starts with its phrase ("wrap up my day": never with a number in it or a
-        change of the same app on offer, "egg count is 12 today"), one that changes records only
+        change of the same app on offer, "egg count is 12 today"), one that changes records only (and never for a
+        question: "Broilers, how much feed do 25 need?" is asked, not ordered)
         when the message
         starts with that phrase ("Add a recipe for...", never "do I have a
         recipe for chili?"). And the message says what it's about ("do I
@@ -420,6 +424,8 @@ class AssistantActionRegistry:
                     a.domain == action.domain and changes_records(a.name)
                     for a in self._actions.values() if a.name in offered):
                 return None
+        if _ASKS.search(request) and request.rstrip().endswith("?"):
+            return None  # a question (how, what, when...) is never forced into a change, even one that starts with its phrase
         return action.name if any(request.startswith(p.strip()) for p in action.trigger_phrases) else None
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:

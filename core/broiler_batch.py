@@ -42,24 +42,25 @@ def breed_of(said: str) -> str:
 
 
 def plan(breed: str, birds: int, started: date) -> dict:
-    """Pure logic. {"steps": [{week, on, step}], "feed_lb", "processing"}: the batch's dated steps and the feed it'll
-    eat, from the day the chicks came."""
+    """Pure logic. {"steps": [{week, on, step}], "feed_lb", "processing"}: the batch's dated steps, each led by a short
+    name before its colon ("Off the heat", "Feed 12 hours on, 12 off"), and the feed it'll eat, from the day the chicks
+    came; water is always kept in, even the night before processing."""
     weeks, feed, heat_off = BREEDS[breed]
     on = lambda w: started + timedelta(weeks=w)  # noqa: E731
     steps = [
         {"week": 0, "on": started.isoformat(), "step": "Brooder: about 95 F the first week, 5 F cooler each week; "
                                                        "starter feed (about 20 to 22% protein) and water always"},
         {"week": heat_off, "on": on(heat_off).isoformat(),
-         "step": f"Off the heat by about week {heat_off}, once they're feathered and the nights allow"},
+         "step": f"Off the heat: by about week {heat_off}, once they're feathered and the nights allow"},
         {"week": heat_off + 1, "on": on(heat_off + 1).isoformat(),
          "step": "Out to pasture or a tractor: move it daily, shade and water every day"},
         {"week": weeks, "on": on(weeks).isoformat(),
-         "step": f"Processing day, about week {weeks}: take their feed away the night before"},
+         "step": f"Processing day, about week {weeks}: take their feed away the night before, but keep water in"},
     ]
     if breed == "cornish cross":
         steps.insert(2, {"week": 2, "on": on(2).isoformat(),
-                         "step": "Cornish cross grow fast: feed on a schedule (12 hours on, 12 off) from about week 2, "
-                                 "so legs and hearts keep up"})
+                         "step": "Feed 12 hours on, 12 off: Cornish cross grow so fast that from about week 2 a "
+                                 "schedule keeps their legs and hearts up with them"})
     steps.sort(key=lambda s: s["week"])  # in the order they come
     return {"steps": steps, "feed_lb": round(birds * feed), "processing": on(weeks)}
 
@@ -135,7 +136,8 @@ def _make(context, params) -> str:
 
 
 def say(context, today: Optional[date] = None) -> str:
-    """For "how are the meat birds coming?": each batch under way, its week, what's next and the processing day."""
+    """For "how are the meat birds coming?": each batch under way, its week (their first seven days are week 1), what's
+    next and the processing day; a kept batch that can't be read is skipped."""
     today = today or date.today()
     config = getattr(context, "config", None)
     missions = getattr(context, "missions", None)
@@ -143,9 +145,12 @@ def say(context, today: Optional[date] = None) -> str:
     for mission_id, batch in dict(config.get(MAP_KEY, {}) or {}).items() if config is not None else []:
         if not _active(missions, mission_id):
             continue
-        started = date.fromisoformat(batch["started"])
-        found = plan(batch["breed"], batch["birds"], started)
-        week = (today - started).days // 7
+        try:
+            started = date.fromisoformat(batch["started"])
+            found = plan(batch["breed"], batch["birds"], started)
+        except (KeyError, ValueError, TypeError):  # a kept batch that can't be read never breaks the rest
+            continue
+        week = (today - started).days // 7 + 1  # their first seven days are week 1
         coming = [s for s in found["steps"] if date.fromisoformat(s["on"]) >= today]
         nxt = f"; next: {coming[0]['step'].split(':')[0].lower()} ({date.fromisoformat(coming[0]['on']):%b} " \
               f"{date.fromisoformat(coming[0]['on']).day})" if coming else ""
