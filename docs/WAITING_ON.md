@@ -24,6 +24,9 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
    (B) the node also waits for your press on its own dashboard. Recommended: B for the pilot's first month, then A.
    Either way MIA never doses, switches a pump or touches the safety limits; only targets, schedules and modes, each
    checked by the node.
+0zv. [ ] **A YouTube key, for searching YouTube from Music** (`core/youtube_music.py`). Free: in Google Cloud Console
+   make a project, turn on "YouTube Data API v3", then Credentials -> Create API key, and paste it on Music's YouTube
+   tab (it's kept sealed on the PC). Pasted YouTube links already play without one.
 0zt. [ ] **Unfinished work lost (my mistake, 2026-11-24).** An unfinished change from 2026-11-08 (transfers between
    your own accounts kept as transfers, DEC-0042) sat uncommitted in budget_manager.py and plaid_manager.py; a
    careless restore of mine wiped it. The plaid half is recovered (in the private audit folder); the budget half has

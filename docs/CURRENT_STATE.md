@@ -3,7 +3,18 @@
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
 session. Last updated: 2026-11-24, late (Opus at the PC: one intelligence, the homestead's brain, the hub and the
-engineer), by claude.*
+engineer, the game layer), by claude.*
+
+**Evening 2026-11-24: the game layer** (Zac: missions and achievements tied together, cards that congratulate him,
+rewards that are a structure, a song, a recipe or a skill, and smart music; `docs/future/GAME_LAYER_PLAN.md`).
+Built: achievements read from his records (produce grown, eggs, jars put up, structures built when their project is
+Complete; core/life_milestones.py), the Achievements log page and a congratulation card on every page
+(core/achievement_cards.py, web/shell.js); missions that reward an item, structure, song, knowledge, recipe or skill
+and objectives that count themselves from his records ("put up 20 jars"; core/mission_trophies.py); and YouTube in
+Music (search with his own key, 0zv; YouTube's embedded player; songs saved as links on any playlist; by voice;
+nothing downloaded; core/youtube_music.py). A review fixed eight problems (a card's close blocked undoing the harvest
+that earned it; structures unlocked on any mention). Next on it: a YouTube song that keeps playing across pages,
+guitar songs as achievements, jar counts corrected without undo.
 
 **Later 2026-11-24: the homestead's brain, the hub and the engineer.** Zac widened the vision: MIA as the brain of
 the aquaponics greenhouse, orchard, garden, water and power (`docs/future/SMART_AG_PLAN.md`), and as the hub of his
