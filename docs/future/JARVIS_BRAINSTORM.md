@@ -341,3 +341,22 @@ New ideas, each checked against what's there first:
 - **Meat birds' processing day** (S, no decision): a batch of broilers as a mission dated from hatch (Cornish cross
   around 8 weeks, slower breeds later), with the feed they'll eat to get there. *Built 2026-11-24
   (`core/broiler_batch.py`).*
+- *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
+  processing day (`core/broiler_batch.py`).
+
+## Round 6 (2026-11-24): the bigger steps, each needing Zac's say
+
+Checked first and already there: business miles and a tool's business use (`core/business_use.py`), feed cost per
+dozen (`core/flock.py`). The small everyday answers are now mostly built; what would move MIA furthest next are these,
+each his call:
+
+- **Hear her on his real phrasing** (needs Zac, at the PC or phone): the routing tests hold about 120 everyday
+  sentences, all written by Claude. A week of his own (MIA can keep the misses she notices, with his yes) would find
+  what no probe does. *The most valuable next step.*
+- **A morning briefing on the glasses or phone at a set time** (his say: a new daily message): the day's first thing,
+  the weather against his plans, what the gate holds, in three sentences, spoken.
+- **Shop mode** (S-M, his say on how it's started): hands-free in the shop: the build's cut list read out one cut at a
+  time ("next"), timers by voice, a measurement converted on the spot; Trade Master already walks a job by voice.
+- **The offline library on the PC** (WAITING_ON 0zh): every survival and homestead how-to answer gets better with
+  her packs searchable again.
+- **A model that fits the new PC** (WAITING_ON 0zi): the comparison is ready for him to read.
