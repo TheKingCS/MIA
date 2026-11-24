@@ -244,8 +244,15 @@ def _action_order_status(context, arguments: dict) -> str:
     return _run(context, "order.status", {"order_id": order.order_id, "status": status})
 
 
+def _hourly(context, arguments: dict) -> str:
+    """Tool earnings_per_hour: what his finished jobs really made an hour (core/hourly_earnings.say)."""
+    from core import hourly_earnings
+
+    return hourly_earnings.say(context)
+
+
 def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
-    """Registers list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
+    """Registers earnings_per_hour (what his work really makes an hour, core/hourly_earnings.py), list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
     (domain business; list_quotes also says which quotes are worth a follow-up), the words that reach them (`WORDS`), and his customers' names and open quotes' and orders'
     titles (`_record_names`)."""
     s = {"type": "string"}
@@ -257,6 +264,12 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
             parameters={"type": "object", "properties": properties, "required": required},
             handler=handler, trigger_phrases=phrases))
 
+    tool("earnings_per_hour", "What his workshop and business jobs really make an hour (not his day job's pay): "
+         "finished jobs' sales less materials and expenses, over their hours, the best and lowest, and his quoting "
+         "rate beside it.", {}, [], _hourly,
+         ("really make an hour", "really making an hour", "really make per hour", "real hourly", "make an hour on",
+          "make per hour on", "workshop worth my time", "shop worth my time", "business worth my time",
+          "jobs worth my time", "per hour on jobs", "per hour on my jobs", "hourly on jobs", "hourly on my builds"))
     tool("list_quotes", "The quotes still out (draft or sent), with customer and price.", {}, [],
          _action_list_quotes, ("quotes out", "quotes are out", "open quotes", "my quotes", "what quotes",
                                "quotes still out", "pending quotes", "quotes i've sent", "quotes to follow up",

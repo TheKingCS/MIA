@@ -357,6 +357,10 @@ New ideas, each checked against what's there first:
 - **Harvests by voice** (no decision): built (`core/harvest_log.py`): "I harvested 5 pounds of tomatoes" goes on his
   grow lab batch of that crop (one added when there isn't), and "what has the garden produced this year?" adds it up
   by crop, valued at store prices he recorded in the same unit.
+- **What should I do this weekend?** (no decision): built (the question plan "weekend"): each weekend day's forecast
+  (the weather now reads a week), what's due, the garden, learning and projects.
+- **What do I really make an hour?** (no decision): built (`core/hourly_earnings.py`): finished jobs' sales less
+  materials and expenses over their hours, the best and lowest, beside his quoting rate.
 
 ## Round 6 (2026-11-24): the bigger steps, each needing Zac's say
 
