@@ -356,38 +356,71 @@ def _action_cut_list(context, arguments: dict) -> str:
     return said
 
 
-CUT_KEY = "modules.plans.cut_at"  # plan id -> the next cut's place, and "_last": the plan being cut (this session)
+_CUT_PLACES: dict = {}  # (plan id, size) -> the next cut's place, and "_last": what he's cutting; this run only, never saved
+_PLAN_STOP = {"the", "a", "an", "my", "for", "of", "cuts", "cut", "plan", "plans", "list", "read", "me", "next",
+              "start", "over", "to", "build", "make", "this", "that", "one", "first"}
+
+
+def _plan_named(library, said: str):
+    """The plan his words name, by a word of its title (never the first plan on the shelf for "the plan", nor a
+    workbench for "potting bench" because its summary says bench); None when none matches."""
+    words = {w for w in re.findall(r"[a-z]+", (said or "").lower()) if w not in _PLAN_STOP}
+    if not words:
+        return None
+    plan = library.best(said)
+    if plan is None:
+        return None
+    title = set(re.findall(r"[a-z]+", plan["title"].lower()))
+    return plan if words <= title or (words & title and len(words & title) >= max(1, len(words) - 1)) else None
 
 
 def _action_next_cut(context, arguments: dict) -> str:
     """Tool next_cut: a plan's cut list read one cut at a time, for the shop ("next cut", "read me the cuts for the
-    bench", "start the cuts over"): the plan he names, else the one he was cutting; where he is is kept for this
-    session only (the setting is never saved: it's a place in a list, not a record). Read-only."""
+    potting bench", "start the cuts over"): the plan his words name by its title, else the one he was cutting; at
+    the size he's building ("the 10 by 12 shed", kept with his place), else the plan's own, said in the reply. His
+    place in each plan (and size) is kept for this run of MIA only, never saved: going back to a plan carries on,
+    naming one he's finished starts it again. Read-only."""
     from core.build_calcs import inches
 
     library = _library(context)
-    config = getattr(context, "config", None)
-    if library is None or config is None:
+    if library is None:
         return "The plans shelf isn't on this MIA."
-    at = dict(config.get(CUT_KEY, {}) or {})
     named = " ".join(str(arguments.get("plan") or "").split())
-    plan = library.best(named) if named else (library.get(at.get("_last", "")) if at.get("_last") else None)
+    if not {w for w in re.findall(r"[a-z]+", named.lower()) if w not in _PLAN_STOP}:
+        named = ""  # "the plan", "my cuts": no name at all, so the one he's cutting
+    last = _CUT_PLACES.get("_last")
+    plan, size = None, {}
+    if named:
+        plan = _plan_named(library, named)
+        if plan is None and last is None:
+            return f"I don't have a plan called {named}. Ask me to find plans, or name one on the shelf."
+    if plan is None and last is not None:
+        plan, size = library.get(last[0]), dict(last[1])
     if plan is None:
         return "Which plan's cuts? Say its name, like \"the cuts for the potting bench\"."
-    cuts = list((plan.get("materials") or {}).get("cuts") or [])
+    asked = sizes_for(plan.get("calc", ""), arguments) if plan.get("calc") else {}
+    size = asked or (size if last is not None and last[0] == plan["id"] else {})
+    worked = library.worked_out(plan, **size) if size else None
+    materials = worked.as_dict() if worked is not None else plan.get("materials") or {}
+    cuts = list(materials.get("cuts") or [])
     if not cuts:
-        return f"{plan['title']} has no cut list. Ask me for its material list instead."
-    place = 0 if str(arguments.get("start_over") or "").lower() in ("1", "true", "yes") or (
-        named and at.get("_last") != plan["id"]) else int(at.get(plan["id"], 0))
+        return f"{plan['title']} has no cut list."
+    key = (plan["id"], tuple(sorted(size.items())))
+    place = 0 if _yes(arguments.get("start_over")) or str(arguments.get("start_over") or "").lower().startswith(
+        ("start", "from", "over", "y")) else _CUT_PLACES.get(key, 0)
     if place >= len(cuts):
-        return f"That's every cut for {plan['title']} ({len(cuts)} in all). Say \"start the cuts over\" to go again."
+        if named:  # naming a plan he's finished starts it again
+            place = 0
+        else:
+            return f"That's every cut for {plan['title']} ({len(cuts)} in all). Say \"start the cuts over\" to go again."
     cut = cuts[place]
     stock = f" from {cut['stock']}" if cut.get("stock") else ""
-    at[plan["id"]], at["_last"] = place + 1, plan["id"]
-    config.set(CUT_KEY, at)
+    _CUT_PLACES[key], _CUT_PLACES["_last"] = place + 1, (plan["id"], tuple(sorted(size.items())))
     left = len(cuts) - place - 1
-    return (f"Cut {place + 1} of {len(cuts)} for {plan['title']}: {cut['qty']} x {cut['part']} at "
-            f"{inches(float(cut['length_in']))}{stock}." + (f" {left} more; say \"next cut\"." if left else " That's the last one."))
+    at = f" at {', '.join(f'{k.replace('_ft', '').replace('_', ' ')} {v:g} ft' if k.endswith('_ft') else f'{k} {v}' for k, v in size.items())}" if size else ""
+    return (f"Cut {place + 1} of {len(cuts)} for {plan['title']}{at}: {cut['qty']} x {cut['part']} at "
+            f"{inches(float(cut['length_in']))}{stock}." + (f" {left} more; say \"next cut\"." if left else
+                                                            " That's the last one."))
 
 
 def _action_sources(context, arguments: dict) -> str:
@@ -470,7 +503,7 @@ def _action_forget_plan(context, arguments: dict) -> str:
 
 def register_plan_actions(registry: AssistantActionRegistry) -> None:
     """Registers the plans shelf's tools: asking in domain plans (next_cut reads a plan's cuts one at a time, for the
-    shop), the shopping list in plan_buying, and keeping a plan,
+    shop, at the size he's building; never on the first cut of hay), the shopping list in plan_buying, and keeping a plan,
     starting a project or letting a kept plan go in plan_saving (each domain brought only by its own words)."""
     sizes = {"size": {"type": "string", "description": "The size as they said it, e.g. '10 by 12' or '4x8x2' (feet)."},
              "length_ft": {"type": "number", "description": "Length in feet."},
@@ -512,9 +545,11 @@ def register_plan_actions(registry: AssistantActionRegistry) -> None:
         ("next_cut", "Read a plan's cut list one cut at a time in the shop: the next cut, or start over; the plan "
                      "he names, else the one he's cutting.",
          {"plan": {"type": "string", "description": "the plan's name, if he named one"},
-          "start_over": {"type": "string", "description": "yes to start from the first cut"}}, [], _action_next_cut,
-         ("next cut", "read me the cuts", "the cuts for", "start the cuts over", "first cut", "what's the next cut",
-          "cut by cut", "one cut at a time")),
+          "start_over": {"type": "string", "description": "yes to start from the first cut"}, **sizes}, [],
+         _action_next_cut,
+         # never "the first cut of hay" or "the cuts for the hay": only a cut list's own words
+         ("next cut", "read me the cuts", "start the cuts over", "what's the next cut", "cut by cut",
+          "one cut at a time", "cuts one at a time")),
         ("cut_list", "A cut list for the person's own project: the parts they list (how many, name, size, material: "
                      "'4 legs at 30 in 2x4; 2 sides 11 1/4 x 72 in 3/4 plywood'), worked out into boards and sheets "
                      "to buy.", {"parts": {"type": "string", "description": "The parts, one per line or semicolon."},
