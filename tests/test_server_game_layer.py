@@ -6,6 +6,7 @@ The game layer's routes on the real server (server/app.py): the Achievements pag
 card closed (POST /api/achievements/seen, refused with no ids), YouTube search without a key saying how to get one,
 the key refused when it can't be one and never echoed back, and the page's security policy allowing only YouTube's
 player and thumbnails from outside. Each refuses a stranger.
+And the browser's tab-icon request answered without an error.
 """
 
 from __future__ import annotations
@@ -77,3 +78,8 @@ def test_a_song_asked_for_by_voice_is_offered_to_the_frame_once(client, context,
     assert client.get("/api/music/youtube/next", headers=owner).json()["video_id"] == "ccccccccccc"
     assert client.post("/api/music/youtube/next/played", headers=owner).status_code == 200
     assert client.get("/api/music/youtube/next", headers=owner).json() == {}
+
+
+def test_the_browsers_tab_icon_request_is_answered_without_an_error(client):  # noqa: F811
+    """/favicon.ico, asked for by every browser, gets 204 (no icon yet), not a 404 in the console."""
+    assert client.get("/favicon.ico").status_code == 204

@@ -610,7 +610,8 @@ def create_app(context: AppContext) -> FastAPI:
     (core/achievement_cards.py).
     POST /api/achievements/seen marks cards seen by id, outside undo.
     /api/music/youtube/search and /api/music/youtube/key are YouTube in Music's (core/youtube_music.py).
-    /api/music/youtube/next and /next/played hand MIA's pick by voice to the frame's small player."""
+    /api/music/youtube/next and /next/played hand MIA's pick by voice to the frame's small player.
+    /favicon.ico answers 204 (no icon yet) instead of a 404 in every page's console."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3139,6 +3140,14 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return nexus(view_for(context, profile_id))
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        """Browsers ask for a tab icon at the root of every site; MIA has none yet (her look is Muse's), so the answer
+        is "nothing here" (204) rather than a 404 in every page's console."""
+        from fastapi.responses import Response
+
+        return Response(status_code=204)
 
     @app.get("/api/health")
     def web_health(profile_id: str = Depends(require_profile_id)) -> dict:
