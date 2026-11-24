@@ -49,10 +49,12 @@ def test_the_kind_is_the_projects_own_not_a_thing_it_sits_by(said, kind):
     assert pr.kind_of(said).name == kind
 
 
-def test_a_project_of_no_known_kind_still_names_itself_and_a_fort_is_the_fort():
+def test_the_project_named_is_the_thing_built_never_what_follows_it():
     assert pr.kind_of("I'm planning to build a sauna") is None
     assert pr.planned("I'm planning to build a sauna") == "sauna"
     assert pr.planned("I'm planning to build the kids a fort") == "fort"
+    assert pr.planned("should I build a greenhouse or a cold room?") == "greenhouse"
+    assert pr.planned("how would adding a deck affect the rest of my budget?") == "deck"
 
 
 def test_a_record_counts_as_started_only_when_its_name_holds_the_whole_project():
@@ -81,10 +83,13 @@ def test_a_greenhouse_picture_carries_every_area_it_touches_from_records_or_said
     assert "let's plan the greenhouse" in text  # nothing made: the offer to draft
 
 
-def test_planning_a_greenhouse_reaches_the_picture_and_afford_stays_afford(life):
+def test_planning_a_greenhouse_reaches_the_picture_by_words_and_afford_stays_afford(life):
     assert qp.match(life, "I'm planning to build a greenhouse?").name == "project picture"
     assert qp.match(life, "What would building a shed mean for everything else?").name == "project picture"
     assert qp.match(life, "Can I afford a chicken coop?").name == "afford"
+    assert qp.match(life, "What would a greenhouse take?").name == "project picture"  # its own example, by words
+    assert qp.match(life, "what would a rain barrel change?").name == "project picture"
+    assert qp.match(life, "I'm planning to build a 10 by 12 shed?").name == "project picture"
 
 
 @pytest.mark.parametrize("said", [
@@ -93,6 +98,9 @@ def test_planning_a_greenhouse_reaches_the_picture_and_afford_stays_afford(life)
     "what would it take to save $5000?", "I want to set up a budget?", "I want to start learning guitar?",
     "I want to build a picnic table, how much should I charge?", "how will skipping the gym affect my goals?",
     "I want to build a 10 by 12 shed, what materials do I need?",
+    "when should I start my seeds in the garden?", "is it time to start tomatoes in the greenhouse?",
+    "should I add more hens to my flock?", "what should I add to the garden this week?",
+    "I want to start a garden journal?",
 ])
 def test_the_picture_never_takes_another_plans_or_tools_question(life, said):
     found = qp.match(life, said)

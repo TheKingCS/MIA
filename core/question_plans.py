@@ -48,6 +48,11 @@ from core.project_ripple import PROJECT_WORDS
 
 log = get_logger(__name__)
 
+# A project named as the thing itself: only articles, a few sizes and adjectives before it ("a big garden", "a 10 by
+# 12 shed"), never "seeds in the garden" or "more hens to my flock"
+_PROJECT_THING = (r"(?:\s+(?:a|an|the|some|my|our|new|big|small|another|second|\d+\s*(?:by|x)\s*\d+(?:\s*ft)?))*"
+                  rf"\s+(?:{PROJECT_WORDS})(?![a-z])")
+
 FACT, CALCULATION, ESTIMATE, MISSING = "fact", "calculation", "estimate", "missing"
 MATCH_AT = 0.66  # cosine similarity to the nearest example (measured: small talk stayed below)
 EXAMPLE_AT = 0.92  # this close to a plan's own example, a "how can I...?" question is that plan's, not a how-to
@@ -1058,8 +1063,10 @@ PLANS: tuple[Plan, ...] = (
           "What would a new shed mean for the rest of my life?", "We're going to start a big garden next year.",
           "If I build a cold room, what does it touch?", "I'm planning to add solar panels.",
           "What would a greenhouse take?", "I want to put in rain barrels."),
-         rf"\b(?:build|put up|set up|start|add|install|put in|building|putting up|starting|adding|installing)\b"
-         rf"[^,.?!]{{0,30}}?(?<![a-z])(?:{PROJECT_WORDS})(?![a-z])"
+         rf"\b(?:build|put up|set up|start|add|install|put in|building|putting up|starting|adding|installing)"
+         rf"{_PROJECT_THING}(?!\s+(?:journal|plan|log|seeds?|notes?))"
+         rf"|\b(?:what|how) (?:would|will)(?:\s+(?:building|adding|putting up|starting))?{_PROJECT_THING}"
+         r"[^?]{0,15}\b(?:take|touch|change|mean for)\b"
          r"|\b(?:affect|mean for|touch)\b[^?]{0,20}\b(?:everything|the rest)\b", _project_picture),
     Plan("open loops", "What's unfinished",
          ("What commitments have I made that I haven't completed?", "What projects have I started but not completed?",

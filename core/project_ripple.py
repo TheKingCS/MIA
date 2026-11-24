@@ -120,10 +120,13 @@ def kind_of(prompt: str) -> Optional[Kind]:
 
 def planned(prompt: str) -> str:
     """Pure logic. The project the words plan ("greenhouse" from "I'm planning to build a greenhouse next spring",
-    "fort" from "build the kids a fort": the thing after the last article), or "" when no planning words are there."""
+    "fort" from "build the kids a fort": the thing after the last article; up to the first project word when there
+    is one, so "a greenhouse or a cold room" is the greenhouse), or "" when no planning words are there."""
     found = ""
     for match in _PLANNING.finditer(prompt or ""):
         what = _LEAD.sub("", match.group("what").strip(" -'")).strip(" -'")
+        named = re.search(rf"(?<![a-z])(?:{PROJECT_WORDS})(?:\s+(?:{PROJECT_WORDS}))*(?![a-z])", what)  # "solar panels"
+        what = what[:named.end()] if named else what  # "a greenhouse or a cold room": the greenhouse
         what = re.split(r"\s(?:a|an|the)\s", f" {what} ")[-1].strip()  # "the kids a fort": the fort
         if what and what not in ("to", "on", "it", "that", "this", "something", "build", "put", "set"):
             return what
