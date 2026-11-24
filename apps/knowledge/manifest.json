@@ -72,7 +72,8 @@
       "work_it_out",
       "seed_viability",
       "what_to_plant",
-      "feed_mix"
+      "feed_mix",
+      "next_cut"
     ],
     "actions": [
       "library.fetch",
@@ -122,7 +123,8 @@
       "garden_this_week": "observe",
       "seed_viability": "observe",
       "what_to_plant": "observe",
-      "feed_mix": "observe"
+      "feed_mix": "observe",
+      "next_cut": "observe"
     },
     "outside": []
   },

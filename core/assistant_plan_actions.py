@@ -356,6 +356,40 @@ def _action_cut_list(context, arguments: dict) -> str:
     return said
 
 
+CUT_KEY = "modules.plans.cut_at"  # plan id -> the next cut's place, and "_last": the plan being cut (this session)
+
+
+def _action_next_cut(context, arguments: dict) -> str:
+    """Tool next_cut: a plan's cut list read one cut at a time, for the shop ("next cut", "read me the cuts for the
+    bench", "start the cuts over"): the plan he names, else the one he was cutting; where he is is kept for this
+    session only (the setting is never saved: it's a place in a list, not a record). Read-only."""
+    from core.build_calcs import inches
+
+    library = _library(context)
+    config = getattr(context, "config", None)
+    if library is None or config is None:
+        return "The plans shelf isn't on this MIA."
+    at = dict(config.get(CUT_KEY, {}) or {})
+    named = " ".join(str(arguments.get("plan") or "").split())
+    plan = library.best(named) if named else (library.get(at.get("_last", "")) if at.get("_last") else None)
+    if plan is None:
+        return "Which plan's cuts? Say its name, like \"the cuts for the potting bench\"."
+    cuts = list((plan.get("materials") or {}).get("cuts") or [])
+    if not cuts:
+        return f"{plan['title']} has no cut list. Ask me for its material list instead."
+    place = 0 if str(arguments.get("start_over") or "").lower() in ("1", "true", "yes") or (
+        named and at.get("_last") != plan["id"]) else int(at.get(plan["id"], 0))
+    if place >= len(cuts):
+        return f"That's every cut for {plan['title']} ({len(cuts)} in all). Say \"start the cuts over\" to go again."
+    cut = cuts[place]
+    stock = f" from {cut['stock']}" if cut.get("stock") else ""
+    at[plan["id"]], at["_last"] = place + 1, plan["id"]
+    config.set(CUT_KEY, at)
+    left = len(cuts) - place - 1
+    return (f"Cut {place + 1} of {len(cuts)} for {plan['title']}: {cut['qty']} x {cut['part']} at "
+            f"{inches(float(cut['length_in']))}{stock}." + (f" {left} more; say \"next cut\"." if left else " That's the last one."))
+
+
 def _action_sources(context, arguments: dict) -> str:
     """Tool plan_sources: where free plans and references are, to fetch while online."""
     kind = str(arguments.get("kind") or "").lower()
@@ -435,7 +469,8 @@ def _action_forget_plan(context, arguments: dict) -> str:
 
 
 def register_plan_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the plans shelf's tools: asking in domain plans, the shopping list in plan_buying, and keeping a plan,
+    """Registers the plans shelf's tools: asking in domain plans (next_cut reads a plan's cuts one at a time, for the
+    shop), the shopping list in plan_buying, and keeping a plan,
     starting a project or letting a kept plan go in plan_saving (each domain brought only by its own words)."""
     sizes = {"size": {"type": "string", "description": "The size as they said it, e.g. '10 by 12' or '4x8x2' (feet)."},
              "length_ft": {"type": "number", "description": "Length in feet."},
@@ -474,6 +509,12 @@ def register_plan_actions(registry: AssistantActionRegistry) -> None:
                                "against what the workshop has on hand, with costs. For 'what do I need to build X', "
                                "use material_list instead.", {**name, **sizes}, ["name"], _action_shopping_list,
          ("what do i need to buy for", "shopping list for the", "what do i still need for", "what's left to buy")),
+        ("next_cut", "Read a plan's cut list one cut at a time in the shop: the next cut, or start over; the plan "
+                     "he names, else the one he's cutting.",
+         {"plan": {"type": "string", "description": "the plan's name, if he named one"},
+          "start_over": {"type": "string", "description": "yes to start from the first cut"}}, [], _action_next_cut,
+         ("next cut", "read me the cuts", "the cuts for", "start the cuts over", "first cut", "what's the next cut",
+          "cut by cut", "one cut at a time")),
         ("cut_list", "A cut list for the person's own project: the parts they list (how many, name, size, material: "
                      "'4 legs at 30 in 2x4; 2 sides 11 1/4 x 72 in 3/4 plywood'), worked out into boards and sheets "
                      "to buy.", {"parts": {"type": "string", "description": "The parts, one per line or semicolon."},
