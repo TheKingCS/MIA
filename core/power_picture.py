@@ -25,6 +25,7 @@ phase D); until then the readings are his.
 
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
 from typing import Optional
 
@@ -74,21 +75,32 @@ def set_load(context, name: str, watts, hours) -> str:
 
 
 def solar_kwh_day(context, today: date) -> Optional[float]:
-    """His solar's kilowatt-hours a day over the last 30 days, from its readings logged in kWh; None without any."""
+    """His solar's kilowatt-hours a day over the last 30 days: one meter a source (never a running or lifetime
+    total), each reading by its own unit first (Wh is a thousandth of a kWh), the 30 days' sum over 30; None
+    without any."""
     energy = getattr(context, "energy", None)
     if energy is None:
         return None
     since = (today - timedelta(days=29)).isoformat()
-    total, days = 0.0, set()
+    total, found = 0.0, False
     for source in energy.all_energy_sources():
         if source.source_type != "Solar":
             continue
-        for meter in energy.energy_source_meter_names(source.source_id):
+        meters = [m for m in energy.energy_source_meter_names(source.source_id)
+                  if not re.search(r"\b(total|lifetime|cumulative)\b", m, re.I)]  # a running total isn't a day's
+        for meter in meters[:1]:  # one meter a source: two kWh meters on one array aren't added together
             for r in energy.energy_source_readings(source.source_id, meter):
-                if str(r.timestamp)[:10] >= since and "kwh" in f"{meter} {r.unit}".lower():
+                if str(r.timestamp)[:10] < since:
+                    continue
+                unit = (r.unit or meter).lower()  # the reading's own unit first, then the meter's name
+                if "kwh" in unit:
                     total += float(r.value)
-                    days.add(str(r.timestamp)[:10])
-    return round(total / len(days), 1) if days else None
+                elif "wh" in unit:
+                    total += float(r.value) / 1000
+                else:
+                    continue
+                found = True
+    return round(total / 30, 1) if found else None  # the 30 days' production, a day
 
 
 def say(context, today: Optional[date] = None) -> str:

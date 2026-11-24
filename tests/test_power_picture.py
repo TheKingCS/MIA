@@ -1,6 +1,7 @@
 """The homestead's power (core/power_picture.py): the essentials a day (his own, else typical and said so), the
 battery's hours on them, his solar's last 30 days in kWh against them, the generator's line, a load he says kept or
-taken off, and the questions reaching the tools; and the project picture reading this, never the computer's battery."""
+taken off, and the questions reaching the tools; and the project picture reading this, never the computer's battery.
+A lifetime total or a Wh meter never inflates the solar's day."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -35,11 +36,11 @@ def test_typical_essentials_are_said_as_typical_and_his_own_replace_them(home):
     assert pp.set_load(home, "well pump", 0, 1) == "Took the well pump off your essentials."
 
 
-def test_the_battery_and_solar_against_the_essentials(home):
+def test_the_battery_and_the_solars_30_day_average_against_the_essentials(home):
     said = pp.say(home, date(2026, 11, 24))
     assert "Typical essentials" in said and "about 10.66 kWh a day" in said
     assert "10 kWh battery carries them about 23 hours" in said
-    assert "solar averaged 12 kWh a day" in said and "more than the essentials take" in said
+    assert "solar averaged 0.8 kWh a day" in said and "less than the essentials take" in said  # 24 kWh in 30 days
 
 
 def test_power_questions_reach_the_homesteads_picture_not_the_computers_battery():
@@ -50,3 +51,11 @@ def test_power_questions_reach_the_homesteads_picture_not_the_computers_battery(
     names = lambda said: [a.name for a in registry.matching_actions(said, context)]  # noqa: E731
     assert "power_picture" in names("how long will my battery last if the power goes out?")
     assert "set_power_load" in names("the well pump draws 1000 watts for an hour a day")
+
+
+def test_review_a_lifetime_total_and_watt_hours_dont_inflate_the_solar(home):
+    readings = {"lifetime kwh": [SimpleNamespace(timestamp="2026-11-20T18:00:00", value=40000.0, unit="kWh")],
+                "daily output": [SimpleNamespace(timestamp="2026-11-20T18:00:00", value=12000.0, unit="Wh")]}
+    home.energy.energy_source_meter_names = lambda sid: list(readings)
+    home.energy.energy_source_readings = lambda sid, meter: readings[meter]
+    assert pp.solar_kwh_day(home, date(2026, 11, 24)) == 0.4  # 12 kWh in 30 days; the lifetime meter skipped

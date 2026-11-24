@@ -59,8 +59,9 @@ KINDS: tuple[Kind, ...] = (
     Kind("sour cherry", r"sour cherr(?:y|ies)|tart cherr(?:y|ies)|pie cherr(?:y|ies)|montmorency", (700, 1100),
          (3, 5), True, (10, 20), True, (55, 70)),
     Kind("apricot", r"apricots?", (300, 900), (3, 5), True, (12, 20), True, (90, 120)),
-    Kind("fig", r"figs?", (100, 300), (1, 3), True, (10, 20), False, (60, 90)),
-    Kind("persimmon", r"persimmons?", (100, 400), (3, 6), True, (15, 25), False, (150, 180)),
+    Kind("fig", r"figs?", (100, 300), (1, 3), True, (10, 20), False, (110, 170)),  # the main crop, not the breba
+    # American persimmons need a male tree nearby; Asian ones mostly don't: said as needing one, the safe side
+    Kind("persimmon", r"persimmons?", (100, 400), (3, 6), False, (15, 25), False, (150, 180)),
     Kind("pawpaw", r"paw ?paws?", (400, 900), (4, 7), False, (8, 15), False, (130, 160)),
     Kind("mulberry", r"mulberr(?:y|ies)", (400, 800), (2, 4), True, (15, 30), False, (45, 60)),
 )
@@ -72,6 +73,10 @@ _FRUIT_NOUN = re.compile(r"(?<![a-z])(?:crab ?apples?|apples?|pears?|peach(?:es)
                          r"cherr(?:y|ies)|apricots?|figs?|persimmons?|paw ?paws?|mulberr(?:y|ies))(?![a-z])", re.I)
 
 
+# A fruit's name in something that isn't a fruit tree
+_NOT_A_TREE = re.compile(r"\b(tomato(?:es)?|tomatillos?|ivy|shaped|tv|macbook|iphone|ipad|imac|watch|pie|jam)\b", re.I)
+
+
 def kind_in(name: str) -> Optional[Kind]:
     """Pure logic. The fruit a name holds ("Honeycrisp apple tree" is an apple; sour cherry before sweet), or None."""
     lowered = (name or "").lower()
@@ -81,32 +86,46 @@ def kind_in(name: str) -> Optional[Kind]:
     return next((k for k in found if k.name == "sour cherry"), found[0])
 
 
+_NUMBERS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
+            "ten": 10, "eleven": 11, "twelve": 12}
+
+
 def _count(name: str) -> int:
-    """Pure logic. How many trees a name says ("2 Elberta peaches", "three plums"); 1 when it doesn't."""
-    m = re.match(r"\s*(\d+|two|three|four|five|six)\b", (name or "").lower())
-    if not m:
-        return 1
-    return {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6}.get(m.group(1)) or int(m.group(1))
+    """Pure logic. How many trees a name says ("2 Elberta peaches", "seven plums", "Apples (3)", "Gala apple x4");
+    1 when it doesn't."""
+    said = (name or "").lower()
+    m = re.match(r"\s*(\d+|" + "|".join(_NUMBERS) + r")\b", said)
+    if m:
+        return _NUMBERS.get(m.group(1)) or int(m.group(1))
+    m = re.search(r"\((\d+)\)\s*$|\bx\s*(\d+)\s*$", said)  # "Apples (3)", "Gala apple x4"
+    return int(m.group(1) or m.group(2)) if m else 1
 
 
 def _variety(name: str, kind: Kind) -> str:
-    """Pure logic. The variety a name gives before its fruit ("Honeycrisp" in "Honeycrisp apple tree"), or ""."""
+    """Pure logic. The variety a name gives before its fruit ("Honeycrisp" in "Honeycrisp apple tree"), or "".
+    A variety after the fruit, behind a dash or in quotes ("Apple tree - Liberty"), comes first."""
+    after = re.search(r"\s[-–:]\s*([A-Za-z][\w' ]+)$|[\"']([^\"']+)[\"']", name)  # "Apple tree - Liberty", 'Apple "Gala"'
+    if after:
+        return (after.group(1) or after.group(2)).strip()
     before = _FRUIT_NOUN.split(name, maxsplit=1)[0]  # the fruit's own noun: "Bing" stays the variety of a cherry
-    before = re.sub(r"^\s*(\d+|two|three|four|five|six)\b", "", before, flags=re.I)
+    before = re.sub(r"^\s*(\d+|" + "|".join(_NUMBERS) + r")\b", "", before, flags=re.I)
     before = re.sub(r"\b(sweet|sour|tart|pie)\b", "", before, flags=re.I)
     before = _TREE_WORDS.sub("", before).strip(" ,-")
     return before
 
 
 def trees(context) -> list[dict]:
-    """His fruit trees from Maintenance: [{name, kind, variety, count, asset_id}], by the fruit in each asset's name;
+    """His fruit trees from Maintenance: [{name, kind, variety, count, asset_id}], by the fruit in each asset's name,
+    in the Garden/Plant category or with a tree word in the name, never tomatoes, ivy or a "pear-shaped" anything;
     [] without Maintenance or trees."""
     maintenance = getattr(context, "maintenance", None)
     out = []
     for asset in (maintenance.all_assets() if maintenance is not None else []):
         kind = kind_in(asset.name)
-        if kind is None:
+        if kind is None or _NOT_A_TREE.search(asset.name):
             continue
+        if getattr(asset, "category", "Garden/Plant") != "Garden/Plant" and not _TREE_WORDS.search(asset.name):
+            continue  # an "Apple TV" in Appliances isn't a tree
         out.append({"name": asset.name, "kind": kind, "variety": _variety(asset.name, kind),
                     "count": _count(asset.name), "asset_id": asset.asset_id})
     return out
@@ -121,7 +140,8 @@ def _last_frost(context, today: date) -> Optional[date]:
 
 def calendar(kinds: list[Kind], last_frost: date, first_frost: Optional[date] = None) -> list[tuple]:
     """Pure logic. The orchard's year for these kinds: [(day, job, kinds)] in date order, from the last spring frost
-    (bloom is taken as two weeks before it, the frost watch the weeks around it) and, for the fall jobs, the first."""
+    (bloom is taken as two weeks before it, the frost watch the weeks around it) and, for the fall jobs, the first.
+    Thinning only for the kinds that are thinned (never figs or persimmons); dates said without a leading zero."""
     if not kinds:
         return []
     bloom = last_frost - timedelta(days=14)
@@ -137,30 +157,36 @@ def calendar(kinds: list[Kind], last_frost: date, first_frost: Optional[date] = 
     jobs.append((last_frost - timedelta(days=42), "Dormant oil spray before bud break, above 40°F with no rain due",
                  every))
     jobs.append((bloom, "Bloom: watch the frost forecast; cover small trees on a frosty night", every))
-    jobs.append((bloom + timedelta(days=35), "Thin fruit to one every 6 to 8 inches once it has set", [
-        k.name for k in kinds if k.name in ("apple", "pear", "peach", "nectarine", "plum", "apricot")] or every))
+    thinned = [k.name for k in kinds if k.name in ("apple", "pear", "peach", "nectarine", "plum", "apricot")]
+    if thinned:
+        jobs.append((bloom + timedelta(days=35), "Thin fruit to one every 6 to 8 inches once it has set", thinned))
     jobs.append((date(last_frost.year, 7, 15), "Summer pruning: cut water sprouts and suckers", every))
     for k in kinds:
+        end = bloom + timedelta(days=k.ripe_days[1])
         jobs.append((bloom + timedelta(days=k.ripe_days[0]), f"{k.name.capitalize()} harvest can begin (to about "
-                     f"{(bloom + timedelta(days=k.ripe_days[1])):%B %d})", [k.name]))
+                     f"{end:%B} {end.day})", [k.name]))
     fall = (first_frost - timedelta(days=14)) if first_frost else date(last_frost.year, 10, 15)
     jobs.append((fall, "Fall cleanup: rake dropped fruit and leaves, trunk guards against mice and rabbits", every))
     return sorted(jobs, key=lambda j: j[0])
 
 
 def pollination_gaps(found: list[dict]) -> list[str]:
-    """Pure logic. The kinds he has only one variety of that need a second to set fruit."""
+    """Pure logic. The kinds he has only one named variety of that need a second to set fruit (a tree whose variety
+    isn't in its name makes no claim)."""
     gaps = []
     for kind in {t["kind"] for t in found if not t["kind"].self_fruitful}:
         varieties = {t["variety"].lower() for t in found if t["kind"] == kind}
-        if len(varieties) < 2:
+        if "" in varieties:
+            continue  # a tree whose variety isn't in its name: no claim either way
+        if len(varieties) < 2 and sum(t["count"] for t in found if t["kind"] == kind) >= 1:
             gaps.append(kind.name)
     return sorted(gaps)
 
 
 def say_month(context, today: Optional[date] = None) -> str:
     """The orchard's jobs in the next 30 days for the kinds he has, each with its day and his trees, and a kind
-    missing its pollination partner; or what's needed first (trees, his frost date)."""
+    missing its pollination partner; or what's needed first (trees, his frost date).
+    A harvest already under way (started, not yet ended) is said too."""
     from core.planting_now import _first_frost
 
     today = today or date.today()
@@ -177,6 +203,12 @@ def say_month(context, today: Optional[date] = None) -> str:
     for year_frost in (frost - timedelta(days=365), frost):  # the season now ending and the one ahead
         first = _first_frost(context, year_frost)
         jobs += [j for j in calendar(kinds, year_frost, first) if today <= j[0] <= today + timedelta(days=30)]
+        bloom = year_frost - timedelta(days=14)
+        for k in kinds:  # a harvest already under way is still the orchard's job
+            start, end = bloom + timedelta(days=k.ripe_days[0]), bloom + timedelta(days=k.ripe_days[1])
+            if start < today <= end:
+                jobs.append((today, f"{k.name.capitalize()} harvest is under way (to about {end:%B} {end.day})",
+                             [k.name]))
     parts = []
     for day, job, names in sorted(jobs, key=lambda j: j[0]):
         which = ", ".join(t["name"] for t in found if t["kind"].name in names)

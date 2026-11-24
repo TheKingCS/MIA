@@ -223,7 +223,10 @@ def register_project_plan_actions(registry) -> None:
     due to plant now, or one crop's dates, core/planting_now.py; for crops not in a confirmed plan). Their trigger
     phrases cover the everyday ways he'd ask ("what should I plant this
     week", "what needs doing in the garden", "how much should I charge for a picnic table":
-    tests/test_everyday_phrasing_routing.py)."""
+    tests/test_everyday_phrasing_routing.py).
+    The water tools are reached by water tanks and the cistern, never a bare "tank is at" (a propane tank) or
+    "enough water" (a fish tank); the orchard's by its fruit, never "when should I prune" alone (roses) or "when
+    will my" (a package)."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -263,8 +266,9 @@ def register_project_plan_actions(registry) -> None:
                     "uses, has or how long it lasts.",
         parameters={"type": "object", "properties": {}, "required": []}, handler=_water_budget,
         trigger_phrases=("water budget", "how much water do i use", "how much water do we use", "water do i have",
-                         "how long will my water last", "how long will the water last", "enough water",
-                         "water usage", "water use"),
+                         "how long will my water last", "how long will the water last", "do i have enough water",
+                         "enough water stored", "enough water for the", "my water usage", "our water usage",
+                         "water use on the"),
         subjects=("water",),  # so "how long will my water last?" is answered in code (direct_lookup)
     ))
     registry.register(AssistantAction(
@@ -273,8 +277,8 @@ def register_project_plan_actions(registry) -> None:
         parameters={"type": "object", "properties": {
             "tank": {"type": "string", "description": "which tank, e.g. 'cistern'"},
             "gallons": {"type": "number", "description": "how many gallons are in it"}}, "required": ["tank", "gallons"]},
-        handler=_water_level, trigger_phrases=("cistern is at", "tank is at", "barrel is at", "cistern has",
-                                               "tank has", "gallons in the cistern", "gallons in the tank"),
+        handler=_water_level, trigger_phrases=("cistern is at", "water tank is at", "barrel is at", "cistern has",
+                                               "water tank has", "gallons in the cistern", "gallons in the water tank"),
     ))
     registry.register_domain_keywords("orchard", ("orchard", "fruit trees", "fruit tree"))
     registry.register(AssistantAction(
@@ -284,7 +288,8 @@ def register_project_plan_actions(registry) -> None:
                     "and any that lack a pollination partner.",
         parameters={"type": "object", "properties": {}, "required": []}, handler=_orchard_month,
         trigger_phrases=("the orchard", "my orchard", "fruit trees need", "prune the apple", "prune my apple",
-                         "prune the peach", "when do i prune", "when should i prune", "spray the trees",
+                         "prune the peach", "prune the pear", "prune the plum", "prune the cherry", "prune my fruit trees",
+                         "prune the fruit trees", "spray the trees",
                          "dormant oil", "thin the fruit", "thin the apples", "thin the peaches"),
     ))
     registry.register(AssistantAction(
@@ -295,7 +300,7 @@ def register_project_plan_actions(registry) -> None:
         parameters={"type": "object", "properties": {"fruit": {"type": "string",
                     "description": "the fruit, e.g. 'peach'"}}, "required": ["fruit"]}, handler=_fruit_facts,
         trigger_phrases=("chill hours", "need a pollinator", "need two apple", "need another tree", "how far apart",
-                         "years to fruit", "years to bear", "when will my", "self-fertile", "self fertile",
+                         "years to fruit", "years to bear", "start bearing", "bear fruit", "self-fertile", "self fertile",
                          "self-pollinating"),
     ))
     registry.register(AssistantAction(

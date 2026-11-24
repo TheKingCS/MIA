@@ -105,7 +105,9 @@ def _set_power_load(context, arguments: dict) -> str:
 
 def register_energy_actions(registry: AssistantActionRegistry) -> None:
     """Registers the get_energy and log_energy_reading tools, and the homestead's power picture: power_picture and
-    set_power_load (core/power_picture.py; get_power_status is this computer's own battery, not the homestead's)."""
+    set_power_load (core/power_picture.py; get_power_status is this computer's own battery, not the homestead's).
+    set_power_load is reached by watts or amps with a time ("watts for"), never a bare "draws" ("the dog draws
+    attention")."""
     registry.register(AssistantAction(
         name="power_picture", domain="power",
         description="The homestead's power: the essential loads a day (well pump, aquaponics pumps, fridge, "
@@ -125,7 +127,7 @@ def register_energy_actions(registry: AssistantActionRegistry) -> None:
             "watts": {"type": "number", "description": "what it draws"},
             "hours": {"type": "number", "description": "hours a day it runs (24 if always on)"}},
             "required": ["load", "watts"]},
-        handler=_set_power_load, trigger_phrases=("draws", "uses watts", "pulls watts", "watts for"),
+        handler=_set_power_load, trigger_phrases=("watts for", "uses watts", "pulls watts", "amps for"),
     ))
     registry.register(AssistantAction(
         name="get_energy", domain="power",

@@ -27,6 +27,7 @@ level he logs.
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Optional
 
@@ -102,14 +103,22 @@ def stored(context) -> list[dict]:
     return out
 
 
+# Tanks that aren't the property's stored water
+_NOT_WATER = re.compile(r"\b(propane|gas|gasoline|fuel|diesel|oil|kerosene|fish|aquarium|aquaponics|hot water|"
+                        r"water heater|septic|pool)\b", re.I)
+
+
 def log_level(context, tank: str, gallons) -> str:
-    """Keeps a tank's level as he said it (the data logger, `water:<tank>`), undoable; says it back."""
+    """Keeps a tank's level as he said it (the data logger, `water:<tank>`), undoable; says it back. A fuel, fish,
+    hot water or septic tank isn't stored water: turned away (`_NOT_WATER`)."""
     logger = getattr(context, "data_logger", None)
     name = " ".join(str(tank or "").split())
     if logger is None:
         return "The data logger isn't on this MIA, so I can't keep tank levels here."
     if not name:
         return "Which tank or cistern?"
+    if _NOT_WATER.search(name):
+        return f"The {name} isn't stored water, so I don't keep it in the water budget."
     try:
         value = float(gallons)
     except (TypeError, ValueError):

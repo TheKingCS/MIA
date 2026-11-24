@@ -1305,7 +1305,7 @@ PLANS: tuple[Plan, ...] = (
          ("How's the homestead?", "What needs doing on the homestead today?", "Give me the homestead rundown.",
           "How are things on the homestead?", "Homestead check.", "What's going on around the place?"),
          r"\b(how'?s the homestead|how is the homestead|homestead (check|rundown|report|today|this morning)|"
-         r"things on the homestead|on the homestead today|around the (place|property|farm))\b", _homestead),
+         r"things on the homestead|on the homestead today|going on around the place)\b", _homestead),
     Plan("quit by", "Quitting by a date",
          ("What if I quit at the end of next year?", "Could I leave my job in 18 months?",
           "What would it take to quit by next June?", "Can I afford to quit at the end of this year?"),

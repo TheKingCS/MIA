@@ -1,6 +1,7 @@
 """The whole property's water (core/water_budget.py): the house, garden, orchard and flock a day from his records
 (each estimate said as one), the greenhouse said as not counted, tanks at their latest logged level, the days the
-stored water carries the outdoor uses, the roof's catch from his logged rain, and the questions reaching the tools."""
+stored water carries the outdoor uses, the roof's catch from his logged rain, and the questions reaching the tools.
+A propane or fish tank is never stored water, and a fish-tank question isn't the budget."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -56,3 +57,14 @@ def test_water_questions_reach_the_tools():
     assert "water_budget" in names("how long will my water last?")
     assert registry.direct_lookup("How long will my water last?", context).name == "water_budget"  # in code
     assert "log_water_level" in names("the cistern is at 800 gallons")
+
+
+def test_review_a_fuel_or_fish_tank_isnt_water_and_fish_questions_arent_the_budget(place):
+    assert "isn't stored water" in wb.log_level(place, "propane tank", 40)
+    assert wb.stored(place) == []
+    from tests.assistant_registry import build_desktop_registry, demo_context
+
+    registry = build_desktop_registry()
+    context = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    for said in ("is there enough water in the fish tank?", "the propane tank is at 40 percent"):
+        assert {"water_budget", "log_water_level"}.isdisjoint(a.name for a in registry.matching_actions(said, context))

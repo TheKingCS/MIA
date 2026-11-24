@@ -250,7 +250,9 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
     generator run?", "do I need to cover the tomatoes", "what was I in the middle of",
     "have I been spending more than normal?", "what's first tomorrow":
-    tests/test_everyday_phrasing_routing.py)."""
+    tests/test_everyday_phrasing_routing.py).
+    The battery size is reached by "battery bank is" or "kWh battery", never "my battery is" ("my battery is at 20
+    percent")."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -359,7 +361,7 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
                          "plan for 5", "plan for 6", "plan for two", "plan for three", "plan for four",
                          "generator burns", "generator uses", "gallons an hour", "burn rate", "pounds an hour",
                          "plan for days", "prepare for days", "catchment roof is", "catch rain off",
-                         "my battery is", "battery bank is"),
+                         "battery bank is", "kwh battery", "battery holds"),
     ))
     registry.register(AssistantAction(
         name="bleach_for_water", domain="today",

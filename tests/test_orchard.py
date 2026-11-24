@@ -1,7 +1,9 @@
 """The orchard (core/orchard.py): his fruit trees read from Maintenance by the fruit in their names, the year's work
 dated from his last spring frost (stone fruit pruned near bloom, dormant oil before bud break, thinning, harvest by
 each kind's days from bloom, fall cleanup), a kind alone without its pollination partner named, a missing frost date
-asked for, and the questions reaching the tools."""
+asked for, and the questions reaching the tools.
+And the review's cases: an Apple TV or cherry tomatoes are never trees, varieties after the fruit and counts like
+"Apples (3)" are read, figs aren't thinned, a harvest under way is said."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -65,3 +67,18 @@ def test_orchard_questions_reach_its_tools():
     assert "orchard_this_month" in names("what does the orchard need this month?")
     assert "orchard_this_month" in names("when should I prune the apple trees?")
     assert "fruit_tree_facts" in names("how many chill hours does a peach need?")
+
+
+@pytest.mark.parametrize("name", ["Apple TV", "Cherry tomatoes", "Plum tomatoes", "Fig ivy", "Pear-shaped sink"])
+def test_review_things_that_arent_trees_never_count(name):
+    assert orchard.trees(_with([name])) == []
+
+
+def test_review_varieties_counts_thinning_and_a_harvest_under_way():
+    found = orchard.trees(_with(["Apple tree - Liberty", "Apple tree - Gala", "seven Gala apples", "Apples (3)"]))
+    assert [t["variety"] for t in found[:2]] == ["Liberty", "Gala"] and [t["count"] for t in found[2:]] == [7, 3]
+    assert orchard.pollination_gaps(found[:2]) == []
+    figs = [orchard.kind_in("fig"), orchard.kind_in("persimmon")]
+    assert not any("Thin fruit" in job for _, job, _ in orchard.calendar(figs, date(2027, 4, 20)))
+    said = orchard.say_month(_with(["Honeycrisp apple tree", "Liberty apple tree"]), date(2027, 8, 5))
+    assert "Apple harvest is under way" in said
