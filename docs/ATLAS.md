@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1648 files, 360,122 lines; 1648 files describe themselves; 19,799 of 19,929 classes and functions are documented.
+1650 files, 360,392 lines; 1650 files describe themselves; 19,816 of 19,946 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-648 files, 183,625 lines; 9,382 of 9,468 classes and functions documented
+649 files, 183,846 lines; 9,395 of 9,481 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -40,6 +40,7 @@
 - `core/assistant_backup_actions.py`: Backups by voice (DEC-0125), read only: "when did I last back up?" says how long since the last backup in the backups folder and where they go (core/web_backups.py). Making one is on Settings (a passphrase is typed, never said aloud); restoring is on the PC.
 - `core/assistant_browser_actions.py`: MIA's browser by voice and chat (DEC-0117): open a page or search, read it, click, type, go back, close; learn a task the person shows her, do it again, list what she's learned. Every step goes through core/browser.py, which sorts it with core/browser_safety.py: a step that commits is held as the ac
 - `core/assistant_business_view_actions.py`: The Businesses subdashboard by voice (DEC-0153, 2026-11-11): "how are my businesses doing?" (each business's month and year, from core/web_businesses.businesses_page) and "how is the rental business doing?" (one business's dashboard: its money, open orders and quotes, properties and what it owes). F
+- `core/assistant_business_voice_actions.py`: His business by voice (DEC-0125: every feature by voice and on screen), the Business page's quotes, orders and customers: what quotes are still out, what orders are open, a customer's details, adding a customer, making a quote, a quote accepted (it becomes an order), and an order marked ready, deliv
 - `core/assistant_camera_actions.py`: The cameras by voice (DEC-0125, 2026-11-07): the Security screen (core/security_cams.py, DEC-0033) had no tool, so "are the cameras working?" reached the network utilities that share its area. Two tools, in their own area `cameras`:
 - `core/assistant_chat.py`: The pure, non-Qt logic for one Assistant chat turn — moved here from `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4, docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py` needed the exact same request-building and tool-call-safety logic as the full-screen Assistant modu
 - `core/assistant_closet_actions.py`: Smart Closet by voice (DEC-0162): "What should I wear today?" "Add my navy hoodie to the closet" "Save the hoodie and jeans as an outfit" "I wore the hoodie and jeans" "Rate that outfit 4 stars" "Laundry's done" "What haven't I worn in ages?"
@@ -946,7 +947,7 @@
 
 ## tests/: the test suite: what each part must do
 
-596 files, 95,945 lines; 8,054 of 8,098 classes and functions documented
+597 files, 95,994 lines; 8,058 of 8,102 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1009,6 +1010,7 @@
 - `tests/test_business_tagging.py`: Sorting bank charges to businesses (core/business_tagging.py): learning from the owner's choices, auto-tagging after a sync, the review list, the voice tools and the review dialog.
 - `tests/test_business_use.py`: Finance #3, business use of personal equipment (core/business_use.py): the meter math, the worksheet's numbers and notes, persistence, the HTML worksheet, and the Assistant tools. Numbers are checked exactly; it's arithmetic on the owner's own records.
 - `tests/test_business_use_actions.py`: Business use of a tool on its asset page (core/business_use_actions.py, 2026-11-09): Log Use and Remove go through the action contract (refused without an amount, a real tool or a real day), the page shows this year's figures and jobs once something is logged and only the form before, and the life s
+- `tests/test_business_voice.py`: His business by voice (core/assistant_business_voice_actions.py, DEC-0125): the quotes still out, the open orders, a customer's details, adding a customer, making a quote for a customer he has, a quote accepted (it becomes an order, due when he says), an order marked delivered; each change through t
 - `tests/test_calculator_engine.py`: Unit tests for core.calculator_engine.CalculatorEngine.
 - `tests/test_calendar_manager.py`: Unit tests for core.calendar_manager. Isolates _DATA_DIR/_EVENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/calendar_events.json.
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions.

@@ -30,7 +30,7 @@ CUSTOMER = Record("customer", "customer", "customer_id", "get_customer", "add_cu
                       Field("name", "Name", "text", True), Field("phone", "Phone", "text"),
                       Field("email", "Email", "text"), Field("notes", "Notes (what they like, how they found you)", "textarea")))
 QUOTE = Record("quote", "quote", "quote_id", "get_quote", "add_quote", "update_quote", "delete_quote",
-               store="business", fields=(
+               store="business", title_attrs=("title",), fields=(  # "Added the quote Cedar chest", never "quote quote"
                    Field("title", "What it's for", "text", True),
                    Field("entity_id", "Business", "pick", options=("businesses",), say="business"),
                    Field("customer_id", "Customer", "pick", options=("customers",), say="customer"),
@@ -43,7 +43,7 @@ QUOTE = Record("quote", "quote", "quote_id", "get_quote", "add_quote", "update_q
                    Field("valid_until", "Good until", "date"),
                    Field("notes", "Notes", "textarea")))
 ORDER = Record("order", "order", "order_id", "get_order", "add_order", "update_order", "delete_order",
-               store="business", fields=(
+               store="business", title_attrs=("title",), fields=(
                    Field("title", "What it is", "text", True),
                    Field("entity_id", "Business", "pick", options=("businesses",), say="business"),
                    Field("customer_id", "Customer", "pick", options=("customers",), say="customer"),

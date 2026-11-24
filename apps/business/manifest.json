@@ -44,7 +44,14 @@
       "get_businesses",
       "get_ledger_summary",
       "order_paid",
-      "record_sale"
+      "record_sale",
+      "list_quotes",
+      "list_orders",
+      "customer_details",
+      "add_customer",
+      "make_quote",
+      "accept_quote",
+      "order_status"
     ],
     "actions": [
       "customer.add",
@@ -91,7 +98,14 @@
       "quote.send": "act_with_approval",
       "order.invoice": "act_with_approval",
       "draft_invoice": "act_with_approval",
-      "who_owes_me": "observe"
+      "who_owes_me": "observe",
+      "list_quotes": "observe",
+      "list_orders": "observe",
+      "customer_details": "observe",
+      "add_customer": "act_within_grant",
+      "make_quote": "act_within_grant",
+      "accept_quote": "act_within_grant",
+      "order_status": "act_within_grant"
     },
     "outside": []
   },

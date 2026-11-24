@@ -81,7 +81,12 @@ def _action_get_business(context, arguments: dict) -> str:
 
 
 def register_business_view_actions(registry: AssistantActionRegistry) -> None:
-    """Registers get_businesses and get_business (domain ledger: Orders & Quotes' and the businesses')."""
+    """Registers get_businesses and get_business (domain ledger: Orders & Quotes' and the businesses'), and the
+    quotes, orders and customers by voice (core/assistant_business_voice_actions.py), so the PC and the phone both
+    have them."""
+    from core.assistant_business_voice_actions import register_business_voice_actions
+
+    register_business_voice_actions(registry)
     registry.register(AssistantAction(
         name="get_businesses", domain="ledger",
         description="How each of the user's businesses is doing: this month's and this year's income, expenses and net, "

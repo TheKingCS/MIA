@@ -56,6 +56,10 @@ SAID = [
     ("log_maintenance_reading", "the mower has 212 hours on it"), ("add_alarm", "remind me to fix the fence saturday"),
     ("get_project_missions", "how's the shed build coming along?"),
     ("get_project_missions", "how far along is the chicken coop project"),
+    ("make_quote", "make a quote for a cedar chest for Dana"), ("accept_quote", "Dana accepted the quote"),
+    ("list_quotes", "what quotes are still out?"), ("order_paid", "Lee paid the deposit on the bench"),
+    ("add_customer", "add a new customer named Sam Ortiz"), ("customer_details", "what's Sam's phone number"),
+    ("list_orders", "what orders are due this week?"),
 ]
 
 

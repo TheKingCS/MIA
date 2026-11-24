@@ -101,8 +101,9 @@ def _action_remove_operating_line(context, arguments: dict) -> str:
 
 
 def register_more_twins_actions(registry: AssistantActionRegistry) -> None:
-    """Registers remember_this (memory), order_paid (ledger), delete_last_weigh_in (workout), rename_mission
-    (missions) and remove_operating_line (operating_journal), and the word "mission" for Missions."""
+    """Registers remember_this (memory), order_paid (ledger; it also hears "Lee paid the deposit on the bench"),
+    delete_last_weigh_in (workout), rename_mission (missions) and remove_operating_line (operating_journal), and the
+    word "mission" for Missions."""
     registry.register_domain_keywords("missions", ("mission", "missions"))
 
     def tool(name, domain, description, properties, required, handler, phrases):
@@ -118,7 +119,8 @@ def register_more_twins_actions(registry: AssistantActionRegistry) -> None:
          ("remember that", "remember this", "please remember", "don't forget that", "keep in mind that"))
     tool("order_paid", "ledger", "Record that a customer paid for an order (all of it, or the amount said).",
          {"order": "The order's title or the customer's name.", "amount": "What they paid, if said."}, ["order"],
-         _action_order_paid, ("paid for the", "paid for their", "paid the rest", "paid in full", "payment for the"))
+         _action_order_paid, ("paid for the", "paid for their", "paid the rest", "paid in full", "payment for the",
+                              "paid the deposit", "deposit on the", "put down a deposit"))
     tool("delete_last_weigh_in", "workout", "Delete the most recent weigh-in, when it was wrong.", {}, [],
          _action_delete_last_weigh_in, ("delete my last weigh-in", "delete the last weigh-in", "remove my last weigh-in",
                                         "that weigh-in was wrong", "delete that weigh-in"))
