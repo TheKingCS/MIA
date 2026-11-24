@@ -15,7 +15,10 @@ homestead grows, plus the homestead **builds** still to pay for (the
 greenhouse, the coop, solar, the root cellar: Projects with a budget,
 core/homestead_costs.py). Saved so far, at the pace of the last three
 months, reaches it on an **estimated date**. The day the homestead earns
-the whole month, the gap is gone.
+the whole month, the gap is gone. **Quitting by a day he names**
+(`quit_date`, `quit_by`): the same figures run to that day, what's saved by
+then against the goal, the shortfall and what more a month closes it, and
+how long the savings carry the gap after.
 
 **Every number says where it came from** (`source`):
 - a month of living: the person's own number, else the average of the
@@ -49,6 +52,7 @@ from core.data_root import DATA_DIR
 
 import json
 import math
+import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
@@ -160,6 +164,50 @@ def plan(i: Inputs, today: date) -> dict:
         {"what": "homestead profit a month", "amount": step,
          "days_sooner": sooner(i.pace + step, i.homestead + step)},  # it's saved too, and it shrinks the gap
     ]
+    return out
+
+
+_MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+           "november", "december")
+
+
+def quit_date(said: str, today: date) -> Optional[date]:
+    """Pure logic. The day a "what if I quit..." question names: the end of this or next year, "in N months" or "in
+    N years", "by June" or "next June" (its next one), "by June 2027"; None when it names none."""
+    text = (said or "").lower()
+    m = re.search(r"\bend of (this|next) year\b", text)
+    if m:
+        return date(today.year + (m.group(1) == "next"), 12, 31)
+    m = re.search(r"\bin (\d+|a|an|one|two|three|six) (months?|years?)\b", text)
+    if m:
+        n = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "six": 6}.get(m.group(1)) or int(m.group(1))
+        months = n * (12 if m.group(2).startswith("year") else 1)
+        y, mo = divmod(today.month - 1 + months, 12)
+        return date(today.year + y, mo + 1, min(today.day, 28))
+    m = re.search(r"\b(?:by|in|next|before|at the end of|end of)\s+(" + "|".join(_MONTHS) + r")(?:\s+(\d{4}))?\b", text)
+    if m:
+        month = _MONTHS.index(m.group(1)) + 1
+        year = int(m.group(2)) if m.group(2) else today.year + (month <= today.month)
+        return date(year, month, 28 if month == 2 else 30 if month in (4, 6, 9, 11) else 31)
+    if re.search(r"\bnext year\b", text):
+        return date(today.year + 1, 12, 31)
+    return None
+
+
+def quit_by(i: Inputs, when: date, today: date) -> dict:
+    """Pure logic. Quitting on `when`, at the pace of the last three months: the months till then, what's saved by
+    then, the fund's goal (the gap a month times the cushion, plus the builds left), the shortfall (or what's over),
+    what more a month it takes to make it, and after quitting how many months the savings cover the gap."""
+    months = max(0.0, (when - today).days / DAYS_A_MONTH)
+    gap = max(0.0, i.needs - i.homestead)
+    goal = gap * max(0, int(i.cushion_months)) + max(0.0, i.builds_left)
+    by_then = i.saved + max(0.0, i.pace) * months
+    short = goal - by_then
+    out = {"months": round(months, 1), "by_then": _r(by_then), "goal": _r(goal), "gap": _r(gap),
+           "short": _r(max(0.0, short)), "over": _r(max(0.0, -short)), "more_a_month": None,
+           "lasts_months": round(by_then / gap, 1) if gap > 0 else None}
+    if short > 0 and months > 0:
+        out["more_a_month"] = _r(short / months)
     return out
 
 

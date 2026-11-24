@@ -356,7 +356,8 @@ Checked against the code first; each says whether it needs Zac's say.
 - **Which products should I raise prices on?** (no decision): *built 2026-11-24 (`core/product_pricing.py`).* each product's price against its materials and the
   hours its builds took (core/hourly_earnings.py), the ones selling below his quoting rate named, with what the
   price would be at it. His businesses, from his own records.
-- **What if I quit at the end of next year?** (no decision, a read): the freedom plan run with a date he names
+- **What if I quit at the end of next year?** (no decision, a read): *built 2026-11-24 (the question plan "quit
+  by", `core/freedom.quit_by`).* the freedom plan run with a date he names
   against his debts, the homestead's goods, the business's real hourly and who owes him: what's covered, what
   isn't, and the gap a month. Read-only; the biggest "one intelligence" question there is.
 - **Rain catchment** (no decision): *built 2026-11-24 (`core/rain_catchment.py`, "how much rain could I catch off a

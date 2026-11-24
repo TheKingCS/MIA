@@ -97,11 +97,15 @@ class Sheet:
 
     def plain(self) -> str:
         """The sheet in plain words, for when there's no model (or its
-        answer failed the number check)."""
+        answer failed the number check, or the sheet holds only what's
+        missing: then the missing lines, so they know what to add)."""
         found = [f.text for f in self.facts if f.kind != MISSING]
         missing = [f.text for f in self.facts if f.kind == MISSING]
-        out = " ".join(found) if found else "I don't have anything recorded for that yet."
-        if missing and found:
+        if not found:  # only what's missing: say it, so they know what to add
+            return ("I don't have what that needs recorded yet. " + " ".join(missing)) if missing else \
+                "I don't have anything recorded for that yet."
+        out = " ".join(found)
+        if missing:
             out += " Not recorded yet: " + " ".join(missing)
         return out
 
@@ -794,6 +798,55 @@ def _winter(context, sheet, prompt, today):
                         "the heat source and fuel checked.", "general guidance")
 
 
+def _quit_by(context, sheet, prompt, today):
+    """Cross-domain (Jarvis brainstorm round 8): "what if I quit at the end of next year?": the freedom plan run to
+    the day he names (core/freedom.quit_by): saved by then at his pace, the goal, the shortfall and what more a month
+    makes it, how long the savings carry the gap after; beside it the business's real hourly, who owes him and his
+    debts. Read-only; the date he named is said back."""
+    from core import freedom
+
+    when = freedom.quit_date(prompt, today)
+    if when is None:
+        sheet.add(MISSING, "The question doesn't say when (\"by the end of next year\", \"in 18 months\").",
+                  "your question")
+        _look(context, sheet, "get_freedom_progress", "Freedom")
+        return
+    try:
+        inputs, _history = freedom.gather(context, today)
+    except Exception:  # noqa: BLE001 - the fund is the heart of it: said as missing if it can't be read
+        log.exception("The quit-by plan couldn't read the freedom fund")
+        sheet.add(MISSING, "The freedom fund couldn't be read.", "Freedom")
+        return
+    if inputs.needs <= 0:
+        sheet.add(MISSING, "What a month of living takes isn't known (set it on Freedom, or let the bank sync show "
+                           "it).", "Freedom")
+        return
+    r = freedom.quit_by(inputs, when, today)
+    sheet.add(FACT, f"The day asked about: {when:%B} {when.day}, {when.year}, about {r['months']:g} months away.",
+              "your question")
+    sheet.add(CALCULATION, f"A month of living takes {_money(context, inputs.needs)}; the homestead covers "
+                           f"{_money(context, inputs.homestead)} of it, leaving a gap of {_money(context, r['gap'])} "
+                           "a month.", "Freedom")
+    sheet.add(CALCULATION, f"Saved by then at the last three months' pace ({_money(context, inputs.pace)} a month): "
+                           f"about {_money(context, r['by_then'])}, against a goal of {_money(context, r['goal'])} "
+                           f"({inputs.cushion_months} months of the gap, plus builds still to pay for).", "Freedom")
+    if r["short"]:
+        sheet.add(CALCULATION, f"Short by about {_money(context, r['short'])}: saving about "
+                               f"{_money(context, r['more_a_month'] or 0)} more a month from now would close it.",
+                  "a freedom calculation")
+    else:
+        sheet.add(CALCULATION, f"On track: about {_money(context, r['over'])} over the goal by then.",
+                  "a freedom calculation")
+    if r["lasts_months"] is not None:
+        sheet.add(CALCULATION, f"After quitting, what's saved by then covers the gap for about {r['lasts_months']:g} "
+                               "months, while the homestead grows.", "a freedom calculation")
+    _look(context, sheet, "earnings_per_hour", "the business (its real hourly)")
+    _look(context, sheet, "who_owes_me", "the business (owed to him)")
+    _look(context, sheet, "list_debts", "Money (debts)")
+    sheet.add(ESTIMATE, "Every figure assumes the last three months' pace holds; health insurance and taxes after "
+                        "leaving a job aren't in it.", "how this was worked out")
+
+
 def _owned(context, tool: str) -> bool:
     """Whether the household inventory holds a tool by its name (the part before any "and" or parenthesis)."""
     inventory = getattr(context, "inventory", None)
@@ -1215,6 +1268,11 @@ PLANS: tuple[Plan, ...] = (
           "What should I get done on Saturday?", "How should I spend Sunday?", "Is the weekend good for building?"),
          r"\b(this weekend|the weekend|my weekend|next weekend|weekend plans?)\b"
          r"|\b(do|spend|get done|plans?|build|work on|going on)\b[^?]{0,20}\b(saturday|sunday)\b", _weekend),
+    Plan("quit by", "Quitting by a date",
+         ("What if I quit at the end of next year?", "Could I leave my job in 18 months?",
+          "What would it take to quit by next June?", "Can I afford to quit at the end of this year?"),
+         r"\b(quit|leave (my|the) job|leaving (my|the) job|go full[- ]time)\b[^?]{0,40}\b(end of (this|next) year|"
+         r"next year|in \d+ (months?|years?)|by|next|before)\b", _quit_by),
     Plan("winter", "Ready for winter",
          ("Am I ready for winter?", "What do I need to do before winter?", "Are we set for the cold?",
           "Will I get through the winter?", "What's left to winterize?", "Is the homestead ready for winter?"),
@@ -1289,7 +1347,7 @@ CHANGE_VERBS = frozenset((
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
 CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time", "weekend",
-                "winter")  # build plan step 8: plans over several apps
+                "winter", "quit by")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -1358,6 +1416,8 @@ NOT_FOR = {
     # what she did on her own today is "catch me up"'s (her own changes), not today's list
     "today": re.compile(r"\b(on your own|you been up to|while i was (out|gone|away))\b"
                         r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
+    # quitting by a date is its own plan's ("what if I quit at the end of next year?"), not the year's priorities
+    "priorities": re.compile(r"\b(quit|quitting|leave (my|the) job|leaving (my|the) job)\b", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
     # a weekend gone is a conversation or recall; a shop's hours, a meal or a meeting on a weekend day isn't the plan
     "weekend": re.compile(r"\b(was|were|did|went|go|last|spent|happened|open|close[sd]?|hours|dinner|lunch|breakfast|"
@@ -1450,6 +1510,10 @@ HOW = {
         "water, power, time, goals and research as the sheet has them, saying what their records show for each or "
         "that it isn't recorded. Where one area leans on another, say so (water and power for a greenhouse, the "
         "garden's year for its starts). End with the offer to draft the plan."),
+    "quit by": (
+        "For this answer: start with whether the date works at their pace, then in four to six short sentences: the "
+        "gap a month, what's saved by then against the goal, what more a month closes any shortfall, how long the "
+        "savings carry them after, and what the business and money owed add. Say it rests on the pace holding."),
     "winter": (
         "For this answer, instead of picking one thing: start straight with the answer, no heading, then write five "
         "to eight short sentences going through what winter asks, one each from the sheet: how long until the frost, "
@@ -1616,13 +1680,20 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
 def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     """The model's answer when it keeps to the sheet's numbers; else the
     sheet in plain words (never a number MIA didn't look up), noted for the
-    answers.numbers loop. Either way without a stock opener or closer
-    (core.response_composer.polish)."""
+    answers.numbers loop; and the sheet in plain words when it holds no fact
+    or calculation at all (only what's missing: nothing to word). Either way
+    without a stock opener or closer (core.response_composer.polish)."""
     from core.plain_words import strip_markdown
 
     said = strip_markdown(content or "")
     if not said:
         return sheet.plain()
+    if not any(f.kind in (FACT, CALCULATION) for f in sheet.facts):
+        # nothing known, only what's missing: the model had nothing to word and filled it in (heard 2026-11-24:
+        # "about 2 months' worth" from a fund that couldn't be read), so the missing lines are the answer
+        from core.response_composer import polish
+
+        return polish(sheet.plain())
     wrong = invented_numbers(said, sheet.as_text(), prompt)
     if wrong:
         log.warning("Question plan %s: the answer had numbers not on the sheet (%s); using the sheet.",
