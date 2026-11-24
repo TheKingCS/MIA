@@ -20,8 +20,11 @@ A server-level test found every real online lookup failing (core/online_lookup.a
 Then the smart-ag plan's phase B, steps 1-2 (DEC-0185, homestead/docs/MIA_COMMAND_INTERFACE.md): the greenhouse node
 checks MIA's directions itself (homestead/core/mia_commands.py against homestead/config/command_limits.yaml: only the
 pH/EC target bands, hard limits, stale and too-soon refused, staged for his press until 0zu), reached only by
-POST /mia/command signed with a key MIA sends at provisioning (homestead/core/command_auth.py). Steps 3-4 (the
-command's state in the exports, and MIA's side: greenhouse.adjust) are next; a security review of steps 1-2 is running.
+POST /mia/command signed with a key MIA sends at provisioning (homestead/core/command_auth.py), hardened after a
+security review (one at a time, re-checked at approval, replay-safe, the node's own limits never pushed over); the
+node reports each direction's outcome in its export (step 3); and MIA's side (core/greenhouse_adjust.py): "set the
+greenhouse pH minimum to 6.4" then "yes, set it", or Set Target on the Greenhouse page, signed, read back. Live run
+against the real export server passed; still to run with main.py cycling (approve on the node, read back applied).
 
 **Later 2026-11-24: the homestead's brain, the hub and the engineer.** Zac widened the vision: MIA as the brain of
 the aquaponics greenhouse, orchard, garden, water and power (`docs/future/SMART_AG_PLAN.md`), and as the hub of his
