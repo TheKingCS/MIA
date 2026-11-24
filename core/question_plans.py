@@ -1096,7 +1096,8 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
     meaning anything that isn't a change can match (small talk's nearest
     example is in NOT_A_PLAN); by words only (no embedding model) it must
     look like a question. Either way, a plan never takes a question its `NOT_FOR` words give to a tool (the
-    evening's plan never answers "will it frost tonight?")."""
+    evening's plan never answers "will it frost tonight?"). A how-to counts as one about using MIA only when her tool
+    registry says so (`assistant_chat.about_mia`): "how should I pay off my debts?" can reach the debts plan."""
     from core.assistant_actions import looks_like_question
     from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
 
@@ -1104,7 +1105,7 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
     first = re.sub(r"^(please|hey mia|mia|ok|okay)[, ]+", "", said.lower()).split(" ", 1)[0].strip(",.!?")
     if not said or first in CHANGE_VERBS:
         return None
-    how_to = looks_like_how_to_question(said) or looks_like_teaching_request(said)
+    how_to = looks_like_how_to_question(said, context) or looks_like_teaching_request(said, context)
     from core.meaning import nearest
 
     found = nearest(context, said, [(p.name, e) for p in PLANS for e in p.examples] + [("-", e) for e in NOT_A_PLAN])

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1647 files, 359,940 lines; 1647 files describe themselves; 19,790 of 19,920 classes and functions are documented.
+1647 files, 360,011 lines; 1647 files describe themselves; 19,793 of 19,923 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-648 files, 183,542 lines; 9,381 of 9,467 classes and functions documented
+648 files, 183,566 lines; 9,381 of 9,467 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -946,7 +946,7 @@
 
 ## tests/: the test suite: what each part must do
 
-595 files, 95,846 lines; 8,046 of 8,090 classes and functions documented
+595 files, 95,893 lines; 8,049 of 8,093 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -986,7 +986,7 @@
 - `tests/test_assistant_domain_actions.py`: Runs the Assistant's conversational actions (core/assistant_domain_actions.py plus the reworked Maintenance handlers in core/application.py) through the real registry against real managers on temp data — i.e. "the user said X, the model called tool Y with their words; did the right record change?"
 - `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.
 - `tests/test_assistant_life_actions.py`: Workout, people & pets, household routine, and Classroom Assistant tools (core/assistant_life_actions.py) run through the real registry against real managers on temp data, plus their pure parsers.
-- `tests/test_assistant_routing.py`: Enforces tests/assistant_routing_corpus.py against the real desktop action registry: every realistic request reaches its tool, how-to questions about using MIA reach the help docs (and how-to questions about the world, "how do I tie a bowline?", don't), and small talk stays tool-free. Plus unit test
+- `tests/test_assistant_routing.py`: Enforces tests/assistant_routing_corpus.py against the real desktop action registry: every realistic request reaches its tool, how-to questions about using MIA reach the help docs (and how-to questions about the world, "how do I tie a bowline?", don't: they get her library, told to explain, not act)
 - `tests/test_assistant_screen_tools.py`: tests/test_assistant_screen_tools.py — voice for screens that had none (core/assistant_screen_tools.py, DEC-0125): looking something up online through the person's own engine (and saying why not when it can't), what isn't working, past conversations listed and searched, and the sensors listed with t
 - `tests/test_at_rest.py`: MIA's most private files sealed at rest (DEC-0126, core/at_rest.py): a sealed name is written as an AES-256-GCM envelope and read back, any other file stays plain; a plain file still reads (each store moves at its next save); a file that won't open is copied aside before the error, so a store starti
 - `tests/test_atomic_write.py`: Unit tests for core.atomic_write.atomic_write_text — the crash-safety guarantee is the whole point of this module, so these tests exercise the failure path directly (a real exception mid-write), not just the happy path.

@@ -69,11 +69,11 @@ def _direct_lookup(context, prompt: str) -> Optional[str]:
     """A question that clearly asks for one lookup ("When is my next
     alarm?") is answered by running it, no model (2026-10-13,
     core/assistant_actions.direct_lookup). How-to and teach-me questions
-    still go to the help docs."""
+    about using MIA (asked of her tool registry, `about_mia`) still go to the help docs."""
     from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
 
     registry = getattr(context, "assistant_actions", None)
-    if (registry is None or looks_like_how_to_question(prompt) or looks_like_teaching_request(prompt)
+    if (registry is None or looks_like_how_to_question(prompt, context) or looks_like_teaching_request(prompt, context)
             or _about_her(prompt)):
         return None
     action = registry.direct_lookup(prompt, context)

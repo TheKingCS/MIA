@@ -5,7 +5,8 @@ tests.test_assistant_routing
 Enforces tests/assistant_routing_corpus.py against the real desktop
 action registry: every realistic request reaches its tool, how-to
 questions about using MIA reach the help docs (and how-to questions about
-the world, "how do I tie a bowline?", don't), and small talk stays tool-free. Plus unit
+the world, "how do I tie a bowline?", don't: they get her library, told to
+explain, not act), and small talk stays tool-free. Plus unit
 tests for the pieces that make that work (record-name lookup, quantity
 parsing, keyword/record-name matching).
 """
@@ -71,16 +72,45 @@ def test_data_questions_are_not_how_to(prompt):
     "How do I purify creek water?", "How do I start a fire without matches", "How do I tie a bowline",
     "How do I butcher a chicken", "How can I build a lean-to shelter?", "How should I store potatoes for winter?",
 ])
-def test_how_to_questions_about_the_world_are_not_about_mia(prompt):
-    assert not looks_like_how_to_question(prompt)
+def test_how_to_questions_about_the_world_are_not_about_mia(registry, prompt):
+    """Asked of the desktop registry, only her library, learning or plans tools match: about the world."""
+    from types import SimpleNamespace
+
+    asking = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    assert not looks_like_how_to_question(prompt, asking)
+    assert looks_like_how_to_question(prompt)  # with no registry to ask, it stays hers (the safe side)
 
 
 @pytest.mark.parametrize("prompt", [
     "How do I log a workout?", "How do I make MIA read my email?", "How do I change the theme?",
-    "How do I turn on the microphone?", "How do I export my budget?",
+    "How do I turn on the microphone?", "How do I export my budget?", "how do I set an alarm",
+    "how do I put eggs on the grocery list", "how do I make a note", "how do I start a workout", "how do I save a recipe",
+    "how do I send an email", "how do I make a mission", "how do I see my debts", "how do I pay a bill",
+    "how can I get you to remind me",
 ])
-def test_how_to_questions_about_using_her_still_are(prompt):
-    assert looks_like_how_to_question(prompt)
+def test_how_to_questions_about_using_her_still_are(registry, prompt):
+    """An alarm, a note, a workout, an email, a mission, debts, a bill: something she keeps, so hers."""
+    from types import SimpleNamespace
+
+    asking = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    assert looks_like_how_to_question(prompt, asking), prompt
+
+
+def test_you_in_a_world_question_doesnt_make_it_hers(registry):
+    from types import SimpleNamespace
+
+    asking = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    assert not looks_like_how_to_question("how do I purify water if you don't have a filter", asking)
+
+
+def test_teach_me_about_the_world_isnt_held_to_her_pages(registry):
+    from types import SimpleNamespace
+
+    from core.assistant_chat import looks_like_teaching_request
+
+    asking = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
+    assert not looks_like_teaching_request("teach me how to butcher a chicken", asking)
+    assert looks_like_teaching_request("walk me through the budget", asking)
 
 
 # ------------------------------------------------------------------ record lookup
@@ -182,3 +212,16 @@ def test_failing_entity_provider_is_skipped():
 
     registry.register_entity_names("garage", broken)
     assert registry.matching_actions("anything", context=object()) == []
+
+
+def test_a_world_how_to_on_the_tools_path_is_told_to_explain_not_act(registry):
+    from types import SimpleNamespace
+
+    from core.assistant_chat import build_chat_request
+
+    context = SimpleNamespace(**vars(demo_context()), assistant_actions=registry, device_help=None, config=None)
+    talk = SimpleNamespace(conversation_id="t", messages=[], mode=None, journal=False)
+    messages, tools = build_chat_request(context, talk, "how do I practice knots for bushcraft")
+    assert tools and "Don't add, log or change anything" in messages[0]["content"]
+    messages, tools = build_chat_request(context, talk, "log 20 minutes of knot practice")
+    assert "Don't add, log or change anything" not in messages[0]["content"]  # a request to do it is done

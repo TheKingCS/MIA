@@ -69,7 +69,11 @@ def demo_context() -> SimpleNamespace:
 
 
 def offered_tools(registry: AssistantActionRegistry, prompt: str, context=None) -> list[str]:
-    """The tool names build_chat_request() would attach for `prompt`."""
-    if looks_like_teaching_request(prompt) or looks_like_how_to_question(prompt):
+    """The tool names build_chat_request() would attach for `prompt` (the how-to and teach-me checks asking this
+    registry, as they ask the real one)."""
+    from types import SimpleNamespace
+
+    asking = SimpleNamespace(**{**vars(context or SimpleNamespace()), "assistant_actions": registry})
+    if looks_like_teaching_request(prompt, asking) or looks_like_how_to_question(prompt, asking):
         return []
     return [a.name for a in registry.matching_actions(prompt, context)]

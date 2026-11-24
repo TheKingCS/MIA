@@ -336,10 +336,14 @@ _TEACHING_TRIGGER_PHRASES = (
 )
 
 
-def looks_like_teaching_request(prompt: str) -> bool:
-    """Pure logic — testable without an LLM (see tests/test_assistant_chat.py)."""
+def looks_like_teaching_request(prompt: str, context=None) -> bool:
+    """A teach-me request about MIA ("walk me through the budget"): one of `_TEACHING_TRIGGER_PHRASES`, and, when
+    `context` has a tool registry to ask, about her (`about_mia`): "teach me how to butcher a chicken" is about the
+    world, so it isn't held to her own pages."""
     prompt_lower = prompt.lower()
-    return any(phrase in prompt_lower for phrase in _TEACHING_TRIGGER_PHRASES)
+    if not any(phrase in prompt_lower for phrase in _TEACHING_TRIGGER_PHRASES):
+        return False
+    return context is None or about_mia(prompt_lower, context)
 
 
 # 2026-09-27: "how do I add a bill?" contains the add_bill trigger
@@ -362,40 +366,50 @@ _HOW_TO_PATTERNS = (
 )
 
 
-# "How do I ...?" is about MIA when it names her or a part of her, or starts with something done in an app (add,
-# log, export...); "how do I purify creek water?", "how do I tie a bowline?" are about the world, answered from her
-# knowledge and her offline library, never held to her own help pages.
+# "How do I ...?" is about MIA when it names her or a part of her, or when something she keeps answers it (her tool
+# registry: a bill, an alarm, a workout, a mission...); "how do I purify creek water?", "how do I tie a bowline?" match
+# only her library, learning and plans tools, so they're about the world: answered from her knowledge and her
+# offline library, never held to her own help pages. Without a registry to ask, every how-to stays hers (the safe
+# side: a usage question answered as a command could change a record instead of explaining).
 _ABOUT_MIA = re.compile(
-    r"\b(mia|you|your|app|apps|screen|screens|page|tab|tabs|button|buttons|setting|settings|module|modules|feature|"
-    r"features|menu|sidebar|widget|dashboard|notifications?|backups?|profile|account|theme|voice|microphone|mic|"
-    r"glasses|phone app|sync|export|import|undo|sign in|log in|password|vault|desktop|web page)\b")
-_APP_VERB = re.compile(
-    r"(add|log|record|enter|delete|remove|edit|rename|undo|turn (on|off)|enable|disable|connect|pair|link|set up|"
-    r"change my|reset|restore|share|export|import|sync|mark|schedule|cancel|archive|pin|mute|unmute|install|update|"
-    r"back up|sign|switch|track my|keep track)\b")
+    r"\b(mia|you to|can you|get you|app|apps|screen|screens|page|tab|tabs|button|buttons|setting|settings|module|"
+    r"modules|feature|features|menu|sidebar|widget|dashboard|notifications?|backups?|profile|theme|voice|microphone|"
+    r"mic|glasses|phone app|sync|export|import|undo|sign in|log in|password|vault|desktop|web page)\b")
 _WORLD_PREFIXES = ("how do i", "how do you", "how can i", "how would i", "how should i")
+WORLD_DOMAINS = ("library", "knowledge", "learning", "plans")  # tools for the world, not for something she keeps
 
 
-def about_mia(prompt: str) -> bool:
-    """Pure logic. Whether a "how do I ...?" question is about using MIA: it names her or a part of her
-    (`_ABOUT_MIA`), or what follows "how do I" is something done in an app (`_APP_VERB`)."""
+def about_mia(prompt: str, context=None) -> bool:
+    """Whether a how-to question is about using MIA: it names her or a part of her (`_ABOUT_MIA`, after the "how do
+    I" so "how do you purify water?" isn't), or a tool for something she keeps matches it (any tool outside
+    `WORLD_DOMAINS` in `context.assistant_actions`). It's about the world only when tools matched and every one is
+    for the world (her library, learning, plans); with nothing matched, or no registry to ask, it's hers."""
     lowered = prompt.lower().strip()
     rest = next((lowered[len(p):] for p in _WORLD_PREFIXES if lowered.startswith(p)), lowered)
-    if _ABOUT_MIA.search(rest):  # after the prefix: "how do you purify water?" isn't about her
+    if _ABOUT_MIA.search(rest):
         return True
-    return bool(_APP_VERB.match(rest.strip(" ,")))
+    registry = getattr(context, "assistant_actions", None) if context is not None else None
+    if registry is None:
+        return True
+    try:
+        matched = registry.matching_actions(prompt, context)
+    except Exception:  # noqa: BLE001 - when in doubt it's hers, as before
+        return True
+    domains = [a.get("domain") if isinstance(a, dict) else getattr(a, "domain", None) for a in matched]
+    return not domains or any(d not in WORLD_DOMAINS for d in domains)  # nothing matched: hers, as before
 
 
-def looks_like_how_to_question(prompt: str) -> bool:
-    """Pure logic. True for questions about how to use MIA itself: a how-to shape ("how do I", "where do I", "is
-    there a way to", "how does the X work") that's about her (`about_mia`); "where" and "is there a way" are always
-    hers. "How do I purify creek water?" is a question about the world, so False."""
+def looks_like_how_to_question(prompt: str, context=None) -> bool:
+    """True for questions about how to use MIA itself: a how-to shape ("how do I", "where do I", "is there a way
+    to", "how does the X work") that's about her (`about_mia`, asking `context`'s tool registry); "where" and "is
+    there a way" are always hers. "How do I purify creek water?" is about the world, so False when there's a
+    registry to tell."""
     lowered = prompt.lower().strip()
     if any(p.search(lowered) for p in _HOW_TO_PATTERNS):
         return True
     if not lowered.startswith(_HOW_TO_PREFIXES):
         return False
-    return not lowered.startswith(_WORLD_PREFIXES) or about_mia(lowered)
+    return not lowered.startswith(_WORLD_PREFIXES) or about_mia(lowered, context)
 
 
 # Swapped in for GROUNDING_INSTRUCTION (never both at once — one
@@ -741,12 +755,15 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     (reusing self-knowledge's existing retrieval), just with
     `_TEACHING_INSTRUCTION` framing instead of `GROUNDING_INSTRUCTION`,
     and — like any other info question — never get tools attached.
+    Both checks ask her tool registry whether the question is about her
+    (`about_mia`): "how do I tie a bowline?" is about the world, so it gets
+    her library's tools, with a line telling her to explain, not act.
     """
     mode = getattr(conversation, "mode", COMPANION) if conversation is not None else COMPANION
     if mode in PERSONAL_MODES or getattr(conversation, "journal", False):
         return _build_personal_request(context, conversation, prompt, mode)
 
-    is_teaching_request = looks_like_teaching_request(prompt)
+    is_teaching_request = looks_like_teaching_request(prompt, context)
     # "When did I last change it?": what "it" means, from the conversation (DEC-0052 step 4), so the
     # right tools come along and the model is told.
     from core.conversation_state import agreed_to, what_it_means
@@ -758,13 +775,14 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         routed = agreed if not meant else f"{agreed} ({meant})"
     matched_actions = (
         context.assistant_actions.matching_actions(routed, context)
-        if context.assistant_actions is not None and not is_teaching_request and not looks_like_how_to_question(prompt)
+        if context.assistant_actions is not None and not is_teaching_request
+        and not looks_like_how_to_question(prompt, context)
         and not _describes_her(context, prompt)
         else []
     )
     is_action_request = bool(matched_actions)
     # Only a question about using MIA (or a teach-me request) gets her reference material.
-    is_help_question = not is_action_request and (is_teaching_request or looks_like_how_to_question(prompt))
+    is_help_question = not is_action_request and (is_teaching_request or looks_like_how_to_question(prompt, context))
 
     llm_prompt = prompt
     if not is_action_request and context.device_help is not None:
@@ -785,6 +803,11 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         earlier = earlier_topics(conversation.messages, len(history))
         if earlier:
             system += "\n\n" + earlier
+    if is_action_request and prompt.lower().strip().startswith(_WORLD_PREFIXES) and not agreed:
+        # "How do I start a fire without matches?" went to her tools as a question about the world: she explains,
+        # and changes nothing unless they ask her to.
+        system += ("\n\nThey asked how to do something: explain how, from what you know and the tools' answers. "
+                   "Don't add, log or change anything for them unless they ask you to.")
     if agreed:
         system += (f"\n\nThey just said yes to your question “{agreed}”. Do exactly that now with the matching "
                    "tool; if it needs a detail you don't have, ask for it.")
