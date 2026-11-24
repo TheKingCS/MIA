@@ -381,33 +381,43 @@ WORLD_DOMAINS = ("library", "knowledge", "learning", "plans")  # tools for the w
 
 
 # Something done in an app, right after "how do I" or "teach me how to": the sign a record's tool is meant
-_APP_VERB = re.compile(r"(?:add|log|record|enter|delete|remove|edit|rename|undo|set up|set an?|track|export|import|"
-                       r"mark|schedule|cancel|archive|pin|make an? (?:note|mission|reminder|alarm|list|budget|quote|"
-                       r"order|project|task)|use the|see (?:my|the)|view|update|get to|look up|find my|change my|"
-                       r"remind (?:me|myself)|(?:get|put) .+ on (?:a |the )?schedule)\b")
+# (each also as "-ing": "walk me through adding a bill")
+_APP_VERB = re.compile(r"(?:add(?:ing)?|log(?:ging)?|record(?:ing)?|enter(?:ing)?|delet(?:e|ing)|remov(?:e|ing)|"
+                       r"edit(?:ing)?|renam(?:e|ing)|undo(?:ing)?|set(?:ting)? up|set(?:ting)? an?|track(?:ing)?|"
+                       r"export(?:ing)?|import(?:ing)?|mark(?:ing)?|schedul(?:e|ing)|cancel(?:l?ing)?|archiv(?:e|ing)|"
+                       r"pin(?:ning)?|mak(?:e|ing) an? (?:note|mission|reminder|alarm|list|budget|quote|order|project|"
+                       r"task)|us(?:e|ing) the|see(?:ing)? (?:my|the)|view(?:ing)?|updat(?:e|ing)|get to|look(?:ing)? up|"
+                       r"find(?:ing)? my|chang(?:e|ing) my|remind(?:ing)? (?:me|myself)|"
+                       r"(?:get|put)(?:ting)? [^,.?]+? on (?:a |the )?schedule)\b")
 _TEACH_LEADS = ("teach me how to", "teach me how", "teach me about", "teach me", "walk me through", "show me how to",
                 "explain how to")
-# Her parts' names that are also everyday words ("solar power", "the world"): naming one isn't asking about her
-_PLAIN_NAMES = {"home", "play", "look", "world", "power", "people", "property", "knowledge", "skills", "kept", "music",
-                "maps", "navigation", "freedom", "character", "chickens", "greenhouse", "kitchen", "garage", "insurance",
-                "real estate", "compliance", "observations", "files", "workout", "workshop", "toolbox", "field kit",
-                "browser", "money", "household", "maintenance", "cameras", "passwords", "memories", "calendar", "mia"}
-# Her features a teach-me names without an app's name ("teach me how quests work")
-_FEATURE_WORDS = ("quest", "quests", "alarm", "alarms", "reminder", "reminders", "budget", "budgets", "streak",
-                  "streaks", "xp", "level", "levels", "reward", "rewards", "mission", "missions", "journal", "inbox")
+# Her features a teach-me names without an app's name ("teach me how quests work", "teach me about the budget")
+_FEATURE_WORDS = ("quest", "alarm", "reminder", "budget", "streak", "xp", "reward", "mission", "journal", "inbox",
+                  "note", "habit", "habit tracker", "workout", "recipe", "bill")
+# A word after a part's name that still means the part ("the kitchen inventory", "the mission board")
+_PART_SUFFIX = re.compile(r"\s+(?:app|page|screen|tab|tracker|inventory|list|board|log|shop|system)$")
 
 
 def _names_her_part(text: str) -> bool:
-    """Whether `text` names one of MIA's parts: an app's name from its manifest ("the reward shop", "the fix-it log"),
-    leaving out names that are everyday words (`_PLAIN_NAMES`), or one of `_FEATURE_WORDS`; whole words only."""
+    """Whether `text` (what follows a teach-me lead) is one of MIA's parts and nothing more: the whole of it, or its
+    "X works" subject ("quests work"), after "the" or "my", is an app's name from its manifest or one of
+    `_FEATURE_WORDS` (a plural or a word like "app", "page" or "inventory" after it allowed). "The budget" and "how
+    the calendar works" are hers; "zero-based budgets", "keep a journal" and "the reward system in dog training" name
+    more than her part, so they're the world's."""
     names = set(_FEATURE_WORDS)
     try:
         from core import app_registry
 
-        names |= {m.get("name", "").lower() for m in app_registry.load().manifests.values()} - _PLAIN_NAMES - {""}
+        names |= {m.get("name", "").lower() for m in app_registry.load().manifests.values()} - {""}
     except Exception:  # noqa: BLE001 - without the manifests, her features alone
         pass
-    return any(re.search(rf"(?<![a-z0-9]){re.escape(n)}(?![a-z0-9])", text) for n in names)
+    said = text.strip(" ?.!,")
+    works = re.match(r"^(.+?)\s+works?$", said)
+    subject = re.sub(r"^(?:the|my|your)\s+", "", (works.group(1) if works else said).strip())
+    for each in {subject, _PART_SUFFIX.sub("", subject)}:
+        if each in names or (each.endswith("s") and each[:-1] in names):
+            return True
+    return False
 
 
 def about_mia(prompt: str, context=None) -> bool:
@@ -416,8 +426,8 @@ def about_mia(prompt: str, context=None) -> bool:
     it by its own phrase or with an app verb ("how do I set an alarm", "teach me how to add a recipe"). A tool brought
     only by one of his records being named ("how do I sharpen a chainsaw": he has a chainsaw) doesn't make it hers.
     Every match a world tool (her library, learning, plans): the world's. A teach-me request is hers only when it
-    names one of her parts (`_names_her_part`: "teach me how quests work") or starts with an app verb, never because
-    a topic's tools matched ("teach me about solar power", "teach me about rotational grazing": the world's). A how-to that matches nothing, or no registry to ask:
+    is one of her parts (`_names_her_part`: "teach me how quests work") or starts with an app verb and an app's own
+    words matched ("walk me through adding a bill"), never because a topic's tools matched ("teach me about solar power", "teach me about rotational grazing": the world's). A how-to that matches nothing, or no registry to ask:
     hers (the safe side)."""
     lowered = prompt.lower().strip()
     lead = next((p for p in (*_WORLD_PREFIXES, *_TEACH_LEADS) if lowered.startswith(p)), "")
@@ -442,12 +452,15 @@ def about_mia(prompt: str, context=None) -> bool:
     kept = [a for a in matched if domain(a) not in WORLD_DOMAINS]
     if not kept:
         return teaching and _names_her_part(rest)  # only her library, learning or plans: the world's
-    if teaching:  # a topic's words ("solar", "the hens") don't make a teach-me hers; naming her part or app use does
-        return _names_her_part(rest) or bool(_APP_VERB.match(rest.strip(" ,")))
+    if teaching and _names_her_part(rest):
+        return True
     try:  # the apps brought only because one of his records was named ("the chainsaw"), not by their own words
         named_only = registry._entity_domains(prompt, context) - registry.matched_domains_by_words(prompt, context)
     except Exception:  # noqa: BLE001 - a registry without the split: as before, hers
         named_only = set()
+    if teaching:  # a topic's words ("solar", "the hens") don't make a teach-me hers; using an app ("adding a bill") does
+        by_words = any(domain(a) not in named_only for a in kept)
+        return by_words and bool(_APP_VERB.match(rest.strip(" ,")))
     if any(domain(a) not in named_only for a in kept):
         return True  # an app's own words ("missions", "a bill", "set an alarm")
     return bool(_APP_VERB.match(rest.strip(" ,")))  # "teach me how to add the chainsaw": hers; "sharpen" it: the world's

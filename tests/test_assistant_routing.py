@@ -230,6 +230,10 @@ def test_a_world_how_to_on_the_tools_path_is_told_to_explain_not_act(registry):
 
 @pytest.mark.parametrize("prompt", ["teach me how to sharpen a chainsaw", "teach me about rotational grazing", "teach me about solar power",
                                     "teach me about raising chickens",
+                                    "teach me about level wiring", "teach me how to keep a journal",
+                                    "teach me how to budget my money", "teach me about zero-based budgets",
+                                    "teach me about bullet journal methods", "teach me how solar panels work",
+                                    "teach me about the reward system in dog training", "teach me about streaks in chess",
                                     "how do I sharpen the chainsaw"])
 def test_teaching_and_how_to_about_the_world_or_his_own_things_are_not_held_to_her_pages(registry, prompt):
     from types import SimpleNamespace
@@ -244,7 +248,11 @@ def test_teaching_and_how_to_about_the_world_or_his_own_things_are_not_held_to_h
                                     "how do I set an alarm", "teach me how to use the mission board",
                                     "teach me how quests work", "teach me about the budget",
                                     "teach me about the journal", "teach me how alarms work",
-                                    "how do I see the chainsaw's hours?", "teach me about the reward shop"])
+                                    "how do I see the chainsaw's hours?", "teach me about the reward shop",
+                                    "walk me through adding a bill", "walk me through adding a recipe",
+                                    "walk me through logging a workout", "teach me how the calendar works",
+                                    "teach me how workouts work", "teach me how notes work",
+                                    "teach me how the habit tracker works", "teach me how the kitchen inventory works"])
 def test_teaching_about_using_her_still_is(registry, prompt):
     from types import SimpleNamespace
 
