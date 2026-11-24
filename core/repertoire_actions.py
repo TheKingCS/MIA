@@ -59,18 +59,22 @@ def _list(context, arguments: dict) -> str:
 
 
 def register_repertoire_actions(registry) -> None:
-    """Registers learned_a_song and songs_i_can_play."""
+    """Registers learned_a_song and songs_i_can_play.
+    "I learned ..." offers learned_a_song beside learning_lesson; its description says past tense is a song learned
+    (the live check, 2026-11-24)."""
     registry.register(AssistantAction(
         name="learned_a_song", domain="music",
-        description="He can now play a song all the way through (on guitar unless he names another instrument): "
-                    "it goes in his songbook, which counts toward his music achievements and missions.",
+        description="He says he learned a song or can now play it all the way through (on guitar unless he names "
+                    "another instrument): it goes in his songbook, which counts toward his music achievements and "
+                    "missions. Past tense, done: a lesson he wants is learning_lesson's.",
         parameters={"type": "object", "properties": {
             "song": {"type": "string", "description": "the song's name"},
             "instrument": {"type": "string", "description": "the instrument, only if he said one"},
             "artist": {"type": "string", "description": "who it's by, only if he said"}},
             "required": ["song"]},
         handler=_learned, trigger_phrases=("i learned to play", "i can play", "learned the song", "to my songbook",
-                                           "learned how to play"),
+                                           "learned how to play", "learned it on", "i just learned",
+                                           "i finally learned", "i learned "),
     ))
     registry.register(AssistantAction(
         name="songs_i_can_play", domain="music",

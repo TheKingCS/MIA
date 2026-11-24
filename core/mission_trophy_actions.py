@@ -11,6 +11,8 @@ is core/mission_trophies.py; the store is core/mission_manager.py.
 
 from __future__ import annotations
 
+import re
+
 from core.actions import ACTION_TYPES, ActionError, ActionType
 from core.assistant_actions import AssistantAction
 
@@ -107,12 +109,18 @@ TROPHY_ACTIONS = {k.kind: k for k in (
 ACTION_TYPES.update(TROPHY_ACTIONS)
 
 
+_FILLER = re.compile(r"^(?:my|the|our|that)\s+|\s+(?:mission|quest)$")
+
+
 def _named(context, name: str):
-    """The person's active mission whose name matches (exactly, else the one containing it), or None."""
+    """The person's active mission whose name matches (exactly, else the one containing it), or None. The model says
+    "my canning mission" for a mission called "Canning": "my"/"the" in front and "mission" after are dropped."""
     from core.mission_actions import is_mine
     from core.person_settings import person_id
 
-    who, name = person_id(context), " ".join(str(name or "").lower().split())
+    name = " ".join(str(name or "").lower().split())
+    name = _FILLER.sub("", _FILLER.sub("", name))
+    who = person_id(context)
     mine = [m for m in context.missions.all_missions() if m.status == "active" and is_mine(m, who)]
     exact = [m for m in mine if m.name.lower() == name]
     near = [m for m in mine if name and name in m.name.lower()]

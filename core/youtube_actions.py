@@ -191,7 +191,9 @@ def _play(context, arguments: dict) -> str:
 
 def register_youtube_actions(registry) -> None:
     """Registers find_on_youtube, save_from_youtube and play_on_youtube (reached by "on YouTube" and "from YouTube",
-    never a bare "play", which is the library's own play_track)."""
+    never a bare "play", which is the library's own play_track), and "youtube" as a music word, so "find Wagon Wheel
+    on YouTube" (words between) still offers them (the live check, 2026-11-24)."""
+    registry.register_domain_keywords("music", ("youtube",))
     query = {"type": "string", "description": "the song or artist to look for, or a YouTube link"}
     registry.register(AssistantAction(
         name="find_on_youtube", domain="music",

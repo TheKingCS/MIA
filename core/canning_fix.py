@@ -102,15 +102,17 @@ def _fix(context, arguments: dict) -> str:
 
 
 def register_canning_fix_actions(registry) -> None:
-    """Registers fix_jar_count."""
+    """Registers fix_jar_count.
+    Reached by a correction's words (", not", "I meant"), so "7 jars of tomatoes, not 70" offers it beside
+    put_up_jars (the live check, 2026-11-24)."""
     registry.register(AssistantAction(
         name="fix_jar_count", domain="kitchen",
         description="Fix how many jars a batch on the canning shelf was put up with, when it was said wrong ('I put "
-                    "up 7 jars of tomatoes, not 70'); his canning count follows.",
+                    "up 7 jars of tomatoes, not 70'); his canning count follows. A new batch is put_up_jars'.",
         parameters={"type": "object", "properties": {
             "food": {"type": "string", "description": "the food, e.g. 'tomatoes'"},
             "jars": {"type": "number", "description": "how many jars it really was"}},
             "required": ["food", "jars"]},
         handler=_fix, trigger_phrases=("jars not", "wrong number of jars", "fix the jar count", "fix my jar count",
-                                       "jars, not"),
+                                       "jars, not", "not 70", ", not ", "i meant"),
     ))

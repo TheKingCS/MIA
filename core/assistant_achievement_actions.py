@@ -21,7 +21,8 @@ def _mine(context, arguments: dict) -> str:
 
 
 def register_achievement_actions(registry) -> None:
-    """Registers my_achievements (reached by "my achievements" and the like; a bare "achievement" isn't enough)."""
+    """Registers my_achievements (reached by "my achievements", "which achievement am I closest to" and the like; a
+    bare "achievement" isn't enough)."""
     registry.register(AssistantAction(
         name="my_achievements", domain="skills",
         description="His achievements log: how many he's unlocked (harvest, eggs, jars, structures built, missions, "
@@ -29,5 +30,6 @@ def register_achievement_actions(registry) -> None:
         parameters={"type": "object", "properties": {}},
         handler=_mine, trigger_phrases=("my achievements", "achievements have i", "achievements log",
                                         "what have i unlocked", "what achievements", "closest achievement",
-                                        "next achievement", "my milestones"),
+                                        "next achievement", "my milestones", "achievement am i", "achievements am i",
+                                        "which achievement", "close to unlocking", "closest to unlocking"),
     ))

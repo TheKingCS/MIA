@@ -5,6 +5,7 @@ tests.test_mission_trophies
 A mission's rewards beyond XP and its objectives counted from records (core/mission_trophies.py, the game layer's
 step 2): a structure, song or skill earned once on completion and kept in the history, a recipe unlocked, and "put
 up 20 jars" counted from the jars logged after it was set, said ready to claim once, never completed for him.
+And a mission found when the model says "my canning mission".
 """
 
 import pytest
@@ -103,6 +104,16 @@ def test_the_actions_add_a_reward_and_a_counted_objective_and_refuse_nonsense(tm
         ACTION_TYPES["objective.count"].describe(world, {**count, "stat": "sunshine"})
     with pytest.raises(ActionError):
         ACTION_TYPES["objective.count"].describe(world, {**count, "target": 0})
+
+
+def test_the_mission_is_found_when_the_model_says_my_canning_mission(tmp_path, monkeypatch):
+    """The live model says "my canning mission" for a mission called "Canning season": it's found."""
+    from core.mission_trophy_actions import _count_toward
+
+    world = _world(tmp_path, monkeypatch)
+    world.missions.add_mission("Canning season", profile_id=world.me.profile_id)
+    said = _count_toward(world, {"mission_name": "my canning mission", "stat": "jars put up", "target": "20"})
+    assert "counts 20 jars put up" in said
 
 
 def test_a_tally_tick_is_refused_on_an_objective_that_counts_from_records(tmp_path, monkeypatch):
