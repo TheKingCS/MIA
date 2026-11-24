@@ -17,6 +17,11 @@ that earned it; structures unlocked on any mention). Then: his songbook (songs h
 core/repertoire.py), YouTube popped out to keep playing across pages, and a wrong jar count fixed without undo
 (core/canning_fix.py), and a song asked for by voice playing in a small YouTube player on the page that's open.
 A server-level test found every real online lookup failing (core/online_lookup.allowed called a property); fixed.
+Then the smart-ag plan's phase B, steps 1-2 (DEC-0185, homestead/docs/MIA_COMMAND_INTERFACE.md): the greenhouse node
+checks MIA's directions itself (homestead/core/mia_commands.py against homestead/config/command_limits.yaml: only the
+pH/EC target bands, hard limits, stale and too-soon refused, staged for his press until 0zu), reached only by
+POST /mia/command signed with a key MIA sends at provisioning (homestead/core/command_auth.py). Steps 3-4 (the
+command's state in the exports, and MIA's side: greenhouse.adjust) are next; a security review of steps 1-2 is running.
 
 **Later 2026-11-24: the homestead's brain, the hub and the engineer.** Zac widened the vision: MIA as the brain of
 the aquaponics greenhouse, orchard, garden, water and power (`docs/future/SMART_AG_PLAN.md`), and as the hub of his
