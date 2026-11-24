@@ -15,7 +15,8 @@ files (`stl`), the format every slicer opens (Bambu Studio is on his PC), from s
 
 Each solid is built from boxes and prisms that touch or overlap, which slicers merge. **What it says**: each file's
 path, its outside size, and its plastic as a solid volume and grams of PLA (1.24 g/cm³), said as the most it can
-take: infill makes it less. Nothing is printed: opening the file in his slicer, and printing, are his.
+take: infill makes it less; then sliced for his printer by Bambu Studio when it's on his PC (core/slicing.py: the
+print time and grams). Nothing is printed: sending it to the printer is his.
 """
 
 from __future__ import annotations
@@ -168,7 +169,9 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
          cable_hole: bool = False) -> str:
     """Makes a part's STL files in his prints folder from the sizes he said (an enclosure with mounting posts at a
     board's hole spacing and a cable hole when asked), and says where they are, their outside size and their most
-    plastic; or what it needs, or a post that wouldn't fit inside."""
+    plastic; or what it needs, or a post that wouldn't fit inside.
+    Then sliced for his printer (core/slicing.slice_files) when Bambu Studio is on his PC, with the print time and
+    grams."""
     kind = (kind or "").lower()
     found = _sizes(sizes)
     if "spacer" in kind or "standoff" in kind:
@@ -177,6 +180,7 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
         part = spacer(found[0], found[1], found[2] if len(found) > 2 else 0.0)
         path = _folder(context) / f"{_slug(name or 'spacer')}.stl"
         path.write_bytes(stl(part["part"], name or "spacer"))
+        made = [path]
         said = (f"Made {path.name}: {part['outside'][0]:g} mm across, {part['outside'][2]:g} mm tall"
                 + (f"; make its {part['bore']:g} mm bore with the slicer's hole tool or a drill" if part["bore"] else ""))
         grams = part["volume_cm3"] * PLA_G_PER_CM3
@@ -190,6 +194,7 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
         folder = _folder(context)
         (folder / f"{slug}-box.stl").write_bytes(stl(part["box"], f"{name or 'enclosure'} box"))
         (folder / f"{slug}-lid.stl").write_bytes(stl(part["lid"], f"{name or 'enclosure'} lid"))
+        made = [folder / f"{slug}-box.stl", folder / f"{slug}-lid.stl"]
         L, W, H = part["outside"]
         said = (f"Made {slug}-box.stl and {slug}-lid.stl: inside {found[0]:g} x {found[1]:g} x {found[2]:g} mm, outside "
                 f"{L:g} x {W:g} x {H:g} mm with the lid on; the lid's lip sits {CLEARANCE:g} mm inside the walls")
@@ -198,8 +203,11 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
                      f"tall with {POST_BORE:g} mm bores for M3 screws" if len(part["posts"]) == 4 else
                      f"; the posts {spacing[0]:g} x {spacing[1]:g} mm apart don't fit inside, so none were made")
         if cable_hole:
-            said += f"; a {CABLE_HOLE[0]:g} x {CABLE_HOLE[1]:g} mm cable hole low in one end"
+            said += f"; a cable hole, {CABLE_HOLE[0]:g} x {CABLE_HOLE[1]:g} mm, low in one end"
         grams = part["volume_cm3"] * PLA_G_PER_CM3
         path = folder / f"{slug}-box.stl"
+    from core.slicing import slice_files
+
+    sliced = slice_files(made, made[0].stem.rsplit("-box", 1)[0])  # Bambu Studio on his PC, when it's there
     return (f"{said}. At most about {part['volume_cm3']:g} cm³ of plastic ({grams:.0f} g of PLA solid; infill makes "
-            f"it less). They're in {path.parent}: open them in Bambu Studio to slice and print.")
+            f"it less). They're in {path.parent}. {sliced}")

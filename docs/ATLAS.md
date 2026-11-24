@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1692 files, 367,286 lines; 1692 files describe themselves; 20,185 of 20,315 classes and functions are documented.
+1694 files, 367,483 lines; 1694 files describe themselves; 20,196 of 20,326 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-667 files, 188,563 lines; 9,571 of 9,657 classes and functions documented
+668 files, 188,698 lines; 9,578 of 9,664 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -524,6 +524,7 @@
 - `core/skill_leveling.py`: Pure XP/Level math for a single Skill in "My Hero's Path" — same "derive it, don't persist a second copy that can drift" philosophy as core/leveling.py's profile-wide Level, but scaled down: a single skill's XP pool fills from a handful of small per-activity grants (core.gamification.grant_xp()'s sk
 - `core/skill_manager.py`: "My Hero's Path" — a skill-tree layer underneath core/gamification.py's existing XP system, added 2026-09-11 at the user's own explicit request to turn real activity across MIA's modules into RPG-style character progression, NOT a replacement for the profile-wide Level/Missions system already built 
 - `core/skill_patterns.py`: Pattern Insight slices 2, 3, and 4 — scoped directly with the user, not assumed (see core/mission_patterns.py's own docstring for slice 1, repeated Mission abandonment, and mia_system_vision's "Phase 6" framing this whole thread continues). Same observe -> insight -> recommend loop; all three slices
+- `core/slicing.py`: Slicing a part for his printer (docs/future/HUB_AND_ENGINEER_PLAN.md part 2, step 2): the STL files MIA makes (core/print_parts.py) sliced by Bambu Studio's own command line, on his PC, offline, for the printer Bambu Studio is set up for (its settings' `machine` preset, a Bambu Lab P1P 0.4 nozzle on
 - `core/smart_closet.py`: Smart Closet (DEC-0162; Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them, maybe let me see what they would look like together"). The design is `docs/specs/SMART_CLOSET.md`.
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/specialist_models.py`: Which local model does each specialist's thinking (T1's second part; the local specialists plan, S3; DEC-0197: "the model per specialist is chosen from this table, not from a guide"). The table is the engineering bench's results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.
@@ -965,7 +966,7 @@
 
 ## tests/: the test suite: what each part must do
 
-621 files, 98,136 lines; 8,251 of 8,295 classes and functions documented
+622 files, 98,198 lines; 8,255 of 8,299 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1444,6 +1445,7 @@
 - `tests/test_skill_manager.py`: Unit tests for core.skill_manager.SkillManager — isolates _DATA_DIR _SKILL_DEFINITIONS_FILE/_SKILL_PROGRESS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. Definitions are written directly to the isolated file per test (not the real seeded data/skill_def
 - `tests/test_skill_patterns.py`: Unit tests for core.skill_patterns — isolates _DATA_DIR for profile/skill/insight files into a tmp_path scratch area, same monkeypatch pattern as test_mission_patterns.py's own isolated_paths.
 - `tests/test_skills_module.py`: Unit tests for modules.skills.module's pure functions, same style as tests/test_missions_module.py (no Qt event loop, no fixtures).
+- `tests/test_slicing.py`: Slicing for his printer (core/slicing.py): the printer read from Bambu Studio's settings, its stock profiles found, the print time and grams read from the G-code's header, a slice run through Bambu's command line (a stand-in here: never the real program in a test), and plain words when Bambu or a pr
 - `tests/test_smart_closet.py`: Smart Closet (DEC-0162): pieces and outfits, ratings, the day's suggestion worked out in code (weather, occasion, rest, colour), insights, the actions with undo, the page and the voice tools.
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py.
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.

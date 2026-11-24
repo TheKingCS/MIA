@@ -54,14 +54,14 @@ def test_asking_for_an_enclosure_reaches_the_tool():
         assert "design_print_part" in [a.name for a in registry.matching_actions(said, context)], said
 
 
-def test_mounting_posts_at_a_boards_spacing_and_a_cable_hole(tmp_path):
+def test_mounting_posts_at_a_boards_spacing_and_a_cable_hole_in_one_end(tmp_path):
     part = pp.enclosure(80, 50, 30, posts=(58, 23), cable_hole=True)
     assert part["posts"] == [(13.0, 15.5), (13.0, 38.5), (71.0, 15.5), (71.0, 38.5)]
     _, x, y, z = _read(pp.stl(part["box"]))
     assert x == (0, 84) and z == (0, 32)
     said = pp.make(SimpleNamespace(home_dir=tmp_path), "enclosure", "80 by 50 by 30", posts="58 by 23",
                    cable_hole=True)
-    assert "4 mounting posts 58 x 23 mm apart" in said and "8 x 6 mm cable hole" in said
+    assert "4 mounting posts 58 x 23 mm apart" in said and "a cable hole, 8 x 6 mm" in said
     assert "don't fit inside" in pp.make(SimpleNamespace(home_dir=tmp_path), "enclosure", "40 by 30 by 20",
                                          posts="60 by 40")
 
