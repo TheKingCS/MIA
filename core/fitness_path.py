@@ -5,8 +5,8 @@ core.fitness_path
 Fitness, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Fitness"): a habit with good form,
 getting stronger, and endurance and mobility. Its checks are mostly read from his own workout log (core/paths.py
 SOURCES: workouts and their minutes, GPS tracks), so passing a stage is shown by what he did, not said. General
-fitness guidance, never medical advice: anyone with a heart, joint or other condition, or new to exercise, checks with
-a doctor first, as the guidelines themselves say.
+fitness guidance, never medical advice: the guidelines advise anyone with a chronic condition or symptoms to talk with
+a doctor first; MIA says it to beginners too, to be safe.
 
 Written from: US Department of Health and Human Services, Physical Activity Guidelines for Americans, 2nd edition
 (150 to 300 minutes of moderate activity a week, muscle-strengthening on 2 or more days); American College of Sports
@@ -27,7 +27,8 @@ STAGES: tuple[Stage, ...] = (
             "Warm up 5 to 10 minutes (easy cardio, then lighter sets of the first exercise).",
             "Judge effort by how hard it feels on a 1 to 10 scale: start around 5 to 6, finishing each set with 2 or "
             "3 good reps left in you.",
-            "Stop for sharp pain, chest pain, dizziness or unusual breathlessness."),
+            "Stop for sharp pain, dizziness or unusual breathlessness; for chest pain or pressure, or fainting, "
+            "stop and call emergency services."),
             "Starting too hard is the commonest reason people get hurt or quit in the first month.",
             ("Training to failure from day one.", "Skipping the warm-up when short on time.")),
         Lesson("patterns", "The basic movements", (

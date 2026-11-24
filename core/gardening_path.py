@@ -89,7 +89,9 @@ STAGES: tuple[Stage, ...] = (
             "Low-acid food canned wrong can carry botulism, which you can't see, smell or taste.",
             ("Water-bathing green beans or other low-acid food.", "Skipping the altitude adjustment.")),
         Lesson("dry_store", "Drying and storing", (
-            "Dry herbs, fruit and jerky in a dehydrator; store dried food airtight, cool and dark.",
+            "Dry herbs and fruit in a dehydrator. Jerky: heat the meat to 160°F (poultry 165°F) before or after "
+            "drying, as the USDA says: a dehydrator alone may not kill what's in it. Store dried food airtight, cool "
+            "and dark.",
             "Potatoes, onions, squash and roots keep for months in a cool, dark, airy place, each at its own "
             "temperature and humidity.",
             "Label everything with what and when; eat the oldest first."),

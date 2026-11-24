@@ -3,7 +3,8 @@ tests.test_evening_wrap
 =========================
 
 The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two
-sentences, from his hour on, once a day through the gate; nothing when there's nothing to say.
+sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never
+tomorrow's first thing, and one of a thing is said singular.
 """
 
 from datetime import datetime
@@ -50,3 +51,17 @@ def test_tomorrows_weather_comes_from_the_kept_forecast(monkeypatch):
     assert ew.weather_tomorrow(SimpleNamespace()) == "rain, 48°F and 35"
     monkeypatch.setattr(weather, "card", lambda context, fetch=None: {"status": "PLANNED", "set": True, "text": None})
     assert ew.weather_tomorrow(SimpleNamespace()) == ""
+
+
+def test_an_alarm_is_never_tomorrows_first_thing(monkeypatch):
+    import core.today as today
+
+    alarm = SimpleNamespace(when="today", title="Alarm", time="06:30", module_id="toolbox")
+    meeting = SimpleNamespace(when="today", title="Meet the roofer", time="09:00", module_id="calendar")
+    monkeypatch.setattr(today, "today_items", lambda context, day: [alarm, meeting])
+    assert ew.first_tomorrow(None, NOW.date()) == "Meet the roofer at 09:00"
+
+
+def test_one_of_a_thing_is_said_singular():
+    assert ew._count(1, "bills paid") == "1 bill paid" and ew._count(2, "bills paid") == "2 bills paid"
+    assert ew._count(1, "workouts") == "1 workout"

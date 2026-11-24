@@ -3,7 +3,7 @@ tests.test_hobby_programs
 ===========================
 
 His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft,
-on core/paths.py's method like guitar and carpentry. Each one's skill is a real skill, every recorded check reads a
+on core/paths.py's method like guitar and carpentry; a recorded check counts from the day its stage opened. Each one's skill is a real skill, every recorded check reads a
 record MIA keeps, every id is unique, every lesson has steps, a why and things to watch for, and the words that start
 one don't start another.
 """
@@ -63,3 +63,20 @@ def test_the_safety_lines_are_there():
     assert "pressure canner" in text("gardening") and "tested recipes" in text("gardening")
     assert "check with a doctor" in text("fitness")
     assert "1 minute" in text("bushcraft") and "burn bans" in text("bushcraft")
+
+
+def test_a_recorded_check_counts_from_the_day_its_stage_opened(tmp_path, monkeypatch):
+    """Stage 2's workouts never pass stage 3's minutes: each stage reads its records from the day it opened."""
+    from types import SimpleNamespace
+
+    paths._builtins()
+    book = paths.PathBook(None, data_dir=tmp_path)
+    book.start(paths.PROGRAMS["fitness"])
+    record = book.path("fitness")
+    record["stage"], record["stage_since"] = 3, {"3": "2026-11-20"}
+    asked = []
+    monkeypatch.setitem(paths.SOURCES, "workout_minutes",
+                        paths.Source("minutes", "minutes", lambda c, since: asked.append(since) or 0.0))
+    check = paths.PROGRAMS["fitness"].check("minutes_600")[1]
+    paths.measure(SimpleNamespace(paths=book), "fitness", check)
+    assert asked == ["2026-11-20"]

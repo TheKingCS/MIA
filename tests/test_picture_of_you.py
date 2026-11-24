@@ -4,7 +4,7 @@ tests.test_picture_of_you
 
 The picture of him (core/picture_of_you.py, DEC-0290): his memories grouped with how each is known and where from,
 his skills by level, what he's learning, how he likes answers; said in a few sentences for "what do you know about
-me?", and the page wired in.
+me?", and the page wired in; his learning read from his own path book, never the device's.
 """
 
 from pathlib import Path
@@ -57,3 +57,14 @@ def test_the_page_is_wired_in():
     page = (ROOT / "web" / "you.js").read_text(encoding="utf-8")
     assert '"memory.fix"' in page and '"memory.forget"' in page
     assert 'href: "you.html"' in (ROOT / "web" / "about.js").read_text(encoding="utf-8")
+
+
+def test_learning_comes_from_the_persons_own_path_book(tmp_path):
+    from core import paths
+
+    book = paths.PathBook(None, data_dir=tmp_path)
+    paths._builtins()
+    book.start(paths.PROGRAMS["woodworking"])
+    got = py._learning(SimpleNamespace(paths=book))
+    assert got == [{"id": "woodworking", "name": "Woodworking at the bench", "stage": 1, "of": 3}]
+    assert py._learning(SimpleNamespace(paths=None)) == []  # no book of his: nothing, never the device's

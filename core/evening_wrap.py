@@ -27,7 +27,8 @@ DEFAULT_HOUR = 20
 
 
 def done_today(context, today: date) -> str:
-    """Today's wins in a few words ("2 workouts, 1 bill paid"), "" for none."""
+    """Today's wins in a few words ("2 workouts, 1 bill paid": one of a thing said singular, `_count`), "" for
+    none."""
     from core import life_events
 
     events = [e for e in life_events.events_for(context, since=today.isoformat(), until=today.isoformat())
@@ -35,14 +36,26 @@ def done_today(context, today: date) -> str:
     taken_back = life_events.reversed_ids(events)
     wins = [e for e in events if e.type in life_events.WINS and e.event_id not in taken_back]
     totals = life_events.counts(wins)
-    return ", ".join(f"{n} {life_events.TYPES.get(t, t)}" for t, n in sorted(totals.items(), key=lambda kv: -kv[1]))
+    return ", ".join(_count(n, life_events.TYPES.get(t, t)) for t, n in sorted(totals.items(), key=lambda kv: -kv[1]))
+
+
+def _count(n: int, label: str) -> str:
+    """Pure logic. "1 bill paid", "2 bills paid": a label's first word made singular for one."""
+    if n != 1:
+        return f"{n} {label}"
+    first, _, rest = label.partition(" ")
+    one = first[:-3] + "y" if first.endswith("ies") else first[:-1] if first.endswith("s") else first
+    return f"1 {one}" + (f" {rest}" if rest else "")
 
 
 def first_tomorrow(context, tomorrow: date) -> str:
-    """Tomorrow's first thing from its list: overdue, then today's (a timed one with its time), "" for nothing."""
+    """Tomorrow's first thing from its own list (a timed one with its time), else what's still open; never an alarm;
+    "" for nothing."""
     from core.today import today_items
 
-    items = [i for i in today_items(context, tomorrow) if i.when in ("overdue", "today")]
+    items = [i for i in today_items(context, tomorrow) if i.when == "today" and i.module_id != "toolbox"]
+    if not items:  # nothing of tomorrow's own: what's still open (an alarm is never the day's first thing)
+        items = [i for i in today_items(context, tomorrow) if i.when == "overdue" and i.module_id != "toolbox"]
     if not items:
         return ""
     first = items[0]
@@ -86,12 +99,12 @@ def wrap(context, now: datetime) -> str:
 
 
 def _hour(context) -> int:
-    """The hour the wrap may come from (his setting, else DEFAULT_HOUR)."""
+    """The hour the wrap may come from: his setting from noon to 11 pm, else DEFAULT_HOUR."""
     try:
         from core import person_settings
 
         hour = int(person_settings.get(context, HOUR_KEY, DEFAULT_HOUR))
-        return hour if 0 <= hour <= 23 else DEFAULT_HOUR
+        return hour if 12 <= hour <= 23 else DEFAULT_HOUR  # an evening wrap: never about a day barely begun
     except (TypeError, ValueError, AttributeError):
         return DEFAULT_HOUR
 

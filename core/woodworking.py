@@ -26,8 +26,8 @@ STAGES: tuple[Stage, ...] = (
             "Table saw: the blade guard, riving knife or splitter on; a push stick for anything narrower than 6 in; "
             "stand to the side of the blade's line, never behind it; never cut freehand: always the fence or the "
             "miter gauge, never both at once for a crosscut.",
-            "Router: feed against the bit's rotation (left to right along an edge you face, from outside the piece); "
-            "take shallow passes.",
+            "Router: feed against the bit's rotation: handheld, that's left to right along an edge you face; on a "
+            "router table it's right to left. Take shallow passes.",
             "Unplug a tool before changing a blade or bit, and wait for anything spinning to stop before reaching in."),
             "Most shop injuries come from kickback and from reaching near a moving blade; these habits are what "
             "prevent them.",
@@ -38,7 +38,7 @@ STAGES: tuple[Stage, ...] = (
             "Wood moves across the grain as its moisture changes, very little along it: leave room for a panel to "
             "move in its frame, and never glue a wide board across another's grain.",
             "Let lumber sit in the shop a week or two before you work it, so it settles to the room's moisture "
-            "(about 6 to 9% indoors).",
+            "(about 6 to 8% indoors in most homes).",
             "Mark a face side and a face edge on every part, and measure everything from them."),
             "A joint that fits today can crack or gap next season if the wood's movement was ignored.",
             ("Cutting the moment boards come home from a damp store.",

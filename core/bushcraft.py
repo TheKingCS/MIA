@@ -35,7 +35,7 @@ STAGES: tuple[Stage, ...] = (
             "A headlamp; sun protection; first aid; a knife; fire (matches, a lighter and a ferro rod).",
             "Shelter (an emergency bivy or tarp); extra food; extra water and a way to treat it; extra clothes.",
             "Pack them for every trip, and know how to use each one."),
-            "Most rescues involve someone missing one of these, usually the extra layer, the light or the map.",
+            "Search and rescue reports often name one of these as missing: the extra layer, the light or the map.",
             ("Relying on a phone for navigation, light and help all at once.",)),
     ), (
         Check("kit_built", "Put together your Ten Essentials and go through them with MIA", "said"),
@@ -55,7 +55,8 @@ STAGES: tuple[Stage, ...] = (
         Lesson("water", "Making water safe", (
             "Bring it to a rolling boil for 1 minute (3 minutes above 6,500 ft), then let it cool.",
             "Or a filter rated for the water you're drinking, or household bleach by the EPA's dose (MIA's water and "
-            "bleach calculator), 30 minutes' contact.",
+            "bleach calculator), 30 minutes' contact. Most hiking filters don't stop viruses, and boiling doesn't "
+            "remove chemicals: water near farms, mines or roads needs a different source.",
             "Cloudy water: let it settle and strain it through cloth first.",
             "Collect from moving water upstream of trails and camps; never from below a farm's runoff."),
             "Bad water can disable you in a day; treating it is simple when you have a way.",
@@ -67,8 +68,8 @@ STAGES: tuple[Stage, ...] = (
     )),
     Stage(3, "Shelter and navigation", "staying warm and dry, and finding your way with a map and compass", (
         Lesson("shelter", "Shelter", (
-            "Get off the ground first: most body heat lost overnight goes into the ground. A thick bed of dry leaves "
-            "or boughs, or a pad.",
+            "Get off the ground first: cold ground pulls heat from you all night. A thick bed of dry leaves or "
+            "boughs, or a pad.",
             "A tarp as a lean-to or A-frame, its back to the wind, tight and sloped to shed rain.",
             "Without a tarp, a debris hut: a ridgepole, ribs, and dry leaves piled an arm's length thick.",
             "Small is warmer: a shelter only big enough to lie in."),
@@ -78,8 +79,9 @@ STAGES: tuple[Stage, ...] = (
         Lesson("navigation", "Map and compass", (
             "Orient the map: turn it until its north matches the compass's north, allowing for the declination the "
             "map shows.",
-            "Take a bearing: point the compass's travel arrow at the target, turn the dial until the needle sits in "
-            "the orienting arrow, read the bearing.",
+            "Take a bearing: point the compass's travel arrow at the target, turn the dial until the needle's red "
+            "(north) end sits inside the orienting arrow (\"red in the shed\"), read the bearing. The white end "
+            "there puts you 180 degrees off.",
             "Walk the bearing from landmark to landmark along it; count paces to know the distance (count your own "
             "paces per 100 m first).",
             "Always know where you are on the map; the GPS is the backup, not the plan."),
@@ -88,8 +90,8 @@ STAGES: tuple[Stage, ...] = (
     ), (
         Check("night_out", "Spend a night in a shelter you built, close to home and with someone told, and tell MIA",
               "said"),
-        Check("bearing_walk", "Walk a course of at least 5 km by map and compass, with a GPS track to check it",
-              "recorded", passes_at=5, unit="km", source="longest_track_km"),
+        Check("bearing_walk", "Walk a course of at least 5 km by map and compass alone (the GPS only recording), and "
+              "tell MIA how close you came to each point", "said"),
     )),
 )
 

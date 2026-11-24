@@ -63,12 +63,11 @@ def _skills(context) -> list[dict]:
 
 
 def _learning(context) -> list[dict]:
-    """The learning paths he started: {name, stage, of}."""
+    """The learning paths he started, from his own path book (`context.paths`): {name, stage, of}."""
     from core import paths
 
-    try:
-        book = paths.PathBook(context=context)
-    except Exception:  # noqa: BLE001
+    book = getattr(context, "paths", None)  # the person's own book (view_for), never the device's file
+    if book is None:
         return []
     out = []
     for pid in book.started():

@@ -71,12 +71,11 @@ def _action_weather_for_my_plans(context, arguments: dict) -> str:
 
 
 def _action_evening_wrap(context, arguments: dict) -> str:
-    """The evening wrap, now (core/evening_wrap.wrap)."""
-    from datetime import datetime
+    """The evening wrap, now, on his own clock (core/evening_wrap.wrap, core/clock.now)."""
+    from core import clock, evening_wrap
 
-    from core import evening_wrap
-
-    return evening_wrap.wrap(context, datetime.now()) or "A quiet day, and nothing on tomorrow's list yet."
+    return evening_wrap.wrap(context, clock.now(context).replace(tzinfo=None)) or \
+        "A quiet day, and nothing on tomorrow's list yet."
 
 
 def _action_how_prepared(context, arguments: dict) -> str:

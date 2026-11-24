@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1635 files, 358,086 lines; 1635 files describe themselves; 19,688 of 19,813 classes and functions are documented.
+1635 files, 358,153 lines; 1635 files describe themselves; 19,693 of 19,818 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-643 files, 182,383 lines; 9,339 of 9,425 classes and functions documented
+643 files, 182,407 lines; 9,340 of 9,426 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -941,7 +941,7 @@
 
 ## tests/: the test suite: what each part must do
 
-588 files, 95,151 lines; 7,986 of 8,025 classes and functions documented
+588 files, 95,194 lines; 7,990 of 8,029 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1094,7 +1094,7 @@
 - `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators; a thinking model's working is left out, and only a readable value for a missi
 - `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing input named, never guessed, and no input's description offering a value a model co
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
-- `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say. *(1 undocumented)*
+- `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
 - `tests/test_expedition_manager.py`: Unit tests for core.expedition_manager. Isolates _DATA_DIR _EXPEDITIONS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths).
@@ -1141,7 +1141,7 @@
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
-- `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry. Each one's skill is a real skill, every recorded check reads a record MIA keeps, every id is unique, every lesson has steps, a why *(1 undocumented)*
+- `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry; a recorded check counts from the day its stage opened. Each one's skill is a real skill, every recorded check reads a record MIA k *(1 undocumented)*
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did).
 - `tests/test_homeostasis.py`: MIA easing off her own work (the Living System doctrine's homeostasis, DEC-0173; core/homeostasis.py, core/scheduler.py): deferrable jobs wait while the computer is busy, on a low battery, offline (the online ones) or nearly out of disk (the heavy ones), essential jobs never do; a waiting job is tri
@@ -1295,7 +1295,7 @@
 - `tests/test_phone_ready.py`: DEC-0019 (2026-10-07): MIA's engine runs on the phone. The phone has no Qt, no desktop voice, no Plaid, no psutil, no offline library and no Web Push sender, so the engine and server must start, serve every screen and take an action without any of them. This builds both in a fresh process with those
 - `tests/test_phone_server.py`: Phone access from Settings (core/phone_server.py): starting and stopping the real server live, the Tailscale checks, and the status checklist.
 - `tests/test_phone_voice_js.py`: Runs server/static/voice.js (the phone's microphone/end-of-speech/WAV code) under Node via tests/js/voice_harness.js, and checks the WAV it produces against the server's own validator — so the phone and the computer at home are proven to agree on the audio format. Skipped when Node isn't installed.
-- `tests/test_picture_of_you.py`: The picture of him (core/picture_of_you.py, DEC-0290): his memories grouped with how each is known and where from, his skills by level, what he's learning, how he likes answers; said in a few sentences for "what do you know about me?", and the page wired in. *(1 undocumented)*
+- `tests/test_picture_of_you.py`: The picture of him (core/picture_of_you.py, DEC-0290): his memories grouped with how each is known and where from, his skills by level, what he's learning, how he likes answers; said in a few sentences for "what do you know about me?", and the page wired in; his learning read from his own path book, *(1 undocumented)*
 - `tests/test_places.py`: Location quests (DEC-0028 #13): places with what arriving does; the phone only gets them when the person switched noticing on; arriving records it and clears the map's fog there; and the same by voice (core/assistant_game_actions.py).
 - `tests/test_plaid_manager.py`: Unit tests for core.plaid_manager — the vault encrypt/decrypt round trip (real core.secrets_manager calls, no network) and poll_for_public_token()'s/extract_completed_public_token()'s stopping logic against fake, duck-typed response objects (SimpleNamespace, not real plaid.model classes — those requ
 - `tests/test_plain_words.py`: Markdown out of what MIA says (core/plain_words.py).

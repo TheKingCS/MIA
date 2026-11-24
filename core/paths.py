@@ -325,7 +325,8 @@ class PathBook:
                 how: str = "said", detail: str = "", day: Optional[str] = None) -> dict:
         """Keeps one attempt at a check: passed or not, its value, how it was verified, what was found. A first pass
         is a life event and earns XP; when every check of the current stage is passed the next opens (another life
-        event, more XP). ValueError for a check the program hasn't or a path not started."""
+        event, more XP), and the day it opened is kept (`stage_since`: its recorded checks count from then). ValueError
+        for a check the program hasn't or a path not started."""
         record = self.paths.get(program.id)
         if record is None:
             raise ValueError(f"Start {program.name} first.")
@@ -341,6 +342,8 @@ class PathBook:
         if first_pass and stage.number == record["stage"] and record["stage"] < len(program.stages) \
                 and all(self.passed(program.id, c.id) for c in stage.checks):
             record["stage"] += 1
+            # the day the new stage opened: its recorded checks count from here, not from the path's start
+            record.setdefault("stage_since", {})[str(record["stage"])] = entry["date"]
             moved = True
         self._save()
         if first_pass:
@@ -649,13 +652,15 @@ SOURCES: dict[str, Source] = {
 
 
 def measure(context, path_id: str, check: Check) -> Optional[float]:
-    """What a recorded check's record says now, counting only since the path started (what came before isn't this
-    path's work), or None when MIA doesn't keep that record here."""
+    """What a recorded check's record says now, counting only since the current stage opened (or the path started,
+    for the first stage: what came before isn't this stage's work, so one stage's workouts never pass the next
+    stage's checks), or None when MIA doesn't keep that record here."""
     source = SOURCES.get(check.source)
     record = context.paths.path(path_id) if getattr(context, "paths", None) is not None else None
     if source is None or record is None:
         return None
-    return source.read(context, record["started"])
+    since = (record.get("stage_since") or {}).get(str(record.get("stage", 1))) or record["started"]
+    return source.read(context, since)
 
 
 def check_records(context, program: Program, check: Check, quiet: bool = False) -> dict:

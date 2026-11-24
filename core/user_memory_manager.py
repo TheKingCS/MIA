@@ -448,7 +448,8 @@ class UserMemoryManager:
 
     @life_events.on_change("memory_updated", "a memory", "memory", named=False)
     def update_memory(self, memory_id: str, text: str) -> UserMemory:
-        """Corrects a memory's text (noted as a correction when it changes); ValueError when it's gone or empty."""
+        """Corrects a memory's text (noted as a correction when it changes), now his own words and confirmed;
+        ValueError when it's gone or empty."""
         memory = self.get_memory(memory_id)
         if memory is None:
             raise ValueError(f"No memory with id '{memory_id}'.")
@@ -457,6 +458,8 @@ class UserMemoryManager:
         if memory.text != text.strip():
             self._note_correction(memory, "edited")
         memory.text = text.strip()
+        memory.how = "said"  # his own words now, and confirmed by fixing it (DEC-0290's page shows both)
+        memory.confirmed_at = datetime.now().isoformat(timespec="seconds")
         self._save()
         return memory
 
