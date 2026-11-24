@@ -13,8 +13,9 @@ Complete; core/life_milestones.py), the Achievements log page and a congratulati
 and objectives that count themselves from his records ("put up 20 jars"; core/mission_trophies.py); and YouTube in
 Music (search with his own key, 0zv; YouTube's embedded player; songs saved as links on any playlist; by voice;
 nothing downloaded; core/youtube_music.py). A review fixed eight problems (a card's close blocked undoing the harvest
-that earned it; structures unlocked on any mention). Next on it: a YouTube song that keeps playing across pages,
-guitar songs as achievements, jar counts corrected without undo.
+that earned it; structures unlocked on any mention). Then: his songbook (songs he can play, Songbook achievements,
+core/repertoire.py), YouTube popped out to keep playing across pages, and a wrong jar count fixed without undo
+(core/canning_fix.py). Next on it: a song played by voice still waits for one press on the Music page.
 
 **Later 2026-11-24: the homestead's brain, the hub and the engineer.** Zac widened the vision: MIA as the brain of
 the aquaponics greenhouse, orchard, garden, water and power (`docs/future/SMART_AG_PLAN.md`), and as the hub of his
