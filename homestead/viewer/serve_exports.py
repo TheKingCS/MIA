@@ -11,10 +11,13 @@ minutes, for when main.py isn't running (never both at once: they'd write the sa
 
 The one write (v0.3, 2026-11-24, DEC-0185, docs/MIA_COMMAND_INTERFACE.md step 2): `POST /mia/command`, one
 direction from MIA (a target change), signed with the key provisioned for this node (core/command_auth.py: a fresh
-timestamp, a one-time nonce, HMAC-SHA256). An unsigned, wrongly signed, stale or replayed request is refused (401)
-before anything reads it; one that passes goes to core/mia_commands.py, which checks it against
-config/command_limits.yaml and stages or applies it. Only with `--db` (the node's database); no key file means every
-direction is refused. Every other method and path is still refused.
+timestamp, a one-time nonce, HMAC-SHA256). An unsigned, wrongly signed, stale or replayed request is refused (401,
+just "refused": why is for the node's log) before anything reads it; one that passes goes to core/mia_commands.py,
+which checks it against the node's command limits and stages or applies it, one direction at a time (`_ONE_AT_A_TIME`).
+It's always on while this server runs, gated by the key: no key file means every direction is refused. Every other
+method and path is still refused. Each connection has `TIMEOUT` seconds to say what it wants, and at most
+`MAX_CONNECTIONS` are served at once, so a slow or silent client can't tie the node up. Its database is resolved
+against the node's folder, whatever folder the server was started from.
 
 Zac chose the transport (2026-11-08, DEC-0150 answer 3): the snapshot by hand still works (drop the file in MIA's
 homestead_snapshots/ folder), MIA fetching it over the network, and (v0.2, 2026-11-09) the live link: the node's own
@@ -37,6 +40,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+TIMEOUT = 10  # seconds a connection has to send its request
+MAX_CONNECTIONS = 16
+_ONE_AT_A_TIME = threading.Lock()  # MIA's directions, decided one after the other
 SERVED = ("home_snapshot.json", "dashboard_state.json")
 # The live link's read-only pages: request path -> (the file, under this node, and its type). Exact files only.
 PAGES = {
@@ -71,27 +77,66 @@ def refresh(db_path: str, out_dir: Path) -> None:
 COMMAND_PATH = "/mia/command"
 
 
+def _no_constants(name):
+    """JSON's NaN and Infinity aren't numbers a direction may carry."""
+    raise ValueError(f"{name} isn't allowed")
+
+
 def take_command(db_path: str, key_path: Path, headers, body: bytes) -> tuple[int, dict]:
     """One signed direction from MIA: (HTTP status, what to answer). Checked for its signature first
-    (core/command_auth.verify), then by the node's own check (core/mia_commands.MiaCommands.submit)."""
+    (core/command_auth.verify), then by the node's own check (core/mia_commands.MiaCommands.submit), one at a time.
+    A refused signature is answered only "refused" (why goes to the node's log); anything unexpected is a 500
+    "refused", logged here, never a dropped connection."""
     from core import command_auth
     from core.experiment_manager import ExperimentManager
     from core.mia_commands import MiaCommands
 
-    db = sqlite3.connect(db_path)
-    try:
-        ok, why = command_auth.verify(db, command_auth.load_key(key_path), headers, body)
-        if not ok:
-            return 401, {"state": "refused", "reason": why}
+    with _ONE_AT_A_TIME:
+        db = sqlite3.connect(db_path, timeout=10)
         try:
-            command = json.loads(body.decode("utf-8"))
-        except (UnicodeDecodeError, ValueError):
-            return 400, {"state": "refused", "reason": "not JSON"}
-        if not isinstance(command, dict):
-            return 400, {"state": "refused", "reason": "not one direction"}
-        return 200, MiaCommands(db, ExperimentManager(db)).submit(command)
-    finally:
-        db.close()
+            ok, why = command_auth.verify(db, command_auth.load_key(key_path), headers, body)
+            if not ok:
+                print(f"MIA direction refused at the door: {why}")
+                return 401, {"state": "refused"}
+            try:
+                command = json.loads(body.decode("utf-8"), parse_constant=_no_constants)
+            except (UnicodeDecodeError, ValueError):
+                return 400, {"state": "refused", "reason": "not JSON"}
+            if not isinstance(command, dict):
+                return 400, {"state": "refused", "reason": "not one direction"}
+            return 200, MiaCommands(db, ExperimentManager(db)).submit(command)
+        except Exception as problem:  # noqa: BLE001 - fail closed, with an answer
+            print(f"MIA direction failed inside the node: {type(problem).__name__}: {problem}")
+            return 500, {"state": "refused", "reason": "internal"}
+        finally:
+            db.close()
+
+
+class BoundedServer(ThreadingHTTPServer):
+    """The threaded server, serving at most MAX_CONNECTIONS at once (the rest wait their turn)."""
+
+    daemon_threads = True
+
+    def __init__(self, *args, **kwargs):
+        """Makes the server and its connection limit."""
+        super().__init__(*args, **kwargs)
+        self._slots = threading.BoundedSemaphore(MAX_CONNECTIONS)
+
+    def process_request(self, request, client_address):
+        """Waits for a free slot, then serves the connection on its own thread."""
+        self._slots.acquire()
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        """Serves one connection and frees its slot."""
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
 
 
 def make_handler(out_dir: Path, db_path: str | None = None, key_path: Path | None = None):
@@ -99,6 +144,8 @@ def make_handler(out_dir: Path, db_path: str | None = None, key_path: Path | Non
     directions at COMMAND_PATH when given the node's database, and refuses everything else."""
     class Exports(BaseHTTPRequestHandler):
         """GET the two exports or a live-link page; any other method or path is refused."""
+
+        timeout = TIMEOUT  # a slow or silent client is let go
 
         def do_GET(self):  # noqa: N802 (http.server's name)
             """Serves an export or a live-link page, or 404."""
@@ -154,13 +201,16 @@ def make_handler(out_dir: Path, db_path: str | None = None, key_path: Path | Non
 def main() -> None:
     """Refreshes the exports on a timer and serves them until stopped."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db", default="mia_homestead.db")
+    parser.add_argument("--db", default=str(HERE.parent / "mia_homestead.db"),
+                        help="the node's database (a relative path is from the node's folder)")
     parser.add_argument("--bind", default="127.0.0.1", help="the node's home-network or Tailscale address")
     parser.add_argument("--port", type=int, default=8770)
     parser.add_argument("--every", type=float, default=0.0,
                         help="minutes between refreshes (0: main.py is running and keeps them fresh)")
     args = parser.parse_args()
     out_dir = HERE
+    db_path = Path(args.db)
+    args.db = str(db_path if db_path.is_absolute() else HERE.parent / db_path)
 
     def loop():
         while True:
@@ -172,7 +222,7 @@ def main() -> None:
 
     if args.every > 0:
         threading.Thread(target=loop, daemon=True).start()
-    server = ThreadingHTTPServer((args.bind, args.port), make_handler(out_dir, db_path=args.db))
+    server = BoundedServer((args.bind, args.port), make_handler(out_dir, db_path=args.db))
     print(f"Serving MIA's exports on http://{args.bind}:{args.port}/ (read-only, and MIA's signed directions "
           f"at {COMMAND_PATH})")
     server.serve_forever()

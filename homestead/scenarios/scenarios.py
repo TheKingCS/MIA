@@ -3535,7 +3535,7 @@ def _mia_commands(conn, approval="node", tmp_dir=None):
 
     from core.experiment_manager import ExperimentManager
     from core.mia_commands import MiaCommands
-    real = yaml.safe_load((Path(__file__).parent.parent / "config" / "command_limits.yaml").read_text())
+    real = yaml.safe_load((Path(__file__).parent.parent / "config" / "command_limits.default.yaml").read_text())
     real["approval"] = approval
     folder = Path(tmp_dir or tempfile.mkdtemp())
     (folder / "command_limits.yaml").write_text(yaml.safe_dump(real))
@@ -3594,14 +3594,17 @@ def scenario_mia_command_stale_current_value_is_refused():
 
 
 def scenario_mia_command_second_change_within_the_hour_is_refused():
-    """A second change to the same parameter within the hour is refused; a different parameter isn't held up, and
-    the same one an hour and more later is allowed."""
+    """A second change to the same parameter within the hour is refused even once the first was approved; a
+    different parameter isn't held up, and the same one an hour and more later is allowed."""
     from datetime import datetime, timedelta
+
+    from core.experiment_manager import ExperimentManager
 
     conn, registry, sim, cell_id = fresh_system()
     commands = _mia_commands(conn)
     current = commands._current(cell_id, "ec_target_min")
     first = commands.submit(_direction(commands, cell_id, "ec_target_min", current + 50))
+    ExperimentManager(conn).approve_parameter_change(first["proposal_id"])  # his press on the node
     second = commands.submit(_direction(commands, cell_id, "ec_target_min", current + 60))
     other = commands.submit(_direction(commands, cell_id, "ph_target_max", commands._current(cell_id, "ph_target_max") - 0.1))
     later = commands.submit(_direction(commands, cell_id, "ec_target_min", current + 60),
@@ -3776,11 +3779,11 @@ def scenario_mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed():
         conn.close()
     return [
         ("an unsigned direction is refused", unsigned[0] == 401),
-        ("one signed with another key is refused", wrong[0] == 401 and wrong[1].get("reason") == "bad signature"),
+        ("one signed with another key is refused, and told nothing more", wrong[0] == 401 and wrong[1] == {"state": "refused"}),
         ("one an hour old is refused", old[0] == 401),
         ("a body changed after signing is refused", changed[0] == 401),
         ("the genuine one goes through once", first[0] == 200),
-        ("the same request sent again is refused as a replay", replay[0] == 401 and replay[1].get("reason") == "replayed"),
+        ("the same request sent again is refused as a replay", replay[0] == 401),
         ("a POST anywhere else is still refused", elsewhere[0] == 405),
         ("only the genuine one was proposed", proposals == 1),
     ]
@@ -3798,7 +3801,109 @@ def scenario_mia_command_endpoint_without_a_key_refuses_everything():
         finally:
             server.shutdown()
             server.server_close()
-    return [("with no key file every direction is refused", status == 401 and "no key" in answer.get("reason", ""))]
+    return [("with no key file every direction is refused, without saying why", status == 401 and answer == {"state": "refused"})]
+
+
+
+def scenario_mia_command_staged_changes_never_cross_and_approval_rechecks():
+    """The review's case: a minimum staged near the maximum, then a maximum below it, can't both stand; and a staged
+    change the picture has moved past is denied when someone presses Approve."""
+    from core.experiment_manager import ExperimentManager
+
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn)
+    lo, hi = commands._current(cell_id, "ph_target_min"), commands._current(cell_id, "ph_target_max")
+    first = commands.submit(_direction(commands, cell_id, "ph_target_min", round(hi - 0.2, 2)))
+    second = commands.submit(_direction(commands, cell_id, "ph_target_max", round(lo + 0.2, 2)))
+    # The picture moves (a person sets the minimum by hand) before the staged change is approved.
+    conn.execute("INSERT INTO target_overrides (cell_id, param_name, value, set_by, active) VALUES (?, ?, ?, 'manual', 1)",
+                 (cell_id, "ph_target_min", lo - 0.05))
+    conn.commit()
+    refused = None
+    try:
+        ExperimentManager(conn).approve_parameter_change(first["proposal_id"])
+    except ValueError as problem:
+        refused = str(problem)
+    status = conn.execute("SELECT status FROM parameter_change_proposals WHERE id = ?", (first["proposal_id"],)).fetchone()[0]
+    return [
+        ("the first is staged", first["state"] == "staged"),
+        ("a change to the other end while it waits is refused", second["state"] == "refused" and "waiting" in second["reason"]),
+        ("approving a change the picture has moved past is refused", refused is not None and "stale" in refused),
+        ("and it's marked denied, not applied", status == "denied"),
+    ]
+
+
+def scenario_mia_command_two_at_once_are_decided_one_after_the_other():
+    """Two directions for the same parameter arriving together, each on its own connection: one passes, the other is
+    refused (they're decided one after the other in a write transaction, never both against the same picture)."""
+    import tempfile
+    import threading
+
+    from core.experiment_manager import ExperimentManager
+    from core.mia_commands import MiaCommands
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "node.db"
+        conn = sqlite3.connect(db_path)
+        conn.executescript(SCHEMA_PATH.read_text())
+        cell_id = setup_demo_cell(conn)
+        limits = _mia_commands(conn, "mia", tmp).config_path
+        current = _mia_commands(conn, "mia", tmp)._current(cell_id, "ph_target_min")
+        conn.close()
+        answers, start = [], threading.Barrier(2)
+
+        def send(value):
+            """One direction on its own connection, both released together."""
+            c = sqlite3.connect(db_path, timeout=10)
+            commands = MiaCommands(c, ExperimentManager(c), config_path=limits)
+            start.wait()
+            answers.append(commands.submit({"cell_id": cell_id, "param_name": "ph_target_min", "value": value,
+                                            "believed_current": current, "approved_by": "zac"}))
+            c.close()
+
+        threads = [threading.Thread(target=send, args=(round(current - d, 2),)) for d in (0.1, 0.3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        c = sqlite3.connect(db_path)
+        overrides = c.execute("SELECT COUNT(*) FROM target_overrides WHERE param_name = 'ph_target_min'").fetchone()[0]
+        c.close()
+    states = sorted(a["state"] for a in answers)
+    return [
+        ("one of two simultaneous directions is applied, the other refused", states == ["applied", "refused"]),
+        ("only one change reached the control loop", overrides == 1),
+    ]
+
+
+def scenario_mia_command_nan_huge_and_odd_types_are_refused_not_raised():
+    """NaN as the current value, a cell id of true or 10**30, a value of 10**400, text for a number: each refused
+    and recorded, never an exception; and a malformed limits file refuses everything."""
+    import tempfile
+
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn, "mia")
+    current = commands._current(cell_id, "ph_target_min")
+    base = {"cell_id": cell_id, "param_name": "ph_target_min", "value": current - 0.1, "believed_current": current,
+            "approved_by": "zac"}
+    cases = [{**base, "believed_current": float("nan")}, {**base, "cell_id": True}, {**base, "cell_id": 10 ** 30},
+             {**base, "value": 10 ** 400}, {**base, "value": "6.5"}, {**base, "believed_current": float("inf")}]
+    answers = [commands.submit(c) for c in cases]
+    with tempfile.TemporaryDirectory() as tmp:
+        bad = Path(tmp) / "limits.yaml"
+        bad.write_text("- just\n- a list\n")
+        from core.experiment_manager import ExperimentManager
+        from core.mia_commands import MiaCommands
+        broken = MiaCommands(conn, ExperimentManager(conn), config_path=bad).submit(base)
+        bad.write_text("parameters:\n  ph_target_min: {low: six}\n")
+        shaped = MiaCommands(conn, ExperimentManager(conn), config_path=bad).submit(base)
+    return [
+        ("each odd value is refused, none raised", all(a["state"] == "refused" for a in answers)),
+        ("each refusal is recorded", conn.execute("SELECT COUNT(*) FROM mia_commands WHERE state = 'refused'").fetchone()[0] >= 6),
+        ("a limits file that's a list refuses everything", broken["state"] == "refused"),
+        ("a parameter with unclear limits isn't adjustable", shaped["state"] == "refused"),
+        ("nothing reached the control loop", conn.execute("SELECT COUNT(*) FROM target_overrides WHERE set_by = 'manual'").fetchone()[0] == 0),
+    ]
 
 
 SCENARIOS = {
@@ -3898,6 +4003,9 @@ SCENARIOS = {
     "mia_command_endpoint_takes_a_signed_direction": scenario_mia_command_endpoint_takes_a_signed_direction,
     "mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed": scenario_mia_command_endpoint_refuses_unsigned_wrong_old_and_replayed,
     "mia_command_endpoint_without_a_key_refuses_everything": scenario_mia_command_endpoint_without_a_key_refuses_everything,
+    "mia_command_staged_changes_never_cross_and_approval_rechecks": scenario_mia_command_staged_changes_never_cross_and_approval_rechecks,
+    "mia_command_two_at_once_are_decided_one_after_the_other": scenario_mia_command_two_at_once_are_decided_one_after_the_other,
+    "mia_command_nan_huge_and_odd_types_are_refused_not_raised": scenario_mia_command_nan_huge_and_odd_types_are_refused_not_raised,
 }
 
 

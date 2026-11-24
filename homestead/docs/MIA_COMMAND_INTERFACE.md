@@ -65,5 +65,15 @@ signed approval applies at once or waits for his press on the node differs (one 
    the end of "push the greenhouse to ..." over SSH on standard input (MIA's core/greenhouse_provision.py). Three
    `mia_command_endpoint_*` scenarios over real HTTP: a signed direction is staged; unsigned, another key, an hour
    old, a body changed after signing and a replay are refused; a node with no key refuses everything.
+
+   **Hardened after a security review (2026-11-24).** Each direction is decided in one write transaction, one at a
+   time (two at once can't both pass); nothing for a parameter or its other end may be waiting when another is
+   staged, and approving a change from MIA checks it again against the picture then (a stale one is denied, whoever
+   presses Approve); values must be finite numbers of the right type; a request more than five minutes older than
+   one already accepted is refused (a high-water mark, so moving the node's clock back can't replay one); a caller is
+   only ever told "refused"; a key per node; each connection has ten seconds and at most sixteen are served at once;
+   any unexpected error is answered as a refusal. The node's limits are its own copy (`config/command_limits.yaml`,
+   git-ignored, seeded from `command_limits.default.yaml`), which a push from MIA's PC never overwrites, and the
+   push never carries the node's key. MIA's free text never reaches the node's assistant.
 3. The command's state in the exports, and MIA's side (`greenhouse.adjust`, its card, the read-back, undo).
 4. Live against the simulator (`main.py` plus `drivers/simulator.py --run`): a change applied, read back, undone.

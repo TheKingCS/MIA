@@ -18,10 +18,11 @@ internal info able to be pushed by MIA").
 - **Pushing it** (`push_node`): the node's code and the preloaded configs copied to the Pi over SSH with that key,
   then its own install steps run there (a Python environment, the schema, the service with its rollback,
   homestead/deploy/README.md). Only on the person's yes. No secret goes into those files.
-- **The key for MIA's directions** (`command_key`, `push_command_key`, DEC-0185): 32 random bytes made once in
-  `data/.keys/`, sent to the node at the end of `push_node` over SSH on standard input (never on a command line or in
+- **The key for MIA's directions** (`command_key`, `push_command_key`, DEC-0185): 32 random bytes made once per
+  node in `data/.keys/`, sent to the node at the end of `push_node` over SSH on standard input (never on a command line or in
   a reply) into its `config/mia_command_key`, owner-readable only. The node refuses any direction not signed with it
-  (homestead/core/command_auth.py); until it has it, every direction is refused.
+  (homestead/core/command_auth.py); until it has it, every direction is refused. A push never carries the node's
+  own key or its command limits (`_EXCLUDE`): those stay as the node has them.
 - **The node's email password** (`push_secret`, DEC-0150: "secrets from the vault and never typed by a model"): the
   SMTP app password the node sends its alerts with, read in code from the person's own password vault (it must be
   unlocked by them; MIA never unlocks it), sent to the Pi over SSH on standard input (never on a command line, in a
@@ -54,7 +55,8 @@ NODE = ROOT / "homestead"
 FIRMWARE = NODE / "firmware" / "safety_mcu"
 BUNDLE = DATA_DIR / "provisioning" / "greenhouse"
 KEY = DATA_DIR / ".keys" / "greenhouse_node_ed25519"
-# The key MIA signs her directions to the node with (DEC-0185, homestead/core/command_auth.py): 32 random bytes, hex.
+# The keys MIA signs her directions to each node with (DEC-0185, homestead/core/command_auth.py): 32 random bytes, hex,
+# one per node (this name, then the node's address), so a direction for one node never works on another.
 COMMAND_KEY = DATA_DIR / ".keys" / "greenhouse_command_key"
 HOSTNAME = "mia-greenhouse"
 REMOTE_DIR = "~/mia-homestead"
@@ -62,7 +64,10 @@ FLASH_TIMEOUT = 900
 # USB-serial chips ESP32 boards use (vendor:product): CP210x, CH340, CH9102, the ESP32-S3's own USB
 ESP32_USB = {(0x10C4, 0xEA60), (0x1A86, 0x7523), (0x1A86, 0x55D4), (0x303A, 0x1001)}
 _EXCLUDE = (".venv", "__pycache__", "mia_homestead.db", "*.db-wal", "*.db-shm", "viewer/*_state.json",
-            "viewer/home_snapshot.json", "viewer/state.json")
+            "viewer/home_snapshot.json", "viewer/state.json",
+            # the node's own: its key for MIA's directions and its command limits (a person edits them there; a push
+            # never overwrites them, DEC-0185)
+            "config/mia_command_key", "config/command_limits.yaml")
 
 
 def _run_input(cmd: list, data: str, timeout: int = 60) -> tuple[int, str]:
@@ -275,22 +280,28 @@ def push_node(host: str, user: str, run: Optional[Callable] = None, run_input: O
 
 # ------------------------------------------------------------------ the key for MIA's directions
 
-def command_key() -> bytes:
-    """The key MIA signs her directions to the node with (DEC-0185, homestead/core/command_auth.py), made once on
-    this PC (32 random bytes, in data/.keys, beside the node's SSH key) and kept."""
+def command_key_path(host: str) -> Path:
+    """Where this node's directions key is kept: COMMAND_KEY's name, then the node's address in safe characters."""
+    return COMMAND_KEY.with_name(f"{COMMAND_KEY.name}-{re.sub(r'[^A-Za-z0-9.-]', '_', host.lower())[:80]}")
+
+
+def command_key(host: str) -> bytes:
+    """The key MIA signs her directions to this node with (DEC-0185, homestead/core/command_auth.py), made once on
+    this PC for this node alone (32 random bytes, in data/.keys, beside the node's SSH key) and kept."""
     import secrets
 
+    path = command_key_path(host)
     try:
-        found = bytes.fromhex(COMMAND_KEY.read_text(encoding="utf-8").strip())
+        found = bytes.fromhex(path.read_text(encoding="utf-8").strip())
         if len(found) >= 32:
             return found
     except (OSError, ValueError):
         pass
-    COMMAND_KEY.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     key = secrets.token_bytes(32)
-    COMMAND_KEY.write_text(key.hex(), encoding="utf-8")
+    path.write_text(key.hex(), encoding="utf-8")
     try:
-        COMMAND_KEY.chmod(0o600)
+        path.chmod(0o600)
     except OSError:
         pass
     return key
@@ -305,8 +316,9 @@ def command_key_command(host: str, user: str, key: Path = KEY) -> list:
 
 def push_command_key(host: str, user: str, run_input: Optional[Callable] = None) -> str:
     """Sends the node its key for MIA's directions over SSH on standard input (`command_key_command`); "" when it
-    went, else what went wrong (never the key)."""
-    key = command_key().hex()
+    went, else what went wrong (never the key).
+    The key is this node's own (command_key(host))."""
+    key = command_key(host).hex()
     code, said = (run_input or _run_input)(command_key_command(host, user), key, 60)
     said, key = (said or "").replace(key, "[hidden]"), ""
     if code != 0:

@@ -1,5 +1,8 @@
 # What MIA may adjust on this node, and the limits she can never cross (DEC-0185; docs/MIA_COMMAND_INTERFACE.md).
-# Read by core/mia_commands.py. MIA can't change this file: it lives here, on the node, and only a person edits it.
+# This is the shipped template. The node uses its own copy, config/command_limits.yaml, when there is one: copy this
+# file to that name on the node and edit it there. That copy is git-ignored and a push from MIA's PC never touches it,
+# so only a person on the node changes what MIA may do. Read fresh by core/mia_commands.py for every direction;
+# anything malformed refuses every direction.
 #
 # approval: whose yes the node trusts (WAITING_ON 0zu, Zac's decision):
 #   node - (B) a direction from MIA is staged as a parameter_change_proposals row and applied only when he

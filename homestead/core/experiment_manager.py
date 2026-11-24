@@ -193,12 +193,25 @@ class ExperimentManager(Describable):
     # ---------- Parameter change approval (mirrors the order queue) ----------
 
     def approve_parameter_change(self, proposal_id: int) -> None:
+        """Applies a proposed parameter change as an active target override. A proposal that came from MIA
+        (core/mia_commands.py) is checked again first against the picture now (its limits, its band, the current
+        value it was made against, nothing else waiting): one the picture has moved past is denied, with why, and
+        ValueError says so, whoever pressed Approve (a person, or the node's assistant)."""
         row = self.db.execute(
             "SELECT cell_id, param_name, proposed_value, rationale FROM parameter_change_proposals WHERE id = ?",
             (proposal_id,),
         ).fetchone()
         if not row:
             raise ValueError(f"no proposal {proposal_id}")
+        from core.mia_commands import MiaCommands
+
+        why = MiaCommands(self.db, self).still_valid(proposal_id)
+        if why:
+            self.db.execute(
+                "UPDATE parameter_change_proposals SET status = 'denied', decided_at = datetime('now') "
+                "WHERE id = ? AND status = 'proposed'", (proposal_id,))
+            self.db.commit()
+            raise ValueError(f"MIA's change can't be approved any more: {why}")
         cell_id, param_name, value, rationale = row
 
         self.db.execute(

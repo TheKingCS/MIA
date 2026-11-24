@@ -160,7 +160,12 @@ docs/            everything else - see index below
 finds it signed with this node's key (`config/mia_command_key`, git-ignored, sent by MIA at provisioning over SSH on
 standard input), fresh (5 minutes) and never seen before (nonces kept in `mia_command_nonces`). Every other method
 and path is still refused; no key file refuses every direction. Three `mia_command_endpoint_*` scenarios over real
-HTTP; 273 passed, the three rsync scenarios fail on Windows only.
+HTTP; 273 passed, the three rsync scenarios fail on Windows only. Then hardened from a security review the same day
+(docs/MIA_COMMAND_INTERFACE.md step 2): one direction at a time in one transaction, nothing crossing a waiting change,
+a re-check at approval, finite typed values, a high-water mark against replays across a clock change, "refused" only
+to callers, a key per node, a 10 s timeout and 16 connections at most, and the node's own command limits
+(config/command_limits.yaml, from command_limits.default.yaml) never overwritten by a push. Three more scenarios;
+284 passed.
 
 **MIA's directions, step 1: the node's check (2026-11-24, DEC-0185, docs/MIA_COMMAND_INTERFACE.md):**
 `core/mia_commands.py` checks a target change MIA directs against `config/command_limits.yaml` (only the pH/EC

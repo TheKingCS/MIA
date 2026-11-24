@@ -2324,7 +2324,10 @@ class _BaseGreenhouseAssistant:
     def _tool_approve_parameter_change(self, proposal_id: int) -> dict:
         from core.experiment_manager import ExperimentManager
         mgr = ExperimentManager(self.db)
-        mgr.approve_parameter_change(proposal_id)
+        try:
+            mgr.approve_parameter_change(proposal_id)
+        except ValueError as problem:  # a change from MIA the picture has moved past is refused, not applied
+            return {"proposal_id": proposal_id, "status": "refused", "reason": str(problem)}
         return {"proposal_id": proposal_id, "status": "approved"}
 
     def _tool_get_active_help_requests(self) -> dict:
