@@ -234,14 +234,15 @@ def _build(context, sheet, kind: Kind, draft) -> float:
 
 
 # The part of MIA each looked-up tool reads, so a missing one is said, not a failure
-_SERVICE = {"get_power_status": "power", "harvest_this_year": "grow_lab", "list_lab_series": "data_logger", "get_learning_progress": "classroom",
+_SERVICE = { "harvest_this_year": "grow_lab", "list_lab_series": "data_logger", "get_learning_progress": "classroom",
             "get_eggs": "flock", "list_projects": "projects", "show_my_why": "intents"}
 
 
 def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
     """One area of his life the project touches, through what already answers for it (growing: the garden plans' year,
     what's due to plant and this year's harvest; water: only the rain he's
-    logged and whether to water, nothing claimed about a system that wasn't checked), and its guidance line."""
+    logged and whether to water, nothing claimed about a system that wasn't checked; power: the homestead's power
+    picture, never this computer's own battery), and its guidance line."""
     from core import question_plans as qp
 
     def look(context, sheet, tool: str, source: str) -> None:
@@ -267,7 +268,7 @@ def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
                   "the rain gauge")
         look(context, sheet, "should_i_water", "the garden")
     elif area == POWER:
-        look(context, sheet, "get_power_status", "Power")
+        look(context, sheet, "power_picture", "the homestead's power")  # never this computer's battery
     elif area == ANIMALS:
         look(context, sheet, "get_eggs", "the flock")
     elif area == TIME:

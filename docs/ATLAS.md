@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1688 files, 366,597 lines; 1688 files describe themselves; 20,150 of 20,280 classes and functions are documented.
+1690 files, 366,817 lines; 1690 files describe themselves; 20,160 of 20,290 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-665 files, 188,056 lines; 9,552 of 9,638 classes and functions documented
+666 files, 188,222 lines; 9,558 of 9,644 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -430,6 +430,7 @@
 - `core/portal_pictures.py`: The picture inside each portal in the Nexus, chosen by the person (DEC-0140's "portal pictures painted by MIA"; since DEC-0153 the Nexus's portals are the person's Living Worlds stories, core/web_nexus.worlds, and the word "area" in the setting and the action means a portal's id).
 - `core/power_actions.py`: Power's changes on the web (DEC-0113 canvas, DEC-0125 parity: Power had no phone screen). Energy sources (solar, a generator, propane, a battery bank) are added, renamed and removed through the shared record kinds (`energy_source.add` / `.edit` / `.delete`, core/record_actions.py), and a reading is 
 - `core/power_manager.py`: Power monitoring — docs/ROADMAP.md milestone 7.2. Defines a small backend-agnostic interface (`PowerBackend`, same shape as core/llm_manager.py's `LLMBackend` and core/voice_manager.py's `STTBackend`/`TTSBackend`), with one concrete implementation, `PsutilBatteryBackend`, using psutil's cross-platfo
+- `core/power_picture.py`: The whole property's power (Zac, 2026-11-24: "will manage ... my power systems"; docs/future/SMART_AG_PLAN.md phase A3): what has to keep running, how long the battery carries it, what the solar has been making, and the generator's days on the fuel in his records.
 - `core/power_ready.py`: Power in "how prepared am I?" (Jarvis brainstorm, round 3): how many days his generator can run on the fuel in his records. It was the one thing the preparedness answer said it didn't count.
 - `core/practices.py`: MIA's best practices, a series that keeps growing (DEC-0108; Zac, 2026-11-07: "MIA should have some kind of understanding of best practices for AI building, development of any kind, honestly everything she does she should have an evolving best practices series of documentation").
 - `core/preparedness.py`: How ready he is if things go wrong (Jarvis brainstorm 4.3, first part; Zac, 2026-11-23: "survival skills, homestead skills ... offline"), worked out in code from his own pantry (core/kitchen_manager.py), never guessed:
@@ -963,7 +964,7 @@
 
 ## tests/: the test suite: what each part must do
 
-619 files, 97,954 lines; 8,235 of 8,279 classes and functions documented
+620 files, 98,008 lines; 8,239 of 8,283 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1347,6 +1348,7 @@
 - `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140; the Nexus's portals are the person's stories since DEC-0153): the person puts one of their own paintings in a story's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the 
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
+- `tests/test_power_picture.py`: The homestead's power (core/power_picture.py): the essentials a day (his own, else typical and said so), the battery's hours on them, his solar's last 30 days in kWh against them, the generator's line, a load he says kept or taken off, and the questions reaching the tools; and the project picture re
 - `tests/test_power_ready.py`: Power in "how prepared am I?" (core/power_ready.py): fuel read from his records by whole word and size (gas cans, propane by the pound or a unit of pounds, quarts or liters; never a gas grill, a generator, a heater or diesel exhaust fluid), none left skipped, days of running from his generator's bur
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
 - `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water or a filter), days of food from the staples by weight and their calor *(1 undocumented)*

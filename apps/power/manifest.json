@@ -37,7 +37,9 @@
     "tools": [
       "get_energy",
       "get_power_status",
-      "log_energy_reading"
+      "log_energy_reading",
+      "power_picture",
+      "set_power_load"
     ],
     "actions": [
       "energy.reading",
@@ -48,6 +50,8 @@
     "tiers": {
       "get_energy": "observe",
       "get_power_status": "observe",
+      "power_picture": "observe",
+      "set_power_load": "act_within_grant",
       "log_energy_reading": "act_within_grant",
       "energy.reading": "act_within_grant",
       "energy_source.add": "act_within_grant",

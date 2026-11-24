@@ -76,13 +76,13 @@ def test_a_project_with_no_library_plan_still_gets_its_money_and_files_no_projec
     assert "This month so far" in sheet.as_text() and not filed
 
 
-def test_a_greenhouse_picture_carries_every_area_it_touches_from_records_or_said_missing(life):
+def test_a_greenhouse_picture_carries_every_area_it_touches_from_records_or_said_missing_and_the_homesteads_power(life):
     sheet = qp.gather(life, qp.PLAN_BY_NAME["project picture"], "I'm planning to build a greenhouse?", TODAY)
     text = sheet.as_text()
     assert "Hoop-house greenhouse" in text  # the Library's plan, at its own size
     assert "Still to buy" in text
     assert "needs water at it" in text and "[estimate, general guidance]" in text
-    assert "Power isn't set up here" in text  # a part not here is said, never a failure
+    assert "essentials" in text  # the homestead's power picture, never this computer's battery
     assert "broke" not in text
     assert "let's plan the greenhouse" in text  # nothing made: the offer to draft
 

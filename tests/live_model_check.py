@@ -701,6 +701,8 @@ GOLDEN_CASES = [
     # ("How long will my water last?" is answered in code, direct_lookup, before any model: tests/test_water_budget.py)
     ("water: the budget", "What's my water budget?", "water_budget"),
     ("water: a tank's level", "The cistern is at 800 gallons", "log_water_level"),
+    ("power: the picture", "If the power goes out, how long will my battery run the essentials?", "power_picture"),
+    ("power: a load", "The well pump draws 1000 watts for an hour a day", "set_power_load"),
 ]
 
 

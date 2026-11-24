@@ -45,7 +45,8 @@ so the things that keep fish and plants alive come first.
    "the cistern is at 800 gallons", "my catchment roof is 600 square feet").* His sources (well, cistern, rain catchment, municipal) and his uses
    (greenhouse, garden, orchard, house, animals), as a daily and monthly water budget. Tank levels come as readings
    he logs until sensors arrive.
-3. **A whole-property power picture.** Sources (solar, grid, generator, battery), the loads that matter (well pump,
+3. **A whole-property power picture.** *Built 2026-11-24 (`core/power_picture.py`: "if the power goes out, how long
+   will my battery run the essentials?", "the well pump draws 1000 watts for an hour a day", "my battery is 10 kWh").* Sources (solar, grid, generator, battery), the loads that matter (well pump,
    aeration, heat), and how long the essentials run on battery. It reads the readings he logs today, with sensor
    feeds later.
 4. **The homestead morning sheet.** One picture of the fish, the beds, the orchard's task, water and power, with

@@ -132,6 +132,7 @@ _PREPARED = {  # argument: (setting, lowest, highest, whole number, how it's sai
     "generator_hours": ("prepared.generator_hours", 1, 24, False, "generator hours a day"),
     "firewood_cords": ("prepared.firewood_cords", 0.25, 30, False, "cords of firewood a winter"),
     "roof_sqft": ("water.roof_sqft", 10, 50000, False, "catchment roof square feet"),
+    "battery_kwh": ("power.battery_kwh", 0.1, 500, False, "battery kWh"),
 }
 
 
@@ -245,7 +246,7 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, should_i_water (core/weather_watch.say_watering, heard only of the
     garden, never houseplants or the hens), log_rain (his rain gauge, which that answer counts; heard only when he reads it, never "is an inch of rain enough?"), weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
-    rate in pounds an hour, and the catchment roof the water budget counts), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
+    rate in pounds an hour, the catchment roof the water budget counts, and the battery the power picture counts), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
     generator run?", "do I need to cover the tomatoes", "what was I in the middle of",
     "have I been spending more than normal?", "what's first tomorrow":
@@ -350,13 +351,15 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
             "generator_hours": {"type": "number", "description": "Hours a day he'd run it."},
             "generator_fuel": {"type": "string", "description": "gasoline, diesel, kerosene or propane."},
             "firewood_cords": {"type": "number", "description": "Cords of firewood a winter takes him."},
-            "roof_sqft": {"type": "number", "description": "The roof he catches rain from, in square feet."}},
+            "roof_sqft": {"type": "number", "description": "The roof he catches rain from, in square feet."},
+            "battery_kwh": {"type": "number", "description": "His battery bank's usable kilowatt-hours."}},
             "required": []},
         handler=_action_set_preparedness,
         trigger_phrases=("cords a winter", "cords of wood a winter", "plan for people", "people to plan for", "plan for 2", "plan for 3", "plan for 4",
                          "plan for 5", "plan for 6", "plan for two", "plan for three", "plan for four",
                          "generator burns", "generator uses", "gallons an hour", "burn rate", "pounds an hour",
-                         "plan for days", "prepare for days", "catchment roof is", "catch rain off"),
+                         "plan for days", "prepare for days", "catchment roof is", "catch rain off",
+                         "my battery is", "battery bank is"),
     ))
     registry.register(AssistantAction(
         name="bleach_for_water", domain="today",

@@ -88,8 +88,45 @@ def _action_log_energy_reading(context, arguments: dict) -> str:
     return f"{done.result} (Say “undo that” to take it back.)"
 
 
+def _power_picture(context, arguments: dict) -> str:
+    """Tool power_picture: the homestead's essentials, battery, solar and generator (core/power_picture.say)."""
+    from core import power_picture
+
+    return power_picture.say(context)
+
+
+def _set_power_load(context, arguments: dict) -> str:
+    """Tool set_power_load: one of his essential loads, its watts and hours a day (core/power_picture.set_load)."""
+    from core import power_picture
+
+    return power_picture.set_load(context, str(arguments.get("load") or ""), arguments.get("watts"),
+                                  arguments.get("hours"))
+
+
 def register_energy_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the get_energy and log_energy_reading tools."""
+    """Registers the get_energy and log_energy_reading tools, and the homestead's power picture: power_picture and
+    set_power_load (core/power_picture.py; get_power_status is this computer's own battery, not the homestead's)."""
+    registry.register(AssistantAction(
+        name="power_picture", domain="power",
+        description="The homestead's power: the essential loads a day (well pump, aquaponics pumps, fridge, "
+                    "freezer...), how long his battery carries them, his solar's last 30 days against them, and the "
+                    "generator's days on his fuel. Not this computer's battery (get_power_status).",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_power_picture,
+        trigger_phrases=("power picture", "power budget", "how long will my battery", "how long would the battery",
+                         "if the power goes out", "power goes out", "off grid", "off-grid", "enough solar",
+                         "enough power", "power outage", "essential loads"),
+        subjects=("power", "battery", "solar"),
+    ))
+    registry.register(AssistantAction(
+        name="set_power_load", domain="power",
+        description="Keep one of his essential loads: its watts and hours a day (0 watts takes it off).",
+        parameters={"type": "object", "properties": {
+            "load": {"type": "string", "description": "e.g. 'well pump'"},
+            "watts": {"type": "number", "description": "what it draws"},
+            "hours": {"type": "number", "description": "hours a day it runs (24 if always on)"}},
+            "required": ["load", "watts"]},
+        handler=_set_power_load, trigger_phrases=("draws", "uses watts", "pulls watts", "watts for"),
+    ))
     registry.register(AssistantAction(
         name="get_energy", domain="power",
         description=("The energy sources tracked by hand (solar, a generator, propane, a utility meter) and each "
