@@ -38,6 +38,7 @@
   },
   "capabilities": {
     "tools": [
+      "check_my_prices",
       "best_customers",
       "earnings_per_hour",
       "draft_invoice",
@@ -81,6 +82,7 @@
       "get_ledger_summary": "observe",
       "earnings_per_hour": "observe",
       "best_customers": "observe",
+      "check_my_prices": "observe",
       "order_paid": "act_with_approval",
       "record_sale": "act_within_grant",
       "customer.add": "act_within_grant",

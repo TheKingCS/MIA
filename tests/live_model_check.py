@@ -692,6 +692,7 @@ GOLDEN_CASES = [
     ("harvest: this year", "What has the garden produced this year?", "harvest_this_year"),
     ("business: real hourly", "What do I really make an hour on my builds?", "earnings_per_hour"),
     ("business: best customers", "Who are my best customers?", "best_customers"),
+    ("business: prices", "Which products should I raise prices on?", "check_my_prices"),
 ]
 
 

@@ -252,6 +252,13 @@ def _hourly(context, arguments: dict) -> str:
     return hourly_earnings.say(context, str(arguments.get("question") or ""))
 
 
+def _prices_check(context, arguments: dict) -> str:
+    """Tool check_my_prices: products selling under their materials and time at his rate (core/product_pricing)."""
+    from core import product_pricing
+
+    return product_pricing.say(context)
+
+
 def _best_customers(context, arguments: dict) -> str:
     """Tool best_customers: his customers by what they've paid, and the regulars gone quiet (core/best_customers)."""
     from core import best_customers
@@ -260,7 +267,8 @@ def _best_customers(context, arguments: dict) -> str:
 
 
 def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
-    """Registers best_customers (who's paid most on orders, all time, who's gone quiet, core/best_customers.py; a
+    """Registers check_my_prices (products selling under their materials and time at his rate,
+    core/product_pricing.py), best_customers (who's paid most on orders, all time, who's gone quiet, core/best_customers.py; a
     market's "regulars" aren't its), earnings_per_hour (what
     his work really makes an hour, core/hourly_earnings.py; the person's words
     passed so a day-job pay question is told it's the workshop's), list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
@@ -283,6 +291,10 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
           "jobs worth my time", "per hour on jobs", "per hour on my jobs", "hourly on jobs", "hourly on my builds",
           "builds make per hour", "builds make an hour", "hourly on the workshop", "business make an hour",
           "effective hourly", "making per hour on", "making money on my builds"), prompt_arg="question")
+    tool("check_my_prices", "Which of his products sell for less than their materials and his time at his quoting "
+         "rate, from the finished jobs that made them, and what each would be at that rate.", {}, [], _prices_check,
+         ("raise prices", "raise my prices", "charging enough", "charge enough", "underpriced", "under priced",
+          "priced too low", "prices too low", "check my prices", "my prices right", "pricing my products"))
     tool("best_customers", "His customers ranked by what they've paid on their orders, each one's share, and the "
          "regulars who haven't ordered in six months.", {}, [], _best_customers,
          ("best customers", "top customers", "biggest customers", "best clients", "top clients",

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1678 files, 365,020 lines; 1678 files describe themselves; 20,070 of 20,200 classes and functions are documented.
+1680 files, 365,189 lines; 1680 files describe themselves; 20,078 of 20,208 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-660 files, 186,922 lines; 9,509 of 9,595 classes and functions documented
+661 files, 187,044 lines; 9,513 of 9,599 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -436,6 +436,7 @@
 - `core/price_book.py`: Prices MIA has seen, and what a thing really costs (Procurement P2, DEC-0172; the proposal's section 5).
 - `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the 
 - `core/product_manager.py`: MIA Home's finished-goods products — the third slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, `core/material_manager.py`'s docstring for the first slice, and `core/job_manager.py`'s for the second), adapted to this project's persisted-JSON-ma
+- `core/product_pricing.py`: Which products are priced below what they take (Jarvis brainstorm round 8, 2026-11-24; his businesses): "which products should I raise prices on?", "am I charging enough?". The products, the jobs that made them and his own quoting rate read together.
 - `core/product_specs.py`: Products compared by their real specifications, not their titles (Procurement P2, DEC-0172; the proposal's section 5). Everything here is pure code: a model never decides whether two things are the same.
 - `core/profile_manager.py`: Manages MIA user profiles — distinct from ConfigManager, which holds app-wide settings (theme, kiosk mode, etc.) that apply regardless of who's using the device. A "profile" is a person: their display name, when they were created, an optional password, and (going forward) the namespace their persona
 - `core/progress_history.py`: A prestige reached or a reward unlocked, kept in that person's history (2026-11-09, from the self-audit's unheard events). The profile manager publishes `profile.prestiged` and `profile.reward_unlocked`, and until now nothing heard either: a toast said it, and then it was gone, so the Chronicle and 
@@ -958,7 +959,7 @@
 
 ## tests/: the test suite: what each part must do
 
-614 files, 97,511 lines; 8,198 of 8,242 classes and functions documented
+615 files, 97,558 lines; 8,202 of 8,246 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1349,6 +1350,7 @@
 - `tests/test_private_journal_panel.py`: The Private Journal tab (gui/private_journal_panel.py) and the desktop chat surfaces' safety-floor path, offscreen.
 - `tests/test_procurement_prices.py`: Procurement P2 (DEC-0172; core/product_specs.py, core/price_book.py, core/price_actions.py, core/assistant_price_actions.py): specifications are read from words with their units, and a product is judged identical, equivalent, similar or not suitable by numbers, never by its title; prices are kept pe
 - `tests/test_product_manager.py`: Unit tests for core.product_manager. Isolates _DATA_DIR/_PRODUCTS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths.
+- `tests/test_product_pricing.py`: Which products are priced below what they take (core/product_pricing.py): a piece's materials and hours from the finished jobs that made it (shared when a job made two products), the least it should sell for at his quoting rate, the underpriced named most first, a product no timed job made said as n
 - `tests/test_profile_manager.py`: Unit tests for the birthday field added to core.profile_manager.Profile (2026-07-14 aesthetic pass part 5) — not a full ProfileManager test suite (none existed before this addition; out of scope to backfill here). Isolates config_manager's _CONFIG_FILE into a tmp_path scratch area, same "config.save
 - `tests/test_progress_history.py`: A prestige reached or a reward unlocked is kept in that person's history (core/progress_history.py, 2026-11-09): heard on the bus, recorded in their own folder, the reward named from its tier, and nothing for a profile that's gone.
 - `tests/test_project_manager.py`: Unit tests for core.project_manager. Isolates _DATA_DIR/_PROJECTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_expedition_manager.py's isolated_paths).

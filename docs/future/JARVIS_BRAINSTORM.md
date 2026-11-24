@@ -353,7 +353,7 @@ Checked against the code first; each says whether it needs Zac's say.
   figure (core/firewood.py), fuel and the generator's days (core/power_ready.py), the 72-hour kit, the flock's
   water in a freeze, what's still in the garden and the canning shelf. The same shape as the project picture, for a
   season instead of a build.
-- **Which products should I raise prices on?** (no decision): each product's price against its materials and the
+- **Which products should I raise prices on?** (no decision): *built 2026-11-24 (`core/product_pricing.py`).* each product's price against its materials and the
   hours its builds took (core/hourly_earnings.py), the ones selling below his quoting rate named, with what the
   price would be at it. His businesses, from his own records.
 - **What if I quit at the end of next year?** (no decision, a read): the freedom plan run with a date he names
