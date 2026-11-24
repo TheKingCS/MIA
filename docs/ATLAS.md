@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1673 files, 364,180 lines; 1673 files describe themselves; 20,030 of 20,160 classes and functions are documented.
+1673 files, 364,245 lines; 1673 files describe themselves; 20,035 of 20,165 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-658 files, 186,427 lines; 9,496 of 9,582 classes and functions documented
+658 files, 186,465 lines; 9,498 of 9,584 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -956,7 +956,7 @@
 
 ## tests/: the test suite: what each part must do
 
-611 files, 97,166 lines; 8,171 of 8,215 classes and functions documented
+611 files, 97,193 lines; 8,174 of 8,218 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1162,7 +1162,7 @@
 - `tests/test_grow_lab.py`: The grow lab (DEC-0030 phase D): batches, harvests and losses, readings against the person's own ranges (only ever a warning), experiments that compare batches, all undoable; and a planting's stage from what's known.
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
 - `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself or an email brought; one counts as offered only once the gate let it through, trie
-- `tests/test_harvest_log.py`: Harvests by voice (core/harvest_log.py): a harvest goes on his growing batch of that crop (plurals alike), a crop not in the grow lab gets a batch first, two batches of it are asked about; and this year's harvest adds up by crop and unit, valued only at a price he recorded in the same unit.
+- `tests/test_harvest_log.py`: Harvests by voice (core/harvest_log.py): a harvest goes on his growing batch of that crop (plurals alike), a crop not in the grow lab gets a batch dated by him first, two batches of it are asked about, a place none is in is a new one, eggs and honey aren't crops; this year's harvest adds up by crop 
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks).
 - `tests/test_hatch_tracker.py`: Eggs in the incubator as a mission (core/hatch_tracker.py): each bird's milestones dated from the day set (chicken: candle days 7 and 14, lockdown 18, hatch 21), the mission made with a step for each, "how's the hatch going?" saying the day and what's next (saved inside the change), a day set read l
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s

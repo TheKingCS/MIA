@@ -148,12 +148,14 @@ def _buildable(context, arguments: dict) -> str:
 
 
 def _log_harvest(context, arguments: dict) -> str:
-    """Tool log_harvest: a harvest kept on his grow lab batch of that crop (core/harvest_log.log)."""
+    """Tool log_harvest: a harvest kept on his grow lab batch of that crop, with when it was planted for a crop not
+    there yet (core/harvest_log.log)."""
     from core import harvest_log
 
     return harvest_log.log(context, str(arguments.get("crop") or ""), arguments.get("amount"),
                            str(arguments.get("unit") or ""), str(arguments.get("where") or ""),
-                           str(arguments.get("last") or "").lower() in ("1", "true", "yes"))
+                           str(arguments.get("last") or "").lower() in ("1", "true", "yes"),
+                           str(arguments.get("planted") or ""))
 
 
 def _harvest_year(context, arguments: dict) -> str:
@@ -166,7 +168,8 @@ def _harvest_year(context, arguments: dict) -> str:
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
     chosen when drafted), log_harvest and harvest_this_year (harvests by voice and what the garden produced,
-    core/harvest_log.py), what_can_i_build (the builds closest to done from his stock, core/buildable.py; reached by
+    core/harvest_log.py; reached by "harvested" and the garden's words, never a bare "harvest" or "dug up"),
+    what_can_i_build (the builds closest to done from his stock, core/buildable.py; reached by
     "build with what I have" or his lumber, never a bare "what could I build", which is often about something else),
     project_picture (what a project touches, core/project_ripple.py; reached by planning words,
     never by "want to build a", which is the material list's), price_build
@@ -207,20 +210,21 @@ def register_project_plan_actions(registry) -> None:
                                            "thinking about putting up", "planning a greenhouse", "affect everything", "mean for everything",
                                            "what does it touch", "what would it take to build"),
     ))
-    registry.register_domain_keywords("harvest", ("harvest", "harvested", "harvests"))
+    registry.register_domain_keywords("harvest", ("harvested",))
     registry.register(AssistantAction(
         name="log_harvest", domain="harvest",
-        description="Log a harvest he just brought in: the crop, how much and its unit, kept on his grow lab batch of "
-                    "it (one is added when there isn't). Undoable.",
+        description="Log a garden crop he just harvested: the crop, how much and its unit, kept on his grow lab batch "
+                    "of it (one is added, with when it was planted, when there isn't). Not eggs or honey. Undoable.",
         parameters={"type": "object", "properties": {
             "crop": {"type": "string", "description": "what was harvested, e.g. 'tomatoes'"},
             "amount": {"type": "number", "description": "how much"},
             "unit": {"type": "string", "description": "lb, oz, heads, bunches...; empty for a count"},
             "where": {"type": "string", "description": "which bed or tank, only if he said"},
-            "last": {"type": "boolean", "description": "true when it's the last of that planting"}},
+            "last": {"type": "boolean", "description": "true when it's the last of that planting"},
+            "planted": {"type": "string", "description": "roughly when it was planted, only if he said"}},
             "required": ["crop", "amount"]},
         handler=_log_harvest, trigger_phrases=("harvested", "log a harvest", "log the harvest", "log my harvest",
-                                               "picked today", "dug up", "out of the garden today",
+                                               "picked today", "out of the garden today",
                                                "from the garden today"),
     ))
     registry.register(AssistantAction(
@@ -230,8 +234,7 @@ def register_project_plan_actions(registry) -> None:
         parameters={"type": "object", "properties": {}},
         handler=_harvest_year, trigger_phrases=("garden produced", "garden has produced", "harvested this year",
                                                 "how much have i harvested", "harvest so far", "garden saved",
-                                                "garden save me", "garden worth", "how much did i grow",
-                                                "how much have i grown", "this year's harvest"),
+                                                "garden save me", "garden worth", "this year's harvest"),
     ))
     registry.register(AssistantAction(
         name="what_can_i_build", domain=DOMAIN,
