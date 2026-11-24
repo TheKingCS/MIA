@@ -362,3 +362,6 @@ each his call:
 - **The offline library on the PC** (WAITING_ON 0zh): every survival and homestead how-to answer gets better with
   her packs searchable again.
 - **A model that fits the new PC** (WAITING_ON 0zi): the comparison is ready for him to read.
+- **Is the homestead making or losing money?** (his say: what counts): the builds, tools and feed against eggs and
+  goods sold and market days are all recorded, but which expenses and sales are "the homestead" (the truck? the
+  garden's groceries saved?) is his to define before she adds them up. Asked 2026-11-24, it reaches nothing yet.

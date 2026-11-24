@@ -83,6 +83,7 @@ SAID = [
     ("start_broilers", "I got 25 Cornish cross chicks today"), ("broilers_status", "how are the meat birds coming?"),
     ("next_cut", "next cut"), ("next_cut", "read me the cuts for the potting bench"),
     ("list_quotes", "which quotes should I follow up on?"), ("list_quotes", "who haven't I heard back from on quotes"),
+    ("get_eggs", "do the eggs pay for themselves?"), ("get_eggs", "what's my feed cost per dozen"),
 ]
 
 

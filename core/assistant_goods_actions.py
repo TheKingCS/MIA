@@ -222,7 +222,8 @@ def _action_hatch_status(context, arguments: dict) -> str:
 def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
     sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
-    will the feed last?": its answer says how long the feed lasts, core/feed_runway.py). Also start_hatch and hatch_status: eggs in the incubator as a
+    will the feed last?": its answer says how long the feed lasts, core/feed_runway.py) and what the eggs cost ("do the
+    eggs pay for themselves?": its answer has the feed cost a dozen). Also start_hatch and hatch_status: eggs in the incubator as a
     mission with dated steps (core/hatch_tracker.py), start_broilers and broilers_status (a batch of meat birds to
     processing day, core/broiler_batch.py; the start tool hears only a batch that came, "got 25 broiler chicks"), and feed_mix (two feeds to a target protein, core/feed_mix.py, reached by "16% layer", "32% supplement" and the
     like), hatch_status heard only of eggs ("how's the hatch going?",
@@ -286,7 +287,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         parameters=none, handler=_get_eggs,
         trigger_phrases=("how many eggs", "eggs this week", "eggs today", "lay rate", "are the hens laying",
                          "how are the chickens", "how are the hens", "egg count", "feed last", "chicken feed",
-                         "more feed", "out of feed"),
+                         "more feed", "out of feed", "eggs pay for", "eggs cost me", "cost per dozen", "cost a dozen",
+                         "chickens cost me", "hens cost me", "feed cost"),
         subjects=("egg", "hen", "chicken", "flock"),
     ))
     registry.register(AssistantAction(
