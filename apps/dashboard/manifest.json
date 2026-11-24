@@ -90,6 +90,7 @@
       "where_were_we",
       "emergency_kit",
       "how_prepared",
+      "set_preparedness",
       "evening_wrap"
     ],
     "actions": [
@@ -182,6 +183,7 @@
       "where_were_we": "observe",
       "emergency_kit": "observe",
       "how_prepared": "observe",
+      "set_preparedness": "act_within_grant",
       "evening_wrap": "observe"
     },
     "outside": [

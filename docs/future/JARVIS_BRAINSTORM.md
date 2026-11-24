@@ -295,3 +295,6 @@ New ideas, each checked against what's there first:
   `core/preparedness.py`), what isn't in his records said as that, and what only he can check (medicine, glasses,
   cash, papers). Read-only.
 - **A purchase against the debts** (1.4's gap): built the same day, see 1.4.
+- **Power in "how prepared am I?"** (S, no decision): built 2026-11-23 (`core/power_ready.py`): gasoline, diesel,
+  kerosene and propane from his inventory and pantry, in gallons, and his generator's days on it at his burn rate and
+  hours a day; the people, target days and generator are set by voice (`set_preparedness`).

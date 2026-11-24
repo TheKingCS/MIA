@@ -41,13 +41,14 @@ def test_what_expires_soon_comes_soonest_first():
 
 
 def test_say_gives_the_shortfall_and_what_isnt_counted(monkeypatch):
-    """Water against the target, what to use soon, food asked for when none is logged, power not counted."""
+    """Water against the target, what to use soon, food asked for when none is logged, and power asks for fuel when
+    none is in his records."""
     monkeypatch.setattr(rd, "_setting", lambda context, key, default: default)
     kitchen = SimpleNamespace(all_pantry_items=lambda: [_item("Water", 5, "gallons"),
                                                         _item("Milk", 1, expires="2026-11-25")])
     said = rd.say(SimpleNamespace(kitchen=kitchen), TODAY)
     assert "about 5 days" in said and "9 days short of your 14-day target" in said and "Milk (Nov 25)" in said
-    assert "Food: no staples logged by weight" in said and "Power isn't counted yet" in said
+    assert "Food: no staples logged by weight" in said and "Power: no fuel in your records" in said
 
 
 def test_with_no_water_logged_she_says_how_much_the_target_takes(monkeypatch):

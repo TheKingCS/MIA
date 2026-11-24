@@ -9,7 +9,8 @@ skills ... offline"), worked out in code from his own pantry (core/kitchen_manag
   `is_drinking_water`: not coconut or tonic water, a water filter or a canner; in gallons, liters, quarts, ounces or
   containers of a stated size: "16.9 fl oz bottles", "5-gallon jugs") against the Red Cross and FEMA guide of one gallon a person a day, for the
   people he says (`prepared.people`, 1 unless he says otherwise; said in the answer). Against his target of days
-  (`prepared.target_days`, 14 unless set: FEMA's two weeks at home).
+  (`prepared.target_days`, 14 unless set: FEMA's two weeks at home). Both are set by voice (`set_preparedness`).
+- Power: his generator's days on the fuel in his records (core/power_ready.py).
 - **Rotate** (`rotate`): what's in the pantry and expires in the next ROTATE_DAYS days, soonest first, so it's eaten
   instead of thrown out.
 - **Food** (`food_days`): the dry staples he's logged by weight (rice, beans, lentils, flour, oats, pasta, cornmeal,
@@ -145,8 +146,8 @@ def _setting(context, key: str, default: int) -> int:
 
 
 def say(context, today: Optional[date] = None) -> str:
-    """For "how prepared am I?": water against his target, days of food from the staples, what to rotate, and what
-    isn't counted."""
+    """For "how prepared am I?": water against his target, days of food from the staples, what to rotate, what
+    isn't counted, and power: his generator's days on the fuel in his records (core/power_ready.py)."""
     today = today or date.today()
     kitchen = getattr(context, "kitchen", None)
     items = kitchen.all_pantry_items() if kitchen is not None else []
@@ -177,5 +178,7 @@ def say(context, today: Optional[date] = None) -> str:
     if uncounted:
         parts.append("Not counted: " + ", ".join(uncounted[:4]) + (f" and {len(uncounted) - 4} more" if len(uncounted) > 4
                                                                     else "") + " (no weight, or not a staple I know).")
-    parts.append("Power isn't counted yet.")
+    from core import power_ready
+
+    parts.append(power_ready.say(context))  # the generator's days on the fuel in his records
     return " ".join(parts)

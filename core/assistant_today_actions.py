@@ -85,6 +85,49 @@ def _action_how_prepared(context, arguments: dict) -> str:
     return preparedness.say(context)
 
 
+_PREPARED = {  # setting: (his word for it, lowest, highest, whole number)
+    "people": ("prepared.people", 1, 20, True),
+    "target_days": ("prepared.target_days", 1, 365, True),
+    "generator_gph": ("prepared.generator_gph", 0.05, 5.0, False),
+    "generator_hours": ("prepared.generator_hours", 1, 24, False),
+}
+
+
+def _action_set_preparedness(context, arguments: dict) -> str:
+    """Sets what "how prepared am I?" counts with: how many people, the target days, and his generator's burn rate,
+    hours a day and fuel (core/preparedness.py, core/power_ready.py). Each is checked against a sensible range; one
+    out of range is said and not kept. Returns what was set."""
+    from core import person_settings
+    from core.power_ready import FUELS
+
+    said, problems = [], []
+    for name, (key, low, high, whole) in _PREPARED.items():
+        if arguments.get(name) in (None, ""):
+            continue
+        try:
+            value = float(arguments[name])
+        except (TypeError, ValueError):
+            problems.append(f"{name.replace('_', ' ')} isn't a number")
+            continue
+        if not low <= value <= high:
+            problems.append(f"{name.replace('_', ' ')} should be {low:g} to {high:g}")
+            continue
+        value = int(round(value)) if whole else value
+        person_settings.put(context, key, value)
+        said.append(f"{name.replace('_', ' ').replace('gph', 'gallons an hour')} {value:g}")
+    fuel = str(arguments.get("generator_fuel", "") or "").strip().lower()
+    if fuel:
+        if fuel in FUELS:
+            person_settings.put(context, "prepared.generator_fuel", fuel)
+            said.append(f"generator fuel {fuel}")
+        else:
+            problems.append("the generator's fuel is gasoline, diesel, kerosene or propane")
+    if not said and not problems:
+        return "What should I set: how many people, the days to plan for, or your generator's burn rate?"
+    return ("Set: " + ", ".join(said) + "." if said else "") + \
+        ((" " if said else "") + "Not set: " + "; ".join(problems) + "." if problems else "")
+
+
 def _action_emergency_kit(context, arguments: dict) -> str:
     """Ready.gov's basic emergency kit against his inventory and pantry (core/ready_kit.say)."""
     from core import ready_kit
@@ -108,7 +151,7 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
-    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
+    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
@@ -174,6 +217,21 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_how_prepared,
         trigger_phrases=("how prepared", "days of water", "how much water do i have", "emergency supplies",
                          "if the power goes out", "grid down", "prepared for an emergency", "what should i rotate"),
+    ))
+    registry.register(AssistantAction(
+        name="set_preparedness", domain="today",
+        description="Set what preparedness counts with: how many people to plan for, the days to plan for, and the "
+                    "generator's burn rate (gallons an hour), hours a day and fuel.",
+        parameters={"type": "object", "properties": {
+            "people": {"type": "number", "description": "How many people to plan for."},
+            "target_days": {"type": "number", "description": "Days of water and food to aim for."},
+            "generator_gph": {"type": "number", "description": "The generator's gallons an hour at its usual load."},
+            "generator_hours": {"type": "number", "description": "Hours a day he'd run it."},
+            "generator_fuel": {"type": "string", "description": "gasoline, diesel, kerosene or propane."}},
+            "required": []},
+        handler=_action_set_preparedness,
+        trigger_phrases=("plan for people", "generator burns", "generator uses", "gallons an hour", "burn rate",
+                         "plan for days", "prepare for days"),
     ))
     registry.register(AssistantAction(
         name="emergency_kit", domain="today",
