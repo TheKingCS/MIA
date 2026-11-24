@@ -196,7 +196,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
     sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
     will the feed last?": its answer says how long the feed lasts, core/feed_runway.py). Also start_hatch and hatch_status: eggs in the incubator as a
-    mission with dated steps (core/hatch_tracker.py).
+    mission with dated steps (core/hatch_tracker.py), hatch_status heard only of eggs ("how's the hatch going?",
+    never "the business incubator" or "the lockdown drill").
     """
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
