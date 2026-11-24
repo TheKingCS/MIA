@@ -59,7 +59,7 @@ _DANGER = re.compile(
     r"i'?m not safe|i am not safe|i'?m in danger|i am in danger|"
     # Indirect, but the commonly recognised signs (2026-11-24): about the person themselves, never a thing, a place or
     # a time ("nobody would miss me at the meeting", "better off gone by noon" stay ordinary talk)
-    r"(?:nobody|no ?one|no-one)(?: would|'d| will)(?: even| really)? (?:miss me(?!\s+(?:at|for|from|during)\b)|"
+    r"(?:nobody|no ?one|no-one)(?: would|'d| will)(?: even| really)? (?:miss me(?!\s+(?:at|for|from|during)\b)(?!\s+if i (?:skip|skipped|left|leave|didn'?t|don'?t|miss|missed)\b)|"
     r"(?:notice|care) if i(?:'?m| am| was| were)? (?:gone|dead|died|disappeared|wasn'?t here|weren'?t here)"
     r"(?!\s+(?:at|for|from|during)\b)|care if i died)|"
     r"would(?:n'?t)? (?:anyone|anybody) (?:even |really )?(?:miss me|notice if i|care if i)|"

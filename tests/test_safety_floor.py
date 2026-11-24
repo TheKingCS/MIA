@@ -53,6 +53,8 @@ MUST_TRIGGER = [
     "I wish I was never born",
     "I just want it all to stop",
     "i‘d be better off gone",
+    "nobody would miss me if I died",
+    "I'm not suicidal. nobody would miss me though",
 ]
 
 MUST_NOT_TRIGGER = [
@@ -88,6 +90,8 @@ MUST_NOT_TRIGGER = [
     "I don't want to exist on ramen this month",
     "the old hen would be better off gone",
     "I want this day to end for good",
+    "nobody would miss me if I skipped the potluck",
+    "no one would miss me if I left early",
 ]
 
 
