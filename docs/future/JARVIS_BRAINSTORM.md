@@ -344,6 +344,37 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 8 (2026-11-24, after the live check): the same principle, further
+
+Checked against the code first; each says whether it needs Zac's say.
+
+- **Am I ready for winter?** (no decision): one sheet before his first fall frost: firewood against his winter
+  figure (core/firewood.py), fuel and the generator's days (core/power_ready.py), the 72-hour kit, the flock's
+  water in a freeze, what's still in the garden and the canning shelf. The same shape as the project picture, for a
+  season instead of a build.
+- **Which products should I raise prices on?** (no decision): each product's price against its materials and the
+  hours its builds took (core/hourly_earnings.py), the ones selling below his quoting rate named, with what the
+  price would be at it. His businesses, from his own records.
+- **What if I quit at the end of next year?** (no decision, a read): the freedom plan run with a date he names
+  against his debts, the homestead's goods, the business's real hourly and who owes him: what's covered, what
+  isn't, and the gap a month. Read-only; the biggest "one intelligence" question there is.
+- **Rain catchment** (no decision): a roof's square feet and his logged rain into gallons a month (0.6 gallons a
+  square foot an inch), against what the greenhouse and garden drink; the project picture's water line gets a
+  number instead of guidance.
+- **A follow-up to a quiet customer, drafted** (his say: drafted only, never sent): from "who are my best
+  customers", the regulars gone quiet get a short email draft he can read and send himself (the drafting already
+  exists; only the offer is new).
+- **The month's money story** (his say: a new monthly message): on the first, two sentences: the month against his
+  usual, the freedom date's move, the one thing that changed it. Paced by the gate like the evening wrap.
+- **A rainy-day plan** (no decision): the weekend plan already reads the forecast; on a wet day it could lead with
+  his learning path's next practice (guitar, the woodworking lesson) and indoor shop work from the cut list.
+- **Hear every plan's answer on the real model, weekly** (no decision): the live check now covers today's tools;
+  the same for each question plan's sheet (does the answer go area by area, does it invent a number), so a prompt
+  change never quietly makes her vaguer. Night School could run it.
+- **A bigger model where it counts** (WAITING_ON 0zi): five tool mix-ups the descriptions can't fix (rental income
+  without a property, "are we on budget", a mower's make, business use, "mission" as an ordinary word) are the
+  14b model's limit.
+
 ## Round 7 (2026-11-24): one intelligence (Zac: "connecting all these capabilities into a unified intelligence layer")
 
 - **What a project touches** (no decision): built (`core/project_ripple.py`): "I'm planning to build a greenhouse"
