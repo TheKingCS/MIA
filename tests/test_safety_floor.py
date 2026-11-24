@@ -34,6 +34,25 @@ MUST_TRIGGER = [
     "I wish I had never been born",
     "I wish I'd never been born",
     "I just want it all to end for good",
+    "I'm not suicidal but what's the point of living",
+    "I'm not suicidal, I just don't want to exist",
+    "I would never kill myself but nobody would miss me",
+    "I wouldn't hurt myself but I wish I'd never been born",
+    "noone would care if i died",
+    "nobody would care if I disappeared",
+    "no one would really miss me",
+    "nobody'd miss me",
+    "wouldn't anyone miss me",
+    "I'd be better off not being here",
+    "everyone would be better off if I was gone",
+    "life's not worth living",
+    "what is the point of living",
+    "what's even the point of living anymore",
+    "I can not go on living",
+    "I do not want to exist",
+    "I wish I was never born",
+    "I just want it all to stop",
+    "i‘d be better off gone",
 ]
 
 MUST_NOT_TRIGGER = [
@@ -58,6 +77,17 @@ MUST_NOT_TRIGGER = [
     "This mower isn't worth fixing",
     "I'd be better off going tomorrow",
     "what's the point in planting before the frost?",
+    "what's the point of going on with this project",
+    "what's the point in going on the trip if it rains",
+    "what's the point of living in the city when land is cheap out here",
+    "what's the point of living so close to town",
+    "I'd be better off gone by noon to beat traffic",
+    "I'm better off gone before the storm hits",
+    "nobody would miss me at the meeting if I skipped",
+    "no one would notice if I was gone for an hour",
+    "I don't want to exist on ramen this month",
+    "the old hen would be better off gone",
+    "I want this day to end for good",
 ]
 
 
