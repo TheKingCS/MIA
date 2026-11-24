@@ -817,7 +817,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), budget_left (this month's budgets, spent and
-    left, from core/finance_summary.py; "over my budget", never a build's), get_net_worth (the Money page's figure, each
+    left, from core/finance_summary.py; "over my budget", never a build's; its description says it isn't bills or
+    what's due, which the model confused it with), get_net_worth (the Money page's figure, each
     part named, and with his other debts taken off; reached only by "my net worth", never "what am I worth?"), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
@@ -915,7 +916,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="budget_left", domain="budget",
-        description="This month's budget targets: spent against each and what's left, or the one category he named.",
+        description="How much is left to spend this month in his budget categories (targets he set, like groceries "
+                    "or gas): spent against each and what's left. Not bills, what's due or overdue (list_bills).",
         parameters=_obj({"category": _s("The budget's category, e.g. 'groceries', if he named one.")}, []),
         handler=_action_budget_left,
         trigger_phrases=("left in my budget", "budget left", "left in the budget", "over my budget", "over budget this",

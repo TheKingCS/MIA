@@ -1276,9 +1276,11 @@ NOT_FOR = {
     "weekend": re.compile(r"\b(was|were|did|went|go|last|spent|happened|open|close[sd]?|hours|dinner|lunch|breakfast|"
                           r"meals?|remind|meeting|appointment)\b", re.I),
     # the build's own questions are its tools' (material_list, cut_list, price_build, plan_with_me), and a plan
-    # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"
+    # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"; nor a question about
+    # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
     "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
-                                  r"let's plan|plan the|debts?|loans?|bills?|weather|frost)\b", re.I),
+                                  r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
+                                  r"how's|how is|needs? doing|needs? done|readings?|temperature|humidity)\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?|weekend)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),

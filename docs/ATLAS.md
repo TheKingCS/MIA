@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1678 files, 364,859 lines; 1678 files describe themselves; 20,064 of 20,194 classes and functions are documented.
+1678 files, 364,885 lines; 1678 files describe themselves; 20,065 of 20,195 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-660 files, 186,807 lines; 9,507 of 9,593 classes and functions documented
+660 files, 186,816 lines; 9,507 of 9,593 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -958,7 +958,7 @@
 
 ## tests/: the test suite: what each part must do
 
-614 files, 97,465 lines; 8,194 of 8,238 classes and functions documented
+614 files, 97,482 lines; 8,195 of 8,239 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1415,7 +1415,7 @@
 - `tests/test_seed_check.py`: Seeds against the plan (core/seed_check.py): the crops his confirmed garden plans start in the next month, checked against the seeds he logged (pantry or inventory), said in the garden's weekly message when any have none logged. *(1 undocumented)*
 - `tests/test_seed_life.py`: How long his seeds keep (core/seed_life.py): each kind's usual span, his dated packets of it said good, worth a germination test or past it, a plural or another name for a crop understood ("broccoli sprouts" never Brussels sprouts), a packet naming two crops counted for both, a "packed for" year cou
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's report and tasks, and the series written from the principles and
-- `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
+- `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed; and a question that only ends with something she has ("what's due in the greenhouse?") isn't one about her. `about_me` reports her real scale from the system map; `my_focus` reflects her Night Sch
 - `tests/test_self_merges.py`: MIA's own changes going in on Claude's pass, the daily summary and the Undo (core/self_merges.py, DEC-0225).
 - `tests/test_self_repair.py`: MIA putting her own services right and telling Zac after (core/self_repair.py, DEC-0222).
 - `tests/test_self_report.py`: MIA's weekly self-report and the standing mission (build plan step 6): what got better and what's slipping, from the loops' own history; Sundays, to the PC's owner only, through the gate; the "Keep MIA healthy" mission works the loops' tasks.

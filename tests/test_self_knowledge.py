@@ -2,7 +2,8 @@
 tests.test_self_knowledge
 ===========================
 
-What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me`
+What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed; and a
+question that only ends with something she has ("what's due in the greenhouse?") isn't one about her. `about_me`
 reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you`
 is honest about how much she knows; a missing source is a quiet gap, not a crash; and a question about her (not
 about one of her apps) gets these facts, her scale read once and kept a while for answers.
@@ -109,10 +110,11 @@ def test_a_question_only_her_records_can_answer_is_told_from_one_about_the_perso
         assert not self_knowledge.asks_about_her(q), q
 
 
-def test_describing_something_she_has_is_told_from_looking_up_or_changing_a_record():
+def test_describing_something_she_has_is_told_from_looking_up_or_changing_a_record_or_asking_whats_in_it():
     for q in ("Do you have a greenhouse app?", "What is the Chronicle?", "What apps do you have?"):
         assert self_knowledge.wants_described(None, q), q
-    for q in ("What is the greenhouse temperature?", "Add milk to the grocery list"):
+    for q in ("What is the greenhouse temperature?", "Add milk to the grocery list", "What's due in the greenhouse?",
+              "What's growing in the greenhouse?"):  # ending with a thing she has isn't asking her to describe it
         assert not self_knowledge.wants_described(None, q), q
 
 

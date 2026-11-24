@@ -5,7 +5,8 @@ records or said as missing, with general guidance marked as such. And it never t
 bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing. A
 Planner draft's "What It Touches" is the same picture at the draft's own size, and a confirmed build's materials
 still to buy reach the money answers (stock counted once across builds), one used on something else is said while
-it's short, his own page speaks to him, and the model is asked to go area by area."""
+it's short, his own page speaks to him, the model is asked to go area by area, and a question about one he already
+has ("what's due in the greenhouse?") never takes the picture, even by meaning."""
 
 from datetime import date
 
@@ -199,3 +200,11 @@ def test_the_picture_asks_the_model_to_go_area_by_area_and_a_failed_tool_or_odd_
                         lambda c, tool, args: "Something on my side broke while I was doing that, sorry.")
     text = qp.gather(life, qp.PLAN_BY_NAME["project picture"], "I'm planning to build a greenhouse?", TODAY).as_text()
     assert "Hoop-house greenhouse" in text and "broke" not in text
+
+
+@pytest.mark.parametrize("said", ["What's due in the greenhouse?", "How's the greenhouse doing?",
+                                  "What's the greenhouse temperature?", "What needs doing in the garden?"])
+def test_a_question_about_one_he_already_has_never_takes_the_picture_even_by_meaning(life, monkeypatch, said):
+    monkeypatch.setattr(meaning, "nearest", lambda *a, **k: ("project picture", 0.9))  # as close as meaning gets
+    found = qp.match(life, said)
+    assert found is None or found.name != "project picture", said

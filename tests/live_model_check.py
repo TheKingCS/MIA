@@ -686,6 +686,12 @@ GOLDEN_CASES = [
     ("weigh-in: delete the last", "Delete my last weigh-in, it was wrong", "delete_last_weigh_in"),
     ("missions: rename", "Rename the mission Read the Tractor Manual to Learn Hydraulics", "rename_mission"),
     ("operating journal: remove a line", "Take early mornings out of my operating journal", "remove_operating_line"),
+    # 2026-11-24's builds: his stock against the plans, harvests, the business's hourly and customers.
+    ("plans: what can I build", "What can I build with what I have?", "what_can_i_build"),
+    ("harvest: log one", "I harvested 5 pounds of tomatoes", "log_harvest"),
+    ("harvest: this year", "What has the garden produced this year?", "harvest_this_year"),
+    ("business: real hourly", "What do I really make an hour on my builds?", "earnings_per_hour"),
+    ("business: best customers", "Who are my best customers?", "best_customers"),
 ]
 
 

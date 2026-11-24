@@ -305,7 +305,9 @@ def _lists_apps(text: str) -> bool:
 def wants_described(context, prompt: str) -> bool:
     """Whether a message asks MIA to describe herself or something she has ("do you have a greenhouse app?", "what is
     the Chronicle?", "how do you work with my glasses?") rather than to look up or change the person's records, so
-    the turn answers it in conversation with her own records beside it instead of handing it to a tool."""
+    the turn answers it in conversation with her own records beside it instead of handing it to a tool. "What's X"
+    names an app only when X is the app ("what's the greenhouse app?"), never when it ends with one ("what's due in
+    the greenhouse?")."""
     text = _norm(prompt)
     if not text or _DOING.match(text):
         return False
@@ -322,9 +324,12 @@ def wants_described(context, prompt: str) -> bool:
     rest = defined.group(1)
     for t in topics:
         found = t.asks.search(rest)
-        if found and found.end() == len(rest):
+        if found and found.start() == 0 and found.end() == len(rest):  # the topic is the whole subject
             return True
-    return any(rest.endswith(a.get("name", "").lower()) or _APP_WORD.search(rest) for a in apps)
+    # the app is the whole subject ("what's the greenhouse", "what is the greenhouse app"), never only its last word
+    # ("what's due in the greenhouse?" asks about his greenhouse's upkeep, not the app)
+    return any(re.fullmatch(rf"{re.escape(a.get('name', '').lower())}(?:\s+{_APP_WORD.pattern})?", rest)
+               or (_APP_WORD.search(rest) and a.get("name", "").lower() in rest) for a in apps)
 
 
 def _cut(text: str, chars: int) -> str:
