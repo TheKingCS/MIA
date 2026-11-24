@@ -24,6 +24,16 @@ MUST_TRIGGER = [
     "I'm not safe at home",
     "I'm thinking about taking an overdose",
     "I want to hurt someone",
+    "Nobody would miss me",
+    "no one would even notice if I was gone",
+    "I'd be better off gone",
+    "What's the point of living",
+    "my life isn't worth living",
+    "I can't go on living like this",
+    "I don't want to exist anymore",
+    "I wish I had never been born",
+    "I wish I'd never been born",
+    "I just want it all to end for good",
 ]
 
 MUST_NOT_TRIGGER = [
@@ -42,6 +52,12 @@ MUST_NOT_TRIGGER = [
     "I don't want to be here anymore, this shift is endless",
     "I nearly died laughing",
     "Kill the lights, MIA",
+    "Nobody would miss this old truck",
+    "What's the point of this meeting?",
+    "I want this day to end",
+    "This mower isn't worth fixing",
+    "I'd be better off going tomorrow",
+    "what's the point in planting before the frost?",
 ]
 
 

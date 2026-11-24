@@ -19,7 +19,11 @@ MIA keeps talking with the person rather than ending the exchange.
 catches clear phrasing and misses indirect phrasing; its own corpus in
 tests/test_safety_floor.py lists both what must trigger and what must
 not ("this traffic is killing me"). False positives cost a caring
-message; false negatives are why the wording errs broad.
+message; false negatives are why the wording errs broad. Besides the
+direct words it knows the commonly recognised indirect signs, each said
+of the person themselves ("nobody would miss me", "what's the point of
+living", "I wish I'd never been born"), never of a thing ("nobody would
+miss this old truck").
 
 Contacts follow the person's country (core/region.py, 2026-10-01): 988
 and 911 in the US, Samaritans and 999 in the UK, and so on; elsewhere,
@@ -47,7 +51,16 @@ _DANGER = re.compile(
     r"overdos(?:e|ing)|"
     r"(?:going|want|gonna) to (?:hurt|kill) (?:someone|somebody|him|her|them)|"
     r"(?:he|she|they)(?:'?s| is| are| was)? (?:going to|gonna) (?:hurt|kill) me|"
-    r"i'?m not safe|i am not safe|i'?m in danger|i am in danger"
+    r"i'?m not safe|i am not safe|i'?m in danger|i am in danger|"
+    # Indirect, but the commonly recognised signs (2026-11-24): about the person themselves, never a thing
+    r"(?:nobody|no one|no-one) would (?:even )?(?:miss me|notice if i(?:'?m| was| were) gone|care if i(?:'?m| was| "
+    r"were) gone|care if i died)|"
+    r"(?:i'?d|i would|i'?m) (?:be )?better off gone|"
+    r"what'?s the point (?:of|in) (?:living|being alive|going on|me being here)|"
+    r"(?:life|my life) (?:isn'?t|is not|ain'?t) worth living|"
+    r"can'?t go on living|don'?t want to exist|"
+    r"wish i(?:'d| had)? never (?:been born|existed)|"
+    r"want (?:it all|everything) to (?:end|stop) for good"
     r")"
 )
 

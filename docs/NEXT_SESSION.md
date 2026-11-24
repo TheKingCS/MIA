@@ -96,7 +96,9 @@ were being treated as changes), record names match as whole words, and business 
 (K-0379 to K-0384). Two more reviews fixed what that change broke (K-0385, K-0386): a web search or page read
 keeps a change's path (`main_thread.OUTWARD`: after outside text it's held), and a direct lookup is never taken
 from a question naming another app's record, past the lookup's own words. Then "what's my net worth?"
-(`get_net_worth`, K-0387). Routing heuristics are fragile: send a fresh reviewer over every change to them. Note: Windows
+(`get_net_worth`, K-0387). Routing heuristics are fragile: send a fresh reviewer over every change to them. A sixteenth review found "what am I worth?"
+answered with his net worth (fixed, K-0389), which led to the safety floor learning the common indirect signs
+("nobody would miss me", "what's the point of living", K-0390); worth Zac reading `core/safety_floor.py`'s list. Note: Windows
 Application Control now blocks libzim's DLL on the PC, so run the suite with
 `--ignore=tests/test_reference_library_manager.py` there (CI on Linux runs it); her offline library reader needs it
 unblocked (WAITING_ON 0zh).
