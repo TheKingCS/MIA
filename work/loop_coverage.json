@@ -452,6 +452,10 @@
   "check:habit_offer": {
    "status": "none",
    "why": "each habit is offered once ever and never again (his rule, DEC-0294), so there's no repeated judgement to improve; the gate paces the one message"
+  },
+  "action:hatch": {
+   "status": "none",
+   "why": "it makes one mission from fixed incubation days (core/hatch_tracker.BIRDS); the mission's steps are his to tick, and the missions' own loops judge how missions go; no judgement of MIA's here to improve"
   }
  }
 }

@@ -304,3 +304,19 @@ New ideas, each checked against what's there first:
 - **Who owes me** (S, no decision): built 2026-11-24 (`core/receivables.py`, "who owes me?"): what's still unpaid on
   his orders (price less payments taken), oldest due first, the overdue and the delivered-but-unpaid named as the
   ones to chase, with the invoice draft he already has as the next step. Read-only.
+
+## Round 4 (2026-11-24, checked against the code first)
+
+- **Eggs in the incubator** (S, no decision): built 2026-11-24 (`core/hatch_tracker.py`): "I set 12 chicken eggs
+  in the incubator today" makes a mission with that bird's dated candling, lockdown and hatch-day steps (chicken 21
+  days, duck and turkey 28, goose 30, guinea 27, quail 17); "how's the hatch going?" says the day and what's next.
+- **Firewood for the winter** (S-M, no decision): cords on hand (inventory) against what a winter takes, from his
+  own burn record (logged loads, the stove's use) once there's a season of it; until then a stated estimate he can
+  correct. Not built yet.
+- **Seed saving** (S, no decision): seeds saved from his own plants (which bed, the year, how many), kept with the
+  pantry or inventory seeds so the seed check (`core/seed_check.py`) counts them, with how many years each kind
+  stays viable. Not built yet.
+- **The brooder** (S, after the hatch): chicks' temperature by week (start near 95 F, down about 5 F a week), as the
+  hatch mission's next steps once they're out. Not built yet.
+- **The offline library on Windows** (needs Zac, WAITING_ON 0zh): Smart App Control blocks its reader; the options
+  are written there.

@@ -68,6 +68,7 @@ SAID = [
     ("get_life_state", "what did I miss?"), ("get_life_state", "did anything happen while I was out?"),
     ("get_life_state", "bring me up to speed"), ("get_life_state", "any messages for me?"),
     ("get_life_state", "what did you do on your own today?"),
+    ("start_hatch", "I set 12 chicken eggs in the incubator today"), ("hatch_status", "how's the hatch going?"),
 ]
 
 

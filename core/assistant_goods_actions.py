@@ -171,12 +171,52 @@ def _get_deadlines(context, arguments: dict) -> str:
     return lead + "; ".join(said) + "." + tail
 
 
+def _action_start_hatch(context, arguments: dict) -> str:
+    """Tool start_hatch: eggs set in the incubator (hatch.start, core/hatch_tracker.py): a mission with the bird's
+    dated candling, lockdown and hatch-day steps."""
+    from core.assistant_correction_actions import _run, day_of
+
+    params = {"bird": str(arguments.get("bird") or "chicken"), "eggs": arguments.get("eggs")}
+    if arguments.get("set"):
+        when = day_of(str(arguments["set"]))
+        if when is None:
+            return "Which day were they set?"
+        params["set"] = when
+    return _run(context, "hatch.start", params)
+
+
+def _action_hatch_status(context, arguments: dict) -> str:
+    """Tool hatch_status: what day each hatch is on and what's next (core/hatch_tracker.say)."""
+    from core import hatch_tracker
+
+    return hatch_tracker.say(context)
+
+
 def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
     sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
-    will the feed last?": its answer says how long the feed lasts, core/feed_runway.py).
+    will the feed last?": its answer says how long the feed lasts, core/feed_runway.py). Also start_hatch and hatch_status: eggs in the incubator as a
+    mission with dated steps (core/hatch_tracker.py).
     """
     none = {"type": "object", "properties": {}, "required": []}
+    registry.register(AssistantAction(
+        name="start_hatch", domain="flock",
+        description="Eggs set in the incubator: a mission with the dated candling, lockdown and hatch-day steps "
+                    "for that bird (chicken 21 days, duck and turkey 28, goose 30, guinea 27, quail 17).",
+        parameters={"type": "object", "properties": {
+            "bird": {"type": "string", "description": "chicken, duck, turkey, goose, guinea or quail"},
+            "eggs": {"type": "number", "description": "how many eggs"},
+            "set": {"type": "string", "description": "the day set, if not today"}}, "required": ["eggs"]},
+        handler=_action_start_hatch,
+        trigger_phrases=("in the incubator", "set some eggs", "set eggs", "eggs to hatch", "started incubating",
+                         "start a hatch"),
+    ))
+    registry.register(AssistantAction(
+        name="hatch_status", domain="flock",
+        description="How each hatch in the incubator is going: what day it is and what's next.",
+        parameters=none, handler=_action_hatch_status,
+        trigger_phrases=("the hatch", "hatch going", "incubator", "when do they hatch", "lockdown", "candle the"),
+    ))
     registry.register(AssistantAction(
         name="get_eggs", domain="flock",
         description="The chickens: eggs today and this week, lay rate, loose eggs, cartons on hand, feed cost per dozen.",

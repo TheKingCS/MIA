@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1651 files, 360,788 lines; 1651 files describe themselves; 19,838 of 19,968 classes and functions are documented.
+1653 files, 361,059 lines; 1653 files describe themselves; 19,858 of 19,988 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-649 files, 184,036 lines; 9,400 of 9,486 classes and functions documented
+650 files, 184,230 lines; 9,410 of 9,496 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -274,6 +274,7 @@
 - `core/guitar_ear.py`: How MIA hears a guitar (DEC-0111): a recording, worked out in code, so a skill check can be passed by playing it, not only by saying so. The same rule she keeps for herself: a skill counts when it's shown.
 - `core/habit_offers.py`: Routines offered from his habits (DEC-0294; Zac, 2026-11-23: "Offer once, I decide"): when the same kind of thing shows in his history on the same weekday three weeks running (workouts logged on Mondays, the budget checked on Sundays), MIA offers one routine for it, a weekly reminder, once. His yes 
 - `core/hash_identifier.py`: Identifies the plausible algorithm(s) for a hash string, by prefix (for self-describing formats like bcrypt/crypt) or length+charset (for bare hex digests) — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. This is pattern-matching, not verification: there is no way to truly det
+- `core/hatch_tracker.py`: Eggs in the incubator, as a mission (Jarvis brainstorm, round 4: homestead). "I set 12 chicken eggs in the incubator today" makes one mission whose steps are the dated milestones of that bird's incubation: candling, lockdown (stop turning, raise the humidity) and hatch day, each with its date worked
 - `core/health_actions.py`: Every change to Health (core/health_manager.py) as an action, so the page, the phone, the glasses and voice agree and undo takes each one back, and the Health page's data (`health_page`) with its forms.
 - `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it:
@@ -947,7 +948,7 @@
 
 ## tests/: the test suite: what each part must do
 
-598 files, 96,200 lines; 8,075 of 8,119 classes and functions documented
+599 files, 96,277 lines; 8,085 of 8,129 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1149,6 +1150,7 @@
 - `tests/test_guitar.py`: Guitar, the first program on MIA's learning paths (core/guitar.py, core/guitar_ear.py, DEC-0111): her ear hears notes and chords right (and wrong ones as wrong), the program is sound (every shape makes its chord's notes), and the path runs end to end by voice: start, practise, checks counted, said a
 - `tests/test_habit_offers.py`: Routines offered from his habits (core/habit_offers.py, DEC-0294): the same kind of thing on the same weekday three weeks running, from his own doing, offered as a weekly reminder once ever, never what MIA did herself or an email brought; one counts as offered only once the gate let it through, trie
 - `tests/test_hash_identifier.py`: Unit tests for core.hash_identifier — pure pattern-matching logic, no external dependency, real hashes used as test fixtures (not mocks).
+- `tests/test_hatch_tracker.py`: Eggs in the incubator as a mission (core/hatch_tracker.py): each bird's milestones dated from the day set (chicken: candle days 7 and 14, lockdown 18, hatch 21), the mission made with a step for each, "how's the hatch going?" saying the day and what's next, and a future day, no eggs or an unknown bi
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
