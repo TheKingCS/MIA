@@ -82,6 +82,7 @@ SAID = [
     ("log_rain", "the rain gauge says half an inch"), ("log_rain", "we got 0.6 inches of rain last night"),
     ("start_broilers", "I got 25 Cornish cross chicks today"), ("broilers_status", "how are the meat birds coming?"),
     ("next_cut", "next cut"), ("next_cut", "read me the cuts for the potting bench"),
+    ("list_quotes", "which quotes should I follow up on?"), ("list_quotes", "who haven't I heard back from on quotes"),
 ]
 
 

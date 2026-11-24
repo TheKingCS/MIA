@@ -5,7 +5,8 @@ tests.test_business_voice
 His business by voice (core/assistant_business_voice_actions.py, DEC-0125): the quotes still out, the open orders, a
 customer's details, adding a customer, making a quote for a customer he has, a quote accepted (it becomes an order,
 due when he says), an order marked delivered; each change through the Business page's own action, with "undo that".
-A record is found by its exact title or customer name first; dates like "December 5" are read; the read-only tools
+The quotes out say what their dates mean (expired, expiring, a week sent with no answer). A record is found by
+its exact title or customer name first; dates like "December 5" are read; the read-only tools
 count as lookups by their observe tier (but a web search or a page read keeps a change's path, and a new tool's tier
 is judged by its name); a record's name matches only as whole words, a plural allowed; a question naming another
 app's record is never answered without the model (past the lookup's own words: "how many eggs this week?" stays the
@@ -133,3 +134,16 @@ def test_a_statement_with_a_number_never_names_a_lookup():
 
     registry = build_desktop_registry()
     assert registry.named_action("egg count is 12 today", ["get_eggs", "log_eggs"]) is None
+
+
+def test_a_quote_a_week_sent_is_worth_a_follow_up_and_an_expired_one_says_so():
+    from datetime import timedelta
+    from types import SimpleNamespace
+
+    today = date(2026, 11, 24)
+    sent = SimpleNamespace(status="Sent", created_at=(today - timedelta(days=9)).isoformat(), valid_until="")
+    assert "9 days with no answer: worth a follow-up" in bv._age_note(sent, today)
+    gone = SimpleNamespace(status="Sent", created_at=today.isoformat(), valid_until="2026-11-20")
+    assert bv._age_note(gone, today) == ", expired Nov 20"
+    fresh = SimpleNamespace(status="Draft", created_at=(today - timedelta(days=30)).isoformat(), valid_until="")
+    assert bv._age_note(fresh, today) == ""  # a draft was never sent: nothing to chase

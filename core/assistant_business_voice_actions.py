@@ -49,8 +49,32 @@ def _money(amount) -> str:
     return money(float(amount or 0), ",.2f")
 
 
+FOLLOW_UP_DAYS = 7  # a sent quote this old with no answer is worth a call
+
+
+def _age_note(q, today: date) -> str:
+    """Pure logic. What a quote's dates say: expired or expiring soon (its good-until date), or, sent and a week old
+    with no answer, worth a follow-up."""
+    try:
+        until = date.fromisoformat(str(q.valid_until)[:10]) if q.valid_until else None
+    except ValueError:
+        until = None
+    if until is not None and until < today:
+        return f", expired {until:%b} {until.day}"
+    if until is not None and (until - today).days <= 3:
+        return f", good until {until:%b} {until.day}"
+    try:
+        made = date.fromisoformat(str(q.created_at)[:10]) if q.created_at else None
+    except ValueError:
+        made = None
+    if q.status == "Sent" and made is not None and (today - made).days >= FOLLOW_UP_DAYS:
+        return f", {(today - made).days} days with no answer: worth a follow-up"
+    return ""
+
+
 def _action_list_quotes(context, arguments: dict) -> str:
-    """Tool list_quotes: the quotes still out (draft or sent), each with its customer and price."""
+    """Tool list_quotes: the quotes still out (draft or sent), each with its customer and price, and what its dates
+    say (`_age_note`: expired, expiring soon, or a week sent with no answer); the ones to follow up named last."""
     from core.business_actions import quote_figures
 
     book = _book(context)
@@ -60,12 +84,19 @@ def _action_list_quotes(context, arguments: dict) -> str:
     out = [q for q in book.quotes if q.status in OPEN_QUOTES]
     if not out:
         return "No quotes are out right now."
-    lines = []
+    today = date.today()
+    lines, chase = [], []
     for q in out:
         price = quote_figures(context, q)["price"]
         who = f" for {names[q.customer_id]}" if q.customer_id in names else ""
-        lines.append(f"{q.title}{who}, {_money(price)} ({q.status.lower()})")
-    return f"{len(out)} quote{'s' if len(out) != 1 else ''} out: " + "; ".join(lines) + "."
+        note = _age_note(q, today)
+        lines.append(f"{q.title}{who}, {_money(price)} ({q.status.lower()}{note})")
+        if "follow-up" in note:
+            chase.append(q.title)
+    said = f"{len(out)} quote{'s' if len(out) != 1 else ''} out: " + "; ".join(lines) + "."
+    if chase:
+        said += " Worth a call: " + ", ".join(chase) + "."
+    return said
 
 
 def _action_list_orders(context, arguments: dict) -> str:
@@ -215,7 +246,7 @@ def _action_order_status(context, arguments: dict) -> str:
 
 def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
     """Registers list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
-    (domain business), the words that reach them (`WORDS`), and his customers' names and open quotes' and orders'
+    (domain business; list_quotes also says which quotes are worth a follow-up), the words that reach them (`WORDS`), and his customers' names and open quotes' and orders'
     titles (`_record_names`)."""
     s = {"type": "string"}
 
@@ -228,7 +259,8 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
 
     tool("list_quotes", "The quotes still out (draft or sent), with customer and price.", {}, [],
          _action_list_quotes, ("quotes out", "quotes are out", "open quotes", "my quotes", "what quotes",
-                               "quotes still out", "pending quotes", "quotes i've sent"))
+                               "quotes still out", "pending quotes", "quotes i've sent", "quotes to follow up",
+                               "follow up on quotes"))
     tool("list_orders", "The open orders (not delivered or cancelled), soonest due first.", {}, [],
          _action_list_orders, ("open orders", "what orders are", "orders due", "orders are due",
                                "what am i building for", "customer orders", "orders do i have"))
