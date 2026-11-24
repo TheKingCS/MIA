@@ -35,7 +35,7 @@ picture", core/project_ripple.py), using the month's money (`money_now`)
 and the freedom date with a cost (`freedom_with`), both shared with the
 money and afford plans. "What should I do this weekend?" gathers each
 weekend day's forecast with what's due, the garden, learning and projects
-(the plan "weekend", `weekend_days`); "am I ready for winter?" gathers
+(the plan "weekend", `weekend_days`; a wet day named for indoor work, `is_wet`); "am I ready for winter?" gathers
 the first frost, firewood, preparedness, the kit, the flock, the garden and
 the canning shelf (the plan "winter"). A tool's quoted example holding a
 number ("I burn 4 cords a winter") is left off a sheet (`without_examples`):
@@ -693,6 +693,16 @@ def _project_picture(context, sheet, prompt, today):
     project_ripple.gather(context, sheet, prompt, today)
 
 
+WET_CHANCE = 60  # percent chance of rain that makes a day a wet one
+_WET_WORDS = re.compile(r"\b(rain|showers?|drizzle|storms?|thunder\w*|snow|sleet)\b", re.I)
+
+
+def is_wet(day: dict) -> bool:
+    """Pure logic. Whether a forecast day is a wet one: its chance of rain at WET_CHANCE or more, or its words say
+    rain, snow or storms."""
+    return (day.get("rain") is not None and day["rain"] >= WET_CHANCE) or bool(_WET_WORDS.search(day.get("words") or ""))
+
+
 def weekend_days(today: date, prompt: str = "") -> list[date]:
     """Pure logic. The days a weekend question means: this Saturday and Sunday (on a Saturday, today and tomorrow; on
     a Sunday, today); "next weekend" the one after this week's (on a Sunday, the coming one); one day named alone
@@ -713,7 +723,7 @@ def weekend_days(today: date, prompt: str = "") -> list[date]:
 def _weekend(context, sheet, prompt, today):
     """Cross-domain (Jarvis brainstorm round 7): the weekend: each day's forecast (core/weather.py), what's due this
     week, the garden's week, his learning paths and his projects, with a line of guidance on fitting outdoor work to
-    the better day when two days have a forecast. The model suggests; nothing is scheduled."""
+    the better day when two days have a forecast; a wet day (`is_wet`) is named, with guidance for indoor work. The model suggests; nothing is scheduled."""
     from core import weather
 
     days = weekend_days(today, prompt)
@@ -724,11 +734,13 @@ def _weekend(context, sheet, prompt, today):
         card = {}
     forecast = {d["date"]: d for d in (card.get("days") or [])}
     unit = card.get("unit", "")
-    known = 0
+    known, wet = 0, []
     for day in days:
         f = forecast.get(day.isoformat())
         if f:
             known += 1
+            if is_wet(f):
+                wet.append(day)
             sheet.add(FACT, f"{day:%A}: " + (f"{f['words']}, " if f["words"] else "") + f"high {f['high']}{unit}, low {f['low']}{unit}"
                       + (f", {f['rain']}% chance of rain" if f.get("rain") is not None else "") + ".", "the forecast")
         else:
@@ -739,6 +751,11 @@ def _weekend(context, sheet, prompt, today):
     _look(context, sheet, "garden_this_week", "the garden")
     _look(context, sheet, "learning_progress", "learning paths")
     _look(context, sheet, "list_projects", "Projects")
+    if wet:  # a wet day: indoor work leads it (Jarvis brainstorm round 8)
+        sheet.add(CALCULATION, " and ".join(f"{d:%A}" for d in wet) + (" looks" if len(wet) == 1 else " look")
+                  + " wet: a day for indoor work.", "the forecast")
+        sheet.add(ESTIMATE, "A wet day suits the next practice on a learning path, shop work on a build's cut list, "
+                            "or planning and paperwork that's been waiting.", "general guidance")
     if known >= 2:  # a comparison only when there are two days to compare
         sheet.add(ESTIMATE, "Outdoor work (a build, the garden) suits the drier, milder day; practice and indoor jobs "
                             "fit the wetter one. Rest counts too.", "general guidance")

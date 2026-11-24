@@ -3,7 +3,7 @@ plan for a question, lookups gathered by code onto a marked sheet, and an
 answer that never states a number MIA didn't look up; and the weekend's
 plan with each day's forecast, reached only by a weekend ahead; and the
 winter plan with the days to the first frost; a tool's quoted example with a
-number never reaches a sheet."""
+number never reaches a sheet; and a wet weekend day named for indoor work."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -181,3 +181,15 @@ def test_a_quoted_example_with_a_number_never_reaches_a_sheet_as_his_record():
                                "I'll keep count. Log water like \"water, 10 gallons\". Say \"let's plan it\".")
     assert "4 cords" not in said and "10 gallons" not in said
     assert "Tell me yours and I'll keep count." in said and "Say \"let's plan it\"." in said  # no number: kept
+
+
+def test_a_wet_weekend_day_is_named_for_indoor_work(life, monkeypatch):
+    from core import weather
+
+    assert qp.is_wet({"rain": 70, "words": "Overcast"}) and qp.is_wet({"rain": None, "words": "Light rain"})
+    assert not qp.is_wet({"rain": 20, "words": "Partly cloudy"})
+    monkeypatch.setattr(weather, "card", lambda c: {"place": "Town", "unit": "°F", "days": [
+        {"date": "2026-11-28", "high": 52, "low": 31, "words": "Clear", "rain": 5},
+        {"date": "2026-11-29", "high": 45, "low": 38, "words": "Rain", "rain": 80}]})
+    text = qp.gather(life, qp.PLAN_BY_NAME["weekend"], "What should I do this weekend?", date(2026, 11, 24)).as_text()
+    assert "Sunday looks wet: a day for indoor work." in text and "A wet day suits" in text

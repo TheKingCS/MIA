@@ -368,7 +368,7 @@ Checked against the code first; each says whether it needs Zac's say.
   exists; only the offer is new).
 - **The month's money story** (his say: a new monthly message): on the first, two sentences: the month against his
   usual, the freedom date's move, the one thing that changed it. Paced by the gate like the evening wrap.
-- **A rainy-day plan** (no decision): the weekend plan already reads the forecast; on a wet day it could lead with
+- **A rainy-day plan** (no decision): *built 2026-11-24 (the weekend plan names a wet day for indoor work).* the weekend plan already reads the forecast; on a wet day it could lead with
   his learning path's next practice (guitar, the woodworking lesson) and indoor shop work from the cut list.
 - **Hear every plan's answer on the real model, weekly** (no decision): the live check now covers today's tools;
   the same for each question plan's sheet (does the answer go area by area, does it invent a number), so a prompt
