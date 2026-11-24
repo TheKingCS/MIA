@@ -693,6 +693,9 @@ GOLDEN_CASES = [
     ("business: real hourly", "What do I really make an hour on my builds?", "earnings_per_hour"),
     ("business: best customers", "Who are my best customers?", "best_customers"),
     ("business: prices", "Which products should I raise prices on?", "check_my_prices"),
+    ("library: a course", "I want to learn about beekeeping", "learn_about"),
+    ("library: a course, said otherwise", "Teach me everything about soil fertility", "learn_about"),
+    ("learning path: a skill", "I want to learn to play the banjo", "start_learning"),
 ]
 
 

@@ -580,6 +580,8 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     lessons).
     Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
     (list_inventory and list_materials, list_trips and get_trip_route...).
+    add_course is reached by "add a course" and "i want to learn", no longer "learn about", which builds a course
+    from her offline library (learn_about, core/library_course.py).
     """
     registry.register(AssistantAction(
         name="log_workout", domain="workout",
@@ -726,7 +728,8 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
             "description": _s("Optional."), "lessons": _list("Optional lesson names in order."),
         }, ["subject", "course"]),
         handler=_action_add_course,
-        trigger_phrases=("add a course", "new course", "start a course", "i want to learn", "learn about"),
+        # "learn about X" builds a course from her library (learn_about); this one adds his own course by name
+        trigger_phrases=("add a course", "new course", "start a course", "i want to learn"),
     ))
     registry.register(AssistantAction(
         name="add_lesson", domain="classroom", description="Add lesson(s) to an existing Classroom course.",

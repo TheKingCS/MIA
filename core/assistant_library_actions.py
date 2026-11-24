@@ -52,9 +52,25 @@ def _fetch(context, arguments: dict) -> str:
     return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
 
 
+def _learn_about(context, arguments: dict) -> str:
+    """Tool learn_about: a Classroom course on a subject built from her offline library (core/library_course.make)."""
+    from core import library_course
+
+    return library_course.make(context, str(arguments.get("subject") or ""))
+
+
+def _library_lesson(context, arguments: dict) -> str:
+    """Tool library_lesson: the next lesson of a library course, read from its article to teach
+    (core/library_course.teach)."""
+    from core import library_course
+
+    return library_course.teach(context, str(arguments.get("course") or ""))
+
+
 def register_library_actions(registry) -> None:
     """Registers look_up_offline and read_reference (in their own domain, brought by how a how-to question is
-    asked) and fetch_reference_packs."""
+    asked), learn_about and library_lesson (courses from the library, core/library_course.py: "I want to learn about
+    beekeeping", "teach me the next lesson on beekeeping") and fetch_reference_packs."""
     registry.register_domain_keywords(DOMAIN, ASKING)
     registry.register(AssistantAction(
         name="look_up_offline", domain=DOMAIN,
@@ -77,6 +93,28 @@ def register_library_actions(registry) -> None:
             "focus": {"type": "string", "description": "What to read about in it, in a few words (optional)."}},
             "required": ["ref"]},
         handler=_read, trigger_phrases=("tell me more about that", "what else does it say", "read more"),
+    ))
+    registry.register(AssistantAction(
+        name="learn_about", domain=DOMAIN,
+        description="Build a course on a subject from MIA's offline library, in Classroom: one lesson for each part "
+                    "of it the library covers (what it is, the basics, tools, how it's done, safety, problems, going "
+                    "further, history), each from one article. For 'I want to learn about X'; for practising a skill "
+                    "(guitar, welding) use start_learning.",
+        parameters={"type": "object", "properties": {"subject": {"type": "string",
+                    "description": "What they want to learn about, in their words."}}, "required": ["subject"]},
+        handler=_learn_about,
+        trigger_phrases=("learn about", "learning about", "learn all about", "everything about", "make me a course",
+                         "build me a course", "course from the library", "study up on", "teach me about"),
+    ))
+    registry.register(AssistantAction(
+        name="library_lesson", domain=DOMAIN,
+        description="Teach the next lesson of one of his library courses (from learn_about), read from its article: "
+                    "the key ideas, an example from the text, and a question to check.",
+        parameters={"type": "object", "properties": {"course": {"type": "string",
+                    "description": "The course's subject, if he named one."}}, "required": []},
+        handler=_library_lesson,
+        trigger_phrases=("next lesson on", "next lesson in", "continue my course", "my library course",
+                         "next lesson of", "keep going with the course"),
     ))
     registry.register(AssistantAction(
         name="fetch_reference_packs", domain="knowledge",
