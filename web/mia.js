@@ -493,6 +493,9 @@
         { name: "Start seeds indoors", steps: [{ do: "Start tomatoes indoors: 8 for Bed 1, plus a few spares.", why: "It needs a head start: about 7 weeks before your last frost.", when: "the week of March 2" }] }] }], builds: [{ id: "raised_bed", title: "Raised garden bed", walked: true }],
       crops: [{ id: "tomato", name: "Tomatoes", per_sqft: 1, days: 75 }, { id: "lettuce", name: "Lettuce", per_sqft: 4, days: 50 }],
       last_frost: "", first_frost: "", sources: [] }) : call("GET", "/api/planner"),
+    plannerTouches: (id) => demo ? Promise.resolve({ lines: [{ kind: "calculation", text: "The Library's plan: 14 materials.", source: "the Library" },
+      { kind: "estimate", text: "A greenhouse needs water at it every day in summer.", source: "general guidance" }] })
+      : call("GET", "/api/planner/touches?plan_id=" + encodeURIComponent(id)),
     // Her offline library's shelves (core/offline_library.py): what she should have, what's here, downloads.
     knowledgeLibrary: () => demo ? Promise.resolve({ available: true, free_gb: 500, packs: [
       { key: "appropedia_en_all_maxi", title: "Appropedia", shelf: "Homestead and growing", set: "essential", why: "appropriate technology", size_gb: 0.58, here: true, newer: false, published: true, state: "" },

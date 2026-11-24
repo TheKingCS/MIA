@@ -3,7 +3,8 @@
  * Reads MIA.planner(): the plans (drafts and confirmed), the Library's builds (marked when Trade Master walks them),
  * the crops and the frost dates. Every change is an action (MIAShell.act): projectplan.draft for a new plan,
  * projectplan.change for a draft's size, beds, crops, frosts or a stage left out, projectplan.confirm (the project and
- * a mission a stage), projectplan.drop. Nothing is worked out here: the stages come from core. Formatting only.
+ * a mission a stage), projectplan.drop. A draft's "What It Touches" (MIA.plannerTouches, core/project_ripple.py) is
+ * read when it's opened. Nothing is worked out here: the stages come from core. Formatting only.
  */
 (function () {
   "use strict";
@@ -20,6 +21,20 @@
         "Leave This Stage Out") : null)));
   }
 
+  // What a draft touches (core/project_ripple.for_plan): read when opened, each line with where it came from.
+  const LABEL = { fact: "", calculation: "", estimate: "Guidance: ", missing: "Not recorded: " };
+  function touches(plan) {
+    const box = el("div", { class: "sync-rows" }, el("p", { class: "dim" }, "Reading your records…"));
+    const panel = el("details", { ontoggle: async (e) => {
+      if (!e.target.open || box.dataset.read) return;
+      box.dataset.read = "1";
+      const data = await MIA.plannerTouches(plan.plan_id);
+      box.replaceChildren(...(data.lines || []).map((l) => el("p", { class: l.kind === "fact" || l.kind === "calculation" ? "" : "dim" },
+        (LABEL[l.kind] || "") + l.text + (l.source ? " (" + l.source + ")" : ""))));
+    } }, el("summary", {}, "What It Touches"), box);
+    return panel;
+  }
+
   function planCard(plan) {
     const draft = plan.status === "draft";
     const buttons = draft ? [
@@ -33,7 +48,7 @@
     return el("section", { class: "glass money-section" },
       el("h2", {}, plan.title), el("p", { class: "dim" }, (plan.kind === "garden" ? "Garden" : "Build") + " · " + (draft ? "a draft: nothing is made until you confirm" : "confirmed")),
       ...plan.warnings.map((w) => el("p", { class: "plan-problem" }, w)),
-      stageList(plan), el("div", { class: "row-buttons" }, buttons.filter(Boolean)));
+      stageList(plan), draft ? touches(plan) : null, el("div", { class: "row-buttons" }, buttons.filter(Boolean)));
   }
 
   async function sizeForm(plan) {

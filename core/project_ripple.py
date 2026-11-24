@@ -28,7 +28,10 @@ time and goals) and puts each one's facts on one sheet, from the records and cal
 
 Each area also carries a line of general guidance (`NEEDS`: "a greenhouse needs water at it"), marked as such, so the
 model connects them without inventing his facts. What isn't recorded is said as missing. Nothing is planned, bought
-or changed: the sheet ends by offering to draft the plan (core/project_plans.py), which waits for his Confirm.
+or changed: the sheet ends by offering to draft the plan, which waits for his Confirm.
+
+**On the Planner page** (`for_plan`, /api/planner/touches): each plan's "What It Touches" is the same picture, at the
+plan's own size (a garden plan's beds and crops in place of a build), opened when he asks for it.
 """
 
 from __future__ import annotations
@@ -278,7 +281,8 @@ def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
 
 
 def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
-    """The project picture's gatherer: the project and what it touches (`kind_of`), each area's facts on the sheet,
+    """The project picture's gatherer: the project and what it touches (`kind_of`), each area's facts on the sheet
+    (`_picture`, shared with the Planner page's `for_plan`),
     with the month's money and the freedom date gathered here for every kind that touches money (a project with no
     Library plan too), then the offer to draft the plan. A project of no known kind gets money, materials, time and
     goals."""
@@ -290,9 +294,25 @@ def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
     _fact(sheet, qp.FACT, f"The project he's planning: {what} (a {kind.name}). It touches: {', '.join(kind.touches)}.",
           "your words")
     draft = _started(context, sheet, kind, what)
+    _picture(context, sheet, kind, draft, today)
+    if draft is None and kind.shelf:
+        _fact(sheet, qp.ESTIMATE, f"Nothing is planned or bought from this. He can say \"let's plan the {kind.name}\" "
+                                  "and MIA drafts it at his size: the materials against what's on hand, then the "
+                                  "build's steps; nothing is made until he confirms.", "how MIA works")
+
+
+def _picture(context, sheet, kind: Kind, draft, today: date) -> None:
+    """Every area `kind` touches onto the sheet: the build (at `draft`'s size when there is one; a garden plan's beds
+    and crops instead), the month's money and the freedom date, then each other area."""
+    from core import question_plans as qp
+
     cost = 0.0
     try:
-        cost = _build(context, sheet, kind, draft)
+        if draft is not None and draft.kind == "garden":
+            _fact(sheet, qp.FACT, f"The garden plan: {len(draft.beds)} bed{'s' if len(draft.beds) != 1 else ''}, "
+                                  f"{len(draft.crops)} crop{'s' if len(draft.crops) != 1 else ''}.", "the Planner")
+        else:
+            cost = _build(context, sheet, kind, draft)
     except Exception:  # noqa: BLE001 - one area failing leaves the rest
         log.exception("The project picture couldn't work out the build")
     if MONEY in kind.touches:  # the month, and the freedom date (with the known cost, when there is one)
@@ -308,7 +328,27 @@ def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
             _area(context, sheet, kind, area, today)
         except Exception:  # noqa: BLE001
             log.exception("The project picture couldn't gather %s", area)
-    if draft is None and kind.shelf:
-        _fact(sheet, qp.ESTIMATE, f"Nothing is planned or bought from this. He can say \"let's plan the {kind.name}\" "
-                                  "and MIA drafts it at his size: the materials against what's on hand, then the "
-                                  "build's steps; nothing is made until he confirms.", "how MIA works")
+
+
+def _kind_of_plan(plan) -> Kind:
+    """Pure logic. The kind a Planner plan is: a garden plan's garden; a build's by its Library plan, else by its
+    title, else a project of its own name touching money, materials, time and goals."""
+    if plan.kind == "garden":
+        return next(k for k in KINDS if k.name == "garden")
+    bare = str(plan.shelf_plan or "").split(":", 1)[-1]
+    return (next((k for k in KINDS if k.shelf and k.shelf == bare), None) or _kind_in(plan.title)
+            or Kind(plan.title or "project", "", "", BASIC))
+
+
+def for_plan(context, plan_id: str, today: Optional[date] = None) -> list[dict]:
+    """The Planner page's "What It Touches" for one plan: the same picture as asking about it (`_picture`, at the
+    plan's own size), each line {kind, text, source}; [] for a plan that isn't there. Plans nothing."""
+    from core.question_plans import Sheet
+
+    book = getattr(context, "project_plans", None)
+    plan = book.get(plan_id) if book is not None else None
+    if plan is None:
+        return []
+    sheet = Sheet("project picture", "What it touches")
+    _picture(context, sheet, _kind_of_plan(plan), plan, today or date.today())
+    return [{"kind": f.kind, "text": f.text, "source": f.source} for f in sheet.facts]

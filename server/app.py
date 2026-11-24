@@ -573,7 +573,7 @@ def create_app(context: AppContext) -> FastAPI:
     /api/sensors/reading with their own key (core/sensors.py), and the phone's autofill asks /api/passwords/autofill
     which logins fit a sign-in (core/password_autofill.py). A linked device's key is kept to its scope, and one reported
     lost is answered "erase", proved with its own key against the nonce it sent (core/linked_devices.py,
-    core/home_link.erase_proof, WP-10). /api/live also takes a linked device's key as its token (a household device's one route), and a device reported lost ends the account's other sign-ins too. /api/knowledge/library is her offline library's shelves (core/offline_library.py); /api/planner the plans made together (core/project_plans.py, on the person's own view). /api/desktop lists MIA OS's Linux apps and System
+    core/home_link.erase_proof, WP-10). /api/live also takes a linked device's key as its token (a household device's one route), and a device reported lost ends the account's other sign-ins too. /api/knowledge/library is her offline library's shelves (core/offline_library.py); /api/planner the plans made together (core/project_plans.py, on the person's own view), and /api/planner/touches one plan's "What It Touches" (core/project_ripple.py). /api/desktop lists MIA OS's Linux apps and System
     Settings pages and opens them from the computer only (core/linux_apps.py, FW-11), with any MIA OS update waiting for his
     restart (core/update_notice.py, Q-114), and /api/models/store her models
     (core/model_store.py, REQ-HW-014). The Sign-ins page says whether the security log is intact
@@ -1429,6 +1429,15 @@ def create_app(context: AppContext) -> FastAPI:
 
         with app.state.turn_lock:
             return page(view_for(context, profile_id))  # his household's plans
+
+    @app.get("/api/planner/touches")
+    def planner_touches(plan_id: str, profile_id: str = Depends(require_profile_id)) -> dict:
+        """One plan's "What It Touches" (core/project_ripple.for_plan): the build against stock, money and the freedom
+        date, and every area the project touches, each line marked fact, calculation, estimate or missing. Reads only."""
+        from core.project_ripple import for_plan
+
+        with app.state.turn_lock:
+            return {"lines": for_plan(view_for(context, profile_id), plan_id)}
 
     @app.post("/api/knowledge/pack/delete")
     def knowledge_pack_delete(body: PackDelete, profile_id: str = Depends(require_profile_id)) -> dict:

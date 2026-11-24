@@ -2,7 +2,8 @@
 project picture, whose sheet carries the build's materials and cost against the workshop's stock, his money and
 freedom date, and each area a greenhouse touches (growing, water, power, time, goals, research), every one from his
 records or said as missing, with general guidance marked as such. And it never takes a question that's another plan's or a tool's (debts, a
-bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing."""
+bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing. A
+Planner draft's "What It Touches" is the same picture at the draft's own size."""
 
 from datetime import date
 
@@ -111,3 +112,17 @@ def test_the_picture_tool_names_the_project_and_plans_nothing(life):
     said = life.assistant_actions.execute(life, "project_picture", {"project": "a hoop house"})
     assert "hoop house" in said and "Hoop-house greenhouse" in said
     assert life.project_plans is None or not life.project_plans.listed()
+
+
+def test_a_drafts_what_it_touches_is_the_same_picture_at_its_own_size_and_plans_nothing(life, tmp_path):
+    from core import project_plans
+    from core.project_plans import ProjectPlanBook
+
+    life.project_plans = ProjectPlanBook(life, data_dir=tmp_path / "pp")
+    plan = project_plans.draft(life, {"kind": "build", "shelf_plan": "builtin:hoop-house", "sizes": {"width_ft": 20}})
+    lines = pr.for_plan(life, plan.plan_id, TODAY)
+    text = " ".join(l["text"] for l in lines)
+    assert "width 20 ft" in text and "needs water at it" in text
+    assert {l["kind"] for l in lines} <= {"fact", "calculation", "estimate", "missing"}
+    assert [p.plan_id for p in life.project_plans.listed()] == [plan.plan_id]  # still only the draft
+    assert pr.for_plan(life, "no-such-plan") == []
