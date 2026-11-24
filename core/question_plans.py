@@ -431,7 +431,8 @@ def _noticed(context, sheet, prompt, today):
 
 def _afford(context, sheet, prompt, today):
     """Cross-domain (build plan step 8): a purchase against the month's money and the freedom date, worked out
-    by core/freedom.plan() twice, as things stand and with the purchase (`freedom_with`)."""
+    by core/freedom.plan() twice, as things stand and with the purchase (`freedom_with`), with what his confirmed
+    builds still need from the store (`_planned_builds`)."""
     amount = _amount_in(prompt)
     monthly = bool(re.search(r"\b(a|per|each|every) month\b|\bmonthly\b", prompt.lower()))
     if amount:
@@ -440,7 +441,19 @@ def _afford(context, sheet, prompt, today):
     else:
         sheet.add(MISSING, "The question doesn't say how much it costs.", "your question")
     _money_month(context, sheet, prompt, today)
+    _planned_builds(context, sheet)
     freedom_with(context, sheet, amount, monthly, today)
+
+
+def _planned_builds(context, sheet) -> None:
+    """What his confirmed builds still need from the store (core/project_ripple.add_still_to_buy); a failure is
+    logged and the sheet goes on without it."""
+    try:
+        from core.project_ripple import add_still_to_buy
+
+        add_still_to_buy(context, sheet)
+    except Exception:  # noqa: BLE001
+        log.exception("Couldn't read what the confirmed builds still need")
 
 
 def freedom_with(context, sheet, amount: Optional[float], monthly: bool, today: date, check: bool = True) -> None:
@@ -591,10 +604,12 @@ def _operating(context, sheet, prompt, today):
 
 
 def _projects(context, sheet, prompt, today):
-    """Cross-domain (step 8; G7, G11): the projects, their open tasks, what builds cost, what the business makes."""
+    """Cross-domain (step 8; G7, G11): the projects, their open tasks, what builds cost and what confirmed builds
+    still need from the store, what the business makes."""
     _look(context, sheet, "list_projects", "Projects")
     _look(context, sheet, "list_tasks", "Projects")
     _look(context, sheet, "get_build_costs", "the Workshop")
+    _planned_builds(context, sheet)
     _look(context, sheet, "get_ledger_summary", "the business")
     _look(context, sheet, "show_my_why", "your goals")
 
@@ -608,12 +623,14 @@ def _habits(context, sheet, prompt, today):
 
 
 def _priorities(context, sheet, prompt, today):
-    """Cross-domain (step 8; G10, G12, G15): money, freedom, projects, how they mean to operate, and the year."""
+    """Cross-domain (step 8; G10, G12, G15): money, freedom, projects (and what confirmed builds still need from the
+    store), how they mean to operate, and the year."""
     from core import seasons
 
     _money_month(context, sheet, prompt, today)
     _look(context, sheet, "get_freedom_progress", "Freedom")
     _look(context, sheet, "list_projects", "Projects")
+    _planned_builds(context, sheet)
     _operating(context, sheet, prompt, today)
     _label, lines = seasons.season(context, "year", today)
     for line in lines[:4]:

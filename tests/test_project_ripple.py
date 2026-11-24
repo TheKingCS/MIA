@@ -3,7 +3,8 @@ project picture, whose sheet carries the build's materials and cost against the 
 freedom date, and each area a greenhouse touches (growing, water, power, time, goals, research), every one from his
 records or said as missing, with general guidance marked as such. And it never takes a question that's another plan's or a tool's (debts, a
 bill, the weather, the build's materials or price), reads the kind from the project itself, and files nothing. A
-Planner draft's "What It Touches" is the same picture at the draft's own size."""
+Planner draft's "What It Touches" is the same picture at the draft's own size, and a confirmed build's materials
+still to buy reach the money answers."""
 
 from datetime import date
 
@@ -126,3 +127,18 @@ def test_a_drafts_what_it_touches_is_the_same_picture_at_its_own_size_and_plans_
     assert {l["kind"] for l in lines} <= {"fact", "calculation", "estimate", "missing"}
     assert [p.plan_id for p in life.project_plans.listed()] == [plan.plan_id]  # still only the draft
     assert pr.for_plan(life, "no-such-plan") == []
+
+
+def test_a_confirmed_builds_materials_still_to_buy_reach_the_afford_answer_and_drafts_dont(life, tmp_path):
+    from core import project_plans
+    from core.project_plans import ProjectPlanBook
+
+    life.project_plans = ProjectPlanBook(life, data_dir=tmp_path / "pp")
+    draft = project_plans.draft(life, {"kind": "build", "shelf_plan": "builtin:hoop-house"})
+    assert pr.still_to_buy(life) == []  # a draft is nothing decided
+    draft.status = "confirmed"
+    life.project_plans.put(draft)
+    rows = pr.still_to_buy(life)
+    assert [r["title"] for r in rows] == [draft.title] and rows[0]["items"] > 0
+    sheet = qp.gather(life, qp.PLAN_BY_NAME["afford"], "can I afford a $900 welder?", TODAY)
+    assert "Confirmed builds still to buy: " + draft.title in sheet.as_text()

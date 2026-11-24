@@ -30,6 +30,9 @@ Each area also carries a line of general guidance (`NEEDS`: "a greenhouse needs 
 model connects them without inventing his facts. What isn't recorded is said as missing. Nothing is planned, bought
 or changed: the sheet ends by offering to draft the plan, which waits for his Confirm.
 
+**In money answers** (`add_still_to_buy`, step 2 of the plan): what his confirmed builds still need from the store,
+on the afford, priorities and projects sheets, so "can I afford it?" knows the greenhouse's lumber is still to come.
+
 **On the Planner page** (`for_plan`, /api/planner/touches): each plan's "What It Touches" is the same picture, at the
 plan's own size (a garden plan's beds and crops in place of a build), opened when he asks for it.
 """
@@ -328,6 +331,54 @@ def _picture(context, sheet, kind: Kind, draft, today: date) -> None:
             _area(context, sheet, kind, area, today)
         except Exception:  # noqa: BLE001
             log.exception("The project picture couldn't gather %s", area)
+
+
+def still_to_buy(context) -> list[dict]:
+    """What his confirmed builds still need from the store, each {title, cost, unpriced, items}: its Library plan at
+    the plan's size against the workshop's stock now (core/plan_library.detail), so what he's bought and put in
+    stock drops off. Drafts aren't counted (nothing's decided); a build already finished (its project Complete) isn't
+    either. [] without plans."""
+    from core.plan_library import detail
+
+    book = getattr(context, "project_plans", None)
+    projects = getattr(context, "projects", None)
+    out = []
+    for plan in (book.listed() if book is not None else []):
+        if plan.status != "confirmed" or plan.kind != "build" or not plan.shelf_plan:
+            continue
+        project = projects.get_project(plan.project_id) if projects is not None and plan.project_id else None
+        if project is not None and project.status == "Complete":
+            continue
+        try:
+            page = detail(context, plan.shelf_plan, plan.sizes or None)
+        except Exception:  # noqa: BLE001 - one plan that can't be read leaves the rest
+            log.exception("Couldn't read %s's materials", plan.title)
+            continue
+        shopping = (page or {}).get("shopping") or {}
+        to_buy = shopping.get("to_buy", [])
+        if to_buy:
+            out.append({"title": plan.title, "cost": float(shopping.get("known_cost") or 0),
+                        "unpriced": len(to_buy) - int(shopping.get("priced") or 0), "items": len(to_buy)})
+    return out
+
+
+def add_still_to_buy(context, sheet) -> None:
+    """The line money answers carry for his confirmed builds (`still_to_buy`), one calculation for them all; nothing
+    when none has anything left to buy."""
+    from core.question_plans import CALCULATION
+    from core.region import money
+
+    rows = still_to_buy(context)
+    if not rows:
+        return
+    parts = [f"{r['title']}: {r['items']} material{'s' if r['items'] != 1 else ''}"
+             + (f", {money(r['cost'])} for those with a price" if r["cost"] else "")
+             + (f" ({r['unpriced']} with no price yet)" if r["unpriced"] else "") for r in rows]
+    total = sum(r["cost"] for r in rows)
+    floor = any(r["unpriced"] for r in rows)
+    sheet.add(CALCULATION, "Confirmed builds still to buy: " + "; ".join(parts) + "."
+              + (f" That's {'at least ' if floor else ''}{money(total)} already spoken for." if total else ""),
+              "the Planner, against the workshop's stock")
 
 
 def _kind_of_plan(plan) -> Kind:
