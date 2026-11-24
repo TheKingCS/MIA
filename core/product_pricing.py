@@ -23,8 +23,9 @@ log = get_logger(__name__)
 
 
 def per_piece(context) -> dict:
-    """{product_id: {pieces, materials, hours}} per piece, from the finished jobs that made each product (a job's
-    materials and hours shared by how many of each product it made). {} without jobs."""
+    """{product_id: {pieces, materials, hours, timed}} per piece, from the finished jobs that made each product (a
+    job's materials and hours shared by the value of each product it made, price times count, else by count; hours
+    averaged over the jobs that logged them). {} without jobs."""
     from core.job_manager import job_material_cost
 
     jobs = getattr(context, "jobs", None)
@@ -32,22 +33,31 @@ def per_piece(context) -> dict:
         return {}
     materials = getattr(context, "materials", None)
     by_id = {m.material_id: m for m in materials.all_materials()} if materials is not None else {}
+    products = getattr(context, "products", None)
+    prices = {p.product_id: float(p.base_price or 0) for p in (products.all_products() if products is not None else [])}
     totals: dict = {}
     for job in jobs.all_jobs():
         made = [p for p in (job.products_produced or []) if float(p.quantity_produced or 0) > 0]
         if job.status != "Complete" or not made:
             continue
-        count = sum(float(p.quantity_produced) for p in made)
+        # a job that made several products shares by value (price times how many), else by count: a table and ten
+        # coasters from one job don't take the same share each
+        weight = {p.product_id: float(p.quantity_produced) * max(prices.get(p.product_id, 0.0), 0.0) for p in made}
+        if not all(weight.values()):
+            weight = {p.product_id: float(p.quantity_produced) for p in made}
+        whole = sum(weight.values())
         cost = job_material_cost(job, by_id)
         for p in made:
-            share = float(p.quantity_produced) / count
-            row = totals.setdefault(p.product_id, {"pieces": 0.0, "materials": 0.0, "hours": 0.0, "timed": True})
+            share = weight[p.product_id] / whole
+            row = totals.setdefault(p.product_id, {"pieces": 0.0, "materials": 0.0, "hours": 0.0, "timed_pieces": 0.0})
             row["pieces"] += float(p.quantity_produced)
             row["materials"] += cost * share
-            row["hours"] += float(job.labor_hours or 0) * share
-            row["timed"] = row["timed"] and bool(job.labor_hours)
+            if job.labor_hours:  # hours averaged over the jobs that logged them
+                row["hours"] += float(job.labor_hours) * share
+                row["timed_pieces"] += float(p.quantity_produced)
     return {pid: {"pieces": r["pieces"], "materials": round(r["materials"] / r["pieces"], 2),
-                  "hours": round(r["hours"] / r["pieces"], 3), "timed": r["timed"]} for pid, r in totals.items()}
+                  "hours": round(r["hours"] / r["timed_pieces"], 3) if r["timed_pieces"] else 0.0,
+                  "timed": bool(r["timed_pieces"])} for pid, r in totals.items()}
 
 
 def checked(context) -> list[dict]:

@@ -172,10 +172,11 @@ _MONTHS = ("january", "february", "march", "april", "may", "june", "july", "augu
 
 
 def quit_date(said: str, today: date) -> Optional[date]:
-    """Pure logic. The day a "what if I quit..." question names: the end of this or next year, "in N months" or "in
-    N years", "by June" or "next June" (its next one), "by June 2027"; None when it names none."""
+    """Pure logic. The day a "what if I quit..." question names: the end of this, the or next year, "in N months"
+    or "in N years", "by June" or "next June" (its next one, this month's if it's this month), "by June 2027", "by
+    June next year"; None when it names none."""
     text = (said or "").lower()
-    m = re.search(r"\bend of (this|next) year\b", text)
+    m = re.search(r"\bend of (this|next|the) year\b", text)
     if m:
         return date(today.year + (m.group(1) == "next"), 12, 31)
     m = re.search(r"\bin (\d+|a|an|one|two|three|six) (months?|years?)\b", text)
@@ -184,10 +185,14 @@ def quit_date(said: str, today: date) -> Optional[date]:
         months = n * (12 if m.group(2).startswith("year") else 1)
         y, mo = divmod(today.month - 1 + months, 12)
         return date(today.year + y, mo + 1, min(today.day, 28))
-    m = re.search(r"\b(?:by|in|next|before|at the end of|end of)\s+(" + "|".join(_MONTHS) + r")(?:\s+(\d{4}))?\b", text)
+    m = re.search(r"\b(?:by|in|next|before|at the end of|end of)\s+(" + "|".join(_MONTHS) + r")(?:\s+(\d{4}|next year))?\b",
+                  text)
     if m:
         month = _MONTHS.index(m.group(1)) + 1
-        year = int(m.group(2)) if m.group(2) else today.year + (month <= today.month)
+        if m.group(2) == "next year":
+            year = today.year + 1
+        else:
+            year = int(m.group(2)) if m.group(2) else today.year + (month < today.month)
         return date(year, month, 28 if month == 2 else 30 if month in (4, 6, 9, 11) else 31)
     if re.search(r"\bnext year\b", text):
         return date(today.year + 1, 12, 31)
@@ -197,7 +202,8 @@ def quit_date(said: str, today: date) -> Optional[date]:
 def quit_by(i: Inputs, when: date, today: date) -> dict:
     """Pure logic. Quitting on `when`, at the pace of the last three months: the months till then, what's saved by
     then, the fund's goal (the gap a month times the cushion, plus the builds left), the shortfall (or what's over),
-    what more a month it takes to make it, and after quitting how many months the savings cover the gap."""
+    what more a month it takes to make it, and after quitting how many months the savings cover the gap (what's
+    set aside for the builds left out)."""
     months = max(0.0, (when - today).days / DAYS_A_MONTH)
     gap = max(0.0, i.needs - i.homestead)
     goal = gap * max(0, int(i.cushion_months)) + max(0.0, i.builds_left)
@@ -205,7 +211,7 @@ def quit_by(i: Inputs, when: date, today: date) -> dict:
     short = goal - by_then
     out = {"months": round(months, 1), "by_then": _r(by_then), "goal": _r(goal), "gap": _r(gap),
            "short": _r(max(0.0, short)), "over": _r(max(0.0, -short)), "more_a_month": None,
-           "lasts_months": round(by_then / gap, 1) if gap > 0 else None}
+           "lasts_months": round(max(0.0, by_then - max(0.0, i.builds_left)) / gap, 1) if gap > 0 else None}
     if short > 0 and months > 0:
         out["more_a_month"] = _r(short / months)
     return out

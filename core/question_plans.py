@@ -134,13 +134,16 @@ _LEAD_IN = re.compile(r"\s*(?:\(\s*)?(?:like|e\.g\.,?|say|such as)?\s*\(?\s*$")
 
 
 def without_examples(text: str) -> str:
-    """Pure logic. A tool's reply without its quoted examples that hold a number (with a "like" or bracket that
-    leads into one), so a model never reports an example ("I burn 4 cords a winter") as the person's record."""
+    """Pure logic. A tool's reply without its quoted examples that hold a number, only those led into by "like",
+    "e.g.", "say", "such as" or a bracket, so a model never reports an example ("I burn 4 cords a winter") as the
+    person's record; a quoted name or price ("Sign 2", "$45") stays."""
     out, last = [], 0
     for quoted in _QUOTED.finditer(text or ""):
         if not re.search(r"\d", quoted.group()):
             continue
         before = text[last:quoted.start()]
+        if not re.search(r"(?:\(|\b(?:like|e\.g\.,?|say|such as))\s*$", before):
+            continue  # a name or a price in quotes ("Sign 2", "$45"): kept
         opened = before.rstrip().endswith("(") or bool(re.search(r"\(\s*(?:like|e\.g\.,?|say|such as)?\s*$", before))
         out.append(_LEAD_IN.sub("", before))
         last = quoted.end()
@@ -702,9 +705,11 @@ _WET_WORDS = re.compile(r"\b(rain|showers?|drizzle|storms?|thunder\w*|snow|sleet
 
 
 def is_wet(day: dict) -> bool:
-    """Pure logic. Whether a forecast day is a wet one: its chance of rain at WET_CHANCE or more, or its words say
-    rain, snow or storms."""
-    return (day.get("rain") is not None and day["rain"] >= WET_CHANCE) or bool(_WET_WORDS.search(day.get("words") or ""))
+    """Pure logic. Whether a forecast day is a wet one: its chance of rain at WET_CHANCE or more; without a chance,
+    its words say rain, snow or storms."""
+    if day.get("rain") is not None:  # the chance decides when there is one ("slight chance of rain" at 10%: dry)
+        return day["rain"] >= WET_CHANCE
+    return bool(_WET_WORDS.search(day.get("words") or ""))
 
 
 def weekend_days(today: date, prompt: str = "") -> list[date]:
@@ -1271,7 +1276,8 @@ PLANS: tuple[Plan, ...] = (
     Plan("quit by", "Quitting by a date",
          ("What if I quit at the end of next year?", "Could I leave my job in 18 months?",
           "What would it take to quit by next June?", "Can I afford to quit at the end of this year?"),
-         r"\b(quit|leave (my|the) job|leaving (my|the) job|go full[- ]time)\b[^?]{0,40}\b(end of (this|next) year|"
+         r"\b(quit (my|the|this) job|quit work(ing)?|quit the factory|what if i quit|could i quit|can i quit|"
+         r"leave (my|the|this) job|leaving (my|the) job|go full[- ]time)\b[^?]{0,40}\b(end of (this|next|the) year|"
          r"next year|in \d+ (months?|years?)|by|next|before)\b", _quit_by),
     Plan("winter", "Ready for winter",
          ("Am I ready for winter?", "What do I need to do before winter?", "Are we set for the cold?",
@@ -1416,6 +1422,11 @@ NOT_FOR = {
     # what she did on her own today is "catch me up"'s (her own changes), not today's list
     "today": re.compile(r"\b(on your own|you been up to|while i was (out|gone|away))\b"
                         r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
+    # quitting a habit or a club isn't quitting the job
+    "quit by": re.compile(r"\b(smoking|drinking|vaping|chew|caffeine|coffee|soda|sugar|gym|band|team|club|league|"
+                          r"class|course|game|drugs?|alcohol)\b", re.I),
+    # a weekend for winter work is the weekend's (it names its days); a winter gone is a conversation or the seasons'
+    "winter": re.compile(r"\b(weekend|saturday|sunday|last|was|were|did|went|got through)\b", re.I),
     # quitting by a date is its own plan's ("what if I quit at the end of next year?"), not the year's priorities
     "priorities": re.compile(r"\b(quit|quitting|leave (my|the) job|leaving (my|the) job)\b", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
@@ -1427,7 +1438,8 @@ NOT_FOR = {
     # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
     "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
-                                  r"how's|how is|needs? doing|needs? done|readings?|temperature|humidity)\b", re.I),
+                                  r"how(?:'s| is) (?:the|my) \w+ (?:doing|going)|needs? doing|needs? done|readings?|"
+                                  r"temperature|humidity)\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?|weekend)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),
@@ -1680,15 +1692,15 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
 def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     """The model's answer when it keeps to the sheet's numbers; else the
     sheet in plain words (never a number MIA didn't look up), noted for the
-    answers.numbers loop; and the sheet in plain words when it holds no fact
-    or calculation at all (only what's missing: nothing to word). Either way
+    answers.numbers loop; and the sheet in plain words when everything on it
+    is missing (nothing to word). Either way
     without a stock opener or closer (core.response_composer.polish)."""
     from core.plain_words import strip_markdown
 
     said = strip_markdown(content or "")
     if not said:
         return sheet.plain()
-    if not any(f.kind in (FACT, CALCULATION) for f in sheet.facts):
+    if sheet.facts and all(f.kind == MISSING for f in sheet.facts):
         # nothing known, only what's missing: the model had nothing to word and filled it in (heard 2026-11-24:
         # "about 2 months' worth" from a fund that couldn't be read), so the missing lines are the answer
         from core.response_composer import polish

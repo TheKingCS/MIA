@@ -1,7 +1,7 @@
 """Which products are priced below what they take (core/product_pricing.py): a piece's materials and hours from the
 finished jobs that made it (shared when a job made two products), the least it should sell for at his quoting rate, the
 underpriced named most first, a product no timed job made said as not worked out, and without a rate the time a piece
-takes said and a rate asked for."""
+takes said and a rate asked for. A job making a table and coasters shares by value; hours come from timed jobs."""
 
 from core import product_pricing as pp
 from core.job_manager import MaterialConsumptionEntry, ProductionEntry
@@ -44,3 +44,19 @@ def test_asking_whether_i_charge_enough_reaches_it(shop):  # noqa: F811
     registry = build_desktop_registry()
     for said in ("which products should I raise prices on?", "am I charging enough?"):
         assert "check_my_prices" in [a.name for a in registry.matching_actions(said, shop)], said
+
+
+def test_review_a_job_making_a_table_and_coasters_shares_by_value_and_hours_come_from_timed_jobs(shop):  # noqa: F811
+    from core.job_manager import ProductionEntry
+
+    table = shop.products.add_product("Table", base_price=300)
+    coaster = shop.products.add_product("Coaster", base_price=5)
+    job = shop.jobs.add_job("Mixed", status="Complete", labor_hours=10)
+    job.products_produced += [ProductionEntry(product_id=table.product_id, quantity_produced=1),
+                              ProductionEntry(product_id=coaster.product_id, quantity_produced=10)]
+    untimed = shop.jobs.add_job("More coasters", status="Complete", labor_hours=0)
+    untimed.products_produced.append(ProductionEntry(product_id=coaster.product_id, quantity_produced=10))
+    shop.jobs._save()
+    pieces = pp.per_piece(shop)
+    assert pieces[table.product_id]["hours"] > 8  # $300 of the job's $350 value: most of the ten hours
+    assert pieces[coaster.product_id]["timed"]  # an untimed job doesn't make it "not worked out"

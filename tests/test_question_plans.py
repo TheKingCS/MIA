@@ -4,7 +4,9 @@ answer that never states a number MIA didn't look up; and the weekend's
 plan with each day's forecast, reached only by a weekend ahead; and the
 winter plan with the days to the first frost; a tool's quoted example with a
 number never reaches a sheet; a wet weekend day named for indoor work; and
-quitting by a date he names worked out against the freedom fund."""
+quitting by a date he names worked out against the freedom fund; and the review's
+cases (quoted names kept, estimate-only sheets worded, dates read as said, habits
+and a winter gone kept out, the weekend winning a weekend for winter work)."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -207,13 +209,13 @@ def test_a_quit_date_is_read_from_how_he_says_it():
     assert quit_date("can I quit?", today) is None
 
 
-def test_quitting_by_a_date_says_the_shortfall_and_what_more_a_month_closes_it():
+def test_quitting_by_a_date_says_the_shortfall_what_more_a_month_closes_it_and_how_long_it_lasts_builds_aside():
     from core.freedom import Inputs, quit_by
 
     r = quit_by(Inputs(needs=3000, homestead=1000, saved=5000, pace=500, cushion_months=6, builds_left=2000),
                 date(2027, 11, 24), date(2026, 11, 24))
     assert r["gap"] == 2000 and r["goal"] == 14000 and 10_900 < r["by_then"] < 11_100
-    assert 2900 < r["short"] < 3100 and 240 < r["more_a_month"] < 260 and 5 < r["lasts_months"] < 6
+    assert 2900 < r["short"] < 3100 and 240 < r["more_a_month"] < 260 and 4 < r["lasts_months"] < 5  # builds aside
 
 
 def test_what_if_i_quit_at_the_end_of_next_year_reaches_its_plan(life):
@@ -225,3 +227,39 @@ def test_a_sheet_with_only_whats_missing_is_said_as_it_is_never_filled_in_by_the
     sheet.add(qp.MISSING, "The freedom fund couldn't be read.", "Freedom")
     said = qp.finish("You'll have saved about 2 months' worth, carrying you 2 to 3 months.", sheet, "what if I quit?")
     assert "2 months" not in said and "freedom fund couldn't be read" in said
+
+
+def test_review_quoted_names_and_prices_stay_and_only_led_in_examples_go():
+    assert qp.without_examples('Your order "Sign 2" is due.') == 'Your order "Sign 2" is due.'
+    assert qp.without_examples('Priced at "$45" each.') == 'Priced at "$45" each.'
+    assert "4 cords" not in qp.without_examples('Tell me yours ("I burn 4 cords a winter").')
+
+
+def test_review_an_estimate_only_sheet_keeps_the_models_answer():
+    sheet = qp.Sheet("winter", "Ready for winter")
+    sheet.add(qp.ESTIMATE, "Most homesteads want about 3 cords.", "general guidance")
+    sheet.add(qp.MISSING, "No firewood logged.", "firewood")
+    assert qp.finish("About 3 cords is usual; log yours.", sheet, "how much firewood?") == "About 3 cords is usual; log yours."
+
+
+def test_review_quit_dates_read_as_said():
+    from core.freedom import quit_date
+
+    today = date(2026, 11, 24)
+    assert quit_date("quit by november", today) == date(2026, 11, 30)
+    assert quit_date("quit by the end of the year", today) == date(2026, 12, 31)
+    assert quit_date("quit by june next year", date(2026, 3, 1)) == date(2027, 6, 30)
+
+
+@pytest.mark.parametrize("said", ["should I quit smoking by next year?", "I want to quit my gym by June?",
+                                  "can I quit drinking before Christmas?", "should I quit the band next month?",
+                                  "how did we get through the winter last year?"])
+def test_review_quitting_a_habit_or_a_winter_gone_isnt_those_plans(life, said):
+    found = qp.match(life, said)
+    assert found is None or found.name not in ("quit by", "winter"), said
+
+
+def test_review_a_weekend_for_winter_work_is_the_weekends_and_a_dry_chance_isnt_wet(life):
+    assert qp.match(life, "what should I get done this weekend to get ready for winter?").name == "weekend"
+    assert not qp.is_wet({"rain": 10, "words": "Slight chance of rain"})
+    assert qp.match(life, "I'm planning to build a greenhouse, how's that affect my water?").name == "project picture"

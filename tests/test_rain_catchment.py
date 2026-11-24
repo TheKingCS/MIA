@@ -1,6 +1,6 @@
 """Water off a roof (core/rain_catchment.py): a roof's square feet read from words, gallons an inch kept after
-gutters and the first flush, what his logged rain would have caught, his beds' monthly need set against it, and the
-question reaching the tool."""
+gutters and the first flush, what his logged rain would have caught, his beds' monthly need (4.33 weeks) set
+against it, and the question reaching the tool."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -18,7 +18,7 @@ def test_a_roofs_size_is_read_from_how_he_says_it(said, sqft):
     assert rc.roof_sqft(said) == sqft
 
 
-def test_gallons_an_inch_and_his_logged_rain(tmp_path):
+def test_gallons_an_inch_and_his_logged_rain_and_his_beds_month(tmp_path):
     from core.data_logger_manager import DataLoggerManager
     from core.weather_watch import RAIN_SERIES
 
@@ -30,7 +30,7 @@ def test_gallons_an_inch_and_his_logged_rain(tmp_path):
     logger.add_reading(RAIN_SERIES, 0.5, timestamp="2026-09-01T08:00:00")  # too long ago
     said = rc.say(SimpleNamespace(data_logger=logger), "400 square feet", beds_sqft=100, today=TODAY)
     assert "logged 1.5 inches in the last 30 days" in said and "about 299 gallons" in said
-    assert "100 square feet of beds take about 249 gallons a month" in said
+    assert "100 square feet of beds take about 270 gallons a month" in said  # 4.33 weeks a month
 
 
 def test_asking_about_rain_off_a_roof_reaches_it():

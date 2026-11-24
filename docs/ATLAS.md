@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1682 files, 365,597 lines; 1682 files describe themselves; 20,098 of 20,228 classes and functions are documented.
+1682 files, 365,680 lines; 1682 files describe themselves; 20,104 of 20,234 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-662 files, 187,346 lines; 9,524 of 9,610 classes and functions documented
+662 files, 187,375 lines; 9,524 of 9,610 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -960,7 +960,7 @@
 
 ## tests/: the test suite: what each part must do
 
-616 files, 97,664 lines; 8,211 of 8,255 classes and functions documented
+616 files, 97,718 lines; 8,217 of 8,261 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1365,7 +1365,7 @@
 - `tests/test_question_plans.py`: Question plans (DEC-0052 step 2a, core/question_plans.py): the right plan for a question, lookups gathered by code onto a marked sheet, and an answer that never states a number MIA didn't look up; and the weekend's plan with each day's forecast, reached only by a weekend ahead; and the winter plan w
 - `tests/test_questlines.py`: Questlines and seasons (DEC-0028): linked chapters, each one a mission; finishing a chapter opens the next with MIA's line for it; seasons follow the date and the hemisphere; and the same by voice (core/assistant_game_actions.py).
 - `tests/test_quick_capture.py`: Quick capture (core/quick_capture.py, gui/quick_capture_dialog.py), 2026-10-01: type anything, MIA files it; nothing is ever lost.
-- `tests/test_rain_catchment.py`: Water off a roof (core/rain_catchment.py): a roof's square feet read from words, gallons an inch kept after gutters and the first flush, what his logged rain would have caught, his beds' monthly need set against it, and the question reaching the tool.
+- `tests/test_rain_catchment.py`: Water off a roof (core/rain_catchment.py): a roof's square feet read from words, gallons an inch kept after gutters and the first flush, what his logged rain would have caught, his beds' monthly need (4.33 weeks) set against it, and the question reaching the tool.
 - `tests/test_rain_gauge.py`: His rain gauge (core/weather_watch.py `rain_inches`, `rain_this_week`, tool log_rain): rainfall read as he says it (inches, fractions, "a quarter of an inch", millimeters, a bare number), kept in the data logger in inches, the last seven days added up, and the watering answer led by the week's real 
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
 - `tests/test_read_back.py`: Tests for the generic read-back after a change (DEC-0218, LS-05, core/read_back.py): the files a change wrote still hold what it left, and the records its history names still resolve, unless it removed them.

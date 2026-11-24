@@ -55,7 +55,8 @@ def _rain_30(context, today: date) -> Optional[float]:
 
 
 def say(context, roof: str, beds_sqft: Optional[float] = None, today: Optional[date] = None) -> str:
-    """The roof's gallons an inch, what his logged rain would have given in 30 days, and against his beds' needs."""
+    """The roof's gallons an inch, what his logged rain would have given in 30 days, and against his beds' needs (an
+    inch a week, 4.33 weeks a month)."""
     today = today or date.today()
     sqft = roof_sqft(roof)
     if not sqft:
@@ -72,7 +73,7 @@ def say(context, roof: str, beds_sqft: Optional[float] = None, today: Optional[d
         out.append(f"Your gauge logged {rain:g} inches in the last 30 days: that roof would have caught about "
                    f"{caught:g} gallons.")
     if beds_sqft:
-        need = gallons(beds_sqft, 1) / KEPT * 4  # an inch a week on the beds, four weeks, every drop used
+        need = gallons(beds_sqft, 1) / KEPT * 4.33  # an inch a week on the beds, a month's weeks, every drop used
         out.append(f"{beds_sqft:g} square feet of beds take about {round(need):g} gallons a month at an inch a week, "
                    f"so the roof covers that with {need / per_inch:.1f} inches of rain a month, with storage to hold "
                    "it between rains.")
