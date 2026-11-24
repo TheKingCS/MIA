@@ -65,7 +65,15 @@ invoice (an order's Email Invoice, drafted for his Send). Round 2 of the brainst
 (`core/garden_week.py`) with the seeds still to get (`core/seed_check.py`), the water-and-bleach calculator
 (`eng_calcs` water_bleach, safety-critical), how long the feed lasts (`core/feed_runway.py`), days of food from the
 staples (`core/preparedness.food_days`), and the day before a market (`core/market_eve.py`). Five fresh reviews in
-all (K-0356 to K-0360), every finding fixed. Everything in the brainstorm that needs no decision is
+all (K-0356 to K-0360), every finding fixed.
+**Zac's answers the same evening (DEC-0289 to 0292), all built:** learning programs for woodworking, gardening and
+homesteading, fitness, and survival and bushcraft (core/woodworking.py, gardening_path.py, fitness_path.py,
+bushcraft.py); the Picture of You (core/picture_of_you.py, web/you.html); the evening wrap (core/evening_wrap.py);
+and the model test (DEC-0291): his Intelligence Benchmark run on five models already on the PC. On the 20 questions
+the model itself answers, qwen2.5:14b and qwen3:14b tied (1 flagged, 4.8 s typical); gpt-oss:20b (3 flagged, 8.1 s),
+mistral-small:24b (4, 10.7 s) and qwen2.5:32b (2, 27.1 s) were slower and no better by MIA's own checks. No switch
+made: Zac reads the answers side by side in pc-check/model-compare.md (on the PC, not in the repository) and
+decides; qwen3:14b is the one worth a look. A sixth review fixed the batch (K-0361). Everything in the brainstorm that needs no decision is
 now built or found already there; what's left waits on Zac (WAITING_ON 0zg): hobby companions, the picture of him,
 a bigger model, event triggers (an event can come from something she reads), routines from his habits. Waiting on Zac: the three brainstorm questions (WAITING_ON 0zg) and 7.1's design. Three questions for Zac at the brainstorm's end.
 Open for Zac: choosing the backup's second place (WAITING_ON 0zf). Q-114 and Q-115 answered 2026-11-23 and built

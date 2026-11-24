@@ -4166,7 +4166,9 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Status: APPROVED (Zac, 2026-11-23, brainstorm 1.5: "Yes, test one")
 - Proposed by: claude (Opus), 2026-11-23, `docs/future/JARVIS_BRAINSTORM.md` 1.5
 - Decision: The larger models already on the PC (qwen3:14b, gpt-oss:20b, mistral-small:24b, qwen2.5:32b) are run through his Intelligence Benchmark beside qwen2.5:14b (tools/intelligence_check.py, read-only, results kept in pc-check/ only); he reads the answers side by side and decides whether to switch. Nothing switches by itself.
-- Record: pc-check/intelligence-*.md (not in the repository)
+- Record: pc-check/intelligence-*.md and pc-check/model-compare.md (not in the repository). Run 2026-11-23: on the
+  questions the model answers itself, qwen2.5:14b and qwen3:14b tied (1 flagged, 4.8 s); the larger three were slower
+  and no better by MIA's checks. No switch; his read decides.
 - Related: DEC-0022
 
 ### DEC-0292: An evening wrap
