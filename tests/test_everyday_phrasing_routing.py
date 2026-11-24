@@ -45,6 +45,8 @@ SAID = [
     ("look_up_offline", "how do I purify creek water?"), ("look_up_offline", "how do I start a fire without matches"),
     ("look_up_offline", "how do I tie a bowline"), ("look_up_offline", "how do I butcher a chicken"),
     ("look_up_offline", "what wild plants are edible here"), ("look_up_offline", "how do I build a lean-to shelter"),
+    ("bleach_for_water", "how much bleach to purify 5 gallons of water"),
+    ("bleach_for_water", "how many drops of bleach per gallon"),
 ]
 
 

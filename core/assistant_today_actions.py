@@ -136,6 +136,40 @@ def _action_set_preparedness(context, arguments: dict) -> str:
         ((" " if said else "") + "Not set: " + "; ".join(problems) + "." if problems else "")
 
 
+_WATER = r"(\d+(?:\.\d+)?)\s*-?\s*(gallons?|gal|liters?|litres?|l|quarts?|qt)\b"
+_STRENGTH = r"(\d+(?:\.\d+)?)\s*%"
+COMMON_STRENGTHS = ("6 %", "8.25 %")  # most US household bleach is one of these
+
+
+def _action_bleach_for_water(context, arguments: dict) -> str:
+    """How much household bleach makes water safe to drink, worked out in code by the EPA's method
+    (core/eng_calcs.py water_bleach), never from the model's memory. The amount of water and the bleach's strength
+    are read from what he said; with no strength, both common strengths are said, to check against the label."""
+    import re
+
+    from core import eng_calcs
+
+    said = " ".join(str(arguments.get(k) or "") for k in ("question", "water", "strength"))
+    water = re.search(_WATER, said, re.I)
+    if not water:
+        return "How much water: how many gallons or liters?"
+    amount = f"{water.group(1)} {'gal' if water.group(2).lower().startswith(('g', 'q')) else 'L'}"
+    if water.group(2).lower().startswith("q"):
+        amount = f"{float(water.group(1)) / 4:g} gal"
+    strength = re.search(_STRENGTH, said)
+    try:
+        if strength:
+            result = eng_calcs.calculate("water_bleach", {"water": amount, "strength": f"{strength.group(1)} %"})
+            return f"{result['said']} (Basis: {result['basis']}.)"
+        lines = [eng_calcs.calculate("water_bleach", {"water": amount, "strength": s}) for s in COMMON_STRENGTHS]
+    except eng_calcs.CalcError as problem:
+        return str(problem)
+    first = lines[0]
+    drops = [int(r["values"]["drops"].si) for r in lines]
+    return (f"Check the label for the bleach's strength: for 6% it's {drops[0]} drops, for 8.25% it's {drops[1]}. "
+            f"{first['said']} (Basis: {first['basis']}.)")
+
+
 def _action_emergency_kit(context, arguments: dict) -> str:
     """Ready.gov's basic emergency kit against his inventory and pantry (core/ready_kit.say)."""
     from core import ready_kit
@@ -159,7 +193,7 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
-    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
+    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
     generator run?", "do I need to cover the tomatoes", "what was I in the middle of",
@@ -250,6 +284,18 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
                          "plan for 5", "plan for 6", "plan for two", "plan for three", "plan for four",
                          "generator burns", "generator uses", "gallons an hour", "burn rate", "pounds an hour",
                          "plan for days", "prepare for days"),
+    ))
+    registry.register(AssistantAction(
+        name="bleach_for_water", domain="today",
+        description="How much unscented household bleach makes water safe to drink (the EPA's method, worked out in "
+                    "code): the amount of water, and the bleach's strength if they said it.",
+        parameters={"type": "object", "properties": {
+            "question": {"type": "string", "description": "Their words, with the amount of water and any strength."}},
+            "required": ["question"]},
+        handler=_action_bleach_for_water,
+        trigger_phrases=("bleach to purify", "how much bleach", "bleach in water", "bleach per gallon",
+                         "drops of bleach", "purify water with bleach", "bleach to make water safe",
+                         "disinfect water", "bleach for drinking water"),
     ))
     registry.register(AssistantAction(
         name="emergency_kit", domain="today",
