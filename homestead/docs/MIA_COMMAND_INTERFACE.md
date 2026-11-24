@@ -87,5 +87,8 @@ signed approval applies at once or waits for his press on the node differs (one 
    denied on the node. Tested against the node's own signature check, and live (2026-11-24) against the real export
    server: a change staged, a second one while it waited refused by the node with its reason.
 4. Live against the simulator (`main.py` plus `drivers/simulator.py --run`): a change applied, read back, undone.
-   Done in part (2026-11-24, the export server alone, approval `node`): staged, refused while waiting. Still to run:
-   with `main.py` cycling, approved on the node and read back as applied, then set back.
+   **Done 2026-11-24 on Windows** (a temporary copy: `drivers/simulator.py --run`, `main.py --interval 2` and the
+   export server, approval `node`): MIA read the cell's pH minimum (6.6), said and sent 6.4 on "yes, set it"; the
+   node staged it and refused a second change while it waited; approved through the node's own approval call, the
+   control loop took it and MIA read it back from the export as applied, the target 6.4. Setting it back waits on
+   the one-change-an-hour rule by design.
