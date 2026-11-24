@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1661 files, 361,973 lines; 1661 files describe themselves; 19,910 of 20,040 classes and functions are documented.
+1663 files, 362,100 lines; 1663 files describe themselves; 19,918 of 20,048 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-653 files, 184,886 lines; 9,437 of 9,523 classes and functions documented
+654 files, 184,983 lines; 9,442 of 9,528 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -227,6 +227,7 @@
 - `core/fact_owners.py`: One owner per fact (DEC-0052, docs/REASONING_PLAN.md section 2). A fact MIA knows about a person lives in exactly one store; every other screen, answer and finding reads it from that owner and never keeps a copy, so two places can't disagree. `tests/test_fact_owners.py` fails when a retired copy com
 - `core/failure_actions.py`: The Fix-It Log's actions (DEC-0049, core/failure_log.py) on the action contract, and its screen (served as /api/failures).
 - `core/failure_log.py`: Where MIA stumbles, so it gets fixed (DEC-0049; Zac, 2026-10-27): "a log that you can be sent to audit the users interactions with MIA, see when she fails, why she fails, when the user runs into an issue and then use that information to fix her ... nearly self developing in a way that doesnt break h
+- `core/feed_mix.py`: Mixing two feeds to a target protein, the Pearson square (Jarvis brainstorm, round 5: homestead). "How do I mix 16% layer feed and a 32% supplement to get 20%?" says how many parts of each, the share of each, and, given a batch size, the pounds of each; worked out in code, the model only says it.
 - `core/feed_runway.py`: How long the hens' feed will last (Jarvis brainstorm round 2; Zac, 2026-11-23: "homestead skills ... aware"), from his flock log (core/flock.py): the last bag bought, how much his flock really eats (from his own purchases over time, at least two weeks of them), else the usual quarter pound a hen a d
 - `core/finance_manager.py`: Watched-folder ingestion for MIA Home's external financial snapshot exports — the Kraken trading agent and the real estate portfolio dashboard (both built as separate projects, per `docs/VISION.md`'s "MIA Home's expanded scope" section), each producing the same shared JSON export shape documented th
 - `core/finance_summary.py`: Finance #4 (2026-09-28): "money on your phone". One read-only snapshot of the owner's finances, as plain JSON-ready data, served by server/app.py's /api/finance/summary to the phone web app and the Android app.
@@ -951,7 +952,7 @@
 
 ## tests/: the test suite: what each part must do
 
-604 files, 96,535 lines; 8,110 of 8,154 classes and functions documented
+605 files, 96,565 lines; 8,113 of 8,157 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1117,6 +1118,7 @@
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_fact_owners.py`: One owner per fact (DEC-0052): a retired copy of a fact never comes back, and every owner named in core/fact_owners.py exists.
 - `tests/test_failure_log.py`: The Fix-It Log (DEC-0049): where MIA stumbles is recorded (privately, redacted), grouped into issues, turned into a fix report with a test to write first, and what the person confirms she learns herself.
+- `tests/test_feed_mix.py`: Two feeds mixed to a target protein, the Pearson square (core/feed_mix.py): the parts and shares of each, a batch's pounds of each, the three percentages and the batch read from what he said, and a target outside the two feeds (or two feeds the same) refused in words.
 - `tests/test_feed_runway.py`: How long the hens' feed will last (core/feed_runway.py): from the last bag, at his flock's own rate once two weeks of purchases show it (the last 90 days, after the flock last changed, never under half the usual), else the usual quarter pound a hen a day; said when it's down to a few days, once a ba *(1 undocumented)*
 - `tests/test_field_kit_module.py`: Unit test for modules.field_kit.module.format_script_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test: the widget-building (QTabWidget, device list, script list) and worker-thread wiring in FieldKitModule needs a real Qt event loo
 - `tests/test_file_operations.py`: Unit tests for modules.files_mod.file_operations. All filesystem operations run against pytest's tmp_path, never real project or user files.

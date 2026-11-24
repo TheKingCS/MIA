@@ -185,6 +185,13 @@ def _action_start_hatch(context, arguments: dict) -> str:
     return _run(context, "hatch.start", params)
 
 
+def _action_feed_mix(context, arguments: dict) -> str:
+    """Tool feed_mix: two feeds mixed to a target protein, the Pearson square (core/feed_mix.say), worked out in code."""
+    from core import feed_mix
+
+    return feed_mix.say(str(arguments.get("question") or ""))
+
+
 def _action_hatch_status(context, arguments: dict) -> str:
     """Tool hatch_status: what day each hatch is on and what's next (core/hatch_tracker.say)."""
     from core import hatch_tracker
@@ -196,7 +203,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
     sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
     will the feed last?": its answer says how long the feed lasts, core/feed_runway.py). Also start_hatch and hatch_status: eggs in the incubator as a
-    mission with dated steps (core/hatch_tracker.py), hatch_status heard only of eggs ("how's the hatch going?",
+    mission with dated steps (core/hatch_tracker.py), and feed_mix (two feeds to a target protein, core/feed_mix.py), hatch_status heard only of eggs ("how's the hatch going?",
     never "the business incubator" or "the lockdown drill").
     """
     none = {"type": "object", "properties": {}, "required": []}
@@ -211,6 +218,17 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_start_hatch,
         trigger_phrases=("in the incubator", "set some eggs", "set eggs", "eggs to hatch", "started incubating",
                          "start a hatch"),
+    ))
+    registry.register(AssistantAction(
+        name="feed_mix", domain="knowledge",  # a calculator, not a record she keeps: "how do I mix..." is the world's
+        description="How to mix two feeds to reach a target protein (the Pearson square): parts, shares and a batch's "
+                    "pounds of each, worked out in code.",
+        parameters={"type": "object", "properties": {
+            "question": {"type": "string", "description": "Their words, with both feeds' percent and the target."}},
+            "required": ["question"]},
+        handler=_action_feed_mix,
+        trigger_phrases=("mix feed", "mix the feed", "feed mix", "pearson square", "protein feed", "% protein",
+                         "percent protein", "mix two feeds"),
     ))
     registry.register(AssistantAction(
         name="hatch_status", domain="flock",

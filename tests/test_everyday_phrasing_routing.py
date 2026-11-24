@@ -76,6 +76,7 @@ SAID = [
     ("what_to_plant", "is it too late to plant garlic?"),
     ("budget_left", "how much is left in my grocery budget?"), ("budget_left", "am I over budget on gas this month?"),
     ("budget_left", "how much can I still spend on eating out"),
+    ("feed_mix", "how do I mix 16% layer feed and 32% supplement to get 20% protein?"),
 ]
 
 
