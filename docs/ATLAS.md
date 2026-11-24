@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1664 files, 362,266 lines; 1664 files describe themselves; 19,928 of 20,058 classes and functions are documented.
+1666 files, 362,541 lines; 1666 files describe themselves; 19,947 of 20,077 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-654 files, 185,088 lines; 9,445 of 9,531 classes and functions documented
+655 files, 185,289 lines; 9,455 of 9,541 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -112,6 +112,7 @@
 - `core/boot_sound.py`: Six to choose from** (2026-11-07, Zac: "an odd ping... sample some sounds and I will pick"): `startup_samples()` makes each of core/startup_sounds.py's choices (a warm chord, rising chimes, a reactor power-up, a soft swell, a ready tone, and the original below); Settings plays and picks one (`sound.
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long.
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
+- `core/broiler_batch.py`: A batch of meat birds, as a mission (Jarvis brainstorm, round 5: homestead). "I got 25 Cornish cross chicks today" makes one mission whose steps are dated from the day they came: off the brooder heat once feathered, out to pasture or a tractor, and processing day for that breed, with about how much 
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile kept in the person's own folder. The window is visible on the computer, so what she does can be watched.
 - `core/browser_routines.py`: Browser tasks MIA has been taught (DEC-0117, Zac 2026-11-07: "show her, then she practises"). The person does a task once in her browser while she records it; she saves it as a routine and replays it later, the same steps in the same order, checking the page as she goes.
 - `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it. `untrusted()` fra
@@ -952,7 +953,7 @@
 
 ## tests/: the test suite: what each part must do
 
-606 files, 96,626 lines; 8,120 of 8,164 classes and functions documented
+607 files, 96,700 lines; 8,129 of 8,173 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1005,6 +1006,7 @@
 - `tests/test_bleach_for_water.py`: How much bleach makes water safe to drink, by voice (bleach_for_water): the EPA's dose worked out in code (core/eng_calcs.py), the water read in gallons, liters or quarts, the strength when he says it, both common strengths when he doesn't, a strength that isn't for drinking water refused, and "how 
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP); and the same by voice (core/assistant_game_actions.py).
+- `tests/test_broiler_batch.py`: A batch of meat birds as a mission (core/broiler_batch.py): each breed's steps dated from the day they came (Cornish cross: off the heat week 3, a feeding schedule from week 2, pasture week 4, processing week 8), the feed the batch eats, the batch saved inside the change, and a breed it doesn't know
 - `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
 - `tests/test_budget_left.py`: "How much is left in my grocery budget?" by voice (budget_left): the Money page's own budget targets, spent and left for the one he named or all ("grocery" is Groceries, "gas" Transportation, never "Other" inside "brother"), over a target said plainly, an unknown one named with the ones he has, and 
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*

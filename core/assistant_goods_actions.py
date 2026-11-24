@@ -192,6 +192,26 @@ def _action_feed_mix(context, arguments: dict) -> str:
     return feed_mix.say(str(arguments.get("question") or ""))
 
 
+def _action_start_broilers(context, arguments: dict) -> str:
+    """Tool start_broilers: a batch of meat birds (broilers.start, core/broiler_batch.py): a mission dated from the
+    day they came to processing day, with the feed they'll eat; the day read looking back."""
+    from core import hatch_tracker
+    from core.assistant_correction_actions import _run
+
+    when = hatch_tracker.set_day(str(arguments.get("started") or "today"))
+    if when is None:
+        return "Which day did they come?"
+    return _run(context, "broilers.start", {"breed": str(arguments.get("breed") or "cornish cross"),
+                                            "birds": arguments.get("birds"), "started": when})
+
+
+def _action_broilers_status(context, arguments: dict) -> str:
+    """Tool broilers_status: each batch's week, what's next and the processing day (core/broiler_batch.say)."""
+    from core import broiler_batch
+
+    return broiler_batch.say(context)
+
+
 def _action_hatch_status(context, arguments: dict) -> str:
     """Tool hatch_status: what day each hatch is on and what's next (core/hatch_tracker.say)."""
     from core import hatch_tracker
@@ -203,7 +223,8 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
     sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
     will the feed last?": its answer says how long the feed lasts, core/feed_runway.py). Also start_hatch and hatch_status: eggs in the incubator as a
-    mission with dated steps (core/hatch_tracker.py), and feed_mix (two feeds to a target protein, core/feed_mix.py, reached by "16% layer", "32% supplement" and the
+    mission with dated steps (core/hatch_tracker.py), start_broilers and broilers_status (a batch of meat birds to
+    processing day, core/broiler_batch.py), and feed_mix (two feeds to a target protein, core/feed_mix.py, reached by "16% layer", "32% supplement" and the
     like), hatch_status heard only of eggs ("how's the hatch going?",
     never "the business incubator" or "the lockdown drill").
     """
@@ -219,6 +240,25 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_start_hatch,
         trigger_phrases=("in the incubator", "set some eggs", "set eggs", "eggs to hatch", "started incubating",
                          "start a hatch"),
+    ))
+    registry.register(AssistantAction(
+        name="start_broilers", domain="flock",
+        description="A batch of meat birds came: a mission dated to processing day (Cornish cross about 8 weeks, "
+                    "rangers about 11, heritage 16), with the feed the batch will eat.",
+        parameters={"type": "object", "properties": {
+            "breed": {"type": "string", "description": "cornish cross, red ranger, freedom ranger or heritage"},
+            "birds": {"type": "number", "description": "how many"},
+            "started": {"type": "string", "description": "the day they came, if not today"}}, "required": ["birds"]},
+        handler=_action_start_broilers,
+        trigger_phrases=("meat birds", "cornish cross", "cornish rock", "broiler chicks", "broilers", "freedom ranger",
+                         "red ranger"),
+    ))
+    registry.register(AssistantAction(
+        name="broilers_status", domain="flock",
+        description="How each batch of meat birds is coming: its week, what's next and the processing day.",
+        parameters=none, handler=_action_broilers_status,
+        trigger_phrases=("meat birds coming", "how are the broilers", "processing day", "when do i process",
+                         "when to butcher", "butcher the chickens"),
     ))
     registry.register(AssistantAction(
         name="feed_mix", domain="knowledge",  # a calculator, not a record she keeps: "how do I mix..." is the world's

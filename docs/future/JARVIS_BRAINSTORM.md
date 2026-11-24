@@ -339,4 +339,5 @@ New ideas, each checked against what's there first:
   the week's real inches instead of only the forecast. *Built 2026-11-24 (`log_rain`, kept in the data logger;
   "should I water?" leads with the week's inches).*
 - **Meat birds' processing day** (S, no decision): a batch of broilers as a mission dated from hatch (Cornish cross
-  around 8 weeks, slower breeds later), with the feed they'll eat to get there. Not built yet.
+  around 8 weeks, slower breeds later), with the feed they'll eat to get there. *Built 2026-11-24
+  (`core/broiler_batch.py`).*

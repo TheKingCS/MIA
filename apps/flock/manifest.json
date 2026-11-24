@@ -38,7 +38,9 @@
       "get_eggs",
       "log_eggs",
       "start_hatch",
-      "hatch_status"
+      "hatch_status",
+      "start_broilers",
+      "broilers_status"
     ],
     "actions": [
       "flock.add",
@@ -49,7 +51,8 @@
       "flock.entry_delete",
       "flock.feed",
       "flock.use",
-      "hatch.start"
+      "hatch.start",
+      "broilers.start"
     ],
     "tiers": {
       "get_eggs": "observe",
@@ -64,7 +67,10 @@
       "flock.use": "act_within_grant",
       "start_hatch": "act_within_grant",
       "hatch_status": "observe",
-      "hatch.start": "act_within_grant"
+      "hatch.start": "act_within_grant",
+      "start_broilers": "act_within_grant",
+      "broilers_status": "observe",
+      "broilers.start": "act_within_grant"
     },
     "outside": []
   },

@@ -79,6 +79,7 @@ SAID = [
     ("feed_mix", "how do I mix 16% layer feed and 32% supplement to get 20% protein?"),
     ("feed_mix", "How do I mix 16% layer feed and a 32% supplement to get 20%?"),
     ("log_rain", "the rain gauge says half an inch"), ("log_rain", "we got 0.6 inches of rain last night"),
+    ("start_broilers", "I got 25 Cornish cross chicks today"), ("broilers_status", "how are the meat birds coming?"),
 ]
 
 
