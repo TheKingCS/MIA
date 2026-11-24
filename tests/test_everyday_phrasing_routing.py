@@ -54,6 +54,8 @@ SAID = [
     ("list_inventory", "where did I put the post hole digger"), ("garden_this_week", "what needs doing in the garden"),
     ("add_expense", "I bought 3 bags of chicken feed"), ("complete_maintenance_task", "I changed the oil in the truck today"),
     ("log_maintenance_reading", "the mower has 212 hours on it"), ("add_alarm", "remind me to fix the fence saturday"),
+    ("get_project_missions", "how's the shed build coming along?"),
+    ("get_project_missions", "how far along is the chicken coop project"),
 ]
 
 

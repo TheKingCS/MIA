@@ -175,7 +175,8 @@ def _get_project_missions(context, arguments: dict) -> str:
 
 
 def register_game_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the boss, questline and place tools, and a mission's project (DEC-0152)."""
+    """Registers the boss, questline and place tools, and a mission's project (DEC-0152); a project's progress is
+    also asked "how's the shed build coming along?" (tests/test_everyday_phrasing_routing.py)."""
     registry.register(AssistantAction(
         name="set_mission_project", domain="missions",
         description="Make one of the person's missions part of a project (or 'none' to stand it on its own).",
@@ -195,7 +196,8 @@ def register_game_actions(registry: AssistantActionRegistry) -> None:
             "required": ["project"]},
         handler=_get_project_missions,
         trigger_phrases=("missions for the", "missions in the", "missions on the", "how far along is the",
-                         "project's missions", "progress on the"),
+                         "project's missions", "progress on the", "coming along", "build coming", "build going",
+                         "how far along", "how close is the", "how's the build", "how is the build"),
     ))
     registry.register(AssistantAction(
         name="get_bosses", domain="missions",
