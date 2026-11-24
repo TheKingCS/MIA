@@ -104,6 +104,11 @@ his winter (`core/firewood.py`), should I water today (`weather_watch.watering`)
 (`core/planting_now.py`); a fresh review after each, every finding fixed. The Intelligence Benchmark's routing audit
 (`python -m tools.bench_audit`) matched this morning's on every question. WAITING_ON 0zh (the library: options
 written) and 0zk (the safety floor's phrases) are new for Zac.
+**Then (K-0401 to K-0409):** what's left in a budget (`budget_left`; the Money page's budget targets are now the
+household's own, to today), feed mixes (`core/feed_mix.py`), his rain gauge (`log_rain`, counted by "should I
+water?"), meat birds to processing day (`core/broiler_batch.py`), a cut list read one cut at a time
+(`next_cut`), and a rule for every turn: a question never forces a change (`assistant_actions._ASKS`, a question
+word at the start only). Brainstorm round 6 is the bigger steps, each Zac's to choose.
 **First thing at the PC after Zac has used her a while:** read `core.failure_log`'s `fix_report()` (his own
 `failures.jsonl`, private: never committed), turn each ranked miss into a test in
 `tests/test_everyday_phrasing_routing.py` or the routing corpus, fix, and send a fresh reviewer over each routing

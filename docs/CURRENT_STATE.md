@@ -108,7 +108,11 @@ more: the erase test removed the checkout's own content folders (only in a workt
   his records; three more fresh reviews, every finding fixed (K-0362 to K-0367).
   2026-11-24: the generator's days on his fuel, "who owes me?", the bleach dose by voice, and routing: the new tools,
   his hobby programs and "how do I...?" questions about the world now reach the right tools on the phone (about 70
-  everyday phrasings kept in a test); three more reviews fixed (K-0368 to K-0378).
+  everyday phrasings kept in a test); three more reviews fixed (K-0368 to K-0378). Then brainstorm rounds 4 to 6:
+  incubator hatches and meat birds as missions, seed shelf life, firewood, watering with his rain gauge, what to
+  plant now, feed mixes, budgets left, net worth, quotes and orders by voice, a cut list read cut by cut; the safety
+  floor's indirect signs; and a question never forces a change. Twenty-four fresh reviews in all, every finding
+  fixed (to K-0409).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope, which model after reading the comparison, unblocking libzim from Windows Application
   Control (`docs/WAITING_ON.md` 0zh), whether a workflow may ever work the homestead's equipment (0zj).
