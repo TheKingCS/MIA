@@ -59,7 +59,8 @@
       "remove_grocery_item",
       "remove_pantry_item",
       "suggest_recipes",
-      "update_pantry_item"
+      "update_pantry_item",
+      "fix_jar_count"
     ],
     "actions": [
       "cooking.back",
@@ -92,7 +93,8 @@
       "recipe.edit",
       "recipe.favorite",
       "recipe.ingredients",
-      "recipe.rate"
+      "recipe.rate",
+      "jars.correct"
     ],
     "tiers": {
       "add_grocery_item": "act_within_grant",
@@ -148,7 +150,9 @@
       "remove_grocery_item": "act_with_approval",
       "remove_pantry_item": "act_with_approval",
       "suggest_recipes": "suggest",
-      "update_pantry_item": "act_within_grant"
+      "update_pantry_item": "act_within_grant",
+      "fix_jar_count": "act_within_grant",
+      "jars.correct": "act_within_grant"
     },
     "outside": []
   },

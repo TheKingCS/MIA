@@ -73,7 +73,15 @@
       el("div", {}, el("div", { class: "row-title" }, p.name), el("div", { class: "row-sub" }, [qty(p), p.category].filter(Boolean).join(" · "))),
       el("div", { class: "row-meta" },
         when ? el("span", { class: "when " + (p.expires_in < 0 ? "overdue" : p.expiring ? "today" : "") }, when) : null,
-        buttons(btn("Edit", "btn-ghost", () => edit("pantry", p)), btn("Remove", "btn-ghost", () => del("pantry", p)))));
+        buttons(p.home_canned ? btn("Fix Jar Count", "btn-ghost", () => fixJars(p)) : null,
+          btn("Edit", "btn-ghost", () => edit("pantry", p)), btn("Remove", "btn-ghost", () => del("pantry", p)))));
+  }
+  // A home-canned batch put up with the wrong count (core/canning_fix.py): the jars it really was. His canning
+  // count (and achievements from here on) follow; the jars on hand move by the same difference.
+  async function fixJars(p) {
+    const v = await form("How many jars was " + p.name + " really?", [
+      { name: "jars", label: "Jars put up", type: "int", required: true, options: [], default: null }], {});
+    if (v) act({ kind: "jars.correct", params: { item_id: p.id, jars: v.jars } });
   }
 
   function groceryRow(g) {

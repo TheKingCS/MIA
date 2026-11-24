@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1709 files, 370,095 lines; 1709 files describe themselves; 20,322 of 20,452 classes and functions are documented.
+1711 files, 370,279 lines; 1711 files describe themselves; 20,332 of 20,462 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-677 files, 190,392 lines; 9,668 of 9,754 classes and functions documented
+678 files, 190,518 lines; 9,675 of 9,761 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -137,6 +137,7 @@
 - `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications.
 - `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses."
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t
+- `core/canning_fix.py`: Fixing a batch of jars that was put up with the wrong count (the achievements review, 2026-11-24): "I put up 7 jars of tomatoes, not 70". The jars he has ever canned are counted from `canned` life events (core/canning_shelf.py, core/life_milestones.jars_canned), because an eaten jar leaves the pantr
 - `core/canning_shelf.py`: The canning shelf (Jarvis brainstorm, round 2): the jars he puts up, kept as batches in his pantry, said by date against the USDA's best-quality window. "I put up 7 quarts of tomatoes today" adds a batch (`put_up`); "what's on my canning shelf?" reads them back (`shelf`, `say`), oldest first, with t
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 - `core/capability_check.py`: A capability's four descriptions read as one (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A capability is described in four places that each work on their own:
@@ -975,7 +976,7 @@
 
 ## tests/: the test suite: what each part must do
 
-626 files, 98,721 lines; 8,289 of 8,333 classes and functions documented
+627 files, 98,771 lines; 8,292 of 8,336 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1048,6 +1049,7 @@
 - `tests/test_calendar_manager.py`: Unit tests for core.calendar_manager. Isolates _DATA_DIR/_EVENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/calendar_events.json.
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions.
 - `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
+- `tests/test_canning_fix.py`: A batch put up with the wrong count, fixed (core/canning_fix.py): the history gains the difference, so the jars he has ever canned are right again, and the jars on hand move by it; a bought can or a count that's already right is refused.
 - `tests/test_canning_shelf.py`: The canning shelf (core/canning_shelf.py): "I put up 7 quarts of tomatoes" adds a dated batch to the pantry, best by a year on, a second batch the same month joins it, and the shelf is read back oldest first with the ones past or nearing a year said first and the never-taste-a-bad-jar line always; b
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, a missing 
 - `tests/test_capability_check.py`: Tests for a capability's four descriptions read as one (DEC-0283, LS-04, core/capability_check.py): the tool, the action kind, the manifest's tier and the effects table must agree.
@@ -1606,7 +1608,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-120 files, 22,419 lines
+120 files, 22,427 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

@@ -45,9 +45,11 @@ def _r(value) -> float:
 
 def kitchen_page(context, today: Optional[date] = None) -> dict:
     """The data the Kitchen screen shows, assembled here (the web only draws it): recipes (what's missing for each, whether it can be made, times
-    made, favourites, ratings, photos; locked ones with the mission that unlocks them), the pantry with what expires,
+    made, favourites, ratings, photos; locked ones with the mission that unlocks them), the pantry with what expires
+    (a home-canned batch flagged, for Fix Jar Count),
     the grocery list, meals logged, the forms, and the recipe being cooked in cook mode (`cooking`).
     """
+    from core.canning_shelf import MARK
     from core.kitchen_actions import RECORDS, form_spec, ingredients_text
     from core.kitchen_manager import days_until_expiration, recipe_missing_ingredients
     from core.person_settings import person_id
@@ -91,6 +93,7 @@ def kitchen_page(context, today: Optional[date] = None) -> dict:
         days = days_until_expiration(p, today)
         items.append({"id": p.item_id, "name": p.name, "quantity": p.quantity, "unit": p.unit, "category": p.category,
                       "expires_in": days, "expiring": days is not None and days <= EXPIRING_DAYS,
+                      "home_canned": MARK.lower() in str(p.notes or "").lower(),
                       "values": _values(RECORDS["pantry"], p)})
     page["pantry"] = sorted(items, key=lambda x: (not x["expiring"], x["category"], x["name"].lower()))
 

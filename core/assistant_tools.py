@@ -80,6 +80,7 @@ from core.assistant_achievement_actions import register_achievement_actions
 from core.mission_trophy_actions import register_mission_trophy_actions
 from core.youtube_actions import register_youtube_actions
 from core.repertoire_actions import register_repertoire_actions
+from core.canning_fix import register_canning_fix_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_path_actions import register_path_actions
 from core.assistant_plan_actions import register_plan_actions
@@ -215,6 +216,7 @@ class AssistantTools:
         come from core/mission_trophy_actions.py.
         find_on_youtube, save_from_youtube and play_on_youtube come from core/youtube_actions.py.
         learned_a_song and songs_i_can_play (his songbook) come from core/repertoire_actions.py.
+        fix_jar_count (a batch put up with the wrong count) comes from core/canning_fix.py.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -263,6 +265,7 @@ class AssistantTools:
         register_mission_trophy_actions(self.context.assistant_actions)  # mission rewards beyond XP, counted objectives
         register_youtube_actions(self.context.assistant_actions)  # YouTube in Music: find, save, play
         register_repertoire_actions(self.context.assistant_actions)  # his songbook: songs he can play
+        register_canning_fix_actions(self.context.assistant_actions)  # a batch of jars put up with the wrong count
         register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_closet_actions(self.context.assistant_actions)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)
