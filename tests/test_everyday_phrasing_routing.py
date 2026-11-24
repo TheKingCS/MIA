@@ -51,6 +51,9 @@ SAID = [
     ("list_bills", "what bills are due this week?"), ("add_expense", "spent $120 at the feed store"),
     ("get_budget_summary", "how's my budget looking"), ("list_unchecked_subscriptions", "what subscriptions am I paying for?"),
     ("money_ahead", "will I have enough for rent next month?"),
+    ("list_inventory", "where did I put the post hole digger"), ("garden_this_week", "what needs doing in the garden"),
+    ("add_expense", "I bought 3 bags of chicken feed"), ("complete_maintenance_task", "I changed the oil in the truck today"),
+    ("log_maintenance_reading", "the mower has 212 hours on it"), ("add_alarm", "remind me to fix the fence saturday"),
 ]
 
 

@@ -316,7 +316,8 @@ def build_core_context(config: ConfigManager, events: EventBus) -> AppContext:
 
 
 def _register_core_assistant_actions(context: AppContext) -> None:
-    """Registers Core's curated Assistant action subset — see this module's docstring. It includes the read tools
+    """Registers Core's curated Assistant action subset — see this module's docstring (the inventory look-up hears
+    "where did I put the post hole digger?" as well as "do I have..."). It includes the read tools
     for Character, Skills, the Reward Shop, Insurance, Kept, the Operating Journal, Play and Files, the Security
     cameras, the energy sources read and logged, and fixing groceries, recipes, the meal plan, bills and expenses,
     playlists, and "remember that", orders paid, weigh-ins, missions and journal lines (DEC-0125), so the phone can ask about them too, cook mode's tools
@@ -510,7 +511,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
             "required": [],
         },
         handler=_action_list_inventory,
-        trigger_phrases=("inventory", "do i have"),
+        trigger_phrases=("inventory", "do i have", "where did i put", "where's my", "where is my", "where did i leave"),
     ))
     registry.register(AssistantAction(
         name="delete_inventory_item",

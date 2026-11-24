@@ -119,7 +119,8 @@ def register_project_plan_actions(registry) -> None:
     chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
     show_plans,
     confirm_plan and drop_plan. Their trigger phrases cover the everyday ways he'd ask ("what should I plant this
-    week", "how much should I charge for a picnic table": tests/test_everyday_phrasing_routing.py)."""
+    week", "what needs doing in the garden", "how much should I charge for a picnic table":
+    tests/test_everyday_phrasing_routing.py)."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -159,7 +160,8 @@ def register_project_plan_actions(registry) -> None:
         handler=_garden_week, trigger_phrases=("garden this week", "what do i plant this week", "seeds this week",
                                                "what's due in the garden", "garden today",
                                                "plant this week", "seeds do i still need", "seeds i still need",
-                                               "seeds do i need"),
+                                               "seeds do i need", "doing in the garden", "to do in the garden",
+                                               "needs done in the garden"),
     ))
     registry.register(AssistantAction(
         name="homestead_year", domain=DOMAIN,
