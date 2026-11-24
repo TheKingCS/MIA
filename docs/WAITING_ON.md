@@ -9,6 +9,11 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From the Jarvis brainstorm (2026-11-23, `docs/future/JARVIS_BRAINSTORM.md`)
+0zj. [ ] **May a workflow work the homestead's equipment?** (brainstorm 7.2) Today MIA only reads the greenhouse
+   and aquaponics system's snapshots; she can't switch anything there. A workflow step like "when the tank is low,
+   run the fill pump" would be a new path from MIA into real pumps and vents. Claude's recommendation: not yet; first
+   let a workflow *suggest* the homestead action as a card you press in the homestead's own screen, and only later,
+   if you want, let it act within limits the homestead itself enforces.
 0zi. [ ] **Which model, after reading the comparison** (DEC-0291): `pc-check/model-compare.md` on the PC has your
    Intelligence Benchmark answered by five models side by side. By MIA's own checks qwen2.5:14b (today's) and
    qwen3:14b tied; the bigger ones were slower and no better. Say "keep it" or "switch to qwen3"; nothing changes

@@ -512,6 +512,35 @@ def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
     return f"Added {_qty(item.quantity, item.unit)} {item.name} to the pantry." if item.quantity else f"Added {item.name} to the pantry."
 
 
+def _action_put_up_jars(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `put_up_jars`: a batch of home-canned jars onto the canning shelf (core/canning_shelf.put_up),
+    dated today unless he says when, best by a year on. Returns the sentence to say back; a missing food or count is
+    asked about, nothing changes."""
+    from core import canning_shelf
+
+    when = None
+    if arguments.get("date"):
+        try:
+            when = date.fromisoformat(str(arguments["date"])[:10])
+        except ValueError:
+            return "Which day did you put them up?"
+    try:
+        item = canning_shelf.put_up(context.kitchen, str(arguments.get("food", "") or ""),
+                                    _num(arguments.get("jars"), 0.0), str(arguments.get("size", "") or ""), when)
+    except ValueError as problem:
+        return str(problem)
+    return (f"On the canning shelf: {item.name}, {_qty(item.quantity, item.unit)}, best by {item.expiration_date}. "
+            f"I'll say when it nears a year.")
+
+
+def _action_canning_shelf(context: AppContext, arguments: dict) -> str:
+    """Assistant tool `canning_shelf`: what's on the canning shelf, oldest first, the ones past or nearing a year
+    said first (core/canning_shelf.say)."""
+    from core import canning_shelf
+
+    return canning_shelf.say(context)
+
+
 def _action_update_pantry_item(context: AppContext, arguments: dict) -> str:
     """Assistant tool `update_pantry_item`: sets how much of a pantry item is left; at 0 it's marked out and offered for the grocery list. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes."""
     item, error = _find_pantry(context, str(arguments.get("name", "")))
@@ -715,7 +744,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
-    mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes.
+    mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and put_up_jars and canning_shelf, his home-canned
+    batches by date (core/canning_shelf.py).
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -932,6 +962,21 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         parameters=_obj({"name": _s("Pantry item."), "quantity": _n("Amount left (0 if out)."), "unit": _s("Optional unit.")}, ["name", "quantity"]),
         handler=_action_update_pantry_item,
         trigger_phrases=("out of", "ran out", "running low", "used up the", "only have"),
+    ))
+    registry.register(AssistantAction(
+        name="put_up_jars", domain="groceries",
+        description="Record a batch of jars the user home-canned (put up): the food, how many jars, the jar size.",
+        parameters=_obj({"food": _s("What was canned, e.g. 'tomatoes'."), "jars": _n("How many jars."),
+                         "size": _s("Jar size: half-pints, pints, quarts or half-gallons."),
+                         "date": _s("YYYY-MM-DD if not today.")}, ["food", "jars"]),
+        handler=_action_put_up_jars,
+        trigger_phrases=("i put up", "we put up", "i canned", "we canned", "jars of"),
+    ))
+    registry.register(AssistantAction(
+        name="canning_shelf", domain="groceries",
+        description="Read back the home-canned jars on the shelf, oldest first, and which to use next (nearing or past a year).",
+        parameters=_NO_PARAMS, handler=_action_canning_shelf,
+        trigger_phrases=("canning shelf", "canned goods", "home canned", "my jars", "how many jars"),
     ))
     registry.register(AssistantAction(
         name="list_pantry", domain="groceries", description="Read back what's in the pantry and what's run out.",

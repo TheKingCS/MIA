@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1638 files, 358,553 lines; 1638 files describe themselves; 19,718 of 19,848 classes and functions are documented.
+1640 files, 358,786 lines; 1640 files describe themselves; 19,732 of 19,862 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-644 files, 182,612 lines; 9,347 of 9,433 classes and functions documented
+645 files, 182,783 lines; 9,355 of 9,441 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -131,6 +131,7 @@
 - `core/calendar_manager.py`: Backs the Calendar tool (modules/toolbox/tools/calendar_tool.py) — a CRUD event store, persisted to data/calendar_events.json so events survive a restart, same durability guarantee core.notification_manager.NotificationManager gives notifications.
 - `core/calendar_view.py`: The Calendar (Zac, 2026-10-16): "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses."
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t
+- `core/canning_shelf.py`: The canning shelf (Jarvis brainstorm, round 2): the jars he puts up, kept as batches in his pantry, said by date against the USDA's best-quality window. "I put up 7 quarts of tomatoes today" adds a batch (`put_up`); "what's on my canning shelf?" reads them back (`shelf`, `say`), oldest first, with t
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 - `core/capability_check.py`: A capability's four descriptions read as one (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A capability is described in four places that each work on their own:
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
@@ -942,7 +943,7 @@
 
 ## tests/: the test suite: what each part must do
 
-590 files, 95,389 lines; 8,008 of 8,052 classes and functions documented
+591 files, 95,451 lines; 8,014 of 8,058 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1008,6 +1009,7 @@
 - `tests/test_calendar_manager.py`: Unit tests for core.calendar_manager. Isolates _DATA_DIR/_EVENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/calendar_events.json.
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions.
 - `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
+- `tests/test_canning_shelf.py`: The canning shelf (core/canning_shelf.py): "I put up 7 quarts of tomatoes" adds a dated batch to the pantry, best by a year on, a second batch the same month joins it, and the shelf is read back oldest first with the ones past or nearing a year said first and the never-taste-a-bad-jar line always; b
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, a missing 
 - `tests/test_capability_check.py`: Tests for a capability's four descriptions read as one (DEC-0283, LS-04, core/capability_check.py): the tool, the action kind, the manifest's tier and the effects table must agree.
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap

@@ -213,7 +213,7 @@ day, week or month (read, count, compare, tell, add) under a grant; what's missi
 bill comes in") and the homestead's controls as a step. *Needs Zac first:* an event can come from something she
 reads (an email, a page), and nothing she reads may grant her anything, so which events may start a workflow is his
 call.* *Built 2026-11-23 on his answer (DEC-0293): a workflow may start on an event in his history; one from something
-she read runs with every change waiting for his yes. The homestead's controls as a step are still to come.*
+she read runs with every change waiting for his yes. The homestead's controls as a step need Zac first: today MIA only reads the homestead's snapshots (DEC-0145), so a step that works its pumps or vents is a new control path into real equipment (WAITING_ON 0zj).*
 Rules he says out loud: "when the greenhouse goes over 90, tell me and open the vents", "when a bill comes in, add
 it to the budget". Each a workflow with its tier from the manifest; the risky ones ask. Builds on: workflows, the event
 bus, the homestead's controls, grants.
@@ -267,7 +267,9 @@ New ideas, each checked against what's there first:
   month with no seeds logged (pantry or inventory) are named in the garden's weekly message.*
 - **The canning shelf** (S-M): jars put up, by date, from his kitchen records, with the USDA's best-quality window
   ("use within a year") said as they near it. Builds on the pantry's expiry dates. *Partly there: "how prepared am I?" lists
-  what expires in the next 30 days (`core/preparedness.rotate`).*
+  what expires in the next 30 days (`core/preparedness.rotate`).* *Built 2026-11-23 (`core/canning_shelf.py`): "I put up 7
+  quarts of tomatoes" keeps a dated batch in the pantry, best by a year on; "what's on my canning shelf?" says the
+  oldest first, what's past or nearing a year, and never to taste a jar whose seal failed.*
 - **Equipment hours to service** (S): the hour meters he logs (core/maintenance_manager.py meter tasks) said a week
   before a service falls due, through the gate. *Already there: `core/maintenance_insights.py` says a meter task
   trending toward due soon.*
