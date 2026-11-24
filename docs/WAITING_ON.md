@@ -30,6 +30,12 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
    packs on the PC (the rest of MIA is fine). Windows Security, App and browser control, shows the block. If it's
    Smart App Control, it has no allow-one-file setting, and once turned off it can't be turned back on without
    reinstalling Windows, so don't flip it in a hurry: Claude can look for another way with you at the PC.
+   Checked 2026-11-24: Smart App Control is On. The ways round it, for you to choose (Claude won't test one
+   without your say-so, since each gets past a Windows security setting): (1) turn Smart App Control off, which
+   can't be undone without reinstalling Windows; (2) run her library on the Linux side (WSL or MIA OS), where
+   it isn't blocked, and let Windows MIA ask it; (3) a reader written in plain Python: it still needs a zstd
+   decompressor, a compiled library Smart App Control would likely block the same way; (4) leave the library to
+   MIA OS and the phone for now. Claude's recommendation: (2), or (4) until MIA OS is on the new PC.
 0zg. [x] (Zac, 2026-11-23: all four hobbies, the picture of him, test a bigger model, the evening wrap: DEC-0289 to
    DEC-0292. Then the last two: event triggers with email waiting for his yes, DEC-0293; habit routines offered once,
    DEC-0294. Nothing from the brainstorm waits on him now.)
