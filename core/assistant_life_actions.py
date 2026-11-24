@@ -575,7 +575,8 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     # -- workout -------------------------------------------------------------
     """Registers every tool above with the Assistant's registry, with descriptions, parameters and trigger
     phrases, plus each domain's everyday words (a workout's include cardio and lifts said plainly: "I ran 3 miles",
-    "I benched 185"; never bare "miles" or "cycling", the truck's mileage and the fish tank's cycle) and the names of the person's own records (exercises, people, pets, routines, courses and
+    "I benched 185"; never bare "miles" or "cycling", the truck's mileage and the fish tank's cycle; a personal record
+    by a lift, a time or a distance, never a bare "my best", which is in "my best customers") and the names of the person's own records (exercises, people, pets, routines, courses and
     lessons).
     """
     registry.register(AssistantAction(
@@ -603,7 +604,11 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         description="The user's personal record (heaviest set) for one exercise.",
         parameters=_obj({"exercise": _s("The exercise, e.g. 'squat'.")}, ["exercise"]),
         handler=_action_get_personal_record,
-        trigger_phrases=("personal record", "my pr ", "my pr?", "my pr.", "my best", "max on"),
+        # "my best" alone was in "my best customers" and "my best friend": only a lift, a time or a distance
+        trigger_phrases=("personal record", "my pr ", "my pr?", "my pr.", "max on", "my best lift", "my best time",
+                         "my best mile", "my best run", "my best squat", "my best bench", "my best deadlift",
+                         "my best press", "my best set", "my best pull", "my best push", "my best 5k",
+                         "my best workout", "my best weight", "my best distance", "my best pace", "my best on"),
     ))
     registry.register_domain_keywords("workout", (
         "workout", "workouts", "worked out", "reps", "squats", "squat", "bench press", "deadlift", "deadlifts",

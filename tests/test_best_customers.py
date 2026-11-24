@@ -1,7 +1,7 @@
 """Who his best customers are (core/best_customers.py): ranked by what's been paid on their orders (cancelled
 ones left out), each one's share, the regulars with no order in six months named as gone quiet, a customer with no
 orders not ranked, nobody with an order still open called quiet, a payment two orders name counted once, and the
-question reaching the tool."""
+question reaching the tool, never the workout tools ("my best" was a personal record's)."""
 
 from datetime import date
 
@@ -54,3 +54,12 @@ def test_asking_for_my_best_customers_or_my_best_customer_reaches_it(shop):  # n
     for said in ("who are my best customers?", "which customers haven't ordered in a while",
                  "what does my best customer usually order"):
         assert "best_customers" in [a.name for a in registry.matching_actions(said, shop)], said
+
+
+def test_my_best_customers_never_bring_the_workout_tools_and_my_best_squat_still_does(shop):  # noqa: F811
+    from tests.assistant_registry import build_desktop_registry
+
+    registry = build_desktop_registry()
+    assert "get_personal_record" not in [a.name for a in registry.matching_actions("who are my best customers?", shop)]
+    for said in ("what's my best squat?", "what's my best on deadlift", "what's my personal record on bench press"):
+        assert "get_personal_record" in [a.name for a in registry.matching_actions(said, shop)], said
