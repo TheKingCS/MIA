@@ -2,7 +2,8 @@
 "can I afford it and still hit my freedom date" is worked out by the freedom plan twice; every plan answer says
 how sure it can be, from the sheet, and answers.calibration checks that "sure" is earned; a purchase asked against
 the debts is worked out as the same money on the debt instead, never as that much more a month, told apart from
-money put on a debt however it's said, and a lump that clears the first debt keeps its minimum rolling."""
+money put on a debt however it's said, and a lump that clears the first debt keeps its minimum rolling; "the card"
+said plainly reaches the debts plan by its words, a birthday card never."""
 
 from datetime import date, datetime
 from types import SimpleNamespace
@@ -185,3 +186,13 @@ def test_a_lump_that_clears_the_first_debt_keeps_its_minimum_rolling():
 
     assert months(big) > months(small)
     assert "pay them all off now" in qp.instead(ranked, 20000, False, now, day, money)[1][1]
+
+def test_the_card_said_plainly_reaches_the_debts_plan_but_a_birthday_card_doesnt():
+    import re
+
+    debts = qp.PLAN_BY_NAME["debts"].words
+    for said in ("what if i put an extra $200 toward the card?", "which card should i pay first?",
+                 "when is my card paid off?"):
+        assert re.search(debts, said), said
+    for said in ("did i get a birthday card?", "what card should i use at the store?"):
+        assert not re.search(debts, said), said

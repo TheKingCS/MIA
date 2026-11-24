@@ -288,3 +288,10 @@ New ideas, each checked against what's there first:
   day".* (M, his say: it's a new daily message): what got done today, tomorrow's first thing, the
   weather for it, in two sentences, at the hour he usually winds down.
 
+## Round 3 (2026-11-23)
+
+- **The 72-hour kit** (S, no decision): built 2026-11-23 (`core/ready_kit.py`, "check my emergency kit"): Ready.gov's
+  basic kit against his inventory and pantry by whole words, water and food against three days (from
+  `core/preparedness.py`), what isn't in his records said as that, and what only he can check (medicine, glasses,
+  cash, papers). Read-only.
+- **A purchase against the debts** (1.4's gap): built the same day, see 1.4.

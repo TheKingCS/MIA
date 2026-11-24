@@ -88,6 +88,7 @@
       "weather_for_my_plans",
       "anything_unusual",
       "where_were_we",
+      "emergency_kit",
       "how_prepared",
       "evening_wrap"
     ],
@@ -179,6 +180,7 @@
       "weather_for_my_plans": "observe",
       "anything_unusual": "observe",
       "where_were_we": "observe",
+      "emergency_kit": "observe",
       "how_prepared": "observe",
       "evening_wrap": "observe"
     },

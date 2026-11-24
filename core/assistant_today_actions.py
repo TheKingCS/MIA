@@ -85,6 +85,13 @@ def _action_how_prepared(context, arguments: dict) -> str:
     return preparedness.say(context)
 
 
+def _action_emergency_kit(context, arguments: dict) -> str:
+    """Ready.gov's basic emergency kit against his inventory and pantry (core/ready_kit.say)."""
+    from core import ready_kit
+
+    return ready_kit.say(context)
+
+
 def _action_where_were_we(context, arguments: dict) -> str:
     """Where he left off (core/left_off.say)."""
     from core import left_off
@@ -101,7 +108,7 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
-    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
+    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
@@ -167,6 +174,15 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_how_prepared,
         trigger_phrases=("how prepared", "days of water", "how much water do i have", "emergency supplies",
                          "if the power goes out", "grid down", "prepared for an emergency", "what should i rotate"),
+    ))
+    registry.register(AssistantAction(
+        name="emergency_kit", domain="today",
+        description="Check the user's 72-hour emergency kit: Ready.gov's basic kit against his inventory and pantry, "
+                    "water and food against three days, and what isn't in his records.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_emergency_kit,
+        trigger_phrases=("emergency kit", "72 hour kit", "72-hour kit", "go bag", "bug out bag", "bug-out bag",
+                         "disaster kit", "survival kit", "what am i missing for an emergency"),
     ))
     registry.register(AssistantAction(
         name="evening_wrap", domain="today",

@@ -874,7 +874,9 @@ PLANS: tuple[Plan, ...] = (
           "When will each of my debts be paid off at my current payment rate?",
           "What would happen if I increased my monthly debt payments?", "When will I be debt free?",
           "Which card should I pay off first?"),
-         r"\b(debts?|loans?|pay (it |them |the \w+ )?(off|down)|payoff|interest|credit cards?|debt.free)\b", _debts),
+         r"\b(debts?|loans?|pay (it |them |the \w+ )?(off|down)|payoff|interest|credit cards?|debt.free)\b"
+         r"|\b(toward|towards|pay|paid|paying) (off |down )?(the|my) cards?\b|\b(which|what) card should i pay\b"
+         r"|\b(the|my) cards?\b[^?]*\b(paid off|balance|interest)\b", _debts),
     Plan("freedom", "Leaving the job",
          ("How much more income do I need to replace my job?", "How close am I to financial independence?",
           "What would my financial situation look like in one, three, and five years?",
