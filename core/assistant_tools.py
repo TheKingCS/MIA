@@ -177,7 +177,7 @@ class AssistantTools:
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
         milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py; plans made together, core/assistant_project_plan_actions.py; their trigger phrases cover everyday ways of
         asking, "spent $120 at the feed store", "I bought 3 bags of chicken feed", "how's my budget looking", "where did I
-        put the post hole digger": tests/test_everyday_phrasing_routing.py).
+        put the post hole digger", "what did I miss?": tests/test_everyday_phrasing_routing.py).
         Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
         the one place independent core services get wired together
@@ -649,6 +649,10 @@ class AssistantTools:
             trigger_phrases=(
                 "what's going on with me", "how am i doing", "status report",
                 "my life state", "give me an overview", "catch me up",
+                # "catch me up" said the other ways: what needs him, what she's holding, what she did on her own
+                "what did i miss", "while i was out", "while i was gone", "what's new", "whats new",
+                "anything i should know", "any messages for me", "messages for me", "did you do on your own",
+                "you do on your own", "fill me in", "bring me up to speed",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(

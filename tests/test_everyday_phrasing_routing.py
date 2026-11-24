@@ -63,6 +63,9 @@ SAID = [
     ("log_workout", "I ran 3 miles this morning"), ("log_workout", "did 45 minutes on the bike"),
     ("log_workout", "I benched 185 for 5"), ("plan_meal", "what's for dinner this week"),
     ("get_net_worth", "what's my net worth?"), ("get_net_worth", "how much am I worth"),
+    ("get_life_state", "what did I miss?"), ("get_life_state", "did anything happen while I was out?"),
+    ("get_life_state", "what's new?"), ("get_life_state", "any messages for me?"),
+    ("get_life_state", "what did you do on your own today?"),
 ]
 
 
@@ -80,7 +83,8 @@ def test_each_everyday_phrasing_is_offered_its_tool(registry, tool, said):
 @pytest.mark.parametrize("said", ["is it going to frost tonight?", "what should I plant this week",
                                   "what's coming up on the homestead this spring", "will I be short next month?",
                                   "when do I need more chicken feed tonight", "have I been spending more than normal?",
-                                  "what's first tomorrow", "what's my bushcraft homework this week"])
+                                  "what's first tomorrow", "what's my bushcraft homework this week",
+                                  "what did you do on your own today?"])
 def test_a_plan_leaves_a_weather_garden_or_flock_question_to_its_tool(said):
     from core import question_plans
 
