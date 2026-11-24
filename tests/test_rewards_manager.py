@@ -7,6 +7,7 @@ file constants into a tmp_path scratch area, same monkeypatch pattern
 as tests/test_kitchen_manager.py's own isolated_paths.
 The homestead stats (produce, eggs, jars) are among every stat listed; their own tests are
 tests/test_achievement_cards.py.
+Songs learned (core/repertoire.py) are a stat too.
 """
 
 from __future__ import annotations
@@ -456,14 +457,14 @@ def test_projects_completed_counts_only_complete_status(isolated_paths):
     assert context.rewards.stat_value("projects_completed", profile.profile_id) == 1.0
 
 
-def test_all_stat_values_covers_every_definition_including_the_homesteads(isolated_paths):
+def test_all_stat_values_covers_every_definition_including_the_homestead_and_songbook(isolated_paths):
     context = _make_context()
     profile = context.profiles.create_profile(name="Alex")
     values = context.rewards.all_stat_values(profile.profile_id)
     assert set(values.keys()) == {
         "engine_hours_logged", "workout_hours_logged", "missions_completed",
         "vehicle_miles_logged", "meals_cooked", "projects_completed",
-        "produce_pounds", "eggs_collected", "jars_canned",
+        "produce_pounds", "eggs_collected", "jars_canned", "songs_learned",
     }
 
 

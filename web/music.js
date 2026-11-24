@@ -15,7 +15,7 @@
   "use strict";
   const { el, act, form, say } = MIAShell;
   const $ = (id) => document.getElementById(id);
-  const TABS = [["songs", "Songs"], ["playlists", "Playlists"], ["artists", "Artists"], ["youtube", "YouTube"]];
+  const TABS = [["songs", "Songs"], ["playlists", "Playlists"], ["artists", "Artists"], ["youtube", "YouTube"], ["canplay", "Can Play"]];
   let page = null, query = "", openList = null, artist = null;
   let ytWords = "", ytFound = null, ytProblem = "", ytNeedsKey = false, ytNow = null;
   let tab = TABS.some(([t]) => t === location.hash.slice(1)) ? location.hash.slice(1) : "songs";
@@ -219,6 +219,22 @@
             : el("p", { class: "empty" }, "Songs you save from YouTube show here and can go on any playlist.")),
       ].filter(Boolean);
     },
+    // His songbook (core/repertoire.py): the songs he can play all the way through, which count toward the Songbook
+    // achievements and missions. Taking one back is "undo that".
+    canplay: () => {
+      const add = async () => {
+        const v = await form("I Learned A Song", [
+          { name: "song", label: "The song", type: "text", required: true, options: [], default: null },
+          { name: "instrument", label: "On", type: "choice", required: true, options: page.instruments, default: "guitar" },
+          { name: "artist", label: "Who it's by", type: "text", required: false, options: [], default: null }], {});
+        if (v) act({ kind: "song.learned", params: v });
+      };
+      return section("Songs I Can Play", btn("I Learned A Song", "btn-amber", add),
+        page.songbook.length ? el("div", { class: "rows" }, page.songbook.map((s) => el("div", { class: "row money-row" },
+          el("div", {}, el("div", { class: "row-title" }, "🎵 " + s.song), el("div", { class: "row-sub" },
+            [s.artist, s.instrument, s.when ? new Date(s.when).toLocaleDateString() : ""].filter(Boolean).join(" · "))))))
+          : el("p", { class: "empty" }, "When you can play a song all the way through, add it here: each one counts toward your Songbook achievements."));
+    },
     artists: () => {
       if (artist) {
         const ids = page.tracks.filter((t) => (t.artist || "Unknown artist") === artist).map((t) => t.id);
@@ -247,7 +263,8 @@
         (lib.found ? ", or put them in MIA's music folder and Scan Library." : ". On the PC you can also point MIA at your music folder in Settings.")),
       phoneAsks() ? buttons(btn("Find The Songs On This Phone", "btn-amber", () => window.MIAPhonePermissions.ask("music"))) : null,
       !lib.found && lib.folder ? el("p", { class: "dim music-library" }, "Looking in: " + lib.folder) : null) : null;
-    $("panel").replaceChildren(...[tab === "youtube" ? null : empty, ...[].concat(lib.count || tab === "youtube" ? VIEWS[tab]() : []),
+    const free = tab === "youtube" || tab === "canplay";  // these need no library of files
+    $("panel").replaceChildren(...[free ? null : empty, ...[].concat(lib.count || free ? VIEWS[tab]() : []),
       lib.count ? el("p", { class: "dim music-library" }, "Library: " + lib.folder + " · ", el("a", { href: "#", onclick: (ev) => { ev.preventDefault(); act({ kind: "music.scan", params: {} }); } }, "Scan For New Music")) : null].filter(Boolean));
   }
 

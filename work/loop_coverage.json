@@ -5,6 +5,10 @@
    "status": "none",
    "why": "youtube.save keeps a link to a song he chose; which songs he likes is his taste, nothing of MIA's to improve"
   },
+  "action:song": {
+   "status": "none",
+   "why": "song.learned is him saying he can play a song; his own word, nothing of MIA's to improve"
+  },
   "action:activity": {
    "status": "none",
    "why": "turning noting on or off and erasing what was noted are his own choices about his privacy (DEC-0197); nothing of MIA's to improve in them"

@@ -270,6 +270,7 @@ STAT_DEFINITIONS: list[StatDefinition] = [
     StatDefinition("produce_pounds", "Produce Grown", "lb", "🥕"),
     StatDefinition("eggs_collected", "Eggs Collected", "", "🥚"),
     StatDefinition("jars_canned", "Jars Canned", "", "🫙"),
+    StatDefinition("songs_learned", "Songs Learned", "", "🎸"),  # his songbook (core/repertoire.py)
 ]
 
 #: v2 reward set — real escalating chains against the real stats above,
@@ -377,6 +378,17 @@ CHALLENGE_CHAINS: list[ChallengeChain] = [
             ChallengeTier("canner_preserver", "Preserver", "Put up 150 jars.", "🍅", 150.0, 2),
             ChallengeTier("canner_root_cellar", "Root Cellar Royalty", "Put up 500 jars.", "🏺", 500.0, 3),
             ChallengeTier("canner_master", "Master Canner", "Put up 1,000 jars.", "🏆", 1000.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="songbook",
+        stat_id="songs_learned",
+        tiers=(
+            ChallengeTier("songbook_first_song", "First Song", "Learn to play 1 song all the way through.", "🎵", 1.0, 0),
+            ChallengeTier("songbook_campfire", "Campfire Set", "Learn 5 songs.", "🔥", 5.0, 1),
+            ChallengeTier("songbook_porch_picker", "Porch Picker", "Learn 15 songs.", "🪕", 15.0, 2),
+            ChallengeTier("songbook_setlist", "A Full Set", "Learn 30 songs.", "🎸", 30.0, 3),
+            ChallengeTier("songbook_songbook", "The Songbook", "Learn 75 songs.", "📖", 75.0, 4),
         ),
     ),
 ]
@@ -571,7 +583,8 @@ class RewardsManager:
 
     def stat_value(self, stat_id: str, profile_id: str) -> float:
         """One stat's value for a person, worked out now from the records (0 for an unknown stat).
-        Produce, eggs and jars are read from core/life_milestones.py."""
+        Produce, eggs and jars are read from core/life_milestones.py.
+        Songs learned are read from his songbook (core/repertoire.py)."""
         if stat_id == "engine_hours_logged":
             return self._compute_engine_hours_logged(profile_id)
         if stat_id == "workout_hours_logged":
@@ -588,6 +601,10 @@ class RewardsManager:
             from core import life_milestones
 
             return float(getattr(life_milestones, stat_id)(self.context))
+        if stat_id == "songs_learned":
+            from core import repertoire
+
+            return repertoire.count(self.context)
         return 0.0
 
     def all_stat_values(self, profile_id: str) -> dict[str, float]:

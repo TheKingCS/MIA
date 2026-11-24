@@ -441,6 +441,7 @@ import core.estate_actions  # noqa: E402,F401
 import core.mission_actions  # noqa: E402,F401  (Missions, Skills, Character)
 import core.mission_trophy_actions  # noqa: E402,F401  (a mission's rewards beyond XP, objectives counted from records)
 import core.youtube_actions  # noqa: E402,F401  (youtube.save: a YouTube song kept as a link)
+import core.repertoire_actions  # noqa: E402,F401  (song.learned: a song in his songbook)
 import core.account_actions  # noqa: E402,F401  (Profile, Settings)
 import core.system_helper  # noqa: E402,F401  (the system helper's three operations, FW-06)
 import core.model_store  # noqa: E402,F401  (her models removed and fetched again, REQ-HW-014)

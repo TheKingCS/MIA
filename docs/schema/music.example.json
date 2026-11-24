@@ -33,5 +33,9 @@
     "minutes": 0
   },
   "youtube_key": false,
+  "songbook": [
+    {"song": "Wagon Wheel", "artist": "", "instrument": "guitar", "when": "2026-11-20T19:02:11", "event_id": "demo1"}
+  ],
+  "instruments": ["guitar", "banjo", "mandolin", "ukulele", "bass", "fiddle", "piano", "harmonica", "drums", "voice"],
   "youtube_next": null
 }

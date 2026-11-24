@@ -50,4 +50,6 @@ every unlock is in his history with its date.
 - Offline: his own files, Creative Commons or public-domain audio and purchases with files. Ripping YouTube to MP3
   breaks YouTube's terms and usually copyright, so MIA won't; YouTube Music Premium is the legitimate offline route.
 - Still to do: a YouTube song keeps playing only while the Music page is open (the shared player plays files);
-  started by voice it waits for a press; songs learned on the guitar path as achievements and mission rewards.
+  started by voice it waits for a press.
+- His songbook (core/repertoire.py, built 2026-11-24): songs he can play, on Music's Can Play tab or "I learned
+  Wagon Wheel on guitar"; the Songbook achievements (1 to 75 songs) and mission objectives count them.

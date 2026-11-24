@@ -50,7 +50,9 @@
       "stop_music",
       "find_on_youtube",
       "save_from_youtube",
-      "play_on_youtube"
+      "play_on_youtube",
+      "learned_a_song",
+      "songs_i_can_play"
     ],
     "actions": [
       "music.scan",
@@ -60,7 +62,8 @@
       "playlist.remove_track",
       "playlist.rename",
       "track.delete",
-      "youtube.save"
+      "youtube.save",
+      "song.learned"
     ],
     "tiers": {
       "add_to_playlist": "act_within_grant",
@@ -88,7 +91,10 @@
       "find_on_youtube": "observe",
       "save_from_youtube": "act_within_grant",
       "play_on_youtube": "act_within_grant",
-      "youtube.save": "act_within_grant"
+      "youtube.save": "act_within_grant",
+      "learned_a_song": "act_within_grant",
+      "songs_i_can_play": "observe",
+      "song.learned": "act_within_grant"
     },
     "outside": [
       "find_on_youtube",
