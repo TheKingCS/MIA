@@ -190,7 +190,8 @@ def _action_progress(context, arguments: dict) -> str:
 LEARNING_WORDS = (
     "woodworking", "woodwork", "the shop", "in the shop", "joinery", "dovetail", "dovetails", "mortise", "tenon",
     "carpentry", "bushcraft", "survival skills", "ferro rod", "fire starting", "friction fire", "knots", "shelter",
-    "fitness", "get fit", "guitar", "homework", "lesson", "lessons", "practiced", "practised",
+    "fitness", "get fit", "guitar", "homework", "practiced", "practised",  # not bare "lessons": "what lessons have
+    # I learned from experience?" is reflection, not a program
     "practice", "my program", "the program", "what stage", "next stage",
 )
 
