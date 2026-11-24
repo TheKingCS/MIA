@@ -9,6 +9,7 @@ files (`stl`), the format every slicer opens (Bambu Studio is on his PC), from s
 **The parts** (`PARTS`), each worked out in millimetres from the inside size he gives, so what goes in fits:
 - **an enclosure** (`enclosure`): an open box (a floor and four walls at his wall thickness) and its lid, a plate with
   a lip that sits inside the walls with a little clearance (`CLEARANCE`), for a sensor board, a relay or a battery;
+  with mounting posts at a board's hole spacing (hollow, for M3 screws) and a cable hole in one end when asked;
 - **a spacer** (`spacer`): a round standoff of a height and outer diameter, with its bore as a note (a hole is drilled
   or printed with the slicer's hole tool; this first maker makes solids only).
 
@@ -52,6 +53,24 @@ def _cylinder(r: float, h: float, segments: int = 48) -> list[tuple]:
     return tris
 
 
+def _tube(cx: float, cy: float, z0: float, h: float, outer: float, bore: float, segments: int = 32) -> list[tuple]:
+    """Pure logic. A hollow post (a tube) standing at (cx, cy) from z0: its outside, its bore, and the rings at both
+    ends; a solid post when the bore is 0."""
+    if bore <= 0:
+        return [tuple((x + cx, y + cy, z + z0) for x, y, z in tri) for tri in _cylinder(outer / 2, h, segments)]
+    ro, ri, z1, tris = outer / 2, bore / 2, z0 + h, []
+    pts = [(math.cos(2 * math.pi * i / segments), math.sin(2 * math.pi * i / segments)) for i in range(segments)]
+    for i in range(segments):
+        (ax, ay), (bx, by) = pts[i], pts[(i + 1) % segments]
+        oa, ob = (cx + ro * ax, cy + ro * ay), (cx + ro * bx, cy + ro * by)
+        ia, ib = (cx + ri * ax, cy + ri * ay), (cx + ri * bx, cy + ri * by)
+        tris += [((*oa, z0), (*ob, z0), (*ob, z1)), ((*oa, z0), (*ob, z1), (*oa, z1)),  # outside
+                 ((*ia, z0), (*ib, z1), (*ib, z0)), ((*ia, z0), (*ia, z1), (*ib, z1)),  # the bore, facing in
+                 ((*oa, z1), (*ob, z1), (*ib, z1)), ((*oa, z1), (*ib, z1), (*ia, z1)),  # the top ring
+                 ((*oa, z0), (*ib, z0), (*ob, z0)), ((*oa, z0), (*ia, z0), (*ib, z0))]  # the bottom ring
+    return tris
+
+
 def stl(triangles: list[tuple], name: str = "MIA part") -> bytes:
     """Pure logic. A binary STL of these triangles (each normal worked out from its winding)."""
     out = [name.encode("ascii", "replace")[:80].ljust(80, b" "), struct.pack("<I", len(triangles))]
@@ -64,13 +83,36 @@ def stl(triangles: list[tuple], name: str = "MIA part") -> bytes:
     return b"".join(out)
 
 
-def enclosure(length: float, width: float, height: float, wall: float = 2.0, lid: float = 2.0) -> dict:
+POST_OUTER, POST_BORE, POST_HEIGHT = 6.0, 2.5, 5.0  # mm: an M3 screw self-taps a 2.5 mm bore in PLA
+CABLE_HOLE = (8.0, 6.0)  # mm: wide by high, for a sensor or power lead
+
+
+def enclosure(length: float, width: float, height: float, wall: float = 2.0, lid: float = 2.0,
+              posts: Optional[tuple] = None, cable_hole: bool = False) -> dict:
     """Pure logic. An open box whose inside is length x width x height (mm) at this wall thickness, and its lid (a
     plate the box's outside size with a lip inside the walls): {"box": triangles, "lid": triangles, "outside",
-    "volume_cm3"}."""
+    "volume_cm3", "posts", "cable_hole"}. `posts` (spacing along, across, in mm: a board's mounting holes) puts four
+    hollow posts on the floor, centred, `POST_OUTER` across with a `POST_BORE` bore for M3 screws; `cable_hole` opens
+    a `CABLE_HOLE` slot low in the first end wall, centred, the wall built around it."""
     L, W, H, t = length + 2 * wall, width + 2 * wall, height + wall, wall
     box = _box(0, 0, 0, L, W, t)  # the floor
-    box += _box(0, 0, 0, L, t, H) + _box(0, W - t, 0, L, W, H) + _box(0, 0, 0, t, W, H) + _box(L - t, 0, 0, L, W, H)
+    box += _box(0, 0, 0, L, t, H) + _box(0, W - t, 0, L, W, H) + _box(L - t, 0, 0, L, W, H)
+    if cable_hole:  # the end wall at x=0 in four pieces around a slot just above the floor
+        hw, hh = CABLE_HOLE
+        ya, yb, za, zb = (W - hw) / 2, (W + hw) / 2, t + 2.0, t + 2.0 + hh
+        box += (_box(0, 0, 0, t, ya, H) + _box(0, yb, 0, t, W, H) + _box(0, ya, 0, t, yb, za)
+                + _box(0, ya, zb, t, yb, H))
+    else:
+        box += _box(0, 0, 0, t, W, H)
+    placed = []
+    if posts:
+        along, across = posts
+        for dx in (-along / 2, along / 2):
+            for dy in (-across / 2, across / 2):
+                cx, cy = L / 2 + dx, W / 2 + dy
+                if t + POST_OUTER / 2 <= cx <= L - t - POST_OUTER / 2 and t + POST_OUTER / 2 <= cy <= W - t - POST_OUTER / 2:
+                    box += _tube(cx, cy, t, POST_HEIGHT, POST_OUTER, POST_BORE)
+                    placed.append((round(cx, 1), round(cy, 1)))
     lip_h, c = min(4.0, height / 3), CLEARANCE
     lid_tris = _box(0, 0, 0, L, W, lid)
     x0, y0, x1, y1 = t + c, t + c, L - t - c, W - t - c
@@ -78,8 +120,11 @@ def enclosure(length: float, width: float, height: float, wall: float = 2.0, lid
                  + _box(x0, y0, lid, x0 + t, y1, lid + lip_h) + _box(x1 - t, y0, lid, x1, y1, lid + lip_h))
     box_solid = L * W * H - (L - 2 * t) * (W - 2 * t) * (H - t)  # the outside block less the hollow
     lip_ring = (x1 - x0) * (y1 - y0) - (x1 - x0 - 2 * t) * (y1 - y0 - 2 * t)
-    volume = box_solid + L * W * lid + lip_ring * lip_h
-    return {"box": box, "lid": lid_tris, "outside": (L, W, H + lid), "volume_cm3": round(volume / 1000, 1)}
+    post = math.pi * ((POST_OUTER / 2) ** 2 - (POST_BORE / 2) ** 2) * POST_HEIGHT
+    volume = box_solid + L * W * lid + lip_ring * lip_h + post * len(placed) \
+        - (CABLE_HOLE[0] * CABLE_HOLE[1] * t if cable_hole else 0)
+    return {"box": box, "lid": lid_tris, "outside": (L, W, H + lid), "volume_cm3": round(volume / 1000, 1),
+            "posts": placed, "cable_hole": cable_hole}
 
 
 def spacer(height: float, outer: float, bore: float = 0.0) -> dict:
@@ -113,9 +158,17 @@ def _slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", (name or "part").lower()).strip("-")[:40] or "part"
 
 
-def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] = None) -> str:
-    """Makes a part's STL files in his prints folder from the sizes he said, and says where they are, their outside
-    size and their most plastic; or what it needs."""
+def _spacing(said: str) -> Optional[tuple]:
+    """Pure logic. A board's mounting-hole spacing in his words ("58 by 23", "58x49 mm"), in mm, or None."""
+    found = _sizes(said)
+    return (found[0], found[1]) if len(found) >= 2 else None
+
+
+def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] = None, posts: str = "",
+         cable_hole: bool = False) -> str:
+    """Makes a part's STL files in his prints folder from the sizes he said (an enclosure with mounting posts at a
+    board's hole spacing and a cable hole when asked), and says where they are, their outside size and their most
+    plastic; or what it needs, or a post that wouldn't fit inside."""
     kind = (kind or "").lower()
     found = _sizes(sizes)
     if "spacer" in kind or "standoff" in kind:
@@ -131,7 +184,8 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
         if len(found) < 3:
             return ("An enclosure needs the inside size: length, width and height, like \"80 by 50 by 30 mm\" (the "
                     "board or part that goes in, plus room for wires).")
-        part = enclosure(found[0], found[1], found[2], wall if wall else 2.0)
+        spacing = _spacing(posts) if posts else None
+        part = enclosure(found[0], found[1], found[2], wall if wall else 2.0, posts=spacing, cable_hole=cable_hole)
         slug = _slug(name or "enclosure")
         folder = _folder(context)
         (folder / f"{slug}-box.stl").write_bytes(stl(part["box"], f"{name or 'enclosure'} box"))
@@ -139,8 +193,13 @@ def make(context, kind: str, sizes: str, name: str = "", wall: Optional[float] =
         L, W, H = part["outside"]
         said = (f"Made {slug}-box.stl and {slug}-lid.stl: inside {found[0]:g} x {found[1]:g} x {found[2]:g} mm, outside "
                 f"{L:g} x {W:g} x {H:g} mm with the lid on; the lid's lip sits {CLEARANCE:g} mm inside the walls")
+        if spacing:
+            said += (f"; {len(part['posts'])} mounting posts {spacing[0]:g} x {spacing[1]:g} mm apart, {POST_HEIGHT:g} mm "
+                     f"tall with {POST_BORE:g} mm bores for M3 screws" if len(part["posts"]) == 4 else
+                     f"; the posts {spacing[0]:g} x {spacing[1]:g} mm apart don't fit inside, so none were made")
+        if cable_hole:
+            said += f"; a {CABLE_HOLE[0]:g} x {CABLE_HOLE[1]:g} mm cable hole low in one end"
         grams = part["volume_cm3"] * PLA_G_PER_CM3
         path = folder / f"{slug}-box.stl"
     return (f"{said}. At most about {part['volume_cm3']:g} cm³ of plastic ({grams:.0f} g of PLA solid; infill makes "
-            f"it less). They're in {path.parent}: open them in Bambu Studio to slice and print. Holes for wires, "
-            "screws or a sensor aren't cut yet: add them in the slicer or drill them.")
+            f"it less). They're in {path.parent}: open them in Bambu Studio to slice and print.")

@@ -1,6 +1,8 @@
 """Parts to 3D print made in code (core/print_parts.py): a binary STL every slicer reads, an enclosure whose inside is
 the size asked and whose lid's lip clears the walls, a spacer, sizes read in millimetres or inches, the files kept
-in his prints folder, and the request reaching the tool."""
+in his prints folder, and the request reaching the tool.
+Mounting posts at a board's spacing (or none when they wouldn't fit) and a cable hole; every shape faces outward, so
+a slicer reads it solid."""
 
 import struct
 from types import SimpleNamespace
@@ -50,3 +52,28 @@ def test_asking_for_an_enclosure_reaches_the_tool():
     context = SimpleNamespace(**vars(demo_context()), assistant_actions=registry)
     for said in ("make me an enclosure for a sensor board 80 by 50 by 30 mm", "3d print a spacer 10 mm tall"):
         assert "design_print_part" in [a.name for a in registry.matching_actions(said, context)], said
+
+
+def test_mounting_posts_at_a_boards_spacing_and_a_cable_hole(tmp_path):
+    part = pp.enclosure(80, 50, 30, posts=(58, 23), cable_hole=True)
+    assert part["posts"] == [(13.0, 15.5), (13.0, 38.5), (71.0, 15.5), (71.0, 38.5)]
+    _, x, y, z = _read(pp.stl(part["box"]))
+    assert x == (0, 84) and z == (0, 32)
+    said = pp.make(SimpleNamespace(home_dir=tmp_path), "enclosure", "80 by 50 by 30", posts="58 by 23",
+                   cable_hole=True)
+    assert "4 mounting posts 58 x 23 mm apart" in said and "8 x 6 mm cable hole" in said
+    assert "don't fit inside" in pp.make(SimpleNamespace(home_dir=tmp_path), "enclosure", "40 by 30 by 20",
+                                         posts="60 by 40")
+
+
+def test_every_shape_faces_outward_so_a_slicer_reads_it_solid():
+    import math
+
+    def volume(tris):
+        """The signed volume of a mesh: positive only when its faces point out."""
+        return sum((a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                    + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6 for a, b, c in tris)
+
+    assert volume(pp._box(0, 0, 0, 2, 3, 4)) == 24
+    assert abs(volume(pp._tube(10, 10, 0, 5, 6, 2.5)) - math.pi * (9 - 1.5625) * 5) < 1.5
+    assert abs(volume(pp._cylinder(3, 5)) - math.pi * 45) < 1.5

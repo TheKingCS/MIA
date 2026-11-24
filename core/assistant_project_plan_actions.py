@@ -148,7 +148,8 @@ def _buildable(context, arguments: dict) -> str:
 
 
 def _print_part(context, arguments: dict) -> str:
-    """Tool design_print_part: an enclosure or a spacer as STL files from his sizes (core/print_parts.make)."""
+    """Tool design_print_part: an enclosure or a spacer as STL files from his sizes (core/print_parts.make).
+    With mounting posts at a board's hole spacing and a cable hole when he asks for them."""
     from core import print_parts
 
     try:
@@ -156,7 +157,8 @@ def _print_part(context, arguments: dict) -> str:
     except (TypeError, ValueError):
         wall = None
     return print_parts.make(context, str(arguments.get("kind") or "enclosure"), str(arguments.get("sizes") or ""),
-                            str(arguments.get("name") or ""), wall)
+                            str(arguments.get("name") or ""), wall, str(arguments.get("posts") or ""),
+                            str(arguments.get("cable_hole") or "").lower() in ("1", "true", "yes"))
 
 
 def _orchard_month(context, arguments: dict) -> str:
@@ -239,7 +241,8 @@ def register_project_plan_actions(registry) -> None:
     tests/test_everyday_phrasing_routing.py).
     The water tools are reached by water tanks and the cistern, never a bare "tank is at" (a propane tank) or
     "enough water" (a fish tank); the orchard's by its fruit, never "when should I prune" alone (roses) or "when
-    will my" (a package)."""
+    will my" (a package).
+    design_print_part takes a board's mounting-hole spacing for posts and a cable hole."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -280,7 +283,9 @@ def register_project_plan_actions(registry) -> None:
             "kind": {"type": "string", "description": "enclosure or spacer"},
             "sizes": {"type": "string", "description": "the sizes as he said them, e.g. '80 by 50 by 30 mm'"},
             "name": {"type": "string", "description": "what it's for, e.g. 'soil sensor box' (optional)"},
-            "wall_mm": {"type": "number", "description": "wall thickness in mm, if he said (2 by default)"}},
+            "wall_mm": {"type": "number", "description": "wall thickness in mm, if he said (2 by default)"},
+            "posts": {"type": "string", "description": "a board's mounting-hole spacing, e.g. '58 by 23', if he said"},
+            "cable_hole": {"type": "boolean", "description": "true for a hole for a cable or wires"}},
             "required": ["kind", "sizes"]},
         handler=_print_part,
         trigger_phrases=("3d print", "print me a", "print an enclosure", "make me an enclosure", "design an enclosure",

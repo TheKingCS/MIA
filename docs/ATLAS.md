@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1692 files, 367,195 lines; 1692 files describe themselves; 20,181 of 20,311 classes and functions are documented.
+1692 files, 367,286 lines; 1692 files describe themselves; 20,185 of 20,315 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-667 files, 188,499 lines; 9,569 of 9,655 classes and functions documented
+667 files, 188,563 lines; 9,571 of 9,657 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -965,7 +965,7 @@
 
 ## tests/: the test suite: what each part must do
 
-621 files, 98,109 lines; 8,249 of 8,293 classes and functions documented
+621 files, 98,136 lines; 8,251 of 8,295 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1354,7 +1354,7 @@
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
 - `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water or a filter), days of food from the staples by weight and their calor *(1 undocumented)*
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again.
-- `tests/test_print_parts.py`: Parts to 3D print made in code (core/print_parts.py): a binary STL every slicer reads, an enclosure whose inside is the size asked and whose lid's lip clears the walls, a spacer, sizes read in millimetres or inches, the files kept in his prints folder, and the request reaching the tool.
+- `tests/test_print_parts.py`: Parts to 3D print made in code (core/print_parts.py): a binary STL every slicer reads, an enclosure whose inside is the size asked and whose lid's lip clears the walls, a spacer, sizes read in millimetres or inches, the files kept in his prints folder, and the request reaching the tool. Mounting pos
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).
 - `tests/test_private_journal_panel.py`: The Private Journal tab (gui/private_journal_panel.py) and the desktop chat surfaces' safety-floor path, offscreen.
