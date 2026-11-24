@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1644 files, 359,430 lines; 1644 files describe themselves; 19,765 of 19,895 classes and functions are documented.
+1644 files, 359,530 lines; 1644 files describe themselves; 19,770 of 19,900 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-647 files, 183,241 lines; 9,372 of 9,458 classes and functions documented
+647 files, 183,301 lines; 9,373 of 9,459 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -945,7 +945,7 @@
 
 ## tests/: the test suite: what each part must do
 
-593 files, 95,637 lines; 8,030 of 8,074 classes and functions documented
+593 files, 95,677 lines; 8,034 of 8,078 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1312,7 +1312,7 @@
 - `tests/test_portal_pictures.py`: Portal Pictures (core/portal_pictures.py, DEC-0140; the Nexus's portals are the person's stories since DEC-0153): the person puts one of their own paintings in a story's portal in the Nexus, or has MIA paint one for it, and can put it back to the original; each person's Nexus is their own. Uses the 
 - `tests/test_power_manager.py`: Unit tests for core.power_manager. should_warn_low_battery() is tested directly with constructed PowerStatus objects (pure, deterministic — no psutil or real battery involved). PsutilBatteryBackend/PowerManager are tested against monkeypatched psutil.sensors_battery(), same approach as test_system_h
 - `tests/test_power_module.py`: Unit tests for modules.power.module's pure formatting functions — no Qt event loop needed. Same shape as tests/test_system_health.py's format_system_health test.
-- `tests/test_power_ready.py`: Power in "how prepared am I?" (core/power_ready.py): fuel read from his records by whole word and size (gas cans, propane by the pound; never a gas grill or a gas bill), days of running from his generator's burn rate and hours, what to tell her without the rate, and set_preparedness keeping only wha
+- `tests/test_power_ready.py`: Power in "how prepared am I?" (core/power_ready.py): fuel read from his records by whole word and size (gas cans, propane by the pound or a unit of pounds, quarts or liters; never a gas grill, a generator, a heater or diesel exhaust fluid), none left skipped, days of running from his generator's bur
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
 - `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water or a filter), days of food from the staples by weight and their calor *(1 undocumented)*
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again.

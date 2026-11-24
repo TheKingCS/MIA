@@ -29,6 +29,10 @@ import re
 from datetime import date, timedelta
 from typing import Optional
 
+from core.logger import get_logger
+
+log = get_logger(__name__)
+
 GALLON_A_DAY = 1.0  # a person, drinking and a little washing (Red Cross, FEMA)
 CALORIES_A_DAY = 2000  # a person (the FDA's reference for daily values)
 # Calories a pound, dry or raw, from USDA FoodData Central (per 100 g x 4.536), first matching words win.
@@ -147,7 +151,8 @@ def _setting(context, key: str, default: int) -> int:
 
 def say(context, today: Optional[date] = None) -> str:
     """For "how prepared am I?": water against his target, days of food from the staples, what to rotate, what
-    isn't counted, and power: his generator's days on the fuel in his records (core/power_ready.py)."""
+    isn't counted, and power: his generator's days on the fuel in his records (core/power_ready.py; if that line
+    fails, it says so and the rest of the answer still comes)."""
     today = today or date.today()
     kitchen = getattr(context, "kitchen", None)
     items = kitchen.all_pantry_items() if kitchen is not None else []
@@ -180,5 +185,9 @@ def say(context, today: Optional[date] = None) -> str:
                                                                     else "") + " (no weight, or not a staple I know).")
     from core import power_ready
 
-    parts.append(power_ready.say(context))  # the generator's days on the fuel in his records
+    try:
+        parts.append(power_ready.say(context))  # the generator's days on the fuel in his records
+    except Exception:  # noqa: BLE001 - power that can't be counted never takes the rest of the answer with it
+        log.exception("Preparedness: the power line failed")
+        parts.append("Power: I couldn't count the fuel just now.")
     return " ".join(parts)

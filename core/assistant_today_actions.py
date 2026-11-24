@@ -85,41 +85,49 @@ def _action_how_prepared(context, arguments: dict) -> str:
     return preparedness.say(context)
 
 
-_PREPARED = {  # setting: (his word for it, lowest, highest, whole number)
-    "people": ("prepared.people", 1, 20, True),
-    "target_days": ("prepared.target_days", 1, 365, True),
-    "generator_gph": ("prepared.generator_gph", 0.05, 5.0, False),
-    "generator_hours": ("prepared.generator_hours", 1, 24, False),
+_PREPARED = {  # argument: (setting, lowest, highest, whole number, how it's said)
+    "people": ("prepared.people", 1, 20, True, "people"),
+    "target_days": ("prepared.target_days", 1, 365, True, "days to plan for"),
+    "generator_gph": ("prepared.generator_gph", 0.05, 5.0, False, "generator gallons an hour"),
+    "generator_hours": ("prepared.generator_hours", 1, 24, False, "generator hours a day"),
 }
 
 
 def _action_set_preparedness(context, arguments: dict) -> str:
     """Sets what "how prepared am I?" counts with: how many people, the target days, and his generator's burn rate,
-    hours a day and fuel (core/preparedness.py, core/power_ready.py). Each is checked against a sensible range; one
-    out of range is said and not kept. Returns what was set."""
+    hours a day and fuel (core/preparedness.py, core/power_ready.py). A propane rate in pounds an hour
+    (`generator_lb_per_hour`, as manuals give it) is turned to gallons; "gas" or "petrol" is gasoline, "LP" propane.
+    Each is checked against a sensible range; one out of range is said and not kept. Returns what was set."""
     from core import person_settings
-    from core.power_ready import FUELS
+    from core.power_ready import PROPANE_LB_A_GALLON, SAID_AS
 
+    arguments = dict(arguments or {})
     said, problems = [], []
-    for name, (key, low, high, whole) in _PREPARED.items():
+    if arguments.get("generator_lb_per_hour") not in (None, ""):
+        try:
+            arguments["generator_gph"] = round(float(arguments["generator_lb_per_hour"]) / PROPANE_LB_A_GALLON, 3)
+            arguments.setdefault("generator_fuel", "propane")
+        except (TypeError, ValueError):
+            problems.append("generator pounds an hour isn't a number")
+    for name, (key, low, high, whole, words) in _PREPARED.items():
         if arguments.get(name) in (None, ""):
             continue
         try:
             value = float(arguments[name])
         except (TypeError, ValueError):
-            problems.append(f"{name.replace('_', ' ')} isn't a number")
+            problems.append(f"{words} isn't a number")
             continue
         if not low <= value <= high:
-            problems.append(f"{name.replace('_', ' ')} should be {low:g} to {high:g}")
+            problems.append(f"{words} should be {low:g} to {high:g}")
             continue
         value = int(round(value)) if whole else value
         person_settings.put(context, key, value)
-        said.append(f"{name.replace('_', ' ').replace('gph', 'gallons an hour')} {value:g}")
+        said.append(f"{words} {value:g}")
     fuel = str(arguments.get("generator_fuel", "") or "").strip().lower()
     if fuel:
-        if fuel in FUELS:
-            person_settings.put(context, "prepared.generator_fuel", fuel)
-            said.append(f"generator fuel {fuel}")
+        if fuel in SAID_AS:
+            person_settings.put(context, "prepared.generator_fuel", SAID_AS[fuel])
+            said.append(f"generator fuel {SAID_AS[fuel]}")
         else:
             problems.append("the generator's fuel is gasoline, diesel, kerosene or propane")
     if not said and not problems:
@@ -151,7 +159,8 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
-    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
+    core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
+    rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
@@ -226,11 +235,13 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
             "people": {"type": "number", "description": "How many people to plan for."},
             "target_days": {"type": "number", "description": "Days of water and food to aim for."},
             "generator_gph": {"type": "number", "description": "The generator's gallons an hour at its usual load."},
+            "generator_lb_per_hour": {"type": "number", "description": "A propane generator's pounds an hour."},
             "generator_hours": {"type": "number", "description": "Hours a day he'd run it."},
             "generator_fuel": {"type": "string", "description": "gasoline, diesel, kerosene or propane."}},
             "required": []},
         handler=_action_set_preparedness,
         trigger_phrases=("plan for people", "generator burns", "generator uses", "gallons an hour", "burn rate",
+                         "pounds an hour",
                          "plan for days", "prepare for days"),
     ))
     registry.register(AssistantAction(

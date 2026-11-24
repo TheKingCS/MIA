@@ -86,13 +86,13 @@ def open_store(path: Path) -> Optional[str]:
         return str(problem)[:120] or type(problem).__name__
 
 
-def drill(backup: Path) -> dict:
+def drill(backup: Path, now: Optional[datetime] = None) -> dict:
     """Restores one backup's stores (data/ .json and .jsonl, never photos or documents) into a scratch folder and opens
-    every one: {at, backup, files, opened, failed: [{file, why}], passed}. Never raises; the scratch folder is
-    always removed."""
+    every one: {at, backup, files, opened, failed: [{file, why}], passed}; `at` is `now` (the run's clock), else the
+    real time. Never raises; the scratch folder is always removed."""
     from core.backup_manager import safe_extract_zip
 
-    at = datetime.now().isoformat(timespec="seconds")
+    at = (now or datetime.now()).isoformat(timespec="seconds")  # the run's clock, held or replayed too
     scratch = Path(tempfile.mkdtemp(prefix="mia_restore_drill_"))
     try:
         with zipfile.ZipFile(backup) as zf:
@@ -124,7 +124,8 @@ def drill(backup: Path) -> dict:
 
 def run(context, now: Optional[datetime] = None) -> dict:
     """This month's drill: the newest backup restored and every store opened, the result kept in `backup.drill` and a
-    failure told to the PC's owner at once. Returns the result; {"skipped": why} when there's no backup to drill."""
+    failure told to the PC's owner at once, stamped with `now` (so a held or replayed clock dates it right). Returns the
+    result; {"skipped": why} when there's no backup to drill."""
     from core.web_backups import folder
 
     config = context.config
@@ -134,7 +135,7 @@ def run(context, now: Optional[datetime] = None) -> dict:
         config.set("backup.drill", result)
         config.save()
         return result
-    result = drill(backup)
+    result = drill(backup, now)
     config.set("backup.drill", result)
     config.save()
     if result["passed"]:
