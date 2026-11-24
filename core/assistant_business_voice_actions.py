@@ -10,10 +10,16 @@ an invoice draft and "who owes me?" could be done by voice.
 How: each change runs the Business page's own action kind (core/business_actions.py: customer.add, quote.add,
 quote.accept, order.status) through `_run` (propose, then approve, as the screen does, with its checks, its sentence
 and "undo that"); a record is found by the words said (`_one`: a customer by name, a quote or order by its title or
-its customer's name). Reading is plain code over the business book; money through `core.region.money`.
+its customer's name: `_pick`, an exact one first, "the" and "'s" dropped); a due day may be a month and day
+(`due_day`). Reading is plain code over the business book; money through `core.region.money`. Business is never a
+child's (core/child_accounts.py).
 """
 
 from __future__ import annotations
+
+import re
+from datetime import date
+from typing import Optional
 
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 from core.assistant_correction_actions import _one, _run, day_of
@@ -22,7 +28,8 @@ OPEN_QUOTES = ("Draft", "Sent")
 DONE_ORDERS = ("Delivered", "Cancelled")
 # What he'd call these, so a business question reaches them on the phone (no embedding model). Not "customer"
 # alone: "customer service was terrible" is small talk; customers are reached by name and by "new customer".
-WORDS = ("quote", "quotes", "orders", "commission", "commissions")
+# Nor "quote" alone ("give me a quote to start the day"), nor "my orders" (online shopping).
+WORDS = ("quotes", "commission", "commissions")
 
 
 def _book(context):
@@ -77,11 +84,11 @@ def _action_list_orders(context, arguments: dict) -> str:
 
 
 def _action_customer_details(context, arguments: dict) -> str:
-    """Tool customer_details: one customer's phone, email and notes, found by name."""
+    """Tool get_customer_details: one customer's phone, email and notes, found by name."""
     book = _book(context)
     if book is None:
         return "There's no business book here."
-    who = _one(list(book.customers), str(arguments.get("customer") or ""), lambda c: c.name, "customer")
+    who = _one(list(book.customers), _plain_words(arguments.get("customer")), lambda c: c.name, "customer")
     if isinstance(who, str):
         return who
     parts = [f"phone {who.phone}" if who.phone else "", f"email {who.email}" if who.email else "",
@@ -99,8 +106,9 @@ def _action_add_customer(context, arguments: dict) -> str:
 
 
 def _action_make_quote(context, arguments: dict) -> str:
-    """Tool make_quote: a new quote (quote.add): what it's for, for a customer he already has (by name), how many,
-    and a price if he set one (else the Business page's suggested price, from a recipe, applies)."""
+    """Tool make_quote: a new quote (quote.add): what it's for, for a customer he already has (by name, "the" and
+    "'s" dropped), how many, and a price if he set one (else the Business page's suggested price, from a recipe,
+    applies)."""
     book = _book(context)
     if book is None:
         return "There's no business book here."
@@ -110,7 +118,7 @@ def _action_make_quote(context, arguments: dict) -> str:
     params = {"title": title}
     said = str(arguments.get("customer") or "").strip()
     if said:
-        who = _one(list(book.customers), said, lambda c: c.name, "customer")
+        who = _one(list(book.customers), _plain_words(said), lambda c: c.name, "customer")
         if isinstance(who, str):
             return who + " Say \"add a customer named ...\" first, or make the quote without one."
         params["customer_id"] = who.customer_id
@@ -120,47 +128,93 @@ def _action_make_quote(context, arguments: dict) -> str:
     return _run(context, "quote.add", params)
 
 
+def _plain_words(said: str) -> str:
+    """Pure logic. What he said without a leading "the/my/a/that" or a trailing "'s" ("dana's" is Dana)."""
+    said = " ".join(str(said or "").lower().split())
+    said = re.sub(r"^(the|my|a|an|that|this)\s+", "", said)
+    return re.sub(r"(?:'s|’s|s')$", "", said)
+
+
+def _pick(items, said: str, title, customer, what: str):
+    """One record by what he said: an exact title or customer name wins (so "bench" isn't "Bench Seat"), then the
+    words in either; else a question as a str."""
+    said = _plain_words(said)
+    exact = [i for i in items if said in (title(i).lower(), customer(i).lower())]
+    if len(exact) == 1:
+        return exact[0]
+    return _one(exact or items, said, lambda i: f"{title(i)} {customer(i)}".strip(), what)
+
+
 def _quote_named(book, said: str):
-    """An open quote by its title or its customer's name, or a question as a str."""
+    """An open quote by its title or its customer's name (`_pick`: an exact one first), or a question as a str."""
     names = _names(book)
-    return _one([q for q in book.quotes if q.status in OPEN_QUOTES], said,
-                lambda q: f"{q.title} {names.get(q.customer_id, '')}".strip(), "quote")
+    return _pick([q for q in book.quotes if q.status in OPEN_QUOTES], said, lambda q: q.title,
+                 lambda q: names.get(q.customer_id, ""), "quote")
+
+
+_MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov",
+                                         "dec"), start=1)}
+
+
+def due_day(said: str, today: Optional[date] = None) -> Optional[str]:
+    """Pure logic. A due day as an ISO date: what `day_of` reads (today, tomorrow, a weekday, an ISO date), or a month
+    and day ("December 5", "dec 5th", "12/5"), the next one coming; None when it isn't a day."""
+    today = today or date.today()
+    found = day_of(said, today)
+    if found:
+        return found
+    text = " ".join(str(said or "").lower().replace(",", " ").split()).removeprefix("on ")
+    m = re.fullmatch(r"([a-z]{3})[a-z]*\.? (\d{1,2})(?:st|nd|rd|th)?", text)
+    n = re.fullmatch(r"(\d{1,2})/(\d{1,2})", text)
+    month, day = (_MONTHS.get(m.group(1)), int(m.group(2))) if m else (int(n.group(1)), int(n.group(2))) if n else (0, 0)
+    if not month:
+        return None
+    for year in (today.year, today.year + 1):
+        try:
+            when = date(year, month, day)
+        except ValueError:
+            return None
+        if when >= today:
+            return when.isoformat()
+    return None
 
 
 def _action_accept_quote(context, arguments: dict) -> str:
-    """Tool accept_quote: a quote accepted (quote.accept): it becomes an order, due when he says."""
+    """Tool accept_quote: a quote accepted (quote.accept): it becomes an order, due when he says (`due_day`: a
+    weekday, "tomorrow", "December 5", "12/5"); a day it can't read is asked again."""
     book = _book(context)
     if book is None:
         return "There's no business book here."
     quote = _quote_named(book, str(arguments.get("quote") or ""))
     if isinstance(quote, str):
         return quote
-    due = day_of(str(arguments.get("due") or "")) if arguments.get("due") else ""
+    due = due_day(str(arguments.get("due") or "")) if arguments.get("due") else ""
     if arguments.get("due") and not due:
         return "When is it due? A day like \"friday\" or a date."
     return _run(context, "quote.accept", {"quote_id": quote.quote_id, "due_date": due or ""})
 
 
 def _action_order_status(context, arguments: dict) -> str:
-    """Tool order_status: an order marked ready, delivered or cancelled (order.status); delivered says what's still
-    to be paid."""
+    """Tool order_status: an order marked ready, delivered or cancelled (order.status), read from the first word
+    said ("ready for pickup" is Ready, "picked up" Delivered); delivered says what's still to be paid."""
     book = _book(context)
     if book is None:
         return "There's no business book here."
-    status = str(arguments.get("status") or "").strip().capitalize()
-    status = {"Done": "Delivered", "Finished": "Delivered", "Canceled": "Cancelled"}.get(status, status)
+    first = (str(arguments.get("status") or "").strip().lower().split() or [""])[0]
+    status = {"ready": "Ready", "delivered": "Delivered", "done": "Delivered", "finished": "Delivered",
+              "picked": "Delivered", "cancelled": "Cancelled", "canceled": "Cancelled"}.get(first, "")
     if status not in ("Ready", "Delivered", "Cancelled"):
         return "Ready, delivered or cancelled?"
     names = _names(book)
-    order = _one([o for o in book.orders if o.status not in DONE_ORDERS], str(arguments.get("order") or ""),
-                 lambda o: f"{o.title} {names.get(o.customer_id, '')}".strip(), "order")
+    order = _pick([o for o in book.orders if o.status not in DONE_ORDERS], str(arguments.get("order") or ""),
+                  lambda o: o.title, lambda o: names.get(o.customer_id, ""), "order")
     if isinstance(order, str):
         return order
     return _run(context, "order.status", {"order_id": order.order_id, "status": status})
 
 
 def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
-    """Registers list_quotes, list_orders, customer_details, add_customer, make_quote, accept_quote and order_status
+    """Registers list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
     (domain business), the words that reach them (`WORDS`), and his customers' names and open quotes' and orders'
     titles (`_record_names`)."""
     s = {"type": "string"}
@@ -174,13 +228,13 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
 
     tool("list_quotes", "The quotes still out (draft or sent), with customer and price.", {}, [],
          _action_list_quotes, ("quotes out", "quotes are out", "open quotes", "my quotes", "what quotes",
-                               "quotes still out", "pending quotes"))
+                               "quotes still out", "pending quotes", "quotes i've sent"))
     tool("list_orders", "The open orders (not delivered or cancelled), soonest due first.", {}, [],
-         _action_list_orders, ("open orders", "my orders", "what orders", "orders due", "orders are due",
-                               "what am i building for"))
-    tool("customer_details", "One customer's phone, email and notes, by name.",
+         _action_list_orders, ("open orders", "what orders are", "orders due", "orders are due",
+                               "what am i building for", "customer orders", "orders do i have"))
+    tool("get_customer_details", "One customer's phone, email and notes, by name.",
          {"customer": {**s, "description": "the customer's name"}}, ["customer"], _action_customer_details,
-         ("phone number", "email address", "contact info", "number for", "email for"))
+         ("customer's phone", "customer's email", "customer's number", "customer's contact"))
     tool("add_customer", "Add a customer, with a phone, email or notes if given.",
          {"name": {**s, "description": "their name"}, "phone": s, "email": s, "notes": s}, ["name"],
          _action_add_customer, ("new customer", "add a customer", "add customer", "customer named"))
@@ -188,8 +242,8 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
          {"title": {**s, "description": "what it's for, e.g. 'cedar chest'"},
           "customer": {**s, "description": "the customer's name, if any"},
           "quantity": {"type": "number"}, "price": {"type": "number", "description": "only if he named one"}},
-         ["title"], _action_make_quote, ("make a quote", "quote for", "new quote", "write up a quote", "quote her",
-                                         "quote him", "quote them"))
+         ["title"], _action_make_quote, ("make a quote", "make up a quote", "new quote", "write up a quote",
+                                         "quote her", "quote him", "quote them", "draw up a quote"))
     tool("accept_quote", "A quote was accepted: it becomes an order, due when he says.",
          {"quote": {**s, "description": "the quote's title or the customer's name"},
           "due": {**s, "description": "when it's due, e.g. 'friday' or a date"}}, ["quote"], _action_accept_quote,
@@ -197,8 +251,8 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
     tool("order_status", "Mark an order ready, delivered or cancelled.",
          {"order": {**s, "description": "the order's title or the customer's name"},
           "status": {**s, "description": "ready, delivered or cancelled"}}, ["order", "status"], _action_order_status,
-         ("delivered the", "mark it delivered", "marked delivered", "is ready for pickup", "cancelled the order",
-          "canceled the order", "mark the order"))
+         ("delivered the order", "mark it delivered", "marked delivered", "cancelled the order",
+          "canceled the order", "mark the order", "order is ready", "order was picked up"))
     registry.register_domain_keywords("business", WORDS)
     registry.register_entity_names("business", _record_names, match_all_words=True)
 

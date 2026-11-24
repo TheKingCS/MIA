@@ -58,7 +58,7 @@ SAID = [
     ("get_project_missions", "how far along is the chicken coop project"),
     ("make_quote", "make a quote for a cedar chest for Dana"), ("accept_quote", "Dana accepted the quote"),
     ("list_quotes", "what quotes are still out?"), ("order_paid", "Lee paid the deposit on the bench"),
-    ("add_customer", "add a new customer named Sam Ortiz"), ("customer_details", "what's Sam's phone number"),
+    ("add_customer", "add a new customer named Sam Ortiz"), ("get_customer_details", "what's my customer's phone number for Sam"),
     ("list_orders", "what orders are due this week?"),
 ]
 

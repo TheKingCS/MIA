@@ -45,11 +45,21 @@ READ_ONLY_DESPITE_NAME = frozenset({"world_finds", "whats_in_the_workspace", "lo
 
 
 def changes_records(action_name: str) -> bool:
-    """Pure logic. Whether a tool may change records: every tool except the read-only ones (get_, list_, search_,
-    show_...) and those named as read-only (READ_ONLY_DESPITE_NAME); those that only look like a lookup
-    (CHANGES_DESPITE_NAME) do."""
+    """Whether a tool may change records: every tool except the read-only ones (get_, list_, search_, show_...),
+    those named as read-only (READ_ONLY_DESPITE_NAME) and those whose app manifest gives them the `observe` tier
+    (core/grants.py: it only reads; "who owes me?", "check my emergency kit" are lookups whatever they're called, so
+    the tool loop never retries a question without them); those that only look like a lookup (CHANGES_DESPITE_NAME)
+    do."""
     if action_name in READ_ONLY_DESPITE_NAME:
         return False
+    if action_name not in CHANGES_DESPITE_NAME:
+        try:
+            from core.grants import OBSERVE, tier_of
+
+            if tier_of(action_name) == OBSERVE:
+                return False
+        except Exception:  # noqa: BLE001 - no manifests to read: judged by its name, as before
+            pass
     return action_name in CHANGES_DESPITE_NAME or not action_name.startswith(_READ_ONLY_PREFIXES)
 
 

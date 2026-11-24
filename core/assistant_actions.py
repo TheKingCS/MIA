@@ -165,6 +165,13 @@ def _summary_of(name: str, arguments: dict) -> str:
     return (name.replace("_", " ") + (f": {words}" if words else ""))[:200]
 
 
+
+def _whole(name: str, text: str) -> bool:
+    """Pure logic. Whether a record's name is in the text as whole words: "Sign" is in "the sign for the shop", never
+    in "redesign"; "Ann" never in "annual"."""
+    return bool(name) and re.search(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])", text) is not None
+
+
 class AssistantActionRegistry:
     """Every tool the Assistant has, and how a request picks the few that travel with it: their trigger phrases, each
     domain's everyday words, and the names of the person's own records in each domain.
@@ -241,8 +248,9 @@ class AssistantActionRegistry:
         }
 
     def _entity_domains(self, prompt: str, context: Optional["AppContext"]) -> set[str]:
-        """The domains whose records the person named ("the mower" brings Maintenance's tools); a provider that fails is
-        logged and skipped.
+        """The domains whose records the person named ("the mower" brings Maintenance's tools), a full name only as
+        whole words (`_whole`: an order called "Sign" never in "redesign"); a provider that fails is logged and
+        skipped.
         """
         if context is None or not self._entity_providers:
             return set()
@@ -267,7 +275,7 @@ class AssistantActionRegistry:
                 else:
                     head = head_word(name_l)
                     hit = bool(head) and head in prompt_tokens
-                if name_l in lowered or hit:
+                if _whole(name_l, lowered) or hit:
                     domains.add(domain)
                     break
         return domains
@@ -280,7 +288,7 @@ class AssistantActionRegistry:
     def named_things(self, text: str, context: Optional["AppContext"]) -> list[str]:
         """The person's own records `text` names, by their full names
         ("the truck" -> "Pickup Truck"), with the same matching as
-        _entity_domains. For what "it" means in a conversation
+        _entity_domains (whole words). For what "it" means in a conversation
         (core/conversation_state.py)."""
         if context is None or not self._entity_providers or not text:
             return []
@@ -301,7 +309,7 @@ class AssistantActionRegistry:
                     hit = bool(significant) and significant <= tokens
                 else:
                     hit = bool(head_word(name_l)) and head_word(name_l) in tokens
-                if (name_l in lowered or hit) and str(name).strip() not in found:
+                if (_whole(name_l, lowered) or hit) and str(name).strip() not in found:
                     found.append(str(name).strip())
         return found
 

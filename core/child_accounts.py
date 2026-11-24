@@ -47,6 +47,7 @@ CHILD_BLOCKED_DOMAINS = frozenset({
     "ownership", "private_budget", "links", "goods", "flock", "freedom", "compliance", "dungeon",
     "vault",  # the memory vault isn't a child's (core/memory_vault.py)
     "browser",  # MIA's own web browser (core/browser.py, DEC-0117)
+    "business",  # quotes, orders and customers (their phones and emails): never a child's, as this file opens saying
 })
 
 ASK_A_PARENT = "That one's for grown-ups. Ask a parent if you need it."
