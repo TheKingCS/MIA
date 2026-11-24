@@ -24,7 +24,8 @@ time and goals) and puts each one's facts on one sheet, from the records and cal
 - **materials**: what's on hand for it already;
 - **growing, water, power, animals, time, goals, research**: his garden plans and what's due to plant, the rain he's
   logged and watering, the power system, the flock, his open projects and this week's calendar, his reasons, his grow
-  lab's series and learning paths, each through the tool that already answers it.
+  lab's series and learning paths, each through the tool that already answers it (growing includes this year's harvest,
+core/harvest_log.py).
 
 Each area also carries a line of general guidance (`NEEDS`: "a greenhouse needs water at it"), marked as such, so the
 model connects them without inventing his facts. What isn't recorded is said as missing. Nothing is planned, bought
@@ -232,12 +233,13 @@ def _build(context, sheet, kind: Kind, draft) -> float:
 
 
 # The part of MIA each looked-up tool reads, so a missing one is said, not a failure
-_SERVICE = {"get_power_status": "power", "list_lab_series": "data_logger", "get_learning_progress": "classroom",
+_SERVICE = {"get_power_status": "power", "harvest_this_year": "grow_lab", "list_lab_series": "data_logger", "get_learning_progress": "classroom",
             "get_eggs": "flock", "list_projects": "projects", "show_my_why": "intents"}
 
 
 def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
-    """One area of his life the project touches, through what already answers for it (water: only the rain he's
+    """One area of his life the project touches, through what already answers for it (growing: the garden plans' year,
+    what's due to plant and this year's harvest; water: only the rain he's
     logged and whether to water, nothing claimed about a system that wasn't checked), and its guidance line."""
     from core import question_plans as qp
 
@@ -252,6 +254,7 @@ def _area(context, sheet, kind: Kind, area: str, today: date) -> None:
     if area == GROWING:
         look(context, sheet, "homestead_year", "the garden plans")
         look(context, sheet, "what_to_plant", "the garden")
+        look(context, sheet, "harvest_this_year", "this year's harvest")
     elif area == WATER:
         from core.weather_watch import rain_this_week
 
