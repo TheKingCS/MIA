@@ -46,7 +46,8 @@ STAGES = (
     ("Going further", "{s} advanced"),
     ("Where it comes from", "{s} history"),
 )
-_STOP = {"a", "an", "the", "of", "and", "or", "to", "in", "on", "for", "about", "how", "my", "some", "more"}
+_STOP = {"a", "an", "the", "of", "and", "or", "to", "in", "on", "for", "about", "how", "my", "some", "more", "this",
+         "that", "these", "those", "want", "learn", "winter", "summer", "spring", "fall", "year", "week", "today"}
 
 
 def _words(text: str) -> set[str]:
@@ -55,9 +56,9 @@ def _words(text: str) -> set[str]:
 
 
 def subject_of(said: str) -> str:
-    """Pure logic. The subject in "I want to learn about beekeeping", "teach me everything about solar power", "a
-    course on knots"; the words as given otherwise."""
-    m = re.search(r"\b(?:learn(?:ing)? (?:all )?about|everything about|course (?:on|about)|study up on|"
+    """Pure logic. The subject in "I want to learn about beekeeping", "I'd like to learn more about knots", "teach me
+    everything about solar power", "a course on knots"; the words as given otherwise."""
+    m = re.search(r"\b(?:learn(?:ing)? (?:all |more )?about|everything about|course (?:on|about)|study up on|"
                   r"understand|teach me about)\s+(.+?)[.?!]*$", (said or "").strip(), re.I)
     return (m.group(1) if m else (said or "")).strip(" .?!").strip()
 
@@ -73,8 +74,9 @@ def _library(context):
 
 
 def outline(library, subject: str) -> list[dict]:
-    """Pure-ish (reads the library). The course's lessons: [{stage, article, pack, ref, gist}], one a stage the
-    library has a fitting article for, never the same article twice."""
+    """Reads the library. The course's lessons: [{stage, article, pack, ref, gist}], one a stage the library has a
+    fitting article for (its title holds every word of the subject, or its text two thirds of them), never the same
+    article twice."""
     from core.offline_library import passages
 
     want = _words(subject)
@@ -87,7 +89,8 @@ def outline(library, subject: str) -> list[dict]:
             continue
         for p in found:
             key = (p["pack"], p["article"])
-            fits = want and (want & _words(p["article"]) or len(want & _words(p["text"])) >= max(1, len(want) // 2))
+            need = max(1, -(-len(want) * 2 // 3))  # two thirds of the subject's words, rounded up
+            fits = want and (want <= _words(p["article"]) or len(want & _words(p["text"])) >= need)
             if key in used or not fits:
                 continue
             used.add(key)
@@ -112,6 +115,11 @@ def make(context, said: str) -> str:
     classroom = getattr(context, "classroom", None)
     if classroom is None:
         return "Classroom isn't on this MIA, so there's nowhere to keep a course."
+    title = subject[:1].upper() + subject[1:]
+    made = next((c for c in _courses(classroom) if c.name.lower() == title.lower()), None)
+    if made is not None:
+        return (f"There's already a course on {subject} in Classroom. Say \"teach me the next lesson on {subject}\" "
+                "to carry on.")
     lessons = outline(library, subject)
     if len(lessons) < MIN_LESSONS:
         return (f"My offline library doesn't cover {subject} well enough for a course: "
@@ -119,7 +127,6 @@ def make(context, said: str) -> str:
                    if lessons else "nothing in it fits.") + " A learning path, or the library online, could fill it.")
     home = next((s for s in classroom.all_subjects() if s.name == SUBJECT), None) or classroom.add_subject(
         SUBJECT, category="Study", description="Courses built from MIA's offline library, each lesson from an article.")
-    title = subject[:1].upper() + subject[1:]
     course = classroom.add_course(home.subject_id, title, description=f"From the offline library: {len(lessons)} "
                                                                      "lessons, each from one article.")
     for n, lesson in enumerate(lessons, 1):
@@ -147,16 +154,21 @@ def _courses(classroom) -> list:
 
 
 def teach(context, said: str = "") -> str:
-    """The next lesson not done in the library course the words name (else the newest), read from its article and
-    framed for the model to teach (`TEACH`); or what's missing."""
+    """The next lesson not done in the library course the words name (the best match; with no words, the newest),
+    read from its article and framed for the model to teach (`TEACH`); words that name no course are said, never the
+    newest taught quietly; or what's missing."""
     from core.offline_library import read_further
 
     classroom = getattr(context, "classroom", None)
     courses = _courses(classroom) if classroom is not None else []
     if not courses:
         return "There's no library course yet. Say \"I want to learn about\" something and I'll build one."
-    want = _words(subject_of(said)) if said else set()
-    course = next((c for c in courses if want and want & _words(c.name)), courses[0])
+    want = _words(subject_of(said)) - {"next", "lesson", "teach", "course", "me", "continue"} if said else set()
+    named = [c for c in courses if want and want & _words(c.name)]
+    if want and not named:
+        return ("There's no library course on that. Yours: " + ", ".join(c.name for c in courses) + ". Say \"I want "
+                "to learn about\" something to build one.")
+    course = max(named, key=lambda c: len(want & _words(c.name))) if named else courses[0]
     lessons = sorted(classroom.lessons_for_course(course.course_id), key=lambda x: x.created_at or "")
     lesson = next((x for x in lessons if not x.completed), None)
     if lesson is None:

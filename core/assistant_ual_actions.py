@@ -149,8 +149,8 @@ def register_ual_actions(registry: AssistantActionRegistry) -> None:
         trigger_phrases=("save this to my inbox", "send this to my inbox", "make this a mission", "keep this on my shelf",
                          "put this on my shelf",
                          "start a project from this", "find what i know about", "how does this connect",
-                         "how does this relate", "how should i use this", "how can i use this",
-                         "what does this mean for my", "connect this to"),
+                         "how does this relate", "what does this mean for my", "connect this to",
+                         "use this knowledge"),
         subjects=("selection",),
     ))
     which = {"type": "string", "description": "Which things on the shelf: numbers as listed (\"1, 3\"), or all."}

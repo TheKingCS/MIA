@@ -1,7 +1,8 @@
 """Courses from her offline library (core/library_course.py): "I want to learn about beekeeping" builds a Classroom
 course, one lesson a stage the library covers, each from one article never used twice and only one that fits the
 subject; too little in the library is said, never padded; no library is said with a learning path offered; and the
-next lesson is read from its own article to teach, nothing added."""
+next lesson is read from its own article to teach, nothing added. The same course twice is the one made, a course
+the words don't name is said, and a title must hold the whole subject."""
 
 from types import SimpleNamespace
 
@@ -71,3 +72,15 @@ def test_learning_about_something_reaches_the_course_and_learning_to_play_reache
     names = lambda said: [a.name for a in registry.matching_actions(said, context)]  # noqa: E731
     assert "learn_about" in names("I want to learn about beekeeping")
     assert "start_learning" in names("I want to learn to play guitar")
+
+
+def test_review_the_same_course_twice_is_the_one_made_and_an_unknown_course_is_said(world):
+    lc.make(world, "I want to learn about beekeeping")
+    assert "already a course on beekeeping" in lc.make(world, "I want to learn about beekeeping")
+    assert len(lc._courses(world.classroom)) == 1
+    assert lc.teach(world, "teach me the next lesson on welding").startswith("There's no library course on that.")
+
+
+def test_review_a_title_holds_the_whole_subject_and_more_phrasings_are_read():
+    assert lc.subject_of("I'd like to learn more about knots") == "knots"
+    assert lc._words("beekeeping this winter") == {"beekeeping"}

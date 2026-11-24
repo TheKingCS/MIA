@@ -296,14 +296,25 @@ RECENT_TURNS = 6  # the person's last few messages: what "we've been talking abo
 
 def talking_about(context, capture: Capture) -> list[str]:
     """What the person has been talking to MIA about: their last few messages in the active conversation (the
-    selection itself left out), oldest first, each cut short; [] without one."""
+    selection itself left out), oldest first, each cut short; [] without one. Never a private, journal or
+    off-the-record message, and nothing at all while the conversation is in one of those or a personal mode
+    (core/conversation_modes.PERSONAL_MODES): what's said there never reaches another prompt."""
+    from core.conversation_modes import PERSONAL_MODES
+
     conversations = getattr(context, "conversations", None)
     try:
         active = conversations.get_conversation(conversations.get_active_conversation_id()) if conversations else None
     except Exception:  # noqa: BLE001 - no conversation to read is no conversation
         active = None
+    if active is None:
+        return []
+    try:
+        if active.current_privacy() or getattr(active, "mode", "") in PERSONAL_MODES:
+            return []
+    except Exception:  # noqa: BLE001 - when privacy can't be told, nothing is shared
+        return []
     said = [str(getattr(m, "content", "") or "").strip() for m in (getattr(active, "messages", None) or [])
-            if getattr(m, "role", "") == "user"]
+            if getattr(m, "role", "") == "user" and not getattr(m, "privacy", "")]
     selection = (capture.text or "").strip()[:80]
     said = [s for s in said if s and not (selection and selection in s)][-RECENT_TURNS:]
     return [s if len(s) <= 160 else s[:160].rsplit(" ", 1)[0] + "…" for s in said]
@@ -330,13 +341,17 @@ def _connect(context, capture: Capture) -> dict:
     """Read: how a selection connects to what the person is doing, and how to use it (Zac, 2026-11-24: "an AI tool
     that summarizes and explains how something connects to what we have been talking about... a how should I use
     this knowledge engine"). The connections are found in code first: their records sharing the selection's key
-    terms (`_find_known`, what Ctrl+K finds) and their last few messages (`talking_about`); the model then words what
-    it says, how it ties to those only, and two or three ways to use it. Read-only: nothing is saved or changed."""
+    terms (`_find_known`, what Ctrl+K finds; their titles framed as outside content, since a record can hold someone
+    else's words) and their last few messages (`talking_about`, never a private one); the model then words what it
+    says, how it ties to those only, and two or three ways to use it. Read-only: nothing is saved or changed."""
     found = _find_known(context, capture)
     records = [f"- {r.get('title', '')} ({r.get('kind') or r.get('group') or 'record'}; shares: "
                f"{', '.join(r.get('matched', []))})" for r in found.get("results", [])]
     talk = talking_about(context, capture)
-    said = _model_raw(context, _CONNECT.format(records="\n".join(records) or "(none of their records share its words)",
+    from core.browser_safety import outside
+
+    listed = outside("\n".join(records), "Their records") if records else "(none of their records share its words)"
+    said = _model_raw(context, _CONNECT.format(records=listed,
                                                talk="\n".join(f"- {t}" for t in talk) or "(nothing yet)",
                                                selection=framed(capture)))
     return {"text": said, "results": found.get("results", []), "searched_for": found.get("searched_for", []),

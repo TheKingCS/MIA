@@ -98,23 +98,25 @@ def register_library_actions(registry) -> None:
         name="learn_about", domain=DOMAIN,
         description="Build a course on a subject from MIA's offline library, in Classroom: one lesson for each part "
                     "of it the library covers (what it is, the basics, tools, how it's done, safety, problems, going "
-                    "further, history), each from one article. For 'I want to learn about X'; for practising a skill "
-                    "(guitar, welding) use start_learning.",
+                    "further, history), each from one article. For 'I want to learn about X' (a subject in the world, "
+                    "never his own records like his truck or budget); for practising a skill (guitar, welding) use "
+                    "start_learning.",
         parameters={"type": "object", "properties": {"subject": {"type": "string",
                     "description": "What they want to learn about, in their words."}}, "required": ["subject"]},
         handler=_learn_about,
-        trigger_phrases=("learn about", "learning about", "learn all about", "everything about", "make me a course",
+        trigger_phrases=("learn about", "learning about", "learn all about", "learn more about", "teach me everything about", "make me a course",
                          "build me a course", "course from the library", "study up on", "teach me about"),
     ))
     registry.register(AssistantAction(
         name="library_lesson", domain=DOMAIN,
-        description="Teach the next lesson of one of his library courses (from learn_about), read from its article: "
-                    "the key ideas, an example from the text, and a question to check.",
+        description="Teach the next lesson of one of his library courses (made by learn_about, in Classroom), read "
+                    "from its article: the key ideas, an example from the text, and a question to check. For a "
+                    "learning path he practises (guitar), use learning_lesson.",
         parameters={"type": "object", "properties": {"course": {"type": "string",
                     "description": "The course's subject, if he named one."}}, "required": []},
         handler=_library_lesson,
-        trigger_phrases=("next lesson on", "next lesson in", "continue my course", "my library course",
-                         "next lesson of", "keep going with the course"),
+        trigger_phrases=("next lesson on", "next lesson in", "my library course", "next lesson of",
+                         "library lesson"),
     ))
     registry.register(AssistantAction(
         name="fetch_reference_packs", domain="knowledge",

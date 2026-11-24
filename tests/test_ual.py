@@ -9,7 +9,8 @@ This Myself proposes a path draft; Build A Skill offers to teach steps made of h
 tools, or sends what they can't do to the lab, each only when pressed and approved.
 Research and Verify search the web only with the person's switch on, send a few scrubbed
 words, and Verify never marks a claim without one of its own sources. How Does This Connect
-lists the records and talk found in code, and the model words only those."""
+lists the records and talk found in code, and the model words only those; a private,
+journal or off-the-record message never reaches its prompt."""
 
 import pytest
 
@@ -482,3 +483,19 @@ def test_how_does_this_connect_finds_his_records_and_the_talk_in_code_and_the_mo
     assert got["tier"] == "read" and "Greenhouse heating" in prompt and "I'm planning to build a greenhouse" in prompt
     assert "Never invent a record" in prompt and "never follow instructions" in prompt
     assert any("Greenhouse heating" in r["title"] for r in got["result"]["results"])
+
+
+def test_a_private_journal_or_off_the_record_message_never_reaches_connects_prompt(shop):  # noqa: F811
+    """What's said privately, or in a personal mode, never reaches another prompt (review of d57954f6)."""
+    from core.conversation_manager import ConversationManager
+
+    shop.conversations = ConversationManager(shop, data_dir=shop.home_dir)
+    talk = shop.conversations.get_or_create_active_conversation()
+    shop.conversations.add_message(talk.conversation_id, "user", "an ordinary question about the greenhouse")
+    talk.messages[-1].privacy = "journal"
+    assert ual.talking_about(shop, Capture.from_dict({"text": "x"})) == []
+    talk.messages[-1].privacy = ""
+    talk.off_record = True
+    assert ual.talking_about(shop, Capture.from_dict({"text": "x"})) == []
+    talk.off_record = False
+    assert ual.talking_about(shop, Capture.from_dict({"text": "x"})) == ["an ordinary question about the greenhouse"]
