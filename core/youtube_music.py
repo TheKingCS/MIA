@@ -16,7 +16,8 @@ offline (YouTube Music Premium is the legitimate offline route for its catalogue
 (`set_key`; kept sealed at rest in `KEY_FILE`, core/at_rest.py, and never shown back or put in a proposal). Only
 when looking things up online is allowed (core/online_lookup.allowed: online, not a child, not turned off), and only
 his search words leave the computer, scrubbed (`online_lookup.scrub`). A link he pastes needs no key
-(`video_id`). Titles from YouTube are page text from the web, shown as names only, never read as instructions.
+(`video_id`), and its title and channel come from YouTube's public oEmbed (`title_of`, no key). Titles from YouTube
+are page text from the web, shown as names only, never read as instructions.
 """
 
 from __future__ import annotations
@@ -114,6 +115,26 @@ def _fetch(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "MIA"})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as answer:
         return answer.read()
+
+
+OEMBED_URL = "https://www.youtube.com/oembed"
+
+
+def title_of(context, vid: str, fetch: Optional[Callable[[str], bytes]] = None) -> dict:
+    """A video's title and channel from YouTube's public oEmbed (no key needed), for a pasted link: {title, channel},
+    or {} when it isn't allowed now, the id isn't one, or YouTube doesn't answer. Only the video's address is sent."""
+    from core.online_lookup import allowed
+
+    if not _ID.match(str(vid or "")) or not allowed(context)[0]:
+        return {}
+    url = OEMBED_URL + "?" + urlencode({"url": "https://www.youtube.com/watch?v=" + vid, "format": "json"})
+    try:
+        found = json.loads((fetch or _fetch)(url))
+    except Exception as problem:  # noqa: BLE001 - a title is a nicety; the link still plays
+        log.info("No title from YouTube for %s: %s", vid, type(problem).__name__)
+        return {}
+    return {"title": html.unescape(str(found.get("title", "")))[:150],
+            "channel": html.unescape(str(found.get("author_name", "")))[:80]}
 
 
 def results_from(payload: dict) -> list[dict]:

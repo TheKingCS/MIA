@@ -82,9 +82,16 @@ def _describe_save(context, params) -> str:
 
 
 def _save(context, params) -> str:
-    """Does youtube.save: the link in the library, and on the playlist when one is named."""
+    """Does youtube.save: the link in the library (a pasted link named by YouTube's oEmbed when it has no title), and
+    on the playlist when one is named."""
+    from core.youtube_music import title_of
+
     music, playlist = _music(context), _playlist(context, params)
-    track = music.add_youtube(_video(params), str(params.get("title", "") or ""), str(params.get("channel", "") or ""))
+    vid, title, channel = _video(params), str(params.get("title", "") or ""), str(params.get("channel", "") or "")
+    if not title.strip():  # a pasted link: its name from YouTube, when it can be had
+        named = title_of(context, vid)
+        title, channel = named.get("title", ""), channel or named.get("channel", "")
+    track = music.add_youtube(vid, title, channel)
     if playlist is not None:
         music.add_track_to_playlist(playlist.playlist_id, track.track_id)
         return f"Saved {track.title} and put it on {playlist.name}."

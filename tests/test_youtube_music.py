@@ -5,6 +5,7 @@ tests.test_youtube_music
 YouTube in Music (core/youtube_music.py, core/youtube_actions.py): links read to their video id, YouTube's embedded
 player only, a search only with his key and only his scrubbed words sent, songs saved as links (never a file) that
 playlists hold and a library scan never removes, and MIA's pick by voice waiting on the Music page.
+A pasted link is named by YouTube's oEmbed, and saved all the same without it.
 """
 
 from __future__ import annotations
@@ -26,7 +27,8 @@ from core.youtube_actions import NEXT_KEY, _play, _save_tool, pick, played
 
 @pytest.fixture
 def ctx(tmp_path, monkeypatch):
-    """A context with its own config, a music library and a YouTube key file, all in a temporary folder."""
+    """A context with its own config, a music library and a YouTube key file, all in a temporary folder.
+    Nothing reaches YouTube from a test (_fetch refuses)."""
     data = tmp_path / "data"
     monkeypatch.setattr(config_module, "_CONFIG_FILE", tmp_path / "config.json")
     monkeypatch.setattr(music_module, "_DATA_DIR", data)
@@ -34,6 +36,12 @@ def ctx(tmp_path, monkeypatch):
     monkeypatch.setattr(music_module, "_PLAYLISTS_FILE", data / "music_playlists.json")
     monkeypatch.setattr(music_module, "_DEFAULT_ROOT", tmp_path / "music_library")
     monkeypatch.setattr(yt, "KEY_FILE", data / "youtube_key.json")
+
+    def no_network(url):
+        """Tests never reach YouTube."""
+        raise OSError("no network in tests")
+
+    monkeypatch.setattr(yt, "_fetch", no_network)
     context = AppContext(config=ConfigManager(), events=EventBus())
     context.music = MusicManager(context)
     return context
@@ -122,3 +130,26 @@ def test_by_voice_a_link_is_saved_without_a_key_and_play_leaves_it_as_mias_pick(
     page = music_page(ctx)
     assert page["youtube_next"]["track_id"] == chosen["track_id"] and page["youtube_key"] is False
     assert [t["youtube"] for t in page["tracks"]] == ["ccccccccccc"]
+
+
+def test_a_pasted_link_is_named_by_youtubes_oembed_and_still_saved_without_it(ctx, monkeypatch):
+    """With a link and no title, the song is named from YouTube's oEmbed (only the video's address sent); offline or
+    unanswered, it's still saved, as "YouTube song"."""
+    sent = []
+
+    def oembed(url):
+        """A fake oEmbed answer."""
+        sent.append(url)
+        return json.dumps({"title": "Me at the zoo", "author_name": "jawed"}).encode()
+
+    assert yt.title_of(ctx, "jNQXAC9IVRw", fetch=oembed) == {"title": "Me at the zoo", "channel": "jawed"}
+    assert sent[0].startswith("https://www.youtube.com/oembed?url=")
+    assert yt.title_of(ctx, "not an id", fetch=oembed) == {}
+    monkeypatch.setattr(yt, "_fetch", oembed)
+    ACTION_TYPES["youtube.save"].execute(ctx, {"video": "https://youtu.be/jNQXAC9IVRw"})
+    assert [t.title for t in ctx.music.all_tracks()] == ["Me at the zoo"]
+    from types import SimpleNamespace
+
+    ctx.connectivity = SimpleNamespace(status="offline")
+    ACTION_TYPES["youtube.save"].execute(ctx, {"video": "https://youtu.be/ddddddddddd"})
+    assert "YouTube song" in [t.title for t in ctx.music.all_tracks()]

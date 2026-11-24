@@ -127,7 +127,7 @@
   }
 
   async function saveTo(s) {
-    const v = await form("Save " + s.title + " To…", [{ name: "playlist_id", label: "Playlist", type: "pick", required: true, options: ["playlists"], default: null }],
+    const v = await form("Save " + (s.title || s.shown || "this song") + " To…", [{ name: "playlist_id", label: "Playlist", type: "pick", required: true, options: ["playlists"], default: null }],
       {}, { playlists: page.playlists.map((p) => ({ id: p.id, name: p.name })) });
     if (v) act({ kind: "youtube.save", params: { video: s.video_id, title: s.title, channel: s.channel, playlist_id: v.playlist_id } });
   }
@@ -196,7 +196,7 @@
         ytWords = ($("yt-q") || {}).value || "";
         ytProblem = ""; ytNeedsKey = false;
         const link = /youtu\.?be/.test(ytWords) ? ytWords.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{11})/) : null;
-        if (link) { ytFound = [{ video_id: link[1], title: "The song from your link", channel: "" }]; draw(); return; }
+        if (link) { ytFound = [{ video_id: link[1], title: "", channel: "", shown: "The song from your link" }]; draw(); return; }
         if (!ytWords.trim()) return;
         say("Looking on YouTube…");
         try {
@@ -210,7 +210,7 @@
       const pick = page.youtube_next && byId(page.youtube_next.track_id);
       const results = ytFound === null ? null : (ytFound.length ? el("div", { class: "rows" }, ytFound.map((s) => el("div", { class: "row money-row yt-row" },
         s.thumb ? el("img", { src: s.thumb, alt: "", class: "yt-thumb", loading: "lazy" }) : null,
-        el("div", {}, el("div", { class: "row-title" }, s.title), el("div", { class: "row-sub" }, s.channel || "YouTube")),
+        el("div", {}, el("div", { class: "row-title" }, s.title || s.shown), el("div", { class: "row-sub" }, s.channel || "YouTube")),
         buttons(btn("Play", "btn-green btn-small", () => ytPlay([s])),
           btn("Save", "btn-ghost btn-small", () => act({ kind: "youtube.save", params: { video: s.video_id, title: s.title, channel: s.channel } })),
           page.playlists.length ? btn("+ Playlist", "btn-ghost btn-small", () => saveTo(s)) : null))))

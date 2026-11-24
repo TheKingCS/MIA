@@ -19,12 +19,14 @@ from tests.test_server_app import _login, _profile_id, client, context  # noqa: 
 
 @pytest.fixture
 def owner(client, context, tmp_path, monkeypatch):  # noqa: F811
-    """The signed-in owner's headers, with the music library and the YouTube key file in a temporary folder."""
+    """The signed-in owner's headers, with the music library and the YouTube key file in a temporary folder.
+    Nothing reaches YouTube from a test."""
     data = tmp_path / "music_data"
     data.mkdir()
     monkeypatch.setattr(music_module, "_TRACKS_FILE", data / "music_tracks.json")
     monkeypatch.setattr(music_module, "_PLAYLISTS_FILE", data / "music_playlists.json")
     monkeypatch.setattr(yt, "KEY_FILE", data / "youtube_key.json")
+    monkeypatch.setattr(yt, "_fetch", lambda url: (_ for _ in ()).throw(OSError("no network in tests")))
     return {"Authorization": f"Bearer {_login(client, context)}"}
 
 
