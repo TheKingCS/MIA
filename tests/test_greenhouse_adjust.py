@@ -6,6 +6,7 @@ MIA setting the greenhouse node's targets (core/greenhouse_adjust.py, DEC-0185 s
 exact change said and sent only on "yes, set it", signed so the node's own check accepts it (homestead's
 core/command_auth.verify, loaded on its own: MIA never imports the node's packages), the outcome read back from the
 node's export, and nothing sent without the node's key or outside his network.
+And the pH and EC said against their targets, read only.
 """
 
 from __future__ import annotations
@@ -135,3 +136,16 @@ def test_the_page_card_shows_the_targets_and_outcomes_from_the_last_read(linked)
     assert card["linked"] and card["cells"][0]["name"] == "Pilot"
     assert card["recent"][0] == {"param": "pH minimum", "value": 6.4, "outcome": "refused", "reason": "stale",
                                  "when": "2026-11-24T12:00"}
+
+
+def test_the_ph_and_ec_are_said_against_their_targets(linked):
+    """Inside, below by how much, a stale reading said so; asked in his words, read only (nothing pending)."""
+    context, link = linked
+    state = _state()
+    state["cells"][0]["readings"] = [{"type": "ph", "value": 6.3, "is_stale": False},
+                                     {"type": "ec", "value": 1000, "is_stale": True}]
+    lines = ga.against_targets(state)
+    assert lines[0] == "Pilot's pH is 6.3, below its 6.6 minimum by 0.3."
+    assert "inside its 800-1400 uS/cm band (that reading is stale)" in lines[1]
+    said = ga.reply(context, "how's the greenhouse pH against its target?", get=lambda url: json.dumps(state).encode())
+    assert said.startswith("Pilot's pH is 6.3") and not link.pending

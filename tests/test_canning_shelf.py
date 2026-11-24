@@ -6,6 +6,7 @@ The canning shelf (core/canning_shelf.py): "I put up 7 quarts of tomatoes" adds 
 a year on, a second batch the same month joins it, and the shelf is read back oldest first with the ones past or
 nearing a year said first and the never-taste-a-bad-jar line always; bought cans are never on it; realistic
 phrasing ("7 quart jars of tomatoes", "a dozen pints", "pinto beans") finds the right food, size and count.
+And a batch put up by voice grows the Preserving (Canning) skill.
 """
 
 from datetime import date
@@ -76,3 +77,17 @@ def test_the_same_food_said_two_ways_is_one_batch(kitchen):
     first = cs.put_up(kitchen, "7 quart jars of tomatoes", 7, "", DAY)
     again = cs.put_up(kitchen, "tomatoes", 2, "quarts", DAY)
     assert first.name == "Tomatoes, quarts, Nov 2026" and again.item_id == first.item_id
+
+
+def test_a_batch_put_up_by_voice_grows_the_preserving_skill(tmp_path, monkeypatch):
+    """Canning is a skill (brainstorm round 9): put_up_jars grants XP toward Preserving (Canning), as eggs grow Animal
+    Care; the skill is in the tree under Food Production."""
+    from core.assistant_domain_actions import _action_put_up_jars
+    from tests.engine_world import build_world
+
+    world = build_world(tmp_path, monkeypatch)
+    skill = world.skills.get_skill("preserving")
+    assert skill is not None and skill.prerequisite_skill_ids == ["food_production"]
+    before = world.skills.get_progress(world.me.profile_id, "preserving").total_xp
+    _action_put_up_jars(world, {"food": "tomatoes", "jars": 7, "size": "quarts"})
+    assert world.skills.get_progress(world.me.profile_id, "preserving").total_xp > before

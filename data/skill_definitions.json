@@ -43,6 +43,7 @@
     { "skill_id": "composting", "name": "Composting", "category": "Homestead", "icon": "🍂", "tier": 1 },
     { "skill_id": "water_systems", "name": "Water Systems", "category": "Homestead", "icon": "🚰", "tier": 1 },
     { "skill_id": "food_production", "name": "Food Production", "category": "Homestead", "icon": "🌽", "tier": 1 },
+    { "skill_id": "preserving", "name": "Preserving (Canning)", "category": "Homestead", "icon": "🫙", "tier": 2, "prerequisite_skill_ids": ["food_production"] },
     { "skill_id": "animal_care", "name": "Animal Care", "category": "Homestead", "icon": "🐔", "tier": 1 },
     { "skill_id": "landscaping", "name": "Landscaping", "category": "Homestead", "icon": "🏞️", "tier": 1 },
     { "skill_id": "construction", "name": "Construction", "category": "Homestead", "icon": "🏗️", "tier": 1 },

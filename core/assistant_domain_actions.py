@@ -514,8 +514,9 @@ def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
 
 def _action_put_up_jars(context: AppContext, arguments: dict) -> str:
     """Assistant tool `put_up_jars`: a batch of home-canned jars onto the canning shelf (core/canning_shelf.put_up),
-    dated today unless he says when, best by a year on; a count may be spoken ("a dozen"). Returns the sentence to
-    say back; a missing food or count is asked about, nothing changes."""
+    dated today unless he says when, best by a year on; a count may be spoken ("a dozen"). Each batch grants 5 XP
+    toward the Preserving (Canning) skill. Returns the sentence to say back; a missing food or count is asked about,
+    nothing changes."""
     from core import canning_shelf
 
     when = None
@@ -530,6 +531,10 @@ def _action_put_up_jars(context: AppContext, arguments: dict) -> str:
                                     when)
     except ValueError as problem:
         return str(problem)
+    from core.gamification import SkillWeight, grant_xp
+
+    # Canning is a skill (2026-11-24, brainstorm round 9): each batch grows Preserving, as eggs grow Animal Care.
+    grant_xp(context, 5, "🫙 Jars up!", f"{item.name} on the shelf.", skill_weights=[SkillWeight("preserving", 5)])
     return (f"On the canning shelf: {item.name}, {_qty(item.quantity, item.unit)}, best by {item.expiration_date}. "
             f"I'll say when it nears a year.")
 

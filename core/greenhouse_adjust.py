@@ -14,6 +14,9 @@ so a plain mistake is said at once; the node's own copy is what counts), says ex
 "yes, set it". The tool `adjust_greenhouse` does the same; the Greenhouse page's control is the action
 `greenhouse.adjust`, approved on its card. A change of the greenhouse is never made on the model's word alone.
 
+**Where it sits** (`against_targets`): "how's the greenhouse pH against its target?" reads the node and says each
+cell's latest pH and EC against the band it reports: inside, or below or above by how much, a stale reading said so.
+
 **Sending** (`send`): one direction, signed with this node's key (`sign`, the same HMAC-SHA256 the node checks in
 homestead/core/command_auth.py; the key made for this node at provisioning, core/greenhouse_provision.command_key_path;
 none yet means nothing is sent), to the node's `POST /mia/command`, only on his own network (greenhouse_link.own_node).
@@ -201,6 +204,33 @@ def send(context, p: dict, approved_by: str = "", post: Optional[Callable] = Non
             "I'll see when it's applied.")
 
 
+_AGAINST = re.compile(r"\b(?:ph|ec)\b.*\b(?:against|vs\.?|versus|compared to|within|inside|in)\b.*\b(?:targets?|"
+                      r"range|band)\b|\b(?:is|are)\b.*\b(?:ph|ec)\b.*\b(?:on target|in range|where it should be)\b")
+
+
+def against_targets(state: dict) -> list[str]:
+    """Pure logic. Each cell's latest pH and EC said against the targets the node reports (mia_directions.targets):
+    inside, below or above, by how much, and a stale reading said as stale. [] when the node reports no targets."""
+    targets = ((state or {}).get("mia_directions") or {}).get("targets") or {}
+    lines = []
+    for cell in (state or {}).get("cells") or []:
+        band = targets.get(str(cell.get("id"))) or {}
+        if not band:
+            continue
+        for kind, label, unit in (("ph", "pH", ""), ("ec", "EC", " uS/cm")):
+            low, high = band.get(f"{kind}_target_min"), band.get(f"{kind}_target_max")
+            reading = next((r for r in cell.get("readings") or [] if r.get("type") == kind), None)
+            if reading is None or reading.get("value") is None or low is None or high is None:
+                continue
+            value = float(reading["value"])
+            where = (f"below its {low:g}{unit} minimum by {low - value:.2g}{unit}" if value < low else
+                     f"above its {high:g}{unit} maximum by {value - high:.2g}{unit}" if value > high else
+                     f"inside its {low:g}-{high:g}{unit} band")
+            stale = " (that reading is stale)" if reading.get("is_stale") else ""
+            lines.append(f"{cell.get('name') or 'A cell'}'s {label} is {value:g}{unit}, {where}{stale}.")
+    return lines
+
+
 def node_card(context) -> dict:
     """The Greenhouse page's node card, from the node's last read (no network on a page load): {linked, cells
     [{id, name, targets {param: value}}], recent [{param, value, outcome, reason}], params {param: words}}."""
@@ -243,11 +273,22 @@ ACTION_TYPES.update(ADJUST_ACTIONS)
 
 def reply(context, text: str, post: Optional[Callable] = None, get: Optional[Callable] = None) -> Optional[str]:
     """In code, before the model: "set the greenhouse pH minimum to 6.4" says the exact change and waits; "yes, set
-    it" sends it. None when the words aren't for it."""
+    it" sends it; "how's the greenhouse pH against its target?" reads the node and says each cell's pH and EC against
+    its band (`against_targets`, read only). None when the words aren't for it."""
     link = getattr(context, "greenhouse_link", None)
     if link is None:
         return None
     low = (text or "").strip().lower()
+    if "greenhouse" in low and _AGAINST.search(low):  # "how's the greenhouse pH against its target?": read only
+        from core.greenhouse_link import LinkError, fetch
+
+        try:
+            state = fetch(context, link, get=get) if link.url else link.state
+        except LinkError as problem:
+            return str(problem)
+        lines = against_targets(state)
+        return " ".join(lines) if lines else ("The node doesn't report its targets yet, so I can't say where its "
+                                              "readings sit against them.")
     pending = getattr(link, "pending", {}) or {}
     if pending.get("kind") == "adjust" and _YES.match(low):
         link.pending = {}

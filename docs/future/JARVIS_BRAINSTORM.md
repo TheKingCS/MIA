@@ -355,12 +355,14 @@ Checked against today's code; each says whether it needs Zac's say.
   first sale to 1,000; Debt Free: a debt paid to nothing, 3, 5; core/life_milestones.py).* a first sale, 10 and 100
   products sold (core/business), a debt paid off, the freedom date moved a month nearer (core/freedom.py), the
   first month under budget. The same chains as harvest and eggs, so the card and the log come for free.
-- **"How's the pH against its target?"** (no decision): the greenhouse's readings beside the targets MIA now reads
+- **"How's the pH against its target?"** (no decision): *built 2026-11-24 (`core/greenhouse_adjust.against_targets`).*
+  the greenhouse's readings beside the targets MIA now reads
   from the node (`mia_directions.targets`), said as inside, drifting or outside, with how long; awareness, read only.
 - **A song reward fills the songbook** (no decision: a reply to his own action): finishing a mission whose reward is
   a song asks "can you play it now?" and adds it on yes; a saved YouTube song can be linked to a songbook song for
   play-along practice.
-- **Canning as a skill** (no decision): a Canning (Preserving) skill in the skill tree, so jars put up and canning
+- **Canning as a skill** (no decision): *built 2026-11-24 (Preserving (Canning), under Food Production; each batch
+  put up grants it XP).* a Canning (Preserving) skill in the skill tree, so jars put up and canning
   missions grow it, as gardening and carpentry already grow.
 - **"Almost there"** (his say: a new kind of unprompted message, through the gate): when a tier is within a little
   of done (3 jars from First Batch, 12 lb from Market Gardener), MIA offers one mission for it, paced like every
