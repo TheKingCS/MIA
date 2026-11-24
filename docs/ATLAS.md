@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1678 files, 364,967 lines; 1678 files describe themselves; 20,067 of 20,197 classes and functions are documented.
+1678 files, 365,020 lines; 1678 files describe themselves; 20,070 of 20,200 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-660 files, 186,884 lines; 9,508 of 9,594 classes and functions documented
+660 files, 186,922 lines; 9,509 of 9,595 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -958,7 +958,7 @@
 
 ## tests/: the test suite: what each part must do
 
-614 files, 97,496 lines; 8,196 of 8,240 classes and functions documented
+614 files, 97,511 lines; 8,198 of 8,242 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1146,7 +1146,7 @@
 - `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which (and what it is: Fact, Calculation or
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures).
-- `tests/test_garden_week.py`: This week in the garden (core/garden_week.py): his confirmed garden plans' steps in the next seven days, said once a week through the gate, with their days; nothing said when nothing's due. *(1 undocumented)*
+- `tests/test_garden_week.py`: This week in the garden (core/garden_week.py): his confirmed garden plans' steps in the next seven days, said once a week through the gate, with their days; nothing said when nothing's due; and asked, whether no plan is confirmed or the confirmed ones have nothing this week. *(1 undocumented)*
 - `tests/test_geo_grid.py`: Grid references and TAK (build plan step 14, DEC-0099): MGRS worked out in code (checked against pyproj and the mgrs package: 4,000 random points agreed to the metre, 2026-11-06; the reference outputs are pinned here), and MIA's waypoints as a TAK data package of Cursor on Target events and KML.
 - `tests/test_glasses.py`: The glasses' app cards and quick action menus (Zac 2026-10-16, H-0041 Phase 2; core/glasses.py): the person's own apps as cards, each with a menu; a panel's lines carry only glasses-safe actions, and money stays readouts; a change goes Propose -> Approve like everywhere else. Every ask reaches one o
 - `tests/test_glasses_cards.py`: The glasses cards for the apps that only had an ask (core/glasses_cards.py, 2026-11-08): every one builds a panel without a store and in a real household, shows the page assembler's facts in at most five short lines, flags what needs the person in amber and only what's broken in red, and lets the gl

@@ -3,7 +3,8 @@ tests.test_garden_week
 ========================
 
 This week in the garden (core/garden_week.py): his confirmed garden plans' steps in the next seven days, said once a
-week through the gate, with their days; nothing said when nothing's due.
+week through the gate, with their days; nothing said when nothing's due; and asked, whether no plan is confirmed
+or the confirmed ones have nothing this week.
 """
 
 from datetime import date, datetime
@@ -33,5 +34,11 @@ def test_it_is_said_once_a_week_and_only_when_something_is_due():
     assert gw.offer(_ctx(status="draft"), datetime(2027, 2, 27, 8)) == []
 
 
-def test_without_plans_she_says_how_to_get_dates():
-    assert "Confirmed garden plans" in gw.say(SimpleNamespace(project_plans=None), date(2027, 2, 27))
+def test_without_plans_she_says_none_is_confirmed_and_how_to_get_dates():
+    said = gw.say(SimpleNamespace(project_plans=None), date(2027, 2, 27))
+    assert said.startswith("No garden plan is confirmed yet") and "Planner" in said
+    assert "No garden plan is confirmed yet" in gw.say(_ctx(status="draft"), date(2027, 1, 10))
+
+
+def test_a_confirmed_plan_with_nothing_this_week_says_so_never_that_none_is_confirmed():
+    assert gw.say(_ctx(), date(2027, 1, 10)).startswith("Your 1 confirmed garden plan has nothing due this week.")

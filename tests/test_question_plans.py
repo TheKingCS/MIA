@@ -2,7 +2,8 @@
 plan for a question, lookups gathered by code onto a marked sheet, and an
 answer that never states a number MIA didn't look up; and the weekend's
 plan with each day's forecast, reached only by a weekend ahead; and the
-winter plan with the days to the first frost."""
+winter plan with the days to the first frost; a tool's quoted example with a
+number never reaches a sheet."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -173,3 +174,10 @@ def test_am_i_ready_for_winter_gathers_the_frost_firewood_preparedness_and_the_r
     assert "drain and store hoses" in text
     messages, _ = qp.request(life, None, "Am I ready for winter?", date(2026, 9, 30))
     assert messages[0]["content"].rstrip().endswith(qp.HOW["winter"])
+
+
+def test_a_quoted_example_with_a_number_never_reaches_a_sheet_as_his_record():
+    said = qp.without_examples('How many cords does a winter take you? Tell me yours ("I burn 4 cords a winter") and '
+                               "I'll keep count. Log water like \"water, 10 gallons\". Say \"let's plan it\".")
+    assert "4 cords" not in said and "10 gallons" not in said
+    assert "Tell me yours and I'll keep count." in said and "Say \"let's plan it\"." in said  # no number: kept

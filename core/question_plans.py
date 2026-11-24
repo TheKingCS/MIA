@@ -37,7 +37,9 @@ money and afford plans. "What should I do this weekend?" gathers each
 weekend day's forecast with what's due, the garden, learning and projects
 (the plan "weekend", `weekend_days`); "am I ready for winter?" gathers
 the first frost, firewood, preparedness, the kit, the flock, the garden and
-the canning shelf (the plan "winter").
+the canning shelf (the plan "winter"). A tool's quoted example holding a
+number ("I burn 4 cords a winter") is left off a sheet (`without_examples`):
+the model read examples as his records.
 """
 
 from __future__ import annotations
@@ -121,9 +123,35 @@ class Plan:
 _NOTHING = re.compile(r"^(you don't have|you have no|no |nothing|there (are|is) no|i don't have|none)", re.IGNORECASE)
 
 
+# A quoted example of what to say or log that holds a number ('tell me yours ("I burn 4 cords a winter")'): on a
+# sheet the model read it as his record, so it's left off the sheet (the tool's own reply keeps it).
+_QUOTED = re.compile(r'"[^"]*"')  # quotes in pairs, in order
+_LEAD_IN = re.compile(r"\s*(?:\(\s*)?(?:like|e\.g\.,?|say|such as)?\s*\(?\s*$")
+
+
+def without_examples(text: str) -> str:
+    """Pure logic. A tool's reply without its quoted examples that hold a number (with a "like" or bracket that
+    leads into one), so a model never reports an example ("I burn 4 cords a winter") as the person's record."""
+    out, last = [], 0
+    for quoted in _QUOTED.finditer(text or ""):
+        if not re.search(r"\d", quoted.group()):
+            continue
+        before = text[last:quoted.start()]
+        opened = before.rstrip().endswith("(") or bool(re.search(r"\(\s*(?:like|e\.g\.,?|say|such as)?\s*$", before))
+        out.append(_LEAD_IN.sub("", before))
+        last = quoted.end()
+        if opened and text[last:last + 1] == ")":
+            last += 1
+    out.append((text or "")[last:])
+    said = "".join(out)
+    said = re.sub(r",\s*([.;:])", r"\1", said)
+    return re.sub(r"\s+([,.;:])", r"\1", said).strip()
+
+
 def _look(context, sheet: Sheet, tool: str, source: str, said_as: str = "", **arguments) -> str:
     """Run one of MIA's own lookups and put what it says on the sheet (a fact after `said_as`, when given: whose
-    it is); a lookup that failed (its apology: it's logged) puts nothing on the sheet."""
+    it is), its quoted examples with numbers left off (`without_examples`); a lookup that failed (its apology: it's
+    logged) puts nothing on the sheet. Returns the tool's whole reply."""
     registry = getattr(context, "assistant_actions", None)
     if registry is None or tool not in getattr(registry, "_actions", {}):
         return ""
@@ -136,7 +164,8 @@ def _look(context, sheet: Sheet, tool: str, source: str, said_as: str = "", **ar
     if text.strip().startswith("Something on my side broke"):  # the tool failed (it's logged): not a fact
         return ""
     found = not _NOTHING.match(text.strip())
-    sheet.add(FACT if found else MISSING, said_as + text if found else text, source)
+    kept = without_examples(text)
+    sheet.add(FACT if found else MISSING, said_as + kept if found else kept, source)
     return text
 
 

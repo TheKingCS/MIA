@@ -77,11 +77,20 @@ def _seeds(context, today: date) -> str:
 
 
 def say(context, today: Optional[date] = None) -> str:
-    """For "what's due in the garden this week?", with any crop starting soon that has no seeds logged."""
+    """For "what's due in the garden this week?", with any crop starting soon that has no seeds logged. With nothing
+    due it says whether that's because no garden plan is confirmed yet or because the confirmed ones have nothing
+    this week, so a model never reads "your plans are confirmed" into an empty planner."""
     today = today or date.today()
     items = this_week(context, today)
     seeds = _seeds(context, today)
     if items:
         return " ".join(x for x in ("This week in the garden: " + words(items, today) + ".", seeds) if x)
-    return " ".join(x for x in ("Nothing due in the garden this week from your plans. Confirmed garden plans in the "
-                                "Planner, with your frost dates, put their dates here.", seeds) if x)
+    book = getattr(context, "project_plans", None)
+    confirmed = [p for p in (book.listed() if book is not None else []) if p.kind == "garden" and p.status == "confirmed"]
+    if confirmed:
+        said = (f"Your {len(confirmed)} confirmed garden plan{'s have' if len(confirmed) != 1 else ' has'} nothing due "
+                "this week.")
+    else:
+        said = ("No garden plan is confirmed yet, so there are no garden dates to go by. Plan one in the Planner with "
+                "your frost dates and its steps show up here.")
+    return " ".join(x for x in (said, seeds) if x)
