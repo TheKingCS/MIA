@@ -120,6 +120,28 @@
         : el("p", { class: "dim" }, "No readings yet."));
   }
 
+  // The greenhouse node's targets (DEC-0185, core/greenhouse_adjust.py): what MIA may set (pH and EC bands only, never a
+  // dose or a pump), Set Target on an approval card (greenhouse.adjust), and what became of her latest directions.
+  function nodeCard() {
+    const n = page.node;
+    if (!n || !n.linked) return null;
+    const setTarget = async (cell) => {
+      const params = Object.keys(n.params);
+      const v = await MIAShell.form("Set A Greenhouse Target", [
+        { name: "param", label: "Target", type: "choice", required: true, options: params, default: params[0] },
+        { name: "value", label: "New value", type: "number", required: true, options: [], default: null }], {});
+      if (v) act({ kind: "greenhouse.adjust", params: { param: v.param, value: v.value, cell: cell.id } });
+    };
+    return section("The Node's Targets", null,
+      el("div", { class: "rows" }, n.cells.map((c) => el("div", { class: "row money-row" },
+        el("div", {}, el("div", { class: "row-title" }, c.name), el("div", { class: "row-sub" },
+          Object.entries(c.targets).map(([k, v]) => n.params[k] + " " + v).join(" · "))),
+        btn("Set Target", "btn-ghost btn-small", () => setTarget(c))))),
+      n.recent.length ? el("ul", { class: "craft-needs" }, n.recent.map((r) => el("li", {},
+        el("span", {}, r.param + " → " + r.value + ": " + r.outcome), r.reason ? el("span", { class: "dim" }, r.reason) : null))) : null,
+      el("p", { class: "dim" }, "The node checks every change against its own limits, and holds it for your Approve on its dashboard unless you've told it otherwise."));
+  }
+
   const VIEWS = {
     growing: () => {
       const now = page.batches.filter((b) => b.status === "Growing"), done = page.batches.filter((b) => b.status !== "Growing");
@@ -129,6 +151,7 @@
       done.length ? section("Done", null, el("div", { class: "craft-grid" }, done.map(batchCard))) : null].filter(Boolean);
     },
     water: () => [
+      nodeCard(),
       page.alerts.length ? section("Outside Your Range", null, el("ul", { class: "craft-needs" }, page.alerts.map((a) => el("li", { class: "missing" },
         el("span", {}, a.system + ": " + a.label + " " + a.value + (a.unit ? " " + a.unit : "") + " is " + a.side),
         el("span", { class: "dim" }, "range " + (a.low != null ? a.low : "–") + " to " + (a.high != null ? a.high : "–") + (a.mine ? "" : " (starter)"))))),

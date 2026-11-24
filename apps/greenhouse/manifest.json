@@ -48,7 +48,8 @@
       "log_harvest",
       "log_water_level",
       "orchard_this_month",
-      "water_budget"
+      "water_budget",
+      "adjust_greenhouse"
     ],
     "actions": [
       "batch.add",
@@ -64,7 +65,8 @@
       "grow.range",
       "grow.reading",
       "grow.system",
-      "grow.system_remove"
+      "grow.system_remove",
+      "greenhouse.adjust"
     ],
     "tiers": {
       "get_homestead_next_step": "observe",
@@ -87,7 +89,9 @@
       "grow.range": "act_within_grant",
       "grow.reading": "act_within_grant",
       "grow.system": "act_within_grant",
-      "grow.system_remove": "act_within_grant"
+      "grow.system_remove": "act_within_grant",
+      "adjust_greenhouse": "suggest",
+      "greenhouse.adjust": "act_with_approval"
     },
     "outside": []
   },

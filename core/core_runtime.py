@@ -105,6 +105,7 @@ from core.mission_trophy_actions import register_mission_trophy_actions
 from core.youtube_actions import register_youtube_actions
 from core.repertoire_actions import register_repertoire_actions
 from core.canning_fix import register_canning_fix_actions
+from core.greenhouse_adjust import register_greenhouse_adjust_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
@@ -341,7 +342,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     add_mission_reward and count_toward_mission (core/mission_trophy_actions.py) are among them.
     The YouTube tools (core/youtube_actions.py) are among them.
     His songbook's tools (core/repertoire_actions.py) are among them.
-    fix_jar_count (core/canning_fix.py) is among them."""
+    fix_jar_count (core/canning_fix.py) is among them.
+    adjust_greenhouse (core/greenhouse_adjust.py) is among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -372,6 +374,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_youtube_actions(registry)  # YouTube in Music: find, save, play
     register_repertoire_actions(registry)  # his songbook: songs he can play
     register_canning_fix_actions(registry)  # a batch of jars put up with the wrong count
+    register_greenhouse_adjust_actions(registry)  # the greenhouse node's targets (DEC-0185)
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

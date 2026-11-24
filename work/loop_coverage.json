@@ -13,6 +13,10 @@
    "status": "none",
    "why": "jars.correct is him fixing a count he said wrong; his own word about his own batch"
   },
+  "action:greenhouse": {
+   "status": "none",
+   "why": "greenhouse.adjust is his approved change to a node target; the node itself checks and records every one, and its experiments loop judges targets"
+  },
   "action:activity": {
    "status": "none",
    "why": "turning noting on or off and erasing what was noted are his own choices about his privacy (DEC-0197); nothing of MIA's to improve in them"

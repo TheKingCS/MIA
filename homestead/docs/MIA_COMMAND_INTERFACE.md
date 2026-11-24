@@ -78,6 +78,14 @@ signed approval applies at once or waits for his press on the node differs (one 
 3. **The node's half built 2026-11-24.** `dashboard_state.json` (which MIA already reads) carries `mia_directions`:
    each cell's current adjustable targets (what MIA sends as the value she believes) and her latest directions with
    what became of each (`outcome`: refused with why, waiting for approval, denied, or applied once its change is a
-   live target). Scenario `mia_command_outcomes_and_targets_are_in_the_export_mia_reads`. MIA's side
-   (`greenhouse.adjust`, its card, the read-back, undo) is next.
+   live target). Scenario `mia_command_outcomes_and_targets_are_in_the_export_mia_reads`. **MIA's side built the same
+   day** (MIA's `core/greenhouse_adjust.py`): "set the greenhouse pH minimum to 6.4" reads the node fresh, says the
+   exact change from its current value and sends it only on "yes, set it" (the tool `adjust_greenhouse` does the
+   same; the Greenhouse page's Water tab has The Node's Targets with Set Target, the action `greenhouse.adjust` on an
+   approval card), signed with this node's key, then says what it became from the node's answer and export. There's
+   no Undo button: setting it back is another adjustment (one an hour per target), and a waiting change can be
+   denied on the node. Tested against the node's own signature check, and live (2026-11-24) against the real export
+   server: a change staged, a second one while it waited refused by the node with its reason.
 4. Live against the simulator (`main.py` plus `drivers/simulator.py --run`): a change applied, read back, undone.
+   Done in part (2026-11-24, the export server alone, approval `node`): staged, refused while waiting. Still to run:
+   with `main.py` cycling, approved on the node and read back as applied, then set back.

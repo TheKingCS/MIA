@@ -173,12 +173,13 @@ def _greenhouse_reply(context, prompt: str):
     """The greenhouse node, in code: its setup in order ("let's set up the greenhouse", "what's next?",
     core/greenhouse_setup.py), "take over the greenhouse", "how's the greenhouse?" (core/greenhouse_link.py),
     and setting up its hardware, "flash the safety MCU", "prepare the Pi", "push the greenhouse to ..."
-    (core/greenhouse_provision.py); None when the words aren't for it."""
-    from core import greenhouse_link, greenhouse_provision, greenhouse_setup
+    (core/greenhouse_provision.py), and setting its targets, "set the greenhouse pH minimum to 6.4" then "yes, set it"
+    (core/greenhouse_adjust.py); None when the words aren't for it."""
+    from core import greenhouse_adjust, greenhouse_link, greenhouse_provision, greenhouse_setup
 
     try:
-        return (greenhouse_setup.reply(context, prompt) or greenhouse_link.reply(context, prompt)
-                or greenhouse_provision.reply(context, prompt))
+        return (greenhouse_adjust.reply(context, prompt) or greenhouse_setup.reply(context, prompt)
+                or greenhouse_link.reply(context, prompt) or greenhouse_provision.reply(context, prompt))
     except Exception:
         log.exception("Couldn't follow the greenhouse words")
         return None

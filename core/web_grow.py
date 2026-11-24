@@ -54,8 +54,9 @@ def growth_stage(status: str, days_growing, harvested: int, main_yield: float = 
 
 
 def grow_page(context, today: Optional[date] = None) -> dict:
-    """The Grow Lab screen's data: batches with their figures and stage (growth_stage), experiments, the logger's readings with each checked against its range, the forms, and what to build next on the homestead (`next`); costs and the plan only for an adult. Not available without the lab."""
+    """The Grow Lab screen's data: batches with their figures and stage (growth_stage), experiments, the logger's readings with each checked against its range, the forms, and what to build next on the homestead (`next`); costs and the plan only for an adult. Not available without the lab. The greenhouse node's card (`node`: its pH/EC targets and MIA's latest directions, core/greenhouse_adjust.node_card), adults only."""
     from core.child_accounts import is_child
+    from core.greenhouse_adjust import node_card
     from core.grow_actions import BATCH, EXPERIMENT
     from core.grow_lab import MEASURES, batch_figures, check_range, series_id
     from core.record_actions import record_form
@@ -156,4 +157,6 @@ def grow_page(context, today: Optional[date] = None) -> dict:
             "picks": {"places": [{"id": p["id"], "name": p["name"]} for p in places],
                       "batches": [{"id": b["id"], "name": b["crop"] + (" (" + b["variety"] + ")" if b["variety"] else "")
                                    + (" · " + b["system"] if b["system"] else "")} for b in batches]},
-            "forms": {"batch": batch_form, "experiment": record_form(EXPERIMENT)}}
+            "forms": {"batch": batch_form, "experiment": record_form(EXPERIMENT)},
+            # DEC-0185: the greenhouse node's targets MIA may set, and what became of her latest directions.
+            "node": None if child else node_card(context)}
