@@ -867,7 +867,7 @@ PLANS: tuple[Plan, ...] = (
           "How much am I spending on unnecessary things?", "How much money am I saving each month?",
           "What are my largest recurring expenses?", "What did I spend this month?", "How much have I spent so far?",
           "What's my spending look like this month?"),
-         r"\b(spend|spent|spending|came in|went out|expenses?|money going|saving)\b", _money_month),
+         r"\b(spend|spent|spending|came in|went out|expenses?|money (going|go|goes|went)|saving)\b", _money_month),
     Plan("debts", "Debts and paying them off",
          ("Which debt should I prioritize?", "What happens if I put an extra $200 toward that debt every month?",
           "How much interest am I paying across all my debts?",
@@ -889,7 +889,7 @@ PLANS: tuple[Plan, ...] = (
     Plan("next dollar", "Where the next dollar goes",
          ("What is the most effective use of my next $1,000?", "How much emergency savings should I maintain?",
           "I got a bonus, what should I do with it?", "Where should extra money go?"),
-         r"\b(next \$|extra money|bonus|emergency (fund|savings))\b", _next_dollar),
+         r"\b(next \$|extra money|bonus|emergency (fund|savings)|tax refund|refund go|windfall)\b", _next_dollar),
     Plan("rentals", "The rentals",
          ("How much passive income are my properties generating?", "Is my rental business actually profitable?",
           "Are my rentals making money?", "How are my rental properties doing?"),
@@ -1138,13 +1138,14 @@ _LEARNING = r"homework|lessons?|practi[cs]e\w*|woodworking|bushcraft|fitness pla
 # A plan's own words can catch a question it can't answer: "is it going to frost tonight?" isn't the evening's plan,
 # "what should I plant this week" isn't the week's review. Such a question goes on to the tool that answers it
 # (the weather against his plans, the garden's week, the flock's feed; tomorrow's first thing is the evening wrap's,
-# spending past its usual is "anything unusual"'s, which compares each category with its own normal month).
+# spending past its usual is "anything unusual"'s, which compares each category with its own normal month; what's due
+# this week is the bills', not the week's review; having enough for rent is money ahead's).
 NOT_FOR = {
     "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|first (thing )?tomorrow|tomorrow first)\b",
                           re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
-    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING})\b", re.I),
-    "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow)\b", re.I),
+    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?)\b", re.I),
+    "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),
 }
 
 

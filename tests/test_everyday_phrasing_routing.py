@@ -4,11 +4,12 @@ tests.test_everyday_phrasing_routing
 
 The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by their trigger phrases, without the
 embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his
-generator and preparedness settings, how long the generator runs, the weather against his plans, where he left
+generator and preparedness settings, everyday money questions (bills due, the budget, subscriptions, a tax
+refund, where the money went), how long the generator runs, the weather against his plans, where he left
 off, money ahead, an invoice, the garden's week and year, a build's price, the flock's feed and his learning
 programs (woodworking, gardening, fitness, bushcraft), her offline library for how-to questions about the world
 ("how do I purify creek water?", never held to her own help pages); and a plan whose words
-catch a weather, garden or flock question (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
+catch a weather, garden, flock or bills question (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
 """
 
 import pytest
@@ -47,6 +48,9 @@ SAID = [
     ("look_up_offline", "what wild plants are edible here"), ("look_up_offline", "how do I build a lean-to shelter"),
     ("bleach_for_water", "how much bleach to purify 5 gallons of water"),
     ("bleach_for_water", "how many drops of bleach per gallon"),
+    ("list_bills", "what bills are due this week?"), ("add_expense", "spent $120 at the feed store"),
+    ("get_budget_summary", "how's my budget looking"), ("list_unchecked_subscriptions", "what subscriptions am I paying for?"),
+    ("money_ahead", "will I have enough for rent next month?"),
 ]
 
 
@@ -78,3 +82,14 @@ def test_the_plans_still_take_their_own_questions():
                        ("what's coming up?", "coming up"), ("what should I charge for the shed?", "product cost")):
         found = question_plans.match(demo_context(), said)
         assert found is not None and found.name == plan, said
+
+
+def test_money_questions_reach_their_plans_by_word():
+    from core import question_plans
+
+    for said, plan in (("where should my tax refund go?", "next dollar"),
+                       ("where did my money go this month?", "money month")):
+        found = question_plans.match(demo_context(), said)
+        assert found is not None and found.name == plan, said
+    for said in ("what bills are due this week?", "will I have enough for rent next month?"):
+        assert question_plans.match(demo_context(), said) is None, said  # their tools answer them

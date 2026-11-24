@@ -175,7 +175,9 @@ class AssistantTools:
         """
         Register the built-in actions the Assistant can invoke via
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
-        milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py; plans made together, core/assistant_project_plan_actions.py). Registered here (not in modules/assistant/) for
+        milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py; plans made together, core/assistant_project_plan_actions.py; their trigger phrases cover everyday ways of
+        asking, "spent $120 at the feed store", "how's my budget looking": tests/test_everyday_phrasing_routing.py).
+        Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
         the one place independent core services get wired together
         (tools in their own files register here too, such as
@@ -2169,7 +2171,8 @@ class AssistantTools:
                 "required": ["amount"],
             },
             handler=self._action_add_expense,
-            trigger_phrases=("record an expense", "add an expense", "log an expense", "i spent", "bought groceries"),
+            trigger_phrases=("record an expense", "add an expense", "log an expense", "i spent", "bought groceries",
+                             "spent $"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_budget_summary",
@@ -2191,7 +2194,8 @@ class AssistantTools:
             handler=self._action_get_budget_summary,
             trigger_phrases=(
                 "budget summary", "how much have i spent", "how much did i make", "net cash flow",
-                "my cash flow", "how much income", "tax summary",
+                "my cash flow", "how much income", "tax summary", "how's my budget", "how is my budget",
+                "budget looking", "my budget look",
             ),
         ))
         # --- Proactive nudges follow-up (2026-09-08): expected/recurring

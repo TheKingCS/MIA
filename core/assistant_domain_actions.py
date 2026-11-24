@@ -755,7 +755,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
-    not paid me?", "which canned stuff should I use first?", "send Lee a bill for the bench",
+    not paid me?", "which canned stuff should I use first?", "send Lee a bill for the bench", "what subscriptions am I paying
+    for?",
     "will I be short next month?": tests/test_everyday_phrasing_routing.py).
     """
     registry.register(AssistantAction(
@@ -854,7 +855,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_money_ahead,
         trigger_phrases=("next 90 days", "next few months", "next three months", "money ahead", "cash flow",
                          "tight weeks", "tight week", "money coming up", "can i cover", "short this month",
-                         "be short", "short next month"),
+                         "be short", "short next month", "have enough for", "enough for rent", "enough to cover"),
     ))
     registry.register(AssistantAction(
         name="who_owes_me", domain="business",
@@ -908,7 +909,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         trigger_phrases=("budget to", "set my budget", "budget for", "monthly budget"),
     ))
     # Not "budget"/"paycheck"/"spent": "what's a good way to budget my paycheck?" is advice, not a record.
-    registry.register_domain_keywords("budget", ("bill", "bills", "expense", "expenses"))
+    registry.register_domain_keywords("budget", ("bill", "bills", "expense", "expenses", "subscription",
+                                                 "subscriptions", "paying for"))
 
     # -- kitchen: recipes & meals ------------------------------------------
     registry.register(AssistantAction(
