@@ -12,7 +12,9 @@ holds the food and the month ("Tomatoes, quarts, Nov 2026") so each batch stays 
 the day it was put up; its expiration date is a year on, the National Center for Home Food Preservation's "use within
 a year" for best quality. That date is about quality, not safety: what makes a jar unsafe is a seal that failed or
 signs of spoiling, so the shelf's answer always says to throw such a jar out without tasting it. Nothing here is the
-model's: the dates and counts are worked out in code and only phrased.
+model's: the dates and counts are worked out in code and only phrased. What he said is read in code too:
+`food_of` (the food without its count and jar words), `size_of` (the jar size, whole words only) and `count_of`
+(a number or a spoken one, "a dozen").
 """
 
 from __future__ import annotations
@@ -24,21 +26,52 @@ from typing import Optional
 MARK = "Home-canned"  # in a batch's notes: how the shelf knows its own jars from bought cans
 BEST_DAYS = 365  # NCHFP: home-canned food is best used within a year
 SOON_DAYS = 60  # a batch this close to its year is said as one to use next
-SIZES = {"half-pint": "half-pints", "half pint": "half-pints", "pint": "pints", "quart": "quarts",
-         "half-gallon": "half-gallons", "half gallon": "half-gallons"}
-SAFETY = ("A jar whose lid has come unsealed, bulges, leaks, spurts when opened or smells off goes out without "
-          "tasting, whatever its date.")
+SIZES = {"half-pint": "half-pints", "half pint": "half-pints", "pint": "pints", "pt": "pints", "quart": "quarts",
+         "qt": "quarts", "half-gallon": "half-gallons", "half gallon": "half-gallons", "gallon": "gallons"}
+# NCHFP's signs of spoiling, and its care with a jar that may hold botulism: never tasted, never opened carelessly.
+SAFETY = ("A jar whose lid is unsealed or bulging, that leaks, spurts or foams when opened, or shows mold, cloudiness, "
+          "odd colour or an off smell goes out without tasting, whatever its date: leave it closed, bag it, and wear "
+          "gloves handling it.")
+NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+           "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "a dozen": 12, "dozen": 12, "two dozen": 24,
+           "a half dozen": 6, "half a dozen": 6}
+_SIZE = "|".join(sorted((w.replace("-", "[- ]") for w in SIZES), key=len, reverse=True))
+_SIZE_WORD = re.compile(rf"\b(?:{_SIZE})s?\b", re.I)
+_COUNT = re.compile(r"^\s*(?:\d+(?:\.\d+)?|" + "|".join(sorted(map(re.escape, NUMBERS), key=len, reverse=True))
+                    + r")\s+", re.I)
+_LEAD = re.compile(rf"^\s*(?:(?:{_SIZE})s?\s+)?(?:jars?\s+)?of\s+", re.I)
 _PUT_UP = re.compile(r"put up (\d{4}-\d{2}-\d{2})")
 
 
 def size_of(said: str) -> str:
-    """Pure logic. A jar size in its plural ("quarts"), from what he said ("quart jars", "pints"); "" when it names
-    none."""
-    lowered = (said or "").lower()
-    for word, plural in sorted(SIZES.items(), key=lambda kv: -len(kv[0])):  # "half-pint" before "pint"
-        if word in lowered:
-            return plural
-    return ""
+    """Pure logic. A jar size in its plural ("quarts"), from what he said ("quart jars", "pints", "qt"), whole
+    words only, so "pinto beans" and "quartered peaches" name none; "" when it names none."""
+    found = _SIZE_WORD.search(said or "")  # whole words: "pinto beans" and "quartered peaches" name no jar
+    if not found:
+        return ""
+    word = found.group(0).lower().replace(" ", "-")
+    word = word[:-1] if word not in SIZES and word.endswith("s") else word
+    return SIZES.get(word, SIZES.get(word.replace("-", " "), ""))
+
+
+def count_of(said) -> float:
+    """Pure logic. A jar count from a number or spoken words ("7", "seven", "a dozen"); 0 when it names none."""
+    if isinstance(said, (int, float)):
+        return float(said)
+    text = " ".join(str(said or "").lower().split())
+    try:
+        return float(text)
+    except ValueError:
+        return float(NUMBERS.get(text, 0))
+
+
+def food_of(said: str) -> str:
+    """Pure logic. The food from what he said, without the count or jar words before it ("7 quart jars of tomatoes"
+    is "tomatoes"; "cream of mushroom soup" keeps its "of")."""
+    text = _COUNT.sub("", said or "")
+    text = _LEAD.sub("", text)
+    text = _SIZE_WORD.sub(" ", re.sub(r"^\s*jars?\s+of\s+", "", text, flags=re.I))
+    return " ".join(text.split()).strip(" ,.")
 
 
 def batch_name(food: str, size: str, day: date) -> str:
@@ -50,16 +83,16 @@ def batch_name(food: str, size: str, day: date) -> str:
 
 def put_up(kitchen, food: str, jars: float, size: str = "", day: Optional[date] = None):
     """Adds one batch of home-canned jars to the pantry (the jar count as its quantity, a year on as its date, `MARK`
-    and the day in its notes) and returns the new pantry item. A second batch of the same food the same month is
-    added to that batch instead of making a twin."""
+    and the day in its notes) and returns the new pantry item. The food is read from what he said (`food_of`:
+    "7 quart jars of tomatoes" is tomatoes, in quarts). A second batch of the same food the same month is added to
+    that batch instead of making a twin."""
     day = day or date.today()
-    if not str(food or "").strip():
+    if not food_of(str(food or "")):
         raise ValueError("What did you put up?")
     if not jars or jars <= 0:
         raise ValueError("How many jars?")
     size = size_of(size) or size_of(food) or ""
-    food = re.sub(r"\b(?:half[- ])?(?:pints?|quarts?|gallons?)\b|\bjars?\b|\bof\b", " ", food, flags=re.I)
-    name = batch_name(food, size, day)
+    name = batch_name(food_of(food), size, day)
     same = next((p for p in kitchen.all_pantry_items() if p.name.lower() == name.lower()), None)
     if same is not None:
         kitchen.update_pantry_item(same.item_id, quantity=(same.quantity or 0) + jars)

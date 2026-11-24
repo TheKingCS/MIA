@@ -4,7 +4,8 @@ tests.test_canning_shelf
 
 The canning shelf (core/canning_shelf.py): "I put up 7 quarts of tomatoes" adds a dated batch to the pantry, best by
 a year on, a second batch the same month joins it, and the shelf is read back oldest first with the ones past or
-nearing a year said first and the never-taste-a-bad-jar line always; bought cans are never on it.
+nearing a year said first and the never-taste-a-bad-jar line always; bought cans are never on it; realistic
+phrasing ("7 quart jars of tomatoes", "a dozen pints", "pinto beans") finds the right food, size and count.
 """
 
 from datetime import date
@@ -60,3 +61,18 @@ def test_the_shelf_says_the_oldest_first_and_never_counts_bought_cans(kitchen):
 
 def test_an_empty_shelf_says_how_to_start():
     assert "Nothing home-canned" in cs.say(SimpleNamespace(kitchen=None), DAY)
+
+
+def test_realistic_phrasing_finds_the_food_size_and_count():
+    assert cs.size_of("pinto beans") == "" and cs.size_of("quartered peaches") == ""
+    assert cs.size_of("qt") == "quarts" and cs.size_of("gallon of pickles") == "gallons"
+    assert cs.food_of("7 quart jars of tomatoes") == "tomatoes"
+    assert cs.food_of("a dozen pints of dilly beans") == "dilly beans"
+    assert cs.food_of("cream of mushroom soup") == "cream of mushroom soup"
+    assert cs.count_of("a dozen") == 12 and cs.count_of("seven") == 7 and cs.count_of(5) == 5
+
+
+def test_the_same_food_said_two_ways_is_one_batch(kitchen):
+    first = cs.put_up(kitchen, "7 quart jars of tomatoes", 7, "", DAY)
+    again = cs.put_up(kitchen, "tomatoes", 2, "quarts", DAY)
+    assert first.name == "Tomatoes, quarts, Nov 2026" and again.item_id == first.item_id

@@ -451,13 +451,22 @@ def _afford(context, sheet, prompt, today):
     sheet.add(ESTIMATE, "Both dates assume the last three months' saving pace holds.", "Freedom")
 
 
-_BUYING = re.compile(r"\b(afford|buy|buying|bought|purchase|spend|spending|get an? )\b", re.I)
-_TOWARD = re.compile(r"\b(toward|towards|extra|more)\b[^?]*\b(debt|loan|card|payment)", re.I)
+_BUYING = re.compile(r"\b(?:afford|buy|buying|bought|purchase|spend|spending)\b|\bget (?:an?|the) ", re.I)
+# Money that goes on a debt, not a thing bought: "an extra $200 toward the card", "throw $1,000 at the loan",
+# "pay $300 more a month", "afford to pay $300 a month on my loans", "spending $400 a month on interest".
+_TOWARD = re.compile(
+    r"\b(?:toward|towards|extra)\b"
+    r"|\b(?:pay|put|throw)\s+(?:an?\s+)?(?:\$?[\d,.]+\s+)?more\b"
+    r"|\b(?:put|throw|putting|throwing)\b[^?]*\b(?:on|at|into)\b[^?]*\b(?:debts?|loans?|cards?)\b"
+    r"|\b(?:afford|spend|spending)\b(?:\s+to)?\s+(?:pay(?:ing)?|put(?:ting)?|throw(?:ing)?)\b"
+    r"|\b(?:spend|spending|use|using)\b[^?]{0,40}?\b(?:paying|to pay)\s+(?:down|off)\b"
+    r"|\b(?:spend|spending)\b[^?]*\bon (?:my |the )?(?:interest|debts?|loans?|cards?)\b", re.I)
 
 
 def buying(prompt: str) -> bool:
-    """Pure logic. Whether a question's amount is something he'd buy ("can I afford a $900 welder?"), not money he'd
-    put toward a debt ("what if I paid an extra $200 toward the card?")."""
+    """Pure logic. Whether a question's amount is something he'd buy ("can I afford a $900 welder?", "should I get
+    the $900 welder?"), not money he'd put on a debt ("an extra $200 toward the card", "can I afford to throw $1,000
+    at the card?", "I'm spending $400 a month on interest")."""
     said = prompt or ""
     return bool(_BUYING.search(said)) and not _TOWARD.search(said)
 
@@ -468,15 +477,17 @@ def _monthly(prompt: str) -> bool:
 
 
 def instead(ranked: list, amount: float, monthly: bool, now, today, money) -> list[tuple[str, str]]:
-    """Pure logic. What a purchase costs him in debt terms (brainstorm 1.4): the same money put on the first debt in
-    the payoff order instead, worked out by the payoff simulation, against `now` (the plan as things stand). A
-    purchase never changes the minimums, so it's said that way: "the debts are paid off on the same dates either
-    way; put toward X instead, ..." Returns (kind, line) pairs for the sheet."""
+    """Pure logic. What a purchase costs him in debt terms (brainstorm 1.4): the same money put on the debts in the
+    payoff order instead, worked out by the payoff simulation, against `now` (the plan as things stand). Once, it's
+    walked down the payoff order (a debt it clears keeps its minimum rolling on to the next, as in `now`; what's
+    left over after every debt is said); a month's, it's extra each month. A purchase never changes the minimums, so
+    that's said first. Returns (kind, line) pairs for the sheet."""
     from types import SimpleNamespace
 
     from core.debt_math import simulate
 
     first = ranked[0]
+    covers_all = False
     if monthly:
         other = simulate(ranked, amount, today)
         what = f"{money(amount)} a month"
@@ -484,16 +495,35 @@ def instead(ranked: list, amount: float, monthly: bool, now, today, money) -> li
         copies = [SimpleNamespace(name=d.name, balance=float(d.balance or 0), interest_rate=d.interest_rate,
                                   minimum_payment=d.minimum_payment, promo_apr=getattr(d, "promo_apr", None),
                                   promo_expires_date=getattr(d, "promo_expires_date", None)) for d in ranked]
-        copies[0].balance = max(0.0, copies[0].balance - amount)
-        other = simulate(copies, 0, today)
+        left, freed = float(amount), 0.0
+        for c in copies:
+            if left <= 0.005 or c.balance <= 0.005:
+                continue
+            take = min(c.balance, left)
+            c.balance -= take
+            left -= take
+            if c.balance <= 0.005:
+                freed += float(c.minimum_payment or 0)  # its minimum rolls on, as it would have in `now`
+        covers_all = left > 0.005 or all(c.balance <= 0.005 for c in copies)
+        other = simulate(copies, freed, today)
         what = f"{money(amount)} once"
-    lines = [("calculation", f"Buying it doesn't change the minimums, so the payoff dates above hold either way, as "
-                             f"long as the minimums are still paid.")]
-    if other.debt_free and (now.months is None or (other.months or 0) < now.months):
+    if now.months is None:
+        lines = [("calculation", "Buying it doesn't change the minimums, and at the minimums some debt is never paid "
+                                 "off, so there's no payoff date to hold.")]
+    else:
+        lines = [("calculation", "Buying it doesn't change the minimums, so the payoff dates above hold either way, as "
+                                 "long as the minimums are still paid.")]
+    if covers_all:
+        lines.append(("calculation", f"Put on the debts instead, {what} would pay them all off now. That's what buying "
+                                     f"it costs in debt terms."))
+    elif other.debt_free and (now.months is None or (other.months or 0) < now.months):
         sooner = f", {now.months - other.months} months sooner" if now.months else ""
+        saved = f", with about {money(now.interest - other.interest)} less interest" if now.months else ""
         lines.append(("calculation", f"Put toward {first.name} instead, {what} would make you debt-free "
-                                     f"{other.debt_free}{sooner}, with about {money(now.interest - other.interest)} "
-                                     f"less interest. That's what buying it costs in debt terms."))
+                                     f"{other.debt_free}{sooner}{saved}. That's what buying it costs in debt terms."))
+    elif now.months is not None and now.interest - other.interest >= 1:
+        lines.append(("calculation", f"Put toward {first.name} instead, {what} wouldn't move the debt-free date, but "
+                                     f"would save about {money(now.interest - other.interest)} in interest."))
     else:
         lines.append(("calculation", f"Put toward {first.name} instead, {what} wouldn't move the debt-free date."))
     return lines

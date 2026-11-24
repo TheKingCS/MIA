@@ -514,8 +514,8 @@ def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
 
 def _action_put_up_jars(context: AppContext, arguments: dict) -> str:
     """Assistant tool `put_up_jars`: a batch of home-canned jars onto the canning shelf (core/canning_shelf.put_up),
-    dated today unless he says when, best by a year on. Returns the sentence to say back; a missing food or count is
-    asked about, nothing changes."""
+    dated today unless he says when, best by a year on; a count may be spoken ("a dozen"). Returns the sentence to
+    say back; a missing food or count is asked about, nothing changes."""
     from core import canning_shelf
 
     when = None
@@ -526,7 +526,8 @@ def _action_put_up_jars(context: AppContext, arguments: dict) -> str:
             return "Which day did you put them up?"
     try:
         item = canning_shelf.put_up(context.kitchen, str(arguments.get("food", "") or ""),
-                                    _num(arguments.get("jars"), 0.0), str(arguments.get("size", "") or ""), when)
+                                    canning_shelf.count_of(arguments.get("jars")), str(arguments.get("size", "") or ""),
+                                    when)
     except ValueError as problem:
         return str(problem)
     return (f"On the canning shelf: {item.name}, {_qty(item.quantity, item.unit)}, best by {item.expiration_date}. "

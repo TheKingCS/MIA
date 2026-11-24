@@ -1,7 +1,8 @@
 """Cross-domain reasoning (build plan step 8): questions that span apps gather several plans onto one sheet;
 "can I afford it and still hit my freedom date" is worked out by the freedom plan twice; every plan answer says
 how sure it can be, from the sheet, and answers.calibration checks that "sure" is earned; a purchase asked against
-the debts is worked out as the same money on the debt instead, never as that much more a month."""
+the debts is worked out as the same money on the debt instead, never as that much more a month, told apart from
+money put on a debt however it's said, and a lump that clears the first debt keeps its minimum rolling."""
 
 from datetime import date, datetime
 from types import SimpleNamespace
@@ -153,3 +154,34 @@ def test_money_toward_a_debt_is_still_extra_a_month():
     assert not qp.buying("What if I put an extra $200 toward the card every month?")
     assert qp.buying("Can I afford a $400 chainsaw and still pay down the card?")
     assert qp.buying("Can I spend $150 a month on a gym and still pay off my debts?")
+
+
+def test_a_purchase_or_a_payment_is_told_apart_however_its_said():
+    for said in ("Can I get a $900 welder and still pay off the loan?",
+                 "Should I get the $900 welder or pay down the card first?",
+                 "If I buy a $1,200 trailer, will it take more months to pay off the loan?"):
+        assert qp.buying(said), said
+    for said in ("Can I afford to throw $1,000 at the card?", "Can I afford to pay $300 a month on my loans?",
+                 "Should I spend my $3,000 tax refund paying down the loan?",
+                 "I'm spending $400 a month on interest, when will I be debt free?",
+                 "What if I put an extra $200 toward the card every month?"):
+        assert not qp.buying(said), said
+
+
+def test_a_lump_that_clears_the_first_debt_keeps_its_minimum_rolling():
+    """More money never gives a later date: a cleared debt's minimum rolls on, and one that covers them all says so."""
+    from core.debt_math import simulate
+
+    day = date(2026, 11, 23)
+    ranked = [SimpleNamespace(name="Card", balance=500, interest_rate=24, minimum_payment=50),
+              SimpleNamespace(name="Loan", balance=10000, interest_rate=8, minimum_payment=200)]
+    now = simulate(ranked, 0, day)
+    money = lambda a: f"${a:,.2f}"  # noqa: E731
+    small = qp.instead(ranked, 400, False, now, day, money)[1][1]
+    big = qp.instead(ranked, 3000, False, now, day, money)[1][1]
+
+    def months(line):
+        return int(line.split(" months sooner")[0].rsplit(", ", 1)[-1])
+
+    assert months(big) > months(small)
+    assert "pay them all off now" in qp.instead(ranked, 20000, False, now, day, money)[1][1]
