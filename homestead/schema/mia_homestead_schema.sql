@@ -579,6 +579,23 @@ CREATE TABLE parameter_change_proposals (
     decided_at TEXT
 );
 
+-- ============ MIA'S DIRECTIONS (DEC-0185, docs/MIA_COMMAND_INTERFACE.md) ============
+-- Every target change MIA directs, and what this node decided (core/mia_commands.py checks it against
+-- config/command_limits.yaml). A direction that passes is a parameter_change_proposals row like any other.
+CREATE TABLE mia_commands (
+    id INTEGER PRIMARY KEY,
+    received_at TEXT NOT NULL,
+    cell_id INTEGER,
+    param_name TEXT NOT NULL,
+    value REAL,
+    believed_current REAL,
+    approved_by TEXT,
+    approved_at TEXT,
+    state TEXT NOT NULL,                -- 'staged','applied','refused'
+    reason TEXT NOT NULL,
+    proposal_id INTEGER REFERENCES parameter_change_proposals(id)
+);
+
 -- ============ INFRASTRUCTURE KNOWLEDGE ============
 -- Wiring lives in config/devices/roles/*.yaml (relay_channel,
 -- wiring_rationale per control) — no separate table needed, it's read

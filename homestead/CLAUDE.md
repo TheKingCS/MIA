@@ -155,6 +155,17 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
+**MIA's directions, step 1: the node's check (2026-11-24, DEC-0185, docs/MIA_COMMAND_INTERFACE.md):**
+`core/mia_commands.py` checks a target change MIA directs against `config/command_limits.yaml` (only the pH/EC
+target bands, hard limits, band kept, current value as MIA believed, one change an hour), records every decision in
+the new `mia_commands` table, and stages a passing one as a `parameter_change_proposals` row for a press here
+(approval `node`, the default until Zac decides WAITING_ON 0zu) or applies it through
+`ExperimentManager.approve_parameter_change` (approval `mia`). Nothing outside the process can reach it yet (the
+signed endpoint is step 2). Six `mia_command_*` scenarios; 262 passed, the three rsync scenarios fail on Windows only.
+Also fixed: `core/generate_bom_doc.py` and `core/generate_capabilities_doc.py` wrote in the system's codepage, so
+on Windows every em dash in the two generated docs became a broken character; both now write UTF-8 with LF endings,
+verified by deleting both docs and regenerating them with a real `main.py` run.
+
 **Digital Twin's "Cell Status" panel brought up to the dashboard's
 visual standard (2026-09-02, user request, following the visual review
 pass above):** used to be one unstyled line of raw values

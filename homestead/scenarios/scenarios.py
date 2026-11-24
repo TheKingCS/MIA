@@ -3523,6 +3523,140 @@ def scenario_dosing_no_limit_configured_blocks_and_alerts():
     return checks
 
 
+
+# ============ MIA's directions: the node's check (DEC-0185, docs/MIA_COMMAND_INTERFACE.md step 1) ============
+
+def _mia_commands(conn, approval="node", tmp_dir=None):
+    """A MiaCommands on this scenario's DB, with a command_limits.yaml written to a temp folder (the real one's
+    parameters, this approval)."""
+    import tempfile
+
+    import yaml
+
+    from core.experiment_manager import ExperimentManager
+    from core.mia_commands import MiaCommands
+    real = yaml.safe_load((Path(__file__).parent.parent / "config" / "command_limits.yaml").read_text())
+    real["approval"] = approval
+    folder = Path(tmp_dir or tempfile.mkdtemp())
+    (folder / "command_limits.yaml").write_text(yaml.safe_dump(real))
+    return MiaCommands(conn, ExperimentManager(conn), config_path=str(folder / "command_limits.yaml"))
+
+
+def _direction(commands, cell_id, param, value, **extra):
+    """A direction from MIA for one parameter, believing the real current value unless told otherwise."""
+    current = commands._current(cell_id, param)
+    return {"cell_id": cell_id, "param_name": param, "value": value, "approved_by": "zac",
+            "approved_at": "2026-11-24T12:00:00", "believed_current": extra.pop("believed", current), **extra}
+
+
+def scenario_mia_command_inside_limits_is_staged_for_the_node():
+    """A pH minimum inside its limits, with approval: node, becomes a proposed parameter change waiting for a press
+    here; nothing reaches the control loop until it's approved."""
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn, "node")
+    current = commands._current(cell_id, "ph_target_min")
+    got = commands.submit(_direction(commands, cell_id, "ph_target_min", round(current - 0.1, 2)))
+    proposal = conn.execute("SELECT status FROM parameter_change_proposals WHERE id = ?",
+                            (got["proposal_id"],)).fetchone()
+    override = conn.execute("SELECT 1 FROM target_overrides WHERE cell_id = ? AND param_name = 'ph_target_min' "
+                            "AND active = 1", (cell_id,)).fetchone()
+    return [
+        ("a direction inside its limits is staged, not applied", got["state"] == "staged"),
+        ("it is a proposed parameter change, like an experiment's", proposal is not None and proposal[0] == "proposed"),
+        ("nothing reaches the control loop before the press here", override is None),
+    ]
+
+
+def scenario_mia_command_outside_limits_is_refused():
+    """A pH of 5.0 (below the 6.0 floor) and an EC of 5000 are refused with why, and nothing is proposed."""
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn)
+    low = commands.submit(_direction(commands, cell_id, "ph_target_min", 5.0))
+    high = commands.submit(_direction(commands, cell_id, "ec_target_max", 5000))
+    proposals = conn.execute("SELECT COUNT(*) FROM parameter_change_proposals").fetchone()[0]
+    return [
+        ("a pH below the hard floor is refused", low["state"] == "refused" and "outside" in low["reason"]),
+        ("an EC above the hard ceiling is refused", high["state"] == "refused"),
+        ("nothing was proposed", proposals == 0),
+        ("each refusal is recorded with its reason",
+         conn.execute("SELECT COUNT(*) FROM mia_commands WHERE state = 'refused'").fetchone()[0] == 2),
+    ]
+
+
+def scenario_mia_command_stale_current_value_is_refused():
+    """MIA believed the pH minimum was something it isn't (it changed since she looked): refused as stale."""
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn)
+    current = commands._current(cell_id, "ph_target_min")
+    got = commands.submit(_direction(commands, cell_id, "ph_target_min", current - 0.1, believed=current + 0.3))
+    return [("a direction made against a value that's since changed is refused as stale",
+             got["state"] == "refused" and got["reason"].startswith("stale"))]
+
+
+def scenario_mia_command_second_change_within_the_hour_is_refused():
+    """A second change to the same parameter within the hour is refused; a different parameter isn't held up, and
+    the same one an hour and more later is allowed."""
+    from datetime import datetime, timedelta
+
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn)
+    current = commands._current(cell_id, "ec_target_min")
+    first = commands.submit(_direction(commands, cell_id, "ec_target_min", current + 50))
+    second = commands.submit(_direction(commands, cell_id, "ec_target_min", current + 60))
+    other = commands.submit(_direction(commands, cell_id, "ph_target_max", commands._current(cell_id, "ph_target_max") - 0.1))
+    later = commands.submit(_direction(commands, cell_id, "ec_target_min", current + 60),
+                            now=datetime.utcnow() + timedelta(minutes=61))
+    return [
+        ("the first change is staged", first["state"] == "staged"),
+        ("a second one within the hour is refused", second["state"] == "refused" and "minutes" in second["reason"]),
+        ("another parameter isn't held up by it", other["state"] == "staged"),
+        ("the same parameter after the hour is allowed", later["state"] == "staged"),
+    ]
+
+
+def scenario_mia_command_off_the_list_or_crossing_its_band_is_refused():
+    """A dose, a pump or anything not on the whitelist is refused; a minimum raised to within the band of its
+    maximum is refused; no one approving it is refused."""
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn)
+    dose = commands.submit({"cell_id": cell_id, "param_name": "dose_ph_up", "value": 5, "believed_current": 0,
+                            "approved_by": "zac"})
+    pump = commands.submit({"cell_id": cell_id, "param_name": "main_pump", "value": 1, "believed_current": 0,
+                            "approved_by": "zac"})
+    ph_max = commands._current(cell_id, "ph_target_max")
+    crossing = commands.submit(_direction(commands, cell_id, "ph_target_min", min(7.4, ph_max - 0.05)))
+    nobody = commands.submit(_direction(commands, cell_id, "ph_target_max", ph_max - 0.1, approved_by=""))
+    return [
+        ("a dose is not something MIA may direct", dose["state"] == "refused" and "isn't on" in dose["reason"]),
+        ("a pump is not something MIA may direct", pump["state"] == "refused"),
+        ("a minimum that would crowd its maximum is refused", crossing["state"] == "refused"),
+        ("a direction no one approved is refused", nobody["state"] == "refused"),
+    ]
+
+
+def scenario_mia_command_with_mia_approval_reaches_the_control_loop():
+    """With approval: mia (the other choice in 0zu), a direction inside its limits is applied through the same
+    approval path an experiment uses: a target_overrides row the cell reads on its next cycle."""
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn, "mia")
+    current = commands._current(cell_id, "ph_target_min")
+    new = round(current - 0.1, 2)
+    got = commands.submit(_direction(commands, cell_id, "ph_target_min", new))
+    override = conn.execute("SELECT value, set_by FROM target_overrides WHERE cell_id = ? AND "
+                            "param_name = 'ph_target_min' AND active = 1", (cell_id,)).fetchone()
+    run_cycles(registry, sim, n=1)
+    cell = next(m for m in registry.modules.values() if getattr(m, "cell_id", None) == cell_id)
+    targets = cell._current_targets() if hasattr(cell, "_current_targets") else {}
+    return [
+        ("applied at once with approval: mia", got["state"] == "applied"),
+        ("it's a target override, set through the approval path", override is not None and abs(override[0] - new) < 1e-9),
+        ("the cell reads the new target", abs(targets.get("ph_target_min", new) - new) < 1e-9),
+        ("its proposal is marked approved",
+         conn.execute("SELECT status FROM parameter_change_proposals WHERE id = ?", (got["proposal_id"],)).fetchone()[0]
+         == "approved"),
+    ]
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -3611,6 +3745,12 @@ SCENARIOS = {
     "data_retention_noop_when_nothing_old": scenario_data_retention_noop_when_nothing_old,
     "self_preservation_no_presence_sensor_silent": scenario_self_preservation_no_presence_sensor_silent,
     "self_preservation_signals_with_presence": scenario_self_preservation_signals_with_presence,
+    "mia_command_inside_limits_is_staged_for_the_node": scenario_mia_command_inside_limits_is_staged_for_the_node,
+    "mia_command_outside_limits_is_refused": scenario_mia_command_outside_limits_is_refused,
+    "mia_command_stale_current_value_is_refused": scenario_mia_command_stale_current_value_is_refused,
+    "mia_command_second_change_within_the_hour_is_refused": scenario_mia_command_second_change_within_the_hour_is_refused,
+    "mia_command_off_the_list_or_crossing_its_band_is_refused": scenario_mia_command_off_the_list_or_crossing_its_band_is_refused,
+    "mia_command_with_mia_approval_reaches_the_control_loop": scenario_mia_command_with_mia_approval_reaches_the_control_loop,
 }
 
 

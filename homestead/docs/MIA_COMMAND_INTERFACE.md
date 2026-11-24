@@ -50,9 +50,14 @@ signed approval applies at once or waits for his press on the node differs (one 
 
 ## The order of work (each tested against the simulator first)
 
-1. The whitelist and limits, and the node's check (`core/mia_commands.py`), with scenarios: inside the limits it
-   applies, outside it's refused, a stale current value is refused, a second change within the hour is refused, a
-   parameter not on the list is refused. 200 scenarios plus these must pass, and self_audit must be clean.
+1. **Built 2026-11-24.** The whitelist and limits (`config/command_limits.yaml`: the pH and EC target bands, the
+   four parameters the cell reads from target_overrides today, with fish-safe hard ranges and a kept band; approval
+   `node` until Zac decides 0zu), and the node's check (`core/mia_commands.py`, table `mia_commands`), with six
+   scenarios (`mia_command_*`): inside the limits it's staged for the node (or applied with approval `mia`, reaching
+   the cell's targets), outside it's refused, a stale current value is refused, a second change within the hour is
+   refused, anything off the list (a dose, a pump) or crowding its band or unapproved is refused. 262 scenarios pass
+   (the three rsync ones fail on Windows only), self_audit's coverage is 41/41. Water temperature, irrigation
+   intervals, light hours and modes join the list once the control loop reads them from an override.
 2. The signed endpoint on the export server (POST one command; everything else still refused), with its key from
    provisioning, and scenarios for an unsigned, wrongly signed or replayed request.
 3. The command's state in the exports, and MIA's side (`greenhouse.adjust`, its card, the read-back, undo).

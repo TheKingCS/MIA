@@ -96,7 +96,7 @@ def generate_and_write(db_path: str) -> str:
     only returns a string, it doesn't touch disk. This is what closes
     that gap."""
     content = generate(db_path)
-    OUTPUT_PATH.write_text(content)
+    OUTPUT_PATH.write_text(content, encoding="utf-8", newline="\n")  # the same file on Windows as on the Pi
     return content
 
 
@@ -105,7 +105,7 @@ def main():
     parser.add_argument("--db", default="mia_homestead.db")
     args = parser.parse_args()
     content = generate(args.db)
-    OUTPUT_PATH.write_text(content)
+    OUTPUT_PATH.write_text(content, encoding="utf-8", newline="\n")  # the same file on Windows as on the Pi
     print(f"Generated {OUTPUT_PATH}")
 
 

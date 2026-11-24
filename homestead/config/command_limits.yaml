@@ -1,0 +1,22 @@
+# What MIA may adjust on this node, and the limits she can never cross (DEC-0185; docs/MIA_COMMAND_INTERFACE.md).
+# Read by core/mia_commands.py. MIA can't change this file: it lives here, on the node, and only a person edits it.
+#
+# approval: whose yes the node trusts (WAITING_ON 0zu, Zac's decision):
+#   node - (B) a direction from MIA is staged as a parameter_change_proposals row and applied only when he
+#          presses Approve here, on the node, like an experiment's suggested change. The safe default.
+#   mia  - (A) his yes in MIA (or a grant he gave her for that parameter) applies it at once, within these limits.
+approval: node
+
+# No parameter on a cell changes more than once in this many minutes, so nothing can oscillate.
+min_minutes_between_changes: 60
+
+# Only these, on top of everything the control loop and the safety MCU already refuse. Never a dose, a pump, a
+# valve, a notification, a rollback or the MCU's own limits: those aren't parameters here at all.
+#   low/high: the hard range for the value (a fish-inclusive aquaponics system: pH 6.0-7.6 keeps fish, plants and
+#             the nitrifying bacteria alive together; EC in uS/cm, 300-2000 covers leafy greens to fruiting crops)
+#   pair/min_band: the other end of the same band, and the smallest gap kept between them
+parameters:
+  ph_target_min: {low: 6.0, high: 7.4, pair: ph_target_max, min_band: 0.2}
+  ph_target_max: {low: 6.2, high: 7.6, pair: ph_target_min, min_band: 0.2}
+  ec_target_min: {low: 300, high: 1800, pair: ec_target_max, min_band: 100}
+  ec_target_max: {low: 400, high: 2000, pair: ec_target_min, min_band: 100}

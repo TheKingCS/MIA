@@ -64,6 +64,7 @@ from core.circulation_monitor import CirculationMonitor
 from core.alert_manager import AlertManager
 from core.data_retention import DataRetentionManager
 from core.mia_home_sync import MiaHomeSync
+from core.mia_commands import MiaCommands
 from modules.power_monitor import PowerMonitor, SOC_FORECAST_WARNING_HOURS
 from viewer.export_state import export_state
 from viewer.export_dashboard_state import export_dashboard_state
@@ -184,6 +185,7 @@ def main():
     recommendations = RecommendationEngine(db)
     voice_briefing = VoiceBriefing(db)
     reference_library = ReferenceLibrary(db)
+    mia_commands = MiaCommands(db, experiments)  # MIA's directions, checked here (DEC-0185); no endpoint yet
 
     # Every module and service declares what it does; this rebuilds the
     # assistant's self-knowledge from the live code every time the
@@ -206,7 +208,7 @@ def main():
         (traceability, "traceability"), (sustainability, "sustainability_report"),
         (succession, "succession_planner"), (yield_forecaster, "yield_forecaster"),
         (recommendations, "dosing_recommendations"), (voice_briefing, "voice_briefing"),
-        (reference_library, "reference_library"),
+        (reference_library, "reference_library"), (mia_commands, "mia_commands"),
     ]
     capabilities = CapabilityRegistry(db)
     registered = capabilities.register_all([item for item, _ in all_describables])
