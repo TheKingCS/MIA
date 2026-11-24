@@ -344,6 +344,32 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 9 (2026-11-24, evening): after the game layer and the greenhouse's command path
+
+Checked against today's code; each says whether it needs Zac's say.
+
+- **The Chronicle tells the homestead, songs and wins** (no decision): *built 2026-11-24 (`core/chronicle.py`).* The
+  week's and year's story now has a Homestead thread (eggs once a day, jars put up), Music (songs learned) and Wins
+  (achievements and mission rewards, named among the highlights).
+- **Achievements for the business and the money** (no decision, read from records): a first sale, 10 and 100
+  products sold (core/business), a debt paid off, the freedom date moved a month nearer (core/freedom.py), the
+  first month under budget. The same chains as harvest and eggs, so the card and the log come for free.
+- **"How's the pH against its target?"** (no decision): the greenhouse's readings beside the targets MIA now reads
+  from the node (`mia_directions.targets`), said as inside, drifting or outside, with how long; awareness, read only.
+- **A song reward fills the songbook** (no decision: a reply to his own action): finishing a mission whose reward is
+  a song asks "can you play it now?" and adds it on yes; a saved YouTube song can be linked to a songbook song for
+  play-along practice.
+- **Canning as a skill** (no decision): a Canning (Preserving) skill in the skill tree, so jars put up and canning
+  missions grow it, as gardening and carpentry already grow.
+- **"Almost there"** (his say: a new kind of unprompted message, through the gate): when a tier is within a little
+  of done (3 jars from First Batch, 12 lb from Market Gardener), MIA offers one mission for it, paced like every
+  other suggestion.
+- **The card on the phone and the glasses** (his say for a phone notification): the achievement card as a push to
+  his phone and a tile on the glasses, the same card the PC shows.
+- **Greenhouse targets suggested from evidence** (his say: MIA's own initiative on the greenhouse, DEC-0185/0156):
+  when the node's trends or an experiment's result point to a better band, MIA proposes the adjustment with the
+  evidence; it still goes through his yes and the node's own check.
+
 ## Round 8 (2026-11-24, after the live check): the same principle, further
 
 Checked against the code first; each says whether it needs Zac's say.

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1714 files, 371,094 lines; 1714 files describe themselves; 20,370 of 20,500 classes and functions are documented.
+1714 files, 371,135 lines; 1714 files describe themselves; 20,372 of 20,502 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-679 files, 190,958 lines; 9,696 of 9,782 classes and functions documented
+679 files, 190,969 lines; 9,696 of 9,782 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -977,7 +977,7 @@
 
 ## tests/: the test suite: what each part must do
 
-629 files, 99,078 lines; 8,309 of 8,353 classes and functions documented
+629 files, 99,108 lines; 8,311 of 8,355 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1064,7 +1064,7 @@
 - `tests/test_character_panel.py`: Unit test for gui.character_panel.reaction_for_module — pure lookup logic, no Qt event loop needed. The reactive subscribe/unsubscribe widget behavior itself was verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior — see tests/test_assistant_module.py's
 - `tests/test_character_stats.py`: Real character stats (DEC-0028): six attributes, 1 to 20, from skills (training) and the last 30 days (recent), never falling below training.
 - `tests/test_child_accounts.py`: Child accounts (core/child_accounts.py), 2026-10-01: a parent looks after a child's MIA; grown-up apps and tools say "ask a parent", the Assistant is told it's talking with a child, and the safety floor also asks the child to tell an adult.
-- `tests/test_chronicle.py`: The Chronicle (DEC-0028): each week (and year) told as a story from what really happened. Never made up, never a failure.
+- `tests/test_chronicle.py`: The Chronicle (DEC-0028): each week (and year) told as a story from what really happened. Never made up, never a failure. And the game layer threads: the homestead (eggs once a day), music and wins.
 - `tests/test_chronicle_issue.py`: The Chronicles' weekly issue (build plan step 17, core/chronicle_issue.py): told from approved series events, oldest first; captions in code with the event named; lines from the model in the characters' voices; the Story Bible's five rules checked in code; Zac's approval marks the events as told and
 - `tests/test_ci_workflows.py`: FW-02, CI as the gate (DEC-0264; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): every action a workflow uses is pinned to a commit, not a tag that could be moved; every workflow says what its token may do; the Linux suite runs on every push; the image's own Python runs the whole suite ins
 - `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less

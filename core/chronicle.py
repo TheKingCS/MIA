@@ -11,7 +11,10 @@ Sunday; before then it's "so far". The yearly edition tells the year the
 same way, with its biggest week and busiest month.
 
 Facts are put together here, in code: the history (core/life_events.py,
-undone changes left out), journal entries and finished expeditions. No
+undone changes left out), journal entries and finished expeditions. Since
+2026-11-24 the game layer's too: eggs gathered (once a day) and jars put up,
+songs learned (core/repertoire.py), and achievements and mission rewards
+earned (core/achievement_cards.py), named among the highlights. No
 model writes it, so it's never made up. A quiet week is never a failure
 (DEC-0014): it's "A Quiet Week", and rest counts too. Money is never in
 a child's Chronicle (events_for already leaves it out).
@@ -62,6 +65,13 @@ THREADS = (
      lambda n: f"You cleared {_n(n, 'run')} at work."),
     ("trips", ("explored",), "The Week Of Adventure", "Adventure called, and you answered.",
      lambda n: f"You finished {_n(n, 'expedition')}."),
+    # The game layer (2026-11-24): the homestead's eggs and jars, songs learned, and what was earned.
+    ("homestead", ("eggs_collected", "canned"), "The Homestead Week", "The homestead kept you busy.",
+     lambda n: f"You gathered eggs or put up jars {_times(n)}."),
+    ("music", ("song_learned",), "The Week Of Music", "Music filled the week.",
+     lambda n: f"You learned {_n(n, 'song')}."),
+    ("wins", ("reward_unlocked", "trophy_earned"), "The Week Of Wins", "You earned things worth celebrating.",
+     lambda n: f"You unlocked {_n(n, 'achievement or reward', 'achievements and rewards')}."),
 )
 TYPE_THREAD = {t: key for key, types, *_ in THREADS for t in types}
 
@@ -90,20 +100,21 @@ def _span(start: date, end: date) -> str:
 
 
 def _gather(context, since: date, until: date) -> list[tuple[str, str, str]]:
-    """Everything in the range as (day, thread, highlight line)."""
+    """Everything in the range as (day, thread, highlight line); a meal or the morning's eggs counted once a day,
+    never a highlight."""
     from core.life_events import AUDIT_ONLY, events_for, reversed_ids
 
     items: list[tuple[str, str, str]] = []
     events = events_for(context, since.isoformat(), until.isoformat())
     gone = reversed_ids(events)
-    fed: set[str] = set()
+    fed: set[tuple[str, str]] = set()
     for e in events:
         thread = TYPE_THREAD.get(e.type)
         if not thread or e.event_id in gone or e.type in AUDIT_ONLY:
             continue
-        if thread == "eating":  # counted once a day, never a highlight (it's every meal)
-            if e.day not in fed:
-                fed.add(e.day)
+        if thread == "eating" or e.type == "eggs_collected":  # once a day, never a highlight (it's every meal, every
+            if (thread, e.day) not in fed:                   # morning's eggs)
+                fed.add((thread, e.day))
                 items.append((e.day, thread, ""))
             continue
         items.append((e.day, thread, e.summary))

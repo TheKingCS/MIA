@@ -1,5 +1,6 @@
 """The Chronicle (DEC-0028): each week (and year) told as a story from
-what really happened. Never made up, never a failure."""
+what really happened. Never made up, never a failure.
+And the game layer threads: the homestead (eggs once a day), music and wins."""
 
 from datetime import date
 
@@ -59,3 +60,32 @@ def test_the_yearly_edition_grows_from_the_kept_months():
         {"month": "September", "lines": ["You trained 8 times."]},
         {"month": "October", "lines": ["You trained 12 times, 4 more than September.", "Eggs: 210", "Money in: 4,000"]}]
     assert months_of({}, 2026) == []
+
+
+def test_the_homestead_songs_and_wins_are_told_and_eggs_count_once_a_day():
+    """A batch of jars, a song learned and an achievement unlocked are told, the unlock named among the highlights;
+    the morning's eggs are the homestead's thread (counted once a day by _gather, never a highlight)."""
+    from core import chronicle
+
+    items = [("2026-11-23", "homestead", ""), ("2026-11-23", "homestead", "Put up 7 jars of tomatoes"),
+             ("2026-11-24", "music", "Learned Wagon Wheel on guitar"), ("2026-11-24", "wins", "Unlocked First Basket")]
+    told = tell(items)
+    assert "You gathered eggs or put up jars twice." in told["story"]
+    assert "You learned 1 song." in told["story"] and "You unlocked 1 achievement or reward." in told["story"]
+    assert "Unlocked First Basket" in told["highlights"]
+    assert chronicle.TYPE_THREAD["eggs_collected"] == "homestead" and chronicle.TYPE_THREAD["trophy_earned"] == "wins"
+
+
+def test_eggs_logged_three_times_in_a_day_are_one_item_with_no_highlight(tmp_path, monkeypatch):
+    """Three egg entries on one day in the real history: one homestead item, no highlight line."""
+    from core import chronicle
+    from core.flock import FlockBook
+
+    world = build_world(tmp_path, monkeypatch)
+    world.flock = FlockBook(world, data_dir=world.home_dir)
+    flock = world.flock.add_flock("Layers", hens=6)
+    for n in (3, 4, 5):
+        world.flock.log(flock.flock_id, "eggs", count=n)
+    today = date.today()
+    items = [i for i in chronicle._gather(world, today, today) if i[1] == "homestead"]
+    assert items == [(today.isoformat(), "homestead", "")]
