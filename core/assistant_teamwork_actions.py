@@ -120,7 +120,9 @@ def _newest_team(kind: str):
 
 def register_teamwork_actions(registry: AssistantActionRegistry) -> None:
     """Registers note_for_project, whats_in_the_workspace, confirm_workspace_entry, withdraw_workspace_entry,
-    propose_team, start_team (destructive) and stop_team. Confirming an entry and starting a team only leave a card."""
+    propose_team, start_team (destructive) and stop_team. Confirming an entry and starting a team only leave a card.
+    Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
+    (list_inventory and list_materials, list_trips and get_trip_route...)."""
     project = {"type": "string", "description": "The project's name, as they said it."}
     number = {"type": "string", "description": "The entry's number, as the workspace was read out (1 is the newest)."}
     for name, description, props, required, handler, phrases, destructive in (
@@ -132,7 +134,8 @@ def register_teamwork_actions(registry: AssistantActionRegistry) -> None:
          ["project", "kind", "text"], _note,
          ("note a constraint", "note a finding", "note a question", "note a risk", "note a decision",
           "add to the workspace", "note for the project"), False),
-        ("whats_in_the_workspace", "Read a project's workspace: its entries newest first, numbered, and its teams.",
+        ("whats_in_the_workspace", "Read a project's shared workspace: its entries newest first, numbered, and its "
+         "teams. Only when they ask about a workspace; for what they're working on or have to do, use list_tasks.",
          {"project": project}, ["project"], _read,
          ("what's in the workspace", "whats in the workspace", "read the workspace", "the project's workspace"), False),
         ("confirm_workspace_entry", "Confirm a specialist's entry in a project's workspace, by its number.",

@@ -578,6 +578,8 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     "I benched 185"; never bare "miles" or "cycling", the truck's mileage and the fish tank's cycle; a personal record
     by a lift, a time or a distance, never a bare "my best", which is in "my best customers") and the names of the person's own records (exercises, people, pets, routines, courses and
     lessons).
+    Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
+    (list_inventory and list_materials, list_trips and get_trip_route...).
     """
     registry.register(AssistantAction(
         name="log_workout", domain="workout",
@@ -633,7 +635,9 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="update_person", domain="relationships",
-        description="Remember something about a person: their birthday, relationship, email address, something they like, a gift idea, or a dated note (e.g. 'Sarah got a new job').",
+        description=("Remember something about a person (not a pet): their birthday, relationship, email address, "
+                     "something they like, a gift idea ('Sarah would love a cast iron skillet'), or a dated note "
+                     "(e.g. 'Sarah got a new job')."),
         parameters=_obj({
             "name": _s("The person."), "relationship": _s("Relationship, if stated."), "birthday": _s("Birthday, if stated."),
             "favorite_thing": _s("Something they like."), "gift_idea": _s("A gift idea for them."), "note": _s("Any other news or memory."),
@@ -674,7 +678,8 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         trigger_phrases=("to the vet", "vet visit", "vaccin", "medication"),
     ))
     registry.register(AssistantAction(
-        name="get_pet", domain="relationships", description="Everything MIA knows about a pet, including medical history.",
+        name="get_pet", domain="relationships", description=("Everything MIA knows about one of the user's pets (an "
+                                                             "animal), including medical history. Not for people."),
         parameters=_obj({"name": _s("The pet.")}, ["name"]), handler=_action_get_pet,
         trigger_phrases=("last vet", "medical history",),
     ))

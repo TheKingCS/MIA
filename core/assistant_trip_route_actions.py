@@ -102,7 +102,9 @@ def _route(context, arguments: dict) -> str:
 
 
 def register_trip_route_actions(registry) -> None:
-    """Registers add_route_stop, log_arrival and get_trip_route."""
+    """Registers add_route_stop, log_arrival and get_trip_route.
+    Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
+    (list_inventory and list_materials, list_trips and get_trip_route...)."""
     s = {"type": "string"}
     trip = {**s, "description": "The trip as they said it; leave out for the trip underway."}
     registry.register(AssistantAction(
@@ -125,7 +127,8 @@ def register_trip_route_actions(registry) -> None:
     ))
     registry.register(AssistantAction(
         name="get_trip_route", domain="expeditions",
-        description="A trip's route: the stops reached, the next one, and the legs walked so far.",
+        description=("One trip's route while it's under way: the stops reached, the next stop, and the legs walked so "
+                     "far. For which trip is next, use list_trips."),
         parameters={"type": "object", "properties": {"trip": trip}, "required": []},
         handler=_route,
         trigger_phrases=("my route", "next stop", "left on the route", "my splits"),

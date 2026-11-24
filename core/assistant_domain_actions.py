@@ -825,6 +825,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     not paid me?", "which canned stuff should I use first?", "send Lee a bill for the bench", "what subscriptions am I paying
     for?",
     "will I be short next month?": tests/test_everyday_phrasing_routing.py).
+    Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
+    (list_inventory and list_materials, list_trips and get_trip_route...).
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -1054,7 +1056,9 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="add_recipe_ingredients_to_grocery_list", domain="groceries",
-        description="Add whatever a saved recipe needs that isn't in the pantry to the grocery list.",
+        description=("Add what a saved recipe needs (the venison chili, the bread) that isn't in the pantry to the "
+                     "grocery list. Use this whenever they name a recipe or dish; add_grocery_item is for items they "
+                     "name one by one."),
         parameters=_obj({"recipe_name": _s("The recipe.")}, ["recipe_name"]),
         handler=_action_add_recipe_ingredients_to_grocery_list,
         trigger_phrases=("what i need for", "ingredients for", "everything for the"),

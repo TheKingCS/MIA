@@ -204,6 +204,8 @@ class AssistantTools:
         Navigation's change a waypoint and notifications read out and marked
         read (2026-11-07).
         Taught skills' tools (DEC-0123) are registered here too.
+        Where the live model picked a neighbouring tool (2026-11-24), a description names the one to use instead
+        (list_inventory and list_materials, list_trips and get_trip_route...).
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -437,11 +439,9 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_inventory",
             domain="inventory",
-            description=(
-                "List or search MIA's Inventory tool, including quantities. "
-                "Use this to answer 'how many X do I have' questions about "
-                "inventory items. Leave query empty to list everything."
-            ),
+            description=("List or search MIA's household Inventory (tools, parts, gear and supplies around the home), "
+                         "including quantities: 'how many X do I have'. Not the Workshop's materials or products "
+                         "(list_materials, list_products). Leave query empty to list everything."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -718,7 +718,8 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_expeditions",
             domain="expeditions",
-            description="List the user's Expeditions in MIA",
+            description=("List the user's Expeditions in MIA by name only. To describe or recap one expedition, use "
+                         "recall_expedition."),
             parameters={"type": "object", "properties": {}, "required": []},
             handler=self._action_list_expeditions,
             trigger_phrases=(
@@ -790,7 +791,8 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_trips",
             domain="expeditions",
-            description="List the user's Trips in MIA, optionally filtered to one Expedition by name.",
+            description=("List the user's Trips in MIA, soonest first ('what's my next trip?'), optionally filtered "
+                         "to one Expedition by name."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -1133,7 +1135,8 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_materials",
             domain="materials",
-            description="List the user's raw Materials in MIA's Workshop production pipeline.",
+            description=("List the user's raw Materials in MIA's Workshop (lumber, hardware, supplies for builds), "
+                         "with how many are on hand. Use this for 'what materials do I have'."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -1163,7 +1166,8 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_products",
             domain="products",
-            description="List the user's finished Products in MIA's Workshop production pipeline.",
+            description=("List the user's finished Products in MIA's Workshop (things they make and sell), with "
+                         "stock. Use this for 'what products do I have'."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -1452,7 +1456,8 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_tasks",
             domain="projects",
-            description="List the user's Tasks in MIA, optionally filtered to one Project by name.",
+            description=("List the user's Tasks in MIA (what they have to do, what they're working on), optionally "
+                         "filtered to one Project by name."),
             parameters={
                 "type": "object",
                 "properties": {
@@ -2050,7 +2055,8 @@ class AssistantTools:
         self.context.assistant_actions.register(AssistantAction(
             name="list_lab_readings",
             domain="lab",
-            description="List the logged readings for one Data Logger series in MIA's Lab module, oldest first.",
+            description=("Show the readings already logged for one Data Logger series in MIA's Lab ('show me the "
+                         "readings for soil moisture'), oldest first. To add a new reading, use log_lab_reading."),
             parameters={
                 "type": "object",
                 "properties": {
