@@ -38,6 +38,7 @@
   },
   "capabilities": {
     "tools": [
+      "best_customers",
       "earnings_per_hour",
       "draft_invoice",
       "who_owes_me",
@@ -79,6 +80,7 @@
       "get_businesses": "observe",
       "get_ledger_summary": "observe",
       "earnings_per_hour": "observe",
+      "best_customers": "observe",
       "order_paid": "act_with_approval",
       "record_sale": "act_within_grant",
       "customer.add": "act_within_grant",

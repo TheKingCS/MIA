@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1675 files, 364,564 lines; 1675 files describe themselves; 20,050 of 20,180 classes and functions are documented.
+1677 files, 364,680 lines; 1677 files describe themselves; 20,055 of 20,185 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-659 files, 186,665 lines; 9,503 of 9,589 classes and functions documented
+660 files, 186,743 lines; 9,506 of 9,592 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -108,6 +108,7 @@
 - `core/background_jobs.py`: Everything MIA does on a schedule, with no window needed (the MIA Runtime, DEC-0155; steps 1 and 3 of `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`).
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py.
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week, 
+- `core/best_customers.py`: Who his best customers are, and who's gone quiet (Jarvis brainstorm round 7, 2026-11-24; his businesses): "who are my best customers?", "which customers haven't ordered in a while?". The customers, their orders and the ledger read together.
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show.
 - `core/boot_sound.py`: Six to choose from** (2026-11-07, Zac: "an odd ping... sample some sounds and I will pick"): `startup_samples()` makes each of core/startup_sounds.py's choices (a warm chord, rising chimes, a reactor power-up, a soft swell, a ready tone, and the original below); Settings plays and picks one (`sound.
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long.
@@ -957,7 +958,7 @@
 
 ## tests/: the test suite: what each part must do
 
-612 files, 97,312 lines; 8,184 of 8,228 classes and functions documented
+613 files, 97,350 lines; 8,186 of 8,230 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1007,6 +1008,7 @@
 - `tests/test_background_jobs.py`: MIA's scheduled jobs without the window (core/background_jobs.py, DEC-0155): the ten jobs and 43 daily checks are pinned so none is lost on the way to MIA OS; they run with no Qt; and the desktop app runs the very same ones.
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. Also a restore that waits for the next start (schedule_restore, then apply_
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops.
+- `tests/test_best_customers.py`: Who his best customers are (core/best_customers.py): ranked by what's been paid on their orders (cancelled ones left out), each one's share, the regulars with no order in six months named as gone quiet, a customer with no orders not ranked, and the question reaching the tool.
 - `tests/test_bleach_for_water.py`: How much bleach makes water safe to drink, by voice (bleach_for_water): the EPA's dose worked out in code (core/eng_calcs.py), the water read in gallons, liters or quarts, the strength when he says it, both common strengths when he doesn't, a strength that isn't for drinking water refused, and "how 
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP); and the same by voice (core/assistant_game_actions.py).

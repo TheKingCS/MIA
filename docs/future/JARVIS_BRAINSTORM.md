@@ -361,6 +361,8 @@ New ideas, each checked against what's there first:
   (the weather now reads a week), what's due, the garden, learning and projects.
 - **What do I really make an hour?** (no decision): built (`core/hourly_earnings.py`): finished jobs' sales less
   materials and expenses over their hours, the best and lowest, beside his quoting rate.
+- **Who are my best customers?** (no decision): built (`core/best_customers.py`): customers by what they've paid on
+  their orders, each one's share, and the regulars with no order in six months.
 
 ## Round 6 (2026-11-24): the bigger steps, each needing Zac's say
 

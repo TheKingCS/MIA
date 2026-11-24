@@ -252,8 +252,16 @@ def _hourly(context, arguments: dict) -> str:
     return hourly_earnings.say(context, str(arguments.get("question") or ""))
 
 
+def _best_customers(context, arguments: dict) -> str:
+    """Tool best_customers: his customers by what they've paid, and the regulars gone quiet (core/best_customers)."""
+    from core import best_customers
+
+    return best_customers.say(context)
+
+
 def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
-    """Registers earnings_per_hour (what his work really makes an hour, core/hourly_earnings.py; the person's words
+    """Registers best_customers (who's paid most, who's gone quiet, core/best_customers.py), earnings_per_hour (what
+    his work really makes an hour, core/hourly_earnings.py; the person's words
     passed so a day-job pay question is told it's the workshop's), list_quotes, list_orders, get_customer_details, add_customer, make_quote, accept_quote and order_status
     (domain business; list_quotes also says which quotes are worth a follow-up), the words that reach them (`WORDS`), and his customers' names and open quotes' and orders'
     titles (`_record_names`)."""
@@ -274,6 +282,11 @@ def register_business_voice_actions(registry: AssistantActionRegistry) -> None:
           "jobs worth my time", "per hour on jobs", "per hour on my jobs", "hourly on jobs", "hourly on my builds",
           "builds make per hour", "builds make an hour", "hourly on the workshop", "business make an hour",
           "effective hourly", "making per hour on", "making money on my builds"), prompt_arg="question")
+    tool("best_customers", "His customers ranked by what they've paid on their orders, each one's share, and the "
+         "regulars who haven't ordered in six months.", {}, [], _best_customers,
+         ("best customers", "top customers", "biggest customers", "best clients", "top clients",
+          "customers haven't ordered", "customers gone quiet", "haven't heard from customers", "lapsed customers",
+          "who buys the most", "who spends the most with me", "repeat customers", "my regulars"))
     tool("list_quotes", "The quotes still out (draft or sent), with customer and price.", {}, [],
          _action_list_quotes, ("quotes out", "quotes are out", "open quotes", "my quotes", "what quotes",
                                "quotes still out", "pending quotes", "quotes i've sent", "quotes to follow up",
