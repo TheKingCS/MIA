@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1653 files, 361,157 lines; 1653 files describe themselves; 19,862 of 19,992 classes and functions are documented.
+1655 files, 361,309 lines; 1655 files describe themselves; 19,871 of 20,001 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-650 files, 184,306 lines; 9,412 of 9,498 classes and functions documented
+651 files, 184,425 lines; 9,418 of 9,504 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -490,6 +490,7 @@
 - `core/security_cams.py`: Security (DEC-0033; Zac, 2026-10-18: "an app for Security or Smart Home where I can monitor camera feeds"): your cameras, watched from MIA, with no cloud in between. The smart-home half (lights, locks, thermostat) comes later through a local Home Assistant (docs/ROADMAP.md).
 - `core/security_log.py`: Who signed in, from where, and what changed about an account (docs/SECURITY.md step 3; Zac, 2026-11-08: "fortify our security measures to industry standards and beyond"). One line per event in `security_log.jsonl` on this device: sign-ins (and whether the device was new), wrong passwords, the waits 
 - `core/seed_check.py`: Seeds against the plan (Jarvis brainstorm round 2; Zac, 2026-11-23: "homestead skills ... aware"): the crops his confirmed garden plans start in the next SOON_DAYS days (indoors or sown outside), checked against the seeds he keeps, from his pantry and inventory records (any item whose name has "seed
+- `core/seed_life.py`: How long his seeds stay good (Jarvis brainstorm, round 4: seed saving). "Are my tomato seeds still good?" or "how long do onion seeds last?" says how many years that kind of seed usually keeps its germination stored cool and dry (the common extension figures, `YEARS`), and, for each packet in his pa
 - `core/self_audit.py`: MIA audits herself every week (DEC-0108; Zac, 2026-11-07: "a regular process of auditing her own code and files and searching for ways to improve or beef up whatever she is doing, make it more efficient, more well designed" and "a regular audit for seeing how any of her existing infrastructure can b
 - `core/self_docs.py`: MIA about her own design, from her own documents (DEC-0041; the intelligence spec's Phase 2C/3, docs/INTELLIGENCE_AUDIT.md): "how does the freedom estimate work?", "why can't the phone connect banks?", "what did we decide about eggs?", answered with the passage and the file it came from, never from 
 - `core/self_knowledge.py`: What MIA can honestly say about herself — grounded in real data, never guessed. When the person asks "what are you?", "what can you do?", "what are you working on?" or "what do you know about me?", her answer should come from the facts (the system map, her Night School focus, the person's own stored
@@ -948,7 +949,7 @@
 
 ## tests/: the test suite: what each part must do
 
-599 files, 96,299 lines; 8,087 of 8,131 classes and functions documented
+600 files, 96,332 lines; 8,090 of 8,134 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1391,6 +1392,7 @@
 - `tests/test_security_cams.py`: Security (DEC-0033): cameras on the home network only, logins kept apart and never shown, frames from a picture address or an RTSP stream, saved pictures, grown-ups only.
 - `tests/test_security_log.py`: The security log (core/security_log.py, docs/SECURITY.md step 3): devices said in words, events kept per account newest first, never a password; a sign-in from a new device and repeated wrong passwords alert the account's owner; and "sign out everywhere" ends every other session; a password or email
 - `tests/test_seed_check.py`: Seeds against the plan (core/seed_check.py): the crops his confirmed garden plans start in the next month, checked against the seeds he logged (pantry or inventory), said in the garden's weekly message when any have none logged. *(1 undocumented)*
+- `tests/test_seed_life.py`: How long his seeds keep (core/seed_life.py): each kind's usual span, his dated packets of it said good, worth a germination test or past it, a plural or another name for a crop understood, and a packet with no year asked to give one.
 - `tests/test_self_audit.py`: MIA's weekly self-audit (core/self_audit.py) and her best-practices series (core/practices.py), DEC-0108: what the code audit finds, what the interconnection audit finds and leaves out by design, the docs audit's task, the weekly run's report and tasks, and the series written from the principles and
 - `tests/test_self_knowledge.py`: What MIA can honestly say about herself (core/self_knowledge.py): grounded in real data, never guessed. `about_me` reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you` is honest about how much she knows; a missing source is a quiet gap, 
 - `tests/test_self_merges.py`: MIA's own changes going in on Claude's pass, the daily summary and the Undo (core/self_merges.py, DEC-0225).

@@ -315,7 +315,8 @@ New ideas, each checked against what's there first:
   correct. Not built yet.
 - **Seed saving** (S, no decision): seeds saved from his own plants (which bed, the year, how many), kept with the
   pantry or inventory seeds so the seed check (`core/seed_check.py`) counts them, with how many years each kind
-  stays viable. Not built yet.
+  stays viable. *Built 2026-11-24 (`core/seed_life.py`, "are my tomato seeds still good?"): each kind's usual span,
+  and his packets dated by a year in their names said good, worth a germination test, or past it.*
 - **The brooder** (S, after the hatch): chicks' temperature by week (start near 95 F, down about 5 F a week), as the
   hatch mission's next steps once they're out. *Built 2026-11-24: the hatch mission's last step.*
 - **The offline library on Windows** (needs Zac, WAITING_ON 0zh): Smart App Control blocks its reader; the options

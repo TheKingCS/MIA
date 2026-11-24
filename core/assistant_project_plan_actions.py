@@ -114,11 +114,19 @@ def _price(context, arguments: dict) -> str:
     return plan_price.say(context, str(arguments.get("plan") or ""), hours, margin)
 
 
+def _seed_life(context, arguments: dict) -> str:
+    """Tool seed_viability: how long that kind of seed keeps, and his dated packets of it (core/seed_life.say)."""
+    from core import seed_life
+
+    return seed_life.say(context, str(arguments.get("seeds") or ""))
+
+
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
     chosen when drafted), price_build (core/plan_price.py), homestead_year (core/homestead_year.py), garden_this_week (core/garden_week.py),
     show_plans,
-    confirm_plan and drop_plan. Their trigger phrases cover the everyday ways he'd ask ("what should I plant this
+    confirm_plan and drop_plan, and seed_viability (how long his seeds keep, core/seed_life.py). Their trigger
+    phrases cover the everyday ways he'd ask ("what should I plant this
     week", "what needs doing in the garden", "how much should I charge for a picnic table":
     tests/test_everyday_phrasing_routing.py)."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
@@ -162,6 +170,14 @@ def register_project_plan_actions(registry) -> None:
                                                "plant this week", "seeds do i still need", "seeds i still need",
                                                "seeds do i need", "doing in the garden", "to do in the garden",
                                                "needs done in the garden"),
+    ))
+    registry.register(AssistantAction(
+        name="seed_viability", domain=DOMAIN,
+        description="How long a kind of seed stays good, and whether his dated packets of it still are.",
+        parameters={"type": "object", "properties": {
+            "seeds": {"type": "string", "description": "the kind of seed, e.g. 'tomato'"}}, "required": ["seeds"]},
+        handler=_seed_life, trigger_phrases=("seeds still good", "seeds last", "seed still good", "old seeds",
+                                             "seeds expire", "seeds go bad", "seed viability", "germination test"),
     ))
     registry.register(AssistantAction(
         name="homestead_year", domain=DOMAIN,

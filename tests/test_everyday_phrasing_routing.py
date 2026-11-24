@@ -69,6 +69,7 @@ SAID = [
     ("get_life_state", "bring me up to speed"), ("get_life_state", "any messages for me?"),
     ("get_life_state", "what did you do on your own today?"),
     ("start_hatch", "I set 12 chicken eggs in the incubator today"), ("hatch_status", "how's the hatch going?"),
+    ("seed_viability", "are my tomato seeds still good?"), ("seed_viability", "how long do onion seeds last?"),
 ]
 
 
