@@ -161,7 +161,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
-    Dashboard's)."""
+    Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
+    generator run?": tests/test_everyday_phrasing_routing.py)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -225,6 +226,7 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_how_prepared,
         trigger_phrases=("how prepared", "days of water", "how much water do i have", "emergency supplies",
+                         "generator run", "generator last", "fuel last", "fuel for the generator",
                          "if the power goes out", "grid down", "prepared for an emergency", "what should i rotate"),
     ))
     registry.register(AssistantAction(
@@ -240,8 +242,9 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
             "generator_fuel": {"type": "string", "description": "gasoline, diesel, kerosene or propane."}},
             "required": []},
         handler=_action_set_preparedness,
-        trigger_phrases=("plan for people", "generator burns", "generator uses", "gallons an hour", "burn rate",
-                         "pounds an hour",
+        trigger_phrases=("plan for people", "people to plan for", "plan for 2", "plan for 3", "plan for 4",
+                         "plan for 5", "plan for 6", "plan for two", "plan for three", "plan for four",
+                         "generator burns", "generator uses", "gallons an hour", "burn rate", "pounds an hour",
                          "plan for days", "prepare for days"),
     ))
     registry.register(AssistantAction(

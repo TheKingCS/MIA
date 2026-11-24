@@ -754,7 +754,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
-    batches by date (core/canning_shelf.py).
+    batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
+    not paid me?", "which canned stuff should I use first?": tests/test_everyday_phrasing_routing.py).
     """
     registry.register(AssistantAction(
         name="update_maintenance_asset", domain="maintenance",
@@ -858,8 +859,9 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         description="Who owes the user money: what's still unpaid on his orders (price less payments taken), oldest "
                     "due first, the overdue and the delivered-but-unpaid named, and the total.",
         parameters=_NO_PARAMS, handler=_action_who_owes_me,
-        trigger_phrases=("who owes me", "owes me money", "still owed", "unpaid orders", "outstanding invoices",
-                         "money owed to me", "who hasn't paid"),
+        trigger_phrases=("who owes me", "owe me", "owes me", "still owed", "unpaid orders", "outstanding invoices",
+                         "outstanding on my orders", "outstanding orders", "money owed to me", "who hasn't paid",
+                         "not paid me", "hasn't paid me", "haven't paid me"),
     ))
     registry.register(AssistantAction(
         name="draft_invoice", domain="business",
@@ -993,7 +995,8 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         name="canning_shelf", domain="groceries",
         description="Read back the home-canned jars on the shelf, oldest first, and which to use next (nearing or past a year).",
         parameters=_NO_PARAMS, handler=_action_canning_shelf,
-        trigger_phrases=("canning shelf", "canned goods", "home canned", "my jars", "how many jars"),
+        trigger_phrases=("canning shelf", "canned goods", "canned stuff", "canned food", "home canned", "my jars",
+                         "how many jars", "jars of"),
     ))
     registry.register(AssistantAction(
         name="list_pantry", domain="groceries", description="Read back what's in the pantry and what's run out.",
