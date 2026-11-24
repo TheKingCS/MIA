@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1642 files, 359,127 lines; 1642 files describe themselves; 19,750 of 19,880 classes and functions are documented.
+1642 files, 359,183 lines; 1642 files describe themselves; 19,753 of 19,883 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-646 files, 183,016 lines; 9,364 of 9,450 classes and functions documented
+646 files, 183,044 lines; 9,364 of 9,450 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -441,7 +441,7 @@
 - `core/quick_commands.py`: Things a person says that need no AI model (DEC-0020): "workout complete", "step one of today's workout complete", "finished my pull-ups", "today's lunch complete", "meal prep done", "this week's meal plans complete", "I weigh 182", "had 40 g of protein", "handstand 45 seconds", "undo that". MIA's o
 - `core/rarity.py`: Shared Borderlands-style five-tier rarity vocabulary, from the user's 2026-09-14 "Prestige, Rarity & Character Progression" design handoff (see the [[project_mia_prestige_rarity_vision]] memory) — Common through Legendary, the same white/green/blue/purple/orange scale `core.leveling.PRESTIGE_COLORS`
 - `core/read_back.py`: Done means read back (DEC-0218, LS-05): after a change runs, code reads its effect back instead of trusting the report that it worked. One generic check for every change (docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2):
-- `core/ready_kit.py`: The 72-hour kit, checked against his own records (Jarvis brainstorm, round 3: survival and preparedness). "Check my emergency kit" (`say`) goes down Ready.gov's basic disaster supplies kit and says which things his inventory or pantry holds, which aren't in his records, and the few only he can check
+- `core/ready_kit.py`: The 72-hour kit, checked against his own records (Jarvis brainstorm, round 3: survival and preparedness). "Check my emergency kit" (`say`) goes down Ready.gov's basic disaster supplies kit and says which things his inventory or pantry holds (its 14 things: water, food and `KIT`), which aren't in his
 - `core/real_estate_manager.py`: Property records for a real estate portfolio — values, mortgage balance/equity, and links to the existing systems that already own the rest of what a property needs tracked, rather than duplicating them:
 - `core/recall_index.py`: Recall by meaning (DEC-0210; Prompt 07's memory infrastructure, `docs/mia_os/MIA_OS_MEMORY_INFRASTRUCTURE.md` §2; Zac's yes to Q-71: every personal store except the private journal and private-mode conversations). One index per person, beside the stores and never instead of them.
 - `core/receipt_effects.py`: What a receipt means beyond its total (Zac, 2026-11-07: "she should be able to see my receipt and know I got my oil changed or bought groceries and stock my pantry with what's on the receipt, and same for Lowe's receipts and materials"). When the inbox reads a receipt (core/inbox_manager.py), `propo
@@ -944,7 +944,7 @@
 
 ## tests/: the test suite: what each part must do
 
-592 files, 95,559 lines; 8,023 of 8,067 classes and functions documented
+592 files, 95,587 lines; 8,026 of 8,070 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1334,7 +1334,7 @@
 - `tests/test_rarity.py`: Unit tests for core.rarity's pure functions.
 - `tests/test_read_back.py`: Tests for the generic read-back after a change (DEC-0218, LS-05, core/read_back.py): the files a change wrote still hold what it left, and the records its history names still resolve, unless it removed them.
 - `tests/test_readiness.py`: Tests for FW-04's readiness and watchdog (core/sd_notify.py, core/runtime.py), the self-test's refusal of a folder with anything in it (core/self_test.py), and the image's health checks and night updates (os/files/): staged at night, applied when he restarts, never by a restart of her own.
-- `tests/test_ready_kit.py`: The 72-hour kit (core/ready_kit.py): Ready.gov's basic kit checked against his inventory and pantry by whole words (a headlamp is a light; a propane torch and maple syrup are nothing), water and food against three days, what isn't in his records said as that, and what only he can check.
+- `tests/test_ready_kit.py`: The 72-hour kit (core/ready_kit.py): Ready.gov's basic kit checked against his inventory and pantry by whole words (a headlamp is a light; a car battery, Atlas mason jars, MAP-Pro gas and lighter fluid are nothing), its 14 basic things counted and the additional supplies said apart, water and food a
 - `tests/test_real_estate_manager.py`: Unit tests for core.real_estate_manager. Isolates _DATA_DIR _PROPERTIES_FILE (and core.budget_manager's own data files, since rental income/expenses are real Budget entries this manager filters) into a tmp_path scratch area, same monkeypatch pattern as test_budget_manager.py's isolated_paths.
 - `tests/test_real_estate_module.py`: Unit tests for modules.real_estate.module's pure formatters — no Qt event loop needed, same shape as tests/test_property_module.py.
 - `tests/test_recall_index.py`: Recall by meaning: refs and vectors only, every hit re-read from its store (core/recall_index.py, DEC-0210).

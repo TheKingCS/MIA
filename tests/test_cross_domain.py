@@ -188,11 +188,14 @@ def test_a_lump_that_clears_the_first_debt_keeps_its_minimum_rolling():
     assert "pay them all off now" in qp.instead(ranked, 20000, False, now, day, money)[1][1]
 
 def test_the_card_said_plainly_reaches_the_debts_plan_but_a_birthday_card_doesnt():
+    """Nor a card he pays with, a lost card's bank balance, a bill he paid on the card, or a card game."""
     import re
 
     debts = qp.PLAN_BY_NAME["debts"].words
     for said in ("what if i put an extra $200 toward the card?", "which card should i pay first?",
                  "when is my card paid off?"):
         assert re.search(debts, said), said
-    for said in ("did i get a birthday card?", "what card should i use at the store?"):
+    for said in ("did i get a birthday card?", "what card should i use at the store?",
+                 "which card should i pay with at the hardware store?", "i lost the card, what's my bank balance?",
+                 "what's due this week, did i pay my card?", "which card game should i play?"):
         assert not re.search(debts, said), said

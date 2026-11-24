@@ -4,7 +4,8 @@ core.ready_kit
 
 The 72-hour kit, checked against his own records (Jarvis brainstorm, round 3: survival and preparedness). "Check my
 emergency kit" (`say`) goes down Ready.gov's basic disaster supplies kit and says which things his inventory or
-pantry holds, which aren't in his records, and the few only he can check (medicine, glasses, cash, papers).
+pantry holds (its 14 things: water, food and `KIT`), which aren't in his records, a few of its additional supplies
+said apart (`EXTRA`), and the few only he can check (medicine, glasses, cash, papers).
 
 How: `KIT` is the list, each thing with the whole words that name it ("flashlight", "headlamp" or "lantern" is a
 light). `check(names, water_days, food_days)` is pure: it matches the names of his inventory and pantry items, and
@@ -20,39 +21,56 @@ from typing import Optional
 
 KIT_DAYS = 3  # Ready.gov: water and food for several days, at least three for an evacuation kit
 # (key, how it's said, the whole words that name it in his records)
-KIT = (
-    ("radio", "a battery or hand-crank radio (NOAA weather radio)", r"radios?"),
+KIT = (  # Ready.gov's basic kit, besides water and food: 12 things, so 14 with them
+    ("radio", "a battery or hand-crank radio (NOAA weather radio)", r"radios?(?! flyer)"),
     ("light", "a flashlight", r"flashlights?|headlamps?|lanterns?"),
-    ("first_aid", "a first aid kit", r"first[- ]aid|trauma kit|ifak"),
-    ("batteries", "extra batteries", r"batter(?:y|ies)|aa|aaa|18650s?"),
+    ("first_aid", "a first aid kit", r"first[- ]?aid|trauma kits?|ifak|med(?:ical)? kits?"),
+    # not a car's, a drill's or a battery bank (that's the charger)
+    ("batteries", "extra batteries", r"(?<!car )(?<!drill )(?<!mower )(?<!tractor )(?<!truck )(?<!12v )(?<!18v )"
+                                     r"(?<!20v )(?<!backup )batter(?:y|ies)(?! banks?)(?! chargers?)|aa|aaa|18650s?"),
     ("whistle", "a whistle to signal for help", r"whistles?"),
     ("masks", "dust masks", r"dust masks?|n95s?|respirators?|face masks?"),
-    ("sheeting", "plastic sheeting and duct tape to shelter in place", r"duct tape|plastic sheeting|tarps?|visqueen"),
+    ("sheeting", "plastic sheeting and duct tape to shelter in place",
+     r"duct tape|plastic sheeting|tarps?(?! straps?)|visqueen"),
     ("sanitation", "wet wipes, garbage bags and plastic ties", r"wet wipes|baby wipes|towelettes|garbage bags?|"
-                                                              r"trash bags?|contractor bags?|zip ties?"),
-    ("tools", "a wrench or pliers to turn off utilities", r"wrench(?:es)?|pliers|multi[- ]?tools?|leatherman"),
-    ("can_opener", "a manual can opener", r"can openers?|p-?38|p-?51"),
-    ("maps", "local maps", r"maps?|atlas|gazetteer"),
+                                                              r"trash bags?|contractor bags?|(?:zip|cable)[- ]?ties?"),
+    ("tools", "a wrench or pliers to turn off utilities", r"wrench(?:es)?|pliers|multi[- ]?tools?|leatherman|"
+                                                           r"channel ?locks?|vise[- ]?grips?"),
+    ("can_opener", "a manual can opener", r"(?<!electric )can openers?|p-?38|p-?51"),
+    ("maps", "local maps", r"maps?(?![- ]?pro)(?! app)|road atlas|gazetteer"),
     ("charger", "a phone charger and backup battery", r"power banks?|battery banks?|portable chargers?|"
-                                                       r"backup batter(?:y|ies)|phone chargers?"),
-    ("fire", "matches in a waterproof container, or a lighter", r"matches|lighters?|ferro rods?|fire ?starters?"),
+                                                       r"backup batter(?:y|ies)|phone chargers?|usb chargers?|"
+                                                       r"charging cables?"),
+)
+# From Ready.gov's additional supplies: said apart, never counted in the basic kit's number
+EXTRA = (
+    ("fire", "matches in a waterproof container, or a lighter",
+     r"matches|matchbox(?:es)?|lighters?(?! fluid)|ferro rods?|fire ?starters?"),
     ("warmth", "a sleeping bag or warm blanket", r"sleeping bags?|emergency blankets?|mylar blankets?|"
                                                  r"space blankets?|wool blankets?|bivvy|bivy"),
-    ("extinguisher", "a fire extinguisher", r"fire extinguishers?|extinguishers?"),
+    ("extinguisher", "a fire extinguisher", r"(?:fire )?extinguishers?"),
 )
 ONLY_HE_CAN = "your medicines and glasses, some cash, and copies of your important papers"
-_WORDS = {key: re.compile(rf"\b(?:{words})\b", re.I) for key, _said, words in KIT}
+_WORDS = {key: re.compile(rf"\b(?:{words})\b", re.I) for key, _said, words in KIT + EXTRA}
 
 
 def check(names: list, water_days: float, food_days: float) -> dict:
     """Pure logic. The kit against his records: {"have": [(key, said, the record that names it)], "missing":
-    [(key, said)], "water": days, "food": days, "short": the things under KIT_DAYS}."""
-    have, missing = [], []
-    for key, said, _words in KIT:
-        found = next((n for n in names if _WORDS[key].search(str(n or ""))), None)
-        (have.append((key, said, found)) if found else missing.append((key, said)))
+    [(key, said)], "extra_have", "extra_missing" (the same for `EXTRA`), "water": days, "food": days, "short": the
+    things under KIT_DAYS}."""
+    def sort(items):
+        """Which of `items` a name of his holds, and which none does."""
+        have, missing = [], []
+        for key, said, _words in items:
+            found = next((n for n in names if _WORDS[key].search(str(n or ""))), None)
+            (have.append((key, said, found)) if found else missing.append((key, said)))
+        return have, missing
+
+    have, missing = sort(KIT)
+    extra_have, extra_missing = sort(EXTRA)
     short = [w for w, days in (("water", water_days), ("food", food_days)) if days < KIT_DAYS]
-    return {"have": have, "missing": missing, "water": water_days, "food": food_days, "short": short}
+    return {"have": have, "missing": missing, "extra_have": extra_have, "extra_missing": extra_missing,
+            "water": water_days, "food": food_days, "short": short}
 
 
 def _names(context) -> list:
@@ -68,25 +86,34 @@ def _names(context) -> list:
 
 
 def say(context, people: Optional[int] = None) -> str:
-    """For "check my emergency kit": how many of the kit's things his records hold, water and food against three
-    days, what isn't in his records, and what only he can check."""
+    """For "check my emergency kit": how many of Ready.gov's 14 basic things his records hold, water and food against
+    three days (water whose bottle size couldn't be read is said as that, never as none), what isn't in his records,
+    the additional supplies apart, and what only he can check."""
     from core import preparedness
 
     kitchen = getattr(context, "kitchen", None)
     pantry = kitchen.all_pantry_items() if kitchen is not None else []
     people = people or preparedness._setting(context, "prepared.people", 1)
-    water, _unread = preparedness.water_days(pantry, people)
+    water, unread = preparedness.water_days(pantry, people)
     food, _counted, _uncounted = preparedness.food_days(pantry, people)
     got = check(_names(context), water, food)
     total = len(KIT) + 2
     held = len(got["have"]) + (2 - len(got["short"]))
     parts = [f"Of Ready.gov's basic emergency kit, your records hold {held} of {total} things."]
-    days = (f"Water: about {water:g} days" if water else "Water: none logged") + \
-        (f", food: about {food:g} days" if food else ", food: no staples logged by weight")
-    parts.append(days + f" (the kit wants at least {KIT_DAYS} of each"
+    if water:
+        said_water = f"Water: about {water:g} days"
+    elif unread:
+        said_water = "Water: I couldn't read the size of " + ", ".join(unread[:3]) + " (give it, like \"16.9 oz bottles\")"
+    else:
+        said_water = "Water: none logged"
+    said_food = f", food: about {food:g} days" if food else ", food: no staples logged by weight"
+    parts.append(said_water + said_food + f" (the kit wants at least {KIT_DAYS} days of each"
                  + (f"; {' and '.join(got['short'])} short)." if got["short"] else ", met)."))
     if got["missing"]:
         parts.append("Not in your inventory or pantry: " + "; ".join(s for _k, s in got["missing"]) + ".")
+    if got["extra_missing"]:
+        parts.append("Of the additional supplies it suggests, not in your records: "
+                     + "; ".join(s for _k, s in got["extra_missing"]) + ".")
     parts.append(f"Only you can check {ONLY_HE_CAN}. Anything you have and haven't logged, add it in Inventory and "
                  f"I'll count it.")
     return " ".join(parts)
