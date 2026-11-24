@@ -103,7 +103,11 @@ a mission with the brooder after (`core/hatch_tracker.py`), seed shelf life (`co
 his winter (`core/firewood.py`), should I water today (`weather_watch.watering`), what can I plant now
 (`core/planting_now.py`); a fresh review after each, every finding fixed. The Intelligence Benchmark's routing audit
 (`python -m tools.bench_audit`) matched this morning's on every question. WAITING_ON 0zh (the library: options
-written) and 0zk (the safety floor's phrases) are new for Zac. A sixteenth review found "what am I worth?"
+written) and 0zk (the safety floor's phrases) are new for Zac.
+**First thing at the PC after Zac has used her a while:** read `core.failure_log`'s `fix_report()` (his own
+`failures.jsonl`, private: never committed), turn each ranked miss into a test in
+`tests/test_everyday_phrasing_routing.py` or the routing corpus, fix, and send a fresh reviewer over each routing
+change (they've been fragile: K-0385 to K-0407). A sixteenth review found "what am I worth?"
 answered with his net worth (fixed, K-0389), which led to the safety floor learning the common indirect signs
 ("nobody would miss me", "what's the point of living", K-0390); worth Zac reading `core/safety_floor.py`'s list. Note: Windows
 Application Control now blocks libzim's DLL on the PC, so run the suite with

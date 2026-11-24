@@ -351,8 +351,10 @@ dozen (`core/flock.py`). The small everyday answers are now mostly built; what w
 each his call:
 
 - **Hear her on his real phrasing** (needs Zac, at the PC or phone): the routing tests hold about 120 everyday
-  sentences, all written by Claude. A week of his own (MIA can keep the misses she notices, with his yes) would find
-  what no probe does. *The most valuable next step.*
+  sentences, all written by Claude. A week of his own would find what no probe does. *The most valuable next step,
+  and already wired:* `core/failure_log.py` keeps each miss she can see (a correction, the same thing asked again, a
+  matched tool not used, an undo, a thumbs-down) and `fix_report()` ranks them with a test case each; a session at
+  the PC reads it and turns them into fixes.
 - **A morning briefing on the glasses or phone at a set time** (his say: a new daily message): the day's first thing,
   the weather against his plans, what the gate holds, in three sentences, spoken.
 - **Shop mode** (S-M, his say on how it's started): hands-free in the shop: the build's cut list read out one cut at a
