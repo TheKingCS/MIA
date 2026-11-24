@@ -162,6 +162,21 @@ def _fruit_facts(context, arguments: dict) -> str:
     return orchard.say_kind(str(arguments.get("fruit") or ""))
 
 
+def _water_budget(context, arguments: dict) -> str:
+    """Tool water_budget: the whole property's water a day and a month, what's stored and caught
+    (core/water_budget.say)."""
+    from core import water_budget
+
+    return water_budget.say(context)
+
+
+def _water_level(context, arguments: dict) -> str:
+    """Tool log_water_level: a tank or cistern's level as he said it (core/water_budget.log_level)."""
+    from core import water_budget
+
+    return water_budget.log_level(context, str(arguments.get("tank") or ""), arguments.get("gallons"))
+
+
 def _catchment(context, arguments: dict) -> str:
     """Tool rain_catchment: a roof's gallons from rain, his logged rain and his beds' needs (core/rain_catchment)."""
     from core import rain_catchment
@@ -193,7 +208,8 @@ def _harvest_year(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), orchard_this_month and fruit_tree_facts (the orchard, core/orchard.py), rain_catchment (a
+    chosen when drafted), water_budget and log_water_level (the property's water, core/water_budget.py),
+    orchard_this_month and fruit_tree_facts (the orchard, core/orchard.py), rain_catchment (a
     roof's gallons, core/rain_catchment.py), log_harvest and
     harvest_this_year (harvests by voice and what the garden produced,
     core/harvest_log.py; reached by "harvested" and the garden's words, never a bare "harvest" or "dug up"),
@@ -237,6 +253,28 @@ def register_project_plan_actions(registry) -> None:
         handler=_picture, trigger_phrases=("planning to build", "thinking about building", "planning to put up",
                                            "thinking about putting up", "planning a greenhouse", "affect everything", "mean for everything",
                                            "what does it touch", "what would it take to build"),
+    ))
+    registry.register_domain_keywords("water", ("cistern", "water tank", "rain barrels", "water budget", "well water"))
+    registry.register(AssistantAction(
+        name="water_budget", domain="water",
+        description="The whole property's water: what the house, garden, orchard and flock use a day and a month, "
+                    "what his tanks and cistern hold (their latest levels), what the roof caught, and how many days "
+                    "the stored water lasts. Use this, never the offline library, for his own water: how much he "
+                    "uses, has or how long it lasts.",
+        parameters={"type": "object", "properties": {}, "required": []}, handler=_water_budget,
+        trigger_phrases=("water budget", "how much water do i use", "how much water do we use", "water do i have",
+                         "how long will my water last", "how long will the water last", "enough water",
+                         "water usage", "water use"),
+        subjects=("water",),  # so "how long will my water last?" is answered in code (direct_lookup)
+    ))
+    registry.register(AssistantAction(
+        name="log_water_level", domain="water",
+        description="Log a tank, cistern or barrel's level in gallons, as he said it. Undoable.",
+        parameters={"type": "object", "properties": {
+            "tank": {"type": "string", "description": "which tank, e.g. 'cistern'"},
+            "gallons": {"type": "number", "description": "how many gallons are in it"}}, "required": ["tank", "gallons"]},
+        handler=_water_level, trigger_phrases=("cistern is at", "tank is at", "barrel is at", "cistern has",
+                                               "tank has", "gallons in the cistern", "gallons in the tank"),
     ))
     registry.register_domain_keywords("orchard", ("orchard", "fruit trees", "fruit tree"))
     registry.register(AssistantAction(

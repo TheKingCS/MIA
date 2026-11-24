@@ -41,7 +41,8 @@ so the things that keep fish and plants alive come first.
    chill hours, years to bearing, pollination partners, spacing, pruning season and harvest window. A year of
    orchard work dated from his frost dates: dormant pruning, dormant oil, bloom and frost watch, thinning, summer
    pruning, harvest. And "what does the orchard need this month?"
-2. **A whole-property water picture.** His sources (well, cistern, rain catchment, municipal) and his uses
+2. **A whole-property water picture.** *Built 2026-11-24 (`core/water_budget.py`: "how long will my water last?",
+   "the cistern is at 800 gallons", "my catchment roof is 600 square feet").* His sources (well, cistern, rain catchment, municipal) and his uses
    (greenhouse, garden, orchard, house, animals), as a daily and monthly water budget. Tank levels come as readings
    he logs until sensors arrive.
 3. **A whole-property power picture.** Sources (solar, grid, generator, battery), the loads that matter (well pump,

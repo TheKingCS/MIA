@@ -15,7 +15,8 @@
     "maintenance",
     "development",
     "harvest",
-    "orchard"
+    "orchard",
+    "water"
   ],
   "entry": "web:greenhouse.html",
   "components": {
@@ -45,7 +46,9 @@
       "fruit_tree_facts",
       "harvest_this_year",
       "log_harvest",
-      "orchard_this_month"
+      "log_water_level",
+      "orchard_this_month",
+      "water_budget"
     ],
     "actions": [
       "batch.add",
@@ -67,6 +70,8 @@
       "get_homestead_next_step": "observe",
       "harvest_this_year": "observe",
       "orchard_this_month": "observe",
+      "water_budget": "observe",
+      "log_water_level": "act_within_grant",
       "fruit_tree_facts": "observe",
       "log_harvest": "act_within_grant",
       "batch.add": "act_within_grant",

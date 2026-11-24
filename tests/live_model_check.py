@@ -698,6 +698,9 @@ GOLDEN_CASES = [
     ("learning path: a skill", "I want to learn to play the banjo", "start_learning"),
     ("orchard: this month", "What does the orchard need this month?", "orchard_this_month"),
     ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),
+    # ("How long will my water last?" is answered in code, direct_lookup, before any model: tests/test_water_budget.py)
+    ("water: the budget", "What's my water budget?", "water_budget"),
+    ("water: a tank's level", "The cistern is at 800 gallons", "log_water_level"),
 ]
 
 

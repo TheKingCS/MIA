@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1686 files, 366,338 lines; 1686 files describe themselves; 20,139 of 20,269 classes and functions are documented.
+1688 files, 366,597 lines; 1688 files describe themselves; 20,150 of 20,280 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-664 files, 187,858 lines; 9,545 of 9,631 classes and functions documented
+665 files, 188,056 lines; 9,552 of 9,638 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -598,6 +598,7 @@
 - `core/voice_manager.py`: The Voice interface's STT/TTS core service — docs/ROADMAP.md milestone 5.3. Defines backend-agnostic `STTBackend`/`TTSBackend` interfaces (same shape as `core/llm_manager.py`'s `LLMBackend`), with one concrete implementation each:
 - `core/volume_manager.py`: System volume control for the Home Dashboard's volume widget (gui/home_dashboard.py). Same backend-agnostic shape as core/power_manager.py (`PowerBackend`/`PsutilBatteryBackend`) and core/llm_manager.py's `LLMBackend`: one `VolumeBackend` Protocol, one concrete implementation, `AmixerVolumeBackend`,
 - `core/warranty_watch.py`: A heads-up before a warranty runs out (2026-09-28). Machines got a "Warranty until" date (MaintenanceAsset.warranty_until), typed in or filled from a filed warranty/manual (core/inbox_classify.py). About a month before, and again a week before, MIA mentions it through the communication gate, so anyt
+- `core/water_budget.py`: The whole property's water (Zac, 2026-11-24: "will manage ... my water systems"; docs/future/SMART_AG_PLAN.md phase A2): what the place drinks a day and a month, what's stored, and what the roof brings in, from his own records.
 - `core/waypoint_actions.py`: Waypoints (core/waypoint_manager.py) through the action contract (core/actions.py), for the web's Maps and Navigation pages: `waypoint.add` (a name and where: from a tap on the map, or typed), `waypoint.edit` (its name, kind and notes; where it is stays) and `waypoint.delete`. The store writes throu
 - `core/waypoint_manager.py`: Backs the Navigation module's waypoint list (modules/navigation/module.py) — docs/ROADMAP.md milestone 10.1. Same persisted-JSON pattern as core/inventory_manager.py: data/waypoints.json, a dataclass with to_dict/from_dict, a manager class wrapping load/save.
 - `core/weather.py`: The weather on the Dashboard (DEC-0153, Zac 2026-11-11: "yes", she may fetch it online). MIA had no weather source; this is it.
@@ -962,7 +963,7 @@
 
 ## tests/: the test suite: what each part must do
 
-618 files, 97,893 lines; 8,231 of 8,275 classes and functions documented
+619 files, 97,954 lines; 8,235 of 8,279 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1512,6 +1513,7 @@
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces
 - `tests/test_volume_quick_control.py`: Unit tests for gui.widgets.volume_quick_control's pure format_volume_line() — moved here 2026-09-11 from tests/test_home_dashboard.py, alongside removing gui/home_dashboard.py's own dead copy of this function (and the entire dashboard-grid Volume widget it only ever served) — see that module's 2026-
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py).
+- `tests/test_water_budget.py`: The whole property's water (core/water_budget.py): the house, garden, orchard and flock a day from his records (each estimate said as one), the greenhouse said as not counted, tanks at their latest logged level, the days the stored water carries the outdoor uses, the roof's catch from his logged rai
 - `tests/test_watering.py`: "Should I water the garden today?" (core/weather_watch.watering): rain now or likely tomorrow says hold off, a hot dry day says water deeply in the morning, the crops in the ground named, every answer ending with the soil check, no forecast still giving the soil check; tomorrow's words read when the
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
