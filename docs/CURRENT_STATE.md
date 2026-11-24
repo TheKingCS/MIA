@@ -103,10 +103,12 @@ more: the erase test removed the checkout's own content folders (only in a workt
   scheduled workflows, the wall view): marked in the brainstorm, not built twice.
   Evening, on his answers (DEC-0289 to 0294): learning programs for his four hobbies, the Picture of You, the evening
   wrap, the model test (no switch; the answers side by side for him), workflows started by events (from something
-  she read, each change waits for his yes) and routines offered once from his habits.
+  she read, each change waits for his yes) and routines offered once from his habits. Later: the canning shelf, a
+  purchase against the debts said as what the money would do on them instead, and the 72-hour kit checked against
+  his records; three more fresh reviews, every finding fixed (K-0362 to K-0367).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope, which model after reading the comparison, unblocking libzim from Windows Application
-  Control (`docs/WAITING_ON.md` 0zh).
+  Control (`docs/WAITING_ON.md` 0zh), whether a workflow may ever work the homestead's equipment (0zj).
 
 **2026-11-18 (Claude on Opus, at the PC). MIA OS planning is complete through Prompt 17.**
 - **Prompts 12 to 16** (devices, security, reliability, development, the roadmap): written, and Zac answered each

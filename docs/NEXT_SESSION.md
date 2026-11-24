@@ -76,7 +76,10 @@ made: Zac reads the answers side by side in pc-check/model-compare.md (on the PC
 decides; qwen3:14b is the one worth a look. A sixth review fixed the batch (K-0361). Everything in the brainstorm that needs no decision is
 now built or found already there. His last two answers are built too: workflows started by events in his history,
 anything from an email or page waiting for his yes (DEC-0293, `workflows.run_on_events`), and a routine offered once
-from a habit of his (DEC-0294, `core/habit_offers.py`). Nothing from the brainstorm waits on him. Note: Windows
+from a habit of his (DEC-0294, `core/habit_offers.py`); a seventh review made held changes really wait (K-0362). Then the
+canning shelf (`core/canning_shelf.py`), a purchase asked against the debts worked out as a purchase (1.4's gap,
+`question_plans.instead`), and the 72-hour kit against his records (`core/ready_kit.py`); eighth and ninth reviews
+fixed them (K-0365, K-0367). Waiting on him: which model (0zi), libzim (0zh), the homestead's controls (0zj). Note: Windows
 Application Control now blocks libzim's DLL on the PC, so run the suite with
 `--ignore=tests/test_reference_library_manager.py` there (CI on Linux runs it); her offline library reader needs it
 unblocked (WAITING_ON 0zh).
