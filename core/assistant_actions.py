@@ -362,8 +362,9 @@ class AssistantActionRegistry:
         commonest miss was answering such questions from memory). Only
         when the message is a question, exactly one read-only action's own
         trigger phrase matches, it needs no arguments, and nothing that
-        changes records matches too, and it names no other app's record ("what's running on the pickup truck?" is
-        the truck's); otherwise None and the model decides."""
+        changes records matches too, and, past the lookup's own words, it names no other app's record ("what's
+        running on the pickup truck?" is the truck's; "how many eggs this week?" stays the egg count); otherwise None
+        and the model decides."""
         from core.child_accounts import tool_allowed
 
         lowered = f" {prompt.lower().strip()} "
@@ -381,16 +382,24 @@ class AssistantActionRegistry:
                    and "journal" not in a.name and "journal" not in a.domain and _names_its_subject(a, prompt)]
         if len(lookups) != 1 or len(matched) != 1:
             return None
-        if self._entity_domains(prompt, context) - {lookups[0].domain}:
-            return None  # "what's running on the pickup truck?" names the truck: the model decides, Maintenance offered
-        return lookups[0]
+        # What's left once the lookup's own words are taken out ("how many eggs", its subjects): if that still names
+        # another app's record ("what's running on the pickup truck?" names the truck), the model decides, with
+        # Maintenance offered. "How many eggs this week?" stays the egg count, though eggs are in the pantry too.
+        action = lookups[0]
+        rest = lowered
+        for words in (*action.trigger_phrases, *action.subjects):
+            rest = rest.replace(words, " ")
+        if self._entity_domains(rest, context) - {action.domain}:
+            return None
+        return action
 
     def named_action(self, prompt: str, offered: Iterable[str]) -> Optional[str]:
         """The one tool the message names in its own words, for when the
         model doesn't use it (2026-10-19, the PC model's misses: "Add a note
         that says buy milk" answered with "what title?"). Exactly one offered
         action's trigger phrase matches and it isn't destructive; a lookup
-        for a question or when the message starts with its phrase ("wrap up my day"), one that changes records only
+        for a question or when the message starts with its phrase ("wrap up my day": never with a number in it or a
+        change of the same app on offer, "egg count is 12 today"), one that changes records only
         when the message
         starts with that phrase ("Add a recipe for...", never "do I have a
         recipe for chili?"). And the message says what it's about ("do I
@@ -402,8 +411,15 @@ class AssistantActionRegistry:
             return None
         action = matched[0]
         request = _POLITE_START.sub("", prompt.lower().strip())
-        if not changes_records(action.name) and looks_like_question(prompt):
-            return action.name
+        if not changes_records(action.name):
+            if looks_like_question(prompt):
+                return action.name
+            # A command naming a lookup ("wrap up my day"), never a statement that's really a change: "egg count is 12
+            # today" holds a number, and a change of the same app on offer is the model's to choose.
+            if re.search(r"\d", request) or any(
+                    a.domain == action.domain and changes_records(a.name)
+                    for a in self._actions.values() if a.name in offered):
+                return None
         return action.name if any(request.startswith(p.strip()) for p in action.trigger_phrases) else None
 
     def execute(self, context: AppContext, name: str, arguments: dict) -> str:

@@ -8,8 +8,9 @@ due when he says), an order marked delivered; each change through the Business p
 A record is found by its exact title or customer name first; dates like "December 5" are read; the read-only tools
 count as lookups by their observe tier (but a web search or a page read keeps a change's path, and a new tool's tier
 is judged by its name); a record's name matches only as whole words, a plural allowed; a question naming another
-app's record is never answered without the model; a lookup is named when the message starts with its phrase; and
-none of it is a child's.
+app's record is never answered without the model (past the lookup's own words: "how many eggs this week?" stays the
+egg count though eggs are in the pantry); a lookup is named when the message starts with its phrase, never for a
+statement with a number ("egg count is 12 today"); and none of it is a child's.
 """
 
 from datetime import date, timedelta
@@ -112,3 +113,23 @@ def test_a_lookup_is_named_when_the_message_starts_with_its_phrase():
 
     registry = build_desktop_registry()
     assert registry.named_action("wrap up my day", ["evening_wrap", "get_today"]) == "evening_wrap"
+
+
+def test_the_egg_count_stays_a_direct_lookup_though_eggs_are_in_the_pantry():
+    from types import SimpleNamespace
+
+    from tests.assistant_registry import build_desktop_registry, demo_context
+
+    registry = build_desktop_registry()
+    context = demo_context()
+    context.kitchen = SimpleNamespace(all_pantry_items=lambda: [SimpleNamespace(name="Eggs")],
+                                      all_grocery_items=lambda: [], all_recipes=lambda: [])
+    found = registry.direct_lookup("How many eggs this week?", context)
+    assert found is not None and found.name == "get_eggs"
+
+
+def test_a_statement_with_a_number_never_names_a_lookup():
+    from tests.assistant_registry import build_desktop_registry
+
+    registry = build_desktop_registry()
+    assert registry.named_action("egg count is 12 today", ["get_eggs", "log_eggs"]) is None
