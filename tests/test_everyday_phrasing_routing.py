@@ -74,6 +74,8 @@ SAID = [
     ("should_i_water", "should I water the garden today?"), ("should_i_water", "do the tomatoes need watering"),
     ("what_to_plant", "what can I plant now?"), ("what_to_plant", "when should I plant potatoes?"),
     ("what_to_plant", "is it too late to plant garlic?"),
+    ("budget_left", "how much is left in my grocery budget?"), ("budget_left", "am I over budget on gas this month?"),
+    ("budget_left", "how much can I still spend on eating out"),
 ]
 
 
@@ -134,7 +136,8 @@ def test_self_worth_and_other_peoples_worth_never_get_his_figure(registry, said)
                                         ("the truck has 120000 miles on it", "log_workout"),
                                         ("I ran out of milk", "log_workout"),
                                         ("should I water the houseplants?", "should_i_water"),
-                                        ("do I need to water the chickens?", "should_i_water")])
+                                        ("do I need to water the chickens?", "should_i_water"),
+                                        ("what's left in my pantry?", "budget_left")])
 def test_everyday_talk_never_reaches_a_tool_it_isnt_for(registry, said, never):
     assert never not in offered_tools(registry, said, demo_context()), said
 

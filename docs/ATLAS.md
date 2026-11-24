@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1660 files, 361,897 lines; 1660 files describe themselves; 19,906 of 20,036 classes and functions are documented.
+1661 files, 361,973 lines; 1661 files describe themselves; 19,910 of 20,040 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-653 files, 184,845 lines; 9,436 of 9,522 classes and functions documented
+653 files, 184,886 lines; 9,437 of 9,523 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -951,7 +951,7 @@
 
 ## tests/: the test suite: what each part must do
 
-603 files, 96,500 lines; 8,107 of 8,151 classes and functions documented
+604 files, 96,535 lines; 8,110 of 8,154 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1005,6 +1005,7 @@
 - `tests/test_boot_sound.py`: Unit tests for core.boot_sound — pure synthesis logic, no audio hardware/I/O involved; also the six startup sounds to choose from and the Settings choice that picks one (or Off) (see that module's docstring for why real playback can't be verified in this dev sandbox). write_boot_sound_wav() is exerc
 - `tests/test_boss_battles.py`: Boss battles (DEC-0028): every debt is a boss (max HP is the highest balance seen, payments are hits, interest heals it), and any mission can be made into one (its objectives are its HP); and the same by voice (core/assistant_game_actions.py).
 - `tests/test_browser.py`: MIA's browser (DEC-0117) against a pretend browser: what the safety rules let her do alone, a commit waiting for the person (approved on screen or with a yes, refused when the page changed), secrets never typed, a task taught by showing and replayed, learned after two clean runs, the Browser screen 
+- `tests/test_budget_left.py`: "How much is left in my grocery budget?" by voice (budget_left): the Money page's own budget targets, spent and left for the one he named or all, over a target said plainly, an unknown one named with the ones he has, and none set yet said with how to set one.
 - `tests/test_budget_manager.py`: Unit tests for core.budget_manager. Isolates _DATA_DIR/_*_FILE into a tmp_path scratch area, same monkeypatch pattern as test_calendar_manager.py's isolated_paths, so these tests never touch real data/*.json. *(5 undocumented)*
 - `tests/test_budget_module.py`: Unit tests for modules.budget.module's pure row formatters — no Qt event loop needed, same shape as tests/test_maintenance_module.py.
 - `tests/test_budget_nudges.py`: Unit tests for core.budget_nudges — no Qt, no manager instances, same shape as tests/test_daily_occasions.py. *(2 undocumented)*
