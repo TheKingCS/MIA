@@ -124,7 +124,8 @@ def _take_off(context, arguments: dict) -> str:
 
 def register_ual_actions(registry: AssistantActionRegistry) -> None:
     """Registers the Universal Action Layer's tools: actions_for_this, do_with_this and selections_search_web; and
-    the shelf's: whats_on_my_shelf, use_my_shelf and take_off_my_shelf (UI-4)."""
+    the shelf's: whats_on_my_shelf, use_my_shelf and take_off_my_shelf (UI-4). do_with_this is also reached by "how
+    does this connect" and "how should I use this" (the `connect` action)."""
     from core import ual
 
     ready = [s.id for s in ual.SPECS if s.ready]
@@ -147,7 +148,9 @@ def register_ual_actions(registry: AssistantActionRegistry) -> None:
         }, "required": ["action", "text"]}, handler=_do,
         trigger_phrases=("save this to my inbox", "send this to my inbox", "make this a mission", "keep this on my shelf",
                          "put this on my shelf",
-                         "start a project from this", "find what i know about"),
+                         "start a project from this", "find what i know about", "how does this connect",
+                         "how does this relate", "how should i use this", "how can i use this",
+                         "what does this mean for my", "connect this to"),
         subjects=("selection",),
     ))
     which = {"type": "string", "description": "Which things on the shelf: numbers as listed (\"1, 3\"), or all."}
