@@ -9,6 +9,13 @@ item when it's done. Newest first within each person. Read with `docs/NEXT_SESSI
 ## Zac
 
 ### From the Jarvis brainstorm (2026-11-23, `docs/future/JARVIS_BRAINSTORM.md`)
+0zk. [ ] **Read the safety floor's new phrases** (`core/safety_floor.py`, 2026-11-24): besides "kill myself" and
+   the like, MIA now answers with the fixed crisis text (numbers for your country, then a listening mode) when
+   someone says things like "nobody would miss me", "what's the point of living", "I wish I'd never been born",
+   even after "I'm not suicidal, but...". Ordinary talk ("what's the point of this meeting", "nobody would miss
+   me at the potluck") is kept out, and each phrase is tested both ways. Two things for you: any phrase you'd add
+   or take out; and whether the crisis reply should end by saying "say 'back to normal' when you want me to
+   look things up again" (today the listening mode lasts until you say it or start a new chat).
 0zj. [ ] **May a workflow work the homestead's equipment?** (brainstorm 7.2) Today MIA only reads the greenhouse
    and aquaponics system's snapshots; she can't switch anything there. A workflow step like "when the tank is low,
    run the fill pump" would be a new path from MIA into real pumps and vents. Claude's recommendation: not yet; first
