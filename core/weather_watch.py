@@ -31,10 +31,13 @@ anything planted or kept, there's nothing to say.
 
 "Should I water the garden today?" (`watering`, `say_watering`) is read from the same forecast: rain now or likely
 tomorrow says hold off, a hot dry day says water deeply in the morning, and every answer ends with the soil check.
+His rain gauge's readings ("I got half an inch of rain", `log_rain`) are kept in the data logger (`RAIN_SERIES`, in
+inches), so the watering answer counts the week's real rain, not only the forecast.
 """
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, timedelta
 from typing import Callable, Optional
 
@@ -267,7 +270,8 @@ def watering(forecast: dict, in_ground: list) -> str:
 
 def say_watering(context, today: Optional[date] = None) -> str:
     """For "should I water the garden today?": `watering`, from the kept forecast and what his confirmed garden plans
-    have in the ground; while the forecast is still coming, says so and to ask again."""
+    have in the ground, led by the inches his rain gauge logged this week (`rain_this_week`) against the inch a week
+    the garden wants; while the forecast is still coming, says so and to ask again."""
     from core import weather
 
     today = today or date.today()
@@ -282,4 +286,49 @@ def say_watering(context, today: Optional[date] = None) -> str:
     except Exception:  # noqa: BLE001 - plans that can't be read never stop the answer
         log.exception("Watering: the garden plans couldn't be read")
         in_ground = []
-    return watering(got if got.get("text") else {}, in_ground)
+    said = watering(got if got.get("text") else {}, in_ground)
+    gauge = rain_this_week(context, today)
+    if gauge is not None and not said.startswith("No watering today"):
+        if gauge >= INCH_A_WEEK:
+            said = (f"Your gauge has {gauge:g} inches this week, the inch a week the garden wants, so you can likely "
+                    f"skip it. " + said)
+        else:
+            said = f"Your gauge has {gauge:g} inches this week, so the garden's short about {INCH_A_WEEK - gauge:g}. " + said
+    return said
+
+
+RAIN_SERIES = "weather:rain_gauge"  # his rain gauge, in inches (the data logger's series)
+INCH_A_WEEK = 1.0  # the garden's usual need, rain included
+_RAIN = re.compile(r"(\d+(?:\.\d+)?|\.\d+)\s*(?:\"|in\b|inch(?:es)?|mm|millimet(?:er|re)s?|cm|centimet(?:er|re)s?)",
+                   re.I)
+_RAIN_WORDS = (("an inch and a half", 1.5), ("inch and a half", 1.5), ("half an inch", 0.5), ("half inch", 0.5),
+               ("a quarter inch", 0.25), ("quarter inch", 0.25), ("an inch", 1.0), ("a tenth of an inch", 0.1))
+
+
+def rain_inches(said: str) -> Optional[float]:
+    """Pure logic. Rainfall he read off the gauge, in inches ("0.6 in", "half an inch", "15 mm"), or None."""
+    text = " ".join(str(said or "").lower().split())
+    for words, value in _RAIN_WORDS:
+        if words in text:
+            return value
+    m = _RAIN.search(text)
+    if not m:
+        return None
+    value = float(m.group(1))
+    unit = m.group(0)[len(m.group(1)):].strip().lower()
+    if unit.startswith("mm") or unit.startswith("millimet"):
+        return round(value / 25.4, 2)
+    if unit.startswith("cm") or unit.startswith("centimet"):
+        return round(value / 2.54, 2)
+    return value
+
+
+def rain_this_week(context, today: Optional[date] = None) -> Optional[float]:
+    """The inches his gauge logged over the last seven days (today counting), or None when nothing's logged then."""
+    today = today or date.today()
+    logger = getattr(context, "data_logger", None)
+    if logger is None:
+        return None
+    since = (today - timedelta(days=6)).isoformat()
+    found = [r.value for r in logger.readings_for(RAIN_SERIES) if str(r.timestamp)[:10] >= since]
+    return round(sum(found), 2) if found else None

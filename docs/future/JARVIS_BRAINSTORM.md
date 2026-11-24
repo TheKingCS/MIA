@@ -336,6 +336,7 @@ New ideas, each checked against what's there first:
 - **Mixing feed to a protein** (S, no decision): built 2026-11-24 (`core/feed_mix.py`): the Pearson square, parts,
   shares and a batch's pounds of each.
 - **A rain gauge log** (S, no decision): rainfall he reads off a gauge, kept by day, so "should I water?" counts
-  the week's real inches instead of only the forecast. Not built yet.
+  the week's real inches instead of only the forecast. *Built 2026-11-24 (`log_rain`, kept in the data logger;
+  "should I water?" leads with the week's inches).*
 - **Meat birds' processing day** (S, no decision): a batch of broilers as a mission dated from hatch (Cornish cross
   around 8 weeks, slower breeds later), with the feed they'll eat to get there. Not built yet.

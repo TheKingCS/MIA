@@ -63,6 +63,24 @@ def _action_set_weather_place(context, arguments: dict) -> str:
         return str(problem)
 
 
+def _action_log_rain(context, arguments: dict) -> str:
+    """Rainfall off his gauge, kept in the data logger in inches (core/weather_watch.RAIN_SERIES); said back with the
+    week's total."""
+    from core import weather_watch as ww
+
+    inches = ww.rain_inches(str(arguments.get("amount") or ""))
+    if inches is None or not 0 < inches < 30:
+        return "How much rain did the gauge show? Say it in inches or millimeters, like \"half an inch\"."
+    logger = getattr(context, "data_logger", None)
+    if logger is None:
+        return "There's no data logger here to keep it in."
+    from core.person_settings import person_id
+
+    logger.add_reading(ww.RAIN_SERIES, inches, unit="in", note="rain gauge", profile_id=person_id(context))
+    week = ww.rain_this_week(context)
+    return f"Logged {inches:g} inches of rain. That's {week:g} this week." if week else f"Logged {inches:g} inches."
+
+
 def _action_should_i_water(context, arguments: dict) -> str:
     """Whether to water the garden today, from the forecast and what's in the ground (core/weather_watch.say_watering)."""
     from core import weather_watch
@@ -209,7 +227,7 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather, should_i_water (core/weather_watch.say_watering, heard only of the
-    garden, never houseplants or the hens), weather_for_my_plans (the forecast against his garden and flock,
+    garden, never houseplants or the hens), log_rain (his rain gauge, which that answer counts), weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
@@ -242,6 +260,16 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_get_weather,
         trigger_phrases=("weather", "how hot", "how cold", "is it going to rain", "will it rain", "temperature outside",
                          "forecast"),
+    ))
+    registry.register(AssistantAction(
+        name="log_rain", domain="today",
+        description="Log the rainfall he read off his rain gauge (inches or millimeters), for the week's watering.",
+        parameters={"type": "object", "properties": {
+            "amount": {"type": "string", "description": "how much, as he said it: '0.6 inches', 'half an inch'"}},
+            "required": ["amount"]},
+        handler=_action_log_rain,
+        trigger_phrases=("rain gauge", "inches of rain", "inch of rain", "mm of rain", "got rain", "we got rain",
+                         "rained an inch", "rained half an inch"),
     ))
     registry.register(AssistantAction(
         name="should_i_water", domain="today",
