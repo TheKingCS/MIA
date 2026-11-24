@@ -351,7 +351,8 @@ Checked against today's code; each says whether it needs Zac's say.
 - **The Chronicle tells the homestead, songs and wins** (no decision): *built 2026-11-24 (`core/chronicle.py`).* The
   week's and year's story now has a Homestead thread (eggs once a day, jars put up), Music (songs learned) and Wins
   (achievements and mission rewards, named among the highlights).
-- **Achievements for the business and the money** (no decision, read from records): a first sale, 10 and 100
+- **Achievements for the business and the money** (no decision, read from records): *built 2026-11-24 (Trade: a
+  first sale to 1,000; Debt Free: a debt paid to nothing, 3, 5; core/life_milestones.py).* a first sale, 10 and 100
   products sold (core/business), a debt paid off, the freedom date moved a month nearer (core/freedom.py), the
   first month under budget. The same chains as harvest and eggs, so the card and the log come for free.
 - **"How's the pH against its target?"** (no decision): the greenhouse's readings beside the targets MIA now reads

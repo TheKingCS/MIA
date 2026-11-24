@@ -13,6 +13,9 @@ at), every egg logged in the flock book (core/flock.py), and every jar put up on
 (core/canning_shelf.py records a `canned` life event with its jar count, because a jar eaten leaves the pantry; an
 undone one is dropped by `life_events.reversed_ids`).
 
+**The business and the money** (`sales_made`, `debts_paid_off`, 2026-11-24, brainstorm round 9): each sale in the
+workshop's ledger, and each debt paid down to nothing (a debt_payment event that left 0, one per debt).
+
 **Structures built** (`STRUCTURES`, `built`, `structure_of`): one-time milestones, each earned when a project that
 built it is marked Complete in the Workshop (core/project_manager.py): its name is just the structure ("Greenhouse")
 or says it was built ("Build the chicken coop", "Install solar"), never one about mending, moving or a part of one
@@ -74,6 +77,37 @@ def jars_canned(context) -> float:
             except (TypeError, ValueError):
                 continue
     return total
+
+
+def sales_made(context) -> float:
+    """Every sale in the workshop's ledger (core/ledger_manager.py): each revenue entry of more than nothing."""
+    ledger = getattr(context, "ledger", None)
+    return float(sum(1 for r in (ledger.all_revenue() if ledger is not None else []) if (r.amount or 0) > 0))
+
+
+def debts_paid_off(context) -> float:
+    """Each debt paid down to nothing, from his history: a debt_payment event that left a balance of 0 (core/
+    budget_manager.py records it), one per debt, an undone payment dropped."""
+    from core import life_events
+
+    try:
+        events = life_events.events_for(context, types=("debt_payment", "undone"))
+    except Exception:  # noqa: BLE001 - a history that can't be read counts nothing
+        log.exception("Couldn't read the debt payments")
+        return 0.0
+    undone = life_events.reversed_ids(events)
+    cleared = set()
+    for e in events:
+        if e.type != "debt_payment" or e.event_id in undone:
+            continue
+        try:
+            balance = float(e.payload.get("balance"))
+        except (TypeError, ValueError):
+            continue
+        debt = next((r for r in e.refs if r.startswith("debt:")), "")
+        if balance <= 0.005 and debt:
+            cleared.add(debt)
+    return float(len(cleared))
 
 
 @dataclass(frozen=True)

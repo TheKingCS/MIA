@@ -271,6 +271,9 @@ STAT_DEFINITIONS: list[StatDefinition] = [
     StatDefinition("eggs_collected", "Eggs Collected", "", "🥚"),
     StatDefinition("jars_canned", "Jars Canned", "", "🫙"),
     StatDefinition("songs_learned", "Songs Learned", "", "🎸"),  # his songbook (core/repertoire.py)
+    # The business and the money (2026-11-24, core/life_milestones.py).
+    StatDefinition("sales_made", "Sales Made", "", "🏷️"),
+    StatDefinition("debts_paid_off", "Debts Paid Off", "", "⛓️"),
 ]
 
 #: v2 reward set — real escalating chains against the real stats above,
@@ -389,6 +392,26 @@ CHALLENGE_CHAINS: list[ChallengeChain] = [
             ChallengeTier("songbook_porch_picker", "Porch Picker", "Learn 15 songs.", "🪕", 15.0, 2),
             ChallengeTier("songbook_setlist", "A Full Set", "Learn 30 songs.", "🎸", 30.0, 3),
             ChallengeTier("songbook_songbook", "The Songbook", "Learn 75 songs.", "📖", 75.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="trade",
+        stat_id="sales_made",
+        tiers=(
+            ChallengeTier("trade_first_sale", "Open For Business", "Make your first sale.", "🏷️", 1.0, 0),
+            ChallengeTier("trade_ten_sales", "Ten Sales", "Make 10 sales.", "💵", 10.0, 1),
+            ChallengeTier("trade_steady", "Steady Trade", "Make 50 sales.", "🛒", 50.0, 2),
+            ChallengeTier("trade_established", "Established", "Make 200 sales.", "🏪", 200.0, 3),
+            ChallengeTier("trade_legendary", "Legendary Shop", "Make 1,000 sales.", "🏆", 1000.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="debt_free",
+        stat_id="debts_paid_off",
+        tiers=(
+            ChallengeTier("debt_first_gone", "First Debt Gone", "Pay a debt off completely.", "✂️", 1.0, 2),
+            ChallengeTier("debt_chains_breaking", "Chains Breaking", "Pay off 3 debts.", "⛓️", 3.0, 3),
+            ChallengeTier("debt_slayer", "Debt Slayer", "Pay off 5 debts.", "🗡️", 5.0, 4),
         ),
     ),
 ]
@@ -584,7 +607,8 @@ class RewardsManager:
     def stat_value(self, stat_id: str, profile_id: str) -> float:
         """One stat's value for a person, worked out now from the records (0 for an unknown stat).
         Produce, eggs and jars are read from core/life_milestones.py.
-        Songs learned are read from his songbook (core/repertoire.py)."""
+        Songs learned are read from his songbook (core/repertoire.py); sales and debts paid off from the ledger
+        and the history (core/life_milestones.py)."""
         if stat_id == "engine_hours_logged":
             return self._compute_engine_hours_logged(profile_id)
         if stat_id == "workout_hours_logged":
@@ -597,7 +621,7 @@ class RewardsManager:
             return self._compute_meals_cooked()
         if stat_id == "projects_completed":
             return self._compute_projects_completed()
-        if stat_id in ("produce_pounds", "eggs_collected", "jars_canned"):
+        if stat_id in ("produce_pounds", "eggs_collected", "jars_canned", "sales_made", "debts_paid_off"):
             from core import life_milestones
 
             return float(getattr(life_milestones, stat_id)(self.context))

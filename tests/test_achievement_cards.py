@@ -7,6 +7,7 @@ The game layer's achievements (2026-11-24): pounds of produce, eggs and jars cou
 in the log with their dates and shown once as a card (core/achievement_cards.py), and said by voice.
 And the review's cases: closing a card never blocks undoing what earned it, cards are seen by id, a structure needs
 a build, grams count, and a mission's trophy is in the log.
+And the business and money: a first sale and a debt paid to nothing.
 """
 
 from datetime import datetime, timedelta
@@ -176,3 +177,24 @@ def test_a_missions_trophy_is_in_the_log_and_offered_as_a_card(tmp_path, monkeyp
     assert card["headline"] == "Structure Built" and card["name"] == "Chicken coop"
     assert card["id"].startswith("trophy:")
     assert achievement_cards.page(world)["counts"]["trophies"] == 1
+
+
+def test_a_first_sale_and_a_debt_paid_to_nothing_are_achievements(tmp_path, monkeypatch):
+    """Sales are counted from the ledger (a 0 entry isn't one); a debt is paid off when a payment leaves 0, once per
+    debt; both achievements unlock."""
+    from core.ledger_manager import LedgerManager
+
+    world = _world(tmp_path, monkeypatch)
+    world.ledger = LedgerManager(world, data_dir=world.home_dir)
+    world.ledger.add_revenue(40.0, "Cutting board")
+    world.ledger.add_revenue(0.0, "A refund note")
+    assert life_milestones.sales_made(world) == 1
+    debt = world.budget.add_debt("Store card", 100.0, 20.0)
+    world.budget.record_debt_payment(debt.debt_id, 60.0)
+    assert life_milestones.debts_paid_off(world) == 0
+    world.budget.record_debt_payment(debt.debt_id, 40.0)
+    world.budget.record_debt_payment(debt.debt_id, 0.0)  # another payment at 0 is the same debt
+    assert life_milestones.debts_paid_off(world) == 1
+    world.rewards.scan_for_new_unlocks(world.me.profile_id)
+    assert world.rewards.is_unlocked(world.me.profile_id, "debt_first_gone")
+    assert world.rewards.is_unlocked(world.me.profile_id, "trade_first_sale")
