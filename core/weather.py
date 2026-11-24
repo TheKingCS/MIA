@@ -87,18 +87,20 @@ def unit_for(context) -> str:
 
 
 def forecast_url(lat: float, lon: float, unit: str) -> str:
-    """Pure logic. The forecast request: now, and today's and tomorrow's high, low, weather and chance of rain."""
+    """Pure logic. The forecast request: now, and the week's highs, lows, weather and chances of rain (today and
+    tomorrow for the Dashboard, the weekend for "what should I do this weekend?")."""
     query = {"latitude": f"{lat:.4f}", "longitude": f"{lon:.4f}", "current": "temperature_2m,weather_code",
              "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
-             "forecast_days": 2,
+             "forecast_days": 7,
              "temperature_unit": unit, "timezone": "auto"}
     return FORECAST + "?" + urllib.parse.urlencode(query)
 
 
 def read(raw: dict, unit: str) -> Optional[dict]:
     """Pure logic. Open-Meteo's answer as {temp, words (now), today_words (the whole day's), high, low, tomorrow:
-    {high, low, words, rain?}, unit: "°F"}, every temperature rounded, tomorrow's chance of rain when it's given
-    (tomorrow None when its figures have a gap); None when it isn't a forecast."""
+    {high, low, words, rain?}, days: [{date, high, low, words, rain?}], unit: "°F"}, every temperature rounded, a
+    day's chance of rain when it's given (tomorrow None, and a day left out of `days`, when its figures have a gap);
+    None when it isn't a forecast."""
     try:
         now, daily = raw["current"], raw["daily"]
         sign = "°F" if unit == "fahrenheit" else "°C"
@@ -117,9 +119,16 @@ def read(raw: dict, unit: str) -> Optional[dict]:
             tomorrow = day(1) if len(daily.get("time") or []) > 1 else None
         except (KeyError, IndexError, TypeError, ValueError):
             tomorrow = None
+        days = []
+        for i, when in enumerate(daily.get("time") or []):
+            try:  # each whole day, by its date; one with a gap is left out
+                days.append({"date": str(when), **day(i)})
+            except (KeyError, IndexError, TypeError, ValueError):
+                continue
         return {"temp": round(now["temperature_2m"]), "words": CODES.get(int(now["weather_code"]), ""),
                 "high": today["high"], "low": today["low"], "tomorrow": tomorrow, "unit": sign,
-                "today_words": today["words"]}  # the whole day's, not only now (a clear morning, storms later)
+                "today_words": today["words"],  # the whole day's, not only now (a clear morning, storms later)
+                "days": days}
     except (KeyError, IndexError, TypeError, ValueError):
         return None
 

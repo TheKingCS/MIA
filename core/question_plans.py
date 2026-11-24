@@ -33,7 +33,9 @@ never as that much more a month. A project he's planning ("I'm planning to
 build a greenhouse") gathers everything it touches (the plan "project
 picture", core/project_ripple.py), using the month's money (`money_now`)
 and the freedom date with a cost (`freedom_with`), both shared with the
-money and afford plans.
+money and afford plans. "What should I do this weekend?" gathers each
+weekend day's forecast with what's due, the garden, learning and projects
+(the plan "weekend", `weekend_days`).
 """
 
 from __future__ import annotations
@@ -658,6 +660,46 @@ def _project_picture(context, sheet, prompt, today):
     project_ripple.gather(context, sheet, prompt, today)
 
 
+def weekend_days(today: date) -> list[date]:
+    """Pure logic. The weekend a question means: this Saturday and Sunday; on a Saturday, today and tomorrow; on a
+    Sunday, today."""
+    if today.weekday() == 6:
+        return [today]
+    saturday = today + timedelta(days=(5 - today.weekday()) % 7)
+    return [saturday, saturday + timedelta(days=1)]
+
+
+def _weekend(context, sheet, prompt, today):
+    """Cross-domain (Jarvis brainstorm round 7): the weekend: each day's forecast (core/weather.py), what's due this
+    week, the garden's week, his learning paths and his projects, with a line of guidance on fitting outdoor work to
+    the better day. The model suggests; nothing is scheduled."""
+    from core import weather
+
+    days = weekend_days(today)
+    try:
+        card = weather.card(context)
+    except Exception:  # noqa: BLE001 - the forecast is one part of the sheet
+        log.exception("The weekend plan couldn't read the weather")
+        card = {}
+    forecast = {d["date"]: d for d in (card.get("days") or [])}
+    unit = card.get("unit", "")
+    for day in days:
+        f = forecast.get(day.isoformat())
+        if f:
+            sheet.add(FACT, f"{day:%A}: {f['words'] or 'forecast'}, high {f['high']}{unit}, low {f['low']}{unit}"
+                      + (f", {f['rain']}% chance of rain" if f.get("rain") is not None else "") + ".", "the forecast")
+        else:
+            sheet.add(MISSING, f"No forecast for {day:%A} yet" + ("" if card.get("place") else
+                                                                 " (no town set for the weather)") + ".",
+                      "the forecast")
+    _look(context, sheet, "get_week", "this week")
+    _look(context, sheet, "garden_this_week", "the garden")
+    _look(context, sheet, "learning_progress", "learning paths")
+    _look(context, sheet, "list_projects", "Projects")
+    sheet.add(ESTIMATE, "Outdoor work (a build, the garden) suits the drier, milder day; practice and indoor jobs fit "
+                        "the wetter one. Rest counts too.", "general guidance")
+
+
 def _owned(context, tool: str) -> bool:
     """Whether the household inventory holds a tool by its name (the part before any "and" or parenthesis)."""
     inventory = getattr(context, "inventory", None)
@@ -1074,6 +1116,10 @@ PLANS: tuple[Plan, ...] = (
           "What tools does the job take?"),
          r"\b(this job|the job|what step|this step)\b",
          _the_job),
+    Plan("weekend", "The weekend",
+         ("What should I do this weekend?", "Plan my weekend.", "What's on for the weekend?",
+          "What should I get done on Saturday?", "How should I spend Sunday?", "Is the weekend good for building?"),
+         r"\b(this weekend|the weekend|my weekend|weekend plans?|on saturday|on sunday|saturday's|sunday's)\b", _weekend),
     Plan("project picture", "What a project touches",
          ("I'm planning to build a greenhouse.", "I want to build a chicken coop this spring.",
           "I'm thinking about putting up a hoop house.", "How would building a greenhouse affect everything else?",
@@ -1217,7 +1263,7 @@ NOT_FOR = {
     "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost)\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
-                              rf"supper|meals?)\b", re.I),
+                              rf"supper|meals?|weekend)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),
 }
 

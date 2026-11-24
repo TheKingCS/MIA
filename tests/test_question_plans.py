@@ -1,6 +1,7 @@
 """Question plans (DEC-0052 step 2a, core/question_plans.py): the right
 plan for a question, lookups gathered by code onto a marked sheet, and an
-answer that never states a number MIA didn't look up."""
+answer that never states a number MIA didn't look up; and the weekend's
+plan with each day's forecast."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -112,3 +113,33 @@ def test_what_we_decided_also_looks_in_her_own_decision_record_and_says_whose_it
     looked.clear()
     qp._recall(life, qp.Sheet("recall", "Recall"), "What did I decide about the truck?", TODAY)
     assert not any(tool == "get_mia_docs" for tool, _ in looked)
+
+
+def test_the_weekend_is_this_saturday_and_sunday_or_what_is_left_of_it():
+    assert qp.weekend_days(date(2026, 11, 24)) == [date(2026, 11, 28), date(2026, 11, 29)]  # a Tuesday
+    assert qp.weekend_days(date(2026, 11, 28)) == [date(2026, 11, 28), date(2026, 11, 29)]  # Saturday
+    assert qp.weekend_days(date(2026, 11, 29)) == [date(2026, 11, 29)]  # Sunday
+
+
+def test_asking_about_the_weekend_reaches_its_plan_with_each_days_forecast(life, monkeypatch):
+    from core import weather
+
+    assert qp.match(life, "What should I do this weekend?").name == "weekend"
+    assert qp.match(life, "How did my week go?").name == "week review"
+    monkeypatch.setattr(weather, "card", lambda c: {"place": "Town", "unit": "°F", "days": [
+        {"date": "2026-11-28", "high": 52, "low": 31, "words": "Clear", "rain": 5}]})
+    text = qp.gather(life, qp.PLAN_BY_NAME["weekend"], "What should I do this weekend?", date(2026, 11, 24)).as_text()
+    assert "Saturday: Clear, high 52°F, low 31°F, 5% chance of rain." in text
+    assert "No forecast for Sunday yet." in text and "suits the drier" in text
+
+
+def test_a_forecast_carries_each_whole_day_by_its_date():
+    from core.weather import read
+
+    raw = {"current": {"temperature_2m": 50, "weather_code": 0},
+           "daily": {"time": ["2026-11-24", "2026-11-25", "2026-11-26"], "temperature_2m_max": [55, 57, None],
+                     "temperature_2m_min": [40, 41, 39], "weather_code": [0, 3, 61],
+                     "precipitation_probability_max": [0, 10, 80]}}
+    days = read(raw, "fahrenheit")["days"]
+    assert [d["date"] for d in days] == ["2026-11-24", "2026-11-25"]  # the gap day left out
+    assert days[1]["rain"] == 10
