@@ -1133,14 +1133,16 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
 _WEATHER = r"frost|freez\w*|rain\w*|snow\w*|storms?|forecast|weather|windy|too (cold|hot)|cover the"
 _GROWING = r"plant(ing)?|seeds?|sow(ing)?|transplant\w*|garden\w*|homestead"
 _FLOCK = r"feed|hens?|chickens?|flock|coop"
+_LEARNING = r"homework|lessons?|practi[cs]e\w*|woodworking|bushcraft|fitness plan|guitar"
 # A plan's own words can catch a question it can't answer: "is it going to frost tonight?" isn't the evening's plan,
 # "what should I plant this week" isn't the week's review. Such a question goes on to the tool that answers it
 # (the weather against his plans, the garden's week, the flock's feed; tomorrow's first thing is the evening wrap's,
 # spending past its usual is "anything unusual"'s, which compares each category with its own normal month).
 NOT_FOR = {
-    "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|first (thing )?tomorrow|tomorrow first)\b", re.I),
+    "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|first (thing )?tomorrow|tomorrow first)\b",
+                          re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
-    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK})\b", re.I),
+    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING})\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow)\b", re.I),
 }
 

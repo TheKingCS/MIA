@@ -187,9 +187,30 @@ def _action_progress(context, arguments: dict) -> str:
     return " ".join(paths.describe_stats(book, p) for p in programs)
 
 
+LEARNING_WORDS = (
+    "woodworking", "woodwork", "the shop", "in the shop", "joinery", "dovetail", "dovetails", "mortise", "tenon",
+    "carpentry", "bushcraft", "survival skills", "ferro rod", "fire starting", "friction fire", "knots", "shelter",
+    "fitness", "get fit", "guitar", "homework", "lesson", "lessons", "practiced", "practised",
+    "practice", "my program", "the program", "what stage", "next stage",
+)
+
+
+GARDENING_PHRASES = ("teach me gardening", "into gardening", "learn gardening", "in gardening", "my gardening",
+                     "gardening program", "gardening lesson", "gardening homework")
+
+
+def _program_names(context) -> list:
+    """The learning programs' names ("Woodworking at the bench", "Survival and bushcraft"...), for the registry."""
+    from core import paths
+
+    paths._builtins()
+    return [p.name for p in paths.PROGRAMS.values()]
+
+
 def register_path_actions(registry) -> None:
     """Registers the learning-path tools: start_learning, learning_lesson, log_practice, learning_check and
-    learning_progress."""
+    learning_progress, and the words that reach them (`LEARNING_WORDS`, the programs' names), so his own way of
+    asking about woodworking, gardening, fitness or bushcraft finds them (tests/test_everyday_phrasing_routing.py)."""
     from core.assistant_actions import AssistantAction
 
     s = {"type": "string"}
@@ -206,7 +227,7 @@ def register_path_actions(registry) -> None:
             "days_a_week": {"type": "integer", "description": "Days a week, only if they said."}}, "required": []},
         handler=_action_start,
         trigger_phrases=("want to learn", "learn to play", "teach me to", "teach me how to", "learn guitar",
-                         "start learning", "start it", "get better at", "want to improve at"),
+                         "start learning", "start it", "get better at", "want to improve at") + GARDENING_PHRASES,
         subjects=("learn", "learning"),
     ))
     registry.register(AssistantAction(
@@ -255,3 +276,9 @@ def register_path_actions(registry) -> None:
                          "how am i doing on", "my progress on", "how's my learning"),
         subjects=("progress",),
     ))
+    # His programs by the words he'd use for them, so "what's my next woodworking lesson?" or "I cut a dovetail joint
+    # today" reaches these tools without the embedding model (the phone): each program's name, its everyday words,
+    # and the words of learning itself. "Gardening" alone is small talk ("I love gardening"), so it reaches them only
+    # inside a learning phrase (`GARDENING_PHRASES`).
+    registry.register_domain_keywords("learning", LEARNING_WORDS)
+    registry.register_entity_names("learning", _program_names, match_all_words=True)  # never "a bench at the park"
