@@ -4147,3 +4147,31 @@ REJECTED. Seeded 2026-10-05 from decisions already made and recorded in
 - Decision: Narrows DEC-0136 for light themes only. A theme marked light (light panels, checked in code) may set amber, green, red and the reward's orange to darker shades of the same hues: each within 15 degrees of its meaning's hue and at 4.5:1 on white (`core/themes.meaning_problems`); any other theme still has them dropped. The first is Daylight; on it a colour scheme's accents and each app's own colour also show in darker shades of their own hues. A theme made in the Studio or imported from a file can't be light. Muse's eye on the look is still welcome.
 - Record: docs/mia_os/MIA_OS_OPEN_QUESTIONS.md Q-115; core/themes.py
 - Related: DEC-0014, DEC-0136, DEC-0183, DEC-0186
+
+### DEC-0289: Learning companions for his hobbies
+- Status: APPROVED (Zac, 2026-11-23, the Jarvis brainstorm's question 3.3: "Woodworking / building, Gardening / homesteading, Fitness, Survival / bushcraft")
+- Proposed by: claude (Opus), 2026-11-23, `docs/future/JARVIS_BRAINSTORM.md` 3.3
+- Decision: A learning program on core/paths.py's method (like guitar and the carpentry apprentice) for woodworking (beside carpentry's framing), gardening and homesteading, fitness, and survival and bushcraft: stages of lessons with why and what to watch for, checks said, counted or read from his own records, weekly homework missions. Written from named sources; never a licence or a medical claim.
+- Record: core/woodworking.py, core/gardening_path.py, core/fitness_path.py, core/bushcraft.py
+- Related: DEC-0111, DEC-0112, DEC-0149
+
+### DEC-0290: The picture of him, his to see and correct
+- Status: APPROVED (Zac, 2026-11-23, brainstorm 1.3: "Yes, build it")
+- Proposed by: claude (Opus), 2026-11-23, `docs/future/JARVIS_BRAINSTORM.md` 1.3 (the personality plan's parked phase 3, the self-knowledge map)
+- Decision: One page of what MIA believes about him (interests, skills and their level, how he likes answers, the people and places he's named), each belief with where it came from and a way to correct or forget it; nothing new is collected, only what she already holds, laid out. Her answers read it so she stops asking what she should know.
+- Record: core/picture_of_you.py
+- Related: DEC-0067, DEC-0115
+
+### DEC-0291: A bigger local model, tested before any switch
+- Status: APPROVED (Zac, 2026-11-23, brainstorm 1.5: "Yes, test one")
+- Proposed by: claude (Opus), 2026-11-23, `docs/future/JARVIS_BRAINSTORM.md` 1.5
+- Decision: The larger models already on the PC (qwen3:14b, gpt-oss:20b, mistral-small:24b, qwen2.5:32b) are run through his Intelligence Benchmark beside qwen2.5:14b (tools/intelligence_check.py, read-only, results kept in pc-check/ only); he reads the answers side by side and decides whether to switch. Nothing switches by itself.
+- Record: pc-check/intelligence-*.md (not in the repository)
+- Related: DEC-0022
+
+### DEC-0292: An evening wrap
+- Status: APPROVED (Zac, 2026-11-23: "Yes")
+- Proposed by: claude (Opus), 2026-11-23, the brainstorm's round 2
+- Decision: Once an evening, through the communication gate (paced, mutable like any of her messages): what got done today, tomorrow's first thing and tomorrow's weather, in two sentences, at the hour he usually winds down (his own activity, else 8 pm). Facts from his records, worked out in code.
+- Record: core/evening_wrap.py
+- Related: DEC-0171

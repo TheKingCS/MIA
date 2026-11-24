@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1625 files, 357,149 lines; 1625 files describe themselves; 19,663 of 19,785 classes and functions are documented.
+1630 files, 357,637 lines; 1630 files describe themselves; 19,666 of 19,789 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-637 files, 181,696 lines; 9,325 of 9,411 classes and functions documented
+641 files, 182,119 lines; 9,325 of 9,411 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -119,6 +119,7 @@
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
 - `core/build_calcs.py`: Material lists worked out in code (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Each calculator takes a structure's size and gives what to buy and what to cut: a stud wall, a floor or deck frame, a raised garden bed, a fence run,
 - `core/build_media.py`: Photos and videos of a workshop build (DEC-0030 phase B): the before and after of a furniture flip, the build in progress, the finished piece for the portfolio. They live with the household's workshop data, in `<jobs folder>/workshop_media/<job_id>/`; a name starting "before-" or "after-" is shown a
+- `core/bushcraft.py`: Survival and bushcraft, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Survival bushcraft"): priorities and the kit, fire and water, shelter and navigation. Stages of lessons with why and what to watch for, checks said, counted or read from his own records (a GPS track for
 - `core/business_actions.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C, core/business_book.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.
 - `core/business_report.py`: Pure, Qt-free composition of a household + real estate "Business Report" HTML document — 2026-09-08, at the user's explicit request: "I want this to be something I can do business reports with my wife from." Same split as core/budget_nudges.py: this module never touches BudgetManager/RealEstateManag
@@ -233,6 +234,7 @@
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
 - `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
 - `core/fitness_missions.py`: A person's fitness plan as missions (DEC-0020, H-0026): made from the plan (core/fitness_manager.py) each day and week, on the existing mission path (Missions screen, XP, skills, complete, undo).
+- `core/fitness_path.py`: Fitness, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Fitness"): a habit with good form, getting stronger, and endurance and mobility. Its checks are mostly read from his own workout log (core/paths.py SOURCES: workouts and their minutes, GPS tracks), so passing a stage 
 - `core/flock.py`: Chickens (DEC-0037): a flock log that turns eggs into money you can see.
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap
@@ -246,6 +248,7 @@
 - `core/gap_actions.py`: Capability gaps (core/capability_gaps.py, build plan step 9) through the action contract (core/actions.py): `gap.build` (the person says yes to a new ability being built: a development task naming the gap, never their words) and `gap.dismiss` (not wanted: never offered again).
 - `core/garden_plans.py`: A garden worked out in code (T-0060; Zac, 2026-11-22: "auto generated missions for plans we confirm together for different builds or gardens"), the way core/build_calcs.py works out lumber: never by the model.
 - `core/garden_week.py`: This week in the garden (Jarvis brainstorm, round 2; Zac, 2026-11-23: "homestead skills ... aware"): what his confirmed garden plans say is due in the next seven days (start indoors, transplant or sow, ready to harvest), said once a week through the communication gate, so a seed-starting date never 
+- `core/gardening_path.py`: Gardening and homesteading, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Gardening homesteading"): soil, seeds and transplants, growing through the season, and putting food by. Stages of lessons with why and what to watch for, checks said or counted, homework missions fr
 - `core/generate_worker.py`: Runs a single `AppContext.llm.generate()` call off the GUI thread — same reasoning as `core/chat_worker.py`, a separate class only because `generate()` and `chat_with_tools()` have different signatures/return types (`Optional[str]` vs `Optional[ChatReply]`), not because the threading concern itself 
 - `core/geo_grid.py`: Grid references (build plan step 14, DEC-0099): UTM and MGRS, the Military Grid Reference System that maps, search-and-rescue teams and TAK apps use ("18S UJ 23396 06441"), worked out in code from latitude and longitude on the WGS84 ellipsoid. No dependency, no network. Accurate to well under a metr
 - `core/glasses.py`: The glasses' app cards and their quick action menus (Zac, 2026-10-16; Muse's H-0041 Phase 2). The glasses boot to MIA's orb; one swipe away, the person flips through app cards; selecting one opens its quick action menu. Assembled here, in code, so `web/glasses.js` holds no logic (DEC-0013), from the
@@ -628,6 +631,7 @@
 - `core/welcome.py`: What comes after User Sync (slice 5 of docs/GLASSES_FIRST_BOOT_PLAN.md): the first mission, the tour of Home, the app menu with its optional tours, and the moment MIA hands over.
 - `core/whimsy.py`: A little grounded inspiration toward the slow, made, hand-crafted life — the whimsy and art Zac asked MIA to keep alive (2026-11-08: "slow down, draw, create, think about forest creatures, make stuff, dream, do", and his shift from consumer to producer). The standing directions (`core/direction.py`)
 - `core/why_graph.py`: "Remember Why", slice B of docs/COGNITIVE_EXTENSION_PROPOSAL.md: the owner's reasons as a chain, with live evidence from their own records, assembled in code so the model can only phrase it, never invent it.
+- `core/woodworking.py`: Woodworking, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Woodworking / building"), beside the carpentry apprentice (core/carpentry.py, framing and site work): this one is the bench: sharp tools, reading the wood, joinery and finishing. Stages of lessons with why and wha
 - `core/work_activity.py`: Who did what to the development work, and when (DEC-0068, step 2 of `docs/DEV_ECOSYSTEM_AUDIT.md`): `work/activity.jsonl`, one line per event, only ever added to. Every change `tools/work.py` makes to a task is recorded here, so the history is searchable and a task interrupted halfway can be picked 
 - `core/work_agents.py`: Who can do the development work, and what each may do (DEC-0068/0069, step 3 of `docs/DEV_ECOSYSTEM_AUDIT.md`). Roles live in `work/agents.json`: each is a provider (Claude Code, Ollama, Codex...), a model, a permission tier and the documents it reads first. Roles are configuration; providers are ad
 - `core/work_dashboard.py`: The development dashboard's data (DEC-0068/0070, step 5 of `docs/DEV_ECOSYSTEM_AUDIT.md`), served as `/api/dev` to `web/dev.html`: one view over the work and the contributors. Read-only: it shows the tasks, the agents and whether each is here, the review and approval queue, and the activity history,
@@ -935,7 +939,7 @@
 
 ## tests/: the test suite: what each part must do
 
-585 files, 94,973 lines; 7,975 of 8,011 classes and functions documented
+586 files, 95,038 lines; 7,978 of 8,015 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1134,6 +1138,7 @@
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
+- `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry. Each one's skill is a real skill, every recorded check reads a record MIA keeps, every id is unique, every lesson has steps, a why *(1 undocumented)*
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did).
 - `tests/test_homeostasis.py`: MIA easing off her own work (the Living System doctrine's homeostasis, DEC-0173; core/homeostasis.py, core/scheduler.py): deferrable jobs wait while the computer is busy, on a low battery, offline (the online ones) or nearly out of disk (the heavy ones), essential jobs never do; a waiting job is tri

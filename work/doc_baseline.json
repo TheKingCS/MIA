@@ -9,6 +9,7 @@
   "tests/test_debt_missions.py": 6,
   "tests/test_feed_runway.py": 1,
   "tests/test_garden_week.py": 1,
+  "tests/test_hobby_programs.py": 1,
   "tests/test_homestead_year.py": 1,
   "tests/test_invoice_email.py": 1,
   "tests/test_left_off.py": 2,
