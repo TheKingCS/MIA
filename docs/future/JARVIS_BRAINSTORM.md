@@ -322,3 +322,9 @@ New ideas, each checked against what's there first:
   hatch mission's next steps once they're out. *Built 2026-11-24: the hatch mission's last step.*
 - **The offline library on Windows** (needs Zac, WAITING_ON 0zh): Smart App Control blocks its reader; the options
   are written there.
+
+## Round 5 (2026-11-24, checked against the code first)
+
+- **Should I water today?** (S, no decision): built 2026-11-24 (`core/weather_watch.watering`): rain now or likely
+  tomorrow says hold off, a hot dry day says water deeply in the morning, every answer ends with the soil check.
+- *Found already there:* feed cost per dozen eggs (`core/flock.py`, on the Chickens page and in "how are the hens?").

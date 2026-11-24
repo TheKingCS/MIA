@@ -71,6 +71,7 @@ SAID = [
     ("start_hatch", "I set 12 chicken eggs in the incubator today"), ("hatch_status", "how's the hatch going?"),
     ("seed_viability", "are my tomato seeds still good?"), ("seed_viability", "how long do onion seeds last?"),
     ("firewood_check", "do I have enough firewood for the winter?"), ("set_preparedness", "I burn 4 cords a winter"),
+    ("should_i_water", "should I water the garden today?"), ("should_i_water", "do the tomatoes need watering"),
 ]
 
 

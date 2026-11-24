@@ -63,6 +63,13 @@ def _action_set_weather_place(context, arguments: dict) -> str:
         return str(problem)
 
 
+def _action_should_i_water(context, arguments: dict) -> str:
+    """Whether to water the garden today, from the forecast and what's in the ground (core/weather_watch.say_watering)."""
+    from core import weather_watch
+
+    return weather_watch.say_watering(context)
+
+
 def _action_weather_for_my_plans(context, arguments: dict) -> str:
     """What the weather means for his garden and flock (core/weather_watch.say)."""
     from core import weather_watch
@@ -201,7 +208,7 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
-    """Registers get_today, get_week, get_weather, weather_for_my_plans (the forecast against his garden and flock,
+    """Registers get_today, get_week, get_weather, should_i_water (core/weather_watch.say_watering), weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
@@ -234,6 +241,14 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_get_weather,
         trigger_phrases=("weather", "how hot", "how cold", "is it going to rain", "will it rain", "temperature outside",
                          "forecast"),
+    ))
+    registry.register(AssistantAction(
+        name="should_i_water", domain="today",
+        description="Whether to water the garden today: rain now or likely tomorrow, a hot dry day, and the soil check.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_should_i_water,
+        trigger_phrases=("should i water", "do i need to water", "water the garden", "water the plants",
+                         "need watering", "need to be watered", "watering today"),
     ))
     registry.register(AssistantAction(
         name="weather_for_my_plans", domain="today",
