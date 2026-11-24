@@ -4,7 +4,8 @@ answer that never states a number MIA didn't look up; and the weekend's
 plan with each day's forecast, reached only by a weekend ahead; and the
 winter plan with the days to the first frost; a tool's quoted example with a
 number never reaches a sheet; a wet weekend day named for indoor work; and
-quitting by a date he names worked out against the freedom fund; and the review's
+quitting by a date he names worked out against the freedom fund; the homestead's
+morning sheet; and the review's
 cases (quoted names kept, estimate-only sheets worded, dates read as said, habits
 and a winter gone kept out, the weekend winning a weekend for winter work)."""
 
@@ -263,3 +264,12 @@ def test_review_a_weekend_for_winter_work_is_the_weekends_and_a_dry_chance_isnt_
     assert qp.match(life, "what should I get done this weekend to get ready for winter?").name == "weekend"
     assert not qp.is_wet({"rain": 10, "words": "Slight chance of rain"})
     assert qp.match(life, "I'm planning to build a greenhouse, how's that affect my water?").name == "project picture"
+
+
+def test_hows_the_homestead_gathers_every_part_and_says_the_greenhouse_unwatched(life):
+    assert qp.match(life, "How's the homestead?").name == "homestead"
+    sheet = qp.gather(life, qp.PLAN_BY_NAME["homestead"], "How's the homestead?", date(2026, 11, 24))
+    assert "isn't watching the greenhouse yet" in sheet.as_text()
+    assert {"garden_this_week", "orchard_this_month", "water_budget", "power_picture"} <= set(sheet.looked_up)
+    messages, _ = qp.request(life, None, "How's the homestead?", date(2026, 11, 24))
+    assert messages[0]["content"].rstrip().endswith(qp.HOW["homestead"])

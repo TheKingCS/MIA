@@ -37,7 +37,9 @@ money and afford plans. "What should I do this weekend?" gathers each
 weekend day's forecast with what's due, the garden, learning and projects
 (the plan "weekend", `weekend_days`; a wet day named for indoor work, `is_wet`); "am I ready for winter?" gathers
 the first frost, firewood, preparedness, the kit, the flock, the garden and
-the canning shelf (the plan "winter"). A tool's quoted example holding a
+the canning shelf (the plan "winter"); "how's the homestead?" gathers the
+greenhouse, flock, garden, orchard, water, power and tonight's weather (the
+plan "homestead"). A tool's quoted example holding a
 number ("I burn 4 cords a winter") is left off a sheet (`without_examples`):
 the model read examples as his records.
 """
@@ -136,7 +138,7 @@ _LEAD_IN = re.compile(r"\s*(?:\(\s*)?(?:like|e\.g\.,?|say|such as)?\s*\(?\s*$")
 def without_examples(text: str) -> str:
     """Pure logic. A tool's reply without its quoted examples that hold a number, only those led into by "like",
     "e.g.", "say", "such as" or a bracket, so a model never reports an example ("I burn 4 cords a winter") as the
-    person's record; a quoted name or price ("Sign 2", "$45") stays."""
+    person's record; a quoted name or price ("Sign 2", "$45") stays, and no comma is left before a bracket or stop."""
     out, last = [], 0
     for quoted in _QUOTED.finditer(text or ""):
         if not re.search(r"\d", quoted.group()):
@@ -151,7 +153,7 @@ def without_examples(text: str) -> str:
             last += 1
     out.append((text or "")[last:])
     said = "".join(out)
-    said = re.sub(r",\s*([.;:])", r"\1", said)
+    said = re.sub(r",\s*([.;:)])", r"\1", said)
     return re.sub(r"\s+([,.;:])", r"\1", said).strip()
 
 
@@ -852,6 +854,32 @@ def _quit_by(context, sheet, prompt, today):
                         "leaving a job aren't in it.", "how this was worked out")
 
 
+def _homestead(context, sheet, prompt, today):
+    """Cross-domain (docs/future/SMART_AG_PLAN.md phase A4): the homestead's morning sheet: the greenhouse as its node
+    last reported (core/greenhouse_link.py; never fetched in the middle of an answer), the flock, the garden's week,
+    the orchard's month, the property's water and power, tonight's weather against what's growing, and anything
+    unusual; each through what already answers it."""
+    link = getattr(context, "greenhouse_link", None)
+    if link is not None and getattr(link, "taken_over", False):
+        try:
+            from core.greenhouse_link import status_line
+
+            sheet.add(FACT, "The greenhouse, as its node last reported: " + status_line(link.state), "the greenhouse")
+        except Exception:  # noqa: BLE001 - the greenhouse is one line
+            log.exception("The homestead sheet couldn't read the greenhouse")
+    else:
+        sheet.add(MISSING, "MIA isn't watching the greenhouse yet (the node isn't running, or not taken over).",
+                  "the greenhouse")
+    if getattr(context, "flock", None) is not None and getattr(context.flock, "flocks", None):
+        _look(context, sheet, "get_eggs", "the flock")
+    _look(context, sheet, "garden_this_week", "the garden")
+    _look(context, sheet, "orchard_this_month", "the orchard")
+    _look(context, sheet, "water_budget", "water")
+    _look(context, sheet, "power_picture", "power")
+    _look(context, sheet, "weather_for_my_plans", "tonight's weather against what's growing")
+    _look(context, sheet, "anything_unusual", "anything unusual")
+
+
 def _owned(context, tool: str) -> bool:
     """Whether the household inventory holds a tool by its name (the part before any "and" or parenthesis)."""
     inventory = getattr(context, "inventory", None)
@@ -1273,6 +1301,11 @@ PLANS: tuple[Plan, ...] = (
           "What should I get done on Saturday?", "How should I spend Sunday?", "Is the weekend good for building?"),
          r"\b(this weekend|the weekend|my weekend|next weekend|weekend plans?)\b"
          r"|\b(do|spend|get done|plans?|build|work on|going on)\b[^?]{0,20}\b(saturday|sunday)\b", _weekend),
+    Plan("homestead", "The homestead this morning",
+         ("How's the homestead?", "What needs doing on the homestead today?", "Give me the homestead rundown.",
+          "How are things on the homestead?", "Homestead check.", "What's going on around the place?"),
+         r"\b(how'?s the homestead|how is the homestead|homestead (check|rundown|report|today|this morning)|"
+         r"things on the homestead|on the homestead today|around the (place|property|farm))\b", _homestead),
     Plan("quit by", "Quitting by a date",
          ("What if I quit at the end of next year?", "Could I leave my job in 18 months?",
           "What would it take to quit by next June?", "Can I afford to quit at the end of this year?"),
@@ -1353,7 +1386,7 @@ CHANGE_VERBS = frozenset((
 ))
 PLAN_BY_NAME = {p.name: p for p in PLANS}
 CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resources", "held back", "time", "weekend",
-                "winter", "quit by")  # build plan step 8: plans over several apps
+                "winter", "quit by", "homestead")  # build plan step 8: plans over several apps
 
 
 # ---------------------------------------------------------------- choosing a plan
@@ -1522,6 +1555,12 @@ HOW = {
         "water, power, time, goals and research as the sheet has them, saying what their records show for each or "
         "that it isn't recorded. Where one area leans on another, say so (water and power for a greenhouse, the "
         "garden's year for its starts). End with the offer to draft the plan."),
+    "homestead": (
+        "For this answer, instead of picking one thing: start with the most pressing thing the sheet itself shows (if "
+        "it shows none, say things are steady), then one short sentence each for the greenhouse and fish, the flock, "
+        "the garden, "
+        "the orchard, water and power, from the sheet only, saying what isn't recorded in a few words. Five to eight "
+        "sentences in all."),
     "quit by": (
         "For this answer: start with whether the date works at their pace, then in four to six short sentences: the "
         "gap a month, what's saved by then against the goal, what more a month closes any shortfall, how long the "

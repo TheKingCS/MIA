@@ -49,7 +49,7 @@ so the things that keep fish and plants alive come first.
    will my battery run the essentials?", "the well pump draws 1000 watts for an hour a day", "my battery is 10 kWh").* Sources (solar, grid, generator, battery), the loads that matter (well pump,
    aeration, heat), and how long the essentials run on battery. It reads the readings he logs today, with sensor
    feeds later.
-4. **The homestead morning sheet.** One picture of the fish, the beds, the orchard's task, water and power, with
+4. **The homestead morning sheet.** *Built 2026-11-24 (the question plan "homestead": "how's the homestead?").* One picture of the fish, the beds, the orchard's task, water and power, with
    the one thing to do first (a question plan, the same shape as the project picture).
 
 ### Phase B: the node takes MIA's directions (in simulation; follows `homestead/CLAUDE.md`)
