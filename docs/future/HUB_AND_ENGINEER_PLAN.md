@@ -69,7 +69,8 @@ engineer). Both start from what's built (mapped 2026-11-24) and keep the rules a
 
 1. **Firmware.** MIA writes, builds and flashes ESP32 firmware for a device through PlatformIO (already proven on the
    greenhouse MCU), in the lab, with his approval to flash.
-2. **3D printing.** Parametric parts in OpenSCAD or CadQuery: a sensor enclosure, a feeder part, a pump bracket. The
+2. **3D printing.** *First piece built 2026-11-24 (`core/print_parts.py`: enclosures and spacers as STL files from
+   his sizes, made in code with no CAD program; holes and slicing are next).* Parametric parts in OpenSCAD or CadQuery: a sensor enclosure, a feeder part, a pump bracket. The
    model writes the script, code renders the STL and checks its size, and a slicer (PrusaSlicer or OrcaSlicer, run
    offline) makes the G-code with time and filament. "Print it" sends it to the printer as an action.
 3. **PCBs.** KiCad's command line checks a schematic's rules and exports Gerbers, a BOM priced against his parts

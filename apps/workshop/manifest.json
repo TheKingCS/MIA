@@ -12,6 +12,7 @@
   "retired": false,
   "ask": "How much plywood do I have?",
   "domains": [
+    "printing",
     "components",
     "materials",
     "jobs",
@@ -46,6 +47,7 @@
   },
   "capabilities": {
     "tools": [
+      "design_print_part",
       "add_component",
       "add_job",
       "add_material",
@@ -108,6 +110,7 @@
       "sale.delete"
     ],
     "tiers": {
+      "design_print_part": "act_within_grant",
       "add_component": "act_within_grant",
       "add_job": "act_within_grant",
       "add_material": "act_within_grant",

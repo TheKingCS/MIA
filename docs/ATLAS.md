@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1690 files, 366,966 lines; 1690 files describe themselves; 20,166 of 20,296 classes and functions are documented.
+1692 files, 367,195 lines; 1692 files describe themselves; 20,181 of 20,311 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-666 files, 188,323 lines; 9,559 of 9,645 classes and functions documented
+667 files, 188,499 lines; 9,569 of 9,655 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -437,6 +437,7 @@
 - `core/presence.py`: Presence (DEC-0044, docs/UX_SYSTEM_AUDIT.md): what matters now, across everything MIA keeps, in one ranked list, so nobody has to visit eight screens to find out. Each item says **why** it's there, what **kind** of thing it is (a deadline, a fact, a suggestion, progress), where it came from, where t
 - `core/price_actions.py`: Prices on the action contract (Procurement P2, DEC-0172; core/price_book.py): proposed in plain words, approved, run, undoable.
 - `core/price_book.py`: Prices MIA has seen, and what a thing really costs (Procurement P2, DEC-0172; the proposal's section 5).
+- `core/print_parts.py`: Parts to 3D print, made in code (Zac, 2026-11-24: "help me design the devices too ... 3d printing assistant"; docs/future/HUB_AND_ENGINEER_PLAN.md part 2, step 2). The first parts need no CAD program: MIA writes them as STL files (`stl`), the format every slicer opens (Bambu Studio is on his PC), fr
 - `core/private_journal.py`: The encrypted private journal — slice A ("Talk it out") of docs/COGNITIVE_EXTENSION_PROPOSAL.md. Conversations the user journals with MIA are saved here, one entry per journaling session, organized (title, mood, themes, summary) and kept encrypted at rest. Separate from core/journal_manager.py (the 
 - `core/product_manager.py`: MIA Home's finished-goods products — the third slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, `core/material_manager.py`'s docstring for the first slice, and `core/job_manager.py`'s for the second), adapted to this project's persisted-JSON-ma
 - `core/product_pricing.py`: Which products are priced below what they take (Jarvis brainstorm round 8, 2026-11-24; his businesses): "which products should I raise prices on?", "am I charging enough?". The products, the jobs that made them and his own quoting rate read together.
@@ -964,7 +965,7 @@
 
 ## tests/: the test suite: what each part must do
 
-620 files, 98,056 lines; 8,244 of 8,288 classes and functions documented
+621 files, 98,109 lines; 8,249 of 8,293 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1353,6 +1354,7 @@
 - `tests/test_power_web.py`: Power by voice (DEC-0125): a reading said out loud ("log the propane at 60 percent") is logged through the Power screen's own action, `energy.reading` (core/power_actions.py), so it's undoable. The screen itself is tested in tests/test_web_power.py.
 - `tests/test_preparedness.py`: How ready he is (core/preparedness.py, brainstorm 4.3): days of drinking water from his pantry at a gallon a person a day against his target (the ways water is really stored: sized bottles, gallon jugs, ounces; never coconut water or a filter), days of food from the staples by weight and their calor *(1 undocumented)*
 - `tests/test_presence.py`: What matters now across every app, with why (core/presence.py): it feeds every turn so MIA answers knowing the person's world. The five-places frame it came with (DEC-0044) was undone by Zac, 2026-10-24; the apps are the layout again.
+- `tests/test_print_parts.py`: Parts to 3D print made in code (core/print_parts.py): a binary STL every slicer reads, an enclosure whose inside is the size asked and whose lid's lip clears the walls, a spacer, sizes read in millimetres or inches, the files kept in his prints folder, and the request reaching the tool.
 - `tests/test_private_budget.py`: A private budget (core/personal_data.py, 2026-10-01): one person keeps their money apart from the household's; everyone else keeps the shared budget; switching back keeps the private one. *(1 undocumented)*
 - `tests/test_private_journal.py`: The encrypted private journal (core/private_journal.py).
 - `tests/test_private_journal_panel.py`: The Private Journal tab (gui/private_journal_panel.py) and the desktop chat surfaces' safety-floor path, offscreen.

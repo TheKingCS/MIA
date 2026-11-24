@@ -147,6 +147,18 @@ def _buildable(context, arguments: dict) -> str:
     return buildable.say(context)
 
 
+def _print_part(context, arguments: dict) -> str:
+    """Tool design_print_part: an enclosure or a spacer as STL files from his sizes (core/print_parts.make)."""
+    from core import print_parts
+
+    try:
+        wall = float(arguments["wall_mm"]) if arguments.get("wall_mm") not in (None, "") else None
+    except (TypeError, ValueError):
+        wall = None
+    return print_parts.make(context, str(arguments.get("kind") or "enclosure"), str(arguments.get("sizes") or ""),
+                            str(arguments.get("name") or ""), wall)
+
+
 def _orchard_month(context, arguments: dict) -> str:
     """Tool orchard_this_month: the orchard's jobs in the next 30 days from his frost date (core/orchard.say_month)."""
     from core import orchard
@@ -208,7 +220,8 @@ def _harvest_year(context, arguments: dict) -> str:
 
 def register_project_plan_actions(registry) -> None:
     """Registers plan_with_me, change_plan (a draft's sizes, beds, crops, frosts, stages and notes; its build is
-    chosen when drafted), water_budget and log_water_level (the property's water, core/water_budget.py),
+    chosen when drafted), design_print_part (an enclosure or spacer as STL files, core/print_parts.py), water_budget
+    and log_water_level (the property's water, core/water_budget.py),
     orchard_this_month and fruit_tree_facts (the orchard, core/orchard.py), rain_catchment (a
     roof's gallons, core/rain_catchment.py), log_harvest and
     harvest_this_year (harvests by voice and what the garden produced,
@@ -256,6 +269,23 @@ def register_project_plan_actions(registry) -> None:
         handler=_picture, trigger_phrases=("planning to build", "thinking about building", "planning to put up",
                                            "thinking about putting up", "planning a greenhouse", "affect everything", "mean for everything",
                                            "what does it touch", "what would it take to build"),
+    ))
+    registry.register_domain_keywords("printing", ("3d print", "3d printer", "stl", "print a part"))
+    registry.register(AssistantAction(
+        name="design_print_part", domain="printing",
+        description="Make a part to 3D print as STL files, from the inside size he gives: an enclosure (open box and "
+                    "its lid, for a sensor board, relay or battery) or a spacer (round standoff). Says the outside size "
+                    "and the most plastic; he slices and prints it himself.",
+        parameters={"type": "object", "properties": {
+            "kind": {"type": "string", "description": "enclosure or spacer"},
+            "sizes": {"type": "string", "description": "the sizes as he said them, e.g. '80 by 50 by 30 mm'"},
+            "name": {"type": "string", "description": "what it's for, e.g. 'soil sensor box' (optional)"},
+            "wall_mm": {"type": "number", "description": "wall thickness in mm, if he said (2 by default)"}},
+            "required": ["kind", "sizes"]},
+        handler=_print_part,
+        trigger_phrases=("3d print", "print me a", "print an enclosure", "make me an enclosure", "design an enclosure",
+                         "design a box for", "make a box for", "an enclosure for", "print a spacer", "make a spacer",
+                         "a standoff"),
     ))
     registry.register_domain_keywords("water", ("cistern", "water tank", "rain barrels", "water budget", "well water"))
     registry.register(AssistantAction(

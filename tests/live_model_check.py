@@ -703,6 +703,7 @@ GOLDEN_CASES = [
     ("water: a tank's level", "The cistern is at 800 gallons", "log_water_level"),
     ("power: the picture", "If the power goes out, how long will my battery run the essentials?", "power_picture"),
     ("power: a load", "The well pump draws 1000 watts for an hour a day", "set_power_load"),
+    ("printing: an enclosure", "Make me an enclosure for a sensor board, 80 by 50 by 30 mm", "design_print_part"),
 ]
 
 
