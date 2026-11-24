@@ -4,7 +4,8 @@ tests.test_assistant_routing
 
 Enforces tests/assistant_routing_corpus.py against the real desktop
 action registry: every realistic request reaches its tool, how-to
-questions reach the help docs, and small talk stays tool-free. Plus unit
+questions about using MIA reach the help docs (and how-to questions about
+the world, "how do I tie a bowline?", don't), and small talk stays tool-free. Plus unit
 tests for the pieces that make that work (record-name lookup, quantity
 parsing, keyword/record-name matching).
 """
@@ -64,6 +65,22 @@ def test_how_to_questions_detected(prompt):
 ])
 def test_data_questions_are_not_how_to(prompt):
     assert not looks_like_how_to_question(prompt)
+
+
+@pytest.mark.parametrize("prompt", [
+    "How do I purify creek water?", "How do I start a fire without matches", "How do I tie a bowline",
+    "How do I butcher a chicken", "How can I build a lean-to shelter?", "How should I store potatoes for winter?",
+])
+def test_how_to_questions_about_the_world_are_not_about_mia(prompt):
+    assert not looks_like_how_to_question(prompt)
+
+
+@pytest.mark.parametrize("prompt", [
+    "How do I log a workout?", "How do I make MIA read my email?", "How do I change the theme?",
+    "How do I turn on the microphone?", "How do I export my budget?",
+])
+def test_how_to_questions_about_using_her_still_are(prompt):
+    assert looks_like_how_to_question(prompt)
 
 
 # ------------------------------------------------------------------ record lookup

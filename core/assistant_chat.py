@@ -6,7 +6,10 @@ The pure, non-Qt logic for one Assistant chat turn — moved here from
 `modules/assistant/module.py` (2026-07-14 aesthetic pass part 4,
 docs/ROADMAP.md) once the sidebar chat in `gui/character_panel.py`
 needed the exact same request-building and tool-call-safety logic as
-the full-screen Assistant module. `gui/` may import `core/` directly
+the full-screen Assistant module. A how-to question is held to her own
+help pages only when it's about using her (`about_mia`): "how do I add
+a bill?" is; "how do I purify creek water?" is about the world, so it
+gets her tools (the offline library) and her own knowledge. `gui/` may import `core/` directly
 but must never import `modules/` (CLAUDE.md's one-directional
 layering), so anything both surfaces need had to live here, not in
 `modules/assistant/module.py` — these functions already touched only
@@ -359,10 +362,40 @@ _HOW_TO_PATTERNS = (
 )
 
 
-def looks_like_how_to_question(prompt: str) -> bool:
-    """Pure logic. True for questions about how to use MIA itself."""
+# "How do I ...?" is about MIA when it names her or a part of her, or starts with something done in an app (add,
+# log, export...); "how do I purify creek water?", "how do I tie a bowline?" are about the world, answered from her
+# knowledge and her offline library, never held to her own help pages.
+_ABOUT_MIA = re.compile(
+    r"\b(mia|you|your|app|apps|screen|screens|page|tab|tabs|button|buttons|setting|settings|module|modules|feature|"
+    r"features|menu|sidebar|widget|dashboard|notifications?|backups?|profile|account|theme|voice|microphone|mic|"
+    r"glasses|phone app|sync|export|import|undo|sign in|log in|password|vault|desktop|web page)\b")
+_APP_VERB = re.compile(
+    r"(add|log|record|enter|delete|remove|edit|rename|undo|turn (on|off)|enable|disable|connect|pair|link|set up|"
+    r"change my|reset|restore|share|export|import|sync|mark|schedule|cancel|archive|pin|mute|unmute|install|update|"
+    r"back up|sign|switch|track my|keep track)\b")
+_WORLD_PREFIXES = ("how do i", "how do you", "how can i", "how would i", "how should i")
+
+
+def about_mia(prompt: str) -> bool:
+    """Pure logic. Whether a "how do I ...?" question is about using MIA: it names her or a part of her
+    (`_ABOUT_MIA`), or what follows "how do I" is something done in an app (`_APP_VERB`)."""
     lowered = prompt.lower().strip()
-    return lowered.startswith(_HOW_TO_PREFIXES) or any(p.search(lowered) for p in _HOW_TO_PATTERNS)
+    rest = next((lowered[len(p):] for p in _WORLD_PREFIXES if lowered.startswith(p)), lowered)
+    if _ABOUT_MIA.search(rest):  # after the prefix: "how do you purify water?" isn't about her
+        return True
+    return bool(_APP_VERB.match(rest.strip(" ,")))
+
+
+def looks_like_how_to_question(prompt: str) -> bool:
+    """Pure logic. True for questions about how to use MIA itself: a how-to shape ("how do I", "where do I", "is
+    there a way to", "how does the X work") that's about her (`about_mia`); "where" and "is there a way" are always
+    hers. "How do I purify creek water?" is a question about the world, so False."""
+    lowered = prompt.lower().strip()
+    if any(p.search(lowered) for p in _HOW_TO_PATTERNS):
+        return True
+    if not lowered.startswith(_HOW_TO_PREFIXES):
+        return False
+    return not lowered.startswith(_WORLD_PREFIXES) or about_mia(lowered)
 
 
 # Swapped in for GROUNDING_INSTRUCTION (never both at once — one

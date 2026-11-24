@@ -16,7 +16,8 @@ DOMAIN = "library"
 # How a how-to or factual question is asked: these bring the one look-up tool, never the whole knowledge shelf.
 ASKING = ("how do i", "how do you", "how to", "how should i", "how deep", "how much", "how long", "how many",
           "how often", "what causes", "why does", "why is my", "is it safe", "what's the best way", "purify",
-          "first aid", "symptoms", "troubleshoot", "step by step")
+          "first aid", "symptoms", "troubleshoot", "step by step", "edible", "forage", "foraging", "wild plants",
+          "identify")
 
 
 def _look_up(context, arguments: dict) -> str:

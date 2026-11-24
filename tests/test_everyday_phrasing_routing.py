@@ -6,7 +6,8 @@ The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by t
 embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his
 generator and preparedness settings, how long the generator runs, the weather against his plans, where he left
 off, money ahead, an invoice, the garden's week and year, a build's price, the flock's feed and his learning
-programs (woodworking, gardening, fitness, bushcraft); and a plan whose words
+programs (woodworking, gardening, fitness, bushcraft), her offline library for how-to questions about the world
+("how do I purify creek water?", never held to her own help pages); and a plan whose words
 catch a weather, garden or flock question (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
 """
 
@@ -41,6 +42,9 @@ SAID = [
     ("learning_check", "I cut a dovetail joint today"), ("learning_check", "I started a fire with a ferro rod"),
     ("learning_progress", "how's my woodworking coming along?"), ("learning_progress", "how's my fitness going"),
     ("learning_progress", "what stage am I on in gardening"),
+    ("look_up_offline", "how do I purify creek water?"), ("look_up_offline", "how do I start a fire without matches"),
+    ("look_up_offline", "how do I tie a bowline"), ("look_up_offline", "how do I butcher a chicken"),
+    ("look_up_offline", "what wild plants are edible here"), ("look_up_offline", "how do I build a lean-to shelter"),
 ]
 
 
