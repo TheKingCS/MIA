@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1708 files, 370,062 lines; 1708 files describe themselves; 20,322 of 20,452 classes and functions are documented.
+1709 files, 370,095 lines; 1709 files describe themselves; 20,322 of 20,452 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -975,7 +975,7 @@
 
 ## tests/: the test suite: what each part must do
 
-626 files, 98,720 lines; 8,289 of 8,333 classes and functions documented
+626 files, 98,721 lines; 8,289 of 8,333 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1606,7 +1606,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-119 files, 22,387 lines
+120 files, 22,419 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 
@@ -1727,6 +1727,7 @@
 - `web/worlds.js`: worlds.js — Living Worlds (claude, 2026-11-08, DEC-0134 Phases 1 and 2). Renders MIA.worlds(campaign) (core/web_worlds.py): your character and who they are in each world; the worlds, each with its campaigns; one campaign opened with the character's version in it (stats, skills, what they carry) and 
 - `web/you.js`: you.js — The Picture of You (DEC-0290, claude, 2026-11-23). Renders MIA.picture() (core/picture_of_you.py): what MIA remembers about you, grouped, each with how she knows it and where it came from, with Fix and Forget (memory.fix, memory.forget: undoable); your skills by level; what you're learning 
 - `web/yourdata.js`: yourdata.js — Your Data (claude, 2026-11-08; docs/SECURITY.md step 8). Renders MIA.yourData() (core/your_data.py): the person's own files and their household's shared ones, each with what it is, how many records, its size and whether it's sealed on disk (DEC-0126); her latest answers with the tools 
+- `web/youtube-player.js`: youtube-player.js — YouTube popped out of Music into its own window (claude, 2026-11-24; see youtube-player.html). Its address carries the songs: ?v=id,id,...&t=title. Only well-formed 11-character ids are used, and the player is YouTube's privacy-enhanced embed, the one outside frame MIA's pages al
 
 ## android-phone/: the Android app that carries MIA's engine and the glasses' link
 

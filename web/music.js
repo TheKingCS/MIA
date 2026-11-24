@@ -9,7 +9,8 @@
  * his key) or takes a pasted link, plays in YouTube's own embedded player (a
  * YouTube song plays here, on this page, never through the file player), and
  * saves songs as links (youtube.save) that sit in playlists beside his files.
- * MIA's pick by voice (play_on_youtube) waits at the top for one press.
+ * MIA's pick by voice (play_on_youtube) waits at the top for one press. Pop Out moves the player to its own
+ * window (youtube-player.html), so a song keeps playing across MIA's pages.
  */
 (function () {
   "use strict";
@@ -58,9 +59,17 @@
       (ids.length > 1 ? "&playlist=" + ids.slice(1, 50).join(",") : "");
     let box = $("yt-player");
     if (!box) { box = el("section", { class: "glass yt-player", id: "yt-player", "aria-label": "Playing from YouTube" }); $("panel").before(box); }
+    // Pop Out: the same songs in their own small window (youtube-player.html), which keeps playing while this
+    // window moves between MIA's pages.
+    const popOut = () => {
+      const url = "youtube-player.html?v=" + ids.join(",") + "&t=" + encodeURIComponent(songs[0].title || "");
+      const win = window.open(url, "mia-youtube", "popup,width=480,height=330");
+      if (win) { box.remove(); ytNow = null; } else say("Your browser kept the window from opening; it plays here instead.");
+    };
     box.replaceChildren(
       el("div", { class: "sect" }, el("h2", {}, "▶ " + (songs[0].title || "YouTube")),
-        btn("Close", "btn-ghost btn-small", () => { box.remove(); ytNow = null; })),
+        buttons(btn("Pop Out", "btn-ghost btn-small", popOut),
+          btn("Close", "btn-ghost btn-small", () => { box.remove(); ytNow = null; }))),
       el("div", { class: "yt-frame" }, el("iframe", { src, title: "YouTube player", allow: "autoplay; encrypted-media; picture-in-picture",
         allowfullscreen: true, referrerpolicy: "strict-origin-when-cross-origin" })),
       songs.length > 1 ? el("p", { class: "dim" }, songs.length - 1 + " more after this one.") : null);

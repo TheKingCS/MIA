@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Playing — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+    main { padding: 10px; display: grid; gap: 8px; }
+    h1 { font-size: var(--text-sm); margin: 0; color: var(--text-dim); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <!--
+    YouTube, popped out of Music (claude, 2026-11-24, core/youtube_music.py): YouTube's embedded player in its own
+    small window, so a song keeps playing while the main window moves between MIA's pages (each page is its own
+    document, and a player inside one stops when it's left). It reads only well-formed video ids from its address;
+    no data, no sign-in, nothing else.
+  -->
+  <main>
+    <h1 id="what">From YouTube</h1>
+    <div class="yt-frame" id="frame"></div>
+  </main>
+  <script src="youtube-player.js"></script>
+</body>
+</html>
