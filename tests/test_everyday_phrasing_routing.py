@@ -9,7 +9,9 @@ refund, where the money went), how long the generator runs, the weather against 
 off, money ahead, an invoice, the garden's week and year, a build's price, the flock's feed and his learning
 programs (woodworking, gardening, fitness, bushcraft), her offline library for how-to questions about the world
 ("how do I purify creek water?", never held to her own help pages); and a plan whose words
-catch a weather, garden, flock or bills question (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
+catch a weather, garden, flock or bills question; and everyday talk never reaches a tool it isn't for (self-worth
+never gets his net worth, "where is my wife?" never the inventory, "I ran out of milk" never a workout, a house bought
+never the month's spending), while a real today question still gets today's plan (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
 """
 
 import pytest
@@ -62,9 +64,9 @@ SAID = [
     ("list_orders", "what orders are due this week?"),
     ("log_workout", "I ran 3 miles this morning"), ("log_workout", "did 45 minutes on the bike"),
     ("log_workout", "I benched 185 for 5"), ("plan_meal", "what's for dinner this week"),
-    ("get_net_worth", "what's my net worth?"), ("get_net_worth", "how much am I worth"),
+    ("get_net_worth", "what's my net worth?"), ("get_net_worth", "how's our net worth looking"),
     ("get_life_state", "what did I miss?"), ("get_life_state", "did anything happen while I was out?"),
-    ("get_life_state", "what's new?"), ("get_life_state", "any messages for me?"),
+    ("get_life_state", "bring me up to speed"), ("get_life_state", "any messages for me?"),
     ("get_life_state", "what did you do on your own today?"),
 ]
 
@@ -109,3 +111,28 @@ def test_money_questions_reach_their_plans_by_word():
         assert found is not None and found.name == plan, said
     for said in ("what bills are due this week?", "will I have enough for rent next month?"):
         assert question_plans.match(demo_context(), said) is None, said  # their tools answer them
+
+
+@pytest.mark.parametrize("said", ["what am I worth?", "I feel like nothing. what am I worth anyway?",
+                                  "how much am I worth to my family?", "what's Elon Musk's net worth?",
+                                  "what is net worth?"])
+def test_self_worth_and_other_peoples_worth_never_get_his_figure(registry, said):
+    assert registry.direct_lookup(said, demo_context()) is None
+    assert "get_net_worth" not in offered_tools(registry, said, demo_context())
+
+
+@pytest.mark.parametrize("said,never", [("where is my wife?", "list_inventory"), ("where did I leave off?", "list_inventory"),
+                                        ("we bought the house", "add_expense"), ("what's my weight limit on the trailer",
+                                                                                "log_workout"),
+                                        ("is the fish tank done cycling?", "log_workout"),
+                                        ("the truck has 120000 miles on it", "log_workout"),
+                                        ("I ran out of milk", "log_workout")])
+def test_everyday_talk_never_reaches_a_tool_it_isnt_for(registry, said, never):
+    assert never not in offered_tools(registry, said, demo_context()), said
+
+
+def test_a_real_today_question_still_reaches_todays_plan():
+    from core import question_plans
+
+    found = question_plans.match(demo_context(), "did I miss anything I was supposed to do today?")
+    assert found is not None and found.name == "today"

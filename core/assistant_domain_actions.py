@@ -776,7 +776,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
     them money_ahead, the next 13 weeks of money (core/money_ahead.py), get_net_worth (the Money page's figure, each
-    part named, and with his other debts taken off), and debt_payoff_mission, the payoff plan as a
+    part named, and with his other debts taken off; reached only by "my net worth", never "what am I worth?"), and debt_payoff_mission, the payoff plan as a
     mission on his yes (core/debt_missions.py), and draft_invoice, an order's invoice drafted on his yes, and who_owes_me, his unpaid orders (core/receivables.py), and put_up_jars and canning_shelf, his home-canned
     batches by date (core/canning_shelf.py). Their trigger phrases cover the everyday ways he'd ask ("has anyone
     not paid me?", "which canned stuff should I use first?", "send Lee a bill for the bench", "what subscriptions am I paying
@@ -876,8 +876,9 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         description="His net worth from what MIA tracks (linked accounts and property equity), each part named, and "
                     "with his other debts taken off too.",
         parameters=_NO_PARAMS, handler=_action_get_net_worth,
-        trigger_phrases=("net worth", "how much am i worth", "what am i worth", "own minus what i owe",
-                         "assets minus debts"),
+        # Never "what am I worth?" (a person feeling low gets a dollar figure) nor someone else's net worth or what
+        # net worth means: only his own, said as his.
+        trigger_phrases=("my net worth", "our net worth", "what i own minus what i owe", "my assets minus my debts"),
     ))
     registry.register(AssistantAction(
         name="money_ahead", domain="budget",

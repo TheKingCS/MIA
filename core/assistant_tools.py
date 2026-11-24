@@ -177,7 +177,8 @@ class AssistantTools:
         core/llm_manager.py's chat_with_tools() — docs/ROADMAP.md
         milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py; plans made together, core/assistant_project_plan_actions.py; their trigger phrases cover everyday ways of
         asking, "spent $120 at the feed store", "I bought 3 bags of chicken feed", "how's my budget looking", "where did I
-        put the post hole digger", "what did I miss?": tests/test_everyday_phrasing_routing.py).
+        put the post hole digger", "what did I miss?", "we bought the house" as a property: never "where is my wife?" or
+        "what's new in the news": tests/test_everyday_phrasing_routing.py).
         Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
         the one place independent core services get wired together
@@ -469,7 +470,7 @@ class AssistantTools:
             # (rather than renaming/removing any tool) fixed it
             # reliably at the full 39-tool count — cheaper than
             # fighting the registry's all-or-nothing gating design.
-            trigger_phrases=("inventory", "do i have", "where did i put", "where's my", "where is my", "where did i leave"),
+            trigger_phrases=("inventory", "do i have", "where did i put", "where did i leave the", "where did i leave my"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="delete_inventory_item",
@@ -650,9 +651,8 @@ class AssistantTools:
                 "what's going on with me", "how am i doing", "status report",
                 "my life state", "give me an overview", "catch me up",
                 # "catch me up" said the other ways: what needs him, what she's holding, what she did on her own
-                "what did i miss", "while i was out", "while i was gone", "what's new", "whats new",
-                "anything i should know", "any messages for me", "messages for me", "did you do on your own",
-                "you do on your own", "fill me in", "bring me up to speed",
+                "what did i miss", "while i was out", "while i was gone", "any messages for me",
+                "messages for me", "did you do on your own", "you do on your own", "bring me up to speed",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -2177,7 +2177,7 @@ class AssistantTools:
             },
             handler=self._action_add_expense,
             trigger_phrases=("record an expense", "add an expense", "log an expense", "i spent", "bought groceries",
-                             "spent $", "i bought", "we bought"),
+                             "spent $", "i bought"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="get_budget_summary",
@@ -2310,7 +2310,8 @@ class AssistantTools:
                 "required": ["name"],
             },
             handler=self._action_add_property,
-            trigger_phrases=("add a property", "new property", "add a rental property", "track a property", "add my house"),
+            trigger_phrases=("add a property", "new property", "add a rental property", "track a property", "add my house", "bought a house", "bought the house",
+                             "bought land", "bought a property", "bought the property"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_properties",

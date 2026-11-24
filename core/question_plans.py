@@ -1144,7 +1144,8 @@ NOT_FOR = {
     "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|first (thing )?tomorrow|tomorrow first)\b",
                           re.I),
     # what she did on her own today is "catch me up"'s (her own changes), not today's list
-    "today": re.compile(r"\b(on your own|did you do|you been up to|while i was (out|gone|away)|did i miss)\b", re.I),
+    "today": re.compile(r"\b(on your own|you been up to|while i was (out|gone|away))\b"
+                        r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?)\b", re.I),

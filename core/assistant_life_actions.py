@@ -575,7 +575,7 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     # -- workout -------------------------------------------------------------
     """Registers every tool above with the Assistant's registry, with descriptions, parameters and trigger
     phrases, plus each domain's everyday words (a workout's include cardio and lifts said plainly: "I ran 3 miles",
-    "I benched 185") and the names of the person's own records (exercises, people, pets, routines, courses and
+    "I benched 185"; never bare "miles" or "cycling", the truck's mileage and the fish tank's cycle) and the names of the person's own records (exercises, people, pets, routines, courses and
     lessons).
     """
     registry.register(AssistantAction(
@@ -587,7 +587,10 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
             "date": _s("YYYY-MM-DD if not today."),
         }, ["exercises"]),
         handler=_action_log_workout,
-        trigger_phrases=("log my workout", "log a workout", "i worked out", "just worked out", "did my workout", "i lifted"),
+        trigger_phrases=("log my workout", "log a workout", "i worked out", "just worked out", "did my workout", "i lifted",
+                         # "ran" with a distance, never "I ran out of milk"
+                         *(f"ran {n}" for n in range(1, 10)), "ran a mile", "ran a 5k", "i jogged", "i biked",
+                         *(f"walked {n}" for n in range(1, 10)), "walked a mile"),
     ))
     registry.register(AssistantAction(
         name="get_workout_summary", domain="workout",
@@ -606,8 +609,8 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         "workout", "workouts", "worked out", "reps", "squats", "squat", "bench press", "deadlift", "deadlifts",
         "push-ups", "pushups", "pull-ups", "pullups", "curls", "gym",
         # cardio and lifts said the everyday way ("I ran 3 miles", "did 45 minutes on the bike", "I benched 185")
-        "miles", "mile", "jogged", "jog", "biked", "cycling", "on the bike", "rowing", "laps", "benched", "bench pressed",
-        "weight trend", "my weight",
+        "jogged", "biked", "on the bike", "went cycling", "went running", "went for a run", "rowing", "laps",
+        "benched", "bench pressed",
     ))
     registry.register_entity_names("workout", lambda ctx: [e.name for e in ctx.workout.all_exercises()] if ctx.workout else [])
 
