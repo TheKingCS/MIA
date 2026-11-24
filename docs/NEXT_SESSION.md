@@ -79,7 +79,16 @@ anything from an email or page waiting for his yes (DEC-0293, `workflows.run_on_
 from a habit of his (DEC-0294, `core/habit_offers.py`); a seventh review made held changes really wait (K-0362). Then the
 canning shelf (`core/canning_shelf.py`), a purchase asked against the debts worked out as a purchase (1.4's gap,
 `question_plans.instead`), and the 72-hour kit against his records (`core/ready_kit.py`); eighth and ninth reviews
-fixed them (K-0365, K-0367). Waiting on him: which model (0zi), libzim (0zh), the homestead's controls (0zj). Note: Windows
+fixed them (K-0365, K-0367). Waiting on him: which model (0zi), libzim (0zh), the homestead's controls (0zj).
+**2026-11-24 (same session, past midnight):** power in "how prepared am I?" (`core/power_ready.py`, the generator's
+days on his fuel) and `set_preparedness`; "who owes me?" (`core/receivables.py`; `business_actions._paid` now counts a
+sale on an order's build, and the Business page's owed total and voice payments agree with it); the bleach dose by
+voice (`bleach_for_water`). Then routing: probes of everyday phrasings with no chat model found most of the new tools
+and all four hobby programs unreachable on the phone, and every "how do I...?" about the world (purify water, tie a
+bowline) held to her help pages; fixed, and `tests/test_everyday_phrasing_routing.py` keeps about 70 phrasings. A
+how-to is now about MIA unless the tools that match it are all library, learning or plans tools
+(`assistant_chat.about_mia`). Fresh reviews ten to twelve (K-0369, K-0371, K-0377). The restore drill's own clock fix
+(its test broke once the date passed 2026-11-23). Add a new tool's everyday phrasings to that routing test. Note: Windows
 Application Control now blocks libzim's DLL on the PC, so run the suite with
 `--ignore=tests/test_reference_library_manager.py` there (CI on Linux runs it); her offline library reader needs it
 unblocked (WAITING_ON 0zh).

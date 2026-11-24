@@ -106,6 +106,9 @@ more: the erase test removed the checkout's own content folders (only in a workt
   she read, each change waits for his yes) and routines offered once from his habits. Later: the canning shelf, a
   purchase against the debts said as what the money would do on them instead, and the 72-hour kit checked against
   his records; three more fresh reviews, every finding fixed (K-0362 to K-0367).
+  2026-11-24: the generator's days on his fuel, "who owes me?", the bleach dose by voice, and routing: the new tools,
+  his hobby programs and "how do I...?" questions about the world now reach the right tools on the phone (about 70
+  everyday phrasings kept in a test); three more reviews fixed (K-0368 to K-0378).
 - **Waiting on Zac:** the USB stick (next week), the 4 TB drive and the enclosure test, sealing the
   recovery-key envelope, which model after reading the comparison, unblocking libzim from Windows Application
   Control (`docs/WAITING_ON.md` 0zh), whether a workflow may ever work the homestead's equipment (0zj).
