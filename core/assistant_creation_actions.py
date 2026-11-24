@@ -31,6 +31,12 @@ def _title(creation: dict) -> str:
     return str(creation.get("title") or spec.get("title") or creation.get("id") or "a screen")
 
 
+def _titles(context) -> list[str]:
+    """The titles of the person's screens that aren't retired, for the router (a screen named is its domain)."""
+    store = _creations(context)
+    return [_title(c) for c in (getattr(store, "items", None) or []) if c.get("status") != "retired"]
+
+
 def _find(context, words: str):
     """The creation the words name (by its title), or None."""
     store = _creations(context)
@@ -143,7 +149,8 @@ def _change(kind: str):
 
 
 def register_creation_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the creation tools and the words that bring them into a turn."""
+    """Registers the creation tools and the words that bring them into a turn: a screen's own title (`_titles`, all
+    its words), so "add to my seed bank" reaches it and "add to my notes" doesn't."""
     registry.register(AssistantAction(
         name="list_creations", domain="creations",
         description="List the screens MIA has made for the person, in their sidebar or still drafts.",
@@ -184,7 +191,7 @@ def register_creation_actions(registry: AssistantActionRegistry) -> None:
             "values": {"type": "string", "description": "The entry in their words, field then value, comma-separated."}},
             "required": ["name", "values"]},
         handler=_add_record,
-        trigger_phrases=("add to my", "log in my", "put in my tracker"),
+        trigger_phrases=("add to my tracker", "log in my tracker", "put in my tracker"),  # else by its title
     ))
     registry.register(AssistantAction(
         name="read_creation", domain="creations",
@@ -193,6 +200,9 @@ def register_creation_actions(registry: AssistantActionRegistry) -> None:
             "name": {"type": "string", "description": "The screen's title, as the person said it."}},
             "required": ["name"]},
         handler=_read_records,
-        trigger_phrases=("what's in my", "show me my tracker", "read my tracker"),
+        trigger_phrases=("what's in my tracker", "show me my tracker", "read my tracker"),  # else by its title
     ))
     registry.register_domain_keywords("creations", ("screen", "screens", "tracker", "made by mia", "sidebar"))
+    # "add to my seed bank", "what's in my seed bank?": a screen is reached by its whole title, never by "add to my"
+    # alone (that was in "add to my notes" and "what's in my inbox")
+    registry.register_entity_names("creations", _titles, match_all_words=True)

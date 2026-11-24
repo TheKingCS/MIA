@@ -75,7 +75,8 @@ def _take_back(context, arguments: dict) -> str:
 def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     """Registers list_my_apps, describe_app (which also answers "is the X app working?"), which_app, check_my_apps,
     list_grants and take_back_grant (domain app_registry, the Apps app's). There is no tool that gives a grant
-    (core/grant_actions.py says why)."""
+    (core/grant_actions.py says why). describe_app's "depends on" is the app's ("what does the app depend on"), never
+    a bare "what depends on", which is the links tool's."""
     registry.register(AssistantAction(
         name="list_grants", domain="app_registry",
         description=("What MIA may do on her own without asking: the skills she has learned and the workflows the "
@@ -115,7 +116,7 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {
             "app": {"type": "string", "description": "The app's name, e.g. Greenhouse."}}, "required": ["app"]},
         handler=_describe, prompt_arg="app",
-        trigger_phrases=("what can the app", "what does the app", "what depends on", "tell me about the app",
+        trigger_phrases=("what can the app", "what does the app", "what depends on the app", "what does the app depend on", "tell me about the app",
                          "what's in the app", "what is in the app", "parts of the app", "app's parts",
                          "app working", "app broken", "is the app"),
         subjects=("app",),

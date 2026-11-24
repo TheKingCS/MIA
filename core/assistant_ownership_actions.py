@@ -52,7 +52,8 @@ def _action_get_item_owner(context, arguments: dict) -> str:
 
 
 def register_ownership_actions(registry: AssistantActionRegistry) -> None:
-    """Registers the ownership tools: set_item_owner and get_item_owner."""
+    """Registers the ownership tools: set_item_owner and get_item_owner (by "is my own", never a bare "my own": "my
+    own time")."""
     registry.register(AssistantAction(
         name="set_item_owner", domain="ownership",
         description="Say whose a vehicle, tool or appliance is: the user's, another household member's, or shared.",
@@ -61,7 +62,7 @@ def register_ownership_actions(registry: AssistantActionRegistry) -> None:
             "owner": {"type": "string", "description": "'mine', 'shared', or a household member's name."},
         }, "required": ["item", "owner"]},
         handler=_action_set_item_owner,
-        trigger_phrases=("is mine", "belongs to", "is shared", "is ours", "is my truck", "my own",
+        trigger_phrases=("is mine", "belongs to", "is shared", "is ours", "is my truck", "is my own",
                          "is everyone's"),
     ))
     registry.register(AssistantAction(

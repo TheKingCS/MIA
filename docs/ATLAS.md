@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1677 files, 364,732 lines; 1677 files describe themselves; 20,057 of 20,187 classes and functions are documented.
+1678 files, 364,786 lines; 1678 files describe themselves; 20,061 of 20,191 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-660 files, 186,768 lines; 9,506 of 9,592 classes and functions documented
+660 files, 186,782 lines; 9,507 of 9,593 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -958,7 +958,7 @@
 
 ## tests/: the test suite: what each part must do
 
-613 files, 97,377 lines; 8,188 of 8,232 classes and functions documented
+614 files, 97,417 lines; 8,191 of 8,235 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1476,6 +1476,7 @@
 - `tests/test_trades.py`: Trade Master's jobs and diagnoses (core/trades.py, core/trade_jobs.py, DEC-0149): every one meets the standard Zac asked MIA be held to ("thorough and complete instructions"), the standard catches what a weak one leaves out, a job's own words call for its stop rules, a diagnosis always ends somewher
 - `tests/test_trail_map_library.py`: Unit tests for core.trail_map_library. Isolates _DATA_DIR/_TRAIL_MAPS_FILE and root_path into a tmp_path, same pattern as test_reference_library_manager.py. urllib.request.urlopen() is monkeypatched for add_from_url() tests — no real network call in this committed suite (see core/map_tile_cache.py's
 - `tests/test_training_session.py`: The live workout session (DEC-0055, core/training_session.py): prescribed from the plan, performed set by set with how each count was made, rest by itself (and thirty more seconds of it, tapped or said), pauses, corrections, counting aloud kept honest, and finishing as one ordinary workout log.
+- `tests/test_trigger_hygiene.py`: Trigger phrases that fired inside sentences meant for another app (found by laying every tool's phrases over the routing corpus, 2026-11-24): a bought drill isn't clothing, "my own time" isn't whose a tool is, "what depends on selling the lot" isn't an app's record, "add to my notes" and "what's in 
 - `tests/test_trip_detail_dialog.py`: Unit tests for gui.trip_detail_dialog's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_trip_manager.py`: Unit tests for core.trip_manager. Isolates _DATA_DIR/_TRIPS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_waypoint_manager.py's isolated_paths). planned_route_distance_km() is checked against the same known real-world distance test_waypoint_manager.py already uses (New York <->
 - `tests/test_trip_map_view.py`: Unit tests for gui.trip_map_view's pure functions (project_to_scene_xy, compute_bounds), same style as tests/test_navigation_module.py — no Qt event loop, no QGraphicsScene/View instantiated.

@@ -221,7 +221,7 @@ def _action_hatch_status(context, arguments: dict) -> str:
 
 def register_goods_actions(registry: AssistantActionRegistry) -> None:
     """Registers the flock, goods, freedom and compliance tools: get_eggs, log_eggs, list_goods_on_hand,
-    sell_goods, get_freedom_progress and get_deadlines; get_eggs is also reached by asking about the feed ("how long
+    sell_goods, get_freedom_progress (never by "how far along", a project's) and get_deadlines; get_eggs is also reached by asking about the feed ("how long
     will the feed last?": its answer says how long the feed lasts, core/feed_runway.py) and what the eggs cost ("do the
     eggs pay for themselves?": its answer has the feed cost a dozen). Also start_hatch and hatch_status: eggs in the incubator as a
     mission with dated steps (core/hatch_tracker.py), start_broilers and broilers_status (a batch of meat birds to
@@ -330,7 +330,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         parameters=none, handler=_get_freedom,
         trigger_phrases=("how close am i", "freedom fund", "freedom plan", "when can i quit", "when can i leave",
                          "work from home", "how much have i saved", "freedom progress", "out of the factory",
-                         "out of this job", "how far along"),
+                         "out of this job"),
         subjects=("freedom", "quit", "leave", "saved", "progress", "home", "job", "factory"),
     ))
     registry.register(AssistantAction(

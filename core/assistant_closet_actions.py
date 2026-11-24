@@ -104,7 +104,8 @@ def _laundry(context, arguments: dict) -> str:
 
 def register_closet_actions(registry: AssistantActionRegistry) -> None:
     """Registers the Smart Closet tools: what_to_wear, closet_report, add_clothing, save_outfit, wore_outfit,
-    rate_outfit and closet_laundry."""
+    rate_outfit and closet_laundry. add_clothing is reached by a bought piece of clothing ("bought a jacket"), never a
+    bare "bought a" (a drill isn't clothing)."""
     registry.register(AssistantAction(
         name="what_to_wear", domain="closet",
         description="Smart Closet: what to wear today, from the weather, the day's plans and what hasn't been worn lately.",
@@ -133,7 +134,8 @@ def register_closet_actions(registry: AssistantActionRegistry) -> None:
             "waterproof": {"type": "boolean", "description": "True only if they said it's waterproof."},
         }, "required": ["name"]}, handler=_add_piece,
         trigger_phrases=("to my closet", "to the closet", "add a shirt", "add my shirt", "new shirt", "new jacket",
-                         "new shoes", "bought a"),
+                         "new shoes", "bought a shirt", "bought a jacket", "bought a coat", "bought a hat", "bought a pair of",
+                         "bought new shoes", "bought new boots"),
         subjects=("closet", "clothes"),
     ))
     registry.register(AssistantAction(
