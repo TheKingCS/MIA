@@ -46,13 +46,14 @@ def test_a_remark_a_repeat_a_date_or_a_non_task_is_never_a_task():
 
 
 def test_an_led_only_for_the_plain_question():
+    """Only the plain question is worked out; mains is a warning, and 12 V says to use a 1/2 W resistor."""
     for words in ("what resistor for an LED with a 3.3V forward voltage on 5V",
                   "LED forward voltage 2.2 V, supply 5 V, what resistor?",
                   "I have a 220 ohm resistor and an LED on 5V, how much current will it draw?",
                   "what resistor for 3 LEDs in series on 12 volts", "what resistor for an LED strip on 12V"):
         assert assistant_turn._led_reply(None, words) is None, words
     assert "mains" in assistant_turn._led_reply(None, "resistor for an LED on 120 volts")
-    assert "1/2 W" in assistant_turn._led_reply(None, "what resistor for an LED on 24 volts")
+    assert "1/2 W" in assistant_turn._led_reply(None, "what resistor for an LED on 12 volts")
     assert "1/2 W" not in assistant_turn._led_reply(None, "what resistor for an LED on 5 volts")
 
 

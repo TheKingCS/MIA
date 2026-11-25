@@ -651,11 +651,13 @@ def _job_quote_reply(context, prompt: str):
 _DUE = re.compile(r"^\s*when(?:'s| is| are|s)?\s+(?:my|the|our)\s+(?P<asset>[\w' -]+?)\s+(?:due|next due)\s+for\s+"
                   r"(?:a\s+|an\s+|its\s+|the\s+|new\s+)?(?P<task>[\w' -]+?)\s*\??\s*$", re.I)
 _NEEDS = re.compile(r"^\s*(?:my\s+|the\s+|our\s+)(?P<asset>[\w' -]+?)\s+needs\s+(?:a\s+|an\s+|new\s+|its\s+)?"
-                    r"(?P<what>[\w' -]+?)\s*[.!]?\s*$", re.I)
+                    r"(?P<what>[\w' ,-]+?)\s*[.!]?\s*$", re.I)  # "its 30,000 mile service"
 # what a need never is: a repeat, a day, a number, a question word, or no task at all (the fifteenth review)
-_NOT_A_TASK = re.compile(r"\d|\b(?:to|be|more|some|every|each|soon|today|tomorrow|tonight|next|this|week|month|year|"
-                         r"monday|tuesday|wednesday|thursday|friday|saturday|sunday|nothing|it|that|this|them|work|"
-                         r"gas|fuel|how|what|when|why|where|anything|something|help)\b", re.I)
+_NOT_A_TASK = re.compile(r"^\s*(?:gas|fuel|gasoline|diesel|work)\s*$|\d+\s*(?:days?|weeks?|months?|years?|st|nd|rd|th)\b|"
+                         r"\b(?:to|be|more|some|every|each|soon|today|tomorrow|tonight|next|this|week|month|year|"
+                         r"monday|tuesday|wednesday|thursday|friday|saturday|sunday|nothing|it|that|them|"
+                         r"how|what|when|why|where|anything|something|help)\b", re.I)
+_FILLER = {"new", "the", "its", "his", "her", "our", "and"}
 
 
 def _assets(context) -> list:
@@ -664,14 +666,30 @@ def _assets(context) -> list:
     return [str(a.name).lower() for a in (book.all_assets() if book is not None and hasattr(book, "all_assets") else [])]
 
 
-def _task_line(context, asset: str, task: str):
+def _task_line(context, asset: str, task: str, same: bool = False):
     """The line for that asset's task from his maintenance ("Oil Change (Truck): due in 3 days"), its own asset only
     (the fifteenth review: "truck" lists every vehicle, and the Car's oil change had been said for the truck); None
-    when there's none."""
+    when there's none.
+    `same`: for a need, only the same task (whole words of the title, a plural as its one), never one sharing a
+    word."""
     listed = context.assistant_actions.execute(context, "list_maintenance_tasks", {"query": asset})
-    words = [w for w in re.findall(r"[a-z]{3,}", task.lower()) if w not in ("new", "the")]
-    return next((ln.lstrip("- ").strip() for ln in str(listed).splitlines()
-                 if words and f"({asset.lower()}):" in ln.lower() and all(w in ln.lower() for w in words)), None)
+
+    def words(text):
+        """Its words, whole, a plural as its one ("tags" is "tag")."""
+        return {w[:-1] if len(w) > 3 and w.endswith("s") else w
+                for w in re.findall(r"[a-z]{3,}", text.lower()) if w not in _FILLER}
+
+    said = words(task)
+    for ln in str(listed).splitlines():
+        line = ln.lstrip("- ").strip()
+        title, _, rest = line.partition(" (")
+        if not said or not rest.lower().startswith(f"{asset.lower()}):"):
+            continue
+        # asked when it's due, his words among the title's ("tags": Renew Tags); a need already listed only as the
+        # same task ("a new battery" is never the Battery check, the sixteenth review)
+        if (said == words(title)) if same else said <= words(title):
+            return line
+    return None
 
 
 def _upkeep_reply(context, prompt: str):
@@ -680,7 +698,9 @@ def _upkeep_reply(context, prompt: str):
     new brakes" adds the task for that asset (it had tried to mark one complete), only when the asset is one of his.
     None otherwise.
     The line is that asset's own (`_task_line`); a need already listed is said, never added twice, and a remark, a
-    repeat, a date or a non-task (`_NOT_A_TASK`) is the model's."""
+    repeat, a date or a non-task (`_NOT_A_TASK`) is the model's.
+    A part or a mileage is a real need ("a new fuel filter", "its 30,000 mile service"); only a lone "gas" or "work"
+    isn't."""
     assets = _assets(context)
     said = prompt.replace("’", "'")
     found = _DUE.match(said)
@@ -694,7 +714,7 @@ def _upkeep_reply(context, prompt: str):
     found = _NEEDS.match(said)
     if found and found.group("asset").lower() in assets and not _NOT_A_TASK.search(found.group("what")):
         title = found.group("what").strip()
-        line = _task_line(context, found.group("asset"), title)
+        line = _task_line(context, found.group("asset"), title, same=True)
         if line is not None:
             return f"That's already on your list: {line}."  # never a second one (the fifteenth review)
         return context.assistant_actions.execute(context, "add_maintenance_task", {
@@ -711,17 +731,20 @@ def _led_reply(context, prompt: str):
     sweep's model answer had its formula backwards): for a red LED (about 2 V) and a white or blue one (about 3.1 V),
     at 20 mA, rounded up to a stock value. None otherwise.
     Only the plain question: a forward voltage, two voltages, ohms, current, several LEDs or a strip are the
-    model's; mains is a warning, and over a quarter watt of heat says to use a 1/2 W resistor."""
+    model's; mains is a warning, and over a quarter watt of heat says to use a 1/2 W resistor.
+    A current in mA or several LEDs in words are the model's; mains is over 50 V or said; the resistor is rated
+    twice its heat."""
     found = _LED.search(prompt)
     if not found:
         return None
     # only the plain question (the fifteenth review): a forward voltage or two voltages said, a resistor he has, the
     # current asked, several LEDs or a strip are the model's
-    if (re.search(r"\b(?:forward|vf|ohms?|current|amps?|series|parallel|strips?|\d+\s+leds)\b|\u03a9", prompt, re.I)
+    if (re.search(r"\b(?:forward|vf|ohms?|current|amps?|milliamps?|series|parallel|strips?|\d+\s*ma|"
+                  r"(?:\d+|two|three|four|five|six|several|multiple|many)\s+leds)\b|\u03a9", prompt, re.I)
             or len(re.findall(r"\d+(?:\.\d+)?\s*(?:v|volts?)\b", prompt, re.I)) > 1):
         return None
     supply = float(found.group(1) or found.group(2))
-    if supply > 50 or re.search(r"\b(?:ac|mains|outlet|wall)\b", prompt, re.I):
+    if supply > 50 or re.search(r"\bmains\b", prompt, re.I):  # a 5 V wall adapter is no mains (the sixteenth review)
         return ("Don't run an LED from mains through a resistor alone: the resistor would burn (watts of heat), the "
                 "LED needs protecting from the reverse half of AC, and it's a shock hazard. Use a bulb or LED made for "
                 "mains, or a low-voltage supply (5 or 12 V DC) with a resistor.")
@@ -737,8 +760,10 @@ def _led_reply(context, prompt: str):
         except Exception:  # noqa: BLE001 - a calculation that can't be done is the model's
             return None
         said.append(f"for {color} LED (about {forward:g} V), {result['said'].rstrip('.')}")
-        if (supply - forward) * 0.02 > 0.25:
-            said[-1] += " (over a quarter watt of heat: use a 1/2 W resistor)"
+        heat = (supply - forward) * 0.02
+        rating = next(r for r in (0.25, 0.5, 1, 2, 3, 5) if r >= 2 * heat)  # rated twice its heat
+        if rating > 0.25:
+            said[-1] += f" ({heat:.2g} W of heat: use a {'1/2' if rating == 0.5 else f'{rating:g}'} W resistor)"
     if not said:
         return None
     return ("At 20 mA, " + "; ".join(said) + ". R = (supply - the LED's forward voltage) / current: check your LED's "
@@ -1108,6 +1133,19 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
                          route="model", tools_offered=offered)
 
 
+def _defines(text: str) -> bool:
+    """Whether the JSON is a function definition: a "description" beside its name, never inside the arguments
+    (the sixteenth review: a made-up call whose arguments had a description had leaked as raw JSON)."""
+    import json
+
+    try:
+        whole = json.loads(text)
+        return isinstance(whole, dict) and "description" in whole
+    except ValueError:
+        found = re.search(r'"(?:parameters|arguments|args|input)"\s*:', text)
+        return bool(found) and '"description"' in text[:found.start()]
+
+
 def _garbled(content: str, context=None) -> bool:
     """Whether the model's reply is a tool call written as text instead of made (a malformed call); with a context, only
     when the name it gives is one of her tools (the twelfth review: a JSON example he asked for, {"name": "Zac"}, had
@@ -1117,7 +1155,8 @@ def _garbled(content: str, context=None) -> bool:
     or a fenced example with words around it.
     The name may sit anywhere in the object; a fenced block counts only when it names one of her tools, a made-up
     snake_case name only unfenced with parameters or arguments.
-    A function definition he asked for (a "description" beside its parameters) is an answer."""
+    A function definition he asked for (a "description" beside its parameters) is an answer.
+    A description inside the arguments is still a call (`_defines`)."""
     from core.llm_manager import _looks_like_malformed_tool_call
 
     try:
@@ -1144,7 +1183,7 @@ def _garbled(content: str, context=None) -> bool:
     # a made-up tool's snake_case name, only unfenced and with parameters or arguments: a fenced function-call example
     # he asked for ("get_current_weather") is an answer
     return (not fenced and "_" in name and bool(re.search(r'"(?:parameters|arguments)"\s*:', text))
-            and not re.search(r'"description"\s*:', text))  # a function definition he asked for is an answer
+            and not _defines(text))  # a function definition he asked for is an answer
 
 
 def echoes(content: str, prompt: str) -> bool:
