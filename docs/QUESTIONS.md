@@ -5,6 +5,22 @@ Answer under the question; Claude moves closed ones to the bottom.*
 
 ## Open
 
+### Q-0018: Should the shortcuts that write records stay word patterns? (claude → zac)
+- Asked: 2026-11-25 · Status: OPEN
+- What it means: some everyday sentences are handled in code before the model, because the model kept getting them
+  wrong (it said "you've been reminded" without setting anything, or filed hours as a machine reading). Most of those
+  shortcuts only read your records, and they're fine. Six of them write a record: what you spent, a reminder on a
+  day, a maintenance job, project hours, a job quote, and turning the morning briefing on or off. Every review today
+  found new everyday sentences they recorded wrongly; a Fable review called that a treadmill that won't converge.
+  They're now narrowed to act only on a sentence they read whole, and to hand anything else to the model.
+- The choice:
+  1. Keep them narrowed, as now (each change is undoable; the model gets the rest).
+  2. Turn the six into proposals: MIA says "Log $30 under Groceries today?" and a yes records it.
+  3. Retire them: the model picks the tool, and code checks its details against your words (the amount you said,
+     a date it can read, a project you have) before anything is written.
+- Claude's recommendation: 3 for spending, quotes and the briefing, 1 for reminders and project hours, which read
+  cleanly once narrowed. Nothing changes until you say.
+
 ### Q-0017: Which Project ALICE ideas should MIA take? (claude → zac)
 - Asked: 2026-10-17 · Status: ANSWERED
 - Answer (zac, 2026-10-17): "I want to take your recommended features
