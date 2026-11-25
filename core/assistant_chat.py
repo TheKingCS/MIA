@@ -454,9 +454,7 @@ def about_mia(prompt: str, context=None) -> bool:
     Every match a world tool (her library, learning, plans): the world's. A teach-me request is hers only when it
     is one of her parts (`_names_her_part`: "teach me how quests work") or starts with an app verb and an app's own
     words matched ("walk me through adding a bill"), never because a topic's tools matched ("teach me about solar power", "teach me about rotational grazing": the world's). A how-to that matches nothing, or no registry to ask:
-    hers (the safe side). A how-to (not a teach-me) where only world tools matched by their own phrases, the apps
-    only by a keyword, is the world's: "how do I wire the relay lab?" is building a circuit (build_along), not using
-    the Data Logger's Lab."""
+    hers (the safe side)."""
     lowered = prompt.lower().strip()
     lead = next((p for p in (*_WORLD_PREFIXES, *_TEACH_LEADS) if lowered.startswith(p)), "")
     rest = lowered[len(lead):]
@@ -489,12 +487,6 @@ def about_mia(prompt: str, context=None) -> bool:
     if teaching:  # a topic's words ("solar", "the hens") don't make a teach-me hers; using an app ("adding a bill") does
         by_words = any(domain(a) not in named_only for a in kept)
         return by_words and bool(_APP_VERB.match(rest.strip(" ,")))
-    padded = f" {lowered} "
-    by_phrase = {domain(a) for a in matched
-                 if any(t in padded for t in (a.get("trigger_phrases", ()) if isinstance(a, dict)
-                                              else getattr(a, "trigger_phrases", ())))}
-    if by_phrase and by_phrase <= set(WORLD_DOMAINS):
-        return False  # a world tool's own phrase ("how do i wire"), her apps only by a keyword ("the relay lab")
     if any(domain(a) not in named_only for a in kept):
         return True  # an app's own words ("missions", "a bill", "set an alarm")
     return bool(_APP_VERB.match(rest.strip(" ,")))  # "teach me how to add the chainsaw": hers; "sharpen" it: the world's

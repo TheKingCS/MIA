@@ -97,7 +97,7 @@
     const status = b.ready ? "Your ESP32 is on " + b.port + (b.description ? " (" + b.description + ")" : "") + "."
       : (b.missing || "Plug in your ESP32.");
     const flash = el("button", { type: "button", class: "btn btn-amber", disabled: page.started ? null : true,
-      onclick: () => MIAShell.act({ kind: "esplab.flash", params: { lesson: lab.id } }) }, "Flash This Lab");
+      onclick: () => MIAShell.act({ kind: "esplab.flash", params: { lesson: lab.id, port: b.port || "" } }) }, "Flash This Lab");
     const out = el("pre", { class: "crs-monitor", "aria-live": "polite" }, monitor || "The board's output shows here.");
     const said = el("p", { class: "dim" });
     const read = el("button", { type: "button", class: "btn btn-ghost", disabled: page.started ? null : true }, "Read The Board");
@@ -105,7 +105,7 @@
       read.disabled = true;
       read.textContent = "Reading…";
       try {
-        const got = await MIA.courseRead(course, lab.id, 8);
+        const got = await MIA.courseRead(course, lab.id, 0);
         monitor = got.serial || "(nothing came)";
         out.textContent = monitor;
         said.textContent = got.said;

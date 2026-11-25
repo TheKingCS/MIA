@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1763 files, 380,307 lines; 1763 files describe themselves; 20,808 of 20,938 classes and functions are documented.
+1763 files, 380,430 lines; 1763 files describe themselves; 20,812 of 20,942 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-703 files, 197,119 lines; 9,960 of 10,046 classes and functions documented
+703 files, 197,175 lines; 9,960 of 10,046 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -714,7 +714,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,948 lines; 62 of 62 classes and functions documented
+2 files, 4,951 lines; 62 of 62 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -1001,7 +1001,7 @@
 
 ## tests/: the test suite: what each part must do
 
-652 files, 101,497 lines; 8,480 of 8,524 classes and functions documented
+652 files, 101,561 lines; 8,484 of 8,528 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

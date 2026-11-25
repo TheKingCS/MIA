@@ -7,6 +7,8 @@ drill run by voice from its start to its summary, the place riding in MIA's own 
 ordinal, "stop the drill", and words that aren't a drill (a drill bit, a fire drill at home) left alone; the course
 page's data; and a drill never touching his path.
 The canning and carpentry drills by their courses' words, and the Classroom's list of courses with labs or drills.
+And ordinary messages (a stud, a worst case scenario, a drill at work) that never start one, with commands let
+through while one waits.
 """
 
 from types import SimpleNamespace
@@ -70,6 +72,23 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     assert [c["id"] for c in listed] == ["esp32", "bushcraft", "gardening", "carpentry"]
     assert listed[2]["what"] == "Lessons, and 1 drill that judges each call"
     assert listed[1]["what"] == "Lessons, and 3 drills that judge each call"
+
+
+def test_ordinary_messages_never_start_a_drill_and_a_waiting_drill_lets_commands_through():
+    """The review's cases (2026-11-25): a stud, pilot holes, a worst case scenario, rent, a drill at work, and the
+    sensor in the greenhouse start nothing; while a drill waits, "lights off" or "thanks" aren't asked for a letter,
+    "e" or "not sure" are, and "drill me on canning" still starts one."""
+    for words in ("can I drill into the stud?", "how far apart should I drill pilot holes for the shop shelves",
+                  "what's the worst case scenario for water in the basement?",
+                  "in a scenario where I can't pay rent, what happens?", "we had a drill at work today, a fire evacuation",
+                  "let's do a fire drill with the family"):
+        assert drills.reply(None, _said(), words) is None, words
+    first = drills.reply(None, _said(), "give me a survival drill")
+    for words in ("lights off", "thanks", "set alarm 7", "pause music"):
+        assert drills.reply(None, _said(first), words) is None, words
+    for words in ("e", "not sure"):
+        assert drills.reply(None, _said(first), words).startswith("Which one: A, B or C?"), words
+    assert drills.reply(None, _said(), "drill me on canning").startswith("Drill: Putting up green beans.")
 
 
 def test_picking_by_letter_or_ordinal_within_the_choices():

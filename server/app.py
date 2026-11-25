@@ -195,10 +195,11 @@ class NewsHeardRequest(BaseModel):
 
 
 class LabReadRequest(BaseModel):
-    """Reading his board for a lab (POST /api/labs/{course}/read): the lab, a port if not the one found, how long."""
+    """Reading his board for a lab (POST /api/labs/{course}/read): the lab, a port if not the one found, how long.
+    No seconds: as long as the lab needs."""
     lesson: str
     port: str = ""
-    seconds: float = 8.0
+    seconds: float = 0.0  # 0: as long as the lab needs (core/esp32_lab.READ_FOR)
 
 
 class LabAskRequest(BaseModel):
@@ -643,7 +644,8 @@ def create_app(context: AppContext) -> FastAPI:
     A course's labs (web/course.html) read /api/labs/{course}, and reading the board to check a lab is POST
     /api/labs/{course}/read.
     The ESP32 simulator runs a lab on his wires at POST /api/labs/{course}/sim (core/esp32_sim).
-    Ask MIA on a course page is POST /api/labs/{course}/ask (core/lab_ask.py)."""
+    Ask MIA on a course page is POST /api/labs/{course}/ask (core/lab_ask.py).
+    A lab's read runs as long as the lab needs unless asked otherwise (2 to 30 seconds)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3269,7 +3271,8 @@ def create_app(context: AppContext) -> FastAPI:
         if lab_of(request.lesson) is None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Which lab? Like blink or dht.")
         view = view_for(context, profile_id)
-        return esp32_lab.read_and_check(view, request.lesson, request.port, max(2.0, min(20.0, request.seconds)))
+        seconds = max(2.0, min(30.0, request.seconds)) if request.seconds else None  # else the lab's own
+        return esp32_lab.read_and_check(view, request.lesson, request.port, seconds)
 
     @app.post("/api/labs/{course}/ask")
     def web_lab_ask(course: str, request: LabAskRequest, profile_id: str = Depends(require_profile_id)) -> dict:

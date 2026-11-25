@@ -638,7 +638,7 @@
     courseSim: (course, lesson, wires, inputs, seconds) => demo ? demoOnly()
       : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/sim", { lesson, wires, inputs, seconds }),
     courseRead: (course, lesson, seconds) => demo ? demoOnly()
-      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/read", { lesson, seconds: seconds || 8 }),
+      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/read", { lesson, seconds: seconds || 0 }),
     achievementsNew: () => demo ? Promise.resolve({ cards: [], more: 0 }) : call("GET", "/api/achievements/new"),
     achievementsSeen: (ids) => demo ? Promise.resolve({}) : call("POST", "/api/achievements/seen", { ids }),
     character: () => read("/api/character", "character"),

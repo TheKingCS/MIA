@@ -38,6 +38,8 @@ log = get_logger(__name__)
 LAB_DIR = DATA_DIR / "labs" / "esp32"
 BAUD = 115200
 READ_SECONDS = 8
+# Labs whose markers come slower than a read of READ_SECONDS sees: a wake every 10 seconds, a browser's request.
+READ_FOR = {"sleep": 25, "web": 20}
 FLASH_TIMEOUT = 600
 PLACEHOLDER = "type-yours-here"
 SECRETS = f"""// Your Wi-Fi, typed by you. MIA never fills this in, and it stays on this computer.
@@ -82,14 +84,19 @@ def needs_secrets(folder: Path) -> bool:
 
 def board(ports: Optional[list] = None, pio: Optional[list] = None) -> dict:
     """{port, description, pio, missing} for the bench: the ESP32's port (or the only one), PlatformIO, and what's
-    missing in words ("" when both are there)."""
+    missing in words ("" when both are there). With more than one board plugged in, no port: he says which (the
+    review, 2026-11-25: the greenhouse's MCU on the same PC could have been flashed by mistake)."""
     from core import greenhouse_provision as gp
 
     ports = gp.serial_ports() if ports is None else ports
-    found = gp.likely_mcu(ports)
+    boards = [p for p in ports if (p.get("vid"), p.get("pid")) in gp.ESP32_USB]
+    found = gp.likely_mcu(ports) if len(boards) <= 1 else None
     pio = gp.platformio() if pio is None else pio
     missing = []
-    if found is None:
+    if len(boards) > 1:
+        missing.append(f"{len(boards)} boards are plugged in ({', '.join(p.get('device', '') for p in boards)}): "
+                       "say which port, like COM5, so I never write to the wrong one")
+    elif found is None:
         missing.append("no ESP32 on a USB port (plug it in with a data cable)" if not ports else
                        f"{len(ports)} serial ports and none is clearly an ESP32: say which, like COM5")
     if not pio:
@@ -99,16 +106,22 @@ def board(ports: Optional[list] = None, pio: Optional[list] = None) -> dict:
 
 
 def lesson_for(context, words: str = "") -> Optional[str]:
-    """The lab his words name (its id or its lesson's title), else the next one on his path (the lab whose sketch
-    prints the first open check's marker), else the first; None outside the course."""
+    """The lab his words name ("the relay lab" first, then its lesson's title or its id as a whole word: "pot" never
+    in "spot"), else the next one on his path (the lab whose sketch prints the first open check's marker), else the
+    first; None outside the course."""
     from core import paths
     from core.esp32_path import LABS, PROGRAM
 
+    import re
+
     said = str(words or "").lower()
-    for stage in PROGRAM.stages:
-        for lesson in stage.lessons:
-            if lesson.id in said or lesson.title.lower() in said:
-                return lesson.id
+    lessons = [lesson for stage in PROGRAM.stages for lesson in stage.lessons]
+    for lesson in lessons:  # "the relay lab" first, so "hello MIA, flash the relay lab" is the relay lab
+        if re.search(rf"\b{re.escape(lesson.id)} lab\b", said):
+            return lesson.id
+    for lesson in lessons:
+        if lesson.title.lower() in said or re.search(rf"\b{re.escape(lesson.id)}\b", said):
+            return lesson.id
     book = getattr(context, "paths", None)
     if book is not None and book.path(PROGRAM.id) is not None:
         stage = paths.stage_of(book, PROGRAM)
@@ -124,7 +137,8 @@ def lesson_for(context, words: str = "") -> Optional[str]:
 
 def flash(context, lesson_id: str, port: str = "", run: Optional[Callable] = None, pio: Optional[list] = None,
           base: Optional[Path] = None) -> str:
-    """Builds the lab and writes it to the board; what happened, in words. ActionError for what's missing."""
+    """Builds the lab and writes it to the board; what happened, in words. ActionError for what's missing.
+    With no port and more than one board plugged in, it writes to none and says which are there."""
     from core import greenhouse_provision as gp
 
     folder = project(lesson_id, base)
@@ -136,7 +150,7 @@ def flash(context, lesson_id: str, port: str = "", run: Optional[Callable] = Non
     if not bench["pio"]:
         raise ActionError("PlatformIO isn't installed on this PC (pip install platformio), so I can't build it.")
     if not port:
-        raise ActionError("I don't see the ESP32: plug it in with a data USB cable, or tell me its port.")
+        raise ActionError("I can't tell which board to write to: " + (bench["missing"] or "plug it in") + ".")
     code, said = (run or gp._run)(list(bench["pio"]) + ["run", "-t", "upload", "-d", str(folder), "--upload-port",
                                                        port], FLASH_TIMEOUT)
     if code != 0:
@@ -147,14 +161,20 @@ def flash(context, lesson_id: str, port: str = "", run: Optional[Callable] = Non
 
 
 def read_serial(port: str, seconds: float = READ_SECONDS, opener: Optional[Callable] = None) -> str:
-    """What the board prints over `seconds` (opening the port restarts most dev boards, so its setup lines come
-    again). "" when nothing came; OSError when the port can't be opened (in use by a monitor, or unplugged)."""
+    """What the board prints over `seconds`, the port opened without toggling DTR and RTS, so the board keeps
+    running (a lab's sketch says its marker in loop() for this; the sleep lab's wake count lives through deep sleep).
+    "" when nothing came; OSError when the port can't be opened (in use by a monitor, or unplugged)."""
     if opener is None:
         import serial
 
         def opener(p):
-            """The port at the labs' speed."""
-            return serial.Serial(p, BAUD, timeout=0.5)
+            """The port at the labs' speed, opened with the reset lines held off, so a running board isn't
+            restarted by the read."""
+            link = serial.Serial()
+            link.port, link.baudrate, link.timeout = p, BAUD, 0.5
+            link.dtr = link.rts = False
+            link.open()
+            return link
 
     lines = []
     with opener(port) as link:
@@ -174,14 +194,16 @@ def checks_of(lesson_id: str) -> list:
     return [c for s in PROGRAM.stages for c in s.checks if f"MIA {c.about.split()[0]}" in code]
 
 
-def read_and_check(context, lesson_id: str, port: str = "", seconds: float = READ_SECONDS,
+def read_and_check(context, lesson_id: str, port: str = "", seconds: Optional[float] = None,
                    reader: Optional[Callable] = None) -> dict:
     """Reads the board and judges each of the lab's checks from it (core/paths.verify, kept as attempts):
     {port, serial (what it said), results [{check, passed, said}], said (in words)}. For the voice (`check`) and the
-    course page (web/course.html, server/app.py)."""
+    course page (web/course.html, server/app.py). How long: as asked, else the lab's own (READ_FOR), else
+    READ_SECONDS. With more than one board plugged in and no port named, it reads none."""
     from core import paths
     from core.esp32_path import PROGRAM
 
+    seconds = float(seconds or READ_FOR.get(lesson_id, READ_SECONDS))
     out = {"port": port, "serial": "", "results": [], "said": ""}
     book = getattr(context, "paths", None)
     if book is None:
@@ -190,9 +212,10 @@ def read_and_check(context, lesson_id: str, port: str = "", seconds: float = REA
     if book.path(PROGRAM.id) is None:
         out["said"] = "Start Build With ESP32 first: say \"start ESP32\", and how much time you have."
         return out
-    port = out["port"] = port or board(pio=[])["port"]
+    bench = board(pio=[]) if not port else {"port": port, "missing": ""}
+    port = out["port"] = bench["port"]
     if not port:
-        out["said"] = "I don't see the ESP32 on a USB port: plug it in, or tell me its port."
+        out["said"] = "I can't read the board: " + (bench["missing"].split("; ")[0] or "plug it in") + "."
         return out
     try:
         text = (reader or read_serial)(port, seconds)
@@ -208,27 +231,36 @@ def read_and_check(context, lesson_id: str, port: str = "", seconds: float = REA
         got = paths.verify(context, PROGRAM, c.id, {"serial": text})
         out["results"].append({"check": c.id, "passed": got["passed"], "said": got["said"]})
     out["said"] = " ".join(r["said"] for r in out["results"]) or f"The {lesson_id} lab has no check to read."
+    if lesson_id == "web" and not all(r["passed"] for r in out["results"]):
+        out["said"] += " Open http://<its address>/reading in a browser while I read: the address is the MIA WIFI line."
     return out
 
 
-def check(context, lesson_id: str, port: str = "", seconds: float = READ_SECONDS,
+def check(context, lesson_id: str, port: str = "", seconds: Optional[float] = None,
           reader: Optional[Callable] = None) -> str:
-    """Reads the board and judges each of the lab's checks from it (`read_and_check`); in words."""
+    """Reads the board and judges each of the lab's checks from it (`read_and_check`); in words.
+    As long as the lab needs when no time is given (READ_FOR)."""
     return read_and_check(context, lesson_id, port, seconds, reader)["said"]
 
 
 # ------------------------------------------------------------------ the action and the tools
 
 def _describe(context, params) -> str:
-    """What esplab.flash says: the lab, the board and what it does."""
+    """What esplab.flash says: the lab, the board (its port named, found now when none was given; refused when more
+    than one board is plugged in) and what it does."""
     lesson = str(params.get("lesson", "") or "").strip()
     from core.esp32_path import lab_of
 
     if lab_of(lesson) is None:
         raise ActionError("Which lab? Like blink, button or dht.")
     port = str(params.get("port", "") or "").strip()
-    return (f"Build the {lesson} lab and write it to your ESP32" + (f" on {port}" if port else "")
-            + ": it replaces what's on the board now.")
+    where = port
+    if not port:
+        bench = board(pio=[])
+        if not bench["port"]:
+            raise ActionError("Which board? " + (bench["missing"].split("; ")[0] or "Plug it in") + ".")
+        where = bench["port"] + (f" ({bench['description']})" if bench["description"] else "")
+    return f"Build the {lesson} lab and write it to the board on {where}: it replaces what's on that board now."
 
 
 def _execute(context, params) -> str:
@@ -246,13 +278,15 @@ ACTION_TYPES.update(ACTIONS)
 
 def _flash_tool(context, arguments: dict) -> str:
     """Tool flash_lab: the approval card for flashing a lab (the one named, else the next on his path).
-    With no actions here it points to the course page."""
+    With no actions here it points to the course page.
+    The card carries the port found now, so it names the board it writes to."""
     actions = getattr(context, "actions", None)
     if actions is None:
         return "I can't put that to you from here: it's on the course page."
     lesson = lesson_for(context, str(arguments.get("lab", "") or "") + " " + str(arguments.get("question", "") or ""))
     try:
-        card = actions.propose(context, "esplab.flash", {"lesson": lesson, "port": str(arguments.get("port", "") or "")})
+        port = str(arguments.get("port", "") or "") or board(pio=[])["port"]  # the card names the board it writes
+        card = actions.propose(context, "esplab.flash", {"lesson": lesson, "port": port})
     except ActionError as problem:
         return str(problem)
     return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."

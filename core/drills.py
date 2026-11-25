@@ -249,8 +249,8 @@ def named(words: str) -> Optional[Drill]:
     return None
 
 
-_COURSE_WORDS = {"gardening": r"\b(canning|can|preserving|food safety|homestead\w*)\b",
-                 "carpentry": r"\b(carpentry|saw|woodworking|shop|construction)\b"}
+_COURSE_WORDS = {"gardening": r"\b(canning|preserving|food safety)\b",
+                 "carpentry": r"\b(carpentry|circular saw|saw|woodworking)\b"}
 
 
 def find(words: str, today: Optional[date] = None) -> Optional[Drill]:
@@ -309,8 +309,23 @@ _FILLER = {"i", "i'd", "id", "i'll", "ill", "would", "will", "think", "guess", "
            "my", "sure", "yeah"}
 _ORDINAL = {"first": 0, "1st": 0, "one": 0, "second": 1, "2nd": 1, "two": 1, "third": 2, "3rd": 2, "three": 2,
             "fourth": 3, "4th": 3, "four": 3}
-_START = re.compile(r"\b(drill|scenario|quiz me|test me)\b")
 _SURVIVAL = re.compile(r"\b(survival|bushcraft|wilderness|outdoor|outdoors|woods)\b")
+# A drill is started only when one is asked for, its subject right beside the word: "a canning drill", "run the water
+# drill", "drill me on survival" (the review: "can I drill into the stud?", "worst case scenario for water" and "a drill
+# at work today" had each started one).
+_REQUEST = re.compile(r"\b(give me|run|start|do|try|let's|lets|i want|i'd like|how about|another|new|drill me|quiz me|"
+                      r"test me)\b")
+_SUBJECTS = sorted({"survival", "bushcraft", "wilderness", "outdoor", "canning", "preserving", "food safety",
+                    "carpentry", "circular saw", "saw", "green beans", "dusk"}
+                   | {w for d in DRILLS for w in d.title.lower().split() if len(w) > 3 and w != "fire"}, key=len,
+                   reverse=True)
+_SUBJECT = "(?:" + "|".join(re.escape(s) for s in _SUBJECTS) + ")"
+_ASKED_FOR = re.compile(rf"\b{_SUBJECT}\s+(?:drill|scenario)s?\b|\b(?:drill|scenario|quiz)\s+(?:me\s+)?(?:on|about|for)\s+"
+                        rf"(?:the\s+|my\s+|a\s+)?{_SUBJECT}\b")
+# While a drill waits, only an attempt at an answer gets "which one?" back; anything else ("lights off", "thanks") is
+# his to say, and the drill ends there.
+_TRYING = re.compile(r"^(?:(?:hmm+|um+|uh+|well|ok|okay|oh)\s+)*(?:[a-z]|not sure|dunno|i don't know|i dont know|"
+                     r"idk|no idea|pass|skip|hmm+|um+|uh+|(?:the )?(?:fifth|last) one)$")
 _NOT_THIS = re.compile(r"\b(drill bits?|drill press|power drill|cordless|hammer drill|drill (?:a|the|some|holes?)|"
                        r"drilling)\b")
 _STOP = re.compile(r"^(?:stop|end|quit|cancel|skip) (?:the |this )?(?:drill|scenario|quiz)\b")
@@ -359,8 +374,9 @@ def answer(drill: Drill, n: int, right: int, pick: int) -> str:
 
 def reply(context, conversation, text: str) -> Optional[str]:
     """Drills by voice, in code, before the question plans: an answer to the question MIA just asked, "stop the drill",
-    or "give me a survival drill"; None when the words aren't for a drill.
-    A course's own words start one of its drills ("a canning drill", "a carpentry drill")."""
+    or "give me a survival drill"; None when the words aren't for a drill. A drill starts only when one is asked for,
+    its subject beside the word ("a canning drill", "drill me on survival"); while one waits, only an attempt at an
+    answer ("e", "not sure") is asked for the letter again, and anything else ends it."""
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     live = where(conversation)
     if live is not None:
@@ -370,17 +386,17 @@ def reply(context, conversation, text: str) -> Optional[str]:
         pick = picked(said, len(drill.questions[n - 1].choices))
         if pick is not None:
             return answer(drill, n, right, pick)
-        if re.search(r"\b(repeat|again|options|choices|what were|say that)\b", said):
+        if re.search(r"^(?:repeat|again|say (?:that|it) again|what were the (?:options|choices)|repeat (?:that|the "
+                     r"question))\b", said):
             return _asked(drill, n, right)
-        if len(said.split()) <= 3 and not _START.search(said):
+        if _TRYING.match(re.sub(r"[^\w' ]+", "", said).strip()):
             letters = LETTERS[:len(drill.questions[n - 1].choices)]
             return (f"Which one: {', '.join(letters[:-1])} or {letters[-1]}? Or \"repeat\" to hear it again, or "
                     f"\"stop the drill\". (Drill {drill.id}: question {n} of {len(drill.questions)}, {right} best so "
                     f"far.)")
-    if _START.search(said) and not _NOT_THIS.search(said):
-        drill = named(said)
-        if drill is None and (_SURVIVAL.search(said) or any(re.search(w, said) for w in _COURSE_WORDS.values())):
-            drill = find(said)
+    if _REQUEST.search(said) and _ASKED_FOR.search(said) and not _NOT_THIS.search(said) \
+            and not re.search(r"\b(fire drill|drill at work|drills? at work|at work)\b", said):
+        drill = find(said)
         if drill is not None:
             return start(drill)
     return None

@@ -6,6 +6,8 @@ The ESP32 lab simulator (core/esp32_sim.py): a circuit judged the way it would b
 resistor, or with the resistor on its other side; a short; 5 V on the pot; a sensor on the wrong pin; an input-only
 pin asked to drive), the build along with MIA (steps ticked, a resistor's ends either way round; "next step" by voice
 kept on his path), every lab's own circuit passing its checks in a run, and a run never passing anything on his path.
+Also 5 V on a pin stopping the run, an LED across a rail needing its resistor, and a sensor named for the greenhouse
+never taken as a lab to build.
 """
 
 from types import SimpleNamespace
@@ -118,18 +120,29 @@ def test_building_along_is_taken_in_code_before_the_plans_only_right_after_a_ste
     assert sim.reply(context, said(), "Flash the relay lab") is None
 
 
-def test_a_how_to_naming_a_lab_to_wire_is_the_worlds_not_a_question_about_mias_lab_app():
-    """"How do I wire the relay lab?": only the learning tool's own phrase matched, the Data Logger only by the word
-    "lab", so it's about the world (her tools), not a how-to about MIA's Lab (her help pages)."""
-    from core.assistant_actions import AssistantActionRegistry
-    from core.assistant_chat import about_mia
-    from core.esp32_lab import register_esp32_lab_actions
+def test_five_volts_on_a_pin_stops_and_an_led_across_a_rail_needs_its_resistor():
+    """The review's cases: GPIO 34, 4 or 35 on VIN is a stop (it can damage the chip), not a reading of 4095; an LED
+    from 3V3 to GND with no resistor is overdriven, with one, on."""
+    for lab, pin in (("pot", "GPIO 34"), ("dht", "GPIO 4"), ("soil", "GPIO 35")):
+        run = sim.simulate(lab, [(pin, "VIN")])
+        assert not run["ran"] and "over the ESP32's 3.3 V limit" in run["said"], lab
+    bare = sim.analyse("blink", [("led1.anode", "3V3"), ("led1.cathode", "GND")])
+    assert bare["state"]["led1"] == "overdriven" and not bare["ok"]
+    with_r = sim.analyse("blink", [("3V3", "r1.a"), ("r1.b", "led1.anode"), ("led1.cathode", "GND")])
+    assert with_r["state"]["led1"] == "on" and with_r["ok"]
 
-    registry = AssistantActionRegistry()
-    register_esp32_lab_actions(registry)
-    registry.register_domain_keywords("lab", ("lab",))
-    context = SimpleNamespace(assistant_actions=registry)
-    assert about_mia("how do i wire the relay lab?", context) is False
+
+def test_a_sensor_named_for_the_greenhouse_isnt_a_lab_to_build(tmp_path):
+    """"How do I connect the soil moisture sensor in the greenhouse?" and "wire the temperature and humidity sensor
+    for the coop" start nothing; "how do I wire the soil lab?" does."""
+    book = paths.PathBook(None, data_dir=tmp_path)
+    context = SimpleNamespace(paths=book)
+    empty = SimpleNamespace(messages=[])
+    for words in ("how do I connect the soil moisture sensor in the greenhouse?",
+                  "how should I wire the temperature and humidity sensor for the coop?",
+                  "I want to build a raised bed to track soil moisture"):
+        assert sim.reply(context, empty, words) is None, words
+    assert sim.reply(context, empty, "how do I wire the soil lab?").startswith("Building the soil lab:")
 
 
 def test_a_run_in_the_simulator_never_passes_a_check_on_his_path(tmp_path):

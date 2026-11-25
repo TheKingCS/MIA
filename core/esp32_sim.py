@@ -238,13 +238,14 @@ def _reach(nets: _Nets, start: str, resistors: list) -> dict:
 
 
 def _led(nets: _Nets, part: str, pin: str, resistors: list, touched: set, say: Callable) -> str:
-    """An LED's state from its loop: lit, overdriven (no resistor), backwards, on (to 3V3, not the pin) or off."""
+    """An LED's state from its loop: lit, overdriven (no resistor), backwards, on (to 3V3, not the pin) or off.
+    An LED straight across a rail with no resistor is overdriven, like one on the pin."""
     anode, cathode = f"{part}.anode", f"{part}.cathode"
     if nets.same(anode, cathode):
         say("warn", "The LED's two legs are joined: the current goes around it, so it stays dark.")
         return "off"
     to_a, to_c = _reach(nets, anode, resistors), _reach(nets, cathode, resistors)
-    ground, supply = nets.find("GND"), nets.find("3V3")
+    ground = nets.find("GND")
     gpios = [p for p in BOARD if p.startswith("GPIO ")]
     forward = [(q, to_a[nets.find(q)] + to_c[ground]) for q in gpios if nets.find(q) in to_a and ground in to_c]
     backward = [q for q in gpios if nets.find(q) in to_c and ground in to_a]
@@ -262,9 +263,15 @@ def _led(nets: _Nets, part: str, pin: str, resistors: list, touched: set, say: C
         say("warn", "The LED is in backwards: its long leg (+) goes toward the pin, the short leg (-) toward GND. The "
                     "serial monitor still counts, but the LED stays dark.")
         return "backwards"
-    if supply in to_a and ground in to_c:
-        say("note", "The LED runs from 3V3, not the pin: it's on all the time, whatever the sketch does.")
-        return "on"
+    for rail_name in ("3V3", "VIN"):
+        rail_net = nets.find(rail_name)
+        if rail_net in to_a and ground in to_c:
+            if to_a[rail_net] + to_c[ground] == 0:
+                say("warn", f"The LED goes straight from {rail_name} to GND with no resistor: it takes far more "
+                            "current than it should and burns out. Put the 220 ohm resistor in series.")
+                return "overdriven"
+            say("note", f"The LED runs from {rail_name}, not the pin: it's on all the time, whatever the sketch does.")
+            return "on"
     if touched & {anode, cathode} or any(t.startswith(r + ".") for r in resistors for t in touched):
         say("warn", f"The LED isn't in a loop from {label(pin)} to GND yet.")
     return "off"
@@ -334,7 +341,8 @@ def _module(nets: _Nets, part: str, kind: str, signal: str, pin: str, say: Calla
 
 def analyse(lesson_id: str, wires) -> dict:
     """Pure logic. His circuit judged (see the module's opening): {ok, problems [{level, text}], state {part: ...,
-    "reset": EN held low, "short": a rail shorted}}. ValueError for a lab or terminal it hasn't."""
+    "reset": EN held low, "short": a rail shorted}}. ValueError for a lab or terminal it hasn't.
+    A GPIO wired to VIN (5 V) is a stop: it can damage the chip."""
     wires = clean_wires(lesson_id, wires)
     circuit = CIRCUITS[lesson_id]
     nets = _Nets(wires)
@@ -362,7 +370,11 @@ def analyse(lesson_id: str, wires) -> dict:
     drives = any(kind in ("led", "relay") for _, kind in circuit["parts"])
     for gpio in sorted({t for t in touched if t.startswith("GPIO ")}, key=lambda p: int(p[5:])):
         rail = nets.rail(gpio)
-        if rail and gpio == pin and drives:
+        if rail == "VIN":
+            say("stop", f"{label(gpio)} is wired to VIN, 5 V: over the ESP32's 3.3 V limit, which can damage the chip. "
+                        "Pull that wire.")
+            state["short"] = True
+        elif rail and gpio == pin and drives:
             say("stop", f"{label(gpio)} is tied straight to {rail}: when the sketch drives it the other way, it "
                         "shorts through the pin.")
             state["short"] = True
@@ -491,7 +503,8 @@ def _last_was_a_step(conversation) -> bool:
 
 def reply(context, conversation, text: str) -> Optional[str]:
     """Building along, in code, before the question plans (as a trade job's walk-through is): a build verb with a
-    lab named starts it ("walk me through building the pot lab", "how do I wire the relay lab?"), and right after a
+    lab named as one starts it ("walk me through building the pot lab", "how do I wire the relay lab?"; never "the
+    soil moisture sensor in the greenhouse"), and right after a
     step, "next step", "go back", "repeat that" or "done" moves it, when nothing else is said ("what's my next step on
     the shed?" stays the plans'). None when the words aren't for it."""
     from core.esp32_path import PROGRAM
@@ -499,7 +512,7 @@ def reply(context, conversation, text: str) -> Optional[str]:
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     if getattr(context, "paths", None) is None:
         return None
-    names_a_lab = any(re.search(rf"\b{lesson.id} lab\b", said) or lesson.title.lower() in said
+    names_a_lab = any(re.search(rf"\b(?:{re.escape(lesson.id)}|{re.escape(lesson.title.lower())}) lab\b", said)
                       for stage in PROGRAM.stages for lesson in stage.lessons if lesson.id in CIRCUITS)
     if names_a_lab and _BUILD_VERB.search(said) and not re.search(r"\b(flash|upload|simulat\w*|print|check)\b", said):
         return _build_tool(context, {"question": said})
@@ -582,7 +595,8 @@ def _clamp(x: float) -> int:
 
 
 def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.Random) -> tuple:
-    """What the lab's sketch does in `seconds`: ([(t, line)], [(t, {output: value})])."""
+    """What the lab's sketch does in `seconds`: ([(t, line)], [(t, {output: value})]).
+    The hello lab says MIA HELLO with its seconds every loop, as its sketch does."""
     lines, outs = [], []
     led = state.get("led1")
     glow = 1.0 if led in ("lit", "overdriven") else 0.0
@@ -594,10 +608,9 @@ def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.
             lines.append((float(k), f"MIA BLINK {k}"))
             k += 1
     elif lesson_id == "hello":
-        lines.append((0.5, "MIA HELLO"))
         t = 0.5
         while t <= seconds:
-            lines.append((t, f"MIA UPTIME {int(t)}"))
+            lines.append((t, f"MIA HELLO {int(t)}"))
             t += 2.0
     elif lesson_id == "button":
         last, count = -1.0, 0
@@ -685,13 +698,15 @@ def simulate(lesson_id: str, wires=None, inputs: Optional[dict] = None, seconds:
     """Pure logic. Runs a lab in the simulator (see the module's opening) on his wires, or the lab's own circuit when
     none are given: {ok, problems, ran (False when a stop problem kept it from running), serial (the text), trace
     [{t, line}], outputs [{t, ...}], checks [{check, what, would_pass, how}], said}. The lab's own circuit with no
-    inputs given runs as SHOW has it (the knob turned, BOOT pressed). Never a pass on his path."""
+    inputs given runs as SHOW has it (the knob turned, BOOT pressed). Never a pass on his path.
+    Each input's list is cut to 500 entries."""
     from core.esp32_lab import checks_of
     from core.esp32_path import judge
 
     if lesson_id not in CIRCUITS:
         raise ValueError("There's no lab by that name.")
     shown = ""
+    inputs = {k: (v[:500] if isinstance(v, list) else v) for k, v in dict(inputs or {}).items()}
     if wires is None and not inputs and lesson_id in SHOW:
         inputs, seconds, shown = SHOW[lesson_id]
     seconds = max(1.0, min(60.0, float(seconds or 10.0)))

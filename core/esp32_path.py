@@ -68,11 +68,10 @@ void loop() {
 void setup() {
   Serial.begin(115200);
   delay(500);
-  Serial.println("MIA HELLO");
 }
 
 void loop() {
-  Serial.printf("MIA UPTIME %lu\\n", millis() / 1000);   // seconds since it started
+  Serial.printf("MIA HELLO %lu\\n", millis() / 1000);   // hello, and the seconds since it started
   delay(2000);
 }
 """,
@@ -329,7 +328,7 @@ STAGES: tuple[Stage, ...] = _tied((
         Lesson("hello", "Talk over serial", (
             "Flash the hello lab; open the serial monitor at 115200 baud.",
             "Serial.begin sets the speed; both ends must agree, or you see garbage.",
-            "Watch MIA UPTIME count the seconds since it started; press EN (reset) and see it start over."),
+            "Watch MIA HELLO count the seconds since it started; press EN (reset) and see it start over."),
             "The serial monitor is your window into the board: every later lab tells you what it's doing through it.",
             ("The wrong baud rate: gibberish on the monitor.", "Printing too fast, which floods the monitor.")),
     ), (
