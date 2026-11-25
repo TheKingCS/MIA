@@ -249,9 +249,15 @@ def _water_on_hand_reply(context, prompt: str):
     """"How many days of water do I have?", in code, both ways it can mean (live check, 2026-11-25: three tools
     matched, and the model took the property's water budget and asked for the roof): the drinking water in the pantry
     against his target (core/preparedness.water_lines), then the property's stored water, its use and how long it
-    lasts (core/water_budget.say). None for anything else."""
-    if not _WATER_ON_HAND.search(prompt.lower().replace("’", "'")):
-        return None
+    lasts (core/water_budget.say). None for anything else.
+    Only for a question, never a command or someone else's water (a car, the coop)."""
+    from core.assistant_actions import looks_like_question
+
+    said = prompt.lower().replace("’", "'")
+    if not _WATER_ON_HAND.search(said) or not looks_like_question(prompt) \
+            or re.match(r"\s*(?:remind|set|add|log|put|change|make)\b", said) \
+            or re.search(r"\b(?:car|bottle|cooler|in the sun|coop|hens?|chickens?)\b", said):
+        return None  # never a command or someone else's water ("remind me to buy 14 days of water": the sixth review)
     from core import preparedness, water_budget
 
     try:

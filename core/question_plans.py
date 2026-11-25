@@ -1473,8 +1473,9 @@ NOT_FOR = {
     # quitting by a date is its own plan's ("what if I quit at the end of next year?"), not the year's priorities
     "priorities": re.compile(r"\b(quit|quitting|leave (my|the) job|leaving (my|the) job)\b", re.I),
     # a project idea for anyone ("a good beginner woodworking project") isn't his own projects (live sweep 2026-11-25)
-    "projects": re.compile(r"\b(beginner|beginners|good|easy|simple|first|starter|ideas?|weekend)\b.{0,30}\bprojects?\b|"
-                           r"\bprojects? (ideas?|for (a )?beginners?)\b", re.I),
+    "projects": re.compile(r"\b(?:a|an|some)\s+(?:good|easy|simple|first|starter|beginner|beginners|weekend)\b.{0,30}"
+                           r"\bprojects?\b|\bbeginners?\b.{0,20}\bprojects?\b|\bprojects? (?:ideas?|for (?:a )?"
+                           r"beginners?)\b|\bproject ideas?\b", re.I),
     # his net worth is get_net_worth's, not what his products are worth (live sweep 2026-11-25)
     "products": re.compile(r"\bnet worth\b|\bam i worth\b", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b|\brent(al)?\b|\bwater\b", re.I),
@@ -1485,7 +1486,8 @@ NOT_FOR = {
     # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"; nor a question about
     # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
     # a survival how-to ("the best way to start a fire in the rain", live sweep 2026-11-25) is no project of his
-    "project picture": re.compile(r"\b(fire|tinder|kindling|purify|creek|compass|shelter|plans for|blueprints?|"
+    "project picture": re.compile(r"\b((?:start|make|light|build)\w* a fire|fire in the (?:rain|wet)|tinder|kindling|"
+                                  r"purify|compass|(?:build|make) a (?:survival |debris )?shelter|plans for|blueprints?|"
                                   r"(?:do|does) (?:we|i) have (?:any )?plans|"
                                   r"materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
                                   r"how many (?:solar )?panels|panels (?:would|do) i need|kwh|size (?:a|my) solar|"

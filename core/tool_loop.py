@@ -259,16 +259,26 @@ def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply
                      tool_calls=[])
 
 
+# The calculators whose one detail is his question, which the model has sent its own description for
+HIS_WORDS_TOOLS = frozenset({"canning_time", "feed_mix", "bleach_for_water", "meat_cure"})
+
+
 def his_words(registry, call: ToolCall, prompt: str) -> dict:
     """A call's arguments, with a tool's `prompt_arg` (the one detail that is his question: canning_time, feed_mix...)
     given his own words, or on a follow-up the question it makes (core/conversation_state.turn_follow_up), never the
     model's (live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with
-    the tool's own description as the question, and was refused)."""
+    the tool's own description as the question, and was refused). Only for HIS_WORDS_TOOLS, and only when the
+    model's question is empty or the tool's own description: any other question of the model's stands (the sixth
+    review: describe_app's two apps, a budget, two foods in two calls had all become the whole prompt)."""
     arguments = dict(call.arguments or {})
     action = getattr(registry, "_actions", {}).get(call.name)
     field = getattr(action, "prompt_arg", "") if action is not None else ""
-    if not field or not str(prompt or "").strip():
+    if call.name not in HIS_WORDS_TOOLS or not field or not str(prompt or "").strip():
         return arguments
+    given = " ".join(str(arguments.get(field) or "").lower().split())
+    described = " ".join(str(getattr(action, "description", "") or "").lower().split())
+    if given and not (given in described or described.startswith(given[:40])):
+        return arguments  # the model's own question stands ("and corn?", two foods in two calls: the sixth review)
     from core.conversation_state import turn_follow_up
 
     follow = turn_follow_up()

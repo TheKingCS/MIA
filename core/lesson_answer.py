@@ -53,16 +53,27 @@ _HOWTO = re.compile(r"\b(?:how (?:do|should|would|can|could) (?:i|you|one|we)|ho
                     r"way to|what is the (?:best|right|safest) way to|best way to|"
                     r"teach me (?:how )?to|show me how to|what(?:'s| is) a good|what should i (?:make|build) "
                     r"(?:as|for) (?:a|my))\b")
+# What a lesson's words also mean but it doesn't teach (the sixth review): a fire pit or fire insurance, the tank's or
+# the aquaponics' water, a seed company
+NOT_ASKS = {
+    ("bushcraft", "fire"): re.compile(r"\bfire\s*(?:pit|place|insurance|extinguisher|alarm|department|ant)s?\b|"
+                                      r"\bfireplace\b|\bfire\s+(?:the|an?)\s+\w+"),
+    ("bushcraft", "water"): re.compile(r"\b(?:tank|cistern|aquaponics|pool|hot tub|aquarium|fish|pond|well|softener|"
+                                       r"heater|bath|dishwasher|radiator)s?\b"),
+    ("gardening", "seed_starting"): re.compile(r"\b(?:company|business|website|money|fund|funding|round|investor)s?\b"),
+}
 # A drill that practises the lesson (core/drills.py), said as the words that start it
 DRILL_FOR = {("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list"}
 
 
 def find(words: str) -> Optional[tuple]:
-    """Pure logic. (course id, lesson id) for a how-to his words ask about one of `ASKS`'s lessons, else None."""
+    """Pure logic. (course id, lesson id) for a how-to his words ask about one of `ASKS`'s lessons, else None.
+    Never what a lesson's words also mean but it doesn't teach (`NOT_ASKS`)."""
     said = " ".join(str(words or "").lower().replace("’", "'").split())
     if not _HOWTO.search(said):
         return None
-    return next((key for key, pattern in ASKS.items() if pattern.search(said)), None)
+    return next((key for key, pattern in ASKS.items()
+                 if pattern.search(said) and not (key in NOT_ASKS and NOT_ASKS[key].search(said))), None)
 
 
 def reply(context, words: str) -> Optional[str]:

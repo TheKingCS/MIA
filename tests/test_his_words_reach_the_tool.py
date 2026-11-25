@@ -18,17 +18,26 @@ DESCRIPTION = "How long to process home-canned jars and at what pressure, from t
 
 
 def _registry():
-    """A registry holding canning_time with its prompt_arg, and a tool without one."""
-    return SimpleNamespace(_actions={"canning_time": SimpleNamespace(prompt_arg="question"),
+    """A registry holding canning_time with its prompt_arg, and a tool without one.
+    The tool carries its description, as a registered one does."""
+    return SimpleNamespace(_actions={"canning_time": SimpleNamespace(prompt_arg="question", description=DESCRIPTION
+                                                                     + " adjusted for his altitude."),
                                      "list_notes": SimpleNamespace(prompt_arg="")})
 
 
 def test_the_question_detail_is_his_words_not_the_models():
+    """The tool's own description, or nothing, becomes his words; the model's own question, or another tool's
+    argument, stands."""
     call = SimpleNamespace(name="canning_time", arguments={"question": DESCRIPTION})
     said = "How long do I pressure can quart jars of green beans?"
     assert his_words(_registry(), call, said) == {"question": said}
     other = SimpleNamespace(name="list_notes", arguments={"query": "eggs"})
     assert his_words(_registry(), other, said) == {"query": "eggs"}
+    # the model's own question stands (the sixth review: two foods in two calls had become the whole prompt)
+    own = SimpleNamespace(name="canning_time", arguments={"question": "corn, quarts"})
+    assert his_words(_registry(), own, "How long for green beans and corn?") == {"question": "corn, quarts"}
+    empty = SimpleNamespace(name="canning_time", arguments={})
+    assert his_words(_registry(), empty, said) == {"question": said}
 
 
 def test_a_follow_up_gives_the_question_it_makes():
