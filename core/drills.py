@@ -535,7 +535,8 @@ def by_id(drill_id: str) -> Optional[Drill]:
 
 
 # Words that name a drill besides its title's ("the power outage drill", "a blackout drill").
-ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "generator", "power"),
+# never the bare "power" (the Fable review: "quiz me on the power rule for calculus" had started the outage drill)
+ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "generator", "power cut", "no power"),
         "flock_night": ("flock", "chicken", "chickens", "hens", "coop", "poultry"),
         "surprise_bill": ("money", "finance", "budget", "surprise bill", "debt"),
         "market_day": ("market day", "market", "business", "farmers market", "pricing"),

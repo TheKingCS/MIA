@@ -32,6 +32,11 @@ with the floor's reply in it; the fixed words are said again only for a differen
 alarm ("mom passed out the cookies") had silenced real ones ("grandma fell off the horse and isn't breathing", "dad
 has collapsed", "he cut his finger off a minute ago help"), so the words stay wide, and a false alarm is the accepted
 cost; tests/test_first_aid_floor_never_misses.py holds every real phrasing the reviews found.
+A figure of speech ("drowning in work") or a past clause ("had a heart attack last year") takes out only its own
+words, and the rest is checked again (`_without`, the Fable review, 2026-11-25: one everyday phrase had silenced the
+emergency beside it, "he was burning brush and his clothes caught fire"); words typed or heard without their
+apostrophes are read as said (`normalised`: "hes passed out", "im bleeding"); and a follow-up naming an emergency the
+last reply didn't cover is answered.
 
 **Scope, honestly:** a floor, not a medic. It catches clear words and misses some indirect ones (the tests list both);
 a false positive costs one careful message with the number in it. Reviewed 2026-11-23 against a corpus of panicked
@@ -43,17 +48,21 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+_PEOPLE = (r"wife|husband|son|daughter|dad|father|mom|mother|friend|kid|kids|baby|child|toddler|infant|brother|"
+           r"sister|grandpa|grandma|grandfather|grandmother|neighbou?r|partner|boy|girl|uncle|aunt|cousin|man|woman|guy|"
+           r"lady|person|worker|coworker|boss|teenager|nephew|niece")
+# the person (the Fable review, 2026-11-25: "husband collapsed in the kitchen", "our son collapsed", "a man
+# collapsed at the store" had been missed for want of "my")
 _WHO = (r"(?:he|she|they|i|we|someone|somebody|the baby|baby|grandma|grandpa|granny|mom|mum|dad|mother|father|"
-        r"my (?:\w+ ){0,2}(?:wife|husband|son|daughter|dad|father|"
-        r"mom|mother|friend|kid|baby|child|brother|sister|grandpa|grandma|grandfather|grandmother|neighbou?r|partner|"
-        r"boy|girl|uncle|aunt|cousin))")
+        r"(?:my|our|the|a|his|her|their) (?:\w+ ){0,2}(?:" + _PEOPLE + r")|(?:" + _PEOPLE + r"))")
 _CPR_SHORT = "If they stop responding and aren't breathing normally, start CPR: push hard and fast in the center of the chest."
 
 # Each kind: (id, the words that say it, what to do after "Call {number} now."). Most time-critical first; when several
 # match, the first two are said.
 KINDS: list[tuple[str, re.Pattern, str]] = [
     ("choking", re.compile(r"\bchok(?:ing|es|ed)\b|"
-                           r"\bsomething (?:stuck|caught) in (?:his|her|their|my|the baby'?s) throat\b|\bheimlich\b"),
+                           r"\b(?:something|food|a \w+|it) (?:is )?(?:stuck|caught|lodged) in (?:his|her|their|my|the "
+                           r"baby'?s) throat\b|\bheimlich\b"),
      "If they can't cough, speak or breathe: give 5 firm back blows between the shoulder blades with the heel of your "
      "hand, then 5 quick thrusts in and up with your fist just above the belly button; keep switching until it comes "
      "out. A baby under one year: face down along your forearm, 5 back blows, then face up, 5 chest thrusts in the "
@@ -64,7 +73,8 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "there for a few seconds; through clothes is fine. Keep them lying down with legs raised, or sitting up if "
      "breathing is easier. A second dose may be needed if they're no better after 5 to 15 minutes and help hasn't "
      "come."),
-    ("drowning", re.compile(r"\bdrown(?:ing|ed)?\b|\b(?:pulled|got) (?:him|her|them|my \w+) out of the (?:water|pond|"
+    ("drowning", re.compile(r"\bdrown(?:ing|ed)?\b|\bwent under\b.{0,25}\b(?:isn'?t|not|hasn'?t|didn'?t) "
+                            r"(?:coming|come|came) (?:back )?up\b|\b(?:pulled|got) (?:him|her|them|my \w+) out of the (?:water|pond|"
                             r"pool|lake|river|creek)\b|\bfell (?:in|into) the (?:pond|pool|lake|river|creek|water)\b"),
      "Get them out of the water without going in yourself if you can: reach with a pole or throw something that "
      "floats. If they aren't breathing normally, start CPR; drowning is a lack of air, so give rescue breaths too if "
@@ -75,9 +85,10 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "Don't touch them until the power is off: switch it off at the breaker or unplug it, or push the source away with "
      "something dry that isn't metal (a wooden broom handle). Stay well back from a downed power line. Once it's off, "
      "if they aren't breathing normally, start CPR; cover any burns loosely."),
-    ("cpr", re.compile(r"\b(?:not|isn'?t|aren'?t|stopped|no longer|quit) breathing\b|\bno pulse\b|"
+    ("cpr", re.compile(r"\b(?:not|isn'?t|aren'?t|stopped|no longer|quit) breathing\b|\bno (?:pulse|heartbeat|heart "
+                       r"beat)\b|\bcan'?t (?:find|feel) (?:a|his|her|their) (?:pulse|heartbeat)\b|"
                        r"\b(?:his|her|their|baby'?s|the baby'?s) heart (?:has )?stopped\b|\bcardiac arrest\b|"
-                       r"\b(?:lips|face|he|she|baby|they) (?:is |are |'s )?(?:turning|turned|going) blue\b"),
+                       r"\b(?:lips|face|he|she|baby|they)(?:'s|'re| is| are)? (?:turning|turned|going) blue\b"),
      "If they don't respond and aren't breathing normally, start CPR: kneel beside them, heel of one hand in the "
      "center of the chest, the other on top; push hard and fast, about 2 inches deep, 100 to 120 times a minute, "
      "letting the chest come back up each time. A baby: about 1.5 inches deep, with two thumbs or the heel of one "
@@ -97,6 +108,9 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                             r"\bcut (?:my|his|her|their|the baby'?s|a) (?:\w+ )?(?:finger|thumb|toe|hand|arm|leg|foot)s? "
                             r"(?:off|clean off)\b|"
                             r"\b(?:severe|heavy|serious|bad) bleeding\b|\bdeep (?:cut|gash|wound)\b|"
+                            r"\b(?:so much|a lot of|lots of) blood\b|\bcut (?:his|her|my|their) \w+ open\b|"
+                            r"\b(?:chainsaw|saw|axe|knife|machete|blade)\b.{0,30}\b(?:cut|sliced|went into|got)\b.{0,20}"
+                            r"\b(?:leg|arm|hand|foot|neck|thigh)\b|"
                             r"\bcut (?:my |his |her |their |the baby'?s |a )?(?:hand|finger|thumb|leg|arm|foot|"
                             r"toe|head|face|wrist|knee|neck|palm|shin)\b.{0,25}\b(?:deep|to the bone|bad|badly)\b|\b(?:been|got|was|i'?m) (?:shot|stabbed)\b|"
                             r"\b(?:shot|stabbed) (?:him|her|me|them)\b"),
@@ -115,7 +129,8 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                           r"\bone side (?:of (?:his|her|their|my) (?:face|body) )?(?:is )?(?:numb|weak|drooping)\b"),
      "Note the time it started: the hospital needs it. Keep them lying down with the head a little raised, and give "
      "nothing to eat or drink. If they stop responding and aren't breathing normally, start CPR."),
-    ("heart", re.compile(r"\bchest (?:pain|pains|hurts|pressure|tightness)\b|\bpain in (?:my|his|her|their) chest\b|"
+    ("heart", re.compile(r"\bchest (?:pain|pains|hurts|pressure|tightness)\b|\bchest (?:is |feels )?(?:tight|heavy|"
+                         r"crushing)\b|\bpain in (?:my|his|her|their) chest\b|"
                          r"\bcrushing (?:pain|feeling)\b.{0,20}\bchest\b|\b(?:having|has|is having) a heart attack\b|"
                          r"\bheart attack\b|\bpain (?:down|in) (?:his|her|their|my) (?:left )?arm\b"),
      "Have them stop and sit down, resting; loosen anything tight. Tell the operator about any medicines they take: "
@@ -125,7 +140,13 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                                r"won'?t wake up|not waking up|not responding|unresponsive|unconscious|fainted|"
                                r"blacked out|passed out)\b|\b(?:got|was|been|is) knocked (?:out|unconscious)\b|"
                                r"\bunconscious\b(?! (?:bias|mind|thoughts?))|\bunresponsive\b|"
-                               r"\b(?:is|are|isn'?t|aren'?t) (?:not )?responding\b"),
+                               r"\b(?:is|are|isn'?t|aren'?t) (?:not )?responding\b|"
+                               # anywhere in the sentence (the Fable review: "he fell and won't wake up", "touched the
+                               # fence and collapsed", "fell off the ladder and isn't moving")
+                               r"\b" + _WHO + r"\b.{0,40}\b(?:won'?t|will not|isn'?t|is not|not|can'?t get (?:him|her|"
+                               r"them) to) (?:wake|waking) up\b|\b(?:and|then|just|suddenly|has|had) (?:\w+ )?(?:collapsed|fainted|blacked out|"
+                               r"passed out|went limp)\b|\bfell\b.{0,40}\b(?:isn'?t|is not|not|won'?t|stopped) "
+                               r"(?:moving|waking|answering|talking)\b"),
      "Check if they're breathing. If they are, roll them onto their side, top knee bent, head tilted back so the "
      "airway stays open, and watch the breathing. If they fell or may have hurt the neck or back, don't move them "
      "unless you must to keep the airway open or get them out of danger. If they aren't breathing normally, start "
@@ -135,10 +156,14 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "Don't hold them down and don't put anything in their mouth. Move hard things away, cushion the head, and time "
      "it. When the shaking stops, roll them onto their side and stay with them. Tell the operator if it lasts more "
      "than 5 minutes or happened in water."),
-    ("poison", re.compile(r"\boverdos\w*|\bpoisoned\b|\btook too many\b|\bswallowed\b.{0,30}\b(?:pills?|tablets?|"
+    ("poison", re.compile(r"\boverdos\w*|\bpoisoned\b|\btook too many\b|\btook (?:all|a whole bottle|the whole bottle|"
+                          r"a bunch) (?:of )?(?:her|his|my|their|the)?\s*(?:\w+\s+)?(?:pills|tablets|meds|medicine|"
+                          r"tylenol|advil|aspirin)\b|\b(?:tide|laundry|dishwasher|detergent) pods?\b|"
+                          r"\bswallowed\b.{0,30}\b(?:pills?|tablets?|"
                           r"bleach|poison|chemicals?|antifreeze|batter(?:y|ies)|medicine|cleaner|lye|gas(?:oline)?|"
                           r"detergent|pods?|rat poison)\b|\bdrank\b.{0,20}\b(?:bleach|antifreeze|gas(?:oline)?|poison|"
-                          r"cleaner|lye|chemicals?)\b|\bate\b.{0,20}\b(?:rat poison|mushrooms? from the yard|pills)\b"),
+                          r"cleaner|lye|chemicals?|weed killer|roundup|pesticide|herbicide|kerosene|paint thinner|"
+                          r"windshield fluid)\b|\bate\b.{0,20}\b(?:rat poison|mushrooms? from the yard|pills)\b"),
      "Don't make them throw up. Keep whatever they took (the bottle or package) to tell the operator; a swallowed "
      "button battery needs the emergency room right away. If they stop responding, roll them onto their side; if they "
      "aren't breathing normally, start CPR."),
@@ -149,7 +174,9 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "things near the bite before it swells. Don't cut it, suck it, ice it or put a tourniquet on it."),
     ("burn", re.compile(r"\bburn(?:ed|t)\b.{0,25}\b(?:badly|bad|all over|blister\w*|skin)\b|"
                         r"\b(?:bad|badly|severe|serious|deep) burns?\b|\bclothes (?:caught|are on|on) fire\b|"
-                        r"\b(?:he|she|they|baby|my \w+)(?:'s| is| are|'re) on fire\b"),
+                        r"\b(?:he|she|they|baby|my \w+)(?:'s| is| are|'re) on fire\b|\bon fire\b.{0,15}\b(?:he|she|"
+                        r"him|her)\b|\b(?:boiling|hot) (?:water|oil|grease)\b.{0,25}\b(?:on|over) (?:the baby|him|her|"
+                        r"me|them|my|his|her)\b|\bscald(?:ed|ing)?\b"),
      "Stop the burning: stop, drop and roll, or smother it. Cool the burn under cool (not icy) running water for 10 "
      "to 20 minutes. Take off rings and anything tight, but not clothing stuck to the skin. Cover it loosely with "
      "clean plastic wrap or a clean cloth."),
@@ -166,28 +193,33 @@ _ABOUT = re.compile(r"^\s*(?:what (?:are|is) (?:the )?(?:signs?|symptoms?|causes
                     r"identify)|is it (?:true|bad|safe)|why (?:do|does|is))", re.I)
 # Words that say it's happening, which win over a question's opening: "what do I do, my baby is choking right now".
 _HAPPENING = re.compile(r"\bright now\b|\bhelp\b|!|\b(?:he|she|they)(?:'s| is| are|'re)\b|\bi'm\b|\bi am\b|"
-                        r"\bmy (?:\w+ ){0,2}(?:is|are|has|just)\b|\bjust (?:now|happened)\b", re.I)
+                        r"\bmy (?:\w+ ){0,2}(?:is|are|has|just)\b|\bjust (?:now|happened)\b|"
+                        # today's, beside a past one (the Fable review: "had a heart attack last year and just
+                        # collapsed", "choked last week and today he choked again")
+                        r"\bjust (?:collapsed|passed out|fainted|fell|stopped|choked)\b|\b(?:now|today|tonight|again)\b",
+                        re.I)
 # Something from the past: "had a heart attack in 2019", "years ago".
 _PAST = re.compile(r"\bin (?:19|20)\d\d\b|\b(?:years?|months?|weeks?) ago\b|\blast (?:year|month|week)\b|"
                    r"\bwhen (?:i|he|she) was (?:a )?(?:kid|young|little|child)\b", re.I)
 # A figure of speech: "I'm drowning in work", "choking on all this paperwork", "almost had a heart attack".
-_FIGURE = re.compile(r"\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that|the|my|these) (?:paperwork|work|news|"
-                     r"traffic|emails?|bills?|deadlines?)\b|\b(?:almost|nearly) (?:had|died|choked|drowned)\b|"
+_FIGURE = re.compile(r"\bdrowning in\b(?!\s+(?:the\s+|a\s+|our\s+|his\s+|her\s+)?(?:pool|lake|pond|river|creek|"
+                     r"water|ocean|sea|tub|bath\w*|canal|stock tank|trough))|\bchok(?:ing|ed) on (?:all )?(?:this|that|the|my|these) (?:paperwork|work|news|"
+                     r"traffic|emails?|bills?|deadlines?)\b|\b(?:almost|nearly) (?:had a (?:heart attack|stroke|cow|fit)|had|died|choked|drowned)\b|"
                      r"\bgave me a heart attack\b|\bmy heart (?:almost |nearly )?stopped when\b|\bunresponsive "
                      r"(?:app|page|website|computer|laptop|screen|server)\b|\b(?:app|page|website|site|computer|"
-                     r"laptop|screen|server|program|phone|printer|mouse|keyboard|browser|tv|it)\b.{0,15}"
-                     r"\b(?:not responding|unresponsive)\b|"
+                     r"laptop|screen|server|program|phone|printer|mouse|keyboard|browser|tv|it)(?:'s| is| was| keeps| "
+                     r"seems| still)*\s*(?:not responding|unresponsive)\b|"
                      # the homestead's own words (review 2026-11-23): engines, fences, plants, cooking, lines
                      r"\bchok\w*\s+(?:the\s+|my\s+)?(?:engine|carb\w*|saw|chainsaw|mower|motor|truck|tractor)\b|\bthe choke\b|"
                      r"\b(?:engine|motor|pump|bearing|piston|chainsaw|saw|bolt|brake|caliper)s?\s+seiz\w*|"
-                     r"\bseiz\w*\s+(?:up|the\s+(?:engine|bolt|motor))|\belectric fence\b|\bfence (?:charger|energi[sz]er)\b|"
+                     r"\bseiz\w*\s+(?:up|the\s+(?:engine|bolt|motor))|\b(?:shock|zap)\w*\b.{0,40}\belectric fence\b|\belectric fence\b.{0,40}\b(?:shock|zap)\w*\b|\belectric fence\b|\bfence (?:charger|energi[sz]er)\b|"
                      r"\bdrown\w*\s+(?:the\s+|my\s+)?(?:\w+\s+)?(?:seedlings?|plants?|tomato(?:es)?|garden|roots|"
                      r"crops?|lawn|beds?|starts|transplants)\b|"
                      r"\bburn\w*\s+(?:the\s+|my\s+)?(?:rice|toast|food|dinner|pan|pot|beans|bread|cookies|meat|steak|"
                      r"sauce|brush|pile|trash|wood|leaves)\b|"
                      r"\b(?:lines?|brakes?|hydraulics?|radiators?)\b.{0,25}\bbleed\w*|\bbleed\w*\b.{0,15}\b(?:lines?|"
-                     r"brakes?|air)\b|\b(?:throttle|mower|engine|tractor|truck|pump|controller|sensor|remote|valve)\b"
-                     r".{0,25}\b(?:unresponsive|not responding)\b|\boverdos\w*\s+(?:the\s+|my\s+)?(?:tomatoes|plants?|"
+                     r"brakes?|air)\b|\b(?:throttle|mower|engine|tractor|truck|pump|controller|sensor|remote|valve)"
+                     r"(?:'s| is| was| keeps| seems| still)*\s*(?:unresponsive|not responding)\b|\boverdos\w*\s+(?:the\s+|my\s+)?(?:tomatoes|plants?|"
                      r"garden|lawn|soil|seedlings?)\b|\bon (?:fertili[sz]er|nitrogen)\b", re.I)
 # Practice asked for, not an emergency: only a drill actually asked for ("give me a choking drill", "quiz me on
 # bleeding": core/drills.requested, the same words that start one), never the bare noun (the sixth review: "she choked
@@ -217,6 +249,13 @@ def _practice_asked(text: str) -> bool:
         return requested(text) is not None
     except Exception:  # noqa: BLE001 - if it can't tell, it's never practice: the floor answers
         return False
+def _without(pattern: re.Pattern, text: str) -> str:
+    """Pure logic. The words with `pattern`'s own spans taken out, so what's left is checked again: an everyday
+    phrase never silences an emergency said beside it (the Fable review, 2026-11-25: "he was burning brush and his
+    clothes caught fire", "she almost drowned and now she isn't breathing" had gone quiet)."""
+    return pattern.sub(" ", text)
+
+
 # An animal and no person: the vet's work, not these words ("my dog is choking", "the hens are gasping").
 _ANIMAL = re.compile(r"\b(?:dog|dogs|puppy|cat|cats|kitten|chickens?|hens?|rooster|horse|goat|cow|calf|pig|sheep|"
                      r"lamb|duck|rabbit|bird|birds|chicks?)\b", re.I)
@@ -225,22 +264,42 @@ _PERSON = re.compile(_WHO + r"\b|\b(?:me|him|her|them|us|i'm|i've|i)\b", re.I)
 MARK = "or have someone else call while you help."
 
 
+_SPOKEN = {"hes": "he's", "shes": "she's", "theyre": "they're", "im": "i'm", "wont": "won't", "isnt": "isn't",
+           "cant": "can't", "doesnt": "doesn't", "arent": "aren't", "didnt": "didn't", "wasnt": "wasn't",
+           "hasnt": "hasn't", "aint": "ain't", "thats": "that's", "whats": "what's", "dont": "don't"}
+
+
+def normalised(prompt: str) -> str:
+    """Pure logic. The words lowercased, curly apostrophes straight, spaces single, and contractions typed or
+    transcribed without the apostrophe restored ("hes passed out", "im bleeding", "wont wake up": the Fable review)."""
+    text = " ".join(str(prompt or "").lower().replace("’", "'").replace("‘", "'").split())
+    return re.sub(r"\b[a-z]+\b", lambda m: _SPOKEN.get(m.group(0), m.group(0)), text)
+
+
 def kinds(prompt: str) -> list[str]:
     """Pure logic. Every kind of emergency these words say is happening now, most time-critical first ([] for none).
     A drill asked for (core/drills.requested) isn't one, unless the words also say it's happening or real, or an
     emergency is left once the drill's own words are out (`_left_after_drill`); a bare "practice" or "drill" never
-    turns the floor off."""
-    text = " ".join(str(prompt or "").lower().replace("’", "'").split())
+    turns the floor off.
+    A figure of speech or a past clause takes out only its own words, and the rest is checked again (the Fable
+    review, 2026-11-25); the words are `normalised` first ("hes", "im", "wont")."""
+    text = normalised(prompt)
     if not text:
         return []
+    text = _without(_FIGURE, text)  # a figure of speech's own words out; what's left still counts
     found = [kind for kind, words, _do in KINDS if words.search(text)]
     if not found:
         return []
-    if _FIGURE.search(text) or (_ANIMAL.search(text) and not _PERSON.search(text)):
+    if _ANIMAL.search(text) and not _PERSON.search(text):
         return []
     happening = bool(_HAPPENING.search(text))
-    if (_ABOUT.search(text) or _PAST.search(text)) and not happening:
+    if _ABOUT.search(text) and not happening:
         return []
+    if _PAST.search(text) and not happening:
+        rest = _without(re.compile(r"[^,.;]*" + _PAST.pattern + r"[^,.;]*", re.I), text)
+        found = [kind for kind, words, _do in KINDS if words.search(rest)]  # the past clause out, not the sentence
+        if not found:
+            return []
     if _practice_asked(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)) \
             and not _left_after_drill(text):
         return []  # "help me practice the choking drill" is practice; "help, he's choking" never is
@@ -321,7 +380,10 @@ _NOT_FIRST_AID = re.compile(r"\bbleed\w*\s+(?:the\s+|a\s+|my\s+)?(?:radiators?|b
                             r"sap|syrup|hydraulics?|injectors?|fuel|system)\b|\bburn\w*\s+(?:the\s+|a\s+|my\s+|off\s+)?"
                             r"(?:stumps?|brush|piles?|cds?|dvds?|discs?|calories|fat|wood|trash|leaves|fields?|"
                             r"rubber|clutch|in\b)|\bchok\w*\s+up\b|\bchok\w*\s+(?:the\s+|a\s+|my\s+)?(?:chainsaw|saw|"
-                            r"engine|motor|mower|carb\w*)\b|\bwound up\b|\bwind(?:ing)? up\b")
+                            r"engine|motor|mower|carb\w*)\b|\bwound up\b|\bwind(?:ing)? up\b|"
+                            # (the Fable review: these had been given the tourniquet or "stop, drop and roll")
+                            r"\b(?:freezer|razor|sun|wind|rug|carpet|tip|leaf) ?burn\w*|\bwounds?\b.{0,25}\b(?:trees?|"
+                            r"bark|plants?|branch\w*|trunk)\b|\b(?:nose ?bleeds?|bleeding nose|nose (?:is )?bleeding)\b")
 _HOWTO = re.compile(r"^\s*(?:how (?:do|should|would|can|could) (?:i|you|one|we|people|someone) |how to |what (?:should|"
                     r"do|would) (?:i|you|one|we) do (?:if|when|for|about|with)|what to do (?:if|when|for|about)|"
                     r"what'?s the (?:right |best )?way to |teach me (?:how )?to )")
@@ -359,11 +421,15 @@ def floor_kind_of(text: str) -> Optional[str]:
 
 def respond(prompt: str, history: list, where=None) -> Optional[str]:
     """The floor's reply for this turn, or None: None too when MIA's last words in this conversation were the floor's
-    reply for the same emergency, so his next words in it go on to the model."""
+    reply for the same emergency, so his next words in it go on to the model. A kind her last reply didn't cover
+    ("he's unconscious and not breathing" after "dad collapsed") is answered, the new kinds first."""
     found = kinds(prompt)
     if not found:
         return None
     last = next((m for m in reversed(history or []) if getattr(m, "role", "") == "assistant"), None)
-    if last is not None and floor_kind_of(getattr(last, "content", "")) in found:
-        return None
-    return reply(found, where)
+    said = str(getattr(last, "content", "") or "") if last is not None else ""
+    covered = {k for k, _w, do in KINDS if do in said} if MARK in said else set()
+    new = [k for k in found if k not in covered]
+    if not new:
+        return None  # the same emergency, already answered: his next words go on to the model
+    return reply(new, where)  # one it didn't cover ("he's not breathing now") is answered (the Fable review)

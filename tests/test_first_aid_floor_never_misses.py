@@ -11,6 +11,23 @@ false alarm is the accepted cost (one careful message with the number), and this
 from core import first_aid_floor as floor
 
 REAL = (
+    # the Fable review, 2026-11-25: a figure, a past clause, a missing apostrophe or a person without "my"
+    "my son is drowning in the pool", "he is drowning in the lake help",
+    "he was burning brush and his clothes caught fire", "he was burning leaves and now he is on fire",
+    "he fell off the mower and is unresponsive", "he rolled the tractor and is not responding",
+    "dad collapsed in front of the tv and is not responding", "he took it and is now unresponsive",
+    "he was bleeding the brakes and the truck fell on him he's not breathing",
+    "he touched the electric fence and collapsed", "she almost drowned and now she isn't breathing",
+    "he nearly choked and now he can't breathe", "hes passed out", "hes collapsed", "he's turning blue",
+    "she's turning blue", "im bleeding", "how do you do cpr hes not breathing", "he fell and won't wake up",
+    "grandpa fell and wont wake up", "my wife is on the floor and wont wake up", "he isnt waking up",
+    "husband collapsed in the kitchen", "our son collapsed", "my toddler passed out", "the neighbor collapsed",
+    "a man collapsed at the store", "dad had a heart attack last year and just collapsed",
+    "my dad choked last week and today he choked again and can't breathe", "husband kicked by horse unconscious",
+    "she took all her pills", "she took a whole bottle of tylenol", "my kid ate a tide pod",
+    "he drank some weed killer", "there's so much blood", "he cut his leg open with the chainsaw",
+    "she's got food stuck in her throat", "my chest is tight and my arm hurts", "no heartbeat",
+    "she went under and isn't coming up", "boiling water spilled on the baby", "he fell off the ladder and isn't moving",
     # at practice, with a drill (the sixth review)
     "she choked at soccer practice and can't breathe", "he collapsed at football practice and isn't breathing",
     "kid not breathing at swim practice", "coach collapsed at practice not breathing call 911",

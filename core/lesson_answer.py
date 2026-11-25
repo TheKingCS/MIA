@@ -74,13 +74,20 @@ NOT_ASKS = {
     ("bushcraft", "fire"): re.compile(r"\bfire\s*(?:pit|place|insurance|extinguisher|alarm|department|ant)s?\b|"
                                       r"\bfireplace\b|\bfire\s+(?:the|an?)\s+\w+"),
     ("bushcraft", "water"): re.compile(r"\b(?:tank|cistern|aquaponics|pool|hot tub|aquarium|fish|pond|well|softener|"
-                                       r"heater|bath|dishwasher|radiator)s?\b"),
+                                       r"heater|bath|dishwasher|radiator)s?\b|"
+                                       # the kitchen and the house (the Fable review, 2026-11-25)
+                                       r"\b(?:pasta|noodles|rice|eggs?|coffee|tea|basement|flood\w*|leak\w*|carpet|"
+                                       r"floor|trough|bucket|hard water|dishes)\b"),
+    ("bushcraft", "shelter"): re.compile(r"\bfor (?:the |my |our )?(?:goats?|chickens?|hens|animals?|dogs?|horses?|"
+                                         r"pigs?|livestock|cows?|sheep|ducks?|rabbits?|cats?)\b"),
     ("gardening", "seed_starting"): re.compile(r"\b(?:company|business|website|money|fund|funding|round|investor)s?\b"),
     # his own numbers are the plans' (the tenth review): "how much margin did the shop make", "the margin on my
     # cutting boards", another store's markup; and a tax estimate is no quote
     ("business", "biz_price"): re.compile(r"\b(?:markup|margin)\s+(?:on|did|does|this|last|was|is)\b|\bmade\b|"
+                                          r"\bmargin of (?:safety|error)\b|"
                                           r"\b(?:home depot|lowe'?s|walmart|amazon|tractor supply)\b"),
-    ("business", "biz_terms"): re.compile(r"\btax(?:es)?\b|\bcleared\b|\bbank\b"),
+    ("business", "biz_terms"): re.compile(r"\btax(?:es)?\b|\bcleared\b|\bbank\b|\btweets?\b|\bquote (?:a |the )?"
+                                          r"(?:verse|passage|text|line|source)\b"),
 }
 # A drill that practises the lesson (core/drills.py), said as the words that start it
 DRILL_FOR = {("gardening", "flock_care"): "flock", ("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list",
