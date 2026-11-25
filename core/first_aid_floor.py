@@ -15,6 +15,10 @@ drill", core/drills.py), unless the same words say it's real ("he's choking, thi
 needed: "baby not breathing" counts. Each pattern asks for a person or body where an everyday sentence could match
 ("my laptop won't wake up", "a 2-stroke chainsaw", "the power got cut off", "my heart stopped when I saw the bill").
 
+**The home's own** (2026-11-25): a fire, a gas leak and carbon monoxide are kinds too, first in `KINDS`: get out,
+then call from outside (`HOME`), and an animal named is never a reason to stay quiet about them ("the barn is on
+fire and the horses are inside").
+
 **What she says** (`reply`): fixed, human-written words: call the emergency number first (by his country,
 core/region.py, never a number that might be wrong), then the first thing to do now for each kind that matched, most
 time-critical first (choking before CPR, so "she's choking and can't breathe" gets the thrusts), from the standard
@@ -60,6 +64,31 @@ _CPR_SHORT = "If they stop responding and aren't breathing normally, start CPR: 
 # Each kind: (id, the words that say it, what to do after "Call {number} now."). Most time-critical first; when several
 # match, the first two are said.
 KINDS: list[tuple[str, re.Pattern, str]] = [
+    # the home's own emergencies, first: get out, then call (2026-11-25: "I smell gas", "my carbon monoxide alarm is
+    # going off" and "there's a fire in the kitchen" had reached nothing). From the US Fire Administration's and the
+    # NFPA's home fire guidance, gas utilities' leak steps and the CDC's on carbon monoxide.
+    ("fire", re.compile(r"\b(?:house|home|kitchen|room|bedroom|garage|barn|shop|workshop|coop|trailer|camper|"
+                        r"building|attic|basement|shed|apartment|stove|oven|dryer|chimney)\s+(?:is |'s |caught |are )?"
+                        r"(?:on fire|in flames|burning|caught fire)\b|\bthere'?s (?:a )?fire\b|\bfire in (?:the|my|our)\b|"
+                        r"\b(?:i |we )?(?:see|smell) (?:smoke|flames)\b.{0,30}\b(?:house|room|kitchen|inside|walls?|"
+                        r"ceiling|attic|garage|barn)\b|\bgrease fire\b|\bchimney fire\b|\bsmoke (?:is )?(?:coming|pouring) "
+                        r"(?:out|from)\b|\bsmoke alarm\b.{0,30}\b(?:smoke|flames|fire)\b"),
+     "Get everyone out and stay out; don't stop for things. Crawl low under smoke, and feel a door with the back of "
+     "your hand before you open it: if it's hot, use another way out. Close doors behind you, meet outside, and never "
+     "go back in. A grease fire on the stove, only if it's small and you can: slide a lid over it and turn off the "
+     "heat; never water."),
+    ("gas", re.compile(r"\b(?:smell|smells|smelling|smelled)\s+(?:like\s+)?(?:of\s+)?(?:gas|propane|natural gas|rotten "
+                       r"eggs)\b(?!\s+station)|\b(?:gas|propane)\s+leak\w*\b|\bleaking (?:gas|propane)\b|\bhissing "
+                       r"(?:from|at) the (?:gas|propane)\b"),
+     "Leave now, everyone and the pets, and leave the door open behind you. Don't switch any light or appliance on or "
+     "off, don't light anything, and don't use a phone until you're well away outside. Call from outside, and the gas "
+     "or propane company's emergency line too. Don't go back in until they say it's safe."),
+    ("co", re.compile(r"\b(?:carbon monoxide|co)\s+(?:alarm|detector|monitor|sensor)\b.{0,30}\b(?:going off|goes off|"
+                      r"went off|beeping|sounding|alarming|is on|keeps going)\b|\bcarbon monoxide poison\w*|"
+                      r"\bcarbon monoxide\b.{0,30}\b(?:house|home|inside|in here|garage)\b"),
+     "Get everyone, the pets too, out into fresh air now, and leave the door open. Call from outside. Anyone with a "
+     "headache, dizziness, sleepiness, nausea or confusion needs care now: tell the operator. Don't go back in until "
+     "the fire department says it's clear."),
     ("choking", re.compile(r"\bchok(?:ing|es|ed)\b|"
                            r"\b(?:something|food|a \w+|it) (?:is )?(?:stuck|caught|lodged) in (?:his|her|their|my|the "
                            r"baby'?s) throat\b|\bheimlich\b"),
@@ -289,7 +318,8 @@ def kinds(prompt: str) -> list[str]:
     emergency is left once the drill's own words are out (`_left_after_drill`); a bare "practice" or "drill" never
     turns the floor off.
     A figure of speech or a past clause takes out only its own words, and the rest is checked again (the Fable
-    review, 2026-11-25); the words are `normalised` first ("hes", "im", "wont")."""
+    review, 2026-11-25); the words are `normalised` first ("hes", "im", "wont").
+    An animal named never quiets the home's own kinds (a fire, gas, carbon monoxide)."""
     text = normalised(prompt)
     if not text:
         return []
@@ -297,7 +327,7 @@ def kinds(prompt: str) -> list[str]:
     found = [kind for kind, words, _do in KINDS if words.search(text)]
     if not found:
         return []
-    if _ANIMAL.search(text) and not _PERSON.search(text):
+    if _ANIMAL.search(text) and not _PERSON.search(text) and not any(k in HOME for k in found):
         return []
     happening = bool(_HAPPENING.search(text))
     if _ABOUT.search(text) and not happening:
@@ -319,14 +349,21 @@ def detect(prompt: str) -> Optional[str]:
     return found[0] if found else None
 
 
+HOME = ("fire", "gas", "co")  # the home's own: get out first, then call; never an animal's to the vet
+
+
 def reply(kind, where=None) -> str:
     """Pure logic. The fixed words for a kind (or a list of kinds, the first two said): call the emergency number
-    first (the person's country's), then what to do now, then that she's staying with him."""
+    first (the person's country's), then what to do now, then that she's staying with him. A fire, a gas leak or
+    carbon monoxide (`HOME`) says to get out first and call from outside."""
     from core.region import DEFAULT, REGIONS
 
     region = where or REGIONS[DEFAULT]
     wanted = [kind] if isinstance(kind, str) else list(kind)[:2]
     steps = [do for k in wanted for kk, _w, do in KINDS if kk == k]
+    if wanted[0] in HOME:  # a fire, gas or carbon monoxide: out first, then the call from outside
+        return (f"Get out now and call {region.emergency} from outside, {MARK} " + " ".join(steps)
+                + " Tell me what's happening and I'll stay with you and help.")
     if len(wanted) == 1 and wanted[0] not in ("cpr", "choking", "drowning", "shock", "unconscious", "stroke", "heart",
                                               "poison", "seizure"):
         steps.append(_CPR_SHORT)  # the kinds whose own words don't already say when to start CPR

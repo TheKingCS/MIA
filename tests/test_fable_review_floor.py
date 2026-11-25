@@ -7,7 +7,8 @@ its own words (its real emergencies are in tests/test_first_aid_floor_never_miss
 emergency the floor's last reply didn't cover is answered; freezer burn, a tree's wound and a nosebleed never get
 the floor's steps; the kitchen's water, a goat shelter, a margin of safety and a quote tweet aren't lessons; the bare
 word "power" never starts the outage drill. Fable's check of those fixes: each kind is said once in a
-conversation and then the model helps, and a how-to's answer never stops a real emergency after it.
+conversation and then the model helps, and a how-to's answer never stops a real emergency after it. The home's own
+emergencies (a fire, a gas leak, carbon monoxide) say to get out first and call from outside.
 """
 
 from types import SimpleNamespace
@@ -68,3 +69,12 @@ def test_after_a_how_to_a_real_emergency_is_answered():
     assert taught
     history = [SimpleNamespace(role="assistant", content=taught)]
     assert floor.respond("it won't stop bleeding", history) is not None
+
+
+def test_the_homes_own_emergencies_say_get_out_first():
+    """A fire, a gas leak or carbon monoxide: out first and call from outside; a gas station never is one."""
+    said = floor.respond("I smell gas in the house", [])
+    assert said.startswith("Get out now and call") and "don't use a phone until you're well away" in said
+    assert floor.respond("my carbon monoxide alarm is going off", []).startswith("Get out now")
+    assert floor.detect("I need to stop at the gas station") is None
+    # "what does a gas leak smell like?" gets the floor too: a false alarm is its accepted cost, never narrowed

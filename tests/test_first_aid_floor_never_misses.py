@@ -11,6 +11,11 @@ false alarm is the accepted cost (one careful message with the number), and this
 from core import first_aid_floor as floor
 
 REAL = (
+    # the home's own (2026-11-25): fire, a gas leak, carbon monoxide
+    "I smell gas in the house", "it smells like rotten eggs in the kitchen", "there's a propane leak",
+    "my carbon monoxide alarm is going off", "the CO detector is beeping", "there is a fire in the kitchen",
+    "the house is on fire", "grease fire on the stove", "the barn is on fire and the horses are inside",
+    "smoke is pouring out of the dryer", "smoke alarm going off and I see smoke in the hallway ceiling",
     # Fable's check of the fixes, 2026-11-25
     "my son is drowning in my pool", "my son is drowning in the neighbor's pool", "she's drowning in the hot tub",
     "he's drowning in the stock pond", "my son is drowning in the swimming pool",
