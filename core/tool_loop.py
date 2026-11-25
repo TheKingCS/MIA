@@ -20,7 +20,9 @@ up*:
    held to their figures strictly, small ones included; said plainly, a
    library result is its first passage and where it's from. A question only
    the library's look-up was offered for, answered without it, is read from
-   the library first (`_read_first`).
+   the library first (`_read_first`). A safety lookup whose answer is worded in code (`SAID_AS_IS`: canning
+   times, a meat cure, bleach for water, heat and wind chill, solar sizing, taxes, the outage clock) is said as it
+   is, never re-worded.
 
 While a round of lookups runs and the model reads what they found, her orb says what it's for, from the tools'
 domains (`DOING`, `round_doing`, through core/orb_state.doing: "Thinking · Reading your library"), so the wait is never
@@ -59,6 +61,11 @@ RESULT_CHARS = 1500
 # Her offline library's reading (core/reference_reader.py): several passages and how to talk about them, which a
 # 1,500-character cut would lose; and their figures are held to the text exactly, small ones too (2 drops, 4 cups).
 LIBRARY_TOOLS = {"look_up_offline": 7000, "read_reference": 7000}
+# Lookups whose answer is safety numbers worked out and worded in code: said as they are, never re-worded by the
+# model, which squeezed "the wind chill gets down to about 18°F around 7 am..." into "18°F, 7 am, 3 pm." and could
+# drop a pressure, a nitrite level or a warning (live check through run_assistant_turn, 2026-11-24).
+SAID_AS_IS = frozenset({"canning_time", "meat_cure", "bleach_for_water", "work_outside_wind_chill_heat_index",
+                        "size_solar", "tax_set_aside", "power_outage"})
 
 # What her orb says while a lookup runs (brainstorm 1.1), by the tool's domain; the rest say "Looking it up".
 DOING = {"library": "Reading your library", "budget": "Checking your money", "debts": "Checking your money",
@@ -291,7 +298,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     (`without_figures`); every library answer passes her safety floor
     (`_finish`, core/reference_reader.floor), with what the library was
     asked beside the question (a follow-up names its food there), and
-    the guide's page looked up in code when the turn's reading missed it."""
+    the guide's page looked up in code when the turn's reading missed it.
+    Lookups that are all SAID_AS_IS (safety numbers worded in code) are the answer as they are."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -369,6 +377,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         reply = llm.chat_with_tools(talk + [{"role": "system", "content": ANSWER_ONLY}], [])  # never unasked
     if not results:
         return reply
+    if all(name in SAID_AS_IS for name, _t in results) and not (reply is not None and reply.tool_calls):
+        return _finish(context, prompt, asked, results, "\n\n".join(text for _n, text in results))
     said = (reply.content if reply is not None else "") or ""
     sources = "\n".join(text for _n, text in results)
     strict = all(name in LIBRARY_TOOLS for name, _t in results)  # a reference's figures, small ones too

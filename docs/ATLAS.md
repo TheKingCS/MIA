@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1745 files, 375,669 lines; 1745 files describe themselves; 20,618 of 20,748 classes and functions are documented.
+1745 files, 375,706 lines; 1745 files describe themselves; 20,619 of 20,749 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-695 files, 194,154 lines; 9,852 of 9,938 classes and functions documented
+695 files, 194,164 lines; 9,852 of 9,938 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -993,7 +993,7 @@
 
 ## tests/: the test suite: what each part must do
 
-644 files, 100,420 lines; 8,401 of 8,445 classes and functions documented
+644 files, 100,447 lines; 8,402 of 8,446 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1531,7 +1531,7 @@
 - `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell. The Theme Studio builds a theme from a few choices, refuses warni
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant.
 - `tests/test_tool_gate.py`: The Assistant's tool gate (2026-11-10): only a tool offered this turn runs, a tool whose name reads like a lookup but changes records counts as a change (undo, screens refresh), and a change the model asks for right after a lookup that brought in outside text (a web page, a search, the inbox) is hel
-- `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop.
+- `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop. A safety lookup worded in code is 
 - `tests/test_trace.py`: LS-01 (DEC-0280): one trace id for everything one cause did. A turn runs under one id; a proposal carries the id of what proposed it, and approving it later (from another request) runs under that same id, so what it changed and recorded can be found from the cause; each scheduled job run is a cause 
 - `tests/test_trade_session.py`: Walking someone through a job or a diagnosis (core/trade_session.py, core/trade_actions.py, DEC-0149): started by their words, one step at a time, never past a hold point until it's checked, why and what to watch for on any step, a stop rule's words ending it at once with what to do instead, a job p
 - `tests/test_trades.py`: Trade Master's jobs and diagnoses (core/trades.py, core/trade_jobs.py, DEC-0149): every one meets the standard Zac asked MIA be held to ("thorough and complete instructions"), the standard catches what a weak one leaves out, a job's own words call for its stop rules, a diagnosis always ends somewher

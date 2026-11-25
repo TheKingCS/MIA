@@ -1,7 +1,8 @@
 """The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to
 the model and it may look up more, a few rounds at most, never the same
 lookup twice; one answer at the end that never states a number the
-lookups didn't; a change is never run inside the loop."""
+lookups didn't; a change is never run inside the loop.
+A safety lookup worded in code is said as it is, never the model's squeezed version."""
 
 from types import SimpleNamespace
 
@@ -137,3 +138,29 @@ def test_after_looking_a_question_still_gets_an_answer_not_a_change(life):
     model = _Model(call("list_bills"), call("add_bill"), ChatReply(content="Electric $80.00 is due Friday.", tool_calls=[]))
     reply = tool_loop.run(life, model, [], TOOLS, "What bills do I have?")
     assert reply.tool_calls == [] and reply.content == "Electric $80.00 is due Friday." and model.sent[-1][1] == []
+
+
+
+def test_a_safety_lookup_worded_in_code_is_said_as_it_is():
+    """The canning tool's sentence is the answer, never the model's squeezed version of it."""
+    from types import SimpleNamespace
+
+    from core import tool_loop
+    from core.llm_manager import ChatReply, ToolCall
+
+    said = "Corn goes in the pressure canner: 85 minutes for quarts and 55 for pints, at 10 lb on a weighted gauge."
+    registry = SimpleNamespace(execute=lambda context, name, args: said, _actions={})
+    replies = iter([ChatReply(content="", tool_calls=[ToolCall(name="canning_time", arguments={"question": "corn"})]),
+                    ChatReply(content="85 min.", tool_calls=[])])
+    llm = SimpleNamespace(chat_with_tools=lambda messages, tools=None: next(replies))
+    context = SimpleNamespace(assistant_actions=registry, config=None, failures=None, llm=llm)
+    tools = [{"function": {"name": "canning_time"}}]
+    import core.tool_loop as tl
+
+    old = (tl.loop_ok, tl._lookups_only)
+    tl.loop_ok, tl._lookups_only = (lambda context: True), (lambda context, calls: bool(calls))
+    try:
+        got = tool_loop.run(context, llm, [{"role": "user", "content": "corn?"}], tools, "corn?")
+    finally:
+        tl.loop_ok, tl._lookups_only = old
+    assert got.content == said
