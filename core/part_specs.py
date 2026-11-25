@@ -184,7 +184,10 @@ def slug(name: str) -> str:
 
 def clean(data: dict, source: str) -> Spec:
     """Pure logic. A drafted spec checked: a name, a supply range between 0 and 60 V with the low end first, two to
-    twelve pins with known roles and unique ids, a power and a ground pin. ValueError saying what's wrong."""
+    twelve pins with known roles and unique ids, a power and a ground pin. ValueError saying what's wrong.
+    A draft that isn't a dict, or pins that aren't, is a ValueError; two pins of one name are numbered (gnd, gnd_2)."""
+    if not isinstance(data, dict):
+        raise ValueError("The draft isn't a spec.")
     name = " ".join(str(data.get("name", "") or "").split())[:80]
     if not name:
         raise ValueError("The draft has no name.")
@@ -199,8 +202,15 @@ def clean(data: dict, source: str) -> Spec:
     if out is not None and not (0 < out <= 60):
         raise ValueError("The output level doesn't make sense.")
     pins = []
-    for raw in list(data.get("pins") or [])[:13]:
+    raw_pins = data.get("pins") or []
+    if not isinstance(raw_pins, list) or not all(isinstance(r, dict) for r in raw_pins):
+        raise ValueError("The draft's pins aren't a list of pins.")
+    for raw in raw_pins[:13]:
         pin_id = slug(raw.get("id") or raw.get("name"))
+        n = 2
+        while any(p.id == pin_id for p in pins):  # two GND pins on one module: gnd, gnd_2
+            pin_id = f"{slug(raw.get('id') or raw.get('name'))}_{n}"
+            n += 1
         role = str(raw.get("role", "")).lower().strip()
         if role not in ROLES:
             raise ValueError(f"The pin {raw.get('name')} has a role MIA doesn't know: {role or 'none'}.")

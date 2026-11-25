@@ -11,14 +11,16 @@ the board's limits (core/boards.py). Pure logic; nothing kept.
 terminals ("p1.echo", "D8", "GPIO 21"). The rules, each said with why and what to do:
 
 - **The board**: a supply shorted to GND or to another supply (stop), reset held at GND (stop).
-- **Power**: each power pin on a supply (warn when not), within the part's range: over it is a stop (it can be
+- **Power**: power on GND or ground on a supply is a stop (backwards, it can destroy the part). Each power pin
+  on a supply (warn when not), within the part's range: over it is a stop (it can be
   damaged), under it a warning (it may not run); VIN on an Arduino counts as up to 12 V (a wall supply), on the ESP32
   as 5 V (USB). A ground pin on GND.
 - **Outputs into the board** (out, analog, sda, scl): a part's output drives the level its spec gives, or its own
   supply's; over the board's logic level on a board pin is a stop, with the fix (a divider of 1k and 2k, a level
   shifter, or powering it from 3V3 when its range allows). An analog output on a pin with no ADC, and I2C off the
   board's SDA and SCL pins, are warnings. Two parts' outputs on one net fight (warn).
-- **Inputs from the board**: a part's input on an input-only pin can't be driven (warn).
+- **Inputs from the board**: a part's input on an input-only pin can't be driven (warn); on a rail over the
+  part's range, a stop. An output tied straight to a rail shorts when it switches (warn).
 - **An LED**: in a loop from a pin or a supply to GND through a resistor (none: overdriven), never backwards.
 - **A pot**: its ends across a supply and GND; its wiper on a pin at that supply's level (5 V into a 3.3 V board:
   stop).
@@ -33,8 +35,9 @@ from typing import Optional
 # The pins that read analog on each board family, and its I2C pins (SDA, SCL).
 _ADC = {"esp32": {f"GPIO {n}" for n in (0, 2, 4, 12, 13, 14, 15, 25, 26, 27, 32, 33, 34, 35, 36, 39)},
         "arduino": {f"A{n}" for n in range(8)}}
-_I2C = {"esp32": {"sda": ("GPIO 21",), "scl": ("GPIO 22",)},
-        "arduino": {"sda": ("A4", "SDA"), "scl": ("A5", "SCL")}}
+# I2C by board: the Mega's is its own SDA/SCL header (D20, D21), never A4/A5 (the second review, 2026-11-25).
+_I2C = {"esp32dev": {"sda": ("GPIO 21",), "scl": ("GPIO 22",)}, "mega": {"sda": ("SDA",), "scl": ("SCL",)},
+        "nano": {"sda": ("A4",), "scl": ("A5",)}, "nano_new": {"sda": ("A4",), "scl": ("A5",)}}
 
 
 def _volts(board, rail: str) -> Optional[float]:
@@ -46,14 +49,15 @@ def _volts(board, rail: str) -> Optional[float]:
 
 def check(board_id: str, parts: list, wires: list, specs: Optional[dict] = None) -> dict:
     """Pure logic. His free build judged (see the module's opening). ValueError for an unknown board, part spec or
-    terminal."""
+    terminal.
+    Only the pins this board has can be wired (a Nano has no SDA pin)."""
     from core import boards, esp32_sim, part_specs
 
     board = boards.BOARDS.get(board_id)
     if board is None:
         raise ValueError("Which board? The ESP32, the Mega or a Nano.")
     specs = specs if specs is not None else part_specs.BUILTIN
-    known = set(boards.FAMILY_PINS[board.family])
+    known = set(board.pins) | {"GND", "GND 2"}  # only the pins this board has
     placed = {}
     for item in parts or ():
         spec = specs.get(str(item.get("spec", "")))
@@ -77,7 +81,9 @@ def check(board_id: str, parts: list, wires: list, specs: Optional[dict] = None)
 
 
 def _judge(board, placed: dict, wires: list) -> dict:
-    """The rules, on the board already set for the nets."""
+    """The rules, on the board already set for the nets.
+    Power backwards is a stop; a part's input on a rail over its range is a stop; an output tied to a rail is
+    warned; I2C pins are the board's own."""
     from core import esp32_sim
 
     nets = esp32_sim._Nets(wires)
@@ -117,7 +123,11 @@ def _judge(board, placed: dict, wires: list) -> dict:
         for p in power:
             term = f"{pid}.{p.id}"
             rail = nets.rail(term)
-            if rail is None or rail == "GND":
+            if rail == "GND":
+                say("stop", f"The {spec.name}'s {p.name} is on GND: power backwards can destroy it. It goes to a "
+                            "supply.")
+                continue
+            if rail is None:
                 if term in touched or any(t.startswith(pid + ".") for t in touched):
                     say("warn", f"The {spec.name}'s {p.name} isn't on a supply yet: it has no power.")
                 continue
@@ -132,8 +142,19 @@ def _judge(board, placed: dict, wires: list) -> dict:
                             "not run.")
         for p in spec.pins:
             term = f"{pid}.{p.id}"
-            if p.role == "ground" and nets.rail(term) != "GND" and any(t.startswith(pid + ".") for t in touched):
+            if p.role == "ground" and nets.rail(term) in board.supplies:
+                say("stop", f"The {spec.name}'s {p.name} is on {nets.rail(term)}: power backwards can destroy it. It "
+                            "goes to GND.")
+            elif p.role == "ground" and nets.rail(term) != "GND" and any(t.startswith(pid + ".") for t in touched):
                 say("warn", f"The {spec.name}'s {p.name} isn't on GND: without a shared ground there's no signal.")
+            rail_on = nets.rail(term)
+            if p.role == "in" and rail_on in board.supplies and _volts(board, rail_on) > spec.volts_max:
+                where = "VIN (up to 12 V from a wall supply)" if rail_on == "VIN" and board.family != "esp32" \
+                    else rail_on
+                say("stop", f"The {spec.name}'s {p.name} is on {where}: over the {spec.volts_max:g} V it takes.")
+            if p.role in ("out", "analog") and rail_on is not None:
+                say("warn", f"The {spec.name}'s {p.name} is an output tied straight to {rail_on}: when it switches "
+                            "the other way, it shorts. Wire it to a pin.")
             on = nets.pins_on(term)
             if p.role in ("out", "analog", "sda", "scl"):
                 level = spec.out_volts if spec.out_volts is not None else supply_v
@@ -149,7 +170,7 @@ def _judge(board, placed: dict, wires: list) -> dict:
                     say("warn", f"The {spec.name}'s {p.name} is a voltage to read, but {board.label(on[0])} has no "
                                 "ADC: use an analog pin.")
                 if p.role in ("sda", "scl"):
-                    wanted = _I2C[board.family][p.role]
+                    wanted = _I2C[board.id][p.role]
                     if (on or nets.rail(term)) and not any(nets.same(term, w) for w in wanted):
                         say("warn", f"The {spec.name}'s {p.name} goes on {' or '.join(board.label(w) for w in wanted)}"
                                     f", {board.short}'s I2C {p.role.upper()}.")

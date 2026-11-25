@@ -65,8 +65,9 @@ def labs_of(course: str = "esp32") -> dict:
 
 def course_in(context, words: str = "", building: bool = False) -> str:
     """Pure logic, with his path. The board course his words mean: "arduino", "nano", "mega" or a lab only it has
-    (the light, distance, servo or buzzer lab) is the Arduino course; "esp32" or one only that has, the ESP32's;
-    else the one he's started, or building along in (`building`); else the ESP32's."""
+    (the light, distance, servo or buzzer lab) is the Arduino course; "esp32" or one only that has, the ESP32's; a
+    lab named as one ("the blink lab") decides before a stray word ("so the light blinks"), and one both courses have
+    leaves it to the one he's started, or building along in (`building`); else the ESP32's."""
     import re
 
     said = str(words or "").lower()
@@ -75,12 +76,19 @@ def course_in(context, words: str = "", building: bool = False) -> str:
     if re.search(r"\besp ?32\b", said):
         return "esp32"
     ard, esp = labs_of("arduino"), labs_of("esp32")
-    for lab in ard:
-        if lab not in esp and re.search(rf"\b{lab}\b", said):
+    named = re.findall(r"\b(\w+) lab\b", said)  # "the blink lab": the lab he means, before any stray word
+    for lab in named:
+        if lab in ard and lab not in esp:
             return "arduino"
-    for lab in esp:
-        if lab not in ard and re.search(rf"\b{lab}\b", said):
+        if lab in esp and lab not in ard:
             return "esp32"
+    if not any(lab in ard or lab in esp for lab in named):
+        for lab in ard:
+            if lab not in esp and re.search(rf"\b{lab}\b", said):
+                return "arduino"
+        for lab in esp:
+            if lab not in ard and re.search(rf"\b{lab}\b", said):
+                return "esp32"
     book = getattr(context, "paths", None)
     started = [c for c in ("esp32", "arduino") if book is not None and book.path(c) is not None]
     if building and book is not None:
@@ -156,7 +164,8 @@ def board(ports: Optional[list] = None, pio: Optional[list] = None, course: str 
     """{port, description, pio, missing} for the bench: the ESP32's port (or the only one), PlatformIO, and what's
     missing in words ("" when both are there). With more than one board plugged in, no port: he says which (the
     review, 2026-11-25: the greenhouse's MCU on the same PC could have been flashed by mistake). A course's boards
-    are found by their USB chips (core/boards.py): the Arduino course's by Arduino's own, CH340 or FTDI."""
+    are found by their USB chips (core/boards.py): the Arduino course's by Arduino's own, CH340 or FTDI.
+    A port found by a USB chip both kinds of board use (the CH340) says so in its description."""
     from core import greenhouse_provision as gp
 
     from core.boards import BOARDS, COURSE_BOARDS
@@ -176,7 +185,12 @@ def board(ports: Optional[list] = None, pio: Optional[list] = None, course: str 
                        f"{len(ports)} serial ports and none is clearly an {what}: say which, like COM5")
     if not pio:
         missing.append("PlatformIO isn't installed on this PC (pip install platformio), so I can't build or flash")
-    return {"port": (found or {}).get("device", ""), "description": (found or {}).get("description", ""),
+    description = (found or {}).get("description", "")
+    others = [BOARDS[b] for c, ids in COURSE_BOARDS.items() if c != course for b in ids]
+    if found is not None and any(k.found_by(found.get("vid"), found.get("pid")) for k in others):
+        description += (" (a USB chip both ESP32 and Arduino boards use: check it's the board you mean)" if description
+                        else "a USB chip both ESP32 and Arduino boards use: check it's the board you mean")
+    return {"port": (found or {}).get("device", ""), "description": description,
             "pio": pio, "missing": "; ".join(missing)}
 
 

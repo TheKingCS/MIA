@@ -69,6 +69,12 @@
     if (!data.board) { fill($("panel"), el("p", { class: "empty" }, el("strong", {}, data.lookup.why))); return; }
     const specs = Object.fromEntries(data.specs.map((s) => [s.id, s]));
     const parts = placedParts().filter((p) => specs[p.spec]);
+    // Wires only to what's here: a part taken off, or whose spec was removed, takes its wires with it.
+    const here = new Set(data.board.left.concat(data.board.right).map((x) => x.id)
+      .concat(["GND", "GND 2"], ...parts.map((p) => specs[p.spec].pins.map((x) => p.id + "." + x.id))));
+    const saved = store("mia.labsim." + wiresKey()) || [];
+    const kept = saved.filter((w) => Array.isArray(w) && w.every((t) => here.has(t)));
+    if (kept.length !== saved.length) store("mia.labsim." + wiresKey(), kept);
     const picker = el("select", { "aria-label": "Your board", onchange: (e) => { boardId = e.target.value; store("mia.bench.board", boardId); MIAShell.refresh(); } },
       data.boards.map((b) => el("option", { value: b.id, selected: b.id === data.board.id ? true : null }, b.name)));
     const adding = el("select", { "aria-label": "A part to place" }, data.specs.map((s) => el("option", { value: s.id }, s.name + (s.builtin ? "" : " (yours)"))));

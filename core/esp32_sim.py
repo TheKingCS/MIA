@@ -429,10 +429,15 @@ def _pot(nets: _Nets, part: str, pin: str, say: Callable) -> dict:
 
 def _module(nets: _Nets, part: str, kind: str, signal: str, pin: str, say: Callable) -> bool:
     """A three-wire module (DHT22, soil sensor, relay): powered, grounded and its signal on the sketch's pin.
-    An input-only pin is the board's own (core/boards.py)."""
+    An input-only pin is the board's own (core/boards.py).
+    Power backwards is a stop: it can destroy the module."""
     name = KINDS[kind][0]
     power, ground, on = nets.rail(f"{part}.vcc"), nets.rail(f"{part}.gnd"), nets.pins_on(f"{part}.{signal}")
     ok = True
+    if power == "GND" or ground in ("3V3", "VIN"):
+        say("stop", f"The {name}'s power is backwards (VCC on {power or 'nothing'}, GND on {ground or 'nothing'}): it "
+                    "can destroy it. VCC goes to 3V3, GND to GND.")
+        return False
     if power not in ("3V3", "VIN"):
         say("warn", f"The {name}'s VCC isn't on 3V3 yet: it has no power.")
         ok = False
@@ -460,7 +465,8 @@ def _module(nets: _Nets, part: str, kind: str, signal: str, pin: str, say: Calla
 
 def _by_build(nets: _Nets, part: str, kind: str, say: Callable) -> bool:
     """A part judged against its own build steps: each terminal on the rail or pin its step names (a button's,
-    photoresistor's or resistor's legs either way round); the closer way round is the one said."""
+    photoresistor's or resistor's legs either way round); the closer way round is the one said.
+    Power backwards (a supply terminal on GND, or ground on a supply) is a stop."""
     name = KINDS[kind][0]
     steps = [(a, b) if a.startswith(part + ".") else (b, a) for a, b, _ in _circ()[_COURSE_LESSON.get()]["build"]
              if a.startswith(part + ".") or b.startswith(part + ".")]
@@ -479,6 +485,9 @@ def _by_build(nets: _Nets, part: str, kind: str, say: Callable) -> bool:
                     continue
                 if actual is None:
                     found.append(("warn", f"The {name}'s {what} isn't on {target} yet."))
+                elif (target == "GND" and actual in B().supplies) or (target in B().supplies and actual == "GND"):
+                    found.append(("stop", f"The {name}'s {what} is on {actual}: power backwards can destroy it. It "
+                                          f"goes to {target}."))
                 elif actual == "VIN":
                     found.append(("stop", f"The {name}'s {what} is on VIN: from a wall supply that's up to 12 V, too "
                                           f"much for it. Use {target}."))

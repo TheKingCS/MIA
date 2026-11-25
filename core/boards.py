@@ -59,8 +59,10 @@ class Board:
         return "GND" if pin == "GND 2" else pin
 
     def is_signal(self, pin: str) -> bool:
-        """Whether a pin is one a sketch reads or drives (not a rail, reset or reference)."""
-        return pin.startswith("GPIO ") or (pin[:1] in ("D", "A") and pin[1:].isdigit())
+        """Whether a pin is one a sketch reads or drives (not a rail, reset or reference).
+        The Mega's SDA and SCL header pins count, on a board that draws them."""
+        return pin.startswith("GPIO ") or (pin[:1] in ("D", "A") and pin[1:].isdigit()) or (
+            pin in ("SDA", "SCL") and pin in self.pins)  # the Mega's own I2C header
 
     @property
     def signals(self) -> tuple:

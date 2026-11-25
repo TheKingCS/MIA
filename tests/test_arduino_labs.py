@@ -78,14 +78,15 @@ def test_the_course_and_board_are_read_from_his_words(tmp_path):
 
 
 def test_the_flash_card_names_the_board_and_its_port(monkeypatch):
-    """One Arduino on CH340: the card says the Nano and the port; an Arduino-only lab on the ESP32 course is refused."""
+    """One Arduino on CH340: the card says the Nano and the port; an Arduino-only lab on the ESP32 course is refused.
+    It also says the CH340 is a chip ESP32 boards use too."""
     from core import greenhouse_provision as gp
     from core.actions import ActionError
 
     monkeypatch.setattr(gp, "serial_ports", lambda: [{"device": "COM9", "description": "USB-SERIAL CH340",
                                                       "vid": 0x1A86, "pid": 0x7523}])
     said = bench.ACTIONS["esplab.flash"].describe(None, {"lesson": "servo", "course": "arduino", "board": "nano"})
-    assert "Arduino Nano" in said and "on COM9 (USB-SERIAL CH340)" in said
+    assert "Arduino Nano" in said and "on COM9 (USB-SERIAL CH340" in said and "both ESP32 and Arduino" in said
     with pytest.raises(ActionError):
         bench.ACTIONS["esplab.flash"].describe(None, {"lesson": "servo"})
 
