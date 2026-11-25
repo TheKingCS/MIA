@@ -64,10 +64,13 @@ def count(context) -> float:
 
 def learned(context, song: str, instrument: str = "", artist: str = "") -> str:
     """Adds a song he can now play, dated today, and says so; ValueError for no song or one already in his songbook on
-    that instrument. Said as activity.logged, so a Songbook tier or a mission counting songs moves at once."""
+    that instrument. Said as activity.logged, so a Songbook tier or a mission counting songs moves at once.
+    A placeholder artist the model sends ("None") is left out."""
     from core import life_events
 
     song, artist, instrument = _clean(song), _clean(artist, 60), instrument_of(instrument or "guitar")
+    if artist.lower() in ("none", "null", "unknown", "n/a", "not given"):  # a placeholder the model sent
+        artist = ""
     if not song:
         raise ValueError("Which song?")
     if any(s["song"].lower() == song.lower() and s["instrument"] == instrument for s in songs(context)):
@@ -85,13 +88,15 @@ def learned(context, song: str, instrument: str = "", artist: str = "") -> str:
 
 
 def say(context, instrument: Optional[str] = None) -> str:
-    """The songs he can play (on one instrument when he names it), newest first, ten at most."""
+    """The songs he can play (on one instrument when he names it), newest first, ten at most.
+    An artist kept as "None" before that is never said."""
     found = songs(context)
     if instrument:
         found = [s for s in found if s["instrument"] == instrument_of(instrument)]
     if not found:
         return "No songs in your songbook yet. When you can play one through, tell me \"I learned ... on guitar\"."
-    names = [s["song"] + (f" ({s['artist']})" if s["artist"] else "") + (f" on {s['instrument']}"
+    names = [s["song"] + (f" ({s['artist']})" if s["artist"] and str(s["artist"]).lower() not in ("none", "null")
+                          else "") + (f" on {s['instrument']}"
                                                                         if s["instrument"] != "guitar" else "")
              for s in found[:10]]
     more = f", and {len(found) - 10} more" if len(found) > 10 else ""

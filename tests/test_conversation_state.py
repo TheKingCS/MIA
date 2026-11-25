@@ -160,8 +160,9 @@ def test_a_short_follow_up_to_a_tools_answer_brings_that_questions_tools():
 
 
 def test_a_lookup_on_a_follow_up_turn_gets_the_new_words_and_a_change_never_does(monkeypatch):
-    """"What about 8 pounds?": a lookup whose question leaves it out gets the follow-up words; one that has them, a
-    tool that changes records, or a turn that isn't a follow-up keeps its own."""
+    """"What about 8 pounds?": a lookup gets the whole follow-up, its words and the question it follows, even when
+    the model passed only the new words; a tool that changes records, or a turn that isn't a follow-up, keeps its
+    own."""
     from types import SimpleNamespace
 
     from core import assistant_actions as aa
@@ -171,8 +172,8 @@ def test_a_lookup_on_a_follow_up_turn_gets_the_new_words_and_a_change_never_does
     cs.set_turn_follow_up("What about 8 pounds?", "What about 8 pounds? (after: curing salt for 5 lb of bacon?)")
     assert aa._with_follow_up(lookup, "meat_cure", {"question": "curing salt for meat"})["question"].startswith(
         "What about 8 pounds?")
-    kept = {"question": "what about 8 pounds of bacon"}
-    assert aa._with_follow_up(lookup, "meat_cure", kept) == kept
+    only_new = {"question": "what about 8 pounds"}  # the new words alone lose the earlier question's details
+    assert aa._with_follow_up(lookup, "meat_cure", only_new)["question"].endswith("(after: curing salt for 5 lb of bacon?)")
     monkeypatch.setattr(aa, "changes_records", lambda name: True)
     assert aa._with_follow_up(lookup, "add_note", {"question": "x"}) == {"question": "x"}
     monkeypatch.undo()

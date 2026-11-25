@@ -1476,7 +1476,8 @@ NOT_FOR = {
                                   r"temperature|humidity)\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?|weekend)\b", re.I),
-    "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),
+    "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to|prepared|"
+                            r"emergency|emergencies|kit|preparedness)\b", re.I),
     # questions with a tool built for them, which these plans took by meaning (live check through
     # run_assistant_turn, 2026-11-24): spending against his usual is spending_vs_usual, what to make next is
     # what_to_make_next, taxes to set aside are tax_set_aside, who owes him is who_owes_me, the coop's light is the

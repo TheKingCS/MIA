@@ -189,7 +189,8 @@ COMMON_STRENGTHS = ("6 %", "8.25 %")  # most US household bleach is one of these
 def _action_bleach_for_water(context, arguments: dict) -> str:
     """How much household bleach makes water safe to drink, worked out in code by the EPA's method
     (core/eng_calcs.py water_bleach), never from the model's memory. The amount of water and the bleach's strength
-    are read from what he said; with no strength, both common strengths are said, to check against the label."""
+    are read from what he said; with no strength, both common strengths are said, to check against the label.
+    Asked about cloudy water ("and if it's cloudy?"), the CDC's doubled dose after filtering leads."""
     import re
 
     from core import eng_calcs
@@ -202,15 +203,23 @@ def _action_bleach_for_water(context, arguments: dict) -> str:
     if water.group(2).lower().startswith("q"):
         amount = f"{float(water.group(1)) / 4:g} gal"
     strength = re.search(_STRENGTH, said)
+    cloudy = "cloud" in said.lower().split(" (after:")[0]  # a follow-up's own words: "and if it's cloudy?"
     try:
         if strength:
             result = eng_calcs.calculate("water_bleach", {"water": amount, "strength": f"{strength.group(1)} %"})
-            return f"{result['said']} (Basis: {result['basis']}.)"
+            lead = (f"Cloudy water: filter it through a clean cloth first; if it's still cloudy, use "
+                    f"{int(result['values']['cloudy_drops'].si)} drops (twice the dose). " if cloudy else "")
+            return f"{lead}{result['said']} (Basis: {result['basis']}.)"
         lines = [eng_calcs.calculate("water_bleach", {"water": amount, "strength": s}) for s in COMMON_STRENGTHS]
     except eng_calcs.CalcError as problem:
         return str(problem)
     first = lines[0]
     drops = [int(r["values"]["drops"].si) for r in lines]
+    if cloudy:
+        doubled = [int(r["values"]["cloudy_drops"].si) for r in lines]
+        return (f"Cloudy water: filter it through a clean cloth first; if it's still cloudy, use twice the dose: "
+                f"{doubled[0]} drops of 6% bleach or {doubled[1]} of 8.25% for {amount}. Then stir and let it stand "
+                f"30 minutes. (Basis: {first['basis']}.)")
     return (f"Check the label for the bleach's strength: for 6% it's {drops[0]} drops, for 8.25% it's {drops[1]}. "
             f"{first['said']} (Basis: {first['basis']}.)")
 

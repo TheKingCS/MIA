@@ -7,6 +7,7 @@ Service's own tables, a hot day names its level and cooler hours with the heat-s
 to frostbite, a mild day says so, and the forecast's hours come through core/weather.read.
 A stale forecast is never read as today.
 The day is read from a follow-up's own words.
+Cloudy water leads with the doubled bleach dose.
 """
 
 from core import outdoor_work as ow
@@ -83,3 +84,13 @@ def test_the_day_is_read_from_a_follow_ups_own_words(monkeypatch):
     ow._tool(None, {"question": "What about tomorrow? (after: Is it too hot to work outside today?)"})
     ow._tool(None, {})
     assert asked == ["tomorrow", "today"]
+
+
+
+def test_cloudy_water_leads_with_the_doubled_dose():
+    """"And if it's cloudy?" after 3 gallons: filter first, then 48 drops of 6% or 36 of 8.25%."""
+    from core.assistant_today_actions import _action_bleach_for_water
+
+    said = _action_bleach_for_water(None, {"question": "And if the water is cloudy? (after: How much bleach for 3 "
+                                                       "gallons of water?)"})
+    assert said.startswith("Cloudy water: filter it through a clean cloth first") and "48 drops of 6%" in said

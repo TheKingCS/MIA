@@ -181,18 +181,19 @@ def _whole(name: str, text: str) -> bool:
 
 
 def _with_follow_up(action, name: str, arguments: dict) -> dict:
-    """The arguments, with a read-only lookup's "question" set to the turn's follow-up words when the model's own
-    question leaves out what the person just said ("what about 8 pounds?" after the curing question: the model passed
-    the earlier question unchanged, live check 2026-11-24; core/conversation_state.turn_follow_up)."""
+    """The arguments, with a read-only lookup's "question" set to the turn's whole follow-up (its words, then the
+    question it follows): the model passed the earlier question unchanged ("what about 8 pounds?") or only the new
+    words ("and if the water is cloudy?", losing the 3 gallons; live checks 2026-11-24;
+    core/conversation_state.turn_follow_up)."""
     from core.conversation_state import turn_follow_up
 
     props = (action.parameters or {}).get("properties") or {}
     turn = turn_follow_up()
     if turn is None or "question" not in props or changes_records(name):
         return arguments
-    said, words = turn
-    if said.lower().rstrip("?.! ") in str((arguments or {}).get("question", "") or "").lower():
-        return arguments
+    _said, words = turn
+    # always the whole follow-up (its words, then the question it follows): the model's own question kept the
+    # new words but dropped the earlier question's detail ("and if the water is cloudy?" lost the 3 gallons)
     return {**(arguments or {}), "question": words}
 
 

@@ -78,7 +78,9 @@ def _storm(context, arguments: dict) -> str:
 
 def register_outage_actions(registry) -> None:
     """Registers power_outage, water_emergency (a day without safe water, core/water_day.py) and storm_ready (a storm
-    coming, core/storm_ready.py)."""
+    coming, core/storm_ready.py).
+    power_outage also hears "the power just went out" and "how long is the freezer good?" (live check through the
+    whole turn, 2026-11-24)."""
     registry.register(AssistantAction(
         name="storm_ready", domain="today",
         description="Is a storm coming in the next three days (thunderstorms, freezing rain, heavy rain or snow, high "
@@ -110,9 +112,12 @@ def register_outage_actions(registry) -> None:
             "state": {"type": "string", "description": "out, status or back"},
             "when": {"type": "string", "description": "when it went out, only if he said, e.g. 'at 6 am', '2 hours ago'"}},
             "required": ["state"]},
-        handler=_tool, trigger_phrases=("power went out", "power is out", "power's out", "power outage",
+        handler=_tool, trigger_phrases=("power went out", "power just went out", "power's been out",
+                                        "power has been out", "power is out", "power's out", "power outage",
                                         "lost power", "power's back", "power is back", "power came back",
                                         "food good", "fridge safe", "freezer safe", "food still safe", "blackout",
                                         "freezer still good", "fridge still good", "freezer good for",
-                                        "fridge good for", "food last without power"),
+                                        "fridge good for", "food last without power", "freezer good",
+                                        "fridge good", "long is the freezer", "long is the fridge",
+                                        "long will the freezer", "long will the fridge"),
     ))
