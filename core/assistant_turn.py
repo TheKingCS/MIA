@@ -869,7 +869,9 @@ def _project_time_reply(context, prompt: str):
     been a maintenance reading, and "what did I work on yesterday?" read as his workouts): "log 2 hours on the shed",
     "I spent 3 hours on the deck yesterday" or "I worked on the coop for an hour" run log_project_time, only for a
     project of his (core/project_time.project_named); "how many hours have I put into the shed?" and "what did I work
-    on this week?" run project_hours. None otherwise."""
+    on this week?" run project_hours. "Log 2 hours on" something that's neither a project nor one of his machines is
+    said as no such project, with his projects' names; a machine's ("the mower") stays its engine hours. None
+    otherwise."""
     from core import project_time
     from core.budget_manager import read_date
 
@@ -878,8 +880,14 @@ def _project_time_reply(context, prompt: str):
     if actions is None:
         return None
     try:
-        for pattern in _TIME_ON:
+        for n, pattern in enumerate(_TIME_ON):
             found = pattern.match(said)
+            if found and n == 0 and project_time.project_named(context, found.group("p")) is None:
+                named = project_time._words(found.group("p"))
+                if not any(named & project_time._words(a) for a in _assets(context)):
+                    # "log 2 hours on the shed build" with no such project: said so with his projects, never a
+                    # machine's hours (the live check); "log 2 hours on the mower" stays its engine's reading
+                    return actions.execute(context, "log_project_time", {"project": found.group("p"), "hours": 1})
             if found and project_time.project_named(context, found.group("p")) is not None:
                 hours = project_time.hours_said(found.group("h"))
                 if not hours:

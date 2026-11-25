@@ -4,7 +4,7 @@ tests.test_project_time
 
 The hours he puts into his projects (core/project_time.py, 2026-11-25): "log 2 hours on the shed build" adds them to
 that project's time log, undoable, only for a project of his; the hours are read back by project or by day; the time
-log survives a save and a reload.
+log survives a save and a reload; hours on a project he doesn't have name his projects, a machine's stay its own.
 """
 
 from datetime import date, timedelta
@@ -57,7 +57,9 @@ def test_logging_hours_on_the_shed_build_adds_them_to_it(book):
 
 
 def test_hours_on_something_that_isnt_his_project_are_never_logged(book):
+    """His truck's hours stay the truck's, the phone and the plant are no project, and nothing is logged."""
     context = _context(book)
+    context.maintenance = SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Truck")])
     for words in ("log 2 hours on the truck", "I spent 3 hours on the phone", "I worked 8 hours at the plant"):
         assert assistant_turn._project_time_reply(context, words) is None, words
     assert all(not p.time_log for p in book.all_projects())
@@ -77,3 +79,12 @@ def test_the_hours_are_read_back_by_project_and_by_day(book):
 def test_a_day_of_more_than_24_hours_is_refused(book):
     with pytest.raises(ValueError):
         book.log_time(book.all_projects()[0].project_id, 30)
+
+
+def test_logging_hours_on_a_project_he_doesnt_have_names_his_projects(book):
+    context = _context(book)
+    context.maintenance = SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Riding Mower")])
+    said = assistant_turn._project_time_reply(context, "Log 2 hours on the chicken coop")
+    assert said.startswith("I don't have a project called 'the chicken coop'.") and "Shed Build" in said
+    assert assistant_turn._project_time_reply(context, "log 2 hours on the mower") is None  # its engine hours
+    assert all(not p.time_log for p in book.all_projects())
