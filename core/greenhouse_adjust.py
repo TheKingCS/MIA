@@ -4,7 +4,7 @@ core.greenhouse_adjust
 
 MIA adjusting the greenhouse's targets (DEC-0185; Zac, 2026-11-16: "MIA absolutely should be able to adjust
 greenhouse controllers"; homestead/docs/MIA_COMMAND_INTERFACE.md step 4, MIA's side). Targets only: the pH and EC
-bands the node lists in its command limits. Never a dose, a pump, a valve or the safety MCU: those aren't things
+bands, and the air's temperature band (°F) and humidity limit, as the node lists them in its command limits. Never a dose, a pump, a valve or the safety MCU: those aren't things
 she can ask the node for at all, and the node checks everything again itself.
 
 **Asking** (`parse`, `plan`, `reply`): "set the greenhouse pH minimum to 6.4" (or "EC max to 1600", "lower the pH
@@ -48,26 +48,38 @@ ROOT = Path(__file__).resolve().parent.parent
 LIMITS = ROOT / "homestead" / "config" / "command_limits.default.yaml"
 COMMAND_PATH = "/mia/command"
 # What he says -> the node's parameter.
-_WHICH = re.compile(r"\b(ph|ec)\b[\s\w]*?\b(min(?:imum)?|low(?:er (?:end|limit|bound))?|floor|bottom|"
-                    r"max(?:imum)?|high(?:er (?:end|limit|bound))?|ceiling|top)\b")
-_ASK = re.compile(r"\b(?:set|change|raise|lower|move|put|make|adjust)\b.*\bgreenhouse\b.*\b(?:ph|ec)\b|"
-                  r"\b(?:set|change|raise|lower|move|put|make|adjust)\b.*\b(?:ph|ec)\b.*\bgreenhouse\b")
+_WHICH = re.compile(r"\b(ph|ec|(?:air )?temp(?:erature)?|heat(?:ing)?)\b[\s\w]*?\b(min(?:imum)?|low(?:er (?:end|limit|"
+                    r"bound))?|floor|bottom|max(?:imum)?|high(?:er (?:end|limit|bound))?|ceiling|top)\b")
+_HUMID = re.compile(r"\bhumidity\b")
+_THING = r"(?:ph|ec|temp(?:erature)?|heat(?:ing)?|humidity)"
+_ASK = re.compile(rf"\b(?:set|change|raise|lower|move|put|make|adjust)\b.*\bgreenhouse\b.*\b{_THING}\b|"
+                  rf"\b(?:set|change|raise|lower|move|put|make|adjust)\b.*\b{_THING}\b.*\bgreenhouse\b")
 _TO = re.compile(r"\bto\s+(\d+(?:\.\d+)?)\b")
 _YES = re.compile(r"^\s*yes,? set it[.!]*\s*$")
 WORDS = {"ph_target_min": "pH minimum", "ph_target_max": "pH maximum", "ec_target_min": "EC minimum",
-         "ec_target_max": "EC maximum"}
+         "ec_target_max": "EC maximum", "temp_min": "air temperature minimum (°F)",
+         "temp_max": "air temperature maximum (°F)", "humidity_max": "humidity maximum (%)"}
 
 
 def parse(text: str) -> Optional[tuple[str, float]]:
-    """Pure logic. (parameter, value) from "set the greenhouse pH minimum to 6.4", or None when it isn't one."""
+    """Pure logic. (parameter, value) from "set the greenhouse pH minimum to 6.4", "the greenhouse air temperature
+    maximum to 82" or "the greenhouse humidity to 70", or None when it isn't one."""
     said = (text or "").lower()
     if not _ASK.search(said):
         return None
-    which, to = _WHICH.search(said), _TO.search(said)
-    if which is None or to is None:
+    to = _TO.search(said)
+    if to is None:
+        return None
+    if _HUMID.search(said):  # one limit only: venting above it
+        return "humidity_max", float(to.group(1))
+    which = _WHICH.search(said)
+    if which is None:
         return None
     end = "min" if which.group(2).startswith(("min", "low", "floor", "bottom")) else "max"
-    return f"{which.group(1)}_target_{end}", float(to.group(1))
+    what = which.group(1)
+    if what in ("ph", "ec"):
+        return f"{what}_target_{end}", float(to.group(1))
+    return f"temp_{end}", float(to.group(1))
 
 
 _LIMIT_LINE = re.compile(r"^\s+(\w+):\s*\{[^}]*?\blow:\s*(-?[\d.]+)[^}]*?\bhigh:\s*(-?[\d.]+)", re.M)

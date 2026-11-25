@@ -3945,6 +3945,29 @@ def scenario_mia_command_outcomes_and_targets_are_in_the_export_mia_reads():
     ]
 
 
+
+def scenario_mia_command_sets_the_greenhouse_air_and_humidity():
+    """The climate module's targets (in °F and %RH) are adjustable the same way: a temperature maximum applied with
+    approval mia reaches the climate module's live targets; one above 95 °F is refused; humidity has no band."""
+    conn, registry, sim, cell_id = fresh_system()
+    commands = _mia_commands(conn, "mia")
+    climate = next((m for m in registry.modules.values() if type(m).__name__ == "ClimateControl"
+                    and getattr(m, "cell_id", None) == cell_id), None)
+    if climate is None:
+        return [("the demo cell has a climate module", False)]
+    t_max = commands._current(cell_id, "temp_max")
+    applied = commands.submit(_direction(commands, cell_id, "temp_max", t_max - 3))
+    hot = commands.submit(_direction(commands, cell_id, "temp_min", 96))
+    humid = commands.submit(_direction(commands, cell_id, "humidity_max", 70))
+    targets = climate._current_targets()
+    return [
+        ("a lower air maximum is applied", applied["state"] == "applied"),
+        ("the climate module reads it", abs(targets["temp_max"] - (t_max - 3)) < 1e-9),
+        ("an air minimum of 96 °F is refused", hot["state"] == "refused"),
+        ("humidity, a lone limit, needs no band", humid["state"] == "applied"),
+    ]
+
+
 SCENARIOS = {
     "stale_sensor_freeze": scenario_stale_sensor_freeze,
     "ph_crash_response": scenario_ph_crash_response,
@@ -4046,6 +4069,7 @@ SCENARIOS = {
     "mia_command_two_at_once_are_decided_one_after_the_other": scenario_mia_command_two_at_once_are_decided_one_after_the_other,
     "mia_command_nan_huge_and_odd_types_are_refused_not_raised": scenario_mia_command_nan_huge_and_odd_types_are_refused_not_raised,
     "mia_command_outcomes_and_targets_are_in_the_export_mia_reads": scenario_mia_command_outcomes_and_targets_are_in_the_export_mia_reads,
+    "mia_command_sets_the_greenhouse_air_and_humidity": scenario_mia_command_sets_the_greenhouse_air_and_humidity,
 }
 
 

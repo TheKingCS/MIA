@@ -37,7 +37,8 @@ def sparkline_points(conn: sqlite3.Connection, sensor_id: int, limit: int = 8) -
     return [r["value"] for r in reversed(rows)]
 
 
-ADJUSTABLE = ("ph_target_min", "ph_target_max", "ec_target_min", "ec_target_max")
+ADJUSTABLE = ("ph_target_min", "ph_target_max", "ec_target_min", "ec_target_max", "temp_min", "temp_max",
+              "humidity_max")
 
 
 def mia_directions(conn) -> dict:

@@ -9,7 +9,8 @@ never overwrites; until one exists, the shipped `config/command_limits.default.y
 1. the parameter is on the whitelist, the cell exists, someone approved it;
 2. the cell is a whole number, the values are finite numbers (never NaN, infinity, a bool or text), the value is
    inside the parameter's hard low/high, and it keeps its band against the other end (a new minimum stays at least
-   `min_band` below the maximum, and the other way round; a missing other end refuses);
+   `min_band` below the maximum, and the other way round; a missing other end refuses; a lone limit with no `pair`,
+   like humidity_max, has no band);
 3. the value MIA believed was current is the real current target (else it's refused as stale);
 4. nothing for that parameter or its other end is waiting for approval (two staged changes can't cross each other),
    and no change to that parameter on that cell in the last `min_minutes_between_changes`.
@@ -116,9 +117,10 @@ class MiaCommands(Describable):
             if not isinstance(spec, dict):
                 continue
             low, high, band = _number(spec.get("low")), _number(spec.get("high")), _number(spec.get("min_band", 0))
-            if low is None or high is None or band is None or low > high or not isinstance(spec.get("pair"), str):
+            pair = spec.get("pair")
+            if low is None or high is None or band is None or low > high or (pair is not None and not isinstance(pair, str)):
                 continue  # a parameter whose limits aren't clear isn't adjustable
-            params[str(name)] = {"low": low, "high": high, "min_band": band, "pair": spec["pair"]}
+            params[str(name)] = {"low": low, "high": high, "min_band": band, "pair": pair}
         return {"approval": approval if approval in APPROVALS else "node",
                 "min_minutes": minutes if minutes is not None and minutes >= 0 else 60.0, "parameters": params}
 
@@ -153,15 +155,17 @@ class MiaCommands(Describable):
         current = self._current(cell_id, param)
         if current is None or abs(current - believed) > 1e-6:
             return "stale: the current value isn't what MIA believed"
-        other = self._current(cell_id, spec["pair"])
-        if other is None:
-            return f"{spec['pair']} isn't set, so the band can't be kept"
-        band = spec["min_band"]
-        if (param.endswith("_min") and value > other - band) or (not param.endswith("_min") and value < other + band):
-            return f"{value:g} would leave less than {band:g} between {param} and {spec['pair']} ({other:g})"
+        pair = spec["pair"]
+        if pair:  # a band's other end (a lone limit, like humidity_max, has none)
+            other = self._current(cell_id, pair)
+            if other is None:
+                return f"{pair} isn't set, so the band can't be kept"
+            band = spec["min_band"]
+            if (param.endswith("_min") and value > other - band) or (not param.endswith("_min") and value < other + band):
+                return f"{value:g} would leave less than {band:g} between {param} and {pair} ({other:g})"
         waiting = self.db.execute(
             "SELECT id FROM parameter_change_proposals WHERE cell_id = ? AND param_name IN (?, ?) "
-            "AND status = 'proposed'", (cell_id, param, spec["pair"])).fetchall()
+            "AND status = 'proposed'", (cell_id, param, pair or param)).fetchall()
         if any(w[0] != pending_ok for w in waiting):
             return f"a change to {param} or {spec['pair']} is already waiting for approval"
         if abs(value - current) < 1e-9:
@@ -278,6 +282,8 @@ class MiaCommands(Describable):
                 "scenarios.py::scenario_mia_command_staged_changes_never_cross_and_approval_rechecks",
                 "scenarios.py::scenario_mia_command_two_at_once_are_decided_one_after_the_other",
                 "scenarios.py::scenario_mia_command_nan_huge_and_odd_types_are_refused_not_raised",
+                "scenarios.py::scenario_mia_command_outcomes_and_targets_are_in_the_export_mia_reads",
+                "scenarios.py::scenario_mia_command_sets_the_greenhouse_air_and_humidity",
             ],
         )
 

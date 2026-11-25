@@ -8,6 +8,7 @@ core/command_auth.verify, loaded on its own: MIA never imports the node's packag
 node's export, and nothing sent without the node's key or outside his network.
 And the pH and EC said against their targets, read only.
 And a dropped link said plainly, nothing claimed.
+And the air temperature and humidity read from his words.
 """
 
 from __future__ import annotations
@@ -176,3 +177,12 @@ def test_a_dropped_link_is_said_and_nothing_is_claimed(linked):
 
     with pytest.raises(ActionError, match="didn't answer"):
         ga.plan(context, "ph_target_min", 6.4, get=unreachable)
+
+
+def test_the_air_temperature_and_humidity_are_read_from_his_words():
+    """The air's band and the humidity limit, in his words; asking what it is never sets anything."""
+    assert ga.parse("set the greenhouse air temperature maximum to 82") == ("temp_max", 82.0)
+    assert ga.parse("lower the heating minimum in the greenhouse to 50") == ("temp_min", 50.0)
+    assert ga.parse("set the greenhouse humidity to 70") == ("humidity_max", 70.0)
+    assert ga.parse("what is the greenhouse temperature") is None
+    assert {"temp_min", "temp_max", "humidity_max"} <= set(ga.shipped_limits())

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1727 files, 372,753 lines; 1727 files describe themselves; 20,456 of 20,586 classes and functions are documented.
+1727 files, 372,775 lines; 1727 files describe themselves; 20,457 of 20,587 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-687 files, 192,145 lines; 9,755 of 9,841 classes and functions documented
+687 files, 192,157 lines; 9,755 of 9,841 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -275,7 +275,7 @@
 - `core/gps_tracks.py`: Tracks (build plan step 14, DEC-0099): a walk, a ride or a drive as points with times, from a GPX file (what phones, watches and GPS units export). Worked out in code (`stats()`): distance (haversine, between successive points), climb and descent (changes under `CLIMB_NOISE` metres ignored, as GPS e
 - `core/grant_actions.py`: Taking a grant back, on the action contract (DEC-0156; core/grants.py): proposed in plain words, approved by the person, run, undoable.
 - `core/grants.py`: Every capability's tier, the grants a person has given, and the one check MIA's own initiative goes through (DEC-0156, approved by Zac 2026-11-15; migration phase M4 of `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md`; the Living System's G1).
-- `core/greenhouse_adjust.py`: MIA adjusting the greenhouse's targets (DEC-0185; Zac, 2026-11-16: "MIA absolutely should be able to adjust greenhouse controllers"; homestead/docs/MIA_COMMAND_INTERFACE.md step 4, MIA's side). Targets only: the pH and EC bands the node lists in its command limits. Never a dose, a pump, a valve or t
+- `core/greenhouse_adjust.py`: MIA adjusting the greenhouse's targets (DEC-0185; Zac, 2026-11-16: "MIA absolutely should be able to adjust greenhouse controllers"; homestead/docs/MIA_COMMAND_INTERFACE.md step 4, MIA's side). Targets only: the pH and EC bands, and the air's temperature band (°F) and humidity limit, as the node lis
 - `core/greenhouse_link.py`: "Take over the greenhouse" (DEC-0150; Zac, 2026-11-08: "build it and essentially pass her to it, so that she can integrate and monitor everything she has set up for monitoring"). MIA's half of the link to the MIA Homestead node (`homestead/`): she watches; the node, its control loop and its safety M
 - `core/greenhouse_provision.py`: Setting up the greenhouse's hardware from MIA (DEC-0150; Zac, 2026-11-08: "MIA needs to be able to flash/program the pi and other components and help me set them up when it comes time. Maybe have like preloaded configs set up and all internal info able to be pushed by MIA").
 - `core/greenhouse_setup.py`: The greenhouse's setup from start to hand-over, as one sequence MIA keeps track of (DEC-0150; Zac, 2026-11-08: "if we are setting up the greenhouse and I ask what is next is she able to tell me what device to flash, how to set it up, what i need to ask next"). The pieces already exist: the build job
@@ -985,7 +985,7 @@
 
 ## tests/: the test suite: what each part must do
 
-634 files, 99,513 lines; 8,336 of 8,380 classes and functions documented
+634 files, 99,523 lines; 8,337 of 8,381 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

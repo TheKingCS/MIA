@@ -94,3 +94,9 @@ signed approval applies at once or waits for his press on the node differs (one 
    the node's own limits copy at `min_minutes_between_changes: 0` for the run): "set the greenhouse pH minimum to
    6.6" said "from 6.4 to 6.6", was approved and read back as applied, the target 6.6. The interface's four steps
    are done; what's left is Zac's 0zu (whose approval the node trusts) and real hardware.
+
+**Widened 2026-11-24:** the air's temperature band (`temp_min` 40-75 °F, `temp_max` 70-95 °F, 5 °F apart) and
+`humidity_max` (60-90 %, a lone limit with no band), which modules/climate_control.py already reads from
+target_overrides. Scenario `mia_command_sets_the_greenhouse_air_and_humidity`; MIA says "set the greenhouse air
+temperature maximum to 82". Irrigation intervals, light hours and modes wait until the loop reads them from an
+override.

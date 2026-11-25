@@ -155,6 +155,11 @@ docs/            everything else - see index below
 
 ## Current state (honest summary)
 
+**MIA may also set the greenhouse air (2026-11-24):** `config/command_limits.default.yaml` adds `temp_min`, `temp_max`
+(°F, 5 °F apart) and `humidity_max` (a lone limit: `pair` is optional now in core/mia_commands.py), the targets
+modules/climate_control.py already reads from target_overrides. One scenario; 293 passed (the three rsync scenarios
+fail on Windows only). The export's `mia_directions.targets` reports them too.
+
 **MIA's directions, step 3, the node's half (2026-11-24):** `viewer/export_dashboard_state.py`'s `mia_directions`
 puts each cell's current pH/EC targets and MIA's latest directions with their outcome (refused, waiting for approval,
 denied, applied) into `dashboard_state.json`, so MIA reports a change only once she sees it applied here. It also

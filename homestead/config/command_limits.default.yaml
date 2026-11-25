@@ -23,3 +23,8 @@ parameters:
   ph_target_max: {low: 6.2, high: 7.6, pair: ph_target_min, min_band: 0.2}
   ec_target_min: {low: 300, high: 1800, pair: ec_target_max, min_band: 100}
   ec_target_max: {low: 400, high: 2000, pair: ec_target_min, min_band: 100}
+  # The greenhouse air (modules/climate_control.py, in °F): heat below temp_min, vent above temp_max, vent above
+  # humidity_max. Never below 40 °F (the fish tank and seedlings) or above 95 °F (heat stress).
+  temp_min: {low: 40, high: 75, pair: temp_max, min_band: 5}
+  temp_max: {low: 70, high: 95, pair: temp_min, min_band: 5}
+  humidity_max: {low: 60, high: 90}
