@@ -13,6 +13,7 @@ with what to do there to pass; the board (its port, or what's missing) for a cou
 on one; and what's next. Read only: starting the course is the action `path.start`, flashing `esplab.flash`, reading
 the board POST /api/labs/{course}/read. A course with scenario drills has them too (core/drills.page_of), its
 choices' verdicts in them, shown on the page once he picks.
+`hands_on()`: the courses with labs or drills, for the Classroom's Hands-on labs.
 """
 
 from __future__ import annotations
@@ -27,6 +28,24 @@ def _labs(course: str) -> dict:
 
         return LABS
     return {}
+
+
+def hands_on() -> list:
+    """The courses with labs or drills, for the Classroom's Hands-on labs: [{id, name, icon, what}]."""
+    from core import drills, paths
+
+    out = []
+    for course in ["esp32"] + [c for c in drills.courses() if c != "esp32"]:
+        program = paths.program_of(None, course)
+        if program is None:
+            continue
+        labs, drilled = bool(_labs(course)), bool(drills.of_program(course))
+        count = len(drills.of_program(course))
+        what = ("Wiring, sketches, a simulator and checks from your board" if labs else
+                f"Lessons, and {count} drill{'s that judge' if count != 1 else ' that judges'} each call") \
+            if labs or drilled else ""
+        out.append({"id": program.id, "name": program.name, "icon": program.icon, "what": what})
+    return out
 
 
 def page(context, course: str = "esp32", lesson: str = "") -> dict:

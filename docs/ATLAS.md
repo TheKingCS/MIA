@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1761 files, 379,909 lines; 1761 files describe themselves; 20,789 of 20,919 classes and functions are documented.
+1761 files, 380,037 lines; 1761 files describe themselves; 20,792 of 20,922 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-702 files, 196,903 lines; 9,955 of 10,041 classes and functions documented
+702 files, 197,010 lines; 9,957 of 10,043 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1000,7 +1000,7 @@
 
 ## tests/: the test suite: what each part must do
 
-651 files, 101,392 lines; 8,467 of 8,511 classes and functions documented
+651 files, 101,411 lines; 8,468 of 8,512 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1656,7 +1656,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-122 files, 22,963 lines
+122 files, 22,965 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

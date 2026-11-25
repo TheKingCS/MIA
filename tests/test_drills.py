@@ -6,6 +6,7 @@ Scenario drills (core/drills.py): every drill well formed (one best choice a que
 drill run by voice from its start to its summary, the place riding in MIA's own message; answers by letter or by
 ordinal, "stop the drill", and words that aren't a drill (a drill bit, a fire drill at home) left alone; the course
 page's data; and a drill never touching his path.
+The canning and carpentry drills by their courses' words, and the Classroom's list of courses with labs or drills.
 """
 
 from types import SimpleNamespace
@@ -55,6 +56,20 @@ def test_stopping_and_words_that_arent_a_drill():
     assert drills.reply(None, _said(first, "Your shed needs lumber."), "B") is None
     assert drills.reply(None, _said(first), "hmm not sure").startswith("Which one: A, B or C?")
     assert drills.reply(None, _said(first), "repeat that").startswith(first.split("\n\n")[1][:30])
+
+
+def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_lists_them():
+    """"Give me a canning drill" is the green beans; "run a carpentry drill" the 2x6; water-bathing green beans is
+    wrong. The Classroom's Hands-on labs lists ESP32 first, then each course with drills, said with its count."""
+    canning = drills.reply(None, _said(), "give me a canning drill")
+    assert canning.startswith("Drill: Putting up green beans.")
+    assert drills.reply(None, _said(), "run a carpentry drill").startswith("Drill: Cutting a 2x6 to length.")
+    beans = drills.by_id("canning_day")
+    assert drills.judge(beans, 2, 1)["verdict"] == "wrong" and "pressure canner" in drills.judge(beans, 2, 1)["best"]
+    listed = lab_page.hands_on()
+    assert [c["id"] for c in listed] == ["esp32", "bushcraft", "gardening", "carpentry"]
+    assert listed[2]["what"] == "Lessons, and 1 drill that judges each call"
+    assert listed[1]["what"] == "Lessons, and 3 drills that judge each call"
 
 
 def test_picking_by_letter_or_ordinal_within_the_choices():

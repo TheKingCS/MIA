@@ -340,7 +340,9 @@
         { id: "l3", name: "Butt joints", done: false, done_at: "", xp: 30 }] },
       skills: [{ id: "welding", name: "Welding" }, { id: "metalwork", name: "Metalwork" }],
       textbooks: { available: true, books: [{ id: "b1", title: "Welding Fundamentals", pages: 312, added: "2026-10-12", reading: false, error: "",
-        course: "", chapters: [{ title: "Chapter 1: Safety", page: 9 }, { title: "Chapter 6: Gas Metal Arc Welding", page: 101 }] }] } })
+        course: "", chapters: [{ title: "Chapter 1: Safety", page: 9 }, { title: "Chapter 6: Gas Metal Arc Welding", page: 101 }] }] },
+      hands_on: [{ id: "esp32", name: "Build With ESP32", icon: "🔌", what: "Wiring, sketches, a simulator and checks from your board" },
+        { id: "bushcraft", name: "Survival and bushcraft", icon: "🔥", what: "Lessons, and 3 drills that judge each call" }] })
       : call("GET", "/api/classroom"),
     knowledge: (q = "") => demo ? Promise.resolve({ available: true, root: "reference_library", packs: [
       { id: "wikipedia_en_medicine", title: "Wikipedia: Medicine", description: "Medical articles, offline", articles: 52000 }],

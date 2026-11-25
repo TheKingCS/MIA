@@ -6,7 +6,9 @@ Scenario drills: the simulator for a course without a board (docs/future/INTERAC
 2026-11-25: the ESP32 labs "could be used as a standard for other teaching areas", and what he liked most was trying
 it in a simulator first). A drill puts him in a situation and asks a few decisions in order; each choice is judged
 best, fine or wrong, with why, written from the course's own sources (a survival drill from core/bushcraft.py's:
-US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA). Pure logic; nothing kept.
+US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA; canning from core/gardening_path.py's, the USDA Complete
+Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
+logic; nothing kept.
 
 - **The drills** (`DRILLS`, `of_program`, `find`): each a `Drill` of `Question`s, each with its `Choice`s.
 - **Judging** (`judge`): a choice's verdict, why, and the best choice when it wasn't.
@@ -152,6 +154,75 @@ DRILLS: tuple = (
                  ("Dry the wood by the fire first", "fine",
                   "It works once a fire is going, for the next load, not to start one.")),
           ), "fire"),
+    Drill("canning_day", "gardening", "Putting up green beans",
+          "A Saturday with a bushel of green beans from the garden. You have a boiling-water canner, a pressure "
+          "canner, new lids, and your grandmother's recipe card.",
+          (
+              _q("Which recipe do you follow?",
+                 ("Grandma's card: it's been made for years", "wrong",
+                  "Only tested recipes are safe to can from; years without trouble isn't a test, and the risk is "
+                  "botulism."),
+                 ("A tested one: the USDA guide, the National Center for Home Food Preservation or a Ball book", "best",
+                  "A tested recipe's times and pressures were measured in the jar; that's what makes it safe."),
+                 ("A popular one online with good reviews", "wrong",
+                  "Reviews say it tastes good, not that it was tested; can only from a tested recipe.")),
+              _q("Which canner do the green beans go in?",
+                 ("The pressure canner, at the pressure and time for your altitude", "best",
+                  "Green beans are low-acid: only a pressure canner gets hot enough to make them safe."),
+                 ("The boiling-water canner, just for longer", "wrong",
+                  "Boiling water never gets hot enough for low-acid food, however long it runs."),
+                 ("Either, as long as the lids seal", "wrong",
+                  "A sealed jar of low-acid food canned wrong can still carry botulism; the seal doesn't make it "
+                  "safe.")),
+              _q("The next day, one lid flexes up and down when you press it. What now?",
+                 ("It's fine: put it on the shelf with the rest", "wrong",
+                  "An unsealed jar isn't shelf-stable; it spoils."),
+                 ("Put it in the fridge and eat it soon, or reprocess it within 24 hours", "best",
+                  "That's what the USDA says to do with a jar that didn't seal."),
+                 ("Throw it out", "fine",
+                  "Safe, but the food is good: refrigerate it or reprocess it within the day.")),
+              _q("Months later a jar's lid is bulging, and it spurts when you open it. What do you do?",
+                 ("Taste a little to see if it's off", "wrong",
+                  "Never taste it: botulism can't be seen, smelled or tasted, and a little can kill."),
+                 ("Don't taste it: get rid of it carefully, as the USDA describes", "best",
+                  "A bulging lid is a sign of spoilage, and maybe botulism; the jar and its food are handled with "
+                  "care, never eaten."),
+                 ("Boil it hard for a while and then eat it", "wrong",
+                  "Food from a bulging jar is never eaten, boiled or not.")),
+          ), "canning_safe"),
+    Drill("first_cut", "carpentry", "Cutting a 2x6 to length",
+          "You're cutting a 2x6 to length with a circular saw, the board across two sawhorses, the cut near the "
+          "middle.",
+          (
+              _q("How do you support the board for the cut?",
+                 ("Across both sawhorses, cutting between them", "wrong",
+                  "Supported at both ends, the board sags as you cut and pinches the blade: that's kickback."),
+                 ("So the offcut can fall free", "best",
+                  "With nothing holding the cut closed, the kerf stays open and the blade can't bind."),
+                 ("Have a helper hold the offcut up", "wrong",
+                  "Holding it up closes the kerf on the blade, the same as a board supported at both ends.")),
+              _q("How deep do you set the blade?",
+                 ("About 1/4 inch deeper than the board is thick", "best",
+                  "Enough to cut through, with as little blade showing as possible."),
+                 ("As deep as it goes", "wrong",
+                  "More blade showing is more to catch, and a worse angle on the wood."),
+                 ("Exactly the board's thickness", "wrong",
+                  "It won't cut all the way through, and you'll be tempted to force it.")),
+              _q("Which side of your line do you cut on?",
+                 ("The waste side", "best",
+                  "The blade's width comes out of the offcut, so the piece you keep is the length you marked."),
+                 ("Right on the line", "fine",
+                  "Close, but half the blade's width comes off the piece you keep."),
+                 ("The side you're keeping", "wrong",
+                  "The whole blade's width comes off your piece: it ends up short.")),
+              _q("Halfway through, the blade starts to bind. What do you do?",
+                 ("Push harder to get through it", "wrong",
+                  "A binding blade is how kickback starts; forcing it is the worst thing to do."),
+                 ("Let go of the trigger, let the blade stop, back it out and fix the support", "best",
+                  "Stopped and out of the cut, nothing can kick; then fix what pinched it."),
+                 ("Lift the saw out while it's still spinning", "wrong",
+                  "Lifting a spinning blade out of a cut can throw the saw; let it stop first.")),
+          ), "circular_saw"),
 )
 
 
@@ -176,13 +247,19 @@ def named(words: str) -> Optional[Drill]:
     return None
 
 
+_COURSE_WORDS = {"gardening": r"\b(canning|can|preserving|food safety|homestead\w*)\b",
+                 "carpentry": r"\b(carpentry|saw|woodworking|shop|construction)\b"}
+
+
 def find(words: str, today: Optional[date] = None) -> Optional[Drill]:
-    """Pure logic. The drill his words name (`named`), else a survival one by the day (so asking each day brings a
-    different one)."""
+    """Pure logic. The drill his words name (`named`), else one of the course his words mean (a canning drill, a
+    carpentry drill), else a survival one; by the day among them (so asking each day brings a different one)."""
     drill = named(words)
     if drill is not None:
         return drill
-    survival = of_program("bushcraft")
+    said = str(words or "").lower()
+    course = next((c for c, w in _COURSE_WORDS.items() if re.search(w, said)), "bushcraft")
+    survival = of_program(course)
     if not survival:
         return None
     return survival[(today or date.today()).toordinal() % len(survival)]
@@ -280,7 +357,8 @@ def answer(drill: Drill, n: int, right: int, pick: int) -> str:
 
 def reply(context, conversation, text: str) -> Optional[str]:
     """Drills by voice, in code, before the question plans: an answer to the question MIA just asked, "stop the drill",
-    or "give me a survival drill"; None when the words aren't for a drill."""
+    or "give me a survival drill"; None when the words aren't for a drill.
+    A course's own words start one of its drills ("a canning drill", "a carpentry drill")."""
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     live = where(conversation)
     if live is not None:
@@ -299,11 +377,16 @@ def reply(context, conversation, text: str) -> Optional[str]:
                     f"far.)")
     if _START.search(said) and not _NOT_THIS.search(said):
         drill = named(said)
-        if drill is None and _SURVIVAL.search(said):
+        if drill is None and (_SURVIVAL.search(said) or any(re.search(w, said) for w in _COURSE_WORDS.values())):
             drill = find(said)
         if drill is not None:
             return start(drill)
     return None
+
+
+def courses() -> list:
+    """The courses with drills, in the order their drills come: [program id, ...]."""
+    return list(dict.fromkeys(d.program for d in DRILLS))
 
 
 def page_of(program_id: str) -> list:
@@ -321,15 +404,17 @@ def _start_tool(context, arguments: dict) -> str:
 
 
 def register_drill_tools(registry) -> None:
-    """Registers start_drill (its answers are taken in code, `reply`)."""
+    """Registers start_drill (its answers are taken in code, `reply`).
+    Its words cover the canning and carpentry drills too."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
         name="start_drill", domain="learning",
-        description="Start a survival scenario drill: a situation and a few decisions, each judged with why "
-                    "(\"give me a survival drill\", \"the water drill\").",
+        description="Start a scenario drill: a situation and a few decisions, each judged with why (survival, "
+                    "canning safety, a saw cut: \"give me a survival drill\", \"a canning drill\").",
         parameters={"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
                     "required": []}, prompt_arg="question",
         handler=_start_tool, trigger_phrases=("survival drill", "survival scenario", "bushcraft drill",
-                                             "give me a drill", "run a drill", "another drill", "scenario drill"),
+                                             "canning drill", "carpentry drill", "give me a drill", "run a drill",
+                                             "another drill", "scenario drill"),
     ))

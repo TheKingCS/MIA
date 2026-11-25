@@ -474,7 +474,8 @@ def continue_course(subjects: list) -> dict | None:
 
 def screen(context) -> dict:
     """The Classroom's web screen (web/classroom.html): each subject, its courses and their lessons (with the skill
-    each trains and its XP, and their notes), the skills a lesson can train, the textbooks (core/web_textbooks.py), how far along each is, and the course to continue (`continue_course`)."""
+    each trains and its XP, and their notes), the skills a lesson can train, the textbooks (core/web_textbooks.py), how far along each is, and the course to continue (`continue_course`).
+    The courses with labs or drills too (`hands_on`, core/lab_page.py), for its Hands-on labs."""
     room = getattr(context, "classroom", None)
     subjects = []
     for s in (room.all_subjects() if room is not None else []):
@@ -492,7 +493,9 @@ def screen(context) -> dict:
                          "courses": courses})
     skills = getattr(context, "skills", None)
     choices = [{"id": k.skill_id, "name": k.name} for k in skills.all_skills()] if skills is not None else []
+    from core.lab_page import hands_on
     from core.web_textbooks import section
 
     return {"available": room is not None, "subjects": subjects, "continue": continue_course(subjects),
-            "skills": sorted(choices, key=lambda k: k["name"].lower()), "textbooks": section(context)}
+            "skills": sorted(choices, key=lambda k: k["name"].lower()), "textbooks": section(context),
+            "hands_on": hands_on()}

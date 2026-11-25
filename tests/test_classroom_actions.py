@@ -47,13 +47,17 @@ def test_a_subject_its_course_and_lessons_ticked_off(person, monkeypatch):
 
 
 def test_what_it_refuses(person):
-    """A subject needs a name, a course a real subject, and a MIA without a classroom says so."""
+    """A subject needs a name, a course a real subject, and a MIA without a classroom says so (its hands-on courses
+    still listed: they don't live in the classroom)."""
     with pytest.raises(ActionError):
         person.actions.propose(person, "subject.add", {"name": "  "}, proposed_by="person")
     with pytest.raises(ActionError):
         person.actions.propose(person, "course.add", {"subject_id": "nope", "name": "X"}, proposed_by="person")
+    from core.lab_page import hands_on
+
     assert screen(SimpleNamespace(classroom=None)) == {"available": False, "subjects": [], "continue": None,
-                                                       "skills": [], "textbooks": {"available": False, "books": []}}
+                                                       "skills": [], "textbooks": {"available": False, "books": []},
+                                                       "hands_on": hands_on()}
 
 
 def test_continue_is_the_course_you_last_finished_a_lesson_in():
