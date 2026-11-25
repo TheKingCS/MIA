@@ -1504,7 +1504,7 @@ NOT_FOR = {
     # what_to_make_next, taxes to set aside are tax_set_aside, who owes him is who_owes_me, the coop's light is the
     # hens' (why_hens_not_laying)
     "time": re.compile(r"\b(spend(ing)? (more|less) than|spend(ing)? money|spent \$|money|eating out|groceries|"
-                       r"bills?)\b", re.I),
+                       r"bills?|budgets?)\b", re.I),  # "am I over budget anywhere?" is budget_left (the live sweep)
     # a course's next lesson is the learning tools' (live check, 2026-11-25: "what's my next Arduino lesson?" was
     # answered by this plan with a lesson it made up)
     "progress": re.compile(rf"\b(make next|for the shop|sell\w*|products?|running low|in stock|{_LEARNING}|arduino|"

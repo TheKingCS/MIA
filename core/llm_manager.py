@@ -745,13 +745,15 @@ def _start_ollama() -> bool:
 # {... "\$$X" ...}}' as its answer (live sweep, 2026-11-25), invalid JSON, so it was neither caught nor retried
 # Also a whole reply that is one fenced block, and the "input"/"args" keys (the thirteenth review); this only asks again
 # without tools; what's replaced in the turn is narrower (core/assistant_turn._garbled)
+# A doubled quote before the key too: {"name":"add_alarm",""parameters":...} (the live sweep, 2026-11-25)
 _CALL_SHAPE = re.compile(r'^\s*(?:```(?:json)?\s*)?\{\s*"(?:name|function|tool)"\s*:\s*"[A-Za-z_][\w.]*"\s*,\s*'
-                         r'"(?:parameters|arguments|args|input)"\s*:')
+                         r'"+(?:parameters|arguments|args|input)"\s*:')
 
 
 def _looks_like_malformed_tool_call(content: str) -> bool:
     """True if `content` looks like a hallucinated tool-call JSON blob rather than a real answer: JSON with a name,
-    or a tool call's own opening even when the rest doesn't parse (`_CALL_SHAPE`)."""
+    or a tool call's own opening even when the rest doesn't parse (`_CALL_SHAPE`, a doubled quote before its key
+    too)."""
     content = str(content or "").strip()
     if _CALL_SHAPE.match(content):
         return True

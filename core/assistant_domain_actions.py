@@ -821,7 +821,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
     """Registers every tool above with the Assistant's registry, with its description, parameters and trigger
     phrases, plus each domain's everyday words and the names of the person's own records (assets, debts, recipes,
     pantry, parts, materials, products), so plain speech reaches the right tools without a trigger phrase. Among
-    them money_ahead, the next 13 weeks of money (core/money_ahead.py), budget_left (this month's budgets, spent and
+    them money_ahead, the next 13 weeks of money (core/money_ahead.py), budget_left ("am I over budget"; this month's budgets, spent and
     left, from core/finance_summary.py; "over my budget", never a build's; its description says it isn't bills or
     what's due, which the model confused it with), get_net_worth (the Money page's figure, each
     part named, and with his other debts taken off; reached only by "my net worth", never "what am I worth?"), and debt_payoff_mission, the payoff plan as a
@@ -928,6 +928,7 @@ def register_domain_actions(registry: AssistantActionRegistry) -> None:
         parameters=_obj({"category": _s("The budget's category, e.g. 'groceries', if he named one.")}, []),
         handler=_action_budget_left,
         trigger_phrases=("left in my budget", "budget left", "left in the budget", "over my budget", "over budget this",
+                         "am i over budget", "over budget anywhere", "over budget in",
                          "over budget on", "under budget",
                          "still spend on", "can i still spend", "my budgets", "grocery budget", "gas budget",
                          "food budget", "fuel budget", "feed budget"),

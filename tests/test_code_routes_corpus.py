@@ -85,7 +85,7 @@ def routes(tmp_path):
     The morning briefing's reading of the words too.
     And the job quote's.
     And the daily reminder's.
-    His upkeep's and an LED's resistor's too."""
+    His upkeep's and an LED's resistor's too, and what he spent on a category."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -103,6 +103,7 @@ def routes(tmp_path):
         "spent": lambda w: turn._spent_reply(context, w),
         "upkeep": lambda w: turn._upkeep_reply(context, w),
         "led": lambda w: turn._led_reply(context, w),
+        "spent on": lambda w: turn._spent_on_reply(context, w),
         "job quote": lambda w: _job_words(w),
         "morning briefing": lambda w: _briefing_words(w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),

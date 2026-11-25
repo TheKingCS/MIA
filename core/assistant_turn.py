@@ -124,6 +124,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A reminder on a day too (`_reminder_reply`).
     A course's next lesson too (`_next_lesson_reply`).
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
+    What he spent on a category (`_spent_on_reply`) too.
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -183,6 +184,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _upkeep_reply(context, prompt)  # "when is my truck due for an oil change?", as in a turn
     if walked is None:
         walked = _led_reply(context, prompt)  # "what resistor for an LED on 5 volts?", as in a turn
+    if walked is None:
+        walked = _spent_on_reply(context, prompt)  # "how much did I spend on groceries this month?", as in a turn
     if walked is None:
         walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
@@ -356,6 +359,13 @@ _REMIND_ON = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can yo
                         r"(?:\s+at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?)?\s*[.!]?\s*$", re.I)
 
 
+# "remind me tomorrow at 9 to call the vet": the day and time first, said the other way round for _REMIND_ON
+_REMIND_FIRST = re.compile(r"^(?P<lead>\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+)?remind me)"
+                           r"\s+(?P<when>(?:on\s+|this\s+|next\s+)?(?:today|tonight|tomorrow|monday|tuesday|wednesday|"
+                           r"thursday|friday|saturday|sunday)(?:\s+(?:morning|afternoon|evening|night))?"
+                           r"(?:\s+at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?)?)\s*,?\s+to\s+(?P<what>.+?)\s*[.!]?\s*$", re.I)
+
+
 _EVERY = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday)"
 _REMIND_EVERY = re.compile(
     r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+|would you\s+)?"
@@ -478,7 +488,12 @@ def _reminder_reply(context, prompt: str):
     through add_calendar_event, so it's undoable like any change of hers. A time with no day stays the alarms'; a
     repeating one ("every Saturday") the model's. None otherwise.
     "Tonight" or "evening" with an hour and no am or pm is the evening's.
-    Evening only for "tonight" or a day's evening; "tonight at 12" sets no time."""
+    Evening only for "tonight" or a day's evening; "tonight at 12" sets no time.
+    The day first is the same ("remind me tomorrow at 9 to call the vet", `_REMIND_FIRST`: the live sweep, where the
+    model had written its alarm call out as text)."""
+    first = _REMIND_FIRST.match(prompt.replace("’", "'"))
+    if first:
+        prompt = f"{first.group('lead')} to {first.group('what')} {first.group('when')}"
     found = _REMIND_ON.match(prompt.replace("’", "'"))
     if not found or re.search(r"\b(?:every|each)\b", found.group(1), re.I):
         return None
@@ -782,6 +797,58 @@ def _led_reply(context, prompt: str):
             "own forward voltage and current on its datasheet.")
 
 
+_SPENT_ON_ASK = re.compile(r"^\s*how much (?:money )?(?:did|have) (?:i|we) (?:spend|spent|spended) on (?P<what>[\w&' -]+?)"
+                           r"(?:\s+(?P<when>this month|last month|this week|this year|so far this month|so far))?"
+                           r"\s*\??\s*$", re.I)
+
+
+_OVER_BUDGET = re.compile(r"^\s*(?:am i|are we|is anything|anything)\s+(?:over|under)\s+(?:my\s+|our\s+|the\s+)?budgets?"
+                          r"(?:\s+(?:anywhere|on anything|at all|this month|yet))?\s*\??\s*$", re.I)
+
+
+def _spent_on_reply(context, prompt: str):
+    """"How much did I spend on groceries this month?", in code from his own expenses (the live sweep, 2026-11-25:
+    the money plan's model had said "the fact sheet only mentions..."): the category his words name (`_SPENT_ON`'s
+    words, or a category's own name), this month unless he said last month, this week or this year. None when the
+    words name no category, or there's no budget.
+    "Am I over budget anywhere?" is his budgets, each spent against its target (budget_left, `_OVER_BUDGET`)."""
+    if _OVER_BUDGET.match(prompt):  # "am I over budget anywhere?": his budgets, from budget_left (the live sweep)
+        try:
+            return context.assistant_actions.execute(context, "budget_left", {})
+        except Exception:
+            log.exception("Couldn't read his budgets")
+            return None
+    found = _SPENT_ON_ASK.match(prompt.replace("’", "'"))
+    book = getattr(context, "budget", None)
+    if not found or book is None or not hasattr(book, "total_expenses_by_category"):
+        return None
+    from datetime import date as _date, timedelta
+
+    from core.budget_manager import EXPENSE_CATEGORIES
+    from core.region import money
+
+    what = found.group("what").strip()
+    category = next((c for c in EXPENSE_CATEGORIES if c.lower() == what.lower()), None)
+    category = category or next((c for c, words in _SPENT_ON if re.search(words, what, re.I)), None)
+    if category is None:
+        return None
+    today = _date.today()
+    when = (found.group("when") or "this month").lower()
+    if when == "last month":
+        end = today.replace(day=1) - timedelta(days=1)
+        start, said = end.replace(day=1), "last month"
+    elif when == "this week":
+        start, end, said = today - timedelta(days=today.weekday()), today, "this week"
+    elif when == "this year":
+        start, end, said = today.replace(month=1, day=1), today, "this year"
+    else:
+        start, end, said = today.replace(day=1), today, "this month"
+    spent = book.total_expenses_by_category(start.isoformat(), end.isoformat()).get(category, 0.0)
+    if not spent:
+        return f"Nothing logged under {category} {said}."
+    return f"{money(spent)} on {category} {said}, from what you've logged."
+
+
 def _materials_reply(context, prompt: str):
     """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
     calculators' list, never the model's); None otherwise."""
@@ -914,6 +981,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A first-aid how-to is answered in the floor's own words (`_first_aid_reply`).
     His upkeep ("when is my truck due for an oil change?", "the truck needs new brakes": `_upkeep_reply`) and an
     LED's resistor (`_led_reply`) are taken in code too.
+    What he spent on a category this month is said from his expenses (`_spent_on_reply`).
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
@@ -1045,6 +1113,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _upkeep_reply(context, prompt)  # his upkeep: when a task is due, a need added as a task
         if walked is None:
             walked = _led_reply(context, prompt)  # an LED's resistor, worked out in code
+        if walked is None:
+            walked = _spent_on_reply(context, prompt)  # what he spent on a category, from his expenses
         if walked is None:
             walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:
