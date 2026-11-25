@@ -101,14 +101,15 @@ def course_in(context, words: str = "", building: bool = False) -> str:
 def next_lab_reply(context, words: str) -> Optional[str]:
     """"What's my next Arduino lesson?", "next ESP32 lab?": the next step on that board course's path, in code (live
     check, 2026-11-25: the model, offered the learning tools, answered both in its own words), with how to build it
-    along with MIA; None for other words, or a course not started."""
+    along with MIA; None for other words, or a course not started.
+    "What's next on my Arduino course?" too."""
     import re
 
     from core import paths
 
     said = str(words or "").lower().replace("\u2019", "'")
     if not re.search(r"\b(arduino|nano|mega|esp ?32)\b", said) or not re.search(
-            r"\b(?:what's|whats|what is|what are)\b.*\bnext\b.*\b(lessons?|labs?|steps?)\b|"
+            r"\b(?:what's|whats|what is|what are)\b.*\bnext\b.*\b(lessons?|labs?|steps?|course)\b|"
             r"\bnext (?:\w+ )?(?:lesson|lab)\b", said):
         return None
     course = course_in(context, said)

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1798 files, 386,522 lines; 1798 files describe themselves; 21,065 of 21,193 classes and functions are documented.
+1799 files, 386,606 lines; 1799 files describe themselves; 21,070 of 21,198 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,408 lines; 10,097 of 10,180 classes and functions documented
+714 files, 201,461 lines; 10,100 of 10,183 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-675 files, 103,099 lines; 8,597 of 8,642 classes and functions documented
+676 files, 103,130 lines; 8,599 of 8,644 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1373,6 +1373,7 @@
 - `tests/test_net_worth_history.py`: Tests for core/net_worth_history.py: one net worth point a day, the change this month, and the Overview's line.
 - `tests/test_net_worth_voice.py`: "What's my net worth?" by voice (get_net_worth): the Money page's figure (linked accounts and property equity), each part named, his other debts taken off too since that figure leaves them out, and nothing to add up said plainly, never a made-up zero.
 - `tests/test_next_cut.py`: A plan's cut list read one cut at a time in the shop (next_cut): the plan he names, then "next cut" walking on from where he is, the last one said, "start the cuts over", a plan with no cuts or none named answered plainly, going back to a plan carrying on, a finished one named starting again, a vagu
+- `tests/test_next_lesson_reply.py`: "What's my next guitar lesson?" answered in code, read only (core/assistant_path_actions.next_lesson_reply; live sweep, 2026-11-25): a course named and started gets its next step from his own path, one not started says so and how to start it, a course named by its id as a word counts ("my next money
 - `tests/test_night_school.py`: Night School (DEC-0100, core/night_school.py): she chooses what to study, her teacher sets exercises with a test that fails first, code grades her, the teacher's lesson comes back the next time, practice never merges, and her picks are scored against her teacher's before she's trusted to choose.
 - `tests/test_no_control_characters.py`: No stray control characters in MIA's code or docs. A shell heredoc turns a regex's \b into a backspace byte, and the pattern then silently matches nothing (it happened in 2026-11 twice: the turn traces' patterns, and the check that keeps passwords out of what MIA remembers by voice).
 - `tests/test_no_flashing_windows.py`: Every program MIA starts is started with no window.

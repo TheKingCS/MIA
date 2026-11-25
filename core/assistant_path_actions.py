@@ -18,7 +18,8 @@ progress work the same for every path.
 - `learning_progress`: how every path (or the one named) is going.
 
 Writes go straight to the person's own store (each undoable); nothing here is
-sent anywhere.
+sent anywhere. `next_lesson_reply` answers "what's my next guitar lesson?" in
+code, read only, before the model (core/assistant_turn.py).
 """
 
 from __future__ import annotations
@@ -55,6 +56,39 @@ def _which(context, book: paths.PathBook, words: str) -> Optional[paths.Program]
                 return own[0]
         return None
     return started[0] if len(started) == 1 else None
+
+
+_NEXT_LESSON = re.compile(r"\b(?:what'?s|whats|what is|what are)\b.{0,30}\bnext\b.{0,30}\b(?:lessons?|steps?|course)\b|"
+                          r"\bnext (?:\w+ ){1,3}lesson\b", re.I)
+
+
+def _course_named(context, said: str):
+    """The course his words name: by its words (core/paths.find_program), else its id or name as a whole word ("my
+    next money lesson": an id counts in find_program only as the whole subject)."""
+    found = paths.find_program(context, said)
+    if found is not None:
+        return found
+    paths._builtins()
+    return next((p for p in paths.PROGRAMS.values()
+                 if re.search(rf"\b{re.escape(p.id)}\b", said, re.I) or p.name.lower() in said.lower()), None)
+
+
+def next_lesson_reply(context, words: str) -> Optional[str]:
+    """"What's my next guitar lesson?", read only, in code (live sweep, 2026-11-25: with Guitar not started, the
+    model answered "I'm not aware of your upcoming lessons"): for a course his words name, its next step from his own
+    path (core/paths.next_step), or that it isn't started and how to start it. None when no course is named (the
+    progress plans and the lesson tool take "what's next?"), or for a board course (core/esp32_lab.next_lab_reply's)."""
+    said = str(words or "")
+    if not _NEXT_LESSON.search(said):
+        return None
+    book = getattr(context, "paths", None)
+    program = _course_named(context, said)
+    if book is None or program is None or program.id in ("esp32", "arduino"):
+        return None
+    if book.path(program.id) is None:
+        return (f"You haven't started {program.name} yet. Say \"I want to learn {program.id}\" and I'll set it up "
+                "with you.")
+    return paths.next_step(book, program)
 
 
 def _ask_which(context, book: paths.PathBook, words: str = "") -> str:

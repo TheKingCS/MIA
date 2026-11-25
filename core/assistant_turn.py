@@ -121,7 +121,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A how-to from a course lesson too (`_lesson_reply`).
     Days of water too (`_water_on_hand_reply`).
     A materials question too (`_materials_reply`).
-    A reminder on a day too (`_reminder_reply`)."""
+    A reminder on a day too (`_reminder_reply`).
+    A course's next lesson too (`_next_lesson_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -160,6 +161,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _water_on_hand_reply(context, prompt)  # "how many days of water do I have?", as in a turn
     if walked is None:
         walked = _materials_reply(context, prompt)  # "how many fence posts for 200 feet?", as in a turn
+    if walked is None:
+        walked = _next_lesson_reply(context, prompt)  # "what's my next guitar lesson?", as in a turn
     if walked is None:
         walked = _reminder_reply(context, prompt)  # "remind me to check the oil Saturday", as in a turn
     if walked is None:
@@ -358,6 +361,18 @@ def _reminder_reply(context, prompt: str):
         return None
 
 
+def _next_lesson_reply(context, prompt: str):
+    """"What's my next guitar lesson?", read only, in code (core/assistant_path_actions.next_lesson_reply); None
+    otherwise."""
+    from core.assistant_path_actions import next_lesson_reply
+
+    try:
+        return next_lesson_reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't say the next lesson")
+        return None
+
+
 def _materials_reply(context, prompt: str):
     """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
     calculators' list, never the model's); None otherwise."""
@@ -494,6 +509,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A claim of a change no tool made is said honestly; a reminder on a day goes on the calendar.
     A personal or off-the-record turn's claim is never kept in the Fix-It Log.
     The model's reply is polished with his words, so a loosely copied humor example goes.
+    A course's next lesson, named, in code (`_next_lesson_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -595,6 +611,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _water_on_hand_reply(context, prompt)  # days of water: the pantry's and the property's
         if walked is None:
             walked = _materials_reply(context, prompt)  # a structure and its size: the calculators' list
+        if walked is None:
+            walked = _next_lesson_reply(context, prompt)  # a course's next step, or that it isn't started
         if walked is None:
             walked = _reminder_reply(context, prompt)  # "remind me to X on Saturday": on his calendar
         if walked is None:
