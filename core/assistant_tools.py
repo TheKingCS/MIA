@@ -4019,7 +4019,8 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_income(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_income`: records income with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_income`: records income with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A day other than today is said in the reply."""
         amount = arguments.get("amount")
         if amount is None:
             return "I need an amount to record income."
@@ -4027,11 +4028,15 @@ class AssistantTools:
         description = str(arguments.get("description", "") or "")
         date_str = str(arguments.get("date", "") or "").strip() or None
         entry = context.budget.add_income(amount=float(amount), category=category, description=description, date=date_str)
-        return f"Recorded {money(entry.amount, '.2f')} of income ({entry.category})."
+        from core.budget_manager import _today_iso
+
+        on = "" if entry.date == _today_iso() else f" on {entry.date}"
+        return f"Recorded {money(entry.amount, '.2f')} of income ({entry.category}){on}."
 
     @staticmethod
     def _action_add_expense(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_expense`: records an expense with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_expense`: records an expense with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A day other than today is said in the reply."""
         amount = arguments.get("amount")
         if amount is None:
             return "I need an amount to record an expense."
@@ -4039,7 +4044,10 @@ class AssistantTools:
         description = str(arguments.get("description", "") or "")
         date_str = str(arguments.get("date", "") or "").strip() or None
         entry = context.budget.add_expense(amount=float(amount), category=category, description=description, date=date_str)
-        return f"Recorded {money(entry.amount, '.2f')} expense ({entry.category})."
+        from core.budget_manager import _today_iso
+
+        on = "" if entry.date == _today_iso() else f" on {entry.date}"  # a day other than today, said
+        return f"Recorded {money(entry.amount, '.2f')} expense ({entry.category}){on}."
 
     @staticmethod
     def _action_get_budget_summary(context: AppContext, arguments: dict) -> str:

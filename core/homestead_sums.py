@@ -55,10 +55,12 @@ def _setting(context, key: str, default: float) -> float:
 def days_in(words: str) -> Optional[float]:
     """Pure logic. The days his words give: "two weeks", "3 days", "72 hours", "a month" (30), "a year"; None for
     none.
-    Hours only when no days, weeks or months are said."""
+    Hours only when no days, weeks or months are said.
+    A rate ("a gallon a day") never cancels the hours."""
     said = str(words or "").lower()
     hours = re.search(rf"\b{_NUM}\s+hours?\b", said)
-    if hours and not re.search(r"\b(?:days?|weeks?|months?|years?|fortnight)\b", said):  # "72 hours": 3 days
+    if hours and not re.search(r"\b(?:\d+|two|three|four|five|six|seven|eight|nine|ten|a couple of)\s+(?:days?|weeks?|"
+                               r"months?|years?)\b|\bfortnight\b", said):  # "72 hours": 3 days; "a day each" is a rate
         return _number(hours.group(1)) / 24
     found = re.search(rf"\b{_NUM}\s+(day|week|month|year)s?\b", said)
     if not found:
@@ -71,13 +73,18 @@ def days_in(words: str) -> Optional[float]:
 def people_in(words: str) -> Optional[int]:
     """Pure logic. The people his words give: "for 4 people", "for 1 person", "a family of 5", "the two of us", and
     every group said added up ("2 adults and 2 kids" is 4: the sixth review); None for none.
-    A total said (a family of 4, 4 people) wins over its breakdown."""
+    A total said (a family of 4, 4 people) wins over its breakdown.
+    A family of 4 is the whole; "2 people and 2 kids" adds up, a breakdown with adults doesn't."""
     said = str(words or "").lower()
-    whole = (re.search(rf"\bfamily of\s+{_NUM}\b", said) or re.search(rf"\bthe\s+{_NUM}\s+of us\b", said)
-             or re.search(rf"\b{_NUM}\s+(?:people|persons?)\b", said))
-    if whole:  # a total said wins over its breakdown ("4 people, 2 adults and 2 kids": the seventh review)
-        return max(1, int(_number(whole.group(1))))
-    groups = re.findall(rf"\b{_NUM}\s+(?:adults?|kids?|children|child|teens?)\b", said)
+    family = re.search(rf"\bfamily of\s+{_NUM}\b", said)
+    if family:  # a family of 4 is the whole of it
+        return max(1, int(_number(family.group(1))))
+    whole = re.search(rf"\bthe\s+{_NUM}\s+of us\b", said) or re.search(rf"\b{_NUM}\s+(?:people|persons?)\b", said)
+    adults = re.findall(rf"\b{_NUM}\s+(?:adults?)\b", said)
+    kids = re.findall(rf"\b{_NUM}\s+(?:kids?|children|child|teens?)\b", said)
+    if whole:  # "4 people, 2 adults and 2 kids" is a breakdown; "2 people and 2 kids", "the 2 of us and 3 kids" add up
+        return max(1, int(_number(whole.group(1)) + (0 if adults else sum(_number(k) for k in kids))))
+    groups = adults + kids
     return max(1, int(sum(_number(g) for g in groups))) if groups else None
 
 

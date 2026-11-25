@@ -307,7 +307,9 @@ def named_day(prompt: str, today=None):
     """Pure logic. The one day his words name, or None: none when they give a date themselves ("December 24",
     "12/04", "the 3rd": the seventh review, a stated date had been replaced by a weekday). "Today", "tonight",
     "tomorrow"; else a weekday, the one after "on", "for", "this", "next" or "by" before any other (a weekday in a
-    title, "Tuesday trivia night ... for Thursday", is Thursday), and "next Friday" the one after the coming one."""
+    title, "Tuesday trivia night ... for Thursday", is Thursday), and "next Friday" the one after the coming one.
+    A weekday after "on", "by", "this" or "next" beats one after "for", and a weekday's own ("Tuesday's meeting") is
+    never it."""
     from datetime import date as _date, timedelta
 
     said = " ".join(str(prompt or "").lower().replace("’", "'").split())
@@ -319,10 +321,11 @@ def named_day(prompt: str, today=None):
     if re.search(r"\b(?:today|tonight|this (?:morning|afternoon|evening))\b", said):
         return today
     found = [(m.start(), m.group(2), m.group(1) or "") for m in
-             re.finditer(r"\b(?:(on|for|this|next|by|coming)\s+)?(" + "|".join(_WEEKDAYS) + r")\b", said)]
+             re.finditer(r"\b(?:(on|for|this|next|by|coming)\s+)?(" + "|".join(_WEEKDAYS) + r")\b(?!'s)", said)]
     if not found:
-        return None
-    _at, weekday, before = next((f for f in found if f[2]), found[-1])
+        return None  # "Tuesday's meeting" is the meeting's day, never the reminder's (the eighth review)
+    _at, weekday, before = next((f for f in found if f[2] in ("on", "by", "this", "next", "coming")),
+                                next((f for f in found if f[2]), found[-1]))
     ahead = (_WEEKDAYS.index(weekday) - today.weekday()) % 7
     return today + timedelta(days=ahead + (7 if before == "next" else 0))
 
@@ -338,17 +341,21 @@ def _reminder_reply(context, prompt: str):
     tool and said "You've been reminded"): what and the day his words name (and a time, when said) go on his calendar
     through add_calendar_event, so it's undoable like any change of hers. A time with no day stays the alarms'; a
     repeating one ("every Saturday") the model's. None otherwise.
-    "Tonight" or "evening" with an hour and no am or pm is the evening's."""
+    "Tonight" or "evening" with an hour and no am or pm is the evening's.
+    Evening only for "tonight" or a day's evening; "tonight at 12" sets no time."""
     found = _REMIND_ON.match(prompt.replace("’", "'"))
     if not found or re.search(r"\b(?:every|each)\b", found.group(1), re.I):
         return None
     what = found.group(1).strip().rstrip(",")
     args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, prompt)
-    evening = re.search(r"\b(?:tonight|evening|night)\b", prompt, re.I)
+    evening = re.search(r"\btonight\b|\b(?:this|tomorrow|" + "|".join(_WEEKDAYS) + r")\s+(?:evening|night)\b", prompt,
+                        re.I)  # never "night crawlers" or "game night saturday" (the eighth review)
     if "date" not in args:
         return None
     if found.group(3):
         hour, minute = int(found.group(3)), int(found.group(4) or 0)
+        if evening and not found.group(5) and hour == 12:
+            hour = 99  # "tonight at 12": noon or midnight? no time rather than a wrong one
         hour += 12 if ((found.group(5) or "").lower() == "pm" or (evening and not found.group(5))) and hour < 12 \
             else 0  # "tonight at 9" is 9 pm (the seventh review)
         hour = 0 if (found.group(5) or "").lower() == "am" and hour == 12 else hour

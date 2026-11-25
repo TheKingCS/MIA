@@ -58,18 +58,22 @@ def _which(context, book: paths.PathBook, words: str) -> Optional[paths.Program]
     return started[0] if len(started) == 1 else None
 
 
-_NEXT_LESSON = re.compile(r"\b(?:what'?s|whats|what is|what are)\b.{0,30}\bnext\b.{0,30}\b(?:lessons?|steps?|course)\b|"
-                          r"\bnext (?:\w+ ){1,3}lesson\b", re.I)
+_NEXT_LESSON = re.compile(r"\b(?:what'?s|whats|what is|what are)\b.{0,30}\bnext\b.{0,30}\b(?:lesson|course)\b(?! plan)|"
+                          r"\bnext (?:\w+ ){1,3}lesson\b(?! plan)", re.I)  # never "steps" or "a lesson plan" (8th review)
 
 
 def _course_named(context, said: str):
-    """The course his words name: by its words (core/paths.find_program), else its id or name as a whole word ("my
-    next money lesson": an id counts in find_program only as the whole subject)."""
-    found = paths.find_program(context, said)
-    if found is not None:
-        return found
-    paths._builtins()
-    return next((p for p in paths.PROGRAMS.values()
+    """The course his words name, by its own id or name as a whole word ("my next money lesson", "the next guitar
+    lesson"), never by the courses' topic words, nor anything about a meeting or a plan (the eighth review: "the next
+    lesson plan for the business meeting" had been the business course)."""
+    paths._builtins()  # by its own id or name only, never the courses' topic words ("the business meeting")
+    candidates = list(paths.PROGRAMS.values())
+    book = getattr(context, "paths", None)
+    if book is not None:
+        candidates += [paths.from_dict(d) for d in book.drafts.values()]
+    if re.search(r"\b(?:meeting|appointment|plan for)\b", said, re.I):
+        return None
+    return next((p for p in candidates
                  if re.search(rf"\b{re.escape(p.id)}\b", said, re.I) or p.name.lower() in said.lower()), None)
 
 

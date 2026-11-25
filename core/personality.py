@@ -162,7 +162,7 @@ _NOT_FUNNY = re.compile(
 
 # A pleasantry alone has nothing to be funny about: the model, nudged to joke at "thanks", made one about the
 # examples' tangled cord instead (live sweep, 2026-11-25)
-_PLEASANTRY = re.compile(r"^\s*(?:(?:thanks?|thank you|ty|cheers|great|cool|nice|ok(?:ay)?|got it|perfect|awesome|"
+_PLEASANTRY = re.compile(r"^\s*(?:(?:thanks?|thank you|ty|cheers|"  # never a bare ok or perfect: a yes (8th review)
                          r"hi|hey|hello|yo|good (?:morning|afternoon|evening|night)|night|bye|later|see you|"
                          r"you'?re (?:the best|great|awesome|amazing)|love you|that'?s (?:helpful|great|perfect|it)|"
                          r"mia)[\s,.!']*)+$", re.I)

@@ -48,8 +48,10 @@ HONEST = ("I didn't set that up: I couldn't do it from what you said, so nothing
 _SENTENCES = re.compile(r"(?<=[.!?])\s+|\n+")
 # He asked for something done: "remind me...", "add...", "can you put...", "please set..."
 _ASKED = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+|can you\s+|could you\s+|would you\s+|i need you to\s+)?"
-                    r"(?:remind|add|put|schedule|log|record|delete|remove|cancel|move|book|mark|"
-                    r"set (?:an? |the |my )?(?:alarm|timer|reminder))\b", re.I)  # a record asked for, not a story
+                    r"(?:remind|add|put|schedule|log|record|delete|remove|cancel|move|book|mark|note that|write down|"
+                    r"make a note|(?:set|create|make|change|update|reset) (?:an? |the |my )?(?:\w+ )?(?:alarm|timer|"
+                    r"reminder|task|to-?do|note|event|appointment|list|entry|budget|routine|mission))\b",
+                    re.I)  # a record asked for, not a story (the eighth review: "create a task", "change my alarm")
 
 
 def _claiming(sentence: str, asked: bool = True) -> bool:

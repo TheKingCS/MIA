@@ -305,13 +305,33 @@ def _today_iso() -> str:
 
 
 def _entry_date(value: Optional[str]) -> str:
-    """Pure logic but for today. An entry's date as given when it's a real YYYY-MM-DD date, else today (live sweep,
-    2026-11-25: the model sent the string "null", stored as the date, and no month's totals ever counted it)."""
-    said = str(value or "").strip()[:10]
+    """Pure logic but for today. An entry's date as given when it's a real YYYY-MM-DD date, or "yesterday", "11/20/2026",
+    "Nov 20, 2026" or "Nov 20" (the last one), else today (live sweep, 2026-11-25: the model sent the string "null",
+    stored as the date, and no month's totals ever counted it)."""
+    from datetime import timedelta
+
+    raw = str(value or "").strip()
+    said = raw[:10]
     try:
         return datetime.strptime(said, "%Y-%m-%d").date().isoformat()
     except ValueError:
-        return _today_iso()
+        pass
+    words = raw.lower()
+    today = datetime.now().date()
+    if words == "yesterday":  # the eighth review: these had silently become today
+        return (today - timedelta(days=1)).isoformat()
+    for form in ("%m/%d/%Y", "%m/%d/%y", "%B %d, %Y", "%b %d, %Y", "%B %d %Y", "%b %d %Y"):
+        try:
+            return datetime.strptime(raw, form).date().isoformat()
+        except ValueError:
+            continue
+    for form in ("%m/%d", "%B %d", "%b %d"):
+        try:
+            day = datetime.strptime(raw, form).date().replace(year=today.year)
+        except ValueError:
+            continue
+        return (day.replace(year=today.year - 1) if day > today else day).isoformat()  # a month and day: the last one
+    return _today_iso()
 
 
 def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str]) -> bool:
@@ -967,12 +987,15 @@ class BudgetManager:
         return entry
 
     def update_income(self, entry_id: str, **fields) -> IncomeEntry:
+        """Changes an income entry's fields and saves it; a date given is read by `_entry_date` (never "null"), and its creation time can't change."""
         entry = self.get_income(entry_id)
         if entry is None:
             raise ValueError(f"No income entry with id '{entry_id}'.")
         for key, value in fields.items():
             if key == "created_at":
                 raise ValueError("'created_at' can't be set through update_income().")
+            if key == "date":
+                value = _entry_date(value)  # never "null" through an update (the eighth review)
             if not hasattr(entry, key):
                 raise ValueError(f"IncomeEntry has no field '{key}'.")
             setattr(entry, key, value)
@@ -1061,12 +1084,15 @@ class BudgetManager:
         return entry
 
     def update_expense(self, entry_id: str, **fields) -> ExpenseEntry:
+        """Changes an expense entry's fields and saves it; a date given is read by `_entry_date` (never "null"), and its creation time can't change."""
         entry = self.get_expense(entry_id)
         if entry is None:
             raise ValueError(f"No expense entry with id '{entry_id}'.")
         for key, value in fields.items():
             if key == "created_at":
                 raise ValueError("'created_at' can't be set through update_expense().")
+            if key == "date":
+                value = _entry_date(value)  # never "null" through an update (the eighth review)
             if not hasattr(entry, key):
                 raise ValueError(f"ExpenseEntry has no field '{key}'.")
             setattr(entry, key, value)

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1799 files, 386,614 lines; 1799 files describe themselves; 21,070 of 21,198 classes and functions are documented.
+1800 files, 386,744 lines; 1800 files describe themselves; 21,078 of 21,204 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,461 lines; 10,100 of 10,183 classes and functions documented
+714 files, 201,522 lines; 10,102 of 10,183 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -123,7 +123,7 @@
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile kept in the person's own folder. The window is visible on the computer, so what she does can be watched.
 - `core/browser_routines.py`: Browser tasks MIA has been taught (DEC-0117, Zac 2026-11-07: "show her, then she practises"). The person does a task once in her browser while she records it; she saves it as a routine and replays it later, the same steps in the same order, checking the page as she goes.
 - `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it. `untrusted()` fra
-- `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(62 undocumented)*
+- `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(60 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
 - `core/build_calcs.py`: Material lists worked out in code (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Each calculator takes a structure's size and gives what to buy and what to cut: a stud wall, a floor or deck frame, a raised garden bed, a fence run,
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-676 files, 103,138 lines; 8,599 of 8,644 classes and functions documented
+677 files, 103,207 lines; 8,605 of 8,650 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1492,6 +1492,7 @@
 - `tests/test_review_2026_11_22.py`: Fable's review of 2026-11-22 (three independent reviewers over WP-01 to FW-12): each fixed finding held by a test of the behaviour it described.
 - `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
 - `tests/test_review_7.py`: The seventh review's findings (2026-11-25), each kept fixed: the claim check leaves alone a sentence about anything but his records, a story, and a lookup's "your alarm is set"; a date his words state is never replaced by a weekday, a weekday after "on" or "for" beats one in a title, "next Friday" i *(1 undocumented)*
+- `tests/test_review_8.py`: The eighth review's findings (2026-11-25), each kept fixed: a family member named bare is an emergency only with nothing after the verb ("grandma collapsed", never "mom passed out the cookies"), "he" is never found inside "the", and paint, a movie or a list never bleed; "create a task" and "change m
 - `tests/test_review_bench_3.py`: The third review (2026-11-25), each finding as its failing input: "build me a ..." only as a request at the start, never a reminder, a note, a time or a stand; her designs only proper names, asked about exactly, and a plan said only when its decision calls it one; parts matched by whole word, severa
 - `tests/test_review_labs_2.py`: The second review of the labs (2026-11-25), each finding as its failing input: the Mega's I2C on its own header, never A4/A5; power backwards a stop in the free build and the course simulator; a part's input held to its range and an output tied to a rail warned; a lab named as one deciding the cours
 - `tests/test_review_labs_5.py`: The fifth review's findings (2026-11-25), each kept fixed: a photo of an ordinary thing never gets a part's spec and the first part named wins; a check's question uses the same words its course was looked for by, and words a started course uses for itself stay its; a lab's why never takes a request 
