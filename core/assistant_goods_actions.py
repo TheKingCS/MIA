@@ -9,6 +9,7 @@ on hand?", "Sold 3 loaves of banana bread", "How close am I to freedom?",
 (the action kinds in core/flock_actions.py, core/goods_actions.py; the
 pages in core/web_flock.py, core/freedom.py, core/web_compliance.py), so
 the numbers match and "undo that" takes a change back.
+Eggs over last week, this month or last month are counted from the flock's log (`eggs_between`).
 """
 
 from __future__ import annotations
@@ -30,13 +31,18 @@ def _run(context, kind: str, params: dict) -> str:
 def _get_eggs(context, arguments: dict) -> str:
     """Tool get_eggs: for each flock, eggs today and this week, the lay rate from its hens, loose eggs, cartons on
     hand and feed cost a dozen, read from the Chickens page, and when they're laying far below their own normal, that
-    with what to check (core/unusual.py), and how long the feed will last (core/feed_runway.py).
+    with what to check (core/unusual.py), and how long the feed will last (core/feed_runway.py). Asked about last
+    week or this month (his words, a follow-up's own first): those eggs from the log (`eggs_between`).
     """
     from core.web_flock import flock_page
 
     page = flock_page(context)
     if not page.get("available") or not page["flocks"]:
         return "No flock in MIA yet: add it under Apps → Chickens."
+    own = str(arguments.get("question", "") or "").lower().split(" (after:")[0]
+    span = _egg_span(own)
+    if span is not None:
+        return _eggs_in_span(context, span)
     parts = []
     for f in page["flocks"]:
         x = f["figures"]
@@ -50,6 +56,46 @@ def _get_eggs(context, arguments: dict) -> str:
             line += f"; feed costs {x['feed_per_dozen_text']} a dozen"
         parts.append(line + "." + (" " + f["unusual"] if f.get("unusual") else "")
                      + (" " + f["feed_runway"] if f.get("feed_runway") else ""))
+    return " ".join(parts)
+
+
+def _egg_span(words: str):
+    """Pure logic. (label, first day back, last day back) for "last week" (7 to 13 days ago), "this month" or "last
+    month" (by the calendar), else None."""
+    from datetime import date, timedelta
+
+    today = date.today()
+    if "last week" in words:
+        return "last week", today - timedelta(days=13), today - timedelta(days=7)
+    if "this month" in words:
+        return "so far this month", today.replace(day=1), today
+    if "last month" in words:
+        end = today.replace(day=1) - timedelta(days=1)
+        return f"in {end:%B}", end.replace(day=1), end
+    return None
+
+
+def eggs_between(entries: list, flock_id: str, first, last) -> float:
+    """Pure logic. Eggs one flock's log has collected between two dates, both counted."""
+    return sum(float(e.count or 0) for e in entries if e.flock_id == flock_id and e.kind == "eggs"
+               and first.isoformat() <= str(e.date)[:10] <= last.isoformat())
+
+
+def _eggs_in_span(context, span) -> str:
+    """Each flock's eggs over that span, from its log, with this week beside it for last week."""
+    from datetime import date, timedelta
+
+    label, first, last = span
+    book = context.flock
+    parts = []
+    for f in book.flocks:
+        entries = book.entries_for(f.flock_id)
+        got = eggs_between(entries, f.flock_id, first, last)
+        line = f"{f.name}: {got:g} eggs {label}"
+        if label == "last week":
+            week = eggs_between(entries, f.flock_id, date.today() - timedelta(days=6), date.today())
+            line += f", against {week:g} this week"
+        parts.append(line + ".")
     return " ".join(parts)
 
 
@@ -228,6 +274,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     processing day, core/broiler_batch.py; the start tool hears only a batch that came, "got 25 broiler chicks"), and feed_mix (two feeds to a target protein, core/feed_mix.py, reached by "16% layer", "32% supplement" and the
     like), hatch_status heard only of eggs ("how's the hatch going?",
     never "the business incubator" or "the lockdown drill").
+    get_eggs takes his words (its prompt_arg, still answered in code) for last week, this month or last month.
     """
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
@@ -283,8 +330,11 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="get_eggs", domain="flock",
-        description="The chickens: eggs today and this week, lay rate, loose eggs, cartons on hand, feed cost per dozen.",
-        parameters=none, handler=_get_eggs,
+        description="The chickens: eggs today and this week (or last week, this month, last month), lay rate, loose "
+                    "eggs, cartons on hand, feed cost per dozen.",
+        parameters={"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
+                    "required": []},
+        handler=_get_eggs, prompt_arg="question",  # still answered in code, his words as the question
         trigger_phrases=("how many eggs", "eggs this week", "eggs today", "lay rate", "are the hens laying",
                          "how are the chickens", "how are the hens", "egg count", "feed last", "chicken feed",
                          "more feed", "out of feed", "eggs pay for", "eggs cost me", "cost per dozen", "cost a dozen",

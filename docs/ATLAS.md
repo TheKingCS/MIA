@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1744 files, 375,521 lines; 1744 files describe themselves; 20,609 of 20,739 classes and functions are documented.
+1745 files, 375,602 lines; 1745 files describe themselves; 20,614 of 20,744 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-695 files, 194,065 lines; 9,847 of 9,933 classes and functions documented
+695 files, 194,115 lines; 9,850 of 9,936 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -993,7 +993,7 @@
 
 ## tests/: the test suite: what each part must do
 
-643 files, 100,361 lines; 8,397 of 8,441 classes and functions documented
+644 files, 100,392 lines; 8,399 of 8,443 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1152,6 +1152,7 @@
 - `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
+- `tests/test_eggs_span.py`: "How many eggs last week?" (core/assistant_goods_actions.py get_eggs): last week, this month and last month read from his words (a follow-up's own first) and counted from the flock's log, both ends counted.
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
 - `tests/test_energy_manager.py`: Unit tests for core.energy_manager. Isolates _DATA_DIR _ENERGY_SOURCES_FILE (and core.data_logger_manager's own data file, since readings are real DataLogger entries this manager passes through), same monkeypatch pattern as tests/test_data_logger_manager .py's isolated_paths.
 - `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators; a thinking model's working is left out, and only a readable value for a missi
