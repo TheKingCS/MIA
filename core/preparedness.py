@@ -20,7 +20,8 @@ skills ... offline"), worked out in code from his own pantry (core/kitchen_manag
   counted, never guessed.
 - **Not counted** (said plainly): power needs his batteries and generator; it waits for him (brainstorm 4.1).
 
-`say(context)` answers "how prepared am I?" / "how many days of water do I have?".
+`say(context)` answers "how prepared am I?"; its water part, `water_lines(context)`, is also the drinking half of
+"how many days of water do I have?" (core/assistant_turn.py says the property's stored water after it).
 """
 
 from __future__ import annotations
@@ -149,13 +150,13 @@ def _setting(context, key: str, default: int) -> int:
         return default
 
 
-def say(context, today: Optional[date] = None) -> str:
-    """For "how prepared am I?": water against his target, days of food from the staples, what to rotate, what
-    isn't counted, and power: his generator's days on the fuel in his records (core/power_ready.py; if that line
-    fails, it says so and the rest of the answer still comes)."""
-    today = today or date.today()
-    kitchen = getattr(context, "kitchen", None)
-    items = kitchen.all_pantry_items() if kitchen is not None else []
+def water_lines(context, items: Optional[list] = None) -> list:
+    """The drinking-water part of the answer: the days of it in the pantry for his people against his target, or how
+    much the target takes and how to log it; and any container it couldn't count. Also the first half of "how many
+    days of water do I have?" (core/assistant_turn._water_on_hand_reply)."""
+    if items is None:
+        kitchen = getattr(context, "kitchen", None)
+        items = kitchen.all_pantry_items() if kitchen is not None else []
     people = _setting(context, "prepared.people", 1)
     target = _setting(context, "prepared.target_days", TARGET_DAYS)
     days, unread = water_days(items, people)
@@ -170,6 +171,20 @@ def say(context, today: Optional[date] = None) -> str:
                      f"{target * people} gallons. Log it in Kitchen, Pantry, like \"water, 10 gallons\".")
     if unread:
         parts.append("I couldn't count " + ", ".join(unread[:3]) + ": give the bottle size, like \"16.9 oz bottles\".")
+    return parts
+
+
+def say(context, today: Optional[date] = None) -> str:
+    """For "how prepared am I?": water against his target, days of food from the staples, what to rotate, what
+    isn't counted, and power: his generator's days on the fuel in his records (core/power_ready.py; if that line
+    fails, it says so and the rest of the answer still comes).
+    Its water part is `water_lines`."""
+    today = today or date.today()
+    kitchen = getattr(context, "kitchen", None)
+    items = kitchen.all_pantry_items() if kitchen is not None else []
+    people = _setting(context, "prepared.people", 1)
+    who = "you" if people == 1 else f"{people} people"
+    parts = water_lines(context, items)
     soon = rotate(items, today)
     if soon:
         parts.append("Use soon, before it expires: " + ", ".join(f"{n} ({d:%b} {d.day})" for n, d in soon[:5]) + ".")

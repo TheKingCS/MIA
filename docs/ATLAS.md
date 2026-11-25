@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1790 files, 385,615 lines; 1790 files describe themselves; 21,015 of 21,145 classes and functions are documented.
+1791 files, 385,688 lines; 1791 files describe themselves; 21,019 of 21,149 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-713 files, 200,883 lines; 10,076 of 10,162 classes and functions documented
+713 files, 200,926 lines; 10,078 of 10,164 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1011,7 +1011,7 @@
 
 ## tests/: the test suite: what each part must do
 
-668 files, 102,717 lines; 8,568 of 8,612 classes and functions documented
+669 files, 102,747 lines; 8,570 of 8,614 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1609,6 +1609,7 @@
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py).
 - `tests/test_watchdog_lab.py`: The ESP32 course's capstone, the greenhouse's safety brain (core/esp32_path.py stage 7, core/esp32_sim.py `_watchdog`): a watchdog that goes safe on its own after 15 seconds without a heartbeat, refuses a dose while safe or mid-dose, recovers on a heartbeat, and stays stopped after BOOT whatever com
 - `tests/test_water_budget.py`: The whole property's water (core/water_budget.py): the house, garden, orchard and flock a day from his records (each estimate said as one), the greenhouse said as not counted, tanks at their latest logged level, the days the stored water carries the outdoor uses, the roof's catch from his logged rai
+- `tests/test_water_on_hand.py`: "How many days of water do I have?" is answered both ways it can mean (core/assistant_turn._water_on_hand_reply; live check, 2026-11-25: three tools matched and the model asked for the catchment roof): the pantry's drinking water against his target (core/preparedness.water_lines, the same words "how
 - `tests/test_watering.py`: "Should I water the garden today?" (core/weather_watch.watering): rain now or likely tomorrow says hold off, a hot dry day says water deeply in the morning, the crops in the ground named, every answer ending with the soil check, no forecast still giving the soil check; tomorrow's words read when the
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
