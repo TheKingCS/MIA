@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1791 files, 385,688 lines; 1791 files describe themselves; 21,019 of 21,149 classes and functions are documented.
+1792 files, 385,768 lines; 1792 files describe themselves; 21,024 of 21,154 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-713 files, 200,926 lines; 10,078 of 10,164 classes and functions documented
+713 files, 200,975 lines; 10,080 of 10,166 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1011,7 +1011,7 @@
 
 ## tests/: the test suite: what each part must do
 
-669 files, 102,747 lines; 8,570 of 8,614 classes and functions documented
+670 files, 102,778 lines; 8,573 of 8,617 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1332,6 +1332,7 @@
 - `tests/test_market_eve.py`: The day before a market day (core/market_eve.py): what to bring from what usually sells, beside what's on hand, the short ones and the goods without history named; once per market day, only for an open one tomorrow. *(2 undocumented)*
 - `tests/test_material_list_is_a_lookup.py`: A materials question is a lookup (core/main_thread.call_changes, core/tool_loop._wants_change; live check, 2026-11-25: "what do I need to build garage shelves 8 feet wide?" reached for material_list, was taken for a change, and the model answered with quantities of its own): material_list and cut_li
 - `tests/test_material_manager.py`: Unit tests for core.material_manager. Isolates _DATA_DIR/_MATERIALS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. materials_needing_restock() is also tested directly as a pure function (no filesystem I/O), same reasoning as every other pur
+- `tests/test_materials_reply.py`: A materials question with its structure and size answered in code (core/assistant_plan_actions.materials_reply; live check, 2026-11-25: "how many fence posts for 200 feet?" reached find_plans, and once the model said "2 posts" for 100 feet): the calculators' list, never saved; with no size, the size
 - `tests/test_meal_plan.py`: Meal plans, prep and the shopping list (core/meal_plan.py, DEC-0020), with their actions (meal.*) and missions. Placeholder recipes and values.
 - `tests/test_meat_cure.py`: "How much curing salt for 5 pounds of pork belly?" (core/meat_cure.py): the weight read from his words in any unit, bacon at the USDA's 120 ppm and the rest at 156, a salt percentage he names, the fridge and tested-recipe advice, and a question without a weight asked back.
 - `tests/test_memories_module.py`: Unit tests for modules.memories.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).

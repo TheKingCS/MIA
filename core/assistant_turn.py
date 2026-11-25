@@ -116,7 +116,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A design of hers not built yet is answered there too, as a plan.
     A first-aid how-to too (`_first_aid_reply`).
     A how-to from a course lesson too (`_lesson_reply`).
-    Days of water too (`_water_on_hand_reply`)."""
+    Days of water too (`_water_on_hand_reply`).
+    A materials question too (`_materials_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -153,6 +154,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _lesson_reply(context, prompt)  # "how do I sharpen a chisel?": her course's lesson, as in a turn
     if walked is None:
         walked = _water_on_hand_reply(context, prompt)  # "how many days of water do I have?", as in a turn
+    if walked is None:
+        walked = _materials_reply(context, prompt)  # "how many fence posts for 200 feet?", as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -258,6 +261,18 @@ def _water_on_hand_reply(context, prompt: str):
         log.exception("Couldn't answer the water on hand")
         return None
     return f"{drinking}\n\nFor the whole property: {stored}"
+
+
+def _materials_reply(context, prompt: str):
+    """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
+    calculators' list, never the model's); None otherwise."""
+    from core.assistant_plan_actions import materials_reply
+
+    try:
+        return materials_reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't work out the materials")
+        return None
 
 
 def _lesson_reply(context, prompt: str):
@@ -380,6 +395,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A first-aid how-to is answered in the floor's own words (`_first_aid_reply`).
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
+    A materials question with its size, from the calculators (`_materials_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -479,6 +495,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _lesson_reply(context, prompt)  # "how do I purify water from a creek?": her course's lesson
         if walked is None:
             walked = _water_on_hand_reply(context, prompt)  # days of water: the pantry's and the property's
+        if walked is None:
+            walked = _materials_reply(context, prompt)  # a structure and its size: the calculators' list
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:

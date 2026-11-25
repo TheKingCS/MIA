@@ -1485,7 +1485,8 @@ NOT_FOR = {
     # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"; nor a question about
     # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
     # a survival how-to ("the best way to start a fire in the rain", live sweep 2026-11-25) is no project of his
-    "project picture": re.compile(r"\b(fire|tinder|kindling|purify|creek|compass|shelter|"
+    "project picture": re.compile(r"\b(fire|tinder|kindling|purify|creek|compass|shelter|plans for|blueprints?|"
+                                  r"(?:do|does) (?:we|i) have (?:any )?plans|"
                                   r"materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
                                   r"how many (?:solar )?panels|panels (?:would|do) i need|kwh|size (?:a|my) solar|"
                                   r"hens?|chickens?|coop|laying|"

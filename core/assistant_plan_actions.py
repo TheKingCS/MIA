@@ -24,6 +24,9 @@ them.
 Tools travel in three domains: `plans` for asking, `plan_buying` only on
 buying words, and `plan_saving` (keep a plan, start a project) only when
 the person says to, so a question never saves anything.
+
+`materials_reply(context, words)`: a materials question naming a structure and its size, answered in code before the
+model (core/assistant_turn.py), so a list's quantities are never the model's.
 """
 
 from __future__ import annotations
@@ -307,6 +310,30 @@ def _action_material_list(context, arguments: dict) -> str:
     return said
 
 
+# A materials question with its structure and size in the words, answered in code (live check, 2026-11-25: "how many
+# fence posts for 200 feet?" went to find_plans, and once the model said "2 posts" for 100 feet)
+_MATERIALS_ASK = re.compile(r"\bhow many (?:fence posts|posts|t-posts|rails|pickets|bags of concrete|studs|2x4s|2x6s|"
+                            r"joists|rafters|sheets(?: of plywood)?|boards)\b|\bwhat do (?:i|we) need to build\b|"
+                            r"\bhow much (?:lumber|wood|concrete) (?:for|to build|do i need)\b|"
+                            r"\bmaterials?(?: list)? for (?:a|an|the|my)\b", re.I)
+
+
+def materials_reply(context, words: str) -> Optional[str]:
+    """Pure logic but for the plans shelf. A materials question naming a structure MIA can work out and its size
+    ("how many fence posts for 200 feet?", "what do I need to build a 10 by 12 shed?") answered by material_list in
+    code, never saved; with no size, the size asked for (and a fence's post spacing: the model had said "2-3 posts
+    per 8-foot section"); None when the words aren't one or name no structure she knows."""
+    said = str(words or "")
+    calc = structure_for(said) if _MATERIALS_ASK.search(said) or re.search(r"\bhow many posts\b", said, re.I) else ""
+    if not calc:
+        return None
+    if not size_words(said):  # no size: what the plan's spacing is, for a fence, and the size asked for
+        spacing = ("A wood fence's posts go every 8 ft, with one more at the end (so 26 for 200 ft), for a 6 ft fence "
+                   "10 ft posts set 2.5 ft deep in concrete. " if calc == "fence" else "")
+        return spacing + "Tell me its size and I'll work out the whole list, like \"a 200 foot fence\" or \"a 10 by 12 shed\"."
+    return _action_material_list(context, {"structure": said, "size": said})
+
+
 def _action_shopping_list(context, arguments: dict) -> str:
     """Tool plan_shopping_list: a plan's materials (at a size, when given) against the workshop's stock: what's on
     hand, what to buy, and its cost where prices are known."""
@@ -505,7 +532,8 @@ def register_plan_actions(registry: AssistantActionRegistry) -> None:
     """Registers the plans shelf's tools: asking in domain plans (next_cut reads a plan's cuts one at a time, for the
     shop, at the size he's building; never on the first cut of hay), the shopping list in plan_buying, and keeping a plan,
     starting a project or letting a kept plan go in plan_saving (each domain brought only by its own words).
-    "Shelf" and "shelves" bring the plans tools too."""
+    "Shelf" and "shelves" bring the plans tools too.
+    Fence posts, posts and rails bring material_list too."""
     sizes = {"size": {"type": "string", "description": "The size as they said it, e.g. '10 by 12' or '4x8x2' (feet)."},
              "length_ft": {"type": "number", "description": "Length in feet."},
              "width_ft": {"type": "number", "description": "Width in feet (a deck or floor: the joist span)."},
@@ -538,7 +566,9 @@ def register_plan_actions(registry: AssistantActionRegistry) -> None:
           **sizes, "keep": {"type": "boolean", "description": "Save it to the plans shelf."}}, ["structure"],
          _action_material_list, ("material list", "materials list", "materials for", "what do i need to build",
                                  "how much lumber", "how many 2x4", "how many studs", "cut list", "how much concrete",
-                                 "how many bags of concrete", "how many pickets", "what would it take to build")),
+                                 "how many bags of concrete", "how many pickets", "what would it take to build",
+                                 "how many fence posts", "fence posts for", "how many posts for", "how many t-posts",
+                                 "how many rails for")),
         ("plan_shopping_list", "What's still to buy for a plan already on the shelf, by its name: its materials "
                                "against what the workshop has on hand, with costs. For 'what do I need to build X', "
                                "use material_list instead.", {**name, **sizes}, ["name"], _action_shopping_list,
