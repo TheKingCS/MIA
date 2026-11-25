@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1808 files, 387,704 lines; 1808 files describe themselves; 21,124 of 21,250 classes and functions are documented.
+1810 files, 387,900 lines; 1810 files describe themselves; 21,134 of 21,260 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-715 files, 202,050 lines; 10,120 of 10,201 classes and functions documented
+716 files, 202,169 lines; 10,124 of 10,205 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -328,6 +328,7 @@
 - `core/intent_manager.py`: Intent — the "why" layer in the connective-infrastructure pass that followed the "My Hero's Path" architecture review (see docs/ROADMAP.md's dated entry for the full reasoning). An Intent is a long-running, open-ended goal ("Homestead Independence," "Get really good at making things") that a core.pr
 - `core/inventory_manager.py`: Backs the Inventory tool (modules/toolbox/tools/inventory_tool.py) — milestone 3.5 in docs/ROADMAP.md. Same persisted-JSON pattern as core.calendar_manager.CalendarManager / core.alarm_manager.AlarmManager: data/inventory_items.json, a dataclass with to_dict/from_dict, a manager class wrapping load/
 - `core/job_manager.py`: MIA Home's fabrication jobs — the second slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section and `core/material_manager.py`'s docstring for the first slice), adapted to this project's persisted-JSON-manager convention. Same shape as every other man
+- `core/job_quote.py`: A quote from a job's words (brainstorm round 14; Zac's vision: "my businesses skills ... automation of as much as possible"): "write a quote for Sarah's 12 by 16 deck" works the job out in code and drafts the quote for his yes.
 - `core/journal_manager.py`: Backs the Notes module (modules/notes/module.py) — milestone 3.4 in docs/ROADMAP.md, which upgrades that module from a placeholder into the "Notes/Journal Engine" described in ROADMAP.md's shared core services table: dated, searchable, taggable entries. It's a core service (not module-local) specifi
 - `core/journal_reflection.py`: The opt-in weekly journal reflection (2026-09-28), the follow-up to Cognitive Extension slice C: once a week (Sunday evening by default), if the owner journaled that week, MIA says a reflection is ready. The details (what came up most, how the mood moved) are given only when the owner asks ("how was
 - `core/key_unlock.py`: Where the secret that opens MIA's data key comes from on Linux (DEC-0126's Linux step, for MIA OS and the Pi: DEC-0168). On Windows the data key in data/.keys/ is protected by DPAPI; Linux has no DPAPI, so there `core.at_rest` wraps the data key under an **unlock secret**, and this module is the onl
@@ -1013,7 +1014,7 @@
 
 ## tests/: the test suite: what each part must do
 
-684 files, 103,639 lines; 8,633 of 8,678 classes and functions documented
+685 files, 103,716 lines; 8,639 of 8,684 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1282,6 +1283,7 @@
 - `tests/test_inventory_tool.py`: Unit test for modules.toolbox.tools.inventory_tool.format_item_row — pure formatting logic, no Qt event loop needed.
 - `tests/test_invoice_email.py`: An order's invoice (core/business_actions.invoice_email, brainstorm 5.1): what, the price, what's been paid, the balance and when it's due, drafted for his Send, never sent; a paid-up order's is a receipt; a delivered order can be invoiced, a cancelled one can't; by voice too (draft_invoice). *(1 undocumented)*
 - `tests/test_job_manager.py`: Unit tests for core.job_manager. Isolates _DATA_DIR/_JOBS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. consume_material() total_cost()/produce_product() also need core.material_manager core.product_manager isolated in the same tmp_path, s
+- `tests/test_job_quote.py`: A quote from a job's words (core/job_quote.py; brainstorm round 14): "write a quote for Sarah's 12 by 16 deck" reads the customer and the structure with its size, works the materials out with the calculators, prices what the workshop has prices for (never guessing the rest), and drafts the quote (qu
 - `tests/test_journal_manager.py`: Unit tests for core.journal_manager. Isolates _DATA_DIR/_ENTRIES_FILE into a tmp_path scratch area (same monkeypatch pattern as test_calendar_manager.py's isolated_paths).
 - `tests/test_journal_reflection.py`: The opt-in weekly journal reflection (core/journal_reflection.py): when it's due, the content-free notice, the reflection itself, and that asking for it is a private turn.
 - `tests/test_key_unlock.py`: MIA's data key on Linux (DEC-0126's Linux step; core/key_unlock.py, core/at_rest.py): where there's no DPAPI the data key is wrapped under an unlock secret that systemd keeps for this user on this machine. Checked here, with stand-ins for systemd so it runs on any system: the key file holds only the

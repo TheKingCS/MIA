@@ -125,7 +125,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A course's next lesson too (`_next_lesson_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
-    The morning briefing too (`_morning_briefing_reply`)."""
+    The morning briefing too (`_morning_briefing_reply`).
+    A quote from a job's words too (`_job_quote_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -162,6 +163,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _lesson_reply(context, prompt)  # "how do I sharpen a chisel?": her course's lesson, as in a turn
     if walked is None:
         walked = _water_on_hand_reply(context, prompt)  # "how many days of water do I have?", as in a turn
+    if walked is None:
+        walked = _job_quote_reply(context, prompt)  # "write a quote for Sarah's 12 by 16 deck", as in a turn
     if walked is None:
         walked = _materials_reply(context, prompt)  # "how many fence posts for 200 feet?", as in a turn
     if walked is None:
@@ -515,6 +518,18 @@ def _morning_briefing_reply(context, prompt: str):
         return None
 
 
+def _job_quote_reply(context, prompt: str):
+    """"Write a quote for Sarah's 12 by 16 deck", in code (core/job_quote.reply: the calculators' list, priced from
+    the workshop, a draft quote for his yes); None otherwise."""
+    from core import job_quote
+
+    try:
+        return job_quote.reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't draft the quote")
+        return None
+
+
 def _materials_reply(context, prompt: str):
     """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
     calculators' list, never the model's); None otherwise."""
@@ -655,6 +670,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A reminder every week goes on the calendar repeating (`_weekly_reminder_reply`).
     What he says he spent is recorded (`_spent_reply`).
     The morning briefing he asks for, set or turned off (`_morning_briefing_reply`).
+    A quote from a job's words, a draft for his yes (`_job_quote_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -754,6 +770,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _lesson_reply(context, prompt)  # "how do I purify water from a creek?": her course's lesson
         if walked is None:
             walked = _water_on_hand_reply(context, prompt)  # days of water: the pantry's and the property's
+        if walked is None:
+            walked = _job_quote_reply(context, prompt)  # a quote from a job's words: a draft for his yes
         if walked is None:
             walked = _materials_reply(context, prompt)  # a structure and its size: the calculators' list
         if walked is None:

@@ -54,7 +54,18 @@ EVERYDAY = (
     # money said that isn't an expense of his (bills, debts, people: their own tools)
     "I paid $120 for the electric bill", "I paid $500 on the truck loan", "I paid Sarah $40 back",
     "how much have I spent on groceries?", "I spent the day on the fence", "I paid the vet",
+    # quotes that aren't a structure with its size (make_quote's), and quote talk
+    "make a quote for Sarah's cutting board", "send Sarah the deck quote", "did Sarah accept the deck quote?",
 )
+
+
+def _job_words(words: str):
+    """The job quote's reading of the words, with a structure and size (no quote is made here)."""
+    from core.assistant_plan_actions import size_words, structure_for
+    from core.job_quote import job_of
+
+    found = job_of(words)
+    return found if found and structure_for(found[1]) and size_words(found[1]) else None
 
 
 def _briefing_words(words: str):
@@ -68,7 +79,8 @@ def _briefing_words(words: str):
 def routes(tmp_path):
     """Each code route, as a function of the words; a change route records instead of acting.
     What he spent is one of them.
-    The morning briefing's reading of the words too."""
+    The morning briefing's reading of the words too.
+    And the job quote's."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -83,6 +95,7 @@ def routes(tmp_path):
         "drill": lambda w: drills.requested(w),
         "first-aid how-to": lambda w: first_aid_floor.teach(w),
         "spent": lambda w: turn._spent_reply(context, w),
+        "job quote": lambda w: _job_words(w),
         "morning briefing": lambda w: _briefing_words(w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),
     }
@@ -96,6 +109,7 @@ MEANT = {
     "weekly reminder": "remind me every Monday to check the water filter", "drill": "give me a choking drill",
     "first-aid how-to": "how do you use a tourniquet?", "lab": "walk me through building the pot lab",
     "spent": "I spent $30 on groceries",
+    "job quote": "write a quote for Sarah's 12 by 16 deck",
     "morning briefing": "every morning at 7, tell me the weather and my day",
 }
 
