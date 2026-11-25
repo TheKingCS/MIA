@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1779 files, 384,284 lines; 1779 files describe themselves; 20,957 of 21,087 classes and functions are documented.
+1780 files, 384,321 lines; 1780 files describe themselves; 20,958 of 21,088 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-711 files, 200,014 lines; 10,051 of 10,137 classes and functions documented
+711 files, 200,025 lines; 10,051 of 10,137 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1009,7 +1009,7 @@
 
 ## tests/: the test suite: what each part must do
 
-659 files, 102,265 lines; 8,535 of 8,579 classes and functions documented
+660 files, 102,291 lines; 8,536 of 8,580 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1289,6 +1289,7 @@
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte
 - `tests/test_left_off.py`: Where he left off (core/left_off.py, brainstorm 1.2): missions changed lately with their next step, Planner drafts not yet confirmed, open promises and recent decisions (newest first, without their label said twice), from the records only. *(2 undocumented)*
+- `tests/test_lesson_named_course.py`: A lesson asked for by its course's name (core/assistant_path_actions.py; live check, 2026-11-25): a course he hasn't started is said as not started, never swapped for the one he has; with no course named, his one started course's next lesson, as before.
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_library_course.py`: Courses from her offline library (core/library_course.py): "I want to learn about beekeeping" builds a Classroom course, one lesson a stage the library covers, each from one article never used twice and only one that fits the subject; too little in the library is said, never padded; no library is sa
 - `tests/test_life_areas.py`: The life state's `areas` section (core/life_areas.py): each area reads its store live, says PLANNED without one, never breaks the life state when one fails, keeps a child out of the money areas, and every area names a store MIA really has, and the homestead area reads its snapshots' critical alerts.

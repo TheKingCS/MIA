@@ -34,19 +34,27 @@ def _book(context) -> Optional[paths.PathBook]:
 
 
 def _which(context, book: paths.PathBook, words: str) -> Optional[paths.Program]:
-    """The path the words mean among those started (or the only one started)."""
+    """The path the words mean among those started (or the only one started); None when the words name a course
+    that isn't started (`_ask_which` then says so)."""
     started = [paths.program_of(context, p) for p in book.started()]
     started = [p for p in started if p is not None]
     if len(started) == 1 and not words:
         return started[0]
     found = paths.find_program(context, words) if words else None
-    if found is not None and book.path(found.id) is not None:
-        return found
+    if found is not None:
+        # a course he named that isn't started is never swapped for the one that is (live check, 2026-11-25: "teach me
+        # small business basics" taught Money basics' first lesson)
+        return found if book.path(found.id) is not None else None
     return started[0] if len(started) == 1 else None
 
 
-def _ask_which(context, book: paths.PathBook) -> str:
-    """The question when more than one path is started."""
+def _ask_which(context, book: paths.PathBook, words: str = "") -> str:
+    """The question when more than one path is started; or, when the words name a course he hasn't started, that he
+    hasn't and how to."""
+    named = paths.find_program(context, words) if words.strip() else None
+    if named is not None and book.path(named.id) is None:
+        return (f"You haven't started {named.name} yet. Say \"I want to learn {named.name.lower()}\" and I'll set it up "
+                "with you.")
     names = [paths.program_of(context, p).name for p in book.started() if paths.program_of(context, p)]
     return "Which one? " + ", ".join(names) + "." if names else "You haven't started anything yet: say what you'd like to learn."
 
@@ -80,14 +88,15 @@ def _action_start(context, arguments: dict) -> str:
 
 
 def _action_lesson(context, arguments: dict) -> str:
-    """Tool learning_lesson: the next lesson for where they are, one named, or (guitar) a chord's shape."""
+    """Tool learning_lesson: the next lesson for where they are, one named, or (guitar) a chord's shape.
+    A course named that isn't started is said as not started, never swapped for the one that is."""
     book = _book(context)
     if book is None:
         return "Learning paths aren't on this MIA."
     topic = str(arguments.get("topic") or "").strip()
     program = _which(context, book, str(arguments.get("path") or topic))
     if program is None:
-        return _ask_which(context, book)
+        return _ask_which(context, book, str(arguments.get("path") or topic))
     if program.id == "guitar" and topic:
         from core.guitar import CHORDS, shape_text
 
@@ -107,13 +116,14 @@ def _action_lesson(context, arguments: dict) -> str:
 
 
 def _action_practice(context, arguments: dict) -> str:
-    """Tool log_practice: keeps a practice session on a path and says how the week's homework stands."""
+    """Tool log_practice: keeps a practice session on a path and says how the week's homework stands.
+    A course named that isn't started is said as not started."""
     book = _book(context)
     if book is None:
         return "Learning paths aren't on this MIA."
     program = _which(context, book, str(arguments.get("path") or ""))
     if program is None:
-        return _ask_which(context, book)
+        return _ask_which(context, book, str(arguments.get("path") or ""))
     try:
         book.log_practice(program, arguments.get("minutes") or 0, str(arguments.get("worked_on") or ""),
                           arguments.get("value"))
@@ -148,13 +158,14 @@ def _find_check(program: paths.Program, book: paths.PathBook, words: str) -> Opt
 
 def _action_check(context, arguments: dict) -> str:
     """Tool learning_check: a counted or said check passed or not; a recorded one read from the person's records; one
-    a verifier checks points to the page."""
+    a verifier checks points to the page.
+    A course named that isn't started is said as not started."""
     book = _book(context)
     if book is None:
         return "Learning paths aren't on this MIA."
     program = _which(context, book, str(arguments.get("path") or arguments.get("check") or ""))
     if program is None:
-        return _ask_which(context, book)
+        return _ask_which(context, book, str(arguments.get("path") or ""))
     check = _find_check(program, book, str(arguments.get("check") or ""))
     if check is None:
         return "Which check? " + paths.next_step(book, program)
