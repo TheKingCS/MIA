@@ -38,6 +38,10 @@ and Small business basics (core/business_path.py, a Business skill), each with a
 report their reading to MIA as a sensor over Wi-Fi (bench_designs.connected); a third and a fourth independent review,
 every finding fixed (bench designs only as a request, her designs only proper names, parts by whole word, planning
 words never a drill, a course's id only as the whole subject). 8391 passing.
+Then: a part from a photo (Look ties a module's printed model to its spec); a course he hasn't started is said as not
+started, never swapped for one he has; and the ESP32 course's capstone, the greenhouse's safety brain (a watchdog lab:
+safe on its own after 15 s without a heartbeat, BOOT a stop for good, an LED for the pump, simulated), with "simulate
+the X lab" and a why about a named lab answered in code by voice, the why from the lesson's own material. 8400 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the

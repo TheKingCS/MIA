@@ -354,7 +354,9 @@ vision, each with what it needs:
 - **The capstone: his greenhouse node's firmware as the last lab** (plan step 5; needs nothing new). The ESP32 course
   ends at a sleeping soil node; the next stage builds the real greenhouse node's sensors one by one on the bench,
   each checked by what it prints, then hands off to homestead/ (its own rules: DEC-0185, read homestead/CLAUDE.md).
-  He'd learn by building the thing his homestead runs on.
+  He'd learn by building the thing his homestead runs on. *Built 2026-11-25 as its safety board in small* (stage 7,
+  the watchdog lab: the PC proposes, the board decides, silence means safe), pointing at the real firmware's LED test
+  rather than flashing it: that firmware's first run is the homestead's own milestone.
 - **"Build me a ..." from My Bench** (needs nothing): he names a goal ("a coop door that opens at sunrise", "a
   freezer alarm"), MIA picks the parts from his Component DB and the specs, draws the circuit on the bench, checks it,
   and writes the sketch; flashing stays his yes. The free build becomes a designer, not only a checker.

@@ -22,8 +22,13 @@ Protocol as a plan); MIA can hear (the Vosk model is in voice_models/ on the PC)
 with the mic; on My Bench, "build me a tank level gauge", Put It On The Bench, Save This Build. Next ideas: brainstorm
 round 13 (the greenhouse node as the ESP32 capstone, drills for the flock and money, a part from a photo).
 Since: the flock, money and business courses and drills are built; bench designs can report to MIA (needs MIA's
-server listening on the home network: Phone Access with server.host 0.0.0.0 and port 8765 open, his call). Left from
-round 13: the greenhouse capstone, a part from a photo, Wokwi or QEMU (his say).
+server listening on the home network: Phone Access with server.host 0.0.0.0 and port 8765 open, his call). A part
+from a photo is built (Look reads a module's model and ties it to its spec). The capstone is built (2026-11-25,
+4c565a85): stage 7 of the ESP32 course, the greenhouse's safety brain, a watchdog lab (an LED for the pump, hb and dose
+typed in the serial monitor, safe after 15 s of quiet, BOOT a stop for good), simulated too; it touches nothing in
+homestead/ and only points at homestead/firmware/safety_mcu, whose own LED test is the greenhouse's next milestone.
+At the PC: "simulate the watchdog lab", "why does the watchdog lab refuse a dose?". Left from round 13: Wokwi or QEMU
+(his say).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
