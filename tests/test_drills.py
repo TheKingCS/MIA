@@ -9,6 +9,7 @@ page's data; and a drill never touching his path.
 The canning and carpentry drills by their courses' words, and the Classroom's list of courses with labs or drills.
 And ordinary messages (a stud, a worst case scenario, a drill at work) that never start one, with commands let
 through while one waits.
+The power outage drill too, named by its own words.
 """
 
 from types import SimpleNamespace
@@ -63,7 +64,8 @@ def test_stopping_and_words_that_arent_a_drill():
 def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_lists_them():
     """"Give me a canning drill" is the green beans; "run a carpentry drill" the 2x6; water-bathing green beans is
     wrong. The Classroom's Hands-on labs lists the board courses first (ESP32, Arduino), then each course with drills,
-    said with its count."""
+    said with its count.
+    Survival has four drills now, the power outage among them."""
     canning = drills.reply(None, _said(), "give me a canning drill")
     assert canning.startswith("Drill: Putting up green beans.")
     assert drills.reply(None, _said(), "run a carpentry drill").startswith("Drill: Cutting a 2x6 to length.")
@@ -72,7 +74,7 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     listed = lab_page.hands_on()
     assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "carpentry"]
     assert listed[3]["what"] == "Lessons, and 1 drill that judges each call"
-    assert listed[2]["what"] == "Lessons, and 3 drills that judge each call"
+    assert listed[2]["what"] == "Lessons, and 4 drills that judge each call"
 
 
 def test_ordinary_messages_never_start_a_drill_and_a_waiting_drill_lets_commands_through():
@@ -112,3 +114,15 @@ def test_the_survival_course_page_has_its_drills_and_a_drill_leaves_his_path_alo
     for letter in "BCAA":
         said = drills.reply(None, _said(said), letter)
     assert "That's the drill: Every call the best one." in said and book.paths == {}
+
+
+def test_the_power_outage_drill_is_named_by_its_own_words_and_keeps_the_cdc_and_usda_rules():
+    """"Give me the power outage drill" and "run a blackout drill" start it; the garage is wrong (carbon monoxide), 20
+    feet out is best; a fridge at 50 °F means out with the perishables; "is the power out?" isn't a drill."""
+    start = drills.reply(None, _said(), "give me the power outage drill")
+    assert start.startswith("Drill: The power's out.")
+    assert drills.reply(None, _said(), "run a blackout drill").startswith("Drill: The power's out.")
+    outage = drills.by_id("power_out")
+    assert drills.judge(outage, 1, 0)["verdict"] == "wrong" and "20 feet" in drills.judge(outage, 1, 0)["best"]
+    assert "above 40 °F for more than 2 hours" in drills.judge(outage, 3, 0)["best"]
+    assert drills.reply(None, _said(), "is the power out?") is None

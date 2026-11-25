@@ -6,7 +6,8 @@ Scenario drills: the simulator for a course without a board (docs/future/INTERAC
 2026-11-25: the ESP32 labs "could be used as a standard for other teaching areas", and what he liked most was trying
 it in a simulator first). A drill puts him in a situation and asks a few decisions in order; each choice is judged
 best, fine or wrong, with why, written from the course's own sources (a survival drill from core/bushcraft.py's:
-US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA; canning from core/gardening_path.py's, the USDA Complete
+US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA, and for a power outage the CDC on generators and
+carbon monoxide and the USDA on food in a fridge and freezer without power; canning from core/gardening_path.py's, the USDA Complete
 Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
 logic; nothing kept.
 
@@ -154,6 +155,45 @@ DRILLS: tuple = (
                  ("Dry the wood by the fire first", "fine",
                   "It works once a fire is going, for the next load, not to start one.")),
           ), "fire"),
+    Drill("power_out", "bushcraft", "The power's out",
+          "A winter storm takes the power out in the evening; the forecast says it could be two days. You have a "
+          "portable generator, a full chest freezer and a half-full fridge.",
+          (
+              _q("Where do you run the generator?",
+                 ("In the garage with the door open", "wrong",
+                  "Carbon monoxide builds up even with the door open; you can't see or smell it, and it kills. Never "
+                  "in a garage, a basement or any part of the house."),
+                 ("Outside, at least 20 feet from the house, its exhaust away from windows and doors", "best",
+                  "That's the CDC's distance: far enough that the exhaust doesn't drift in."),
+                 ("On the porch, under the roof out of the snow", "wrong",
+                  "Right by the house the exhaust comes in through windows and doors; keep it 20 feet away.")),
+              _q("What do you do with the fridge and freezer?",
+                 ("Keep the doors shut", "best",
+                  "Shut, a fridge keeps food safe about 4 hours, a full freezer about 48 and a half-full one about 24 "
+                  "(the USDA's times)."),
+                 ("Check inside every hour to see how they're holding", "wrong",
+                  "Every opening lets the cold out; keep them shut and use a thermometer when you do look."),
+                 ("Move everything into coolers right away", "fine",
+                  "It works for what's in the fridge once it's been out a few hours, with ice; the freezer is better "
+                  "left shut.")),
+              _q("The power comes back the next afternoon. The fridge thermometer reads 50 °F. What about the milk "
+                 "and leftovers?",
+                 ("Smell them, and keep what seems fine", "wrong",
+                  "The germs that make you sick don't always change the smell or look."),
+                 ("Throw out the perishables that sat above 40 °F for more than 2 hours", "best",
+                  "That's the USDA's rule: when in doubt, throw it out."),
+                 ("Cook them well and eat them today", "wrong",
+                  "Cooking doesn't undo every toxin some germs leave behind; above 40 °F for over 2 hours, out it "
+                  "goes.")),
+              _q("It's getting cold in the house tonight. How do you keep warm?",
+                 ("Run the gas oven with its door open", "wrong",
+                  "An oven isn't a heater: it's a fire risk and a source of carbon monoxide."),
+                 ("Bring the camp stove or a charcoal grill inside", "wrong",
+                  "Burning fuel indoors without a vent fills the house with carbon monoxide."),
+                 ("Close off one room, layer up, and keep a working CO alarm with fresh batteries", "best",
+                  "A small room holds its warmth, layers hold yours, and the alarm guards against any fuel burning "
+                  "nearby.")),
+          ), "priorities"),
     Drill("canning_day", "gardening", "Putting up green beans",
           "A Saturday with a bushel of green beans from the garden. You have a boiling-water canner, a pressure "
           "canner, new lids, and your grandmother's recipe card.",
@@ -238,10 +278,18 @@ def by_id(drill_id: str) -> Optional[Drill]:
     return next((d for d in DRILLS if d.id == drill_id), None)
 
 
+# Words that name a drill besides its title's ("the power outage drill", "a blackout drill").
+ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "generator", "power"),
+        "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw")}
+
+
 def named(words: str) -> Optional[Drill]:
-    """Pure logic. The drill his words name by its title or a word of it ("the water drill"), or None. "Fire drill"
-    alone is the house's kind, not this."""
+    """Pure logic. The drill his words name by its own words (`ALSO`: "the power outage drill") or its title or a word
+    of it ("the water drill"), or None. "Fire drill" alone is the house's kind, not this."""
     said = re.sub(r"\bfire drill\b", " ", str(words or "").lower())
+    for drill in DRILLS:
+        if any(re.search(rf"\b{re.escape(w)}\b", said) for w in ALSO.get(drill.id, ())):
+            return drill
     for drill in DRILLS:
         title = drill.title.lower()
         if title in said or any(re.search(rf"\b{w}\b", said) for w in title.split() if len(w) > 3):
@@ -317,7 +365,8 @@ _REQUEST = re.compile(r"\b(give me|run|start|do|try|let's|lets|i want|i'd like|h
                       r"test me)\b")
 _SUBJECTS = sorted({"survival", "bushcraft", "wilderness", "outdoor", "canning", "preserving", "food safety",
                     "carpentry", "circular saw", "saw", "green beans", "dusk"}
-                   | {w for d in DRILLS for w in d.title.lower().split() if len(w) > 3 and w != "fire"}, key=len,
+                   | {w for d in DRILLS for w in d.title.lower().split() if len(w) > 3 and w != "fire"}
+                   | {w for words in ALSO.values() for w in words}, key=len,
                    reverse=True)
 _SUBJECT = "(?:" + "|".join(re.escape(s) for s in _SUBJECTS) + ")"
 _ASKED_FOR = re.compile(rf"\b{_SUBJECT}\s+(?:drill|scenario)s?\b|\b(?:drill|scenario|quiz)\s+(?:me\s+)?(?:on|about|for)\s+"
