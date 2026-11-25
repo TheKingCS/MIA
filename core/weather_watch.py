@@ -17,6 +17,11 @@ the forecast (core/weather.py); the model only says it.
   them in for the night.
 - **The flock** (any flock with birds): a high of 90°F (32°C) or over, shade, cool water and air; a low of 32°F
   (0°C) or under, the waterer may freeze by morning.
+- **The house's pipes** (always: everyone has some): a low of 20°F (-7°C) or under, when pipes in unheated spots
+  can freeze: let a faucet on an outside wall drip, open the cabinets under the sinks, unhook the hoses, keep the heat
+  at 55°F (13°C) or above; and with a well pump among his assets (core/outage._has_well_pump), keep its pump house or
+  pressure tank from freezing. Said when he asks only: the daily message leaves it out (`ASKED_ONLY`), since a new
+  kind of unprompted message is his to decide.
 - **A build in progress** (a confirmed Planner build with a mission still active): rain RAIN_LIKELY% likely or more
   tomorrow (or, where the forecast gives no chance, its words say rain, showers, drizzle or thunder), plan the outside
   steps around it and cover what's out.
@@ -53,6 +58,8 @@ FLOCK_HEAT = 90
 WATER_FREEZE = 32
 HARVEST_WEEKS = 3  # a crop is still in the ground this long past its first harvest
 RAIN_LIKELY = 60  # percent chance of rain tomorrow worth a word to a build in progress
+PIPES_FREEZE = 20  # pipes in unheated spots can freeze at about this low
+ASKED_ONLY = ("pipes",)  # concerns said when he asks, never as the daily message (his say)
 
 
 def _f(value: float, unit: str) -> float:
@@ -94,11 +101,11 @@ def _names(names: list) -> str:
     return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
-def concerns(forecast: dict, growing: dict, birds: int, builds: tuple = ()) -> list[dict]:
-    """Pure logic. What tonight's and the next days' weather means for what he's growing, keeping and building: each
-    {kind, text}, the most pressing first. `forecast` is core/weather.card's (high, low, unit, tomorrow); `builds` the
-    titles of builds in progress (rain from tomorrow's chance, or its words when no chance is given); [] without a
-    forecast."""
+def concerns(forecast: dict, growing: dict, birds: int, builds: tuple = (), well: bool = False) -> list[dict]:
+    """Pure logic. What tonight's and the next days' weather means for what he's growing, keeping and building, and
+    for the house's pipes: each {kind, text}, the most pressing first. `forecast` is core/weather.card's (high, low,
+    unit, tomorrow); `builds` the titles of builds in progress (rain from tomorrow's chance, or its words when no
+    chance is given); `well` whether he has a well pump; [] without a forecast."""
     if not forecast or forecast.get("high") is None or not forecast.get("unit"):
         return []
     unit = forecast["unit"]
@@ -118,6 +125,14 @@ def concerns(forecast: dict, growing: dict, birds: int, builds: tuple = ()) -> l
     if half and cold <= FREEZE_HALF_HARDY:
         out.append({"kind": "hard_freeze", "text": (
             f"A hard freeze tonight (a low of {said_low}) can hurt even the {_names(half)}: cover them too.")})
+    if cold <= PIPES_FREEZE:
+        metric = "C" in unit
+        out.append({"kind": "pipes", "text": (
+            f"Cold enough tonight to freeze pipes (a low of {said_low}; pipes in unheated spots can freeze at about "
+            f"{'-7°C' if metric else '20°F'}): let a faucet on an outside wall drip, open the cabinet doors under the "
+            f"sinks, unhook the garden hoses, and keep the heat at {'13°C' if metric else '55°F'} or above."
+            + (" Keep the well's pump house or pressure tank from freezing too: a heat lamp or heat tape made for it."
+               if well else ""))})
     if growing.get("hardening") and cold <= HARDENING_COLD:
         out.append({"kind": "hardening", "text": (
             f"Too cold tonight for seedlings hardening off (a low of {said_low}): bring the "
@@ -175,8 +190,9 @@ def _birds(context) -> int:
 
 def watch(context, today: Optional[date] = None, fetch: Optional[Callable[[str], dict]] = None,
           forecast: Optional[dict] = None) -> list[dict]:
-    """What the weather means for his plans right now (`concerns`: the garden, the flock, builds in progress), from
-    the forecast core/weather.py keeps (or the one given); [] when there's no forecast yet or nothing it touches."""
+    """What the weather means for his plans right now (`concerns`: the garden, the flock, builds in progress, the
+    pipes and his well, `_well`), from the forecast core/weather.py keeps (or the one given); [] when there's no
+    forecast yet or nothing it touches."""
     from core import weather
 
     today = today or date.today()
@@ -189,12 +205,22 @@ def watch(context, today: Optional[date] = None, fetch: Optional[Callable[[str],
     except Exception:  # noqa: BLE001 - a plan or mission that can't be read never stops the rest
         log.exception("Weather watch: the builds couldn't be read")
         builds = ()
-    return concerns(forecast, _growing(context, today), _birds(context), builds)
+    return concerns(forecast, _growing(context, today), _birds(context), builds, _well(context))
+
+
+def _well(context) -> bool:
+    """Whether he has a well pump (core/outage._has_well_pump); False when that can't be read."""
+    from core.outage import _has_well_pump
+
+    try:
+        return _has_well_pump(context)
+    except Exception:  # noqa: BLE001 - assets that can't be read leave the well line out
+        return False
 
 
 def say(context) -> str:
-    """For "will it frost tonight?" and "what does the weather mean for my garden?": each concern, or what she
-    checked and found fine."""
+    """For "will it frost tonight?", "will the pipes freeze?" and "what does the weather mean for my garden?": each
+    concern, or what she checked and found fine."""
     from core import weather
 
     got = weather.card(context)
@@ -214,7 +240,7 @@ def say(context) -> str:
 
 def offer(context, now: datetime, fetch: Optional[Callable[[str], dict]] = None) -> list:
     """The daily check's messages: one per concern per day (frost, a hard freeze, seedlings, the hens, rain on a
-    build), TIMELY (it matters within hours), through the gate."""
+    build; never an `ASKED_ONLY` one, the pipes), TIMELY (it matters within hours), through the gate."""
     from core.communication_gate import TIMELY, Candidate
 
     day = now.date()
@@ -226,7 +252,7 @@ def offer(context, now: datetime, fetch: Optional[Callable[[str], dict]] = None)
                       message=c["text"], urgency=TIMELY, source="system",
                       fingerprint=f"weather-{c['kind']}-{day.isoformat()}",
                       expires=(datetime.combine(day, datetime.min.time()) + timedelta(days=1, hours=9)).isoformat())
-            for c in found]
+            for c in found if c["kind"] not in ASKED_ONLY]
 
 
 HOT_F, HOT_C = 85, 29  # a high this warm dries beds out fast

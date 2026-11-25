@@ -255,7 +255,7 @@ _WATER_A_CROP = tuple(f"{verb} {crop}" for crop in GARDEN_CROPS
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather (never the wind chill or heat index: those go to
     work_outside_wind_chill_heat_index, core/outdoor_work.py), should_i_water (core/weather_watch.say_watering, heard only of the
-    garden or a garden crop by name, GARDEN_CROPS: "should I water the tomatoes?", never houseplants or the hens), log_rain (his rain gauge, which that answer counts; heard only when he reads it, never "is an inch of rain enough?"), weather_for_my_plans (the forecast against his garden and flock,
+    garden or a garden crop by name, GARDEN_CROPS: "should I water the tomatoes?", never houseplants or the hens), log_rain (his rain gauge, which that answer counts; heard only when he reads it, never "is an inch of rain enough?"), weather_for_my_plans (the forecast against his garden, flock and pipes,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour, the catchment roof the water budget counts, and the battery the power picture counts), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
@@ -318,13 +318,15 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         name="weather_for_my_plans", domain="today",
         description="What the forecast means for what the user has going: frost tonight against the crops his "
                     "confirmed garden plans have in the ground, a cold night for seedlings hardening off, heat or "
-                    "freezing water for his flock; or that nothing in it threatens them.",
+                    "freezing water for his flock, a night cold enough to freeze the pipes or the well; or that "
+                    "nothing in it threatens them.",
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_weather_for_my_plans,
         trigger_phrases=("frost tonight", "will it frost", "going to frost", "freeze tonight", "will it freeze",
                          "cover the garden", "cover my plants", "weather for my garden", "weather mean for",
                          "too hot for the chickens", "too cold for the chickens", "hens' water", "need to cover",
-                         "rain tomorrow", "rain mess", "rain on the", "rain for the build"),
+                         "rain tomorrow", "rain mess", "rain on the", "rain for the build", "pipes freeze",
+                         "pipes to freeze", "frozen pipes", "pipes from freezing", "pipes going to freeze"),
     ))
     registry.register(AssistantAction(
         name="anything_unusual", domain="today",

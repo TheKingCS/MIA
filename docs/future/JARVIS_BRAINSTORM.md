@@ -354,6 +354,10 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Will the pipes freeze?** (no decision, asked): *built 2026-11-24 (core/weather_watch.py, the `pipes` concern).*
+  A low of 20 °F (-7 °C) or under: drip a faucet on an outside wall, open the sink cabinets, unhook the hoses, heat at
+  55 °F or above, and the well's pump house when he has a well pump. In "will it freeze tonight?" and "frozen
+  pipes?". *His say:* the same as part of the morning weather message (a new kind of unprompted message).
 - **"Should I water the tomatoes?"** (no decision): it went to log_maintenance_reading; *fixed 2026-11-24*: the
   watering check now hears 25 garden crops by name, asked ("should I water the...", "do I water my..."), answered in
   code; "remind me to water the tomatoes every 2 days" and "I watered the tomatoes" stay Maintenance's.

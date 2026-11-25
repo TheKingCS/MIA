@@ -5,7 +5,8 @@ tests.test_weather_watch
 The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost
 against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening
 off, heat and freezing water against the hens, rain likely tomorrow (by its chance, else its words) against a build
-in progress; in °F and °C; through the gate once per concern per day; a gap in tomorrow's figures never loses today.
+in progress, a night cold enough for the pipes (said when asked, never as the daily message); in °F and °C;
+through the gate once per concern per day; a gap in tomorrow's figures never loses today.
 """
 
 from datetime import date, datetime
@@ -146,3 +147,23 @@ def test_a_gap_in_tomorrows_figures_keeps_today():
                      "weather_code": [0, 61]}}
     got = weather.read(raw, "fahrenheit")
     assert got["high"] == 60 and got["tomorrow"] is None
+
+
+
+def test_a_night_cold_enough_for_the_pipes_is_said_when_asked_never_as_the_daily_message(monkeypatch):
+    """A low of 15 °F: drip a faucet, open the cabinets, unhook hoses, heat at 55; the well's pump house with a well;
+    -10 °C in Celsius; 25 °F says nothing of pipes; and the daily message leaves the pipes out."""
+    from datetime import datetime
+
+    cold = {"high": 28, "low": 18, "unit": "°F", "tomorrow": {"high": 25, "low": 15}}
+    found = {c["kind"]: c["text"] for c in ww.concerns(cold, {"in_ground": [], "hardening": []}, 0, well=True)}
+    assert "faucet on an outside wall drip" in found["pipes"] and "55°F" in found["pipes"]
+    assert "pump house" in found["pipes"]
+    metric = {"high": -4, "low": -8, "unit": "°C", "tomorrow": {"high": -5, "low": -10}}
+    said = ww.concerns(metric, {"in_ground": [], "hardening": []}, 0)[0]["text"]
+    assert "-7°C" in said and "13°C" in said and "pump house" not in said
+    mild = {"high": 35, "low": 28, "unit": "°F", "tomorrow": {"high": 34, "low": 25}}
+    assert not ww.concerns(mild, {"in_ground": [], "hardening": []}, 0)
+    monkeypatch.setattr(ww, "watch", lambda context, day, fetch=None: [{"kind": "pipes", "text": "x"},
+                                                                         {"kind": "frost", "text": "y"}])
+    assert [c.message for c in ww.offer(None, datetime(2026, 12, 1, 7))] == ["y"]
