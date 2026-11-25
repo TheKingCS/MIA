@@ -74,7 +74,10 @@ SAID_AS_IS = frozenset({"canning_time", "meat_cure", "bleach_for_water", "work_o
                         "size_solar", "tax_set_aside", "power_outage",
                         "spending_vs_usual", "what_to_make_next", "who_owes_me", "songs_i_can_play", "whats_biting",
                         "why_hens_not_laying", "harvest_this_year", "why_bill_high", "best_time_to_fish",
-                        "practice_today"})
+                        "practice_today",
+                        # the calculators: their figures are worked out in code (live sweep 2026-11-25: the model
+                        # wrapped 62 bags in "The user is looking for...")
+                        "calculate_concrete", "calculate_board_feet", "material_list", "cut_list", "feed_mix"})
 
 # What her orb says while a lookup runs (brainstorm 1.1), by the tool's domain; the rest say "Looking it up".
 DOING = {"library": "Reading your library", "budget": "Checking your money", "debts": "Checking your money",

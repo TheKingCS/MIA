@@ -48,10 +48,10 @@
       "alarm.switch"
     ],
     "tiers": {
-      "calculate_board_feet": "act_within_grant",
-      "calculate_concrete": "act_within_grant",
-      "calculate_ohms_law": "act_within_grant",
-      "convert_units": "act_within_grant",
+      "calculate_board_feet": "observe",
+      "calculate_concrete": "observe",
+      "calculate_ohms_law": "observe",
+      "convert_units": "observe",
       "alarm.add": "act_within_grant",
       "alarm.delete": "act_with_approval",
       "alarm.switch": "act_within_grant"

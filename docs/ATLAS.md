@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1787 files, 385,340 lines; 1787 files describe themselves; 20,995 of 21,125 classes and functions are documented.
+1788 files, 385,366 lines; 1788 files describe themselves; 20,997 of 21,127 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-712 files, 200,678 lines; 10,063 of 10,149 classes and functions documented
+712 files, 200,681 lines; 10,063 of 10,149 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1010,7 +1010,7 @@
 
 ## tests/: the test suite: what each part must do
 
-666 files, 102,647 lines; 8,561 of 8,605 classes and functions documented
+667 files, 102,670 lines; 8,563 of 8,607 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1083,6 +1083,7 @@
 - `tests/test_business_use_actions.py`: Business use of a tool on its asset page (core/business_use_actions.py, 2026-11-09): Log Use and Remove go through the action contract (refused without an amount, a real tool or a real day), the page shows this year's figures and jobs once something is logged and only the form before, and the life s
 - `tests/test_business_voice.py`: His business by voice (core/assistant_business_voice_actions.py, DEC-0125): the quotes still out, the open orders, a customer's details, adding a customer, making a quote for a customer he has, a quote accepted (it becomes an order, due when he says), an order marked delivered; each change through t
 - `tests/test_calculator_engine.py`: Unit tests for core.calculator_engine.CalculatorEngine.
+- `tests/test_calculators_are_lookups.py`: The pure calculators (board feet, concrete, Ohm's law, units, a subnet) only read (the observe tier), so a question reaching for one keeps it (live sweep, 2026-11-25: "how many bags of concrete for a 10 by 10 slab?" reached calculate_concrete, was taken for a change, and the model answered from memo
 - `tests/test_calendar_manager.py`: Unit tests for core.calendar_manager. Isolates _DATA_DIR/_EVENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/calendar_events.json.
 - `tests/test_calendar_move.py`: "Actually, make it Sunday" (core/calendar_move.py): the event his words name, else the newest, moved to a weekday, "tomorrow" or an ISO date, a time kept unless he gives one; nothing to move, or no day, is said.
 - `tests/test_calendar_view.py`: The Calendar (Zac, 2026-10-16: "I want the Calendar to be filled and I want to be able to access it both in the app and on the glasses"): core/calendar_view.py fills it from everything with a date, sorted Past Due / Due Today / Due Soon; your own events are actions.

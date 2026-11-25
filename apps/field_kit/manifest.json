@@ -49,7 +49,7 @@
       "sensor.remove"
     ],
     "tiers": {
-      "calculate_subnet": "act_within_grant",
+      "calculate_subnet": "observe",
       "check_password_strength": "observe",
       "identify_hash": "act_within_grant",
       "list_connected_devices": "observe",
