@@ -7,8 +7,9 @@ What his homestead life has added up to, read from the records, for the achievem
 Nothing here is kept twice: each number is worked out now from the store that already holds it, the same "derive it"
 rule core/rewards_manager.py follows, and an undone record stops counting.
 
-**Lifetime counts** (`produce_pounds`, `eggs_collected`, `jars_canned`): every harvest weighed in pounds, ounces or
-kilograms in the grow lab (core/grow_lab.py; a harvest counted in heads or bunches has no weight and isn't guessed
+**Lifetime counts** (`produce_pounds`, `eggs_collected`, `jars_canned`): every harvest weighed in pounds, ounces,
+kilograms or grams in the grow lab, and the greenhouse node's produce harvests MIA keeps (core/grow_lab.py,
+core/greenhouse_link.keep_harvests; a harvest counted in heads or bunches has no weight and isn't guessed
 at), every egg logged in the flock book (core/flock.py), and every jar put up on the canning shelf
 (core/canning_shelf.py records a `canned` life event with its jar count, because a jar eaten leaves the pantry; an
 undone one is dropped by `life_events.reversed_ids`).
@@ -37,8 +38,10 @@ POUNDS = {"lb": 1.0, "oz": 1 / 16, "kg": 2.20462, "g": 0.00220462}  # a harvest'
 
 
 def produce_pounds(context) -> float:
-    """Every harvest in the grow lab that was weighed, in pounds (lb, oz and kg converted; heads, bunches and counts
-    have no weight and are left out, never guessed). 0 without a grow lab."""
+    """Every harvest in the grow lab that was weighed, in pounds (lb, oz, kg and g converted; heads, bunches and counts
+    have no weight and are left out, never guessed), and the greenhouse node's produce harvests MIA kept
+    (core/greenhouse_link.keep_harvests; a fish harvest isn't produce). 0 without either."""
+    from core import life_events
     from core.harvest_log import unit_of
 
     lab = getattr(context, "grow_lab", None)
@@ -48,6 +51,17 @@ def produce_pounds(context) -> float:
             factor = POUNDS.get(unit_of(str(harvest.get("unit", ""))))
             try:
                 total += float(harvest.get("amount") or 0) * factor if factor else 0.0
+            except (TypeError, ValueError):
+                continue
+    try:
+        node = life_events.events_for(context, types=("greenhouse_harvest",))
+    except Exception:  # noqa: BLE001 - a history that can't be read leaves the node's part out
+        node = []
+    for e in node:
+        factor = POUNDS.get(unit_of(str(e.payload.get("unit", ""))))
+        if factor and e.payload.get("kind") != "harvest_fish":
+            try:
+                total += float(e.payload.get("quantity") or 0) * factor
             except (TypeError, ValueError):
                 continue
     return round(total, 2)

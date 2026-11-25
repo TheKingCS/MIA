@@ -53,7 +53,7 @@ THREADS = (
      lambda n: f"You logged what you ate on {_n(n, 'day')}."),
     ("crafting", ("build_finished",), "The Maker's Week", "Sawdust everywhere: you built things.",
      lambda n: f"You finished {_n(n, 'build')} in the workshop."),
-    ("growing", ("harvest", "batch_planted"), "The Harvest Week", "The garden came through.",
+    ("growing", ("harvest", "batch_planted", "greenhouse_harvest"), "The Harvest Week", "The garden came through.",
      lambda n: f"You planted or harvested {_times(n)}."),
     ("tasks", ("task_done", "project_completed"), "The Week Of Getting Things Done", "You got things done.",
      lambda n: f"You checked off {_n(n, 'task')}."),

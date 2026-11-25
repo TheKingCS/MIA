@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1729 files, 372,955 lines; 1729 files describe themselves; 20,467 of 20,597 classes and functions are documented.
+1729 files, 373,033 lines; 1729 files describe themselves; 20,469 of 20,599 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-688 files, 192,274 lines; 9,760 of 9,846 classes and functions documented
+688 files, 192,332 lines; 9,761 of 9,847 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -986,7 +986,7 @@
 
 ## tests/: the test suite: what each part must do
 
-635 files, 99,586 lines; 8,342 of 8,386 classes and functions documented
+635 files, 99,606 lines; 8,343 of 8,387 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1189,7 +1189,7 @@
 - `tests/test_goods_voice.py`: Saying it to MIA (core/assistant_goods_actions.py): eggs, goods on hand, a sale, deadlines and freedom, through the same code as their screens.
 - `tests/test_gps_tracks.py`: Tracks (build plan step 14, core/gps_tracks.py): a GPX walk read in code: distance, climb past GPS jitter, moving time, start and end grids; kept in the person's folder; a line in the TAK package.
 - `tests/test_grants.py`: Tiers, grants and the grant check (DEC-0156, approved; migration phase M4; core/grants.py): every tool and action kind has a tier in its app's manifest; the kinds that always ask are tiered at the person's yes, so there is one classification; a person's own press is always theirs; on MIA's own initi
-- `tests/test_greenhouse.py`: Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/greenhouse_link.py watches every sensor the node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab, reads only from the person's own network, and knows the node fro
+- `tests/test_greenhouse.py`: Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/greenhouse_link.py watches every sensor the node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab, keeps its harvests once each (produce counted, fish not), reads 
 - `tests/test_greenhouse_adjust.py`: MIA setting the greenhouse node's targets (core/greenhouse_adjust.py, DEC-0185 step 4): his words read in code, the exact change said and sent only on "yes, set it", signed so the node's own check accepts it (homestead's core/command_auth.verify, loaded on its own: MIA never imports the node's packa
 - `tests/test_greenhouse_module.py`: Unit tests for modules.greenhouse.module's pure functions, same style as tests/test_garage_module.py/tests/test_property_module.py (no Qt event loop, no fixtures).
 - `tests/test_greenhouse_secret.py`: The greenhouse node's email password, from the vault to the node (core/greenhouse_provision.py, DEC-0150: "secrets from the vault and never typed by a model"): found in the person's own unlocked vault, never unlocked by MIA, sent only on "yes, send it", over standard input (never in the command or a

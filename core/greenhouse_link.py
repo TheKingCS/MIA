@@ -17,7 +17,8 @@ the node a command.
   it's stale. The node decides what exists, so a new probe on the node is a new monitor here with nothing to change.
 - **What reaches the person** (`new_alerts()`): each new critical alert from the node as urgent, each new warning as
   timely, through the communication gate, once each.
-- **What she keeps**: readings into the grow lab (the Data Logger's `grow:<cell>:<measure>` series, core/grow_lab.py),
+- **What she keeps**: the node's harvests as `greenhouse_harvest` life events, each once (`keep_harvests`; its
+  weighed produce counts toward his produce and the Grower achievements); readings into the grow lab (the Data Logger's `grow:<cell>:<measure>` series, core/grow_lab.py),
   one every `KEEP_MINUTES` a sensor, so its history and ranges work the same as readings typed in.
 - **What she knows** (`node_knowledge()`): the node's own generated documents, `homestead/docs/
   FEATURES_AND_CAPABILITIES.md` (each module, what it can do, its limits, its proof) and `HARDWARE_BOM_LIVE.md`
@@ -267,6 +268,45 @@ def keep_readings(context, link: GreenhouseLink, now: Optional[datetime] = None)
     return kept
 
 
+def keep_harvests(context, link: GreenhouseLink) -> int:
+    """The node's harvests (its export's `yield.events`, the last seven days) kept in MIA's history as
+    `greenhouse_harvest` life events, each once (by the node's event id, its ref `node_yield:<id>`), so produce from the
+    greenhouse counts toward his produce and the Grower achievements (core/life_milestones.produce_pounds) and the
+    Chronicle; how many were new. A fish harvest is kept too, never counted as produce."""
+    from core import life_events
+
+    events = ((link.state or {}).get("yield") or {}).get("events") or []
+    if not events:
+        return 0
+    where = getattr(context, "life_events", None)
+    if where is None:
+        return 0
+    try:
+        seen = {r for e in life_events.events_for(context, types=("greenhouse_harvest",)) for r in e.refs}
+    except Exception:  # noqa: BLE001 - a history that can't be read keeps nothing this time (never twice)
+        log.exception("Couldn't read the greenhouse harvests kept")
+        return 0
+    new = 0
+    for e in events:
+        ref = f"node_yield:{e.get('id')}"
+        try:
+            amount = float(e.get("quantity") or 0)
+        except (TypeError, ValueError):
+            continue
+        if e.get("id") is None or ref in seen or amount <= 0:
+            continue
+        item, unit = str(e.get("item") or "produce")[:40], str(e.get("unit") or "")[:10]
+        life_events.record(where, "greenhouse_harvest", f"The greenhouse harvested {amount:g} {unit} of {item}".replace("  ", " "),
+                           [ref], {"item": item, "quantity": amount, "unit": unit,
+                                   "kind": str(e.get("yield_type") or "harvest_produce")[:20],
+                                   "at": str(e.get("timestamp") or "")[:19]})
+        seen.add(ref)
+        new += 1
+    if new and getattr(context, "events", None) is not None:
+        context.events.publish("activity.logged", source="greenhouse", category="harvest")
+    return new
+
+
 def alert_candidates(link: GreenhouseLink) -> list:
     """The gate candidates for the node's new alerts (critical urgent, warning timely), marking each raised."""
     from core.communication_gate import TIMELY, URGENT, Candidate
@@ -308,7 +348,7 @@ def take_over(context, link: GreenhouseLink, url: str = "", get: Optional[Callab
 
 def tick(context, link: GreenhouseLink, now: Optional[datetime] = None, get=None) -> list:
     """One check from the app's loop: when MIA has taken over and EVERY_MINUTES have passed, read the node, keep its
-    readings, and return the gate candidates for its new alerts."""
+    readings and its new harvests (`keep_harvests`), and return the gate candidates for its new alerts."""
     now = now or datetime.now()
     if not link.taken_over:
         return []
@@ -320,6 +360,10 @@ def tick(context, link: GreenhouseLink, now: Optional[datetime] = None, get=None
         log.info("Greenhouse not read this time: %s", problem)
         return []
     keep_readings(context, link, now)
+    try:
+        keep_harvests(context, link)
+    except Exception:  # noqa: BLE001 - a harvest that can't be kept never stops the alerts
+        log.exception("Couldn't keep the greenhouse's harvests")
     return alert_candidates(link)
 
 

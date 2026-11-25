@@ -4,7 +4,8 @@ tests.test_greenhouse
 
 Handing the greenhouse to MIA and setting up its hardware (DEC-0150): core/greenhouse_link.py watches every sensor the
 node reports, raises its new alerts once each (critical urgent, warning timely), keeps its readings in the grow lab,
-reads only from the person's own network, and knows the node from its own documents; core/greenhouse_provision.py
+keeps its harvests once each (produce counted, fish not), reads only from the person's own network, and knows the
+node from its own documents; core/greenhouse_provision.py
 finds the ESP32, flashes it and pushes the node to the Pi only on a yes, with preloaded configs that keep every comment
 and never a password; the node's export server serves its two files and its read-only live pages, nothing else.
 """
@@ -272,3 +273,22 @@ def test_a_general_greenhouse_question_gets_her_own_part_and_not_the_nodes_modul
     assert "never offer them" in block and "approval" in block and "no live readings" in block
     assert "declares these modules" not in block
     assert "declares these modules" in gl.context_block(world, "which greenhouse modules are proven?")
+
+
+
+def test_the_nodes_harvests_are_kept_once_and_count_as_produce(tmp_path, monkeypatch):
+    """The export's yield events become greenhouse_harvest events, each once (read again: nothing new); produce in
+    pounds counts toward the produce total, a fish harvest doesn't."""
+    from core import life_milestones
+    from tests.engine_world import build_world
+
+    world = build_world(tmp_path, monkeypatch)
+    link = gl.GreenhouseLink(world, data_dir=tmp_path / "gh")
+    link.state = {"cells": [], "yield": {"events": [
+        {"id": 1, "item": "lettuce", "quantity": 3, "unit": "lb", "yield_type": "harvest_produce",
+         "timestamp": "2026-11-24 10:00:00"},
+        {"id": 2, "item": "tilapia", "quantity": 4, "unit": "lb", "yield_type": "harvest_fish"},
+        {"id": 3, "item": "basil", "quantity": 8, "unit": "oz", "yield_type": "harvest_produce"}]}}
+    assert gl.keep_harvests(world, link) == 3
+    assert gl.keep_harvests(world, link) == 0
+    assert life_milestones.produce_pounds(world) == 3.5
