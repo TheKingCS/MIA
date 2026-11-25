@@ -84,7 +84,11 @@ STAGES: tuple[Stage, ...] = (
             "and heat "
             "lamps start coop fires.",
             "Collect eggs every day. A bird that's hunched, off its feed or not like the others gets separated, "
-            "watched, and seen by a vet who treats poultry if it doesn't pick up."),
+            "watched, and seen by a vet who treats poultry if it doesn't pick up.",
+            "Once a month, check each bird for mites and lice: part the feathers under the wings and around the vent "
+            "and look for crawling specks or egg clusters at the feather bases. Red mites hide in roost cracks by day "
+            "and feed at night, so check the roosts with a flashlight after dark. Treat with a product labelled for "
+            "poultry, exactly as its label says, and clean out the coop's bedding at the same time."),
             "A flock does well on routine: shut in at night, clean water, the right feed, and an eye on each bird.",
             ("Chicken wire as predator protection.", "A heat lamp in the coop.")),
     ), (

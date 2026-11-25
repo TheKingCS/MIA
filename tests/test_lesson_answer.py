@@ -7,7 +7,8 @@ water from a creek, a chisel, seeds indoors, a tape measure, a first woodworking
 and what to watch for, with a drill to practise it and how to start a course he hasn't; never a when, a watering
 question or a project for his business. Also the sweep's plan fixes: a beginner project, a survival how-to and his
 net worth are never his projects', the project picture's or the products', and "The Dungeon." is taken off an answer.
-And the business's how-tos (markup, writing a quote) are its course's, his own product's price and margin the plans'.
+And the business's how-tos (markup, writing a quote) are its course's, his own product's price and margin the plans';
+the flock's questions (mites, feed, predators) its lesson's, the step asked about first.
 """
 
 from types import SimpleNamespace
@@ -64,3 +65,20 @@ def test_the_business_how_tos_find_its_lessons_and_leave_his_own_numbers_to_the_
         assert la.find(words) is None, words
     said = la.reply(SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path)), "How do I write a quote for a deck job?")
     assert "say \"make a quote for\"" in said
+
+
+def test_the_flocks_questions_find_its_lesson_and_lead_with_the_step_asked_about():
+    """Mites, feeding hens and predators are the flock lesson's (its mites step new, from the extension guides), the
+    step asked about said first; an egg count stays the flock's own record."""
+    for words in ("How do I know if my chickens have mites?", "What should I feed laying hens in winter?",
+                  "how do I protect my chickens from raccoons?"):
+        assert la.find(words) == ("gardening", "flock_care"), words
+    assert la.find("How many eggs did my hens lay this week?") is None
+    from types import SimpleNamespace as N
+
+    said = la.reply(N(paths=None), "How do I know if my chickens have mites?")
+    assert said.startswith('From the Gardening and homesteading course, "Keeping a small flock": Once a month, check each '
+                           'bird for mites and lice')
+    steps = ("Close the coop.", "Check for mites under the wings.")
+    assert la.steps_for(steps, "any mites?") == ["Check for mites under the wings.", "Close the coop."]
+    assert la.steps_for(steps, "how do I start?") == list(steps)

@@ -14,7 +14,8 @@ core/woodworking.py, core/carpentry.py, core/gardening_path.py), with the drill 
   tomatoes?" is no water-purifying lesson), and never a when ("when should I start tomato seeds?" is the planting
   dates'). A lesson not listed is never guessed at.
 - **The answer** (`reply`): taken in code before the question plans (core/assistant_turn.py), like the first-aid
-  how-to; None for anything else.
+  how-to, the steps his question is about first (`steps_for`: the mites step for "have mites?"); None for anything
+  else.
 
 Read only: nothing is kept, and his path isn't touched (a lesson he hasn't started is said as the course's, and how
 to start it).
@@ -51,6 +52,11 @@ ASKS: dict[tuple, re.Pattern] = {
     ("carpentry", "square_level"): re.compile(r"\b(?:check|tell)\w*\s+(?:if\s+)?(?:\w+\s+){0,3}(?:is\s+)?"
                                               r"(?:plumb|level|square)\b|\b3-4-5\b|\bspeed square\b"),
     ("carpentry", "circular_saw"): re.compile(r"\buse\s+(?:a\s+)?circular saw\b|\bcircular saw\s+safely\b"),
+    # the flock (live sweep, 2026-11-25: "how do I know if my chickens have mites?" went to the model)
+    ("gardening", "flock_care"): re.compile(r"\b(?:mites?|lice)\b|\bfeed\w*\s+(?:my\s+|the\s+|laying\s+)*(?:hens|"
+                                            r"chickens|flock|layers)\b|\b(?:protect|keep)\w*\s+(?:my\s+|the\s+)?"
+                                            r"(?:hens|chickens|flock|coop)\b.{0,30}\b(?:predators?|raccoons?|foxes|"
+                                            r"hawks|winter|cold|warm|safe)\b"),
     ("gardening", "seed_starting"): re.compile(r"\bstart\w*\s+(?:my\s+|the\s+)?(?:\w+\s+)?seeds?\b|\bseeds?\s+"
                                                r"(?:indoors|inside)\b"),
 }
@@ -58,7 +64,8 @@ _HOWTO = re.compile(r"\b(?:how (?:do|should|would|can|could) (?:i|you|one|we)|ho
                     r"way to|what is the (?:best|right|safest) way to|best way to|"
                     r"teach me (?:how )?to|show me how to|what(?:'s| is) a good|what should i (?:make|build) "
                     r"(?:as|for) (?:a|my)|what(?:'s| is) (?:the|a) (?:right |good |best |usual |typical |fair )?"
-                    r"(?:markup|mark-up|margin)|how much (?:markup|margin))\b")
+                    r"(?:markup|mark-up|margin)|how much (?:markup|margin)|what should i (?:feed|give|do about)|"
+                    r"how (?:can|do) i tell if)\b")
 # What a lesson's words also mean but it doesn't teach (the sixth review): a fire pit or fire insurance, the tank's or
 # the aquaponics' water, a seed company
 NOT_ASKS = {
@@ -69,7 +76,7 @@ NOT_ASKS = {
     ("gardening", "seed_starting"): re.compile(r"\b(?:company|business|website|money|fund|funding|round|investor)s?\b"),
 }
 # A drill that practises the lesson (core/drills.py), said as the words that start it
-DRILL_FOR = {("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list",
+DRILL_FOR = {("gardening", "flock_care"): "flock", ("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list",
              ("business", "biz_price"): "market day"}
 # What to say to do it with MIA, after the lesson
 THEN = {("business", "biz_terms"): "To start one, say \"make a quote for\" and what it's for, and the customer.",
@@ -87,8 +94,32 @@ def find(words: str) -> Optional[tuple]:
                  if pattern.search(said) and not (key in NOT_ASKS and NOT_ASKS[key].search(said))), None)
 
 
+_PLAIN = {"what", "when", "where", "which", "should", "would", "could", "about", "with", "from", "that", "this", "have",
+          "know", "tell", "best", "your", "mine", "they", "them", "there", "their", "into", "does", "want",
+          # what a lesson is about, not which step of it: "chickens" ties the mites step with the coop's wire
+          "chicken", "chickens", "hens", "flock", "birds", "coop", "layers", "laying", "plants", "garden", "wood",
+          "water", "fire", "seeds"}
+
+
+def steps_for(steps: tuple, words: str) -> list:
+    """Pure logic. A lesson's steps, the ones his question is about first ("how do I know if my chickens have
+    mites?" leads with the mites step, not the coop door), the rest after in their order; as they are when none
+    stands out."""
+    asked = {w[:5] for w in re.findall(r"[a-z]{4,}", str(words or "").lower()) if w not in _PLAIN}
+
+    def score(step: str) -> int:
+        """How many of his words (by their first five letters) the step uses."""
+        return len(asked & {w[:5] for w in re.findall(r"[a-z]{4,}", step.lower())})
+
+    best = max((score(s) for s in steps), default=0)
+    if best == 0:
+        return list(steps)
+    return [s for s in steps if score(s) == best] + [s for s in steps if score(s) != best]
+
+
 def reply(context, words: str) -> Optional[str]:
-    """The lesson's answer for a how-to (`find`), from the course's own record: its steps, why and what to watch for,
+    """The lesson's answer for a how-to (`find`), from the course's own record: its steps (the ones asked about first,
+    `steps_for`), why and what to watch for,
     the drill to practise it, and how to start the course when he hasn't. None when it isn't one.
     Then how to do it with MIA, where there's a way (`THEN`)."""
     from core import paths
@@ -101,7 +132,7 @@ def reply(context, words: str) -> Optional[str]:
     lesson = next((l for s in program.stages for l in s.lessons if l.id == lesson_id), None) if program else None
     if lesson is None:
         return None
-    out = f"From the {program.name} course, \"{lesson.title}\": " + " ".join(lesson.steps)
+    out = f"From the {program.name} course, \"{lesson.title}\": " + " ".join(steps_for(lesson.steps, words))
     if lesson.why:
         out += f" Why it matters: {lesson.why}"
     if lesson.watch:
