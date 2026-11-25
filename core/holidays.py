@@ -11,7 +11,7 @@ is the model's.
 
 How: `day_of(name, year, country)` (pure) gives the date or None; `reply(context, words)` reads "when is
 Thanksgiving?", "what day is Easter next year?", "what date is Memorial Day in 2027?" and says the date, the weekday
-and how far off it is. Read-only.
+and how far off it is; `coming_line` says the ones in his coming week (the morning briefing names them). Read-only.
 """
 
 from __future__ import annotations
@@ -84,6 +84,36 @@ def named(words: str, country: str = "US") -> Optional[str]:
 def day_of(name: str, year: int) -> date:
     """Pure logic. The date a holiday falls in a year."""
     return HOLIDAYS[name][2](year)
+
+
+def coming(country: str, today: date, days: int = 7) -> list:
+    """Pure logic. The holidays his country keeps in the next `days` days, today included: [(name, date)], soonest
+    first (one name per day: Christmas, never Christmas and Christmas Eve on one date)."""
+    found = {}
+    for name, (_pattern, where, _fall) in HOLIDAYS.items():
+        if where is not None and country not in where:
+            continue
+        for year in (today.year, today.year + 1):
+            on = day_of(name, year)
+            if 0 <= (on - today).days <= days and on not in found:
+                found[on] = name.split(" (")[0]
+    return sorted(((n, d) for d, n in found.items()), key=lambda nd: nd[1])
+
+
+def coming_line(context, today: Optional[date] = None, days: int = 7) -> str:
+    """The holidays in his coming week in words ("Thanksgiving is Thursday."), or "" when there are none."""
+    from core.region import country_of
+
+    today = today or date.today()
+    try:
+        country = country_of(context) if context is not None else "US"
+    except Exception:  # noqa: BLE001 - no settings: the default
+        country = "US"
+    said = []
+    for name, on in coming(country, today, days):
+        when = "today" if on == today else "tomorrow" if (on - today).days == 1 else f"{on:%A}"
+        said.append(f"{name} is {when}")
+    return ("; ".join(said) + ".") if said else ""
 
 
 _ASKED = re.compile(r"^\s*(?:when(?:'s| is| does)?|what (?:day|date)(?: is| does)?|what day of the week is|which day is)\b"

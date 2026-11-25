@@ -4,7 +4,8 @@ tests.test_sweep_16
 
 The tenth live sweep's fixes (2026-11-25): a unit conversion and a holiday's date are worked out in code (the model
 had said "The conversion is complete." and "I don't have that information"); "I don't know what that means" before
-a real answer goes; "do you remember what I told you yesterday?" is his past conversations, never one person.
+a real answer goes; "do you remember what I told you yesterday?" is his past conversations, never one person. The
+coming week's holidays, which the morning briefing names.
 """
 
 from datetime import date
@@ -49,3 +50,12 @@ def test_i_dont_know_before_an_answer_goes():
 
 def test_what_he_told_her_before_is_never_one_person():
     assert question_plans._not_for("person", "Do you remember what I told you yesterday?")
+
+
+def test_the_coming_weeks_holidays():
+    """The holidays in the next days, his country's only, one name a day."""
+    assert holidays.coming("US", date(2026, 11, 25), 3) == [("Thanksgiving", date(2026, 11, 26))]
+    assert holidays.coming("CA", date(2026, 11, 25), 3) == []
+    assert holidays.coming("US", date(2026, 12, 23), 3)[:2] == [("Christmas Eve", date(2026, 12, 24)),
+                                                                 ("Christmas", date(2026, 12, 25))]
+    assert holidays.coming_line(None, date(2026, 11, 25), 3) == "Thanksgiving is tomorrow."

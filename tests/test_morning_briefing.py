@@ -25,6 +25,7 @@ def test_his_words_set_it_turn_it_off_or_ask_again():
 
 
 def test_the_words_are_the_weather_and_his_day(monkeypatch):
+    """The day's weather, his list's first item, and a holiday that day (the 26th is Thanksgiving)."""
     from core import today, weather
 
     monkeypatch.setattr(weather, "card", lambda context: {"text": "40°F", "high": 52, "low": 33, "unit": "°F",
@@ -33,7 +34,7 @@ def test_the_words_are_the_weather_and_his_day(monkeypatch):
     monkeypatch.setattr(today, "today_items", lambda context, day=None: [item])
     said = mb.briefing(SimpleNamespace(), datetime(2026, 11, 26, 7, 30))
     assert said == ("Good morning. Today: light rain, a high of 52°F and a low of 33°F. 1 thing on today's list, first "
-                    "up Vet at 14:00.")
+                    "up Vet at 14:00. Thanksgiving is today.")  # the 26th is Thanksgiving: named
 
 
 def test_it_comes_only_when_asked_from_his_hour_until_noon(monkeypatch):

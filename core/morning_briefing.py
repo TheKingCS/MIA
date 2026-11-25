@@ -119,7 +119,8 @@ def day_today(context, today) -> str:
 
 
 def briefing(context, now: datetime) -> str:
-    """The briefing's words; "" when there's no weather and nothing on the list."""
+    """The briefing's words; "" when there's no weather and nothing on the list. A holiday in the next three days is
+    named at its end (core/holidays.coming_line)."""
     parts = []
     for read, name in ((lambda: weather_today(context), "weather"), (lambda: day_today(context, now.date()), "day")):
         try:
@@ -134,6 +135,15 @@ def briefing(context, now: datetime) -> str:
     if sky:
         said += f" Today: {sky}."
     said += f" {day[:1].upper() + day[1:]}." if day else " Nothing on today's list."
+    try:
+        from core.holidays import coming_line
+
+        ahead = coming_line(context, now.date(), 3)  # a holiday in the next few days (brainstorm round 15)
+    except Exception:  # noqa: BLE001 - never stops the briefing
+        log.exception("Morning briefing: the holidays couldn't be read")
+        ahead = ""
+    if ahead:
+        said += f" {ahead}"
     return said
 
 
