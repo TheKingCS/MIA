@@ -372,7 +372,8 @@ def _daily_reminder_reply(context, prompt: str):
     eleventh review: it had no home, and the morning briefing took it): a daily event on his calendar from today,
     through add_calendar_event (undoable), at the time said ("at 7", in the evening for "night" or "evening"). None
     otherwise.
-    "At 12" with no am or pm sets no time; two times, or a question in the title, are the model's."""
+    "At 12" with no am or pm sets no time; two times, or a question in the title, are the model's.
+    "At 12:30" keeps its time."""
     from datetime import date as _date
 
     found = _REMIND_DAILY.match(prompt.replace("’", "'"))
@@ -388,8 +389,8 @@ def _daily_reminder_reply(context, prompt: str):
     args = {"title": what[:1].upper() + what[1:], "date": _date.today().isoformat(), "recurrence": "daily"}
     hour_said, minute_said, ap = (found.group("h") or found.group("h2"), found.group("m") or found.group("m2"),
                                   (found.group("ap") or found.group("ap2") or "").lower())
-    if hour_said and int(hour_said) == 12 and not ap:
-        hour_said = None  # "every night at 12": noon or midnight? no time rather than a wrong one
+    if hour_said and int(hour_said) == 12 and not ap and not minute_said:
+        hour_said = None  # "every night at 12": noon or midnight? no time rather than a wrong one ("12:30" is kept)
     if hour_said:
         hour, minute = int(hour_said), int(minute_said or 0)
         later = ap == "pm" or (not ap and (found.group("part") or "").lower() in ("night", "evening", "afternoon"))
@@ -523,10 +524,24 @@ _SPENT_ON = (
 # expense; money paid back isn't spending; a quote, an offer, a refund or a job is money that wasn't spent (the
 # eleventh review: "I got a quote for $3,000" had been an expense)
 _NOT_SPENDING = re.compile(r"\b(?:bills?|rent|loan|mortgage|card|insurance|invoice|deposit|back|internet|electricity|"
-                           r"electric|phone bill|cable|utilit\w*|subscription|quote|offer|refund|raise|bonus)\b",
-                           re.I)
-# A person, not a thing: "I paid $100 for Sarah", "I spent $50 on him" (the twelfth review)
-_A_PERSON = re.compile(r"(?:him|her|them|you|us|me|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)")
+                           r"electric|phone bill|cable|utilit\w*|subscription|quote|offer|refund|raise|bonus)\b|"
+                           r"\b(?:my|the) phone$|^(?:the|a|that) job$", re.I)  # his phone, or a job: his bill tools
+# A person, not a thing: "I paid $100 for Sarah", "I spent $50 on him" (the twelfth review); a name counts only when
+# it's someone he knows (`_known_person`), never Netflix, Costco or Uber (the thirteenth)
+_A_PERSON = re.compile(r"(?:him|her|them|you|us|me|my (?:wife|husband|son|daughter|kid|kids|mom|dad|brother|sister|friend))")
+
+
+def _known_person(context, words: str) -> bool:
+    """Whether the words are only the name of someone in his people or his customers."""
+    said = " ".join(str(words or "").lower().split())
+    names = set()
+    people = getattr(context, "relationships", None)
+    for person in (people.all_people() if people is not None and hasattr(people, "all_people") else []):
+        names |= {str(person.name).lower(), str(person.name).lower().split(" ")[0]}
+    book = getattr(context, "business", None)
+    for customer in (getattr(book, "customers", None) or []):
+        names |= {str(customer.name).lower(), str(customer.name).lower().split(" ")[0]}
+    return bool(said) and said in names
 _SPENT_WHEN = re.compile(r"\s+(?:on\s+)?(yesterday|today|last week|(?:last\s+)?(?:monday|tuesday|wednesday|thursday|"
                          r"friday|saturday|sunday))$", re.I)
 
@@ -539,25 +554,31 @@ def _spent_reply(context, prompt: str):
     flock. Never a question, a bill, rent, a loan, a card or money paid to a person (their own tools). None otherwise.
     Never a quote, an offer, a refund, "it" or two amounts at once; a repair is Maintenance, grocery chicken
     Groceries, goat feed never the hens', and "yesterday" dates it.
-    Never money for a person ("for Sarah", "on him"); a weekday said after ("on Monday") is the one just gone."""
+    Never money for a person ("for Sarah", "on him"); a weekday said after ("on Monday") is the one just gone.
+    A name is a person only when he knows them (`_known_person`): Netflix and Costco are purchases; "last week" or a
+    day alone is the model's to ask."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
         return None
     what = found.group("what").strip().rstrip(",.")
     if _NOT_SPENDING.search(what) or re.search(r"\$\s?\d|\b\d+\s*(?:dollars|bucks)\b", what, re.I) \
-            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I) or _A_PERSON.fullmatch(what):
+            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I):
         return None  # two amounts in one ("$5 on a coffee and $10 on gas") are the model's to split
-    when = _SPENT_WHEN.search(what)
+    when = _SPENT_WHEN.search(" " + what)
     day = ""
     if when:  # "spent $30 on groceries yesterday": its day, out of what it was for
         from core.budget_manager import read_date
 
         said_day = when.group(1).lower()
+        if said_day == "last week":
+            return None  # which day? the model asks, never today by default (the thirteenth review)
         if re.fullmatch(r"(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)", said_day):
             said_day = "last " + said_day  # "gas on Monday", said after: the Monday just gone
-        day = "" if said_day == "last week" else read_date(said_day) or ""
-        what = what[:when.start()].strip()
+        day = read_date(said_day) or ""
+        what = (" " + what)[:when.start()].strip()
+    if not what or _A_PERSON.fullmatch(what) or _known_person(context, what):
+        return None  # "spent $30 on Monday" names no thing; money for a person is a gift or a debt, not this
     amount = float((found.group("d") or found.group("n")).replace(",", ""))
     if amount <= 0:
         return None
@@ -964,7 +985,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
 def _garbled(content: str, context=None) -> bool:
     """Whether the model's reply is a tool call written as text instead of made (a malformed call); with a context, only
     when the name it gives is one of her tools (the twelfth review: a JSON example he asked for, {"name": "Zac"}, had
-    been replaced)."""
+    been replaced).
+    With a context: a call's shape (a name, then parameters, arguments, args or input), as the whole reply or one
+    fenced block, naming one of her tools in any case or a made-up snake_case one; never {"name": "Zac", "age": 30}
+    or a fenced example with words around it."""
     from core.llm_manager import _looks_like_malformed_tool_call
 
     try:
@@ -974,9 +998,17 @@ def _garbled(content: str, context=None) -> bool:
         return False
     if context is None:
         return True
-    named = re.search(r'"(?:name|function|tool)"\s*:\s*"([\w.]+)"', str(content or ""))
-    tools = getattr(getattr(context, "assistant_actions", None), "_actions", {}) or {}
-    return bool(named and named.group(1) in tools)
+    text = str(content or "").strip()
+    fenced = re.fullmatch(r"```(?:json)?\s*(.+?)\s*```", text, re.S)
+    if text.startswith("```") and not fenced:
+        return False  # a fenced example with words around it is an explanation
+    text = fenced.group(1) if fenced else text
+    named = re.match(r'\s*\{\s*"(?:name|function|tool)"\s*:\s*"([\w.]+)"\s*,\s*"(?:parameters|arguments|args|input)"', text)
+    if not named:
+        return False  # {"name": "Zac", "age": 30} is an answer
+    tools = {str(t).lower() for t in (getattr(getattr(context, "assistant_actions", None), "_actions", {}) or {})}
+    name = named.group(1)
+    return name.lower() in tools or "_" in name  # one of hers in any case, or a made-up tool's snake_case name
 
 
 def echoes(content: str, prompt: str) -> bool:

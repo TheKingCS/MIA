@@ -13,11 +13,12 @@ from core.llm_manager import _looks_like_malformed_tool_call
 
 
 def test_a_tool_calls_opening_is_caught_even_when_the_json_is_broken():
-    """A call's opening is caught with broken JSON; a fenced example or prose never is."""
+    """A call's opening is caught with broken JSON, or a whole reply that is one fenced call; prose never is."""
     broken = '{"name": "draft_email", "parameters": {"subject": "Fence", "body": "The cost is \\$$X."}}'
     assert _looks_like_malformed_tool_call(broken)
-    # a fenced example is an explanation, never a call (the twelfth review)
-    assert not _looks_like_malformed_tool_call('```json\n{"name": "add_task", "arguments": {"title": "x"}}\n```')
+    # a whole reply that is one fenced call is asked again without tools (the thirteenth review); whether it's replaced
+    # is the turn's narrower call (core/assistant_turn._garbled: a fenced example with words around it never is)
+    assert _looks_like_malformed_tool_call('```json\n{"name": "add_task", "arguments": {"title": "x"}}\n```')
     assert _looks_like_malformed_tool_call('{"name": "list_notes"}')
     for text in ("The {name} of the game is patience.", 'Here is the JSON: {"a": 1}', "A plain answer."):
         assert not _looks_like_malformed_tool_call(text), text

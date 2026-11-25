@@ -88,7 +88,7 @@ def _delete(context, params) -> str:
 
 for _a in (
     ActionType("event.add", "Add Event", {"title": "what it is", "date": "YYYY-MM-DD", "time": "optional: 14:30",
-                                         "recurrence": "optional: weekly, biweekly, monthly, yearly",
+                                         "recurrence": "optional: daily, weekly, biweekly, monthly, yearly",
                                          "notes": "optional"}, _describe_add, _add),
     ActionType("event.delete", "Remove", {"event_id": "the event"}, _describe_delete, _delete),
 ):

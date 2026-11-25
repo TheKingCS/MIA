@@ -30,12 +30,14 @@ def job_of(words: str) -> Optional[tuple]:
     """Pure logic. (customer's name or "", the job's words) for "write a quote for Sarah's 12 by 16 deck" or "make a
     quote for a 12 by 16 deck for Sarah", else None.
     A customer as "the Smiths'", "Sarah Miller's" or "for the Johnsons" (capitalized after "for": never "tomorrow").
-    A name said lowercase ("for sarah") and a time after it ("tomorrow") are read."""
+    A name said lowercase ("for sarah") and a time after it ("tomorrow") are read.
+    A weekday after it ("by Friday") is a time too."""
     found = ASK.match(str(words or ""))
     if not found:
         return None
     rest = found.group("rest").strip()
-    rest = re.sub(r"\s+(?:by\s+)?(?:tomorrow|today|tonight|this week|next week|asap|soon)$", "", rest, flags=re.I)
+    rest = re.sub(r"\s+(?:by\s+)?(?:tomorrow|today|tonight|this week|next week|asap|soon|monday|tuesday|wednesday|"
+                  r"thursday|friday|saturday|sunday)$", "", rest, flags=re.I)
     # a name said lowercase (speech to text: "for sarah") is still a name, unless it's a time or a material
     spoken = re.match(r"^(?P<job>.+?)\s+for\s+(?:the\s+)?(?P<who>[a-z][\w-]*)$", rest)
     if spoken and not re.fullmatch(r"(?:cedar|pine|oak|maple|treated|cash|free|me|him|her|them|us|you|it|now|"
@@ -71,7 +73,9 @@ def reply(context, words: str) -> Optional[str]:
     """The draft quote for the job his words name, or None when they aren't a quote for a structure with its size
     (then "make a quote for ..." goes to make_quote as before).
     "2 12 by 16 decks" is two; several customers by the name are asked which, before any quote.
-    "The Smiths'" finds a John Smith."""
+    "The Smiths'" finds a John Smith.
+    A lowercase purpose ("for the shop") that's no customer of his is never one to add; the plural lookup only for
+    "the Smiths'"."""
     from core.assistant_plan_actions import calculate, size_words, sizes_for, structure_for
 
     found = job_of(words)
@@ -105,11 +109,14 @@ def reply(context, words: str) -> Optional[str]:
     named = ""
     if who and book is not None:
         person = _one(list(book.customers), who.lower(), lambda c: c.name, "customer")
-        if isinstance(person, str) and who.lower().endswith("s"):  # "the Smiths'" is John Smith
-            person = _one(list(book.customers), who.lower()[:-1], lambda c: c.name, "customer")
+        if isinstance(person, str) and re.search(rf"\b{re.escape(who)}['’]", words):  # "the Smiths'" is John Smith,
+            person = _one(list(book.customers), who.lower()[:-1], lambda c: c.name, "customer")  # never Jess for Jesse
         if isinstance(person, str) and person.startswith("Which"):
             return person  # several customers by that name: which one, before any quote (the eleventh review)
-        if isinstance(person, str):
+        spoken = who not in words  # said lowercase ("for the shop", "for goats"): only a customer if he has one
+        if isinstance(person, str) and spoken:
+            named = ""
+        elif isinstance(person, str):
             named = f" I don't have {who} as a customer yet, so it's for no one: say \"add a customer named {who}\"."
         else:
             params["customer_id"] = person.customer_id

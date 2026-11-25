@@ -17,7 +17,7 @@ with no backup/restore code changes needed.
 Recurring events (2026-09-08, closing a real documented gap —
 docs/KNOWN_ISSUES.md's "Calendar has no recurring-event support"):
 a CalendarEvent's `date` is always its one stored anchor date;
-`recurrence` (None/"yearly"/"monthly"/"weekly") plus the pure
+`recurrence` (None or one of CALENDAR_RECURRENCE_TYPES, daily included) plus the pure
 occurs_on() function below determine whether it ALSO occurs on any
 other date being asked about. This is the one place that logic lives —
 events_for_date()/events_for_month() and
@@ -66,7 +66,7 @@ class CalendarEvent:
     date: str  # ISO "YYYY-MM-DD" — the anchor date; see occurs_on() for recurrence
     time: Optional[str] = None  # "HH:MM", or None for an all-day event
     notes: str = ""
-    recurrence: Optional[str] = None  # None, or one of RECURRENCE_TYPES
+    recurrence: Optional[str] = None  # None, or one of CALENDAR_RECURRENCE_TYPES
 
     def to_dict(self) -> dict:
         """The record as the plain dict saved in its JSON file."""

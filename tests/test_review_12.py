@@ -37,9 +37,12 @@ def test_a_daily_reminder_never_guesses():
 
 @pytest.fixture()
 def spend():
-    """What _spent_reply would record."""
+    """What _spent_reply would record.
+    Sarah Lee is among his people, so a name is someone he knows."""
     ran = []
-    context = SimpleNamespace(flock=None, assistant_actions=SimpleNamespace(execute=lambda c, n, a: ran.append(a) or "ok"))
+    people = SimpleNamespace(all_people=lambda: [SimpleNamespace(name="Sarah Lee")])  # a name is a person he knows
+    context = SimpleNamespace(flock=None, relationships=people, business=None,
+                              assistant_actions=SimpleNamespace(execute=lambda c, n, a: ran.append(a) or "ok"))
     return ran, lambda words: assistant_turn._spent_reply(context, words)
 
 
