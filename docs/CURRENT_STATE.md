@@ -2,8 +2,24 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-24, night (Opus at the PC: one intelligence, the homestead's brain, the hub and the
-engineer, the game layer, brainstorm round 12), by claude.*
+session. Last updated: 2026-11-25 (Opus at the PC: interactive labs, the ESP32 simulator, scenario drills), by
+claude.*
+
+**2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
+one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
+the build; `docs/future/INTERACTIVE_LABS_PLAN.md`). Built: Build With ESP32, six stages of real labs, each check
+passed only by what his board prints over serial (core/esp32_path.py); the lab bench (core/esp32_lab.py: a lab as a
+PlatformIO project, flashed on his yes, checked from the serial port); the course page (web/course.html,
+core/lab_page.py; Classroom > Hands-on labs, and Labs under Learning): the map with checks passed, the lab's steps,
+parts, wiring and sketch, Flash This Lab, a serial monitor; the simulator (core/esp32_sim.py, web/labsim.js): wire a
+lab on a drawn breadboard, each step ticked and the next lit, the circuit judged as it would behave (an LED backwards,
+no resistor, a short, 5 V on the pot, a sensor on the wrong pin), Run It plays back what the board would print; by
+voice "walk me through building the pot lab", "next step", "what will the dht lab print?", taken in code before the
+plans. Then scenario drills (core/drills.py), the simulator for a course without a board: "give me a survival drill"
+(lost at dusk, water on day two, a fire in the wet), each call judged best, fine or wrong with why. Neither a sim run
+nor a drill ever passes a check. Also fixed: the next step named the stage's first lesson, not the check's; "how do I
+wire the relay lab?" counted as a how-to about MIA's Lab app. Waiting on Zac: PlatformIO on the PC, and whether to run
+real compiled sketches in a simulator (Wokwi, online with a token, or QEMU, local). 8340 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the

@@ -5,7 +5,14 @@ start from a fresh copy of this repo with no memory of past chats, so
 **anything not written here is forgotten.** Start a session with "read
 docs/NEXT_SESSION.md". Update it at the end of each session.
 
-*Last updated: 2026-11-24 (Opus on the PC: one intelligence, the project picture, harvests, what can I build)*
+*Last updated: 2026-11-25 (Opus on the PC: interactive labs, the ESP32 simulator, scenario drills)*
+
+**2026-11-25: interactive labs** (`docs/future/INTERACTIVE_LABS_PLAN.md`; CURRENT_STATE has the whole of it). At the
+PC: open Classroom > Hands-on labs; build the blink lab in the simulator; say "walk me through building the pot lab",
+then "next step"; "give me a survival drill", then answer "B". Waiting on Zac: `pip install platformio` (flashing his
+board) and Wokwi or QEMU for running real sketches (online with a token, or local and serial-only). Next build: drills
+for other courses (canning safety, a power outage, the flock) from their own verified sources, then the guitar and
+carpentry on the same frame. Phase B of the smart-ag plan, named next below, is done (2026-11-24).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
