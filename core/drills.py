@@ -302,9 +302,9 @@ DRILLS: tuple = (
                   "A full cushion, then the debt that costs the most: the most good per unit of money."),
                  ("Some to something you'll enjoy, the rest to the plan", "fine",
                   "Fair, as long as most of it goes to the cushion and the dearest debt."),
-                 ("The lowest-rate debt, since it's easiest to finish", "wrong",
-                  "The highest rate costs you the most every month; unless you're working the snowball on purpose, "
-                  "start there.")),
+                 ("The lowest-rate debt first", "wrong",
+                  "The highest rate costs you the most every month, so start there (or with the smallest balance, if "
+                  "you're working the snowball on purpose); the lowest rate is last.")),
           ), "money_cushion"),
     Drill("market_day", "business", "Market day",
           "A Saturday at the farmers' market with your goods. You've worked out each one's full cost, your time "
@@ -325,8 +325,9 @@ DRILLS: tuple = (
                  ("Leave it at home and take cards only", "fine",
                   "Simpler, but you'll lose the customers who carry cash.")),
               _q("A customer brings back something that broke after a week. What now?",
-                 ("Follow your stated policy, and make it right quickly and kindly", "best",
-                  "A stated policy, applied quickly, keeps a customer who'll come back and tell others."),
+                 ("Follow your stated policy and the law where you sell, and make it right quickly and kindly", "best",
+                  "A stated policy, applied quickly, keeps a customer who'll come back and tell others; where the law "
+                  "gives a buyer more for a faulty item, the law comes first."),
                  ("Argue it was their fault", "wrong",
                   "Even if it was, arguing in front of the stall costs you more than the item."),
                  ("Refund anyone anything, no questions", "fine",
@@ -535,7 +536,8 @@ def reply(context, conversation, text: str) -> Optional[str]:
     """Drills by voice, in code, before the question plans: an answer to the question MIA just asked, "stop the drill",
     or "give me a survival drill"; None when the words aren't for a drill. A drill starts only when one is asked for,
     its subject beside the word ("a canning drill", "drill me on survival"); while one waits, only an attempt at an
-    answer ("e", "not sure") is asked for the letter again, and anything else ends it."""
+    answer ("e", "not sure") is asked for the letter again, and anything else ends it.
+    A money or business drill needs the word "drill": "a budget scenario" is his own planning."""
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     live = where(conversation)
     if live is not None:
@@ -556,6 +558,8 @@ def reply(context, conversation, text: str) -> Optional[str]:
     if _REQUEST.search(said) and _ASKED_FOR.search(said) and not _NOT_THIS.search(said) \
             and not re.search(r"\b(fire drill|drill at work|drills? at work|at work)\b", said):
         drill = find(said)
+        if drill is not None and drill.program in ("money", "business") and not re.search(r"\bdrills?\b", said):
+            return None  # "a budget scenario", "quiz me on my budget": his own planning, not a drill (fourth review)
         if drill is not None:
             return start(drill)
     return None

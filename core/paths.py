@@ -221,16 +221,21 @@ def problems(program: Program) -> list[str]:
 
 
 def find_program(context, interest: str) -> Optional[Program]:
-    """The program an interest means: by name or id, else the one whose words it uses most; a person's drafts
-    count too."""
+    """The program an interest means: by its name, or its id as the whole subject ("learn money"), else the one whose
+    words it uses most; a person's drafts count too."""
     _builtins()
     text = f" {(interest or '').lower()} "
     candidates = list(PROGRAMS.values())
     book = getattr(context, "paths", None)
     if book is not None:
         candidates += [from_dict(d) for d in book.drafts.values()]
+    # its id only as the whole subject ("learn money", "start esp32"); in a longer phrase ("grow vegetables for a market
+    # business") the programs' own words decide (the fourth review, 2026-11-25)
+    subject = " ".join(w for w in re.findall(r"[a-z0-9']+", text)
+                       if w not in ("learn", "learning", "start", "begin", "the", "a", "my", "course", "path", "basics",
+                                    "to", "i", "want", "how", "about", "teach", "me", "some", "more"))
     for p in candidates:
-        if f" {p.id} " in text or p.name.lower() in text:
+        if subject == p.id or p.name.lower() in text:
             return p
     scored = [(sum(1 for w in p.words if w in text), p) for p in candidates]
     best = max(scored, key=lambda x: x[0], default=(0, None))

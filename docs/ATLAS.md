@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1778 files, 384,214 lines; 1778 files describe themselves; 20,952 of 21,082 classes and functions are documented.
+1779 files, 384,284 lines; 1779 files describe themselves; 20,957 of 21,087 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-711 files, 199,998 lines; 10,051 of 10,137 classes and functions documented
+711 files, 200,014 lines; 10,051 of 10,137 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1009,7 +1009,7 @@
 
 ## tests/: the test suite: what each part must do
 
-658 files, 102,211 lines; 8,530 of 8,574 classes and functions documented
+659 files, 102,265 lines; 8,535 of 8,579 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1480,6 +1480,7 @@
 - `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
 - `tests/test_review_bench_3.py`: The third review (2026-11-25), each finding as its failing input: "build me a ..." only as a request at the start, never a reminder, a note, a time or a stand; her designs only proper names, asked about exactly, and a plan said only when its decision calls it one; parts matched by whole word, severa
 - `tests/test_review_labs_2.py`: The second review of the labs (2026-11-25), each finding as its failing input: the Mega's I2C on its own header, never A4/A5; power backwards a stop in the free build and the course simulator; a part's input held to its range and an output tied to a rail warned; a lab named as one deciding the cours
+- `tests/test_review_money_4.py`: The fourth review (2026-11-25), each finding as its failing input: money and business planning in "scenario" or "quiz" words never starts a drill; a program's id only as the whole subject; the connected sketch says MIA must listen on the home network, sounds its alarm before reporting, and keeps its
 - `tests/test_reward_shop.py`: The Reward Shop (DEC-0028, Zac 2026-10-17): spend credits on rewards you set. Each person's own shop; spending never lowers the lifetime credits or the level; undo gives the credits back.
 - `tests/test_rewards_manager.py`: Unit tests for core.rewards_manager. Isolates every real manager's own file constants into a tmp_path scratch area, same monkeypatch pattern as tests/test_kitchen_manager.py's own isolated_paths. The homestead stats (produce, eggs, jars) are among every stat listed; their own tests are tests/test_ac
 - `tests/test_runs.py`: The run record (prompt 23's review, UI-1, DEC-0188; core/runs.py): one record for anything MIA runs in steps. A run moves through running, waiting and an end, keeping each step with what she said; a restart never leaves a cut-off run looking alive or calls it done (shown with a real process killed m

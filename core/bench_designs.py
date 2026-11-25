@@ -205,7 +205,7 @@ void loop() {{
 # Reporting to MIA (core/sensors.py: a sensor he adds on the Sensors page, its key shown once): an ESP32 design's main
 # reading sent to /api/sensors/reading at most once a minute (MIA refuses one sooner than 30 s after the last). The
 # value each design sends, and the line its sketch prints it on (the report goes right after).
-CONNECTED = {"temp_alarm": ("c", "Serial.println(c, 1);"), "soil_alert": ("raw", "Serial.println(raw);"),
+CONNECTED = {"temp_alarm": ("c", "digitalWrite(BUZZER, alarm ? HIGH : LOW);"), "soil_alert": ("raw", "Serial.println(raw);"),
              "tank_level": ("full", "Serial.println(full);")}
 PLACEHOLDER = "type-yours-here"
 SECRETS = f"""// Typed by you: MIA never fills this in, and it stays on your computer.
@@ -228,6 +228,8 @@ void reportToMia(float value) {   // at most once a minute: MIA refuses a readin
     return;
   }
   HTTPClient http;
+  http.setConnectTimeout(2000);   // a PC that's off never holds up the sketch for long
+  http.setTimeout(2000);
   http.begin(MIA_URL);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("X-Sensor-Key", SENSOR_KEY);
@@ -288,7 +290,8 @@ def design(context, design_id: str, board_id: str = "esp32dev", report: bool = F
     """A design for his board (see the module's opening): only the parts its wiring for that board uses (the
     Arduino's tank gauge needs no divider), a part used twice counted once with its number. KeyError for one there
     isn't; ValueError for a board. `report`: on the ESP32, the sketch that also sends its reading to MIA
-    (`connected`), with the secrets.h he fills in and how to add the sensor; `can_report` says if it can."""
+    (`connected`), with the secrets.h he fills in and how to add the sensor; `can_report` says if it can.
+    Its reporting steps say first that MIA must listen on the home network (an ESP32 can't use Tailscale)."""
     from core import boards, free_build, part_specs
 
     d = DESIGNS[design_id]
@@ -316,7 +319,11 @@ def design(context, design_id: str, board_id: str = "esp32dev", report: bool = F
            "have": have, "need": need, "check": checked, "can_report": can_report, "reports": False, "secrets": ""}
     if report and can_report:
         out.update(sketch=connected(design_id, code), reports=True, secrets=SECRETS,
-                   report_steps=["In MIA, open Sensors and add a sensor for the series this feeds; copy the key it "
+                   report_steps=["MIA has to listen on your home network, not only on this PC: turn on Phone "
+                                 "Access with its address set to listen on the network (server.host 0.0.0.0), and "
+                                 "allow port 8765 through Windows Firewall for your home network. (The phone's "
+                                 "Tailscale address won't do: an ESP32 can't join it.)",
+                                 "In MIA, open Sensors and add a sensor for the series this feeds; copy the key it "
                                  "shows (it's shown once).",
                                  "Save secrets.h beside the sketch, and type in your Wi-Fi's name and password, your "
                                  "PC's address and that key yourself: MIA never fills them in.",
