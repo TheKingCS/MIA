@@ -2458,3 +2458,14 @@ body.sel-card { background: var(--bg); color: var(--text); margin: 0; font-famil
 .drill-best strong { color: rgb(var(--rgb-ok)); }
 .drill-fine strong { color: rgb(var(--rgb-amber)); }
 .drill-wrong strong { color: rgb(var(--rgb-bad)); }
+
+
+/* Ask MIA on a course's page (web/course.js, core/lab_ask.py). */
+.crs-ask { display: flex; flex-direction: column; gap: 8px; }
+.crs-ask-row { display: flex; gap: 8px; }
+.crs-ask-input { flex: 1; min-width: 0; font: inherit; color: var(--text); background: rgba(var(--rgb-accent), 0.04);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.crs-ask-input:focus { border-color: rgba(var(--rgb-accent), 0.6); outline: none; }
+.crs-ask-about { align-self: flex-start; }
+.crs-ask-answer p { margin: 6px 0; line-height: 1.5; }
+.crs-ask-q { color: var(--text-dim); font-style: italic; }

@@ -633,6 +633,8 @@
     // board checks the lab. (Not the Data Logger's Lab above, MIA.lab.)
     course: (course, lesson) => read("/api/labs/" + encodeURIComponent(course || "esp32") +
       (lesson ? "?lesson=" + encodeURIComponent(lesson) : ""), "course"),
+    courseAsk: (course, lesson, question, drill, n) => demo ? demoOnly()
+      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/ask", { lesson, question, drill: drill || "", n: n || 0 }),
     courseSim: (course, lesson, wires, inputs, seconds) => demo ? demoOnly()
       : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/sim", { lesson, wires, inputs, seconds }),
     courseRead: (course, lesson, seconds) => demo ? demoOnly()

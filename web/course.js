@@ -5,6 +5,7 @@
  * each approved: Start This Course (path.start), Flash This Lab (esplab.flash). Read The Board (MIA.courseRead)
  * reads the board's serial output for a few seconds and checks the lab from what it said. The Simulator section,
  * building along with MIA, is web/labsim.js. A course with scenario drills (core/drills.py) shows them as Drills.
+ * Ask MIA (MIA.courseAsk, core/lab_ask.py): a question about the lab, or the drill question on screen.
  * Formatting only.
  */
 (function () {
@@ -15,6 +16,8 @@
   const course = query.get("course") || "esp32";
   let lesson = query.get("lesson") || "";
   let monitor = "";  // the board's last output, kept while the page is open
+  let focus = { drill: "", n: 0, about: "" };  // what Ask MIA is about: the lab, or the drill question on screen
+  let askBar = null;
 
   const section = (title, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title)), ...body);
@@ -22,6 +25,44 @@
   // replaceChildren with the nulls left out (the DOM's own writes a null as the text "null"; el() skips them).
   const fill = (node, ...kids) => node.replaceChildren(...kids.flat().filter((k) => k != null));
   const checkRow = (c) => el("div", { class: "crs-check" + (c.passed ? " passed" : "") }, (c.passed ? "✓ " : "○ ") + c.what);
+
+  // Ask MIA (core/lab_ask.py): a question about what's in front of him, answered from the lab or the drill question
+  // on screen; the answer shows under the bar and goes into his conversation.
+  function askMia(page) {
+    const input = el("input", { type: "text", class: "crs-ask-input", placeholder: "Ask MIA: why is it done this way? What does this line do?",
+      "aria-label": "Ask MIA about this", maxlength: "600" });
+    const about = el("span", { class: "chip crs-ask-about" });
+    const out = el("div", { class: "crs-ask-answer", "aria-live": "polite" });
+    const button = el("button", { type: "submit", class: "btn btn-amber" }, "Ask MIA");
+    const showAbout = () => { about.textContent = "About: " + (focus.about || page.lab.title); };
+    const form = el("form", { class: "glass money-section crs-ask", onsubmit: async (e) => {
+      e.preventDefault();
+      const question = input.value.trim();
+      if (!question) { input.focus(); return; }
+      button.disabled = true;
+      fill(out, el("p", { class: "dim" }, "Thinking about it…"));
+      try {
+        const got = await MIA.courseAsk(course, page.lab.id, question, focus.drill, focus.n);
+        fill(out, el("p", { class: "crs-ask-q" }, question), ...got.answer.split(/\n\n+/).map((t) => el("p", {}, t)));
+        input.value = "";
+      } catch (err) {
+        fill(out, el("p", {}, err.message));
+      } finally { button.disabled = false; }
+    } }, el("div", { class: "crs-ask-row" }, input, button), about, out);
+    showAbout();
+    askBar = { form, input, showAbout };
+    return form;
+  }
+  function setFocus(drill, n, about) {
+    focus = { drill: drill || "", n: n || 0, about: about || "" };
+    if (askBar) askBar.showAbout();
+  }
+  function askAbout(text) {
+    if (!askBar) return;
+    askBar.input.value = text;
+    askBar.form.scrollIntoView({ behavior: "smooth", block: "center" });
+    askBar.input.focus();
+  }
 
   // Choosing a lab: the address keeps it (so a reload or a link lands on it), and the page is read again.
   function go(id) {
@@ -120,7 +161,10 @@
       function ask() {
         const q = d.questions[n];
         const feedback = el("div", { class: "drill-feedback", "aria-live": "polite" });
+        setFocus(d.id, n + 1, d.title + ", question " + (n + 1));
         const next = el("button", { type: "button", class: "btn btn-amber", hidden: true }, n + 1 < d.questions.length ? "Next Question" : "See How It Went");
+        const why = el("button", { type: "button", class: "btn btn-ghost", hidden: true,
+          onclick: () => askAbout("Why is that the best call here?") }, "Ask MIA Why");
         const buttons = q.choices.map((c, i) => el("button", { type: "button", class: "drill-choice", onclick: () => {
           buttons.forEach((b, j) => { b.disabled = true; b.classList.add(q.choices[j].verdict); });
           buttons[i].classList.add("picked");
@@ -129,15 +173,17 @@
           fill(feedback, el("p", { class: "drill-" + c.verdict }, el("strong", {}, verdictWord[c.verdict] + " "), c.why),
             c.verdict === "best" ? null : el("p", { class: "dim" }, "Best: " + best.text + ". " + best.why));
           next.hidden = false;
+          why.hidden = false;
           next.focus();
         } }, "ABCD"[i] + ") " + c.text));
         next.onclick = () => { n += 1; if (n < d.questions.length) ask(); else done(); };
         fill(box, el("h3", {}, d.title), n === 0 ? el("p", {}, d.situation) : null,
           el("p", { class: "dim" }, "Question " + (n + 1) + " of " + d.questions.length),
           el("p", { class: "drill-ask" }, q.ask), el("div", { class: "drill-choices" }, buttons), feedback,
-          el("div", { class: "row-buttons" }, next));
+          el("div", { class: "row-buttons" }, next, why));
       }
       function done() {
+        setFocus();
         const all = right === d.questions.length;
         fill(box, el("h3", {}, d.title),
           el("p", {}, all ? "Every call the best one." : right + " of " + d.questions.length + " best: the lesson behind it is worth a read again."),
@@ -177,6 +223,7 @@
       page.board ? cell(page.board.ready ? "ok" : "soon", page.board.ready ? "Ready" : "Not yet", "Board") : null);
     $("map").replaceChildren(map(page));
     const panel = labPanel(page);
+    panel.unshift(askMia(page));
     if (!page.started) {
       panel.unshift(el("section", { class: "glass money-section" },
         el("p", {}, "Start " + page.course.name + ": about " + page.course.minutes_a_day + " minutes a day, " +

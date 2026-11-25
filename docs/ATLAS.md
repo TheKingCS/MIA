@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1761 files, 380,037 lines; 1761 files describe themselves; 20,792 of 20,922 classes and functions are documented.
+1763 files, 380,307 lines; 1763 files describe themselves; 20,808 of 20,938 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-702 files, 197,010 lines; 9,957 of 10,043 classes and functions documented
+703 files, 197,119 lines; 9,960 of 10,046 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -328,6 +328,7 @@
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials.
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
+- `core/lab_ask.py`: Ask MIA, on a course's page (Zac, 2026-11-25: "an ask MIA button or text bar where I can get more detailed info or ask why something is done the way she says"). His question goes to the model with what he's looking at, assembled here from core's own records, never from the page: the lab (why, steps,
 - `core/lab_page.py`: The course page (docs/future/INTERACTIVE_LABS_PLAN.md, step 3; web/course.html): one frame for every course on MIA's learning paths, the first Build With ESP32 (core/esp32_path.py).
 - `core/lab_push.py`: Her merged changes pushed with the daily summary (WP-12, Q-100, DEC-0264: "her merged changes are pushed with the daily summary, so CI tests them"). The changes MIA makes to herself go into the running copy on Claude's pass (core/self_merges.py) and were kept on the PC; now, once a day after the sum
 - `core/lab_reading_actions.py`: The Lab's changes on the web (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). `lab_reading.add` logs a reading to a series in the Data Logger (core/data_logger_manager.py), joining an existing series whatever its case and starting a new one with its first reading; `lab_reading.delete` t
@@ -713,7 +714,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,922 lines; 61 of 61 classes and functions documented
+2 files, 4,948 lines; 62 of 62 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -1000,7 +1001,7 @@
 
 ## tests/: the test suite: what each part must do
 
-651 files, 101,411 lines; 8,468 of 8,512 classes and functions documented
+652 files, 101,497 lines; 8,480 of 8,524 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1268,6 +1269,7 @@
 - `tests/test_knowledge_ids.py`: Every knowledge entry in work/knowledge/ has its own id: two sessions working at once can each write the next number, and a merge then brings both in (found 2026-11-07: seven pairs). Renumber the newer one when this fails.
 - `tests/test_knowledge_pack_delete.py`: Deleting a Knowledge pack from the web (core/reference_library_manager.delete_confirmed): only once its name is typed, as the desktop asks, because the file is gone for good.
 - `tests/test_knowledge_pictures.py`: Pictures in Knowledge articles (core/reference_library_manager.article_images): which <img> tags become pictures fetched from the pack, resolved against the article's own path.
+- `tests/test_lab_ask.py`: Ask MIA on a course's page (core/lab_ask.py): the material is core's own (a lab's sketch and build, a drill question's choices and why), the model is asked with it and the question, the exchange goes into his conversation, a missing model is said plainly, and questions about something that isn't the
 - `tests/test_lab_module.py`: Unit test for modules.lab.module.format_reading_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test.
 - `tests/test_lab_page.py`: A course's labs (core/lab_page.py, web/course.html): the course page before and after he starts it (stages, the lab chosen with its sketch and wiring, checks passed), an unknown course, and the action that starts a course (`path.start`, core/path_actions.py), refused for one already started.
 - `tests/test_lab_push.py`: WP-12 (Q-100, DEC-0264): her merged changes are pushed to GitHub with the daily summary, only hers, never forced or rebased, held when anything else is waiting or GitHub has newer commits, and never from the test suite itself.
@@ -1656,7 +1658,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-122 files, 22,965 lines
+122 files, 23,014 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

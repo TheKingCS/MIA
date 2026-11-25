@@ -168,9 +168,11 @@ DRILLS: tuple = (
                   "Reviews say it tastes good, not that it was tested; can only from a tested recipe.")),
               _q("Which canner do the green beans go in?",
                  ("The pressure canner, at the pressure and time for your altitude", "best",
-                  "Green beans are low-acid: only a pressure canner gets hot enough to make them safe."),
+                  "Green beans are low-acid: only a pressure canner reaches the 240 °F that makes them safe; "
+                  "boiling water stops at 212 °F."),
                  ("The boiling-water canner, just for longer", "wrong",
-                  "Boiling water never gets hot enough for low-acid food, however long it runs."),
+                  "Boiling water never gets past 212 °F, however long it runs, and low-acid food needs 240 °F, "
+                  "which only a pressure canner reaches."),
                  ("Either, as long as the lids seal", "wrong",
                   "A sealed jar of low-acid food canned wrong can still carry botulism; the seal doesn't make it "
                   "safe.")),
