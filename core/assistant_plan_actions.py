@@ -504,7 +504,8 @@ def _action_forget_plan(context, arguments: dict) -> str:
 def register_plan_actions(registry: AssistantActionRegistry) -> None:
     """Registers the plans shelf's tools: asking in domain plans (next_cut reads a plan's cuts one at a time, for the
     shop, at the size he's building; never on the first cut of hay), the shopping list in plan_buying, and keeping a plan,
-    starting a project or letting a kept plan go in plan_saving (each domain brought only by its own words)."""
+    starting a project or letting a kept plan go in plan_saving (each domain brought only by its own words).
+    "Shelf" and "shelves" bring the plans tools too."""
     sizes = {"size": {"type": "string", "description": "The size as they said it, e.g. '10 by 12' or '4x8x2' (feet)."},
              "length_ft": {"type": "number", "description": "Length in feet."},
              "width_ft": {"type": "number", "description": "Width in feet (a deck or floor: the joist span)."},
@@ -520,7 +521,7 @@ def register_plan_actions(registry: AssistantActionRegistry) -> None:
         "blueprint", "blueprints", "cut list", "material list", "materials list", "lumber", "2x4",
         "2x4s", "studs", "joists", "rafters", "plywood", "woodworking", "shed", "deck", "fence", "raised bed", "slab",
         "workbench", "coop", "barn", "chicken coop", "hen house", "compost bin", "cold frame", "bookshelf",
-        "bookcase", "shelving", "lean-to", "picnic table", "firewood rack", "deck stairs",
+        "bookcase", "shelving", "shelves", "shelf", "lean-to", "picnic table", "firewood rack", "deck stairs",
         "stair stringers", "build stairs", "potting bench", "planter box", "cut list"))
     tools = (
         ("find_plans", "Find plans in MIA's Library (woodworking plans, structure blueprints, material lists, the "

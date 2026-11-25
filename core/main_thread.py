@@ -15,6 +15,11 @@ the main thread, and otherwise hands the publish to the main thread
 through `context.main_thread_call`, which core/application.py sets to a
 Qt queued call. Without one (tests, the headless voice loop with no
 screens) it publishes directly.
+
+`changes_records(name)` says whether a tool may change records, and
+`call_changes(name, arguments)` whether one call of it does: material_list
+and cut_list only save with keep=true (CHANGES_ONLY_WITH), so a
+materials question stays a lookup.
 """
 
 from __future__ import annotations
@@ -68,6 +73,22 @@ def changes_records(action_name: str, by_tier: bool = True) -> bool:
         except Exception:  # noqa: BLE001 - no manifests to read: judged by its name, as before
             pass
     return action_name in CHANGES_DESPITE_NAME or not action_name.startswith(_READ_ONLY_PREFIXES)
+
+
+# Tools that change a record only when one argument says so (2026-11-25): material_list and cut_list work a size out
+# in code and save it to the plans shelf only with keep=true, so "what do I need to build garage shelves 8 feet wide?"
+# is a lookup (the tool loop had taken it for a change and let the model answer with made-up quantities).
+CHANGES_ONLY_WITH = {"material_list": "keep", "cut_list": "keep"}
+
+
+def call_changes(action_name: str, arguments) -> bool:
+    """Whether this call of a tool may change records: `changes_records`, except a tool in CHANGES_ONLY_WITH called
+    without its argument set true (a small model sends "false" as a string, or leaves it out)."""
+    flag = CHANGES_ONLY_WITH.get(action_name)
+    if flag is not None:
+        value = (arguments or {}).get(flag) if isinstance(arguments, dict) else None
+        return str(value).strip().lower() in ("true", "1", "yes")
+    return changes_records(action_name)
 
 
 def records_changed(context, action_name: str) -> None:

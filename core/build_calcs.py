@@ -427,7 +427,8 @@ def _qty_of(result: MaterialList, starts: str) -> float:
 
 def shelving(width_ft: float = 8, depth_in: float = 24, height_ft: float = 6, shelves: int = 4) -> MaterialList:
     """Garage shelving: shelf frames of 2x4 (front and back rails, cross pieces every 24 in) on 2x4 legs at each end
-    and every 4 ft, topped with 3/4 in plywood ripped to depth."""
+    and every 4 ft, topped with 3/4 in plywood ripped to depth; its notes say how far apart the supports are (16 in
+    for heavy loads) and to fix it to the wall."""
     shelves = int(shelves) or 4
     out = MaterialList(f"{_qty(width_ft)} ft garage shelving, {_qty(depth_in)} in deep, {shelves} shelves",
                        {"width_ft": width_ft, "depth_in": depth_in, "height_ft": height_ft, "shelves": shelves})
@@ -440,6 +441,8 @@ def shelving(width_ft: float = 8, depth_in: float = 24, height_ft: float = 6, sh
     out.add("3/4 in plywood or OSB 4x8", math.ceil(strips / per_sheet), "sheets", f"ripped to {_qty(depth_in)} in")
     out.add("3 in screws", shelves * (across * 4) + legs * shelves * 2)
     out.add("1 1/4 in screws", shelves * across * 3, "", "plywood to the frames")
+    out.notes.append("The supports: a cross piece every 24 in under the plywood and a pair of legs every 4 ft carry "
+                     "each shelf; for heavy loads (paint, tools, full totes) set the cross pieces 16 in apart.")
     out.notes.append("Screw the unit to the wall studs at the top so it can't tip.")
     return out
 

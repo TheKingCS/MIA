@@ -229,10 +229,11 @@ def asks_not_tells(prompt: str) -> bool:
 
 
 def _wants_change(context, reply: ChatReply) -> bool:
-    """Whether a reply asks for any tool that changes a record."""
-    from core.assistant_actions import changes_records
+    """Whether a reply asks for any tool call that changes a record (core/main_thread.call_changes: material_list
+    without keep only works a size out)."""
+    from core.main_thread import call_changes
 
-    return any(changes_records(c.name) for c in reply.tool_calls)
+    return any(call_changes(c.name, c.arguments) for c in reply.tool_calls)
 
 
 def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply: ChatReply) -> ChatReply:
