@@ -6,7 +6,8 @@ His fishing (Jarvis brainstorm, round 11: knowledgeable about his hobbies; fishi
 each fish he catches kept, and what his own catches say about what's biting.
 
 **A catch** (`log`): the species, and what he says of it: length (inches), weight (pounds), where, the bait or lure,
-kept or released. A `fish_caught` life event in his own history (core/repertoire.py's way: dated, undone by "undo
+kept or released; a model's placeholder ("unknown") is left out, and so is a length no fish of that weight could have
+(`plausible_length`). A `fish_caught` life event in his own history (core/repertoire.py's way: dated, undone by "undo
 that", never a second store); said as activity.logged, so the Angler achievements (core/rewards_manager.py) move at
 once.
 
@@ -36,9 +37,22 @@ def _where(context):
     return getattr(context, "personal_life_events", None) or getattr(context, "life_events", None)
 
 
+_BLANK = ("unknown", "none", "n/a", "na", "not specified", "unspecified", "null", "not given", "-")
+
+
 def _clean(text, limit: int = 60) -> str:
-    """Pure logic. Words tidied and cut short."""
-    return " ".join(str(text or "").split())[:limit]
+    """Pure logic. Words tidied and cut short; a model's placeholder ("unknown", "none", "n/a") is nothing said."""
+    words = " ".join(str(text or "").split())[:limit]
+    return "" if words.lower().strip(".") in _BLANK else words
+
+
+def plausible_length(length: Optional[float], weight: Optional[float]) -> Optional[float]:
+    """Pure logic. The length, or None when no fish that long could weigh that much (over length³/400 lb: a 3-inch
+    fish of 3 pounds is the model copying "3 pound" into the length, seen live 2026-11-24; an 18-inch 2.5 lb bass
+    is well inside it)."""
+    if length and weight and weight > length ** 3 / 400:
+        return None
+    return length
 
 
 def _number(raw) -> Optional[float]:
@@ -91,13 +105,16 @@ def _measure(c: dict) -> str:
 
 
 def log(context, species: str, length=None, weight=None, where: str = "", bait: str = "", kept=None) -> str:
-    """Keeps one catch and says so, with a personal best named when it is one. ValueError without a species."""
+    """Keeps one catch and says so, with a personal best named when it is one. ValueError without a species. A
+    placeholder spot or bait is left out, and a length no fish of that weight could have (`plausible_length`)."""
     from core import life_events
 
     species = _clean(species, 40)
     if not species:
         raise ValueError("What did you catch?")
-    row = {"species": species, "length": _number(length), "weight": _number(weight), "where": _clean(where),
+    weight = _number(weight)
+    row = {"species": species, "length": plausible_length(_number(length), weight), "weight": weight,
+           "where": _clean(where),
            "bait": _clean(bait), "kept": None if kept in (None, "") else str(kept).lower() in ("true", "yes", "kept", "1")}
     before = bests(catches(context)).get(species.lower())
     target = _where(context)

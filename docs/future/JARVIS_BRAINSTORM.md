@@ -354,6 +354,14 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **When's the best time to fish?** (no decision; fishing is his): *built 2026-11-24 (`core/fishing_times.py`, the
+  tool `best_time_to_fish`).* Offline, from the sun and moon for his town: dawn and dusk first, the solunar majors (the
+  moon overhead and underfoot) and minors (moonrise and moonset), the ones lining up with dawn or dusk as the best,
+  the phase near a new or full moon, and the week's or weekend's best days; his own log's best hour leads once it has
+  three, and the solunar idea is said as tradition. astral reads the moon's height in UTC whatever the zone: caught
+  by a test that the moon a day before full is highest near midnight. The live check also caught "a 3 pound catfish"
+  logged as 3 inches at "unknown": the catch log now drops a placeholder and a length no fish that heavy could have.
+  *Seen, not changed:* "what phase is the moon tonight?" offers no tool (get_sun_moon_info needs a waypoint).
 - **How much should I set aside for taxes?** (no decision; his businesses, US): *built 2026-11-24
   (`core/tax_setaside.py`, the tool `tax_set_aside`).* This year's workshop profit from his ledger, self-employment tax
   worked out in code (15.3% of 92.35%, from $400), income tax at 12% and 22% side by side (and a bracket he gives),

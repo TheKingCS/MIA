@@ -51,7 +51,8 @@
       "recall_expedition",
       "toggle_gear_packed",
       "log_catch",
-      "whats_biting"
+      "whats_biting",
+      "best_time_to_fish"
     ],
     "actions": [
       "expedition.add",
@@ -101,7 +102,8 @@
       "trip.status": "act_within_grant",
       "log_catch": "act_within_grant",
       "whats_biting": "observe",
-      "catch.log": "act_within_grant"
+      "catch.log": "act_within_grant",
+      "best_time_to_fish": "observe"
     },
     "outside": []
   },

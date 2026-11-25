@@ -89,6 +89,7 @@ from core.catch_actions import register_catch_actions
 from core.make_next import register_make_next_actions
 from core.outdoor_work import register_outdoor_work_actions
 from core.tax_setaside import register_tax_setaside_actions
+from core.fishing_times import register_fishing_times_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_path_actions import register_path_actions
 from core.assistant_plan_actions import register_plan_actions
@@ -227,7 +228,7 @@ class AssistantTools:
         fix_jar_count (a batch put up with the wrong count) comes from core/canning_fix.py.
         adjust_greenhouse (the greenhouse node's targets, DEC-0185) comes from core/greenhouse_adjust.py.
         power_outage (the power outage clock) comes from core/outage_actions.py.
-        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py.
+        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py; best_time_to_fish from core/fishing_times.py.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -285,6 +286,7 @@ class AssistantTools:
         register_make_next_actions(self.context.assistant_actions)  # what to make next to sell
         register_outdoor_work_actions(self.context.assistant_actions)  # heat index and wind chill for work
         register_tax_setaside_actions(self.context.assistant_actions)  # taxes to set aside on the workshop
+        register_fishing_times_actions(self.context.assistant_actions)  # when to go fishing
         register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_closet_actions(self.context.assistant_actions)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

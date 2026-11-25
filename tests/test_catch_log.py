@@ -3,7 +3,8 @@ tests.test_catch_log
 ======================
 
 His catch log (core/catch_log.py): a fish kept in his own history with only what he said, a personal best said the
-moment it's one, what's been biting from his own catches, the Angler achievement at once, and the page and voice.
+moment it's one, what's been biting from his own catches, the Angler achievement at once, and the page and voice;
+a placeholder spot and a length copied from the weight are left out.
 """
 
 from core import catch_log, progress_history
@@ -61,3 +62,14 @@ def test_from_the_page_it_asks_first_and_undo_takes_it_back(tmp_path, monkeypatc
     assert card["count"] == 1 and card["latest"][0]["species"] == "walleye"
     center.undo(world, proposal.proposal_id)
     assert catch_log.count(world) == 0
+
+
+
+def test_a_length_copied_from_the_weight_and_an_unknown_spot_are_left_out():
+    """"Caught a 3 pound catfish" sent as length 3 and where "unknown": 3 lb kept, no length, no spot; an 18-inch 2.5
+    lb bass keeps both."""
+    from core import catch_log as cl
+
+    assert cl.plausible_length(3, 3) is None and cl.plausible_length(18, 2.5) == 18
+    assert cl.plausible_length(30, None) == 30
+    assert cl._clean("unknown") == "" and cl._clean("N/A") == "" and cl._clean("the pond") == "the pond"

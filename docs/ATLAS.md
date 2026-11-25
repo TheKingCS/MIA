@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1733 files, 373,691 lines; 1733 files describe themselves; 20,510 of 20,640 classes and functions are documented.
+1735 files, 374,000 lines; 1735 files describe themselves; 20,528 of 20,658 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-690 files, 192,780 lines; 9,784 of 9,870 classes and functions documented
+691 files, 193,012 lines; 9,797 of 9,883 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -244,6 +244,7 @@
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo
 - `core/first_aid_floor.py`: A floor for emergencies happening now (Jarvis brainstorm 4.2; Zac, 2026-11-23: "the ultimate tool offline and online for survival skills"), the same idea as core/safety_floor.py: a deterministic check before the model, so the first words he gets in an emergency never wait on a model that may be slow
 - `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the
+- `core/fishing_times.py`: "When's the best time to fish?" (Jarvis brainstorm, round 12; fishing is his, docs/VISION.md): the day's (or the week's) fishing windows for his town (core/weather.place), worked out offline from the sun and the moon (`astral`, as core/sun_moon.py) and beside what his own catch log says (core/catch_
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
 - `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
 - `core/fitness_missions.py`: A person's fitness plan as missions (DEC-0020, H-0026): made from the plan (core/fitness_manager.py) each day and week, on the existing mission path (Missions screen, XP, skills, complete, undo).
@@ -988,7 +989,7 @@
 
 ## tests/: the test suite: what each part must do
 
-637 files, 99,816 lines; 8,361 of 8,405 classes and functions documented
+638 files, 99,893 lines; 8,366 of 8,410 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1070,7 +1071,7 @@
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_capture_indicator.py`: REQ-DSK-025 (FW-11): whenever a page of MIA's has the microphone open, the frame shows it, and one press closes it: Talk's recorder and the guitar check register with the frame's indicator, and its Stop closes every stream.
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
-- `tests/test_catch_log.py`: His catch log (core/catch_log.py): a fish kept in his own history with only what he said, a personal best said the moment it's one, what's been biting from his own catches, the Angler achievement at once, and the page and voice.
+- `tests/test_catch_log.py`: His catch log (core/catch_log.py): a fish kept in his own history with only what he said, a personal best said the moment it's one, what's been biting from his own catches, the Angler achievement at once, and the page and voice; a placeholder spot and a length copied from the weight are left out.
 - `tests/test_change_history.py`: The lasting history of MIA's changes (prompt 23's review, UI-3; core/change_history.py): every change is kept with its files' bytes before (sealed, compressed, once per content), so it outlives a restart; "undo what you did this afternoon" puts changes back newest first, each whole or not at all, an *(1 undocumented)*
 - `tests/test_character_module.py`: Unit tests for modules.character.module's pure functions, same style as tests/test_household_module.py (no Qt event loop, no fixtures).
 - `tests/test_character_panel.py`: Unit test for gui.character_panel.reaction_for_module — pure lookup logic, no Qt event loop needed. The reactive subscribe/unsubscribe widget behavior itself was verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior — see tests/test_assistant_module.py's
@@ -1170,6 +1171,7 @@
 - `tests/test_firewood.py`: Firewood for the winter (core/firewood.py): cords read from his inventory (full cords, face cords and ricks at about a third), against his own winter figure (set with set_preparedness), what's short said; without his figure the usual range said as only that and his number asked for; a pile with no m
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
+- `tests/test_fishing_times.py`: "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a new or full moon, the week's best days, his own log's best time, a
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
 - `tests/test_fitness_missions.py`: The fitness plan as missions (core/fitness_missions.py, DEC-0020, H-0026): made once per day and week from the plan, kept in step with the logs (the logs are the truth), ticked through the logs, completing themselves, and letting a missed day go quietly (DEC-0014). Placeholder plan values.
 - `tests/test_flock_and_harvests.py`: DEC-0037: chickens (eggs, feed, birds; cartons into goods, eggs into the bakery), Grow Lab harvests into stock, goods added by hand, and the starter recipes.
