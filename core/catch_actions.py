@@ -44,7 +44,8 @@ ACTION_TYPES.update(CATCH_ACTIONS)
 def _log_tool(context, arguments: dict) -> str:
     """Tool log_catch: catch.log, its refusals said. Kept or released isn't asked of the model (it filled it in when
     he never said, the live check 2026-11-24); a zero length or weight is none; `count` logs that many, each its own
-    catch ("I caught 3 bass")."""
+    catch ("I caught 3 bass").
+    A size said is the first fish's, and "biggest yet" is kept in the summary."""
     params = {k: arguments.get(k) for k in FIELDS if k != "kept"}
     try:
         many = max(1, min(50, int(float(arguments.get("count") or 1))))
@@ -52,14 +53,17 @@ def _log_tool(context, arguments: dict) -> str:
         many = 1
     try:
         ACTION_TYPES["catch.log"].describe(context, params)
-        said = ""
-        for _ in range(many):  # "I caught 3 bass": three catches, each its own (the live sweep: it had been one)
-            said = ACTION_TYPES["catch.log"].execute(context, params)
+        said, best = "", ""
+        for n in range(many):  # "I caught 3 bass": three catches, each its own (the live sweep: it had been one)
+            said = ACTION_TYPES["catch.log"].execute(context, params if n == 0 else {
+                k: v for k, v in params.items() if k not in ("length", "weight")})  # a size said is one fish's
+            best = best or next((s for s in said.split(". ") if "biggest" in s.lower()), "")
         if many > 1:
             where = f" at {params['where']}" if params.get("where") else ""
             total = said.rsplit(". ", 1)[-1] if ". " in said else ""
             what = " ".join(str(params.get("species") or "fish").split())
-            return f"Logged {many} {what}{where}." + (f" {total}" if total else "")
+            best = f" {best.rstrip('.')}." if best and best not in total else ""
+            return f"Logged {many} {what}{where}.{best}" + (f" {total}" if total else "")
         return said
     except ActionError as problem:
         return str(problem)

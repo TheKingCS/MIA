@@ -76,7 +76,8 @@ def reply(context, words: str) -> Optional[str]:
     "The Smiths'" finds a John Smith.
     A lowercase purpose ("for the shop") that's no customer of his is never one to add; the plural lookup only for
     "the Smiths'".
-    "For the Johnsons" finds the Johnson family; "Sarah's" never falls back to a "Sara"."""
+    "For the Johnsons" finds the Johnson family; "Sarah's" never falls back to a "Sara".
+    "The Joneses" are the Jones family too."""
     from core.assistant_plan_actions import calculate, size_words, sizes_for, structure_for
 
     found = job_of(words)
@@ -113,6 +114,8 @@ def reply(context, words: str) -> Optional[str]:
         plural = re.search(rf"\b{re.escape(who)}['’](?!s)", words) or re.search(rf"\bthe\s+{re.escape(who)}\b", words, re.I)
         if isinstance(person, str) and plural and who.lower().endswith("s"):  # "the Smiths'", "for the Johnsons": the
             person = _one(list(book.customers), who.lower()[:-1], lambda c: c.name, "customer")  # family; never "Sara"
+            if isinstance(person, str) and who.lower().endswith("es"):  # "the Joneses" (the fifteenth review)
+                person = _one(list(book.customers), who.lower()[:-2], lambda c: c.name, "customer")
         if isinstance(person, str) and person.startswith("Which"):
             return person  # several customers by that name: which one, before any quote (the eleventh review)
         spoken = who not in words  # said lowercase ("for the shop", "for goats"): only a customer if he has one
