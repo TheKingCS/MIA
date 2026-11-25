@@ -37,7 +37,10 @@ own words (prompt_arg on the model's path too: green beans had been refused); ho
 (core/lesson_answer.py: fire in the rain, creek water, a chisel); net worth, beginner projects and survival how-tos off
 the wrong plans; "The Dungeon." off answers. Still open from the sweep: "how much water should I store for two weeks?",
 "how long will my generator run on 5 gallons?", "how many chickens for a dozen eggs a week?" (answered from memory: each
-wants a small calculator), and "how many fence posts for 200 feet?" reaching find_plans, not material_list.
+wants a small calculator: built 2026-11-25, core/homestead_sums.py), and "how many fence posts for 200 feet?" reaching
+find_plans, not material_list. Also found: "how many days of water do I have?" matches three tools (how_prepared,
+water_budget, list_inventory), so no direct answer, and the model picked the homestead's water budget and asked for the
+roof size; drinking water against the tank's water is a real ambiguity, worth one answer that says both.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
