@@ -735,6 +735,7 @@ GOLDEN_CASES = [
     ("fishing: a catch, said otherwise", "Landed a 22 inch walleye at the river", "log_catch"),
     ("fishing: what's biting", "What's been biting lately?", "whats_biting"),
     ("shop: what to make next", "What should I make next for the shop?", "what_to_make_next"),
+    ("shop: taxes to set aside", "How much should I set aside for taxes on the shop?", "tax_set_aside"),
     ("shop: products running low", "Which products are running low?", "what_to_make_next"),
     ("shop: food running low is the pantry", "What food am I running low on?", "list_pantry"),
     ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),

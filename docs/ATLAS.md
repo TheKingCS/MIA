@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1731 files, 373,459 lines; 1731 files describe themselves; 20,494 of 20,624 classes and functions are documented.
+1733 files, 373,651 lines; 1733 files describe themselves; 20,508 of 20,638 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-689 files, 192,633 lines; 9,776 of 9,862 classes and functions documented
+690 files, 192,760 lines; 9,783 of 9,869 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -573,6 +573,7 @@
 - `core/task_manager.py`: A single Task under a core.project_manager.Project — one concrete to-do item, checked off when done. Same persisted-JSON pattern as core/trip_manager.py, minus that module's photo/journal/gear extensions, which don't apply to a plain task list.
 - `core/taught_skill_actions.py`: Taught skills' actions (DEC-0123, core/taught_skills.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/taught_skills.py`: Taught skills, phase 1 (DEC-0123, approved 2026-11-15; part of MIA's one skills system, DEC-0167; the proposal is `docs/PROCEDURES_PROPOSAL.md`): something the person teaches MIA once, made of things she can already do, that she practises with them watching until it's proven.
+- `core/tax_setaside.py`: "How much should I set aside for taxes?" (Jarvis brainstorm, round 12; his businesses): this year's workshop profit so far from his ledger (core/ledger_manager.py, revenue less expenses since January 1), and what it owes the IRS, worked out here and never by the model.
 - `core/teamwork.py`: A project's team and workspace (T2 of `docs/mia_os/MIA_OS_SPECIALIZED_AGENT_TEAMS.md`, sections 4 and 5; DEC-0198). The workspace is the structured record of work on one project: what was found, what must be respected, what is asked, recommended, disputed, reviewed, decided and delivered. It replace
 - `core/teamwork_actions.py`: A project's workspace and team (core/teamwork.py, T2) on the action contract in core/actions.py:
 - `core/textbook_manager.py`: The textbook tutor's library (2026-09-28): "a feature where MIA gets textbooks that can be added to her that she can reference to help educate the user on subjects of their choice... understand it and assist a user in understanding it."
@@ -987,7 +988,7 @@
 
 ## tests/: the test suite: what each part must do
 
-636 files, 99,731 lines; 8,353 of 8,397 classes and functions documented
+637 files, 99,796 lines; 8,360 of 8,404 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1510,6 +1511,7 @@
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).
 - `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, the steps that ask every time whatever was learned, and each run kept in the run book through its waits to its end (UI-1).
+- `tests/test_tax_setaside.py`: "How much should I set aside for taxes?" (core/tax_setaside.py): self-employment tax is 15.3% of 92.35% of the profit from $400 of earnings, income tax at 12% and 22% side by side with a bracket he gives, the next 1040-ES date, a loss owes nothing, and outside the US it says it's US-only.
 - `tests/test_teamwork.py`: A project's workspace and team (core/teamwork.py, T2 of the specialized agent teams; DEC-0198): the person's entries are confirmed and a specialist's derived until he confirms; a specialist's entry names its model, a finding of its on a source names the source, and it can only come from a real speci
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared.

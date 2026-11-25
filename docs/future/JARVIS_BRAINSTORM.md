@@ -354,6 +354,10 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **How much should I set aside for taxes?** (no decision; his businesses, US): *built 2026-11-24
+  (`core/tax_setaside.py`, the tool `tax_set_aside`).* This year's workshop profit from his ledger, self-employment tax
+  worked out in code (15.3% of 92.35%, from $400), income tax at 12% and 22% side by side (and a bracket he gives),
+  erring high, and the next 1040-ES date. Live model: the model passed "12%" unasked, so no rate is ever called his.
 - **Will the pipes freeze?** (no decision, asked): *built 2026-11-24 (core/weather_watch.py, the `pipes` concern).*
   A low of 20 °F (-7 °C) or under: drip a faucet on an outside wall, open the sink cabinets, unhook the hoses, heat at
   55 °F or above, and the well's pump house when he has a well pump. In "will it freeze tonight?" and "frozen
