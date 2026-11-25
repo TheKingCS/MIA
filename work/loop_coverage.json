@@ -473,6 +473,10 @@
    "status": "none",
    "why": "his own records said once an evening; the gate's pacing learns from whether he opens or dismisses it (topic evening_wrap), and he can mute it from the message"
   },
+  "check:morning_briefing": {
+   "status": "none",
+   "why": "only when he asked for it, his own records said once a morning; the gate's pacing learns from whether he opens or dismisses it (topic morning_briefing), and he can turn it off by saying so or mute it from the message"
+  },
   "check:habit_offer": {
    "status": "none",
    "why": "each habit is offered once ever and never again (his rule, DEC-0294), so there's no repeated judgement to improve; the gate paces the one message"

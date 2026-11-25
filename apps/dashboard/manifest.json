@@ -97,6 +97,7 @@
       "set_preparedness",
       "water_to_store",
       "what_can_you_automate",
+      "morning_briefing",
       "evening_wrap",
       "water_emergency",
       "storm_ready",
@@ -199,6 +200,7 @@
       "set_preparedness": "act_within_grant",
       "water_to_store": "observe",
       "what_can_you_automate": "observe",
+      "morning_briefing": "observe",
       "evening_wrap": "observe",
       "water_emergency": "observe",
       "storm_ready": "observe",
@@ -229,7 +231,8 @@
       "chronicle",
       "chronicle_issue",
       "weather_watch",
-      "evening_wrap"
+      "evening_wrap",
+      "morning_briefing"
     ]
   }
 }

@@ -143,6 +143,7 @@ DAILY_CHECKS: tuple[tuple[str, str], ...] = (
     ("garden_week", "_check_garden_week"),
     ("market_eve", "_check_market_eve"),
     ("evening_wrap", "_check_evening_wrap"),
+    ("morning_briefing", "_check_morning_briefing"),
     ("habit_offer", "_check_habit_offer"),
 )
 
@@ -429,6 +430,13 @@ class BackgroundJobs:
         from core import evening_wrap
 
         self._offers.extend(evening_wrap.offer(self.context, now))
+
+    def _check_morning_briefing(self, now: datetime, today_iso: str) -> None:
+        """The morning briefing he asked for (core/morning_briefing.py): from his hour on, once a morning, through the
+        gate."""
+        from core import morning_briefing
+
+        self._offers.extend(morning_briefing.offer(self.context, now))
 
     def _check_habit_offer(self, now: datetime, today_iso: str) -> None:
         """A routine offered from a habit of his (core/habit_offers.py, DEC-0294): the same kind of thing on the same

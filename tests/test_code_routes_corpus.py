@@ -57,10 +57,18 @@ EVERYDAY = (
 )
 
 
+def _briefing_words(words: str):
+    """The morning briefing's reading of the words (its setting is never touched here)."""
+    from core.morning_briefing import asked
+
+    return asked(words)
+
+
 @pytest.fixture()
 def routes(tmp_path):
     """Each code route, as a function of the words; a change route records instead of acting.
-    What he spent is one of them."""
+    What he spent is one of them.
+    The morning briefing's reading of the words too."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -75,6 +83,7 @@ def routes(tmp_path):
         "drill": lambda w: drills.requested(w),
         "first-aid how-to": lambda w: first_aid_floor.teach(w),
         "spent": lambda w: turn._spent_reply(context, w),
+        "morning briefing": lambda w: _briefing_words(w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),
     }
 
@@ -87,6 +96,7 @@ MEANT = {
     "weekly reminder": "remind me every Monday to check the water filter", "drill": "give me a choking drill",
     "first-aid how-to": "how do you use a tourniquet?", "lab": "walk me through building the pot lab",
     "spent": "I spent $30 on groceries",
+    "morning briefing": "every morning at 7, tell me the weather and my day",
 }
 
 

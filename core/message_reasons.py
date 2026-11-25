@@ -66,6 +66,8 @@ REASONS: dict[str, tuple[str, str]] = {
                    "usually sells at yours, and what's short"),
     "evening_wrap": ("the evening wrap", "you said yes to it (DEC-0292): once an evening, what got done today and "
                      "tomorrow's first thing and weather, in two sentences"),
+    "morning_briefing": ("the morning briefing", "you asked for it: once a morning from the hour you said, the day's "
+                         "weather and your day; \"stop the morning briefing\" turns it off"),
     "habit_offer": ("a routine from a habit of yours", "you chose (DEC-0294) that when I see the same thing on the "
                     "same weekday three weeks running, I offer one weekly reminder for it, once"),
     "greenhouse": ("the greenhouse", "you handed me the greenhouse node to watch (DEC-0150): its critical alerts "

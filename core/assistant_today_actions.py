@@ -111,6 +111,14 @@ def _action_weather_for_my_plans(context, arguments: dict) -> str:
     return weather_watch.say(context)
 
 
+def _action_morning_briefing(context, arguments: dict) -> str:
+    """The morning briefing, now, on his own clock (core/morning_briefing.briefing)."""
+    from core import clock, morning_briefing
+
+    return morning_briefing.briefing(context, clock.now(context).replace(tzinfo=None)) or \
+        "No forecast kept and nothing on today's list yet."
+
+
 def _action_evening_wrap(context, arguments: dict) -> str:
     """The evening wrap, now, on his own clock (core/evening_wrap.wrap, core/clock.now)."""
     from core import clock, evening_wrap
@@ -281,7 +289,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     percent").
     get_weather takes his words (its prompt_arg, so it's still answered in code) and says the day he names.
     firewood_check is reached by "how much firewood do I need for winter?" too.
-    bleach_for_water takes his own words (`prompt_arg`)."""
+    bleach_for_water takes his own words (`prompt_arg`).
+    And morning_briefing: the briefing now (core/morning_briefing.py)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -429,6 +438,13 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         handler=_action_emergency_kit,
         trigger_phrases=("emergency kit", "72 hour kit", "72-hour kit", "go bag", "bug out bag", "bug-out bag",
                          "disaster kit", "survival kit", "what am i missing for an emergency"),
+    ))
+    registry.register(AssistantAction(
+        name="morning_briefing", domain="today",
+        description="The morning briefing now: today's weather, how many things are on today's list and the first.",
+        parameters={"type": "object", "properties": {}, "required": []},
+        handler=_action_morning_briefing,
+        trigger_phrases=("morning briefing", "brief me", "morning rundown", "my morning summary"),
     ))
     registry.register(AssistantAction(
         name="evening_wrap", domain="today",

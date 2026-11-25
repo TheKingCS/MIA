@@ -124,7 +124,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A reminder on a day too (`_reminder_reply`).
     A course's next lesson too (`_next_lesson_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
-    What he spent too (`_spent_reply`)."""
+    What he spent too (`_spent_reply`).
+    The morning briefing too (`_morning_briefing_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -171,6 +172,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _weekly_reminder_reply(context, prompt)  # "remind me every Monday to ...", as in a turn
     if walked is None:
         walked = _spent_reply(context, prompt)  # "I spent $30 on groceries", as in a turn
+    if walked is None:
+        walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -500,6 +503,18 @@ def _spent_reply(context, prompt: str):
         return None
 
 
+def _morning_briefing_reply(context, prompt: str):
+    """"Every morning at 7, tell me the weather and my day", "stop the morning briefing", in code
+    (core/morning_briefing.reply); None otherwise."""
+    from core import morning_briefing
+
+    try:
+        return morning_briefing.reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't set the morning briefing")
+        return None
+
+
 def _materials_reply(context, prompt: str):
     """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
     calculators' list, never the model's); None otherwise."""
@@ -639,6 +654,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A course's next lesson, named, in code (`_next_lesson_reply`).
     A reminder every week goes on the calendar repeating (`_weekly_reminder_reply`).
     What he says he spent is recorded (`_spent_reply`).
+    The morning briefing he asks for, set or turned off (`_morning_briefing_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -748,6 +764,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _weekly_reminder_reply(context, prompt)  # "every Monday": a weekly event on his calendar
         if walked is None:
             walked = _spent_reply(context, prompt)  # "I spent $30 on groceries": an expense, undoable
+        if walked is None:
+            walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:
