@@ -89,10 +89,12 @@ def unit_for(context) -> str:
 def forecast_url(lat: float, lon: float, unit: str) -> str:
     """Pure logic. The forecast request: now, and the week's highs, lows, weather, chances of rain and strongest
     gusts (mph with Fahrenheit, km/h with Celsius; today and tomorrow for the Dashboard, the weekend for "what should
-    I do this weekend?", a storm for core/storm_ready.py)."""
+    I do this weekend?", a storm for core/storm_ready.py), and each hour's temperature, humidity and wind (the heat
+    index and wind chill for core/outdoor_work.py)."""
     query = {"latitude": f"{lat:.4f}", "longitude": f"{lon:.4f}", "current": "temperature_2m,weather_code",
              "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,"
                       "wind_gusts_10m_max",
+             "hourly": "temperature_2m,relative_humidity_2m,wind_speed_10m",
              "forecast_days": 7,
              "temperature_unit": unit, "wind_speed_unit": "mph" if unit == "fahrenheit" else "kmh",
              "timezone": "auto"}
@@ -101,7 +103,8 @@ def forecast_url(lat: float, lon: float, unit: str) -> str:
 
 def read(raw: dict, unit: str) -> Optional[dict]:
     """Pure logic. Open-Meteo's answer as {temp, words (now), today_words (the whole day's), high, low, tomorrow:
-    {high, low, words, rain?, gust?}, days: [{date, high, low, words, rain?, gust?}], unit: "°F"}, every temperature
+    {high, low, words, rain?, gust?}, days: [{date, high, low, words, rain?, gust?}], hours: [{time, temp, rh, wind}]
+    (the first 48, as given; [] without them), unit: "°F"}, every daily temperature
     rounded, a day's chance of rain and strongest gust (mph with °F, km/h with °C) when it's given (tomorrow None, and a day left out of `days`, when its figures have a gap);
     None when it isn't a forecast."""
     try:
@@ -131,10 +134,17 @@ def read(raw: dict, unit: str) -> Optional[dict]:
                 days.append({"date": str(when), **day(i)})
             except (KeyError, IndexError, TypeError, ValueError):
                 continue
+        hourly, hours = raw.get("hourly") or {}, []
+        for i, when in enumerate((hourly.get("time") or [])[:48]):  # today's and tomorrow's
+            try:
+                hours.append({"time": str(when), "temp": hourly["temperature_2m"][i],
+                              "rh": hourly["relative_humidity_2m"][i], "wind": hourly["wind_speed_10m"][i]})
+            except (KeyError, IndexError, TypeError):
+                continue
         return {"temp": round(now["temperature_2m"]), "words": CODES.get(int(now["weather_code"]), ""),
                 "high": today["high"], "low": today["low"], "tomorrow": tomorrow, "unit": sign,
                 "today_words": today["words"],  # the whole day's, not only now (a clear morning, storms later)
-                "days": days}
+                "days": days, "hours": hours}
     except (KeyError, IndexError, TypeError, ValueError):
         return None
 

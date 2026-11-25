@@ -344,6 +344,19 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 12 (2026-11-24, night): the greenhouse counted, and the day's heat and cold
+
+- **The greenhouse's harvests in his totals** (no decision): *built 2026-11-24 (`core/greenhouse_link.keep_harvests`).*
+  Each harvest the node records is kept once when MIA reads it; weighed produce counts toward his produce and the
+  Grower achievements, and "what has the garden produced this year?" includes it, its fish said apart.
+- **Is it safe to work outside today?** (no decision; asked for, so no unprompted message): *built 2026-11-24
+  (`core/outdoor_work.py`, the tool `work_outside_wind_chill_heat_index`).* The National Weather Service's heat index
+  and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
+  hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
+  bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- *Seen, not changed:* "it's so hot, should I water the tomatoes?" goes to log_maintenance_reading (it did before
+  too): should_i_water answers garden words only, so a crop's name doesn't reach it yet.
+
 ## Round 11 (2026-11-24, late): money he can ask about
 
 - **Am I spending more than usual?** (no decision): *built 2026-11-24 (`core/spending_pace.py`, the tool

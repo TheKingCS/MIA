@@ -243,7 +243,8 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:
-    """Registers get_today, get_week, get_weather, should_i_water (core/weather_watch.say_watering, heard only of the
+    """Registers get_today, get_week, get_weather (never the wind chill or heat index: those go to
+    work_outside_wind_chill_heat_index, core/outdoor_work.py), should_i_water (core/weather_watch.say_watering, heard only of the
     garden, never houseplants or the hens), log_rain (his rain gauge, which that answer counts; heard only when he reads it, never "is an inch of rain enough?"), weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour, the catchment roof the water budget counts, and the battery the power picture counts), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
@@ -274,7 +275,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="get_weather", domain="today",
-        description="The weather in the user's town: now, today's high and low, and tomorrow.",
+        description="The weather in the user's town: now, today's high and low, and tomorrow. Not for the wind chill "
+                    "or heat index, or whether it's safe to work outside: those are work_outside_wind_chill_heat_index.",
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_get_weather,
         trigger_phrases=("weather", "how hot", "how cold", "is it going to rain", "will it rain", "temperature outside",

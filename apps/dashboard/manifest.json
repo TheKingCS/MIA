@@ -97,7 +97,8 @@
       "set_preparedness",
       "evening_wrap",
       "water_emergency",
-      "storm_ready"
+      "storm_ready",
+      "work_outside_wind_chill_heat_index"
     ],
     "actions": [
       "direction.add",
@@ -196,7 +197,8 @@
       "set_preparedness": "act_within_grant",
       "evening_wrap": "observe",
       "water_emergency": "observe",
-      "storm_ready": "observe"
+      "storm_ready": "observe",
+      "work_outside_wind_chill_heat_index": "observe"
     },
     "outside": [
       "whats_in_the_workspace"
