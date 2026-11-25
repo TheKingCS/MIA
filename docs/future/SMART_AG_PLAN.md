@@ -55,7 +55,11 @@ so the things that keep fish and plants alive come first.
 ### Phase B: the node takes MIA's directions (in simulation; follows `homestead/CLAUDE.md`)
 
 *Designed 2026-11-24: `homestead/docs/MIA_COMMAND_INTERFACE.md` (the whitelist, the node's checks, one decision for
-Zac, WAITING_ON 0zu).*
+Zac, WAITING_ON 0zu).* **Built and proven 2026-11-24:** the node's check and its signed endpoint (hardened after a
+security review), the outcome in its export, MIA's side (core/greenhouse_adjust.py: said, confirmed, signed, read
+back; "set it back" as another adjustment), scenarios for every refusal, a test for a dropped link, and live runs
+against the real control loop (6.6 to 6.4 and back). Left: 0zu, and the schedule and mode parameters once the control
+loop reads them from an override.
 
 1. **The node's command interface** (DEC-0185). Set a target, a schedule or a mode, through a signed, local-only
    channel. The node checks each command against its limits, the MCU may refuse, and the node confirms what it

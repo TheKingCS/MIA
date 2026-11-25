@@ -7,6 +7,7 @@ exact change said and sent only on "yes, set it", signed so the node's own check
 core/command_auth.verify, loaded on its own: MIA never imports the node's packages), the outcome read back from the
 node's export, and nothing sent without the node's key or outside his network.
 And the pH and EC said against their targets, read only.
+And a dropped link said plainly, nothing claimed.
 """
 
 from __future__ import annotations
@@ -149,3 +150,29 @@ def test_the_ph_and_ec_are_said_against_their_targets(linked):
     assert "inside its 800-1400 uS/cm band (that reading is stale)" in lines[1]
     said = ga.reply(context, "how's the greenhouse pH against its target?", get=lambda url: json.dumps(state).encode())
     assert said.startswith("Pilot's pH is 6.3") and not link.pending
+
+
+def test_a_dropped_link_is_said_and_nothing_is_claimed(linked):
+    """The node gone mid-send (connection refused): said plainly, never "done"; nothing kept pending; and an unreadable
+    node before sending is said too."""
+    context, link = linked
+    gp.command_key("192.168.1.50")
+    get = lambda url: json.dumps(_state()).encode()  # noqa: E731
+    p = ga.plan(context, "ph_target_min", 6.4, get=get)
+
+    def dropped(*_args):
+        """The link drops."""
+        raise ConnectionRefusedError("refused")
+
+    with pytest.raises(ActionError, match="didn't answer"):
+        ga.send(context, p, post=dropped, get=get)
+    link.pending = {"kind": "adjust", "plan": p}
+    said = ga.reply(context, "yes, set it", post=dropped, get=get)
+    assert "didn't answer" in said and not link.pending
+
+    def unreachable(url):
+        """The node can't be read."""
+        raise OSError("no route to host")
+
+    with pytest.raises(ActionError, match="didn't answer"):
+        ga.plan(context, "ph_target_min", 6.4, get=unreachable)
