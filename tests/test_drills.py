@@ -72,7 +72,7 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     Survival has six drills now, the power outage and two for first aid among them.
     Gardening and homesteading has two drills now, the flock's beside the canning one.
     Money basics is listed among them too.
-    Small business basics is listed too."""
+    Small business basics is listed too, and Guitar, with its first jam."""
     canning = drills.reply(None, _said(), "give me a canning drill")
     assert canning.startswith("Drill: Putting up green beans.")
     carpentry = drills.reply(None, _said(), "run a carpentry drill")
@@ -82,7 +82,7 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     beans = drills.by_id("canning_day")
     assert drills.judge(beans, 2, 1)["verdict"] == "wrong" and "pressure canner" in drills.judge(beans, 2, 1)["best"]
     listed = lab_page.hands_on()
-    assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "money", "business",
+    assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "money", "business", "guitar",
                                          "carpentry"]
     assert listed[3]["what"] == "Lessons, and 2 drills that judge each call"
     assert listed[2]["what"] == "Lessons, and 6 drills that judge each call"

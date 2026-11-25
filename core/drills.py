@@ -13,7 +13,7 @@ Association, in the same words as the emergency floor (core/first_aid_floor.py),
 floor wouldn't say, and with no medicine doses; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); a market day from
 core/business_path.py's (the SBA's guides); canning from core/gardening_path.py's, the USDA Complete
 Guide to Home Canning and the NCHFP; a saw cut and a cut list from core/carpentry.py's lessons, OSHA Subpart I
-among them). Pure
+among them; a first jam from core/guitar.py's own lessons). Pure
 logic; nothing kept.
 
 - **The drills** (`DRILLS`, `of_program`, `find`): each a `Drill` of `Question`s, each with its `Choice`s.
@@ -419,6 +419,38 @@ DRILLS: tuple = (
                  ("Note the total and sort the details out at the end of the year", "wrong",
                   "Records rebuilt from memory miss things; the day it happens is when it's easy.")),
           ), "biz_price"),
+    Drill("first_jam", "guitar", "A first jam",
+          "A friend hands you a guitar at a campfire and asks for the four-chord song: G, E minor, C, D. (From the "
+          "Guitar course's own lessons.)",
+          (
+              _q("You tune up first. Which way do the strings go, thickest to thinnest?",
+                 ("E B G D A E", "wrong", "That's thinnest to thickest: the high E is string 1."),
+                 ("E A D G B E (\"Eddie Ate Dynamite, Good Bye Eddie\")", "best",
+                  "The low E is string 6, the high E string 1; and tune up to each note, not down to it: it holds."),
+                 ("A D G B E A", "wrong", "A guitar's lowest and highest strings are both E.")),
+              _q("You're on E minor and the next chord is A minor. What do your fingers do?",
+                 ("Lift everything and build A minor from scratch", "fine",
+                  "It works, but slowly: the two chords share a shape."),
+                 ("The same two fingers move down one string each, and your first finger goes on the B string's 1st "
+                  "fret", "best", "That's the lesson's shortcut: one move, and the change comes back in dozens of "
+                                  "songs."),
+                 ("Slide the whole shape up a fret", "wrong", "That's a different chord entirely; A minor moves down a "
+                                                          "string, not up a fret.")),
+              _q("You're late getting to C. What do you do?",
+                 ("Stop, find the chord, then start again", "wrong",
+                  "The song stops with you; the beat goes on without your fingers."),
+                 ("Slow down until your fingers are there", "wrong", "Everyone else keeps the tempo: you'd drift apart."),
+                 ("Let the last strum before the change go on open strings, and land the change on beat 1", "best",
+                  "Keeping the beat matters more than a clean chord: change on beat 1, every time.")),
+              _q("The D chord: which strings do you strum?",
+                 ("All six", "wrong", "The low E and A strings muddy a D: they aren't in its shape."),
+                 ("Only the top four, from the D string down", "best", "That's how the D shape is played."),
+                 ("From the A string down", "fine", "That's how C is strummed; D wants just the top four.")),
+              _q("Someone calls for a power chord with your first finger on the 3rd fret of the low E. What chord is it?",
+                 ("G5", "best", "The note under your first finger names it: the 3rd fret of the low E is G."),
+                 ("A5", "wrong", "A5 is at the 5th fret of the low E."),
+                 ("C5", "wrong", "C is the 8th fret of the low E, or the 3rd fret of the A string.")),
+          ), "progression"),
     Drill("first_cut", "carpentry", "Cutting a 2x6 to length",
           "You're cutting a 2x6 to length with a circular saw, the board across two sawhorses, the cut near the "
           "middle.",
@@ -507,6 +539,7 @@ ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "genera
         "surprise_bill": ("money", "finance", "budget", "surprise bill", "debt"),
         "market_day": ("market day", "market", "business", "farmers market", "pricing"),
         "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw"),
+        "first_jam": ("guitar", "jam", "chord", "chords"),
         "cut_list": ("cut list", "cut-list", "stop block", "bookcase", "shelves"),
         "deep_cut": ("deep cut", "bad cut", "bleeding", "tourniquet", "wound"),
         "choking": ("choking", "heimlich")}
