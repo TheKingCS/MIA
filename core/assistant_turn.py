@@ -125,6 +125,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A course's next lesson too (`_next_lesson_reply`).
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
     What he spent on a category (`_spent_on_reply`) too.
+    A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -186,6 +187,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _led_reply(context, prompt)  # "what resistor for an LED on 5 volts?", as in a turn
     if walked is None:
         walked = _spent_on_reply(context, prompt)  # "how much did I spend on groceries this month?", as in a turn
+    if walked is None:
+        walked = _garden_kit_reply(context, prompt)  # a crop's dates, the 72-hour kit, as in a turn
     if walked is None:
         walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
@@ -802,6 +805,33 @@ _SPENT_ON_ASK = re.compile(r"^\s*how much (?:money )?(?:did|have) (?:i|we) (?:sp
                            r"\s*\??\s*$", re.I)
 
 
+_PLANT_WHEN = re.compile(r"^\s*when\s+(?:should|do|can|would)\s+(?:i|we)\s+(?:start|plant|sow|transplant|put out|set out)"
+                         r"\b(?P<rest>.+?)\s*\??\s*$", re.I)
+_KIT_ASK = re.compile(r"^\s*(?:what\s+(?:should|do i|goes|would)\b.*|check\s+(?:my|our)\b.*|am i missing\b.*)"
+                      r"\b(?:72[- ]?hour|go[- ]?|bug[- ]?out|emergency|disaster|get[- ]home)\s*(?:bag|kit)s?\b", re.I)
+
+
+def _garden_kit_reply(context, prompt: str):
+    """Two of hers the model passed over (the live sweep, 2026-11-25: it answered from what it knew, with a made-up
+    frost date, and asked him to log a kit): "when should I start my tomato seeds?" is that crop's dates from his
+    own last frost (core/planting_now.say_crop), and "what should be in a 72 hour bag?" the kit against his records
+    (core/ready_kit.say). None otherwise, or for a crop she has no dates for."""
+    found = _PLANT_WHEN.match(prompt)
+    try:
+        if found:
+            from core import planting_now
+
+            return planting_now.say_crop(context, found.group("rest")) if planting_now.crop_named(found.group("rest")) \
+                else None
+        if _KIT_ASK.match(prompt):
+            from core import ready_kit
+
+            return ready_kit.say(context)
+    except Exception:
+        log.exception("Couldn't answer the garden's dates or the kit")
+    return None
+
+
 _OVER_BUDGET = re.compile(r"^\s*(?:am i|are we|is anything|anything)\s+(?:over|under)\s+(?:my\s+|our\s+|the\s+)?budgets?"
                           r"(?:\s+(?:anywhere|on anything|at all|this month|yet))?\s*\??\s*$", re.I)
 
@@ -982,6 +1012,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     His upkeep ("when is my truck due for an oil change?", "the truck needs new brakes": `_upkeep_reply`) and an
     LED's resistor (`_led_reply`) are taken in code too.
     What he spent on a category this month is said from his expenses (`_spent_on_reply`).
+    When to start a crop and what's in a 72-hour kit are said from his records (`_garden_kit_reply`).
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
@@ -1115,6 +1146,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _led_reply(context, prompt)  # an LED's resistor, worked out in code
         if walked is None:
             walked = _spent_on_reply(context, prompt)  # what he spent on a category, from his expenses
+        if walked is None:
+            walked = _garden_kit_reply(context, prompt)  # a crop's dates from his frost, the kit against his records
         if walked is None:
             walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:

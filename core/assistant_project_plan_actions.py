@@ -243,7 +243,8 @@ def register_project_plan_actions(registry) -> None:
     "enough water" (a fish tank); the orchard's by its fruit, never "when should I prune" alone (roses) or "when
     will my" (a package).
     design_print_part takes a board's mounting-hole spacing for posts and a cable hole.
-    design_print_part is never reached by "print me a" (an invoice) or a bare "a standoff"."""
+    design_print_part is never reached by "print me a" (an invoice) or a bare "a standoff".
+    what_to_plant is reached by seed-starting words too ("start my seeds")."""
     registry.register_domain_keywords(DOMAIN, ("plan my garden", "garden plan", "plan the build", "let's plan",
                                                "plan a", "the plan", "confirm the plan", "planting"))
     registry.register(AssistantAction(
@@ -418,7 +419,10 @@ def register_project_plan_actions(registry) -> None:
             "crop": {"type": "string", "description": "one crop, if he named one"}}, "required": []},
         handler=_what_to_plant, trigger_phrases=("what can i plant", "what should i plant", "what should i be planting",
                                                  "when should i plant", "when do i plant", "too late to plant",
-                                                 "time to plant", "when to plant", "plant now"),
+                                                 "time to plant", "when to plant", "plant now",
+                                                 # "when should I start my tomato seeds?" (the live sweep, 2026-11-25)
+                                                 "start my seeds", "start seeds", "start my tomato", "start my pepper",
+                                                 "seed starting", "start them indoors", "start indoors"),
     ))
     registry.register(AssistantAction(
         name="seed_viability", domain=DOMAIN,

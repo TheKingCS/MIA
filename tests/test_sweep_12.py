@@ -3,7 +3,8 @@ tests.test_sweep_12
 =====================
 
 The sixth live sweep's fixes (2026-11-25): "remind me tomorrow at 9 to call the vet" goes on his calendar like
-"remind me to call the vet tomorrow at 9"; a tool call written out with a doubled quote before its key is caught.
+"remind me to call the vet tomorrow at 9"; a tool call written out with a doubled quote before its key is caught;
+what he spent on a category and "am I over budget?" are from his own records; a crop's dates and the 72-hour kit are hers.
 """
 
 from types import SimpleNamespace
@@ -58,3 +59,16 @@ def test_am_i_over_budget_is_his_budgets():
     assert assistant_turn._spent_on_reply(context, "Am I over budget anywhere?") == "Groceries: ..."
     assert ran == ["budget_left"]
     assert assistant_turn._spent_on_reply(context, "am I over thinking this budget thing?") is None
+
+
+def test_a_crops_dates_and_the_kit_are_hers(monkeypatch):
+    from core import planting_now, ready_kit
+
+    monkeypatch.setattr(planting_now, "say_crop", lambda c, said: f"dates for {said.strip()}")
+    monkeypatch.setattr(ready_kit, "say", lambda c: "the kit")
+    assert assistant_turn._garden_kit_reply(None, "When should I start my tomato seeds?") == "dates for my tomato seeds"
+    assert assistant_turn._garden_kit_reply(None, "What should be in a 72 hour bag?") == "the kit"
+    assert assistant_turn._garden_kit_reply(None, "check my go bag") == "the kit"
+    for words in ("when should I start my workout?", "when should I start the business?", "what's in my bag?",
+                  "the emergency kit is in the truck"):
+        assert assistant_turn._garden_kit_reply(None, words) is None, words

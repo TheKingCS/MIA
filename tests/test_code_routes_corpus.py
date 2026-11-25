@@ -30,7 +30,7 @@ EVERYDAY = (
     "what's the weather tomorrow?", "is it going to freeze tonight?", "I started the tomato seeds today",
     "the fire pit project is going well", "how much feed is left?", "the goats got out again",
     "how do i tell if my dog has mites", "what should i do about head lice", "how do I clean the water tank",
-    "how do I build a fire pit", "how do I water the tomatoes?", "When should I start tomato seeds?",
+    "how do I build a fire pit", "how do I water the tomatoes?",
     # the business and money
     "I sold 3 cutting boards today", "Sarah paid her deposit", "what did I make this month?",
     "how much margin did the shop make?", "send Sarah her quote", "how much do I owe on the truck?",
@@ -85,7 +85,7 @@ def routes(tmp_path):
     The morning briefing's reading of the words too.
     And the job quote's.
     And the daily reminder's.
-    His upkeep's and an LED's resistor's too, and what he spent on a category."""
+    His upkeep's and an LED's resistor's too, and what he spent on a category, and a crop's dates or the kit."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -104,6 +104,7 @@ def routes(tmp_path):
         "upkeep": lambda w: turn._upkeep_reply(context, w),
         "led": lambda w: turn._led_reply(context, w),
         "spent on": lambda w: turn._spent_on_reply(context, w),
+        "garden kit": lambda w: turn._garden_kit_reply(context, w),
         "job quote": lambda w: _job_words(w),
         "morning briefing": lambda w: _briefing_words(w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),
@@ -120,6 +121,7 @@ MEANT = {
     "first-aid how-to": "how do you use a tourniquet?", "lab": "walk me through building the pot lab",
     "spent": "I spent $30 on groceries",
     "led": "what resistor do I need for an LED on 5 volts?",
+    "garden kit": "When should I start tomato seeds?",
     "job quote": "write a quote for Sarah's 12 by 16 deck",
     "morning briefing": "every morning at 7, tell me the weather and my day",
 }

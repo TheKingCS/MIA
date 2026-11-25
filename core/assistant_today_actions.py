@@ -294,7 +294,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     get_weather takes his words (its prompt_arg, so it's still answered in code) and says the day he names.
     firewood_check is reached by "how much firewood do I need for winter?" too.
     bleach_for_water takes his own words (`prompt_arg`).
-    And morning_briefing: the briefing now (core/morning_briefing.py)."""
+    And morning_briefing: the briefing now (core/morning_briefing.py).
+    emergency_kit is reached by "72 hour bag" and "emergency bag" too."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -441,6 +442,7 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_emergency_kit,
         trigger_phrases=("emergency kit", "72 hour kit", "72-hour kit", "go bag", "bug out bag", "bug-out bag",
+                         "72 hour bag", "72-hour bag", "go-bag", "emergency bag", "bugout bag", "get home bag",
                          "disaster kit", "survival kit", "what am i missing for an emergency"),
     ))
     registry.register(AssistantAction(
