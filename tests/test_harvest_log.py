@@ -2,7 +2,8 @@
 not in the grow lab gets a batch dated by him first, two batches of it are asked about, a place none is in is a new
 one, eggs and honey aren't crops; this year's harvest adds up by crop and unit, valued only at a price he recorded in
 the same unit, beside what its plantings cost, with the greenhouse node's produce in it and its fish said apart; and
-sentences that aren't a harvest don't bring its tools."""
+sentences that aren't a harvest don't bring its tools.
+The garden's and the greenhouse's rows of a crop are one, and a counted fish is a number."""
 
 from datetime import date
 
@@ -117,3 +118,25 @@ def test_the_greenhouse_nodes_harvests_are_in_this_years_total(tmp_path, monkeyp
     assert any(r["crop"] == "Lettuce" and r["amount"] == 3 and not r["fish"] for r in rows)
     said = hl.say_year(world, date(2026, 11, 24))
     assert "Lettuce: 3 lb" in said and "The greenhouse's fish: Tilapia: 4 lb." in said
+
+
+
+def test_the_garden_and_the_greenhouse_lettuce_are_one_row(tmp_path, monkeypatch):
+    """2 lb from the grow lab and 3 lb from the node: Lettuce 5 lb once; a fish counted is said as a number."""
+    from types import SimpleNamespace
+
+    from core import life_events
+
+    batch = SimpleNamespace(batch_id="b1", crop="Lettuce", cost=0, harvests=[{"date": "2026-11-02", "amount": 2,
+                                                                              "unit": "lb"}])
+    node = [SimpleNamespace(at="2026-11-20T10:00:00", payload={"item": "lettuce", "quantity": 3, "unit": "lb",
+                                                               "kind": "harvest_produce", "at": "2026-11-20"}),
+            SimpleNamespace(at="2026-11-21T10:00:00", payload={"item": "tilapia", "quantity": 2, "unit": "count",
+                                                               "kind": "harvest_fish", "at": "2026-11-21"})]
+    monkeypatch.setattr(life_events, "events_for", lambda context, types=(): node)
+    context = SimpleNamespace(grow_lab=SimpleNamespace(batches=[batch]), prices=None)
+    rows = hl.year(context, date(2026, 11, 24))
+    lettuce = [r for r in rows if r["crop"] == "Lettuce"]
+    assert len(lettuce) == 1 and lettuce[0]["amount"] == 5
+    said = hl.say_year(context, date(2026, 11, 24))
+    assert "Tilapia: 2." in said and "counts" not in said

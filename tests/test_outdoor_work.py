@@ -5,6 +5,7 @@ tests.test_outdoor_work
 "Is it safe to work outside today?" (core/outdoor_work.py): the NWS heat index and wind chill match the Weather
 Service's own tables, a hot day names its level and cooler hours with the heat-stroke signs, a bitter day the minutes
 to frostbite, a mild day says so, and the forecast's hours come through core/weather.read.
+A stale forecast is never read as today.
 """
 
 from core import outdoor_work as ow
@@ -60,3 +61,14 @@ def test_the_forecast_carries_its_hours():
     got = weather.read(raw, "fahrenheit")
     assert got["hours"] == [{"time": "2026-07-15T13:00", "temp": 98, "rh": 60, "wind": 5}]
     assert "relative_humidity_2m" in weather.forecast_url(40.0, -90.0, "fahrenheit")
+
+
+
+def test_a_stale_forecast_is_never_read_as_today(monkeypatch):
+    """A forecast kept from yesterday (offline): today isn't in it, so it says so instead of yesterday's hours."""
+    from datetime import date, timedelta
+
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    monkeypatch.setattr(weather, "card", lambda context, fetch=None: {"place": "x", "unit": "°F", "text": "x",
+                                                                      "days": [{"date": yesterday}], "hours": []})
+    assert ow.say(None).startswith("The forecast I have doesn't reach today")

@@ -40,12 +40,12 @@ def format_moon_phase_name(phase: float) -> str:
 def moon_tonight(latitude: float, longitude: float, for_date: date, tz=None) -> str:
     """The moon for a day in words: "Moon: 1 day before the full moon; rises 4:24 pm, sets 7:07 am. Next full moon:
     Wednesday, November 25; next new moon: ..." (a rise or set the moon doesn't make that day is left out; `next_moons`).
-    Times in the computer's own zone."""
-    from datetime import datetime
+    Times in the computer's own zone.
+    Times in that day's own offset (core/fishing_times._tz), and the next moons by the same one-day rule as the
+    phase."""
+    from core.fishing_times import _clock, _tz, phase_word
 
-    from core.fishing_times import _clock, phase_word
-
-    tz = tz or datetime.now().astimezone().tzinfo
+    tz = tz or _tz(for_date)
     where = Observer(latitude=latitude, longitude=longitude)
     words, _strong = phase_word(for_date)
     times = []
@@ -64,23 +64,18 @@ def moon_tonight(latitude: float, longitude: float, for_date: date, tz=None) -> 
 
 
 def next_moons(for_date: date) -> list:
-    """The next full and new moon on or after a day, soonest first: [(kind, date)], each the day the moon is nearest
-    it (core/fishing_times.phase_word's "a full moon")."""
+    """The next full and new moon on or after a day, soonest first: [(kind, date)], each the one day the moon is
+    nearest it (core/fishing_times.is_the_day, the same rule phase_word says "a full moon" by)."""
     from datetime import timedelta
 
-    from core.fishing_times import LUNATION
+    from core.fishing_times import is_the_day
 
-    days = [for_date + timedelta(days=i) for i in range(32)]
     out = []
     for kind in ("full", "new"):
-        gaps = []
-        for day in days:
-            p = astral_moon.phase(day)
-            gaps.append(abs(p - LUNATION / 2) if kind == "full" else min(p, LUNATION - p))
-        # the first day at its nearest: a gap no larger than the days either side (today counts when it's nearest)
-        for i, gap in enumerate(gaps[:-1]):
-            if gap < 1.5 and gap <= gaps[i + 1] and (i == 0 or gap <= gaps[i - 1]):
-                out.append((kind, days[i]))
+        for i in range(32):
+            day = for_date + timedelta(days=i)
+            if is_the_day(day, kind):
+                out.append((kind, day))
                 break
     return sorted(out, key=lambda kv: kv[1])
 

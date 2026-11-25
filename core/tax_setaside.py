@@ -18,12 +18,14 @@ worked out here and never by the model.
 
 US only (core/region.py): elsewhere it says so. A workshop at a loss or no profit owes no self-employment tax yet.
 Rental income (Schedule E) isn't in it. Read-only; not tax advice, and it says a tax preparer has the last word.
+Due dates move to the next business day past a weekend, Martin Luther King Jr. Day or DC Emancipation Day
+(`business_day`).
 """
 
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 SE_RATE = 0.153
@@ -40,11 +42,32 @@ def se_tax(profit: float) -> float:
     return round(earnings * SE_RATE, 2) if earnings >= SE_FLOOR else 0.0
 
 
+def _holidays(year: int) -> set:
+    """Pure logic. The federal holidays that can land on a due date's next business day: Martin Luther King Jr. Day
+    (January's third Monday) and DC Emancipation Day (April 16, observed Friday the 15th or Monday the 17th)."""
+    first = date(year, 1, 1)
+    mlk = first + timedelta(days=(0 - first.weekday()) % 7 + 14)
+    emancipation = date(year, 4, 16)
+    if emancipation.weekday() == 5:
+        emancipation = date(year, 4, 15)
+    elif emancipation.weekday() == 6:
+        emancipation = date(year, 4, 17)
+    return {mlk, emancipation}
+
+
+def business_day(when: date) -> date:
+    """Pure logic. The date, or the next business day when it's a weekend or one of those holidays."""
+    while when.weekday() >= 5 or when in _holidays(when.year):
+        when += timedelta(days=1)
+    return when
+
+
 def next_due(today: date) -> date:
-    """Pure logic. The next estimated-tax due date on or after today (before any weekend shift): January 15 (last
-    year's fourth), April 15, June 15, September 15, then next January 15."""
+    """Pure logic. The next estimated-tax due date on or after today: January 15 (last year's fourth), April 15, June
+    15, September 15, then next January 15, each moved to the next business day (`business_day`: 2028's January 15 is
+    a Saturday and the 17th Martin Luther King Jr. Day, so it's the 18th)."""
     dates = [date(today.year, 1, 15), *(date(today.year, m, d) for m, d in DUE[:3]), date(today.year + 1, 1, 15)]
-    return next(when for when in dates if when >= today)
+    return next(business_day(when) for when in dates if business_day(when) >= today)
 
 
 def rate_in(words: str) -> Optional[float]:

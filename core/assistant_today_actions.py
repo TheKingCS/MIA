@@ -246,10 +246,11 @@ def _action_anything_unusual(context, arguments: dict) -> str:
 # plants"); never a houseplant or an animal, and only asked ("should I", "do I"), never "remind me to water the
 # tomatoes every 2 days" (a maintenance task).
 GARDEN_CROPS = ("tomato", "pepper", "bean", "squash", "cucumber", "corn", "lettuce", "potato", "carrot", "onion",
-                "garlic", "melon", "pumpkin", "peas", "kale", "cabbage", "broccoli", "strawberr", "zucchini", "okra",
+                "garlic", "melon", "pumpkin", "pea", "kale", "cabbage", "broccoli", "strawberr", "zucchini", "okra",
                 "spinach", "beet", "radish", "seedlings", "transplants")
 _WATER_A_CROP = tuple(f"{verb} {crop}" for crop in GARDEN_CROPS
-                      for verb in ("should i water the", "should i water my", "do i water the", "do i water my"))
+                      for verb in ("should i water the", "should i water my", "do i water the", "do i water my",
+                                   "need to water the", "need to water my"))
 
 
 def register_today_actions(registry: AssistantActionRegistry) -> None:

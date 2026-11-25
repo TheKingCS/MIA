@@ -22,7 +22,7 @@ Only the working day (`DAY_HOURS`, 6 am to 8 pm) is read. Figures in his own uni
 from __future__ import annotations
 
 import math
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 DAY_HOURS = range(6, 21)  # 6 am through 8 pm
@@ -167,7 +167,8 @@ def judge(forecast: dict, iso: str, emergency: str = "911") -> str:
 
 
 def say(context, day: str = "today", fetch=None) -> str:
-    """The answer for today or tomorrow, from the forecast kept for his town."""
+    """The answer for today or tomorrow, from the forecast kept for his town, found by its date (a forecast that
+    doesn't reach it says so, never yesterday's hours as today's)."""
     from core import region, weather
 
     got = weather.card(context, fetch)
@@ -176,10 +177,11 @@ def say(context, day: str = "today", fetch=None) -> str:
     if got.get("loading") or not got.get("days"):
         return f"I'm getting the forecast for {got.get('place') or 'your town'}; ask me again in a moment."
     tomorrow = str(day or "").strip().lower().startswith("tom")
-    days = got["days"]
-    if tomorrow and len(days) < 2:
-        return "I don't have tomorrow's forecast yet; ask me again in a moment."
-    iso = days[1 if tomorrow else 0]["date"]
+    wanted = (date.today() + timedelta(days=1 if tomorrow else 0)).isoformat()
+    if not any(d.get("date") == wanted for d in got["days"]):  # a stale forecast kept while offline (review 2026-11-24)
+        return (f"The forecast I have doesn't reach {'tomorrow' if tomorrow else 'today'} yet; ask me again when "
+                "I'm back online.")
+    iso = wanted
     said = judge(got, iso, region.region_for(context).emergency)
     if not said:
         return "The forecast I have doesn't give that day's hours; ask me again in a moment."

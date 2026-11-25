@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1739 files, 374,507 lines; 1739 files describe themselves; 20,554 of 20,684 classes and functions are documented.
+1739 files, 374,708 lines; 1739 files describe themselves; 20,569 of 20,699 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-693 files, 193,394 lines; 9,813 of 9,899 classes and functions documented
+693 files, 193,498 lines; 9,821 of 9,907 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -991,7 +991,7 @@
 
 ## tests/: the test suite: what each part must do
 
-640 files, 100,018 lines; 8,376 of 8,420 classes and functions documented
+640 files, 100,115 lines; 8,383 of 8,427 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1517,7 +1517,7 @@
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).
 - `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, the steps that ask every time whatever was learned, and each run kept in the run book through its waits to its end (UI-1).
-- `tests/test_tax_setaside.py`: "How much should I set aside for taxes?" (core/tax_setaside.py): self-employment tax is 15.3% of 92.35% of the profit from $400 of earnings, income tax at 12% and 22% side by side with a bracket he gives, the next 1040-ES date, a loss owes nothing, and outside the US it says it's US-only.
+- `tests/test_tax_setaside.py`: "How much should I set aside for taxes?" (core/tax_setaside.py): self-employment tax is 15.3% of 92.35% of the profit from $400 of earnings, income tax at 12% and 22% side by side with a bracket he gives, the next 1040-ES date, a loss owes nothing, and outside the US it says it's US-only. A due date
 - `tests/test_teamwork.py`: A project's workspace and team (core/teamwork.py, T2 of the specialized agent teams; DEC-0198): the person's entries are confirmed and a specialist's derived until he confirms; a specialist's entry names its model, a finding of its on a source names the source, and it can only come from a real speci
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
 - `tests/test_the_loop.py`: The Loop (DEC-0047): what recurs gets a rhythm by itself, MIA learns its days and times (yours always win), plans the week's runs, reminds you at the time, and a missed day shows honestly as the share cleared.

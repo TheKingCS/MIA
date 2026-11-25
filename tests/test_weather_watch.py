@@ -7,6 +7,7 @@ against tender crops in the ground, a hard freeze against half-hardy ones, a col
 off, heat and freezing water against the hens, rain likely tomorrow (by its chance, else its words) against a build
 in progress, a night cold enough for the pipes (said when asked, never as the daily message); in °F and °C;
 through the gate once per concern per day; a gap in tomorrow's figures never loses today.
+Asked about the pipes on a mild night, its low is still said.
 """
 
 from datetime import date, datetime
@@ -167,3 +168,17 @@ def test_a_night_cold_enough_for_the_pipes_is_said_when_asked_never_as_the_daily
     monkeypatch.setattr(ww, "watch", lambda context, day, fetch=None: [{"kind": "pipes", "text": "x"},
                                                                          {"kind": "frost", "text": "y"}])
     assert [c.message for c in ww.offer(None, datetime(2026, 12, 1, 7))] == ["y"]
+
+
+
+def test_asked_about_the_pipes_on_a_mild_night_its_low_is_said(monkeypatch):
+    """Nothing to worry about: tonight's low against the pipes' 20 °F is still said."""
+    from core import weather
+
+    got = {"text": "40°F", "high": 50, "low": 38, "unit": "°F", "tomorrow": {"high": 52, "low": 34}, "place": "x"}
+    monkeypatch.setattr(weather, "card", lambda context, fetch=None: got)
+    monkeypatch.setattr(weather, "say", lambda context: "In x it's 40°F.")
+    monkeypatch.setattr(ww, "watch", lambda context, forecast=None: [])
+    monkeypatch.setattr(ww, "_growing", lambda context, day: {"in_ground": [], "hardening": []})
+    monkeypatch.setattr(ww, "_birds", lambda context: 0)
+    assert "Tonight's low of 34°F isn't cold enough to freeze pipes" in ww.say(SimpleNamespace())

@@ -5,6 +5,7 @@ tests.test_hen_laying
 "Why did my hens stop laying?" (core/hen_laying.py): short winter days counted from the sun for his town with the
 day they're back over 14 hours, molt season by hemisphere, a young or old flock by when it came, a change in the flock
 first, and his log's lay rate this week against before; with no flock it says how to add one.
+Near the tropics short days are measured against the place's own long days, and a flock's age is when it came.
 """
 
 from datetime import date
@@ -52,9 +53,20 @@ def test_the_answer_puts_a_flock_change_first_and_says_the_light(monkeypatch):
 
 
 def test_young_pullets_and_no_flock(monkeypatch):
-    """A 12-week flock is said as too young first; no flock says how to add one."""
+    """A flock that came 12 weeks ago is said as that, never as its age; no flock says how to add one."""
     monkeypatch.setattr(weather, "place", lambda context: None)
     monkeypatch.setattr(weather, "card", lambda context: {})
     said = hl.say(_context([], started="2026-09-01"), date(2026, 11, 24))
-    assert "about 12 weeks old" in said and "Tell me your town" in said
+    assert "they came about 12 weeks ago; if they came as chicks" in said and "weeks old" not in said
+    assert "Tell me your town" in said
     assert hl.say(SimpleNamespace(flock=None)).startswith("No flock in MIA yet")
+
+
+
+def test_near_the_tropics_short_days_go_by_the_places_own_year():
+    """Tampa never reaches 14 hours: midsummer isn't short; December is, measured against its own long days; far
+    north in summer the day still has a length (astral's sun() alone would fail)."""
+    assert hl.short_for_there(27.95, -82.46, date(2026, 6, 21)) is None
+    short = hl.short_for_there(27.95, -82.46, date(2026, 12, 21))
+    assert short is not None and short[1] < 14
+    assert hl.day_hours(61.2, -149.9, date(2026, 6, 21)) > 18

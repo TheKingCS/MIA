@@ -6,6 +6,7 @@ tests.test_fishing_times
 overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a
 new or full moon, the week's best days, his own log's best time, and a town asked for first; the moon tonight in
 words, with the next full and new moon (core/sun_moon.py).
+Only one day is the full or new moon, each day's times use that day's offset, and dawn and dusk are kept far north.
 """
 
 from datetime import date, datetime
@@ -74,3 +75,24 @@ def test_the_moon_tonight_in_words():
     said = moon_tonight(LAT, LON, date(2026, 11, 24), TZ)
     assert said.startswith("Moon: ") and "full moon" in said and "rises 4:24 pm" in said and "sets 7:07 am" in said
     assert "Full moon today" in said and "next new moon around Wednesday, December 9" in said
+
+
+
+def test_only_one_day_is_the_full_or_new_moon_and_the_answer_never_contradicts_itself():
+    """The day after a new moon is "1 day past" it, and its next new moon is the month after; the day after the full
+    moon isn't a full moon too; the day before a new moon says it's tomorrow."""
+    from core.sun_moon import moon_tonight, next_moons
+
+    assert ft.phase_word(date(2026, 11, 25))[0] == "1 day past the full moon"
+    after = moon_tonight(LAT, LON, date(2026, 12, 10), TZ)
+    assert "1 day past the new moon" in after and "New moon today" not in after
+    assert dict(next_moons(date(2026, 12, 10)))["new"].month == 1
+    before = dict(next_moons(date(2026, 12, 8)))
+    assert ft.phase_word(date(2026, 12, 8))[0] == "1 day before the new moon" and before["new"] == date(2026, 12, 9)
+
+
+def test_each_days_times_use_that_days_offset_and_the_sun_far_north():
+    """A day after the spring clock change gets that day's offset; at 61° N in June dawn and dusk are still there."""
+    assert ft._tz(date(2027, 3, 20)).utcoffset(None) is not None
+    found = ft.windows(61.2, -149.9, date(2026, 6, 21), TZ)
+    assert {"dawn", "dusk"} <= {w["kind"] for w in found}

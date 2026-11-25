@@ -2759,7 +2759,9 @@ class AssistantTools:
         """Assistant tool `get_sun_moon_info`: today's sunrise, sunset and moon phase (the Navigation module's
         summary) with the moon tonight (core/sun_moon.moon_tonight: days to the full or new moon, moonrise and
         moonset), at a named waypoint, else his town (core/weather.place). Returns the reply in words (an unknown
-        waypoint, or no town yet, says so; nothing changes)."""
+        waypoint, or no town yet, says so; nothing changes).
+        One reading of the moon: the summary's four-bucket phase line is left out, so the reply never says Full Moon
+        beside 6 days past it."""
         from datetime import date as _date
 
         from core import weather
@@ -2778,7 +2780,9 @@ class AssistantTools:
                         "or name a saved waypoint.")
             lat, lon, label = town["lat"], town["lon"], town["name"] or "your town"
         today = _date.today()
-        return f"For {label}: {format_sun_moon_summary(lat, lon, today)}\n{moon_tonight(lat, lon, today)}"
+        sun_lines = [line for line in format_sun_moon_summary(lat, lon, today).splitlines()
+                     if not line.startswith("Moon phase:")]  # one reading of the moon: moon_tonight's (review 2026-11-24)
+        return f"For {label}: " + "\n".join(sun_lines + [moon_tonight(lat, lon, today)])
 
     @staticmethod
     def _action_get_system_health(context: AppContext, arguments: dict) -> str:

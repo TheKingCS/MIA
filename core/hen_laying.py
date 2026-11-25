@@ -7,13 +7,14 @@ egg drop is core/unusual.py's): the likely causes for his flock, worked out from
 town, the most likely first, never one his records rule out.
 
 - **Day length** (`day_hours`, offline from the sun for core/weather.place): under `LIGHT_HOURS` (14) hens slow down
-  and many stop; said with today's daylight and the day it's back over 14 (`light_back`). The fix if he wants eggs
+  and many stop; said with today's daylight and the day it's back over 14 (`light_back`). Near the tropics, where 14
+  never comes, the measure is an hour under the place's own longest day (`short_for_there`). The fix if he wants eggs
   through winter: a light on a timer adding the hours in the morning, so they still go to roost at dusk; letting them
   rest is fine too.
 - **Molt** (late summer into fall, August to November in the north, February to May in the south): feathers dropping,
   6 to 12 weeks without eggs; more protein helps them through.
-- **Age** (core/flock.py `started`): pullets start near 18 to 22 weeks; a flock past about three years lays
-  noticeably less each year.
+- **Age** (core/flock.py `started`, when they came, not when they hatched, so said as that): pullets start near 18 to
+  22 weeks; a flock past about three years lays noticeably less each year.
 - **Heat** (today's or tomorrow's high at 90 °F or over, core/weather.card): shade and cool water.
 - **Feed** (core/feed_runway.runway): running out or out.
 - **Birds added or lost** in the last three weeks (the flock's log): a change in the flock is a stress.
@@ -37,26 +38,49 @@ OLD_YEARS = 3
 
 def day_hours(lat: float, lon: float, day: date) -> Optional[float]:
     """Hours from sunrise to sunset that day (astral, in the place's own solar time, so a summer sunset past midnight
-    UTC stays on its day), or None where the sun doesn't rise or set."""
+    UTC stays on its day), or None where the sun doesn't rise or set.
+    Sunrise and sunset are asked separately, so a summer day far north still has its length."""
     from datetime import timezone
 
     from astral import Observer
-    from astral.sun import sun
+    from astral.sun import sunrise, sunset
 
     solar = timezone(timedelta(hours=round(lon / 15)))
-    try:
-        s = sun(Observer(lat, lon), day, tzinfo=solar)
+    where = Observer(lat, lon)
+    try:  # each on its own: astral's sun() fails whole when twilight never ends (far north in summer)
+        up, down = sunrise(where, day, tzinfo=solar), sunset(where, day, tzinfo=solar)
     except ValueError:
         return None
-    return round((s["sunset"] - s["sunrise"]).total_seconds() / 3600, 1)
+    return round((down - up).total_seconds() / 3600, 1)
 
 
-def light_back(lat: float, lon: float, today: date) -> Optional[date]:
-    """The first day ahead (within a year) with LIGHT_HOURS of daylight, or None."""
+def longest_day(lat: float, lon: float, year: int) -> Optional[float]:
+    """The year's longest daylight there (sampled weekly), or None."""
+    hours = [h for h in (day_hours(lat, lon, date(year, 1, 1) + timedelta(days=7 * i)) for i in range(53))
+             if h is not None]
+    return max(hours) if hours else None
+
+
+def short_for_there(lat: float, lon: float, today: date) -> Optional[tuple]:
+    """(today's hours, the hours that count as enough there, the day it's back) when today's daylight is short for
+    the place: under 14 hours, and over an hour under its own longest day (near the tropics 14 never comes, so the
+    year's own long days are the measure; review 2026-11-24); else None."""
+    hours = day_hours(lat, lon, today)
+    longest = longest_day(lat, lon, today.year)
+    if hours is None or longest is None:
+        return None
+    enough = min(LIGHT_HOURS, round(longest - 1, 1))
+    if hours >= enough:
+        return None
+    return hours, enough, light_back(lat, lon, today, enough)
+
+
+def light_back(lat: float, lon: float, today: date, enough: float = LIGHT_HOURS) -> Optional[date]:
+    """The first day ahead (within a year) with `enough` hours of daylight, or None."""
     for i in range(1, 366):
         day = today + timedelta(days=i)
         hours = day_hours(lat, lon, day)
-        if hours is not None and hours >= LIGHT_HOURS:
+        if hours is not None and hours >= enough:
             return day
     return None
 
@@ -76,28 +100,30 @@ def _age(flock, today: date) -> Optional[int]:
 
 
 def causes(context, flock, today: date) -> list[str]:
-    """The likely causes for one flock, most likely first (see the module's opening)."""
+    """The likely causes for one flock, most likely first (see the module's opening).
+    Short days are judged by the place's own year (`short_for_there`), and the flock's age only as when they came."""
     from core import weather
 
     out = []
     where = weather.place(context)
     if where is not None:
-        hours = day_hours(where["lat"], where["lon"], today)
-        if hours is not None and hours < LIGHT_HOURS:
-            back = light_back(where["lat"], where["lon"], today)
-            out.append(f"Short days: {hours:g} hours of daylight today, and hens slow down or stop under about 14"
-                       + (f"; it's back over 14 around {back:%B} {back.day}" if back else "") + ". For eggs through "
-                       "winter, a light on a timer adding the hours in the morning (so they still roost at dusk) "
-                       "brings them back; letting them rest is fine too.")
+        short = short_for_there(where["lat"], where["lon"], today)
+        if short:
+            hours, enough, back = short
+            out.append(f"Short days: {hours:g} hours of daylight today, and hens slow down or stop under about "
+                       f"{enough:g}" + (f"; it's back over {enough:g} around {back:%B} {back.day}" if back else "")
+                       + ". For eggs through winter, a light on a timer adding the hours in the morning (so they still "
+                       "roost at dusk) brings them back; letting them rest is fine too.")
         if molt_season(today, where["lat"]):
             out.append("Molt season: feathers dropping means a molt, 6 to 12 weeks with few or no eggs; a higher "
                        "protein feed (about 20%) helps them regrow.")
-    weeks = _age(flock, today)
+    weeks = _age(flock, today)  # since they came, not their age: MIA isn't told when they hatched (review 2026-11-24)
     if weeks is not None and weeks < PULLET_WEEKS[0]:
-        out.insert(0, f"Their age: about {weeks} weeks old, and pullets usually start at 18 to 22 weeks.")
+        out.append(f"Their age: they came about {weeks} weeks ago; if they came as chicks, pullets usually start at "
+                   "18 to 22 weeks.")
     elif weeks is not None and weeks >= OLD_YEARS * 52:
-        out.append(f"Their age: about {weeks // 52} years old, and hens lay less each year after their second or "
-                   "third.")
+        out.append(f"Their age: they came about {weeks // 52} years ago, and hens lay less each year after their "
+                   "second or third.")
     try:
         got = weather.card(context)
         highs = [h for h in (got.get("high"), (got.get("tomorrow") or {}).get("high")) if h is not None]

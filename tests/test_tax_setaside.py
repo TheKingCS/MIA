@@ -5,6 +5,7 @@ tests.test_tax_setaside
 "How much should I set aside for taxes?" (core/tax_setaside.py): self-employment tax is 15.3% of 92.35% of the
 profit from $400 of earnings, income tax at 12% and 22% side by side with a bracket he gives, the next 1040-ES date, a loss
 owes nothing, and outside the US it says it's US-only.
+A due date on a weekend or holiday moves to the next business day.
 """
 
 from datetime import date
@@ -62,3 +63,12 @@ def test_a_loss_owes_nothing_and_another_country_is_told_its_us_only(monkeypatch
     """No profit: nothing yet; set to Canada: US-only."""
     assert "no self-employment tax" in tx.say(_context(monkeypatch, -50), date(2026, 5, 1))
     assert "US self-employment tax only" in tx.say(_context(monkeypatch, 5000, "CA"), date(2026, 5, 1))
+
+
+
+def test_a_due_date_on_a_weekend_or_holiday_moves_to_the_next_business_day():
+    """2028's January 15 is a Saturday and the 17th MLK Day: the 18th; its April 15 a Saturday and Emancipation Day
+    observed Monday the 17th: the 18th; a weekday stays."""
+    assert tx.next_due(date(2028, 1, 2)) == date(2028, 1, 18)
+    assert tx.next_due(date(2028, 3, 1)) == date(2028, 4, 18)
+    assert tx.next_due(date(2026, 3, 1)) == date(2026, 4, 15)

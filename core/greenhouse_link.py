@@ -270,7 +270,8 @@ def keep_readings(context, link: GreenhouseLink, now: Optional[datetime] = None)
 
 def keep_harvests(context, link: GreenhouseLink) -> int:
     """The node's harvests (its export's `yield.events`, the last seven days) kept in MIA's history as
-    `greenhouse_harvest` life events, each once (by the node's event id, its ref `node_yield:<id>`), so produce from the
+    `greenhouse_harvest` life events, each once (by the node's event id and time, its ref `node_yield:<id>:<time>`, so
+    a node whose database was rebuilt and restarted its ids still has its new harvests kept), so produce from the
     greenhouse counts toward his produce and the Grower achievements (core/life_milestones.produce_pounds) and the
     Chronicle; how many were new. A fish harvest is kept too, never counted as produce."""
     from core import life_events
@@ -288,7 +289,7 @@ def keep_harvests(context, link: GreenhouseLink) -> int:
         return 0
     new = 0
     for e in events:
-        ref = f"node_yield:{e.get('id')}"
+        ref = f"node_yield:{e.get('id')}:{str(e.get('timestamp') or '')[:19]}"  # id and time: a rebuilt node restarts ids
         try:
             amount = float(e.get("quantity") or 0)
         except (TypeError, ValueError):

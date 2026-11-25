@@ -1638,12 +1638,14 @@ def test_get_trip_summary_reports_planned_route_distance(context):
 # ----------------------------------------------------------------------
 
 def test_get_sun_moon_info_without_a_waypoint_uses_his_town_or_asks_for_one(context, monkeypatch):
-    """No waypoint named: his town's sun and moon, with the moon tonight; no town yet: asked for one."""
+    """No waypoint named: his town's sun and moon, with the moon tonight; no town yet: asked for one.
+    One reading of the moon in the reply, and a null waypoint is his town."""
     from core import weather
 
     monkeypatch.setattr(weather, "place", lambda ctx: {"name": "Springfield", "lat": 39.8, "lon": -89.6})
     said = MIAApplication._action_get_sun_moon_info(context, {})
     assert said.startswith("For Springfield: Sunrise:") and "Moon: " in said and "moon" in said.split("Moon: ")[1]
+    assert "Moon phase:" not in said  # one reading of the moon, never two that disagree
     assert MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": "null"}).startswith("For Springfield")
     monkeypatch.setattr(weather, "place", lambda ctx: None)
     assert "I don't know your town yet" in MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": ""})

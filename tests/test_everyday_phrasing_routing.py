@@ -152,7 +152,8 @@ def test_everyday_talk_never_reaches_a_tool_it_isnt_for(registry, said, never):
 
 
 @pytest.mark.parametrize("said", ["It's so hot, should I water the tomatoes?", "should I water my peppers today?",
-                                  "do I water the bean seedlings tonight?"])
+                                  "do I water the bean seedlings tonight?", "Do I need to water the tomatoes today?",
+                                  "should I water the pea plants?"])
 def test_a_garden_crop_by_name_reaches_the_watering_answer(registry, said):
     assert "should_i_water" in offered_tools(registry, said, demo_context()), said
 

@@ -130,7 +130,9 @@ def year(context, today: Optional[date] = None) -> list[dict]:
     first: each {crop, unit, amount, times, cost (what its batches cost: seeds, starts), value (None without a price,
     never for fish), price_from, fish}. Read from the grow lab and the greenhouse node's kept harvests
     (`_node_harvests`); prices from his price book, the cheapest per
-    unit for that crop (by `_same_crop`) in the same unit, each store's latest in the last year."""
+    unit for that crop (by `_same_crop`) in the same unit, each store's latest in the last year.
+    The garden's and the greenhouse's rows of a crop are one (both keyed with fish False), and a node's count is
+    said as each."""
     today = today or date.today()
     lab = getattr(context, "grow_lab", None)
     totals: dict = {}
@@ -138,15 +140,17 @@ def year(context, today: Optional[date] = None) -> list[dict]:
         for h in b.harvests or []:
             if not str(h.get("date", "")).startswith(str(today.year)):
                 continue
-            key = (singular(b.crop), unit_of(h.get("unit", "")))
+            key = (singular(b.crop), unit_of(h.get("unit", "")), False)
             row = totals.setdefault(key, {"crop": key[0].capitalize(), "unit": key[1], "amount": 0.0, "times": 0,
-                                          "batches": set()})
+                                          "batches": set(), "fish": False})
             row["amount"] += float(h.get("amount") or 0)
             row["times"] += 1
             row["batches"].add(b.batch_id)
     for e in _node_harvests(context, today):
         fish = e.payload.get("kind") == "harvest_fish"
-        key = (singular(str(e.payload.get("item") or "produce")), unit_of(str(e.payload.get("unit") or "")), fish)
+        unit = unit_of(str(e.payload.get("unit") or ""))
+        key = (singular(str(e.payload.get("item") or "produce")), "each" if unit in ("count", "counts") else unit,
+               fish)
         row = totals.setdefault(key, {"crop": key[0].capitalize(), "unit": key[1], "amount": 0.0, "times": 0,
                                       "batches": set(), "fish": fish})
         try:

@@ -15,8 +15,8 @@ core/sun_moon.py) and beside what his own catch log says (core/catch_log.biting)
   the best two said with why.
 
 Said honestly: the solunar idea is tradition with mixed evidence, dawn and dusk are the reliable part, and his own log
-outranks both once it has a few catches with times. Times are in the computer's own time zone, never guessed from
-the town. Without a town, he's asked for one.
+outranks both once it has a few catches with times. Times are in the computer's own time zone on each day (a clock change counted), never guessed
+from the town. Without a town, he's asked for one.
 """
 
 from __future__ import annotations
@@ -29,9 +29,26 @@ PHASE_DAYS = 2  # days either side of new (0 / 29.5) or full (14.75) that count 
 LUNATION = 28.0  # astral's moon.phase scale: 0 new, 14 full, 27.99 the end (its own docs), not the 29.53-day month
 
 
-def _tz():
-    """The computer's own time zone."""
-    return datetime.now().astimezone().tzinfo or timezone.utc
+def _tz(day: Optional[date] = None):
+    """The computer's own time zone on that day (noon's offset, so a clock change between now and then is counted:
+    Windows gives a fixed offset for now, review 2026-11-24)."""
+    day = day or date.today()
+    return datetime(day.year, day.month, day.day, 12).astimezone().tzinfo or timezone.utc
+
+
+def _sun_times(lat: float, lon: float, day: date, tz) -> dict:
+    """{sunrise, sunset} that day, each left out when the sun doesn't rise or set (asked one at a time: astral's
+    sun() fails whole when twilight never ends, far north in summer)."""
+    from astral import Observer
+    from astral.sun import sunrise, sunset
+
+    where, out = Observer(lat, lon), {}
+    for name, fn in (("sunrise", sunrise), ("sunset", sunset)):
+        try:
+            out[name] = fn(where, day, tzinfo=tz)
+        except ValueError:
+            continue
+    return out
 
 
 def _clock(when: datetime) -> str:
@@ -56,21 +73,19 @@ def moon_extremes(lat: float, lon: float, day: date, tz) -> dict:
 
 def windows(lat: float, lon: float, day: date, tz=None) -> list[dict]:
     """The day's windows, in time order: each {kind (dawn, dusk, major, minor), what, start, end, on_light (a solunar
-    window touching dawn or dusk)}."""
+    window touching dawn or dusk)}.
+    Dawn and dusk come from sunrise and sunset asked separately (`_sun_times`), so far north in summer they're still
+    there."""
     from astral import Observer, moon
-    from astral.sun import sun
 
-    tz = tz or _tz()
+    tz = tz or _tz(day)
     where = Observer(lat, lon)
     out = []
-    try:
-        s = sun(where, day, tzinfo=tz)
-        out += [{"kind": "dawn", "what": "dawn", "start": s["sunrise"] - timedelta(hours=1),
-                 "end": s["sunrise"] + timedelta(hours=1)},
-                {"kind": "dusk", "what": "dusk", "start": s["sunset"] - timedelta(hours=1),
-                 "end": s["sunset"] + timedelta(hours=1)}]
-    except ValueError:  # no sunrise or sunset that day (far north)
-        pass
+    s = _sun_times(lat, lon, day, tz)
+    for kind, name in (("dawn", "sunrise"), ("dusk", "sunset")):
+        if name in s:
+            out.append({"kind": kind, "what": kind, "start": s[name] - timedelta(hours=1),
+                        "end": s[name] + timedelta(hours=1)})
     peaks = moon_extremes(lat, lon, day, tz)
     out += [{"kind": "major", "what": f"moon {name}", "start": t - timedelta(hours=1), "end": t + timedelta(hours=1)}
             for name, t in peaks.items()]
@@ -89,19 +104,49 @@ def windows(lat: float, lon: float, day: date, tz=None) -> list[dict]:
     return sorted(out, key=lambda w: w["start"])
 
 
-def phase_word(day: date) -> tuple:
-    """(words, strong): "a full moon", "two days past the new moon"... and whether it's the strong stretch."""
+def gap(day: date, kind: str) -> float:
+    """How far that day's moon is from full or new, on astral's scale (0 new, 14 full, 27.99 the end of the cycle;
+    checked: 13.8 on 2026-11-24, that day's full moon)."""
     from astral import moon
 
-    p = moon.phase(day)  # 0 new, 14 full, 27.99 the end of the cycle (checked: 13.8 on 2026-11-24, that day's full moon)
-    to_new = min(p, LUNATION - p)
-    to_full = abs(p - LUNATION / 2)
-    near, gap = ("new", to_new) if to_new <= to_full else ("full", to_full)
-    if gap < 1:
-        return f"a {near} moon", True
-    days = round(gap)
-    side = ("past" if p < LUNATION / 2 else "before") if near == "new" else ("past" if p > LUNATION / 2 else "before")
-    return f"{days} day{'s' if days != 1 else ''} {side} the {near} moon", gap <= PHASE_DAYS
+    p = moon.phase(day)
+    return abs(p - LUNATION / 2) if kind == "full" else min(p, LUNATION - p)
+
+
+def is_the_day(day: date, kind: str) -> bool:
+    """Whether this is the one day the moon is nearest full (or new): nearer than the day before and no further than
+    the day after (so two days in a row never both are; review 2026-11-24)."""
+    g = gap(day, kind)
+    return g < 1.5 and g < gap(day - timedelta(days=1), kind) and g <= gap(day + timedelta(days=1), kind)
+
+
+def moon_day(day: date, kind: str, ahead: bool) -> Optional[date]:
+    """The nearest full (or new) moon day on or after `day` (ahead) or on or before it, within 16 days, or None."""
+    for i in range(17):
+        when = day + timedelta(days=i if ahead else -i)
+        if is_the_day(when, kind):
+            return when
+    return None
+
+
+def phase_word(day: date) -> tuple:
+    """(words, strong): "a full moon" (only on the day, `is_the_day`), "2 days past the new moon"..., and whether
+    it's the strong stretch (within PHASE_DAYS of one). The same rule as core/sun_moon.next_moons."""
+    best = None
+    for kind in ("full", "new"):
+        for ahead in (True, False):
+            when = moon_day(day, kind, ahead)
+            if when is not None and (best is None or abs((when - day).days) < abs((best[1] - day).days)):
+                best = (kind, when)
+    if best is None:
+        return "the moon between phases", False
+    kind, when = best
+    days = (when - day).days
+    if days == 0:
+        return f"a {kind} moon", True
+    side = "before" if days > 0 else "past"
+    n = abs(days)
+    return f"{n} day{'s' if n != 1 else ''} {side} the {kind} moon", n <= PHASE_DAYS
 
 
 def score(lat: float, lon: float, day: date, tz=None) -> tuple:
@@ -158,14 +203,14 @@ HONEST = (" The solunar periods are an old angler's tradition with mixed evidenc
 
 
 def say(context, when: str = "today", today: Optional[date] = None, tz=None) -> str:
-    """The answer for today, tomorrow or the week (see the module's opening)."""
+    """The answer for today, tomorrow or the week (see the module's opening).
+    Each day's times use that day's own offset (`_tz(day)`), so a week across a clock change is right."""
     from core import weather
 
     where = weather.place(context)
     if where is None:
         return "I don't know your town yet. Tell me which one, like \"my town is Springfield, Illinois\"."
     today = today or date.today()
-    tz = tz or _tz()
     when = str(when or "today").strip().lower()
     lat, lon = where["lat"], where["lon"]
     if "week" in when or "weekend" in when:

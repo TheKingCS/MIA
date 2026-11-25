@@ -220,7 +220,7 @@ def _well(context) -> bool:
 
 def say(context) -> str:
     """For "will it frost tonight?", "will the pipes freeze?" and "what does the weather mean for my garden?": each
-    concern, or what she checked and found fine."""
+    concern, or what she checked and found fine (tonight's low against the pipes' 20 °F always said)."""
     from core import weather
 
     got = weather.card(context)
@@ -231,11 +231,14 @@ def say(context) -> str:
     found = watch(context, forecast=got)
     if found:
         return " ".join(c["text"] for c in found)
+    night = (got.get("tomorrow") or {}).get("low", got.get("low"))
+    pipes = (f" Tonight's low of {round(night)}{got['unit']} isn't cold enough to freeze pipes (about "
+             f"{'-7°C' if 'C' in got['unit'] else '20°F'})." if night is not None and got.get("unit") else "")
     growing, birds = _growing(context, date.today()), _birds(context)
     if not growing["in_ground"] and not growing["hardening"] and not birds:
-        return (weather.say(context) + " Nothing of yours is planted out or kept outside that I know of: a garden "
-                "plan confirmed in the Planner, or a flock, and I'll watch the weather for them.")
-    return weather.say(context) + " Nothing in it threatens your garden or the flock."
+        return (weather.say(context) + pipes + " Nothing of yours is planted out or kept outside that I know of: a "
+                "garden plan confirmed in the Planner, or a flock, and I'll watch the weather for them.")
+    return weather.say(context) + pipes + " Nothing in it threatens your garden or the flock."
 
 
 def offer(context, now: datetime, fetch: Optional[Callable[[str], dict]] = None) -> list:
