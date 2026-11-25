@@ -205,7 +205,8 @@ def _tool(context, arguments: dict) -> str:
 
 def register_canning_time_actions(registry) -> None:
     """Registers canning_time.
-    Reached by "what pressure to can...", never a bare "what pressure" (tires)."""
+    Reached by "what pressure to can...", never a bare "what pressure" (tires).
+    His own words, never the model's (`prompt_arg`)."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -216,7 +217,8 @@ def register_canning_time_actions(registry) -> None:
         parameters={"type": "object", "properties": {
             "question": {"type": "string", "description": "his words: the food, pints or quarts, any altitude"}},
             "required": ["question"]},
-        handler=_tool, trigger_phrases=("how long do i process", "how long to process", "processing time",
+        handler=_tool, prompt_arg="question",  # his own words, never the model's (live check 2026-11-25: it sent the tool's description)
+        trigger_phrases=("how long do i process", "how long to process", "processing time",
                                         "process time", "pressure can", "pressure canner", "water bath",
                                         "water-bath", "how long to can", "how long do i can", "canning time",
                                         "pressure to can", "pressure for canning", "pressure should i can",

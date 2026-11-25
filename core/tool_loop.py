@@ -46,6 +46,7 @@ lookups it's given; the desktop runs it on its ChatWorker thread, the
 web and voice inside `run_assistant_turn`.
 A SAID_AS_IS answer drops a failed lookup to the usual path, a repeat, and a sibling's refusal (NOT_AN_ANSWER), and
 keeps the model's words for a two-part question's other part (`two_part`).
+A tool whose one detail is his question (its `prompt_arg`) is given his own words, never the model's (`his_words`).
 """
 
 from __future__ import annotations
@@ -254,6 +255,24 @@ def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply
                      tool_calls=[])
 
 
+def his_words(registry, call: ToolCall, prompt: str) -> dict:
+    """A call's arguments, with a tool's `prompt_arg` (the one detail that is his question: canning_time, feed_mix...)
+    given his own words, or on a follow-up the question it makes (core/conversation_state.turn_follow_up), never the
+    model's (live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with
+    the tool's own description as the question, and was refused)."""
+    arguments = dict(call.arguments or {})
+    action = getattr(registry, "_actions", {}).get(call.name)
+    field = getattr(action, "prompt_arg", "") if action is not None else ""
+    if not field or not str(prompt or "").strip():
+        return arguments
+    from core.conversation_state import turn_follow_up
+
+    follow = turn_follow_up()
+    own = follow is not None and follow[1] and follow[0] == str(prompt).strip()  # this turn's follow-up, not another's
+    arguments[field] = follow[1] if own else str(prompt).strip()
+    return arguments
+
+
 def _short(text: str, name: str = "") -> str:
     """A tool's result cut to RESULT_CHARS (1,500; LIBRARY_TOOLS their own) at a word, marked as cut short."""
     text = str(text or "").strip()
@@ -310,7 +329,8 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     the guide's page looked up in code when the turn's reading missed it.
     Lookups that are all SAID_AS_IS (safety numbers worded in code) are the answer as they are.
     SAID_AS_IS answers skip failures and repeats, and keep the model's words (never figures) for a two-part
-    question's other part."""
+    question's other part.
+    A tool's `prompt_arg` is given his words (`his_words`)."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -359,7 +379,7 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
                     continue
                 try:
                     with orb_state.active("working"):  # the lookup itself
-                        text = registry.execute(context, call.name, call.arguments or {})
+                        text = registry.execute(context, call.name, his_words(registry, call, prompt))
                 except Exception:
                     log.exception("Lookup %s failed in the tool loop", call.name)
                     text = f"(The {call.name} lookup failed.)"

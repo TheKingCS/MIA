@@ -69,7 +69,8 @@ def _tool(context, arguments: dict) -> str:
 
 
 def register_meat_cure_actions(registry) -> None:
-    """Registers meat_cure."""
+    """Registers meat_cure.
+    His own words, never the model's (`prompt_arg`)."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -80,7 +81,8 @@ def register_meat_cure_actions(registry) -> None:
         parameters={"type": "object", "properties": {
             "question": {"type": "string", "description": "Their words, with the meat's weight and what it is."}},
             "required": ["question"]},
-        handler=_tool, trigger_phrases=("curing salt", "cure #1", "cure no. 1", "prague powder", "pink salt",
+        handler=_tool, prompt_arg="question",  # his own words, never the model's (live check 2026-11-25: it sent the tool's description)
+        trigger_phrases=("curing salt", "cure #1", "cure no. 1", "prague powder", "pink salt",
                                         "pink curing", "cure my bacon", "cure bacon", "cure a ham", "cure the ham",
                                         "cure the bacon", "cure some bacon", "cure pork", "cure the pork",
                                         "dry cure", "equilibrium cure", "make bacon", "making bacon",

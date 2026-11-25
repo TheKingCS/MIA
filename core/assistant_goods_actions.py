@@ -275,6 +275,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     like), hatch_status heard only of eggs ("how's the hatch going?",
     never "the business incubator" or "the lockdown drill").
     get_eggs takes his words (its prompt_arg, still answered in code) for last week, this month or last month.
+    feed_mix takes his own words (`prompt_arg`).
     """
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
@@ -315,7 +316,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {
             "question": {"type": "string", "description": "Their words, with both feeds' percent and the target."}},
             "required": ["question"]},
-        handler=_action_feed_mix,
+        handler=_action_feed_mix, prompt_arg="question",  # his own words, never the model's (live check 2026-11-25: it sent the tool's description)
         trigger_phrases=("mix feed", "mix the feed", "feed mix", "pearson square", "protein feed", "% protein",
                          "percent protein", "mix two feeds", "% feed", "% layer", "% grower", "% starter",
                          "% supplement", "% pellet", "% crumble", "% ration", "percent feed", "percent layer",

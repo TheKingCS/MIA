@@ -189,7 +189,7 @@ COMMON_STRENGTHS = ("6 %", "8.25 %")  # most US household bleach is one of these
 def _action_bleach_for_water(context, arguments: dict) -> str:
     """How much household bleach makes water safe to drink, worked out in code by the EPA's method
     (core/eng_calcs.py water_bleach), never from the model's memory. The amount of water and the bleach's strength
-    are read from what he said; with no strength, both common strengths are said, to check against the label.
+    are read from what he said ("per gallon" is one); with no strength, both common strengths are said, to check against the label.
     Asked about cloudy water ("and if it's cloudy?"), the CDC's doubled dose after filtering leads."""
     import re
 
@@ -197,6 +197,10 @@ def _action_bleach_for_water(context, arguments: dict) -> str:
 
     said = " ".join(str(arguments.get(k) or "") for k in ("question", "water", "strength"))
     water = re.search(_WATER, said, re.I)
+    if not water:  # "per gallon", "a gallon of", "each liter": one of it (live check, 2026-11-25)
+        one = re.search(r"\b(?:per|a|an|one|each|every)\s+(gallon|gal|liter|litre|quart)s?\b", said, re.I)
+        if one:
+            water = re.search(_WATER, f"1 {one.group(1)}", re.I)
     if not water:
         return "How much water: how many gallons or liters?"
     amount = f"{water.group(1)} {'gal' if water.group(2).lower().startswith(('g', 'q')) else 'L'}"
@@ -276,7 +280,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     The battery size is reached by "battery bank is" or "kWh battery", never "my battery is" ("my battery is at 20
     percent").
     get_weather takes his words (its prompt_arg, so it's still answered in code) and says the day he names.
-    firewood_check is reached by "how much firewood do I need for winter?" too."""
+    firewood_check is reached by "how much firewood do I need for winter?" too.
+    bleach_for_water takes his own words (`prompt_arg`)."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -401,7 +406,7 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {
             "question": {"type": "string", "description": "Their words, with the amount of water and any strength."}},
             "required": ["question"]},
-        handler=_action_bleach_for_water,
+        handler=_action_bleach_for_water, prompt_arg="question",  # his own words, never the model's (live check 2026-11-25: it sent the tool's description)
         trigger_phrases=("bleach to purify", "how much bleach", "bleach in water", "bleach per gallon",
                          "drops of bleach", "purify water with bleach", "bleach to make water safe",
                          "disinfect water", "bleach for drinking water"),
