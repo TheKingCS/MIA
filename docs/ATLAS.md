@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1745 files, 375,813 lines; 1745 files describe themselves; 20,623 of 20,753 classes and functions are documented.
+1747 files, 375,960 lines; 1747 files describe themselves; 20,629 of 20,759 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-695 files, 194,208 lines; 9,852 of 9,938 classes and functions documented
+696 files, 194,308 lines; 9,856 of 9,942 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -494,6 +494,7 @@
 - `core/region.py`: Where a person lives (2026-10-01, accounts stage 4): MIA is built for anyone, so the safety floor's crisis lines and the money symbol follow the person's country instead of assuming the US.
 - `core/relationships_manager.py`: Relationship Profiles and Pet Profiles — docs/VISION.md's own "structured extensions of the same idea" as Memory Palace (core/user_memory_manager.py). One manager, two related dataclasses, same shape as core/kitchen_manager.py.
 - `core/relevance.py`: The Personal Relevance Engine (World Intelligence W2, DEC-0170; the proposal's section 4): how much a find matters to this person, worked out in code from their own records, never guessed by a model. Every point comes with a reason that names the record it came from, so "why is this here?" always ha
+- `core/rent_collected.py`: "How much rent did I collect this month?" (Jarvis brainstorm, round 12; his rentals): his rental income by property from his records (core/real_estate_manager.py income_for_property), for this month, last month, this year or a month he names (`span_of`, a follow-up's own words first), with the total
 - `core/repertoire.py`: The songs he can play (the game layer, Zac 2026-11-24: "sometimes its a song unlocked on the guitar"). A song learned on an instrument is a `song_learned` life event in his own history, so it's dated, undone by "undo that" (`life_events.reversed_ids`), and never kept twice. The list (`songs`) and it
 - `core/repertoire_actions.py`: His songbook from the screen and by voice (core/repertoire.py; DEC-0125, both ways): the action `song.learned` (Music's "Can Play" tab, I Learned A Song) and the tools `learned_a_song` ("I learned Wagon Wheel on guitar") and `songs_i_can_play`. Taking one back is "undo that".
 - `core/replay.py`: A replayed week (LS-09, docs/mia_os/MIA_LIVING_SYSTEM_GAP_ANALYSIS.md section 5): MIA's once-a-day checks run on each day of a week with the one clock (core/clock.py) held at that day's hour, and what she said each day is read back from her communication gate's log. A test seeds a week of things (ev
@@ -993,7 +994,7 @@
 
 ## tests/: the test suite: what each part must do
 
-644 files, 100,510 lines; 8,406 of 8,450 classes and functions documented
+645 files, 100,557 lines; 8,408 of 8,452 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1437,6 +1438,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
+- `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one.
 - `tests/test_repertoire.py`: His songbook (core/repertoire.py): a song learned is dated in his own history, never twice on the same instrument, counted toward the Songbook achievements at once and by a mission objective, and taken back by "undo that".
 - `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
 - `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang

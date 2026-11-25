@@ -354,6 +354,11 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **How much rent did I collect?** (no decision; his rentals): *built 2026-11-24 (`core/rent_collected.py`, the tool
+  `rent_collected`).* Only recording rent had a tool, and the question went to the month's money plan ("I don't have
+  that information"). Now his rental income by property for this month, last month, this year or a named month,
+  the total, and a property that paid before but not yet this month; answered in code. "What's still unpaid?" no
+  longer goes to the open-loops plan.
 - **A third sweep through the whole turn** (no decision): *fixed 2026-11-24.* "How prepared am I for an emergency?"
   went to the coming-up plan (now the preparedness answer, in code); "the power just went out" and "how long is the
   freezer good?" missed the outage clock; a songbook said "Wagon Wheel (None)"; "and if the water is cloudy?" lost

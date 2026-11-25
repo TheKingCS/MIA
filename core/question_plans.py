@@ -1462,7 +1462,7 @@ NOT_FOR = {
     "winter": re.compile(r"\b(weekend|saturday|sunday|last|was|were|did|went|got through)\b", re.I),
     # quitting by a date is its own plan's ("what if I quit at the end of next year?"), not the year's priorities
     "priorities": re.compile(r"\b(quit|quitting|leave (my|the) job|leaving (my|the) job)\b", re.I),
-    "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b", re.I),
+    "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b|\brent(al)?\b", re.I),
     # a weekend gone is a conversation or recall; a shop's hours, a meal or a meeting on a weekend day isn't the plan
     "weekend": re.compile(r"\b(was|were|did|went|go|last|spent|happened|open|close[sd]?|hours|dinner|lunch|breakfast|"
                           r"meals?|remind|meeting|appointment)\b", re.I),
@@ -1487,6 +1487,8 @@ NOT_FOR = {
     "next dollar": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|owe in tax(es)?|taxes on|tax bracket|irs|"
                               r"self.?employment|estimated tax|quarterly tax)\b", re.I),
     "debts": re.compile(r"\b(owes? me|owing me)\b", re.I),
+    # what customers haven't paid is who_owes_me's; rent is rent_collected's
+    "open loops": re.compile(r"\b(unpaid|owes? me|owed|invoices?|rent)\b", re.I),
 }
 
 

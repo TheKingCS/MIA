@@ -740,6 +740,7 @@ GOLDEN_CASES = [
     ("kitchen: curing bacon", "How much curing salt do I need for 5 pounds of pork belly for bacon?", "meat_cure"),
     ("power: sizing solar", "How many solar panels would I need to run the house?", "size_solar"),
     ("kitchen: canning time", "How long do I process quarts of green beans in the pressure canner?", "canning_time"),
+    ("rentals: rent collected", "How much rent did I collect this month?", "rent_collected"),
     ("shop: what to make next", "What should I make next for the shop?", "what_to_make_next"),
     ("shop: taxes to set aside", "How much should I set aside for taxes on the shop?", "tax_set_aside"),
     ("shop: products running low", "Which products are running low?", "what_to_make_next"),
