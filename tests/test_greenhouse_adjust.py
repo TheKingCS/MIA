@@ -115,7 +115,8 @@ def test_outside_its_limits_no_key_or_off_his_network_nothing_is_sent(linked, mo
 
 def test_the_action_card_reads_the_node_fresh_and_a_refusal_is_said(linked):
     """greenhouse.adjust's card says the exact change from the node's current value; a node refusal is said with
-    its reason, not as done."""
+    its reason, not as done.
+    Values carry their units (uS/cm for EC)."""
     context, link = linked
     gp.command_key("192.168.1.50")
     from unittest.mock import patch
