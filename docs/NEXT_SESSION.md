@@ -69,7 +69,10 @@ At the PC: "remind me every morning to give the dog his meds", then edit it on t
 daily. Then the thirteenth review (8027f3cc: tasks back in the week, the evening wrap and the morning briefing; an
 alarm told by its detail, `core/today.is_alarm`; 88a5ccdf) and the fourteenth (76a90b77). The word-pattern routes
 (spending, reminders, quotes, the briefing, tool calls as text) took several rounds each; MIA's knowledge K-0496 says
-what held. A fifteenth review of 76a90b77 is due.
+what held. Then the eleventh live sweep (f613d216): "I caught 3 bass" is three catches; his upkeep in code ("when is
+my truck due for an oil change?", "the truck needs new brakes", only for an asset of his); an LED's resistor worked out
+in code. A fifteenth review of 76a90b77 and f613d216 is running or due. Still open from the sweeps: hook sizes, deer
+season, field dressing, filament and warping, soldering: these want the offline knowledge packs or SearXNG (Zac's call).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:

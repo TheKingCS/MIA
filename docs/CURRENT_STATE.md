@@ -63,7 +63,8 @@ Then the tenth review's fixes, a guitar drill, a standing corpus test over every
 Then a tool call written as text never said, daily reminders (the calendar repeats daily, everywhere an event is
 edited), the week without alarms, and the eleventh and twelfth reviews' fixes. 8505 passing. Then the thirteenth
 and fourteenth reviews' fixes (tasks back in the week, a person only someone he knows, a tool call caught wherever its
-name sits). 8514 passing.
+name sits). 8514 passing. Then the eleventh live sweep (a catch of several, his upkeep and an LED's resistor in
+code). 8518 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the
