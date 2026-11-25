@@ -5,7 +5,8 @@ tests.test_fishing_path
 Fishing basics (core/fishing_path.py, 2026-11-25): the course is registered with its stages and checks; its counted
 checks read his own catch log (a catch, a species); "what size hook for bass?" and "how do I tie a palomar knot?" are
 answered from its lessons, never a wall hook or the fish tank. Soldering and the meter (core/soldering_path.py)
-too: its how-tos from its own lessons, never a copper pipe.
+too: its how-tos from its own lessons, never a copper pipe. The Fable check of both: never mains, a hook in a
+hand, a bass guitar or a crochet hook; their own how-tos found (an iron's heat, amps, a license, where fish hold).
 """
 
 from core import lesson_answer, paths
@@ -60,3 +61,29 @@ def test_a_bridge_over_the_creek_is_no_soldering_lesson():
     for words in ("how do I build a bridge over the creek", "how do I fix the bridge on my guitar"):
         found = lesson_answer.find(words)
         assert found is None or found[0] != "soldering", words
+
+
+def test_the_courses_never_take_what_isnt_theirs():
+    """The Fable check of the courses (2026-11-25): mains, a hook in a hand, a bass guitar, a crochet hook, a gas
+    line's solder and business continuity are never these lessons; their own how-tos are."""
+    for words in ("how do I check the voltage at an outlet?", "how do I check the voltage in my breaker panel",
+                  "how do I test the voltage on my car battery", "how do I get the hook out of my hand",
+                  "how do I get the hook out of my dog's mouth", "how do I unhook the trailer",
+                  "what size hook for crochet?", "what size hooks do I need to hang a 40 lb mirror?",
+                  "how do I rig a bass guitar pickup", "how do I clean my bass guitar", "how do I clean my fish pond",
+                  "how do I release a bass track on spotify", "how do I solder a 3/4 inch water line",
+                  "how do I solder battery tabs on 18650 cells", "how do I desolder a copper fitting",
+                  "how do I keep continuity in my story", "how do I clinch the deal"):
+        found = lesson_answer.find(words)
+        assert found is None or found[0] not in ("fishing", "soldering"), words
+    for words, key in (("how hot should my soldering iron be?", ("soldering", "joints")),
+                       ("how do I fix a cold joint", ("soldering", "fixing")),
+                       ("how do I measure amps with a multimeter?", ("soldering", "meter")),
+                       ("how do I test a resistor", ("soldering", "meter")),
+                       ("how do I take the hook out of a bluegill", ("fishing", "release")),
+                       ("how do I skin a catfish", ("fishing", "cleaning")),
+                       ("how do I set up a bobber", ("fishing", "rigs")),
+                       ("do I need a fishing license?", ("fishing", "rules")),
+                       ("where should I fish for bass in the summer?", ("fishing", "reading_water"))):
+        assert lesson_answer.find(words) == key, words
+    assert "in series" in lesson_answer.reply(None, "how do I measure amps with a multimeter?")

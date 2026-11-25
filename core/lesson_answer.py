@@ -26,6 +26,10 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+# the fish his courses name, and what those words mean that isn't a fish ("bass guitar", "perch business")
+_FISH = (r"bass|trout|catfish|crappie|bluegill|panfish|sunfish|perch|walleye|pike|carp|salmon|muskie|musky|"
+         r"striper|redfish|snook|cats|bream|gills")
+_NOT_FISH = r"(?!\s+(?:guitar|amp|pickup|drum|tank|pond|fryer|finder|recipe|business|track|song|album|boat|filter|line\b))"
 # (course, lesson): the words that ask how to do the lesson's own subject
 ASKS: dict[tuple, re.Pattern] = {
     ("bushcraft", "fire"): re.compile(r"\b(?:start|make|light|build|get)\w*\s+(?:a\s+)?fire\b|\bfire\s+(?:in|when)\s+"
@@ -59,35 +63,51 @@ ASKS: dict[tuple, re.Pattern] = {
                                             r"chickens|flock|layers)\b|\b(?:protect|keep)\w*\s+(?:my\s+|the\s+)?"
                                             r"(?:hens|chickens|flock|coop)\b.{0,30}\b(?:predators?|raccoons?|foxes|"
                                             r"hawks|winter|cold|warm|safe)\b"),
-    # soldering and the meter (core/soldering_path.py: the live sweeps found it a gap)
-    ("soldering", "fixing"): re.compile(r"\bsolder(?:ing)? bridges?\b|\bbridged? (?:two |the )?pins\b|\bdesolder\w*|\bsolder (?:wick|sucker)\b|"
-                                     r"\btoo much solder\b"),
+    # soldering and the meter (core/soldering_path.py: the live sweeps found it a gap); the Fable check of the courses
+    # (2026-11-25): each needs its own subject's words, never a hook for hanging, a bass guitar or an outlet
+    ("soldering", "fixing"): re.compile(r"\bsolder(?:ing)? bridges?\b|\bbridged? (?:two |the )?pins\b|\bdesolder\w*|"
+                                        r"\bsolder (?:wick|sucker)\b|\btoo much solder\b|\bremov\w* (?:the )?solder\b|"
+                                        r"\bcold (?:solder )?joints?\b"),
     ("soldering", "joints"): re.compile(r"\bsolder\w*\b"),
-    ("soldering", "meter"): re.compile(r"\bmulti-?meter\b|\bcontinuity\b|\b(?:measure|check|test)\w*\s+(?:the\s+)?"
-                                   r"(?:voltage|volts|resistance|ohms)\b"),
+    ("soldering", "meter"): re.compile(r"\bmulti-?meter\b|\bcontinuity\b(?=.*\b(?:wires?|joints?|circuits?|meter|boards?|"
+                                       r"fuses?|cables?|traces?)\b)|\b(?:measure|check|test|read)\w*\s+(?:the\s+|a\s+)?"
+                                       r"(?:dc\s+)?(?:voltage|volts|resistance|ohms|amps|current)\b|\btest (?:a|the) "
+                                       r"(?:resistor|fuse|diode)\b|\bcheck (?:a|the) (?:9 ?v|aa|aaa) battery\b"),
     # fishing (the live sweeps: hook sizes had been guessed)
-    ("fishing", "hooks"): re.compile(r"\bhook sizes?\b|\bsize (?:of )?hooks?\b|\b(?:what|which) (?:size )?hooks?\b|"
-                                     r"\bhooks?\b.{0,25}\b(?:bass|trout|catfish|crappie|bluegill|panfish|sunfish|perch|"
-                                     r"walleye|pike|carp|worms?|minnows?|plastics?)\b|\bcircle hooks?\b"),
-    ("fishing", "knots"): re.compile(r"\b(?:tie|tying)\b.{0,25}\b(?:hooks?|lures?|swivels?|fishing line|jig)\b|"
-                                     r"\b(?:clinch|palomar)\b|\bfishing knots?\b|\bknot\b.{0,20}\b(?:braid|"
-                                     r"fluoro\w*|mono\w*|hooks?|lures?)\b"),
-    ("fishing", "rigs"): re.compile(r"\b(?:texas|carolina|bobber|bottom|drop shot|slip bobber)\s+rigs?\b|"
-                                    r"\brig\w*\b.{0,25}\b(?:bass|catfish|crappie|bluegill|worms?|bobber)\b"),
-    ("fishing", "release"): re.compile(r"\bcatch and release\b|\brelease\w*\s+(?:a\s+|the\s+)?(?:fish|bass|trout)\b|"
-                                       r"\bunhook\w*\b|\bget (?:a|the) hook out\b"),
-    ("fishing", "cleaning"): re.compile(r"\b(?:clean|fillet|gut|scale)\w*\s+(?:a\s+|the\s+|my\s+|these\s+)?"
-                                        r"(?:fish|bass|trout|crappie|bluegill|catfish|perch|walleye|panfish|sunfish)\b"),
+    ("fishing", "hooks"): re.compile(r"\b(?:hook sizes?|size (?:of )?hooks?|(?:what|which) (?:size )?hooks?|hooks?)\b"
+                                     r".{0,30}\b(?:" + _FISH + r"|fish|fishing|worms?|minnows?|plastics?|bait|crickets?|"
+                                     r"nightcrawlers?)\b" + _NOT_FISH + r"|\bcircle hooks?\b|\bfish(?:ing)? hooks?\b|"
+                                     r"\bhook sizes? (?:mean|work|go)\b"),
+    ("fishing", "knots"): re.compile(r"\b(?:tie|tying)\b.{0,25}\b(?:hooks?|lures?|swivels?|fishing line|jigs?)\b"
+                                     r"(?!.{0,25}\b(?:trailer|tarp|workbench|bench|truck|wall|fence)\b)|"
+                                     r"\b(?:improved )?clinch knot\b|\bpalomar\b|\bfishing knots?\b|\bknot\b.{0,20}\b(?:braid|"
+                                     r"fluoro\w*|mono\w*|hooks?|lures?|fishing line)\b"),
+    ("fishing", "rigs"): re.compile(r"\b(?:texas|carolina|drop shot|slip bobber|bobber)\s+rigs?\b|\bbottom rigs?\b.{0,25}"
+                                    r"\b(?:fish|catfish|carp)\b|\bset up (?:a |my )?(?:bobber|float)\b|"
+                                    r"\brig\w*\b.{0,25}\b(?:bass|catfish|crappie|bluegill|worms?|bobber)\b" + _NOT_FISH),
+    ("fishing", "release"): re.compile(r"\bcatch and release\b|\brelease\w*\s+(?:a\s+|the\s+)?(?:" + _FISH + r"|fish)\b"
+                                       + _NOT_FISH + r"|\b(?:unhook|take the hook out of|get the hook out of|remove (?:a |"
+                                       r"the )?hook from)\s+(?:a\s+|the\s+|my\s+|this\s+)?(?:" + _FISH + r"|fish)\b"),
+    ("fishing", "cleaning"): re.compile(r"\b(?:clean|fillet|gut|scale|skin)\w*\s+(?:a\s+|the\s+|my\s+|these\s+)?(?:" + _FISH
+                                        + r"|fish)\b" + _NOT_FISH + r"|\bcook\w*\b.{0,20}\bfish\b.{0,20}\b(?:to|temp\w*)\b"),
+    ("fishing", "rules"): re.compile(r"\bfishing licen[cs]es?\b|\blicen[cs]e to fish\b|\b(?:bag|creel|size|daily) "
+                                     r"limits?\b.{0,25}\b(?:" + _FISH + r"|fish)\b"),
+    ("fishing", "reading_water"): re.compile(r"\bwhere (?:do|should|can|would) (?:i|you) (?:find|catch|fish for|look for)\b"
+                                             r".{0,20}\b(?:" + _FISH + r"|fish)\b" + _NOT_FISH),
     ("gardening", "seed_starting"): re.compile(r"\bstart\w*\s+(?:my\s+|the\s+)?(?:\w+\s+)?seeds?\b|\bseeds?\s+"
                                                r"(?:indoors|inside)\b"),
 }
 _HOWTO = re.compile(r"\b(?:what size|which size|what hook|which hook|what knot|which knot|what(?:'s| is) the best knot|"
+                    r"how hot|what temp\w*|where (?:do|should|can|would) (?:i|you)|do i need a|"
                     r"how (?:do|should|would|can|could) (?:i|you|one|we)|how to|what'?s the (?:best|right|safest) "
                     r"way to|what is the (?:best|right|safest) way to|best way to|"
                     r"teach me (?:how )?to|show me how to|what(?:'s| is) a good|what should i (?:make|build) "
                     r"(?:as|for) (?:a|my)|what(?:'s| is) (?:the|a) (?:right |good |best |usual |typical |fair )?"
                     r"(?:markup|mark-up|margin)|how much (?:markup|margin)|what should i (?:feed|give|do about)|"
                     r"how (?:can|do) i tell if)\b")
+_NOT_BENCH_SOLDER = (r"\b(?:pipes?|copper|plumbing|sweat\w*|fittings?|stained glass|jewel\w*|water lines?|"
+                     r"valves?|sink|gas lines?|junction box|mains|18650|battery tabs|battery packs?|cells|radiators?|"
+                     r"gutters?|rings?|silver|flashing|roof)\b")
 # What a lesson's words also mean but it doesn't teach (the sixth review): a fire pit or fire insurance, the tank's or
 # the aquaponics' water, a seed company
 NOT_ASKS = {
@@ -107,10 +127,24 @@ NOT_ASKS = {
                                           r"\bmargin of (?:safety|error)\b|"
                                           r"\b(?:home depot|lowe'?s|walmart|amazon|tractor supply)\b"),
     ("fishing", "hooks"): re.compile(r"\bhooks? (?:for|on) (?:the |my |a )?(?:wall|garage|tools?|towels?|coats?|"
-                                     r"pictures?|hanging|ceiling|shed|keys|hats?|bags?|trailer|chains?)\b|\bhook up\b"),
-    ("fishing", "cleaning"): re.compile(r"\bfish ?tank\b|\baquarium\b|\baquaponics\b"),
-    # a pipe's solder is plumbing's, not a circuit board's
-    ("soldering", "joints"): re.compile(r"\b(?:pipes?|copper|plumbing|sweat\w*|fittings?|stained glass|jewel\w*)\b"),
+                                     r"pictures?|hanging|ceiling|shed|keys|hats?|bags?|trailer|chains?)\b|\bhook up\b|"
+                                     r"\b(?:crochet|mirror|curtain|shower|towing|tow|latch|gate|eye|picture|wall)\b|"
+                                     r"\b(?:take|get|remove)\b.{0,10}\bhook out\b|\bunhook\w*\b|\bremov\w* (?:a |the )?"
+                                     r"hook\b"),  # taking one out is the release lesson
+    ("fishing", "cleaning"): re.compile(r"\bfish ?tank\b|\baquarium\b|\baquaponics\b|\bpond\b|\bfryer\b"),
+    # a hook in a person or a pet is first aid or the vet's, never a fish's release (the Fable check)
+    ("fishing", "release"): re.compile(r"\b(?:hand|finger|thumb|skin|arm|leg|ear|eye|lip|face|foot|dog|cat|puppy|horse|"
+                                       r"trailer|washing machine|bra)\b"),
+    ("fishing", "rigs"): re.compile(r"\b(?:guitar|amp|pickup|worm bin|drain|drill press|truck|antenna)\b"),
+    ("fishing", "knots"): re.compile(r"\bclinch (?:the|a) (?:deal|nail|win)\b"),
+    # a pipe's, a gas line's, a battery pack's or a ring's solder is never a circuit board's (the Fable check)
+    ("soldering", "joints"): re.compile(_NOT_BENCH_SOLDER),
+    ("soldering", "fixing"): re.compile(_NOT_BENCH_SOLDER),
+    # mains and high-energy sources are an electrician's, never the bench meter lesson (the Fable check)
+    ("soldering", "meter"): re.compile(r"\b(?:outlets?|sockets?|receptacles?|mains|wall|breakers?|panel|live wire|hot wire|"
+                                       r"is (?:a|the) wire live|120 ?v?|240 ?v?|\bac\b|appliances?|microwave|capacitors?|"
+                                       r"electric fence|fence|solar|car|truck|alternator|dryer|oven|stove|well pump|"
+                                       r"furnace|story|business continuity)\b"),
     ("business", "biz_terms"): re.compile(r"\btax(?:es)?\b|\bcleared\b|\bbank\b|\btweets?\b|\bquote (?:a |the )?"
                                           r"(?:verse|passage|text|line|source)\b"),
 }

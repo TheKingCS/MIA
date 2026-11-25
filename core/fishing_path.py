@@ -41,8 +41,8 @@ STAGES: tuple = (
             "(bigger plastics, bigger hooks); live bait on about size 1 to 1/0.",
             "Catfish: circle hooks, about 2/0 to 6/0, bigger for bigger fish and baits. With a circle hook, don't jerk "
             "to set it: let the fish take it and reel steadily, and it hooks the corner of the mouth.",
-            "Match the hook to the bait as much as the fish: the point should show past the bait, and the bait should "
-            "fit the fish's mouth."),
+            "Match the hook to the bait as much as the fish: with bait, the point should show past it (a Texas-rigged "
+            "plastic hides it on purpose), and the bait should fit the fish's mouth."),
             "Too big a hook and fish won't take the bait; too small and they swallow it or it straightens; the right "
             "size hooks the mouth, which is what a release needs.",
             ("A hook too big for panfish.", "Setting hard on a circle hook.", "A dull hook: test the point on a "
@@ -93,7 +93,9 @@ STAGES: tuple = (
             "Read your state wildlife agency's regulations for the water you fish: the season, the size limit, the "
             "bag (daily) limit, and any special rules for that lake or river.",
             "Measure a fish you mean to keep the way the regulations say (often mouth closed, tail pinched).",
-            "Some waters are catch-and-release only, or lures only: the posted rules win."),
+            "Some waters are catch-and-release only, or lures only: the posted rules win.",
+            "Check your state's fish consumption advisories for the water before you eat what you keep, and whether "
+            "fish must stay whole, or skin-on, until you're home (some states measure them at the check)."),
             "The limits are what keep fish in the water for next year, and a ticket costs more than the trip.",
             ("Keeping a fish without measuring it.", "Fishing a new water without reading its rules.")),
         Lesson("cleaning", "Keeping and cleaning a catch", (

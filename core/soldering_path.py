@@ -31,11 +31,12 @@ STAGES: tuple = (
             "little solder on the tip and wipe it on a damp sponge or brass wool so it shines.",
             "Touch the tip to the pin and its pad together for a second or two, then feed the solder into the joint, "
             "not onto the iron; a little flows around the pin.",
-            "Take the solder away first, then the iron. A good joint is a small shiny cone; a dull ball is a cold "
-            "joint: heat it again.",
+            "Take the solder away first, then the iron. A good joint is a small cone that wets the pin and the pad; "
+            "a ball sitting on the pad is a cold joint: heat it again. (Leaded solder shines; lead-free is naturally "
+            "duller, so judge it by its shape.)",
             "Do one pin at each end, check the board sits flat and straight, then the rest.",
-            "Work with air moving past you, keep the iron in its stand, and wash your hands after: solder can hold "
-            "lead."),
+            "Wear safety glasses (a clipped lead or a flick of solder can fly), work with air moving past you, keep "
+            "the iron in its stand, and wash your hands after: solder can hold lead."),
             "A bad joint is the most common reason a circuit works one minute and not the next; a good one is quick "
             "once the iron is clean and hot.",
             ("A cold joint (dull, balled up): reheat it.", "Holding the iron on a pad too long: it can lift off the "
@@ -63,7 +64,10 @@ STAGES: tuple = (
             "Continuity: with the power off, set the beeper mode and touch both ends of a wire or joint: a beep means "
             "connected. It finds bridges and broken wires.",
             "Resistance: with the power off and the part out of the circuit if you can, set ohms and touch its legs: a "
-            "220 ohm resistor reads close to 220."),
+            "220 ohm resistor reads close to 220.",
+            "Current: move the red lead to the amps jack (the mA one for small currents), break the circuit and put "
+            "the meter in the gap, in series. Never put it across a battery or a supply in that mode: it's a short. "
+            "Move the red lead back to V/\u03a9 when you're done."),
             "The meter turns a guess (\"it should be working\") into a fact; most problems are found in a minute with "
             "continuity and a voltage check.",
             ("Measuring resistance or continuity with the power on.", "The red lead left in the amps jack: it shorts "
