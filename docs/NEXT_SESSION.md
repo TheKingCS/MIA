@@ -56,6 +56,13 @@ its wide version and tests/test_first_aid_floor_never_misses.py holds every real
 its other fixes (73c13acf: dates read more ways, an update keeps its date); the business's how-tos from its course
 (a82c07a9). Still from the sweeps: knowledge questions (mites, a well freezing, goat hay) wait on offline packs or
 SearXNG on the PC.
+Then: the tenth review's fixes (efaba1e8), a guitar drill (5b407efa), the code-route corpus (5aafad13: every route
+against everyday messages), what he spent recorded and feed to the flock (d4721254), brainstorm round 14, the
+morning briefing he asks for (050b13dc) and a quote from a job's words (1061b1bd). At the PC: "every morning, tell me
+the weather and my day", "I spent $30 on groceries", "write a quote for Sarah's 12 by 16 deck" (with Sarah a
+customer and the workshop's prices). Next: the model once wrote a tool call as text ("{"name": "draft_email", ...}")
+and it reached him as is: a reply that is a tool call should be run or refused, never said; and an eleventh review of
+the last four.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
