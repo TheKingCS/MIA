@@ -64,8 +64,8 @@ void loop() {{
   digitalWrite(LED, millis() - lastSeen < 10000 ? HIGH : LOW);   // on for 10 s after the last movement
 }}
 """,
-        "use": "The HC-SR501 takes about a minute to settle after power-up; its two knobs set how far it sees and how "
-               "long its own output stays high.",
+        "use": "The LED's resistor (r1) is 220 ohm. The HC-SR501 takes about a minute to settle after power-up; its "
+               "two knobs set how far it sees and how long its own output stays high.",
     },
     "temp_alarm": {
         "name": "A greenhouse temperature alarm", "words": ("temperature alarm", "temp alarm", "frost alarm",
@@ -107,8 +107,9 @@ void loop() {{
   digitalWrite(BUZZER, alarm ? HIGH : LOW);
 }}
 """,
-        "use": "Use an active buzzer (it beeps with plain power; a passive one only clicks). Set TOO_HOT and TOO_COLD "
-               "to your own limits.",
+        "use": "Use an active buzzer (it beeps with plain power; a passive one only clicks). On the ESP32 pick one "
+               "rated for 3.3 V, or drive a 5 V one through a small transistor (a 2N2222 with 1k on its base): a "
+               "board pin gives only a few milliamps. Set TOO_HOT and TOO_COLD to your own limits.",
     },
     "soil_alert": {
         "name": "A dry-soil alert", "words": ("soil alert", "dry soil alert", "dry-soil alert", "plant alarm",
@@ -143,8 +144,9 @@ void loop() {{
   delay(1000);
 }}
 """,
-        "use": "Calibrate first: note the reading with the sensor in air, then in a cup of water, and set DRY between "
-               "them. Push it in only up to its line: the top's electronics aren't waterproof.",
+        "use": "The LED's resistor (r1) is 220 ohm. Calibrate first: note the reading with the sensor in air, then in "
+               "a cup of water, and set DRY between them. Push it in only up to its line: the top's electronics "
+               "aren't waterproof.",
     },
     "tank_level": {
         "name": "A water-tank level gauge", "words": ("tank level", "water level gauge", "water level sensor",
