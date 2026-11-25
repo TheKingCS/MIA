@@ -71,7 +71,7 @@ alarm told by its detail, `core/today.is_alarm`; 88a5ccdf) and the fourteenth (7
 (spending, reminders, quotes, the briefing, tool calls as text) took several rounds each; MIA's knowledge K-0496 says
 what held. Then the eleventh live sweep (f613d216): "I caught 3 bass" is three catches; his upkeep in code ("when is
 my truck due for an oil change?", "the truck needs new brakes", only for an asset of his); an LED's resistor worked out
-in code. A fifteenth review of 76a90b77 and f613d216 is running or due. Still open from the sweeps: hook sizes, deer
+in code. The fifteenth review's fixes (0d1f5285: the truck's own line, never the car's; no junk or duplicate upkeep tasks; an LED only for the plain question, mains a warning) and the sixteenth's (ed0c36be: a part or a mileage is a real need, a resistor rated twice its heat, a 5 V wall adapter is no mains). A seventeenth review of ed0c36be is due. Still open from the sweeps: hook sizes, deer
 season, field dressing, filament and warping, soldering: these want the offline knowledge packs or SearXNG (Zac's call).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
