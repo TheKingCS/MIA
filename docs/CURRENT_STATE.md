@@ -45,7 +45,9 @@ the X lab" and a why about a named lab answered in code by voice, the why from t
 Then: first aid drills and how-tos in the emergency floor's own Red Cross and AHA words (a drill asked for never trips
 the floor; the quiz mode steps aside for one), and a fifth review's seven fixes (a photo needs a model number to get a
 spec, a started course keeps its own words, the lab routes' exclusions, BOOT never passing the quiet check). 8407
-passing.
+passing. Then a live sweep's fixes: a cut-list drill, materials and concrete questions as lookups said as worked out,
+the calculators given his own words, how-tos from her courses' lessons (core/lesson_answer.py), and three plans kept
+off questions that weren't theirs. 8417 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the

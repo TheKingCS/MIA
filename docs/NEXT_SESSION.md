@@ -31,6 +31,13 @@ At the PC: "simulate the watchdog lab", "why does the watchdog lab refuse a dose
 (his say). Since: first aid drills (a deep cut, choking at dinner) and how-tos ("how do you use a tourniquet?") in the
 emergency floor's own words, asking for a drill never tripping the floor; the fifth review's seven fixes. At the PC:
 "quiz me on first aid", "how do you do CPR?".
+Then a live sweep of twenty everyday questions, its misses fixed: a cut-list drill; a materials or concrete question is
+a lookup (material_list without keep, and the pure calculators observe), said as worked out; the calculators get his
+own words (prompt_arg on the model's path too: green beans had been refused); how-tos from her own courses' lessons
+(core/lesson_answer.py: fire in the rain, creek water, a chisel); net worth, beginner projects and survival how-tos off
+the wrong plans; "The Dungeon." off answers. Still open from the sweep: "how much water should I store for two weeks?",
+"how long will my generator run on 5 gallons?", "how many chickens for a dozen eggs a week?" (answered from memory: each
+wants a small calculator), and "how many fence posts for 200 feet?" reaching find_plans, not material_list.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
