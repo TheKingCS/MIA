@@ -1,6 +1,7 @@
 """Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract
 first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never
-identified, and only the kind and timing of each look are kept."""
+identified, and only the kind and timing of each look are kept.
+And a part in a photo tied to its spec."""
 
 from types import SimpleNamespace
 
@@ -63,3 +64,19 @@ def test_only_the_kind_and_timing_are_kept_and_the_loop_reads_them(person, tmp_p
     assert "trowel" not in kept and "fake-jpeg" not in kept
     reading = BY_ID["sight.failed"].measure(person)
     assert (reading.value, reading.n) == (0.2, 5)
+
+
+def test_a_part_in_a_photo_is_tied_to_its_spec_or_how_to_get_one():
+    """The answer names an HC-SR04: its spec follows, said as "if it's"; an unknown board asked about as a part: how to
+    have its specs looked up; a mug: nothing added."""
+    from types import SimpleNamespace
+
+    from core import sight
+
+    context = SimpleNamespace(config=None)
+    known = sight.look(context, b"x", "what part is this?", ask=lambda m, p, i: "A module marked HC-SR04.")["said"]
+    assert "If it's the HC-SR04 ultrasonic sensor, I know its spec" in known and "4.5 to 5.5 V" in known
+    unknown = sight.look(context, b"x", "what part is this?", ask=lambda m, p, i: "A board marked ZX-1234.")["said"]
+    assert "look up the specs for" in unknown
+    assert sight.look(context, b"x", "what is this?", ask=lambda m, p, i: "A coffee mug.")["said"] == \
+        "From the photo: A coffee mug."

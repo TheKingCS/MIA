@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1780 files, 384,321 lines; 1780 files describe themselves; 20,958 of 21,088 classes and functions are documented.
+1780 files, 384,371 lines; 1780 files describe themselves; 20,960 of 21,090 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-711 files, 200,025 lines; 10,051 of 10,137 classes and functions documented
+711 files, 200,058 lines; 10,052 of 10,138 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1009,7 +1009,7 @@
 
 ## tests/: the test suite: what each part must do
 
-660 files, 102,291 lines; 8,536 of 8,580 classes and functions documented
+660 files, 102,308 lines; 8,537 of 8,581 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1513,7 +1513,7 @@
 - `tests/test_shelf.py`: The shelf (UI-4, core/shelf.py; the review's acceptance row): the same thing captured from the phone, the palette and a drop lands on the shelf the same way; a planted instruction in something shelved changes nothing; an entry is gone after its time; nothing shelved becomes a memory by itself. Also:
 - `tests/test_show_off.py`: Show-off mode (DEC-0031): a tour of MIA on the real profile that never shows money, the journal, memories, health or other people.
 - `tests/test_show_source.py`: "Show me where it says that" (core/show_source.py, brainstorm 3.2): the sources her library lookups named are kept for the person for a while, and asking to see one opens it on the Knowledge page (refs with spaces kept whole, PDF pages as numbered); with nothing read lately, or words that name a top
-- `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept.
+- `tests/test_sight.py`: Sight (build plan step 15, core/sight.py): a photo and a question, answered on the PC: reading tries Tesseract first (its words are exactly what's printed), the vision model's judgment is said as one, a person is never identified, and only the kind and timing of each look are kept. And a part in a p
 - `tests/test_sign_in_guard.py`: Sign-in protection (core/sign_in_guard.py, docs/SECURITY.md): the wait after wrong passwords doubles and is capped, old failures are forgotten, a success clears the account; sessions end when idle or old; and account passwords are hashed at OWASP's count, older hashes upgraded on the next right pass
 - `tests/test_skill_leveling.py`: Skill levels (core/skill_leveling.py): the XP each skill level needs, progress within it, what a level means you can do (its capability status), and the next honest step to take.
 - `tests/test_skill_manager.py`: Unit tests for core.skill_manager.SkillManager — isolates _DATA_DIR _SKILL_DEFINITIONS_FILE/_SKILL_PROGRESS_FILE into a tmp_path scratch area, same monkeypatch pattern as every other manager test file. Definitions are written directly to the isolated file per test (not the real seeded data/skill_def

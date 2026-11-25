@@ -22,6 +22,10 @@ running. **It never identifies a person** ("who is this?" is refused in code,
 and the model is told not to), and the photo isn't kept: it's read and let go,
 unless the person sends it on to the Inbox.
 
+**A part from a photo** (2026-11-25): an electronics module's model number is read where it's printed, and when it's
+one MIA has a spec for (core/part_specs.py), its pins and limits follow, said as "if it's", to check before wiring
+(`_part_note`).
+
 **Honest about what it is**: a vision model's answer is a judgment from a
 picture, so it's said as one ("from the photo, it looks like..."), never as a
 fact; text Tesseract read is said as read. Each look is noted in the person's
@@ -67,10 +71,13 @@ NO_FACES = ("I don't identify people from their faces. I can describe what's in 
 
 PROMPTS = {
     WHAT: "Say what this photo shows, in two or three plain sentences, starting with the main thing. If you aren't "
-          "sure, say what it most likely is and what else it could be. Never identify a person or guess who anyone is.",
+          "sure, say what it most likely is and what else it could be. If it's an electronics module, sensor or board, "
+          "read any model number printed on it (like HC-SR04 or DHT22). Never identify a person or guess who anyone "
+          "is.",
     READ: "Read the text in this photo exactly as printed, line by line. Don't add anything that isn't written. "
           "If part of it can't be read, say so. Never identify a person.",
-    INSPECT: "This is a photo of a part or a thing to inspect. Say what it most likely is, then its condition: wear, "
+    INSPECT: "This is a photo of a part or a thing to inspect. Say what it most likely is (for an electronics module "
+             "or board, read any model number printed on it), then its condition: wear, "
              "cracks, rust, leaks, damage, anything missing. Then one or two things to check by hand that a photo "
              "can't show. Be plain and say how sure you are. Never identify a person.",
 }
@@ -143,7 +150,8 @@ def _tesseract(context, image: bytes) -> str:
 
 def look(context, image: bytes, question: str = "what is this?", ask: Optional[Callable] = None,
          read_text: Optional[Callable] = None) -> dict:
-    """One look: {"kind", "said", "how", "seconds"}. Raises SightError for what it won't or can't do."""
+    """One look: {"kind", "said", "how", "seconds"}. Raises SightError for what it won't or can't do.
+    An electronics part the answer names is tied to its spec, or to how to get one (`_part_note`)."""
     if not image:
         raise SightError("No photo came through.")
     if len(image) > MAX_BYTES:
@@ -172,7 +180,32 @@ def look(context, image: bytes, question: str = "what is this?", ask: Optional[C
         how = "vision model"
     seconds = round(time.monotonic() - started, 1)
     _note(context, kind, True, seconds)
-    return {"kind": kind, "said": said, "how": how, "seconds": seconds}
+    part = _part_note(context, said, question)
+    return {"kind": kind, "said": said + (f"\n\n{part}" if part else ""), "how": how, "seconds": seconds}
+
+
+_PART_ASKED = re.compile(r"\b(?:part|module|board|sensor|chip|component|breakout)\b", re.IGNORECASE)
+
+
+def _part_note(context, said: str, question: str) -> str:
+    """An electronics part the photo shows, tied to what MIA knows (brainstorm round 13: "a part from a photo"): when
+    the answer names a part she has a spec for (core/part_specs.named_spec), its pins and limits, said as "if it's"
+    (a photo can be wrong); when he asked about a part she has no spec for, how to have its specs looked up. "" when
+    it isn't about a part."""
+    from core import part_specs
+
+    try:
+        spec = part_specs.named_spec(context, said)
+    except Exception:
+        log.exception("Sight: couldn't match the part to a spec")
+        spec = None
+    if spec is not None:
+        return (f"If it's the {spec.name}, I know its spec: {part_specs.summary(spec)}. Check the markings match before "
+                "you wire it; you can try it on My Bench.")
+    if _PART_ASKED.search(question or ""):
+        return ("I don't have a spec for it yet: if you can read its model on it, say \"look up the specs for\" and "
+                "the model, and I'll draft one for you to check.")
+    return ""
 
 
 # ------------------------------------------------------------------ the record (never the photo or the answer)
