@@ -62,7 +62,11 @@ morning briefing he asks for (050b13dc) and a quote from a job's words (1061b1bd
 the weather and my day", "I spent $30 on groceries", "write a quote for Sarah's 12 by 16 deck" (with Sarah a
 customer and the workshop's prices). Next: the model once wrote a tool call as text ("{"name": "draft_email", ...}")
 and it reached him as is: a reply that is a tool call should be run or refused, never said; and an eleventh review of
-the last four.
+the last four. Done since: a tool call written as text is never said (642e2c88), the eleventh review's fixes
+(d1dbe97c), daily reminders on the calendar (14bbb7e0), the week said without alarms (aff21b2d), the twelfth
+review's fixes (ea163dd0: a daily event survives editing everywhere, a JSON answer is never taken for a tool call).
+At the PC: "remind me every morning to give the dog his meds", then edit it on the calendar page and see it stay
+daily. A thirteenth review of ea163dd0 is running or due.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
