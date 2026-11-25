@@ -2,7 +2,7 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1804 files, 387,215 lines; 1804 files describe themselves; 21,100 of 21,226 classes and functions are documented.
+1805 files, 387,312 lines; 1805 files describe themselves; 21,103 of 21,229 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-681 files, 103,434 lines; 8,622 of 8,667 classes and functions documented
+682 files, 103,531 lines; 8,625 of 8,670 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1114,6 +1114,7 @@
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py.
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).
 - `tests/test_clock.py`: LS-07 (DEC-0284): one clock. Now is aware of his zone (his setting, else the computer's), tests can freeze it, the week runs Monday to Sunday, and the day a phrase means is worked out in code: the words life notes already knew, "in N days/weeks/months", month-name and ISO dates, and "the first Satur
+- `tests/test_code_routes_corpus.py`: MIA's code routes (the answers taken in code before the model: a course's lesson, a materials list, a course's next lesson, days of water, a reminder on a day or every week, a drill, a first-aid how-to, a lab to build or simulate) each take only what they're for. Review after review (2026-11-25) fou
 - `tests/test_communication_gate.py`: Slice C, "Know when to speak" (core/communication_gate.py): every rule with a fake clock, the persisted gate with delivery and deferral, the daily checks routed through it, a scripted day, and the learned pace per kind of message that replaced the fixed daily cap (DEC-0171).
 - `tests/test_component_manager.py`: Unit tests for core.component_manager. Isolates _DATA_DIR/_COMPONENTS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_inventory_manager.py's isolated_paths).
 - `tests/test_config_manager.py`: Unit tests for core.config_manager.ConfigManager.
