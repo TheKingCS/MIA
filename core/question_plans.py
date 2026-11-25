@@ -1511,6 +1511,10 @@ NOT_FOR = {
                            r"esp ?32|labs?|course)\b", re.I),
     "next dollar": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|owe in tax(es)?|taxes on|tax bracket|irs|"
                               r"self.?employment|estimated tax|quarterly tax)\b", re.I),
+    # the same for the business's month (live sweep, 2026-11-25: "how much should I set aside for taxes on my side
+    # business?" was told to ask a professional, with tax_set_aside there to work it out)
+    "business month": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|put away for tax(es)?|owe in tax(es)?|"
+                                 r"taxes on|tax bracket|irs|self.?employment|estimated tax|quarterly tax)\b", re.I),
     "debts": re.compile(r"\b(owes? me|owing me)\b", re.I),
     # what's due on a vehicle or machine is the maintenance list's (live check: "what's coming up on the truck?")
     "discussed": re.compile(r"\b(coming up on|due on|due for|needs doing on|service|maintenance|oil change)\b", re.I),

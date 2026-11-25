@@ -8,7 +8,7 @@
 - **Decisions** — 293 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).
-- **Knowledge she's written** — 490 dev entries (work/knowledge/).
+- **Knowledge she's written** — 491 dev entries (work/knowledge/).
 - **Night-school learnings** — 0 nights studied.
 - **What she keeps** — 55 personal + 43 household stores, 126 sealed at rest.
 - **How you shape her** — 4 answer-style dimensions she learns from your picks (DEC-0138).
@@ -325,7 +325,7 @@
 
 - **96 improvement loops** watch her processes (docs/LOOPS.md, DEC-0094/0101) — Observe → Measure → Evaluate → Improve → Verify.
 - **Night school** (DEC-0100) — 0 nights spent studying how to build herself; what went right and wrong is written back as knowledge.
-- **Dev-knowledge** — 490 entries 74 lesson, 57 debugging, 27 decision, 13 method, 22 test-procedure, 4 failed-experiment, 287 implementation, 6 security-finding.
+- **Dev-knowledge** — 491 entries 74 lesson, 57 debugging, 27 decision, 13 method, 22 test-procedure, 4 failed-experiment, 288 implementation, 6 security-finding.
 
 ## What she keeps, and how it's protected
 

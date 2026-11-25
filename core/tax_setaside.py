@@ -129,7 +129,8 @@ def _tool(context, arguments: dict) -> str:
 
 
 def register_tax_setaside_actions(registry) -> None:
-    """Registers tax_set_aside."""
+    """Registers tax_set_aside.
+    Quarterly and estimated taxes, and taxes on his side business, bring it too."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -141,5 +142,8 @@ def register_tax_setaside_actions(registry) -> None:
             "bracket": {"type": "string", "description": "his income tax bracket, only if he said, e.g. '12%'"}}},
         handler=_tool, trigger_phrases=("set aside for tax", "save for tax", "put away for tax", "owe in tax",
                                         "self-employment tax", "self employment tax", "tax on my profit",
-                                        "tax on the shop", "my tax bracket", "owe the irs", "aside for taxes"),
+                                        "tax on the shop", "my tax bracket", "owe the irs", "aside for taxes",
+                                        # live sweep, 2026-11-25: "how much do I owe in quarterly taxes?" was generic
+                                        "quarterly tax", "estimated tax", "owe in quarterly", "taxes on my side",
+                                        "tax on my side"),
     ))

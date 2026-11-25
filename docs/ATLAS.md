@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1795 files, 386,207 lines; 1795 files describe themselves; 21,046 of 21,176 classes and functions are documented.
+1796 files, 386,238 lines; 1796 files describe themselves; 21,047 of 21,177 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,236 lines; 10,089 of 10,175 classes and functions documented
+714 files, 201,244 lines; 10,089 of 10,175 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-672 files, 102,956 lines; 8,586 of 8,630 classes and functions documented
+673 files, 102,979 lines; 8,587 of 8,631 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1567,6 +1567,7 @@
 - `tests/test_talk_it_out.py`: Slice A, "Talk it out" (core/talk_it_out.py) end to end through core/assistant_turn.run_assistant_turn with a fake model: modes, privacy of what's written to disk, the safety floor, journaling, and the journal tools. Asserts facts and structure, never generated wording.
 - `tests/test_task_manager.py`: Unit tests for core.task_manager. Isolates _DATA_DIR/_TASKS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_trip_manager.py's isolated_paths).
 - `tests/test_taught_skills.py`: Taught skills, phase 1 (DEC-0123): steps read and written as lines, teaching by telling and by watching, a run that stops for the person, practising until two clean runs, the steps that ask every time whatever was learned, and each run kept in the run book through its waits to its end (UI-1).
+- `tests/test_tax_question_reaches_its_tool.py`: A tax set-aside question about the business is tax_set_aside's (live sweep, 2026-11-25): "how much should I set aside for taxes on my side business?" had gone to the business month's plan ("check with a professional"), and "how much do I owe in quarterly taxes?" matched no tool; the business month's
 - `tests/test_tax_setaside.py`: "How much should I set aside for taxes?" (core/tax_setaside.py): self-employment tax is 15.3% of 92.35% of the profit from $400 of earnings, income tax at 12% and 22% side by side with a bracket he gives, the next 1040-ES date, a loss owes nothing, and outside the US it says it's US-only. A due date
 - `tests/test_teamwork.py`: A project's workspace and team (core/teamwork.py, T2 of the specialized agent teams; DEC-0198): the person's entries are confirmed and a specialist's derived until he confirms; a specialist's entry names its model, a finding of its on a source names the source, and it can only come from a real speci
 - `tests/test_textbook_tutor.py`: Textbook tutor: document text extraction (core/document_text.py), the library and its index (core/textbook_manager.py), study and quiz turns (core/textbook_study.py), the tools, and the Classroom page. A small real PDF is generated per test with Qt's own PDF writer.
