@@ -123,7 +123,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A materials question too (`_materials_reply`).
     A reminder on a day too (`_reminder_reply`).
     A course's next lesson too (`_next_lesson_reply`).
-    A weekly reminder too (`_weekly_reminder_reply`)."""
+    A weekly reminder too (`_weekly_reminder_reply`).
+    What he spent too (`_spent_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -168,6 +169,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _reminder_reply(context, prompt)  # "remind me to check the oil Saturday", as in a turn
     if walked is None:
         walked = _weekly_reminder_reply(context, prompt)  # "remind me every Monday to ...", as in a turn
+    if walked is None:
+        walked = _spent_reply(context, prompt)  # "I spent $30 on groceries", as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -445,6 +448,58 @@ def _next_lesson_reply(context, prompt: str):
         return None
 
 
+_AMOUNT = r"(?:\$\s?(?P<d>\d[\d,]*(?:\.\d{1,2})?)|(?P<n>\d[\d,]*(?:\.\d{1,2})?)\s*(?:dollars|bucks))"
+_SPENT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:spent|paid|dropped)\s+" + _AMOUNT + r"\s+(?:on|for)\s+(?P<what>.+?)"
+                    r"\s*[.!]*\s*$", re.I)
+_BOUGHT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:bought|picked up|got)\s+(?P<what>.+?)\s+for\s+" + _AMOUNT +
+                     r"\s*[.!]*\s*$", re.I)
+# What it was for, by its words: the budget's categories (core/budget_manager.EXPENSE_CATEGORIES)
+_SPENT_ON = (
+    ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chick(?:s|en)?|scratch|oyster shell|goat|horse|pig|dog food|"
+                       r"cat food|kibble)\b"),
+    ("Groceries", r"\b(?:groceries|grocery|food|milk|bread|eggs|meat|produce|walmart|aldi|kroger|costco)\b"),
+    ("Transportation", r"\b(?:gas|fuel|diesel|gasoline|oil change|tires?|parking|toll)\b"),
+    ("Building Materials", r"\b(?:lumber|2x\d+s?|plywood|screws|nails|concrete|fence|posts?|shingles|boards?)\b"),
+    ("Tools & Equipment", r"\b(?:tools?|saw|drill|bits?|blade|clamps?|sander|router)\b"),
+    ("Medical", r"\b(?:doctor|dentist|pharmacy|prescription|meds|medicine)\b"),
+    ("Entertainment", r"\b(?:movie|movies|game|games|concert|streaming)\b"),
+)
+# A bill, rent, a loan or a card is a bill paid (mark_bill_paid and the debt tools), never a stray expense
+_NOT_SPENDING = re.compile(r"\b(?:bills?|rent|loan|mortgage|card|insurance|invoice|deposit|back|him|her|them|"
+                           r"sarah|you)\b", re.I)
+
+
+def _spent_reply(context, prompt: str):
+    """"I spent $30 on groceries", "spent 12 dollars on gas", "bought 50 lb of layer feed for $22", in code (brainstorm
+    round 14's sweep: the first went to the money month's plan and nothing was kept, the second got small talk, a
+    third was only "Noted"): an expense through add_expense, in the budget's category its words name (feed, hay and
+    the vet are Animals & Feed), undoable; feed with its weight goes to the flock's feed log (log_feed) when there's a
+    flock. Never a question, a bill, rent, a loan, a card or money paid to a person (their own tools). None otherwise."""
+    said = prompt.replace("’", "'").strip()
+    found = _SPENT.match(said) or _BOUGHT.match(said)
+    if not found or "?" in said:
+        return None
+    what = found.group("what").strip().rstrip(",.")
+    if _NOT_SPENDING.search(what):
+        return None
+    amount = float((found.group("d") or found.group("n")).replace(",", ""))
+    if amount <= 0:
+        return None
+    category = next((c for c, words in _SPENT_ON if re.search(words, what, re.I)), "Other")
+    weight = re.search(r"\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b", what, re.I)
+    flock = getattr(context, "flock", None)
+    try:
+        if category == "Animals & Feed" and weight and re.search(r"\bfeed\b", what, re.I) and flock is not None \
+                and getattr(flock, "flocks", None):
+            return context.assistant_actions.execute(context, "log_feed", {"pounds": float(weight.group(1)),
+                                                                           "cost": amount})
+        return context.assistant_actions.execute(context, "add_expense", {
+            "amount": amount, "category": category, "description": what[:1].upper() + what[1:]})
+    except Exception:
+        log.exception("Couldn't record what he spent")
+        return None
+
+
 def _materials_reply(context, prompt: str):
     """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
     calculators' list, never the model's); None otherwise."""
@@ -583,6 +638,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     The model's reply is polished with his words, so a loosely copied humor example goes.
     A course's next lesson, named, in code (`_next_lesson_reply`).
     A reminder every week goes on the calendar repeating (`_weekly_reminder_reply`).
+    What he says he spent is recorded (`_spent_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -690,6 +746,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _reminder_reply(context, prompt)  # "remind me to X on Saturday": on his calendar
         if walked is None:
             walked = _weekly_reminder_reply(context, prompt)  # "every Monday": a weekly event on his calendar
+        if walked is None:
+            walked = _spent_reply(context, prompt)  # "I spent $30 on groceries": an expense, undoable
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:

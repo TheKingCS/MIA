@@ -111,6 +111,23 @@ def _log_eggs(context, arguments: dict) -> str:
     return _run(context, "flock.eggs", {"flock_id": flock.flock_id, "count": arguments.get("count")})
 
 
+def _log_feed(context, arguments: dict) -> str:
+    """Tool log_feed: proposes `flock.feed` (the pounds and what it cost, for the flock named or the only one), so
+    feed bought counts toward the flock's feed runway and goes in the business's books (brainstorm round 14: "I spent
+    $45 on feed" had been a Groceries expense the flock never knew of); asks which flock when it can't tell."""
+    book = getattr(context, "flock", None)
+    if book is None or not book.flocks:
+        return "No flock in MIA yet: add it under Apps → Chickens. (Or say it as an expense, and I'll log the cost.)"
+    name = str(arguments.get("flock") or "").strip().lower()
+    flock = next((f for f in book.flocks if name and name in f.name.lower()), book.flocks[0] if len(book.flocks) == 1 else None)
+    if flock is None:
+        return "Which flock? " + ", ".join(f.name for f in book.flocks)
+    params = {"flock_id": flock.flock_id, "pounds": arguments.get("pounds"), "cost": arguments.get("cost")}
+    if arguments.get("date"):
+        params["date"] = arguments.get("date")
+    return _run(context, "flock.feed", params)
+
+
 # ---------------------------------------------------------------- goods
 
 
@@ -276,6 +293,7 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
     never "the business incubator" or "the lockdown drill").
     get_eggs takes his words (its prompt_arg, still answered in code) for last week, this month or last month.
     feed_mix takes his own words (`prompt_arg`).
+    And log_feed: feed bought, to the flock's log and the books.
     """
     none = {"type": "object", "properties": {}, "required": []}
     registry.register(AssistantAction(
@@ -352,6 +370,21 @@ def register_goods_actions(registry: AssistantActionRegistry) -> None:
         handler=_log_eggs,
         trigger_phrases=("collected", "gathered", "got eggs", "log eggs", "eggs from the coop", "picked up eggs"),
         subjects=("egg",),
+    ))
+    registry.register(AssistantAction(
+        name="log_feed", domain="flock",
+        description="Log feed bought for the flock (pounds and what it cost): it counts toward how long the feed "
+                    "lasts and goes in the business's books. Use this, not add_expense, for chicken or layer feed.",
+        parameters={"type": "object", "properties": {
+            "pounds": {"type": "number", "description": "How many pounds (a 50 lb bag is 50)."},
+            "cost": {"type": "number", "description": "What it cost, if he said."},
+            "flock": {"type": "string", "description": "Which flock, only if there are several."}},
+            "required": []},
+        handler=_log_feed,
+        trigger_phrases=("bought feed", "bought layer feed", "bought chicken feed", "lb of feed", "pounds of feed",
+                         "bag of feed", "bags of feed", "lb of layer feed", "lbs of feed", "spent on feed",
+                         "on chicken feed", "on layer feed", "picked up feed"),
+        subjects=("feed",),
     ))
     registry.register(AssistantAction(
         name="list_goods_on_hand", domain="goods",

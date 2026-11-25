@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1805 files, 387,312 lines; 1805 files describe themselves; 21,103 of 21,229 classes and functions are documented.
+1806 files, 387,454 lines; 1806 files describe themselves; 21,109 of 21,235 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,766 lines; 10,107 of 10,188 classes and functions documented
+714 files, 201,857 lines; 10,109 of 10,190 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-682 files, 103,531 lines; 8,625 of 8,670 classes and functions documented
+683 files, 103,582 lines; 8,629 of 8,674 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1554,6 +1554,7 @@
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
 - `tests/test_speech_split.py`: Her first words sooner (core/speech_split.py, brainstorm 1.1(c)): the first sentence voiced first, the rest a part at a time while it plays, never cut mid-sentence; only for a page that asks (the phone app keeps the whole audio).
 - `tests/test_spending_pace.py`: "Am I spending more on groceries than usual?" (core/spending_pace.py): his words read to a category, this month at its pace against his usual month, the early days said as too early, and the ones running over said when none is named.
+- `tests/test_spent_reply.py`: What he says he spent is recorded (core/assistant_turn._spent_reply; brainstorm round 14's sweep: "I spent $30 on groceries" went to the money month's plan and nothing was kept, "spent 12 dollars on gas" got small talk): an expense in the category its words name, undoable through add_expense; feed w
 - `tests/test_spoken_approval.py`: Approving a waiting card by voice, "approve it from now on" included (core/spoken_approval.py, DEC-0215). *(1 undocumented)*
 - `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back.
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.

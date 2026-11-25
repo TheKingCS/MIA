@@ -344,6 +344,34 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 14 (2026-11-25, late): what four live sweeps and ten reviews showed
+
+Four sweeps of everyday questions through the whole turn on the PC's model, and ten fresh reviews, found the same
+shape again and again: MIA knows more than she says (a course teaches it, a calculator works it out) and the turn
+doesn't reach it, or a route reaches too far. Ideas from that, each in the vision, each with what it needs:
+
+- **A morning briefing he asks for** (needs nothing; built? see below): "every morning tell me the weather and my
+  day" set a daily message at the time he says, through the communication gate (paced, one message, dropped when he
+  stops opening it): the day's weather and work-outside risk, what's due, the calendar, the greenhouse's state. Today
+  the sweep's "every morning..." got a one-off answer and nothing kept.
+- **A quote from a job's words** (needs nothing): "write a quote for Sarah's 12 by 16 deck" works the deck out in
+  code (core/build_calcs), prices the materials from his inventory and receipts, adds his labor rate, and drafts the
+  quote (quote.add) for his yes. The sweep's "how do I write a quote for a deck job?" now teaches the lesson; this
+  would do the job.
+- **Feed bought counts toward the flock** (needs nothing): an Animals & Feed expense with a weight ("50 lb of layer
+  feed, $22") also tops up the flock's feed runway (core/feed_runway.py), so "how long will the feed last?" knows.
+- **Knowledge for the gaps** (his say: which packs and how much disk): mites, a well that freezes, how much hay a
+  goat eats, how deep a water line goes. The offline library answers these once its packs are fetched (land-grant
+  extension guides first); until then MIA says plainly she doesn't have it, and online needs SearXNG running.
+- **A goat and livestock course** (needs sources chosen): the flock has a course and a drill; goats, pigs and a
+  family cow don't. Feed by body weight, hoof care, fencing that holds them, kidding season.
+- **The weekend planner** (needs nothing): "what should I do this weekend?" weighs the forecast, his projects' next
+  steps, the garden's timing and what's due, and offers two or three, each with why.
+- **Every route in the corpus** (built 2026-11-25, tests/test_code_routes_corpus.py): every code route runs against
+  everyday messages; a new one joins it.
+- **Never narrow the emergency floor** (decided in code, 2026-11-25): false alarms are its accepted cost; its
+  never-miss list only grows.
+
 ## Round 13 (2026-11-25): from labs to a maker who builds his own homestead tech
 
 Built today: interactive labs as a teaching standard (Build With ESP32, Build With Arduino for his ELEGOO Mega and

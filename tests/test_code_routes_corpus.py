@@ -51,12 +51,16 @@ EVERYDAY = (
     # the workshop and the bench
     "I finished the bookshelf", "the saw is dull", "I need more 2x4s", "what tools do I have?",
     "can you simulate a day in the greenhouse like the web lab", "a drill at work today", "can I drill into the stud?",
+    # money said that isn't an expense of his (bills, debts, people: their own tools)
+    "I paid $120 for the electric bill", "I paid $500 on the truck loan", "I paid Sarah $40 back",
+    "how much have I spent on groceries?", "I spent the day on the fence", "I paid the vet",
 )
 
 
 @pytest.fixture()
 def routes(tmp_path):
-    """Each code route, as a function of the words; a change route records instead of acting."""
+    """Each code route, as a function of the words; a change route records instead of acting.
+    What he spent is one of them."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -70,6 +74,7 @@ def routes(tmp_path):
         "weekly reminder": lambda w: turn._weekly_reminder_reply(context, w),
         "drill": lambda w: drills.requested(w),
         "first-aid how-to": lambda w: first_aid_floor.teach(w),
+        "spent": lambda w: turn._spent_reply(context, w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),
     }
 
@@ -81,6 +86,7 @@ MEANT = {
     "reminder on a day": "remind me to check the oil Saturday",
     "weekly reminder": "remind me every Monday to check the water filter", "drill": "give me a choking drill",
     "first-aid how-to": "how do you use a tourniquet?", "lab": "walk me through building the pot lab",
+    "spent": "I spent $30 on groceries",
 }
 
 
