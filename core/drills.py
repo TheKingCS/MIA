@@ -12,7 +12,8 @@ backyard poultry guides; first aid (a deep cut, choking) from the American Red C
 Association, in the same words as the emergency floor (core/first_aid_floor.py), so a drill never teaches what the
 floor wouldn't say, and with no medicine doses; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); a market day from
 core/business_path.py's (the SBA's guides); canning from core/gardening_path.py's, the USDA Complete
-Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
+Guide to Home Canning and the NCHFP; a saw cut and a cut list from core/carpentry.py's lessons, OSHA Subpart I
+among them). Pure
 logic; nothing kept.
 
 - **The drills** (`DRILLS`, `of_program`, `find`): each a `Drill` of `Question`s, each with its `Choice`s.
@@ -451,6 +452,42 @@ DRILLS: tuple = (
                  ("Lift the saw out while it's still spinning", "wrong",
                   "Lifting a spinning blade out of a cut can throw the saw; let it stop first.")),
           ), "circular_saw"),
+    Drill("cut_list", "carpentry", "Shelves from a cut list",
+          "A bookcase from 1x12 boards, 8 feet long: two sides at 48 in and four shelves at 34-1/2 in, your circular "
+          "saw's blade about 1/8 in thick.",
+          (
+              _q("Which parts do you cut first?",
+                 ("The shortest, to get them out of the way", "wrong",
+                  "Cut short parts first and the long ones may not fit in what's left."),
+                 ("The longest, so the offcuts can become the short parts", "best",
+                  "Longest first, then the shorter parts come out of what's left: less waste, fewer boards."),
+                 ("Whichever board is on top of the pile", "wrong",
+                  "Without an order, a board ends up too short for the one long part you still need.")),
+              _q("Can both 48 in sides come out of one 8 ft board?",
+                 ("Yes: 48 and 48 is exactly 96", "wrong",
+                  "The blade turns about 1/8 in into sawdust at every cut, and a factory end may not be square: the "
+                  "second side comes up short."),
+                 ("Measure the board first: with a square end and the blade's 1/8 in, two 48s need a little over 96 "
+                  "in", "best",
+                  "Boards are often a touch over 8 ft; measure it, square one end, and see whether both fit."),
+                 ("Cut one, and see what's left", "fine",
+                  "You'll find out, but measuring first tells you before you've cut, while you can still choose a "
+                  "board.")),
+              _q("Four shelves all at 34-1/2 in. How do you cut them alike?",
+                 ("Measure each new one from the last piece you cut", "wrong",
+                  "Any error in one is copied into the next, and they creep."),
+                 ("Clamp a stop block at 34-1/2 in and cut each one against it", "best",
+                  "Every piece is set by the same block, so all four match."),
+                 ("Mark each with the tape and cut to the lines", "fine",
+                  "It works with care, but four marks are four chances to be off; a stop block makes them identical.")),
+              _q("You've cut the first shelf against the block. Now what?",
+                 ("Cut the other three, then check them all", "wrong",
+                  "If the block is off, all four are wrong before you know it."),
+                 ("Measure the first one and check it before cutting the rest", "best",
+                  "Measure twice, cut once: the first part proves the setup, then the rest follow it."),
+                 ("Trust the block: it was set with the tape", "wrong",
+                  "A block can be set from the wrong side of a mark or slip as it's clamped; one check catches it.")),
+          ), "cut_list"),
 )
 
 
@@ -470,6 +507,7 @@ ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "genera
         "surprise_bill": ("money", "finance", "budget", "surprise bill", "debt"),
         "market_day": ("market day", "market", "business", "farmers market", "pricing"),
         "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw"),
+        "cut_list": ("cut list", "cut-list", "stop block", "bookcase", "shelves"),
         "deep_cut": ("deep cut", "bad cut", "bleeding", "tourniquet", "wound"),
         "choking": ("choking", "heimlich")}
 
