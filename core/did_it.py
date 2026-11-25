@@ -63,12 +63,20 @@ def _clean(text: str) -> str:
     return " ".join(text.split()).strip(" .!")
 
 
+# A request, never a report: "put the vet appointment on the calendar for Friday at 2pm" reads like "put away the
+# dishes" (live check through the whole turn, 2026-11-24: it was noted as done)
+_REQUEST = re.compile(r"\b(?:on|to|in|onto) (?:the|my) (?:calendar|schedule|list)\b|\bremind me\b|\bschedule\b|"
+                      r"\b(?:for|on|next|this) (?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|"
+                      r"week|month)\b|\bat \d{1,2}(?::\d{2})?\s*(?:am|pm)?\b", re.I)
+
+
 def activities(text: str) -> tuple[list[str], bool]:
     """Pure logic. The activities a person says they did, each as said ("put away the dishes"), and whether that's
     all the message is (nothing else in it, no question). "I've been running" is a habit: ("been running"). None for
-    a negative, a question, or a vague or self-critical object."""
+    a negative, a question, a vague or self-critical object, or a request (`_REQUEST`: the calendar, a reminder, a
+    day or a time ahead)."""
     said = _clean(text)
-    if not said or _NEGATIVE.search(said):
+    if not said or _NEGATIVE.search(said) or _REQUEST.search(said):
         return [], False
     habit = _HABIT.match(said.rstrip("?"))
     if habit:

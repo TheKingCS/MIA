@@ -35,7 +35,8 @@
     "tools": [
       "add_calendar_event",
       "delete_calendar_event",
-      "list_calendar_events"
+      "list_calendar_events",
+      "move_calendar_event"
     ],
     "actions": [
       "event.add",
@@ -46,7 +47,8 @@
       "delete_calendar_event": "act_with_approval",
       "list_calendar_events": "observe",
       "event.add": "act_within_grant",
-      "event.delete": "act_with_approval"
+      "event.delete": "act_with_approval",
+      "move_calendar_event": "act_within_grant"
     },
     "outside": []
   },

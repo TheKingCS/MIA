@@ -95,6 +95,7 @@ from core.meat_cure import register_meat_cure_actions
 from core.solar_size import register_solar_size_actions
 from core.canning_times import register_canning_time_actions
 from core.rent_collected import register_rent_collected_actions
+from core.calendar_move import register_calendar_move_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_path_actions import register_path_actions
 from core.assistant_plan_actions import register_plan_actions
@@ -234,7 +235,7 @@ class AssistantTools:
         fix_jar_count (a batch put up with the wrong count) comes from core/canning_fix.py.
         adjust_greenhouse (the greenhouse node's targets, DEC-0185) comes from core/greenhouse_adjust.py.
         power_outage (the power outage clock) comes from core/outage_actions.py.
-        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py; best_time_to_fish from core/fishing_times.py; why_hens_not_laying from core/hen_laying.py; meat_cure from core/meat_cure.py; size_solar from core/solar_size.py; canning_time from core/canning_times.py; rent_collected from core/rent_collected.py.
+        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py; best_time_to_fish from core/fishing_times.py; why_hens_not_laying from core/hen_laying.py; meat_cure from core/meat_cure.py; size_solar from core/solar_size.py; canning_time from core/canning_times.py; rent_collected from core/rent_collected.py; move_calendar_event from core/calendar_move.py.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -298,6 +299,7 @@ class AssistantTools:
         register_solar_size_actions(self.context.assistant_actions)  # sizing solar from his use
         register_canning_time_actions(self.context.assistant_actions)  # canning times for his altitude
         register_rent_collected_actions(self.context.assistant_actions)  # rent collected by property
+        register_calendar_move_actions(self.context.assistant_actions)  # moving a calendar event
         register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_closet_actions(self.context.assistant_actions)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)
@@ -1025,6 +1027,10 @@ class AssistantTools:
             handler=self._action_set_birthday,
             trigger_phrases=("my birthday is", "my birthday's", "remember my birthday"),
         ))
+        self.context.assistant_actions.register_domain_keywords(
+            "calendar", ("next monday", "next tuesday", "next wednesday", "next thursday", "next friday",
+                         "next saturday", "next sunday", "next week", "on monday", "on tuesday", "on wednesday",
+                         "on thursday", "on friday", "on saturday", "on sunday"))
         self.context.assistant_actions.register(AssistantAction(
             name="add_calendar_event",
             domain="calendar",
@@ -1048,6 +1054,9 @@ class AssistantTools:
             },
             handler=self._action_add_calendar_event,
             trigger_phrases=("add an event", "add a calendar event", "schedule an event", "new calendar event"),
+            # a day named brings the calendar too, so "remind me to ... next Saturday" can go on it (live check
+            # through the whole turn, 2026-11-24: it became a task repeating every 7 days)
+            subjects=("calendar", "event"),
         ))
         self.context.assistant_actions.register(AssistantAction(
             name="list_calendar_events",
@@ -1907,7 +1916,9 @@ class AssistantTools:
                 "days', 'renew tags every year', 'water the tomatoes every 2 days'). NOT a clock-time alarm — use this whenever the task "
                 "repeats on a day interval for a specific owned asset, even if phrased as 'remind me to'. "
                 "Only for day-interval recurrence — mileage/engine-hour/start-count/sensor-triggered tasks "
-                "need the Maintenance module's own screen, not this tool. Only for SETTING UP a new task — "
+                "need the Maintenance module's own screen, not this tool. A one-time thing on a date "
+                "('remind me to change the oil next Saturday') is add_calendar_event, never a task repeating every "
+                "7 days. Only for SETTING UP a new task — "
                 "if the user is reporting they already did something (past tense, e.g. 'I renewed the "
                 "tags'), use complete_maintenance_task instead, not this."
             ),
@@ -1920,6 +1931,8 @@ class AssistantTools:
                         "type": "integer",
                         "description": "Repeat every N days. Omit for a one-time task.",
                     },
+                    "date": {"type": "string",
+                             "description": "The day, for a one-time thing he said a day for ('next Saturday')"},
                 },
                 "required": ["asset_name", "title"],
             },
@@ -1957,7 +1970,8 @@ class AssistantTools:
             trigger_phrases=(
                 "what maintenance is due", "what's due for maintenance", "list maintenance tasks",
                 "what maintenance do i have", "is anything overdue", "maintenance status", "what needs maintenance",
-                "what maintenance is overdue",
+                "what maintenance is overdue", "what's due on", "needs doing on", "service is due",
+                "due for service", "due for an oil change",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -3145,13 +3159,18 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_calendar_event`: adds a calendar event with a date, optional time, notes and recurrence (an unknown recurrence is dropped). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_calendar_event`: adds a calendar event with a date, optional time, notes and recurrence (an unknown recurrence is dropped); a date passed as words ("Friday at 2pm") is read as its day (core/calendar_move.day_of), never kept as words. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         title = str(arguments.get("title", "")).strip()
         date_str = str(arguments.get("date", "") or "").strip()
         if not title:
             return "I need a title to add a calendar event."
         if not date_str:
             return "I need a date (YYYY-MM-DD) to add a calendar event."
+        from core.calendar_move import event_day
+
+        date_str = event_day(date_str) or ""  # "Friday at 2pm" passed as the date: its day, never the words
+        if not date_str:
+            return "Which day? Say a day like \"Friday\" or a date, and I'll put it on the calendar."
         time_str = str(arguments.get("time", "") or "").strip() or None
         notes = str(arguments.get("notes", "") or "")
         recurrence = str(arguments.get("recurrence", "") or "").strip().lower() or None
@@ -3693,7 +3712,7 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_maintenance_task(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_maintenance_task`: adds a task for a tracked item, repeating every N days or one-time. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_maintenance_task`: adds a task for a tracked item, repeating every N days or one-time; a one-time thing with a day ("next Saturday") goes on the calendar instead (live check, 2026-11-24). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
         asset_name = str(arguments.get("asset_name", "")).strip()
         asset, error = resolve_by_name(context.maintenance.all_assets(), asset_name, lambda a: a.name, "tracked item")
         if error:
@@ -3703,6 +3722,18 @@ class AssistantTools:
             return "I need a task title."
         interval_days = arguments.get("interval_days")
         interval_days = int(interval_days) if interval_days not in (None, "") else None
+        when = str(arguments.get("date", "") or "").strip()
+        if when and not interval_days and getattr(context, "calendar", None) is not None:
+            # a one-time thing on a day ("next Saturday") goes on the calendar, never a task repeating every 7 days
+            from datetime import date as _date
+
+            from core.calendar_move import day_of
+
+            day = day_of(when)
+            if day:
+                context.calendar.add_event(title=f"{title} ({asset.name})", date=day)
+                on = _date.fromisoformat(day)
+                return f"On your calendar for {on:%A, %B} {on.day}: {title} ({asset.name})."
         task = context.maintenance.add_task(asset_id=asset.asset_id, title=title, interval_days=interval_days)
         if interval_days:
             return f"Added '{task.title}' for {asset.name}, repeating every {interval_days} days."

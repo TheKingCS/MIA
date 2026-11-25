@@ -354,6 +354,13 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **"Actually, make it Sunday"** (no decision; smooth conversation): *built 2026-11-25 (`core/calendar_move.py`,
+  the tool `move_calendar_event`).* "Remind me to change the truck oil next Saturday" became a task repeating every
+  7 days, and "make it Sunday" added a second one: the calendar could add and delete, not move. Now a one-time thing
+  on a day goes on the calendar, a day named brings the calendar's tools, and the event just added (or the one
+  named) moves to the day his words say, never a date the model made up. Also: "put the vet appointment on the
+  calendar for Friday at 2pm" is a request, never noted as done (core/did_it.py), an event's date passed as words
+  is read as its day, and "what's coming up on the truck?" is the maintenance list's.
 - **What can you help me with on the homestead?** (no decision): *fixed 2026-11-24.* It went to the homestead's
   morning sheet, and "and for my woodworking business?" stayed there. Now it's her own overview
   (core/capabilities.overview) said for the area named (`focus_areas`), and the follow-up's area comes first.

@@ -290,7 +290,8 @@ def test_hows_the_homestead_gathers_every_part_and_says_the_greenhouse_unwatched
                                        ("What can you help me with on the homestead?", "homestead"),
                                        ("What's my water budget?", "money month"),
                                        ("What should I practice on guitar today?", "today"),
-                                       ("How much firewood do I need for winter?", "winter")])
+                                       ("How much firewood do I need for winter?", "winter"),
+                                       ("What's coming up on the truck?", "discussed")])
 def test_a_question_a_tool_is_built_for_isnt_these_plans(said, plan):
     """Each went to the plan by meaning in the live check; its words now give it to its tool (a tax refund stays the
     next dollar's)."""

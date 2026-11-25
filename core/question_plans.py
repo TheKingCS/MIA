@@ -1499,6 +1499,8 @@ NOT_FOR = {
     "next dollar": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|owe in tax(es)?|taxes on|tax bracket|irs|"
                               r"self.?employment|estimated tax|quarterly tax)\b", re.I),
     "debts": re.compile(r"\b(owes? me|owing me)\b", re.I),
+    # what's due on a vehicle or machine is the maintenance list's (live check: "what's coming up on the truck?")
+    "discussed": re.compile(r"\b(coming up on|due on|due for|needs doing on|service|maintenance|oil change)\b", re.I),
     # what she can help with is her own overview (what_can_you_do), not the homestead's morning sheet
     "homestead": re.compile(r"\b(can you help|could you help|help me with|can you do|you help with)\b", re.I),
     # what customers haven't paid is who_owes_me's; rent is rent_collected's
