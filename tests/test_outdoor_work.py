@@ -6,6 +6,7 @@ tests.test_outdoor_work
 Service's own tables, a hot day names its level and cooler hours with the heat-stroke signs, a bitter day the minutes
 to frostbite, a mild day says so, and the forecast's hours come through core/weather.read.
 A stale forecast is never read as today.
+The day is read from a follow-up's own words.
 """
 
 from core import outdoor_work as ow
@@ -72,3 +73,13 @@ def test_a_stale_forecast_is_never_read_as_today(monkeypatch):
     monkeypatch.setattr(weather, "card", lambda context, fetch=None: {"place": "x", "unit": "°F", "text": "x",
                                                                       "days": [{"date": yesterday}], "hours": []})
     assert ow.say(None).startswith("The forecast I have doesn't reach today")
+
+
+
+def test_the_day_is_read_from_a_follow_ups_own_words(monkeypatch):
+    """No day given: "What about tomorrow? (after: ...today?)" is tomorrow; nothing at all is today."""
+    asked = []
+    monkeypatch.setattr(ow, "say", lambda context, day="today", fetch=None: asked.append(day) or day)
+    ow._tool(None, {"question": "What about tomorrow? (after: Is it too hot to work outside today?)"})
+    ow._tool(None, {})
+    assert asked == ["tomorrow", "today"]

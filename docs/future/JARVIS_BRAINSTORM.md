@@ -359,9 +359,10 @@ New ideas, each checked against what's there first:
   of green beans?" then "and what about corn?", "what if I'm at 3,000 feet?", "what about 8 pounds?", "what if I used
   350 watt panels?": before, a follow-up brought no tools and the model answered alone (it made up a curing-salt
   amount); now it brings the tools of the question it follows, and the lookup it runs gets the follow-up's words in
-  code, since the model passed the earlier question unchanged. Live: 10 of 12, every answer right. *Seen, not changed:*
-  "what about tomorrow?" after "is it too hot to work outside?" goes to get_weather (that tool asks for a day, not a
-  question).
+  code, since the model passed the earlier question unchanged. Then "what about tomorrow?" after "is it too hot to
+  work outside?": it went to get_weather, and offered only the right tool the model answered in text with a heat index
+  it made up; now a follow-up settles on the tool its question named, and when the retry won't call it, code does.
+  Live: 12 of 12.
 - **Canning times for his altitude** (no decision; canning is his): *built 2026-11-24 (`core/canning_times.py`, the
   tool `canning_time`).* The USDA's Complete Guide times for 11 pressure-canned foods (the pressure by his altitude:
   weighted 10 or 15 lb, a dial gauge by the thousand feet) and 3 boiling-water ones (each food's own altitude

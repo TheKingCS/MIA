@@ -229,11 +229,23 @@ _NAMED_TOOL_NUDGE = ("The person asked for exactly this. Call {name} now with wh
 
 
 def named_tool(context, prompt: str, tools: list[dict]) -> Optional[str]:
-    """The offered tool `prompt` names in its own words, if exactly one (see settle_on_named_tool)."""
+    """The offered tool `prompt` names in its own words, if exactly one (see settle_on_named_tool); for a follow-up
+    that names none ("what about tomorrow?"), the one the question it follows named ("is it too hot to work
+    outside?": the work-outside tool, never get_weather; core/conversation_state.turn_follows)."""
+    from core.conversation_state import turn_follows
+
     registry = getattr(context, "assistant_actions", None)
     if registry is None:
         return None
-    return registry.named_action(prompt, [t.get("function", {}).get("name") for t in tools])
+    names = [t.get("function", {}).get("name") for t in tools]
+    named = registry.named_action(prompt, names)
+    if named is None:
+        from core.conversation_state import note_follow_up_tool
+
+        follows = turn_follows(prompt)
+        named = registry.named_action(follows, names) if follows else None
+        note_follow_up_tool(named or "")
+    return named
 
 
 def settle_on_named_tool(named: Optional[str], messages: list[dict], tools: list[dict], reply: Optional[ChatReply],
@@ -244,7 +256,9 @@ def settle_on_named_tool(named: Optional[str], messages: list[dict], tools: list
     debt should I pay off first?", or called two lookups at once). Called it
     among others: just that call. Asked back, or picked other lookups: one
     more try (`ask`) offered only that tool, kept if it calls it with every
-    required detail. A different change the model chose stays its choice."""
+    required detail. A different change the model chose stays its choice.
+    A follow-up settled on its question's lookup (core/conversation_state.follow_up_tool) that the retry still
+    doesn't call: that lookup is called, by code."""
     if reply is None or not named:
         return reply
     called = [call.name for call in reply.tool_calls]
@@ -259,6 +273,13 @@ def settle_on_named_tool(named: Optional[str], messages: list[dict], tools: list
         return reply
     retry = ask(messages + [{"role": "system", "content": _NAMED_TOOL_NUDGE.format(name=named)}], [tool])
     if retry is None or [call.name for call in retry.tool_calls] != [named]:
+        from core.conversation_state import follow_up_tool
+
+        if named == follow_up_tool() and not changes_records(named):
+            # A follow-up to that tool's answer ("what about tomorrow?"): the lookup itself, its question carrying
+            # the follow-up's words (core/assistant_actions._with_follow_up). The retry answered in text with a
+            # heat index it made up (live check, 2026-11-24).
+            return ChatReply(content="", tool_calls=[ToolCall(name=named, arguments={})])
         return reply
     arguments = retry.tool_calls[0].arguments or {}
     required = tool["function"].get("parameters", {}).get("required", [])
@@ -829,6 +850,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     A short follow-up to a tool's answer ("and what about corn?") brings the tools of the question it follows
     (core/conversation_state.followed_question), with a line saying which question; a lookup it runs gets the
     follow-up's words in its "question" (core/assistant_actions._with_follow_up).
+    The turn is noted as a follow-up, with the question it follows, for the lookup and the tool it settles on.
     """
     mode = getattr(conversation, "mode", COMPANION) if conversation is not None else COMPANION
     if mode in PERSONAL_MODES or getattr(conversation, "journal", False):
@@ -852,7 +874,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         routed = f"{follows} {prompt}"
     from core.conversation_state import set_turn_follow_up
 
-    set_turn_follow_up(prompt, follow_up_question(prompt, follows) if follows else "")
+    set_turn_follow_up(prompt, follow_up_question(prompt, follows) if follows else "", follows or "")
     matched_actions = (
         context.assistant_actions.matching_actions(routed, context)
         if context.assistant_actions is not None and not is_teaching_request

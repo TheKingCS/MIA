@@ -1,6 +1,7 @@
 """What a conversation is about (DEC-0052 step 4, core/conversation_state.py):
 a short follow-up goes back to the last question plan, with both questions; a follow-up to a tool's answer brings
-that question's tools, and the lookup it runs gets the follow-up's words, never a change."""
+that question's tools, and the lookup it runs gets the follow-up's words, never a change.
+A follow-up that names no tool settles on its question's, called by code when the retry answers in text."""
 
 from types import SimpleNamespace
 
@@ -176,3 +177,46 @@ def test_a_lookup_on_a_follow_up_turn_gets_the_new_words_and_a_change_never_does
     monkeypatch.undo()
     cs.set_turn_follow_up("How long for beans?")
     assert aa._with_follow_up(lookup, "meat_cure", {"question": "x"}) == {"question": "x"}
+
+
+
+def test_a_follow_up_that_names_no_tool_settles_on_the_one_its_question_named():
+    """"What about tomorrow?" after "is it too hot to work outside today?": the tool that question named."""
+    from types import SimpleNamespace
+
+    from core import conversation_state as cs
+    from core.assistant_chat import named_tool
+
+    class Registry:
+        """Names the work-outside tool for its own words only."""
+
+        def named_action(self, text, offered):
+            """The tool a message names, if offered."""
+            return "work_outside" if "work outside" in str(text).lower() and "work_outside" in offered else None
+
+    context = SimpleNamespace(assistant_actions=Registry())
+    tools = [{"function": {"name": "work_outside"}}, {"function": {"name": "get_weather"}}]
+    cs.set_turn_follow_up("What about tomorrow?", "What about tomorrow? (after: Is it too hot to work outside today?)",
+                          "Is it too hot to work outside today?")
+    assert named_tool(context, "What about tomorrow?", tools) == "work_outside"
+    assert named_tool(context, "Something else entirely", tools) is None  # not the turn being answered
+    cs.set_turn_follow_up("x")
+
+
+
+def test_a_follow_ups_lookup_is_called_by_code_when_the_retry_answers_in_text():
+    """The retry offered only the follow-up's tool answers in words: that lookup is called anyway, never the words."""
+    from core import conversation_state as cs
+    from core.assistant_chat import settle_on_named_tool
+    from core.llm_manager import ChatReply, ToolCall
+
+    cs.set_turn_follow_up("What about tomorrow?", "What about tomorrow? (after: x)", "x")
+    cs.note_follow_up_tool("work_outside_wind_chill_heat_index")
+    first = ChatReply(content="", tool_calls=[ToolCall(name="get_weather", arguments={})])
+    tools = [{"function": {"name": "work_outside_wind_chill_heat_index", "parameters": {}}}, {"function": {"name": "get_weather"}}]
+    got = settle_on_named_tool("work_outside_wind_chill_heat_index", [], tools, first, lambda m, t: ChatReply(content="About 92 F.",
+                                                                                      tool_calls=[]))
+    assert [c.name for c in got.tool_calls] == ["work_outside_wind_chill_heat_index"]
+    cs.set_turn_follow_up("x")
+    again = settle_on_named_tool("work_outside_wind_chill_heat_index", [], tools, first, lambda m, t: ChatReply(content="no", tool_calls=[]))
+    assert [c.name for c in again.tool_calls] == ["get_weather"]  # not a follow-up: the model's choice stays

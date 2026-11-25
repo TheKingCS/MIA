@@ -25,7 +25,9 @@ nothing in it can be made up).
 what about corn?" or "what if I'm at 3,000 feet?". The follow-up names no tool's words, so before, it got no tools and
 the model answered alone (live check: it made up a curing-salt amount for "what about 8 pounds?"). Now a short
 follow-up is routed with the person's last question that brought tools, so the same tools come along (with any of
-its own), and the model is told to pass the tool `follow_up_question`: the new words first, then the question.
+its own), and the model is told to pass the tool `follow_up_question`: the new words first, then the question. A
+follow-up that names no tool settles on the one its question named (`note_follow_up_tool`, `follow_up_tool`;
+core/assistant_chat.named_tool, settle_on_named_tool), called by code when the model won't.
 
 Not yet (the rest of section 5): which single record "it" means across
 any turn, and open questions MIA asked.
@@ -142,13 +144,34 @@ def followed_question(context, conversation, prompt: str) -> Optional[str]:
 
 
 TURN_SECONDS = 180  # a turn's follow-up words are good this long (the model's reply and its lookups)
-_turn = {"prompt": "", "words": "", "at": 0.0}
+_turn = {"prompt": "", "words": "", "follows": "", "named": "", "at": 0.0}
 
 
-def set_turn_follow_up(prompt: str, words: str = "") -> None:
-    """Notes this turn's follow-up words (or that it isn't one) for the lookups it runs (`turn_follow_up`). One turn at
-    a time: MIA answers one message at a time per device, and a stale note runs out after TURN_SECONDS."""
-    _turn.update(prompt=str(prompt or "").strip() if words else "", words=words or "", at=time.monotonic())
+def set_turn_follow_up(prompt: str, words: str = "", follows: str = "") -> None:
+    """Notes this turn's follow-up words and the question it follows (or that it isn't one) for the lookups it runs
+    (`turn_follow_up`, `turn_follows`). One turn at a time: MIA answers one message at a time per device, and a stale
+    note runs out after TURN_SECONDS."""
+    _turn.update(prompt=str(prompt or "").strip() if words else "", words=words or "", follows=follows or "",
+                 named="", at=time.monotonic())
+
+
+def note_follow_up_tool(name: str) -> None:
+    """Notes the tool a follow-up was settled on from the question it follows (core/assistant_chat.named_tool)."""
+    _turn["named"] = name or ""
+
+
+def follow_up_tool() -> str:
+    """The tool this turn's follow-up was settled on from its question (`note_follow_up_tool`), or ""."""
+    if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
+        return ""
+    return _turn["named"]
+
+
+def turn_follows(prompt: str) -> str:
+    """The question this turn's message follows, when `prompt` is the follow-up being answered now; else ""."""
+    if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
+        return ""
+    return _turn["follows"] if _turn["prompt"] == str(prompt or "").strip() else ""
 
 
 def turn_follow_up() -> Optional[tuple]:

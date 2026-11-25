@@ -189,12 +189,18 @@ def say(context, day: str = "today", fetch=None) -> str:
 
 
 def _tool(context, arguments: dict) -> str:
-    """Tool work_outside_wind_chill_heat_index: `say` for the day he asked about."""
-    return say(context, str(arguments.get("day", "") or "today"))
+    """Tool work_outside_wind_chill_heat_index: `say` for the day he asked about, from `day`, else his words (a
+    follow-up's own words come before its " (after: ...)", so "what about tomorrow?" is tomorrow)."""
+    day = str(arguments.get("day", "") or "").strip()
+    if not day:
+        said = str(arguments.get("question", "") or "").lower().split(" (after:")[0]
+        day = "tomorrow" if "tomorrow" in said else "today"
+    return say(context, day)
 
 
 def register_outdoor_work_actions(registry) -> None:
-    """Registers work_outside_wind_chill_heat_index."""
+    """Registers work_outside_wind_chill_heat_index.
+    The tool also takes his words (question), so a follow-up's day is read from them."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -204,7 +210,8 @@ def register_outdoor_work_actions(registry) -> None:
                     "from the hourly forecast, the cooler or warmer hours for the heavy work, and frostbite or "
                     "heat-stroke warnings. The plain forecast is get_weather; storms are storm_ready.",
         parameters={"type": "object", "properties": {
-            "day": {"type": "string", "description": "today or tomorrow"}}},
+            "day": {"type": "string", "description": "today or tomorrow"},
+            "question": {"type": "string", "description": "his words"}}},
         handler=_tool, trigger_phrases=("work outside", "working outside", "too hot to work", "too cold to work",
                                         "heat index", "wind chill", "heat stroke", "frostbite", "too hot outside",
                                         "too cold outside", "safe to work out", "hot to be outside",
