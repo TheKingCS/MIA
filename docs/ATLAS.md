@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1743 files, 375,175 lines; 1743 files describe themselves; 20,591 of 20,721 classes and functions are documented.
+1743 files, 375,321 lines; 1743 files describe themselves; 20,598 of 20,728 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-695 files, 193,861 lines; 9,836 of 9,922 classes and functions documented
+695 files, 193,953 lines; 9,841 of 9,927 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -993,7 +993,7 @@
 
 ## tests/: the test suite: what each part must do
 
-642 files, 100,219 lines; 8,390 of 8,434 classes and functions documented
+642 files, 100,273 lines; 8,392 of 8,436 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1100,7 +1100,7 @@
 - `tests/test_conversation_export.py`: A conversation taken out of the chat (core/conversation_export.py): the export in Markdown and JSON, the summary of the whole of it with and without a model, how it's asked for in words, and the action that saves it to Files.
 - `tests/test_conversation_manager.py`: Unit tests for core.conversation_manager. Isolates _DATA_DIR _CONVERSATIONS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths. Also isolates config_manager's _CONFIG_FILE, since set_active_conversation_id() calls context.config.save() — the exact
 - `tests/test_conversation_modes.py`: Explicit mode switches (core/conversation_modes.py): a sentence corpus, not wording.
-- `tests/test_conversation_state.py`: What a conversation is about (DEC-0052 step 4, core/conversation_state.py): a short follow-up goes back to the last question plan, with both questions.
+- `tests/test_conversation_state.py`: What a conversation is about (DEC-0052 step 4, core/conversation_state.py): a short follow-up goes back to the last question plan, with both questions; a follow-up to a tool's answer brings that question's tools, and the lookup it runs gets the follow-up's words, never a change.
 - `tests/test_cooking_session.py`: Cook mode (DEC-0113, core/cooking_session.py and core/cooking_actions.py): one recipe being cooked per person, step by step, with named timers that keep running across steps, what each step uses, and "I made this" logging the meal through the kitchen's own action; and all of it by voice (core/assist
 - `tests/test_core_runtime.py`: Unit tests for core.core_runtime — headless MIA Core's build_core_context() and its curated Assistant action handlers (_action_*). These are independent copies of core/application.py's own staticmethods (see that module's docstring for why), so this mirrors tests/test_assistant_action_handlers.py's 
 - `tests/test_corrections.py`: Corrections in every area (build plan step 4, core/corrections.py): MIA's changes are watched for three days; the person undoing one, or editing or deleting something of the same kind (the same record when both name it), corrects her, once; the corrections.* loops count them by area. Kinds and ids o

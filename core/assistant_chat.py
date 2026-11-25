@@ -826,6 +826,9 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     (`about_mia`): "how do I tie a bowline?" or "teach me about solar
     power" is about the world, so it gets her tools, with a line telling her
     to explain, not act.
+    A short follow-up to a tool's answer ("and what about corn?") brings the tools of the question it follows
+    (core/conversation_state.followed_question), with a line saying which question; a lookup it runs gets the
+    follow-up's words in its "question" (core/assistant_actions._with_follow_up).
     """
     mode = getattr(conversation, "mode", COMPANION) if conversation is not None else COMPANION
     if mode in PERSONAL_MODES or getattr(conversation, "journal", False):
@@ -836,11 +839,20 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     # right tools come along and the model is told.
     from core.conversation_state import agreed_to, what_it_means
 
+    from core.conversation_state import follow_up_question, followed_question  # noqa: F401 - used below
+
     meant = what_it_means(context, conversation, prompt)
     agreed = agreed_to(conversation, prompt)  # "yes" to her own offer: its tools come along
     routed = f"{prompt} ({meant})" if meant else prompt
     if agreed:
         routed = agreed if not meant else f"{agreed} ({meant})"
+    # "And what about corn?" after a tool's answer: the tools of the question it follows come along
+    follows = None if (agreed or is_teaching_request) else followed_question(context, conversation, prompt)
+    if follows:
+        routed = f"{follows} {prompt}"
+    from core.conversation_state import set_turn_follow_up
+
+    set_turn_follow_up(prompt, follow_up_question(prompt, follows) if follows else "")
     matched_actions = (
         context.assistant_actions.matching_actions(routed, context)
         if context.assistant_actions is not None and not is_teaching_request
@@ -882,6 +894,10 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     if meant:
         system += (f"\n\nIn their message, “it” or “that” most likely means {meant} (the last of their things "
                    "named in this conversation); if that doesn't fit, ask which they mean.")
+    if follows and is_action_request:
+        system += (f"\n\nTheir message follows up on their question “{follows}”: answer it with the same tool as "
+                   f"before, passing their words as “{follow_up_question(prompt, follows)}”, never the tool's own "
+                   "description. Never work a number out yourself.")
     learned = getattr(context, "failures", None)
     said = learned.phrases_in(prompt) if learned is not None else []
     if said:  # what this person taught MIA they mean (core/failure_log.py)
@@ -901,6 +917,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         tools = context.assistant_actions.to_ollama_tools(matched_actions)
 
     return messages, tools
+
 
 
 def build_personal_system_message(context, mode: str, conversation=None, prompt: str = "") -> str:

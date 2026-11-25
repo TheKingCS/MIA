@@ -180,6 +180,22 @@ def _whole(name: str, text: str) -> bool:
     return bool(name) and re.search(rf"(?<![a-z0-9]){re.escape(name)}(?:'?s|es)?(?![a-z0-9])", text) is not None
 
 
+def _with_follow_up(action, name: str, arguments: dict) -> dict:
+    """The arguments, with a read-only lookup's "question" set to the turn's follow-up words when the model's own
+    question leaves out what the person just said ("what about 8 pounds?" after the curing question: the model passed
+    the earlier question unchanged, live check 2026-11-24; core/conversation_state.turn_follow_up)."""
+    from core.conversation_state import turn_follow_up
+
+    props = (action.parameters or {}).get("properties") or {}
+    turn = turn_follow_up()
+    if turn is None or "question" not in props or changes_records(name):
+        return arguments
+    said, words = turn
+    if said.lower().rstrip("?.! ") in str((arguments or {}).get("question", "") or "").lower():
+        return arguments
+    return {**(arguments or {}), "question": words}
+
+
 class AssistantActionRegistry:
     """Every tool the Assistant has, and how a request picks the few that travel with it: their trigger phrases, each
     domain's everyday words, and the names of the person's own records in each domain.
@@ -450,6 +466,7 @@ class AssistantActionRegistry:
         core/taught_skills.py), a tool that ran is noted as one of its steps.
         What a tool changes is kept for "undo that", described by its name and
         short arguments for the lasting history (core/change_history.py).
+        On a follow-up turn a lookup's "question" carries what the person just said (`_with_follow_up`).
         """
         action = self._actions.get(name)
         if action is None:
@@ -467,6 +484,7 @@ class AssistantActionRegistry:
         if not tool_allowed(context, action.domain):
             log.info("Refused '%s' for a child account.", name)
             return ASK_A_PARENT
+        arguments = _with_follow_up(action, name, arguments)
         # "Undo that" (core/undo_log.py): what this tool changes can be put back.
         undo = getattr(context, "undo", None)
         recording = undo is not None and changes_records(name) and name != "undo_last_change"

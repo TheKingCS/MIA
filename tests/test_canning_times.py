@@ -14,7 +14,7 @@ from core import weather
 
 def test_the_pressure_by_altitude_and_the_water_bath_columns():
     """Weighted 10 lb to 1,000 ft then 15; dial 11 to 2,000, 12 to 4,000; water-bath bands at each boundary; chicken
-    stock is stock, never chicken."""
+    stock is stock, never chicken; a follow-up's food, named first, is the one read; a bare number is feet."""
     assert ct.pressure_for(800) == (10, 11) and ct.pressure_for(1500) == (15, 11)
     assert ct.pressure_for(3500) == (15, 12) and ct.pressure_for(9000) == (15, None)
     assert [ct.band(f) for f in (1000, 1001, 3000, 3001, 6000, 6001)] == [0, 1, 1, 2, 2, 3]
@@ -22,6 +22,7 @@ def test_the_pressure_by_altitude_and_the_water_bath_columns():
     assert ct.feet_in("chicken, pints, 1500") == 1500 and ct.feet_in("7 quarts of beans") is None
     assert ct.feet_in("process 90 minutes") is None
     assert ct.food_in("pints of chicken stock") == ("pressure", "stock")
+    assert ct.food_in("And what about corn? (after: How long for quarts of green beans?)") == ("pressure", "corn")
     assert ct.food_in("quarts of chicken") == ("pressure", "chicken")
 
 

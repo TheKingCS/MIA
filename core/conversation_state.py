@@ -21,6 +21,12 @@ questions asked before that window go into the system message, in the
 person's own words, built by code (no summary written by the model, so
 nothing in it can be made up).
 
+**A tool's follow-up** (`followed_question`, 2026-11-24): "how long do I process quarts of green beans?" then "and
+what about corn?" or "what if I'm at 3,000 feet?". The follow-up names no tool's words, so before, it got no tools and
+the model answered alone (live check: it made up a curing-salt amount for "what about 8 pounds?"). Now a short
+follow-up is routed with the person's last question that brought tools, so the same tools come along (with any of
+its own), and the model is told to pass the tool `follow_up_question`: the new words first, then the question.
+
 Not yet (the rest of section 5): which single record "it" means across
 any turn, and open questions MIA asked.
 """
@@ -110,6 +116,54 @@ def agreed_to(conversation, prompt: str) -> Optional[str]:
 
 
 LOOK_BACK = 8  # messages searched for the last thing named
+FOLLOW_BACK = 4  # messages back a tool's follow-up may reach (the last exchange or two)
+
+
+def followed_question(context, conversation, prompt: str) -> Optional[str]:
+    """The person's last question in this conversation that brought tools, when `prompt` is a short follow-up
+    (`looks_like_follow_up`, or a short "what about corn?"); else None. One that brings tools of its own still gets
+    it ("what if I used 350 watt panels?" brings a power tool, and the sizing question's tools must come too: the
+    caller routes on both). Only the last FOLLOW_BACK messages are searched, and only the person's own words."""
+    registry = getattr(context, "assistant_actions", None)
+    said = (prompt or "").strip()
+    if registry is None or conversation is None or not said or len(said.split()) > MAX_WORDS:
+        return None
+    if not (_LEADS.match(said) or _LEANS.search(said)):
+        return None
+    before = [m for m in getattr(conversation, "messages", []) or []
+              if not (getattr(m, "role", "") == "user" and str(getattr(m, "content", "")) == prompt)]
+    for m in reversed(before[-FOLLOW_BACK:]):
+        if getattr(m, "role", "") != "user":
+            continue
+        asked = str(getattr(m, "content", "") or "").strip()
+        if asked and asked != said and registry.matching_actions(asked, context):
+            return asked
+    return None
+
+
+TURN_SECONDS = 180  # a turn's follow-up words are good this long (the model's reply and its lookups)
+_turn = {"prompt": "", "words": "", "at": 0.0}
+
+
+def set_turn_follow_up(prompt: str, words: str = "") -> None:
+    """Notes this turn's follow-up words (or that it isn't one) for the lookups it runs (`turn_follow_up`). One turn at
+    a time: MIA answers one message at a time per device, and a stale note runs out after TURN_SECONDS."""
+    _turn.update(prompt=str(prompt or "").strip() if words else "", words=words or "", at=time.monotonic())
+
+
+def turn_follow_up() -> Optional[tuple]:
+    """(the follow-up's own words, the question a tool should be given) for the turn now running, or None."""
+    if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
+        return None
+    return _turn["prompt"], _turn["words"]
+
+
+def follow_up_question(prompt: str, follows: str) -> str:
+    """Pure logic. The question a tool is given for a follow-up: the new words first, then the question they follow
+    ("And what about corn? (after: How long do I process quarts of green beans?)"), so a tool reading the first food
+    or weight reads the new one (the live check, 2026-11-24: given only the turn, the model passed the tool's own
+    description and the new detail was lost)."""
+    return f"{prompt.strip()} (after: {follows.strip()})"
 
 
 def what_it_means(context, conversation, prompt: str) -> Optional[str]:

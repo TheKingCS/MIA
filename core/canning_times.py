@@ -74,13 +74,16 @@ def band(feet: float) -> int:
 
 
 def food_in(words: str) -> Optional[tuple]:
-    """Pure logic. ("pressure" or "water", the food's name) for the food his words name, longest name first, or None."""
+    """Pure logic. ("pressure" or "water", the food's name) for the food his words name first (a follow-up puts the new
+    food first: "and corn? (after: ...green beans?)"), the longer name where two start together ("chicken stock" over
+    "chicken"), or None."""
     said = f" {str(words or '').lower()} "
-    found = [(len(w), "water", name) for name, (ws, _t, _p) in WATER_BATH.items() for w in ws if w in said]
-    found += [(len(w), "pressure", name) for name, (ws, *_rest) in PRESSURE.items() for w in ws if w in said]
+    found = [(said.find(w), -len(w), "water", name) for name, (ws, _t, _p) in WATER_BATH.items() for w in ws if w in said]
+    found += [(said.find(w), -len(w), "pressure", name) for name, (ws, *_rest) in PRESSURE.items() for w in ws
+              if w in said]
     if not found:
         return None
-    _n, how, name = max(found)
+    _at, _n, how, name = min(found)
     return how, name
 
 

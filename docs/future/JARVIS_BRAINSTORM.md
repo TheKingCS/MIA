@@ -354,6 +354,14 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Follow-ups to a tool's answer** (no decision; smooth conversation): *built 2026-11-24
+  (core/conversation_state.followed_question, core/assistant_actions._with_follow_up).* "How long do I process quarts
+  of green beans?" then "and what about corn?", "what if I'm at 3,000 feet?", "what about 8 pounds?", "what if I used
+  350 watt panels?": before, a follow-up brought no tools and the model answered alone (it made up a curing-salt
+  amount); now it brings the tools of the question it follows, and the lookup it runs gets the follow-up's words in
+  code, since the model passed the earlier question unchanged. Live: 10 of 12, every answer right. *Seen, not changed:*
+  "what about tomorrow?" after "is it too hot to work outside?" goes to get_weather (that tool asks for a day, not a
+  question).
 - **Canning times for his altitude** (no decision; canning is his): *built 2026-11-24 (`core/canning_times.py`, the
   tool `canning_time`).* The USDA's Complete Guide times for 11 pressure-canned foods (the pressure by his altitude:
   weighted 10 or 15 lb, a dial gauge by the thousand feet) and 3 boiling-water ones (each food's own altitude

@@ -1,5 +1,6 @@
 """What a conversation is about (DEC-0052 step 4, core/conversation_state.py):
-a short follow-up goes back to the last question plan, with both questions."""
+a short follow-up goes back to the last question plan, with both questions; a follow-up to a tool's answer brings
+that question's tools, and the lookup it runs gets the follow-up's words, never a change."""
 
 from types import SimpleNamespace
 
@@ -123,3 +124,55 @@ def test_yes_to_her_own_offer_brings_its_tools(life):
     statement = SimpleNamespace(conversation_id="y2", mode=None, journal=False, messages=[
         SimpleNamespace(role="assistant", content="Nice work on the bench.")])
     assert cs.agreed_to(statement, "yes") is None  # nothing was asked
+
+
+
+def test_a_short_follow_up_to_a_tools_answer_brings_that_questions_tools():
+    """"And what about corn?" after a canning question: that question, and for one with tools of its own too; a long
+    message, or one with no earlier tool question: None; the tool's question puts the new words first."""
+    from types import SimpleNamespace
+
+    from core.conversation_state import followed_question
+
+    class Registry:
+        """Tools for the canning question and the weather only."""
+
+        def matching_actions(self, text, context):
+            """A tool when the words name canning or the weather."""
+            return ["tool"] if ("process" in text.lower() or "weather" in text.lower()) else []
+
+    context = SimpleNamespace(assistant_actions=Registry())
+    msgs = [SimpleNamespace(role="user", content="How long do I process quarts of green beans?"),
+            SimpleNamespace(role="assistant", content="25 minutes for quarts and 20 for pints.")]
+    conv = SimpleNamespace(messages=msgs)
+    assert followed_question(context, conv, "And what about corn?") == "How long do I process quarts of green beans?"
+    assert followed_question(context, conv, "What if I'm at 3,000 feet?") == "How long do I process quarts of green beans?"
+    assert followed_question(context, conv, "and the weather?") == msgs[0].content  # its own tools, and these too
+    assert followed_question(context, conv, "tell me a joke about a very long day at the farm and the cows") is None
+    assert followed_question(context, SimpleNamespace(messages=msgs[1:]), "And what about corn?") is None
+    from core.conversation_state import follow_up_question
+
+    assert follow_up_question("And what about corn?", "How long for beans?") == \
+        "And what about corn? (after: How long for beans?)"
+
+
+
+def test_a_lookup_on_a_follow_up_turn_gets_the_new_words_and_a_change_never_does(monkeypatch):
+    """"What about 8 pounds?": a lookup whose question leaves it out gets the follow-up words; one that has them, a
+    tool that changes records, or a turn that isn't a follow-up keeps its own."""
+    from types import SimpleNamespace
+
+    from core import assistant_actions as aa
+    from core import conversation_state as cs
+
+    lookup = SimpleNamespace(parameters={"properties": {"question": {"type": "string"}}})
+    cs.set_turn_follow_up("What about 8 pounds?", "What about 8 pounds? (after: curing salt for 5 lb of bacon?)")
+    assert aa._with_follow_up(lookup, "meat_cure", {"question": "curing salt for meat"})["question"].startswith(
+        "What about 8 pounds?")
+    kept = {"question": "what about 8 pounds of bacon"}
+    assert aa._with_follow_up(lookup, "meat_cure", kept) == kept
+    monkeypatch.setattr(aa, "changes_records", lambda name: True)
+    assert aa._with_follow_up(lookup, "add_note", {"question": "x"}) == {"question": "x"}
+    monkeypatch.undo()
+    cs.set_turn_follow_up("How long for beans?")
+    assert aa._with_follow_up(lookup, "meat_cure", {"question": "x"}) == {"question": "x"}
