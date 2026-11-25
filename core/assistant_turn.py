@@ -457,22 +457,29 @@ def _next_lesson_reply(context, prompt: str):
 _AMOUNT = r"(?:\$\s?(?P<d>\d[\d,]*(?:\.\d{1,2})?)|(?P<n>\d[\d,]*(?:\.\d{1,2})?)\s*(?:dollars|bucks))"
 _SPENT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:spent|paid|dropped)\s+" + _AMOUNT + r"\s+(?:on|for)\s+(?P<what>.+?)"
                     r"\s*[.!]*\s*$", re.I)
-_BOUGHT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:bought|picked up|got)\s+(?P<what>.+?)\s+for\s+" + _AMOUNT +
+_BOUGHT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:bought|purchased)\s+(?P<what>.+?)\s+for\s+" + _AMOUNT +
                      r"\s*[.!]*\s*$", re.I)
 # What it was for, by its words: the budget's categories (core/budget_manager.EXPENSE_CATEGORIES)
 _SPENT_ON = (
-    ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chick(?:s|en)?|scratch|oyster shell|goat|horse|pig|dog food|"
-                       r"cat food|kibble)\b"),
-    ("Groceries", r"\b(?:groceries|grocery|food|milk|bread|eggs|meat|produce|walmart|aldi|kroger|costco)\b"),
+    ("Groceries", r"\bchicken (?:breasts?|thighs?|wings?|legs?|drumsticks?|nuggets?|tenders?)\b|\bwhole chicken\b|"
+                  r"\b(?:groceries|grocery|milk|bread|eggs|meat|produce|walmart|aldi|kroger|costco)\b"),
+    ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chicks|scratch|oyster shell|dog food|cat food|kibble)\b"),
+    ("Groceries", r"\bfood\b"),
+    ("Maintenance", r"\b(?:repairs?|fix(?:ing|ed)?|plumber|electrician|mechanic|parts)\b"),
     ("Transportation", r"\b(?:gas|fuel|diesel|gasoline|oil change|tires?|parking|toll)\b"),
     ("Building Materials", r"\b(?:lumber|2x\d+s?|plywood|screws|nails|concrete|fence|posts?|shingles|boards?)\b"),
     ("Tools & Equipment", r"\b(?:tools?|saw|drill|bits?|blade|clamps?|sander|router)\b"),
     ("Medical", r"\b(?:doctor|dentist|pharmacy|prescription|meds|medicine)\b"),
     ("Entertainment", r"\b(?:movie|movies|game|games|concert|streaming)\b"),
 )
-# A bill, rent, a loan or a card is a bill paid (mark_bill_paid and the debt tools), never a stray expense
-_NOT_SPENDING = re.compile(r"\b(?:bills?|rent|loan|mortgage|card|insurance|invoice|deposit|back|him|her|them|"
-                           r"sarah|you)\b", re.I)
+# A bill, rent, a loan, a card or a utility is a bill paid (mark_bill_paid and the debt tools), never a stray
+# expense; money paid back isn't spending; a quote, an offer, a refund or a job is money that wasn't spent (the
+# eleventh review: "I got a quote for $3,000" had been an expense)
+_NOT_SPENDING = re.compile(r"\b(?:bills?|rent|loan|mortgage|card|insurance|invoice|deposit|back|internet|electricity|"
+                           r"electric|phone|cable|utilit\w*|subscription|quote|offer|refund|job|shift|raise|bonus)\b",
+                           re.I)
+_SPENT_WHEN = re.compile(r"\s+(yesterday|today|last (?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))$",
+                         re.I)
 
 
 def _spent_reply(context, prompt: str):
@@ -480,14 +487,23 @@ def _spent_reply(context, prompt: str):
     round 14's sweep: the first went to the money month's plan and nothing was kept, the second got small talk, a
     third was only "Noted"): an expense through add_expense, in the budget's category its words name (feed, hay and
     the vet are Animals & Feed), undoable; feed with its weight goes to the flock's feed log (log_feed) when there's a
-    flock. Never a question, a bill, rent, a loan, a card or money paid to a person (their own tools). None otherwise."""
+    flock. Never a question, a bill, rent, a loan, a card or money paid to a person (their own tools). None otherwise.
+    Never a quote, an offer, a refund, "it" or two amounts at once; a repair is Maintenance, grocery chicken
+    Groceries, goat feed never the hens', and "yesterday" dates it."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
         return None
     what = found.group("what").strip().rstrip(",.")
-    if _NOT_SPENDING.search(what):
-        return None
+    if _NOT_SPENDING.search(what) or re.search(r"\$\s?\d|\b\d+\s*(?:dollars|bucks)\b", what, re.I) \
+            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I):
+        return None  # two amounts in one ("$5 on a coffee and $10 on gas") are the model's to split
+    when = _SPENT_WHEN.search(what)
+    day = ""
+    if when:  # "spent $30 on groceries yesterday": its day, out of what it was for
+        from core.budget_manager import read_date
+
+        day, what = read_date(when.group(1)) or "", what[:when.start()].strip()
     amount = float((found.group("d") or found.group("n")).replace(",", ""))
     if amount <= 0:
         return None
@@ -495,12 +511,15 @@ def _spent_reply(context, prompt: str):
     weight = re.search(r"\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b", what, re.I)
     flock = getattr(context, "flock", None)
     try:
-        if category == "Animals & Feed" and weight and re.search(r"\bfeed\b", what, re.I) and flock is not None \
-                and getattr(flock, "flocks", None):
+        poultry = not re.search(r"\b(?:goat|horse|pig|hog|cattle|cow|rabbit|dog|cat|sheep|llama|alpaca)\b", what, re.I)
+        if category == "Animals & Feed" and weight and re.search(r"\bfeed\b", what, re.I) and poultry \
+                and flock is not None and getattr(flock, "flocks", None):  # goat feed never counts for the hens
             return context.assistant_actions.execute(context, "log_feed", {"pounds": float(weight.group(1)),
                                                                            "cost": amount})
-        return context.assistant_actions.execute(context, "add_expense", {
-            "amount": amount, "category": category, "description": what[:1].upper() + what[1:]})
+        args = {"amount": amount, "category": category, "description": what[:1].upper() + what[1:]}
+        if day:
+            args["date"] = day
+        return context.assistant_actions.execute(context, "add_expense", args)
     except Exception:
         log.exception("Couldn't record what he spent")
         return None

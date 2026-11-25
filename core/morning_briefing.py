@@ -26,9 +26,12 @@ log = get_logger(__name__)
 HOUR_KEY = "morning_briefing.hour"
 DEFAULT_HOUR = 7
 
-_SET = re.compile(r"\b(?:every|each)\s+morning\b.{0,40}\b(?:tell|give|brief|show|send|read)\b|"
-                  r"\b(?:give me|set up|start|turn on|i want)\s+(?:a\s+|my\s+|the\s+)?(?:daily\s+)?morning\s+"
-                  r"(?:briefing|brief|summary|report|rundown)\b|\bbrief me every morning\b", re.I)
+# Only a briefing asked for, said either way round, never a sentence about his own morning ("every morning I read the
+# Bible", "the morning report from the greenhouse": the eleventh review)
+_SET = re.compile(r"\b(?:every|each)\s+morning\b.{0,40}\b(?:tell|give|brief|show|send|read)\s+me\b|"
+                  r"\b(?:tell|give|brief|show|send|read)\s+me\b.{0,40}\b(?:every|each)\s+morning\b|"
+                  r"\b(?:give me|set up|start|turn on|i want)\s+(?:a\s+|my\s+)?(?:daily\s+)?morning\s+"
+                  r"(?:briefing|brief|summary|rundown)\b", re.I)
 _OFF = re.compile(r"\b(?:stop|cancel|turn off|no more|end|pause)\s+(?:the\s+|my\s+)?(?:daily\s+)?morning\s+"
                   r"(?:briefing|brief|summary|report|rundown)s?\b", re.I)
 _AT = re.compile(r"\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?", re.I)
@@ -57,12 +60,14 @@ def set_hour(context, hour_of: Optional[int]) -> None:
 
 def asked(words: str) -> Optional[tuple]:
     """Pure logic. ("on", hour) for "every morning at 7, tell me the weather and my day" (7 unless he says an hour
-    from 4 to 11 am), ("off", None) for "stop the morning briefing", else None."""
+    from 4 to 11 am), ("off", None) for "stop the morning briefing", else None.
+    Only a briefing asked for, either way round ("tell me the weather every morning"); never a sentence about his
+    own morning or a reminder."""
     said = str(words or "")
     if _OFF.search(said):
         return "off", None
-    if not _SET.search(said):
-        return None
+    if not _SET.search(said) or re.search(r"\bremind me\b", said, re.I):
+        return None  # "remind me every morning to give the dog his meds" is a reminder, never the briefing
     at = _AT.search(said)
     if not at:
         return "on", DEFAULT_HOUR
@@ -134,7 +139,8 @@ def offer(context, now: datetime) -> list:
 
 def reply(context, words: str) -> Optional[str]:
     """His words about it, answered in code (core/assistant_turn.py): set from his hour, turned off, or asked again
-    for a morning hour; None for anything else."""
+    for a morning hour; None for anything else.
+    A time with minutes is said as sent on the hour."""
     found = asked(words)
     if found is None:
         return None
@@ -145,5 +151,6 @@ def reply(context, words: str) -> Optional[str]:
     if kind == "ask":
         return "What time in the morning? Say an hour from 4 to 11, like \"every morning at 7\"."
     set_hour(context, hour_of)
-    return (f"Done: every morning from {hour_of} am, the day's weather and your day, in one message. Say \"stop the "
-            "morning briefing\" to turn it off.")
+    on_the_hour = " (I send it on the hour)" if re.search(r"\bat\s+\d{1,2}:(?!00)\d{2}", str(words or "")) else ""
+    return (f"Done: every morning from {hour_of} am{on_the_hour}, the day's weather and your day, in one message. Say "
+            "\"stop the morning briefing\" to turn it off.")

@@ -56,6 +56,9 @@ EVERYDAY = (
     "how much have I spent on groceries?", "I spent the day on the fence", "I paid the vet",
     # quotes that aren't a structure with its size (make_quote's), and quote talk
     "make a quote for Sarah's cutting board", "send Sarah the deck quote", "did Sarah accept the deck quote?",
+    # the eleventh review's: money that wasn't spent, and his own mornings
+    "I got a quote for $3,000", "I got a refund for $20", "every morning I give the dog his meds",
+    "Every morning I read the Bible", "remind me every morning to give the dog his meds",
 )
 
 

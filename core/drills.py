@@ -443,7 +443,8 @@ DRILLS: tuple = (
                  ("Let the last strum before the change go on open strings, and land the change on beat 1", "best",
                   "Keeping the beat matters more than a clean chord: change on beat 1, every time.")),
               _q("The D chord: which strings do you strum?",
-                 ("All six", "wrong", "The low E and A strings muddy a D: they aren't in its shape."),
+                 ("All six", "wrong", "The low E isn't in a D chord and muddies it; strum from the D string so D is "
+                                      "the lowest note."),
                  ("Only the top four, from the D string down", "best", "That's how the D shape is played."),
                  ("From the A string down", "fine", "That's how C is strummed; D wants just the top four.")),
               _q("Someone calls for a power chord with your first finger on the 3rd fret of the low E. What chord is it?",
