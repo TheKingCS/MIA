@@ -2,7 +2,8 @@
 tests.test_storm_ready
 ========================
 
-"Is a storm coming?" (core/storm_ready.py): stormy days found by their weather or gusts in the next three, and a
+"Is a storm coming?" (core/storm_ready.py): stormy days found by their weather or gusts in the next three (a night
+cold enough for the pipes adds them to the list), and a
 checklist from his records; the forecast's gusts read when Open-Meteo gives them (core/weather.read).
 """
 
@@ -49,3 +50,22 @@ def test_the_checklist_says_only_what_applies(monkeypatch):
     context.greenhouse_link = SimpleNamespace(taken_over=True)
     lines = storm_ready.checklist(context)
     assert any("hens" in l for l in lines) and any("air pump" in l for l in lines)
+
+
+
+def test_a_night_cold_enough_for_the_pipes_adds_them_to_the_storm_list(monkeypatch):
+    """An ice storm with a 12 °F night: drip a faucet and the well's pump house; a 30 °F night adds nothing."""
+    from core import weather_watch
+
+    monkeypatch.setattr(weather_watch, "_well", lambda context: True)
+    context = SimpleNamespace(kitchen=None, config=None, greenhouse_link=None)
+    monkeypatch.setattr(weather_watch, "_birds", lambda context: 0)
+    monkeypatch.setattr(weather_watch, "_builds", lambda context: ())
+    from core import power_ready
+    monkeypatch.setattr(power_ready, "say", lambda context: "Fuel: fine.")
+    cold = {"unit": "°F", "days": [{"date": "2026-01-10", "low": 25}, {"date": "2026-01-11", "low": 12}]}
+    lines = storm_ready.checklist(context, cold)
+    pipes = [line for line in lines if "pipes" in line]
+    assert pipes and "a low of 12°F" in pipes[0] and "pump house" in pipes[0]
+    mild = {"unit": "°F", "days": [{"date": "2026-01-10", "low": 30}]}
+    assert not [line for line in storm_ready.checklist(context, mild) if "pipes" in line]

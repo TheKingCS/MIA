@@ -11,7 +11,8 @@ its day and what it is.
 
 **The checklist** (`checklist`), each line only when it applies: the generator's fuel days (core/power_ready.say), his
 drinking water in days (core/preparedness.water_days), the hens shut in with water that won't freeze (a flock), the
-greenhouse's air pump on backup power (the greenhouse taken over), lumber, tarps and tools put away (a build in
+greenhouse's air pump on backup power (the greenhouse taken over), the pipes (and the well's pump house) kept from
+freezing when one of the three nights is cold enough (`cold_nights`, core/weather_watch.PIPES_FREEZE), lumber, tarps and tools put away (a build in
 progress), phones and power banks charged, and "the power went out" to start the outage clock if it goes
 (core/outage.py). With no storm in three days, that's said with the days' weather.
 
@@ -54,11 +55,29 @@ def _day(iso: str) -> str:
     return "today" if delta == 0 else "tomorrow" if delta == 1 else when.strftime("%A")
 
 
-def checklist(context) -> list[str]:
-    """What to do from his records before a storm (see the module's opening)."""
+def cold_nights(forecast: dict, days: int = 3) -> list[dict]:
+    """Pure logic. The next `days` days whose low reaches the pipes' freezing point (core/weather_watch.PIPES_FREEZE,
+    20 °F, -7 °C): each {date, low}."""
+    from core.weather_watch import PIPES_FREEZE, _f
+
+    unit = str((forecast or {}).get("unit", ""))
+    return [{"date": str(d.get("date", "")), "low": d["low"]} for d in ((forecast or {}).get("days") or [])[:days]
+            if d.get("low") is not None and _f(d["low"], unit) <= PIPES_FREEZE]
+
+
+def checklist(context, forecast: dict = None) -> list[str]:
+    """What to do from his records before a storm (see the module's opening); `forecast` adds the pipes when a night
+    in it is cold enough."""
     from core import power_ready, preparedness, weather_watch
 
     lines = [power_ready.say(context)]
+    cold = cold_nights(forecast) if forecast else []
+    if cold:
+        coldest = min(cold, key=lambda c: c["low"])
+        lines.append(f"Keep the pipes from freezing (a low of {coldest['low']}{forecast.get('unit', '')} "
+                     f"{_day(coldest['date'])}): drip a faucet on an outside wall, open the sink cabinets, unhook the "
+                     "hoses" + (", and keep the well's pump house from freezing." if weather_watch._well(context)
+                                else "."))
     kitchen = getattr(context, "kitchen", None)
     people = preparedness._setting(context, "prepared.people", 1)
     water, _unread = preparedness.water_days(kitchen.all_pantry_items() if kitchen is not None else [], people)
@@ -81,7 +100,8 @@ def checklist(context) -> list[str]:
 
 
 def say(context, fetch=None) -> str:
-    """The answer: the storm days and the checklist, or that none is in the next three days."""
+    """The answer: the storm days and the checklist (with the forecast, so a hard-freeze night adds the pipes), or
+    that none is in the next three days."""
     from core import weather
 
     got = weather.card(context, fetch)
@@ -94,4 +114,4 @@ def say(context, fetch=None) -> str:
         return ("Nothing stormy in the next three days: " + "; ".join(
             f"{_day(d['date'])} {str(d.get('words') or '').lower()}" for d in got["days"][:3]) + ".")
     head = "Coming: " + "; ".join(f"{_day(s['date'])}, {s['why']}" for s in found) + "."
-    return head + " Before it: " + " ".join(checklist(context))
+    return head + " Before it: " + " ".join(checklist(context, got))
