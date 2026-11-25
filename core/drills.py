@@ -7,7 +7,8 @@ Scenario drills: the simulator for a course without a board (docs/future/INTERAC
 it in a simulator first). A drill puts him in a situation and asks a few decisions in order; each choice is judged
 best, fine or wrong, with why, written from the course's own sources (a survival drill from core/bushcraft.py's:
 US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA, and for a power outage the CDC on generators and
-carbon monoxide and the USDA on food in a fridge and freezer without power; canning from core/gardening_path.py's, the USDA Complete
+carbon monoxide and the USDA on food in a fridge and freezer without power; the flock from land-grant extension
+backyard poultry guides; canning from core/gardening_path.py's, the USDA Complete
 Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
 logic; nothing kept.
 
@@ -232,6 +233,41 @@ DRILLS: tuple = (
                  ("Boil it hard for a while and then eat it", "wrong",
                   "Food from a bulging jar is never eaten, boiled or not.")),
           ), "canning_safe"),
+    Drill("flock_night", "gardening", "A night at the coop",
+          "Late fall. Your hens are laying, the nights are dropping below freezing, and last week a neighbour lost "
+          "birds to a raccoon.",
+          (
+              _q("It's getting dark. What do you do?",
+                 ("Shut the coop door once they're all in", "best",
+                  "Most losses to predators happen at night; a closed, solid coop is the first defence."),
+                 ("Leave the door open so they can go out at first light", "wrong",
+                  "An open door at night is how a raccoon gets in."),
+                 ("Leave a light on to scare things off", "wrong",
+                  "Predators learn a light quickly; only a shut, solid coop keeps them out.")),
+              _q("You're closing up gaps around the run. What do you use?",
+                 ("Chicken wire: it's what it's for", "wrong",
+                  "Chicken wire keeps chickens in, but raccoons and dogs tear it or reach through it."),
+                 ("Hardware cloth, buried or skirted at the base", "best",
+                  "Small, welded mesh stops reaching paws, and the buried edge stops digging."),
+                 ("Netting over the top only", "fine",
+                  "It stops hawks, but not anything on the ground; the sides and base need hardware cloth.")),
+              _q("A hard freeze is coming. How do you keep them comfortable?",
+                 ("A heat lamp over the roost", "wrong",
+                  "Heat lamps start coop fires, and birds used to them suffer if the power fails."),
+                 ("Ventilation high up, no drafts at roost level, and dry bedding", "best",
+                  "Damp air, not cold, causes frostbite; venting the moisture keeps them dry and their feathers do "
+                  "the rest."),
+                 ("Seal every vent to keep the warmth in", "wrong",
+                  "Sealed, the coop fills with moisture and ammonia: worse frostbite and sick birds.")),
+              _q("In the morning one hen is hunched, fluffed up and won't eat. What now?",
+                 ("Leave her with the flock: she'll perk up", "wrong",
+                  "If it's catching, the rest of the flock gets it."),
+                 ("Separate her somewhere warm and quiet, with water, and watch her", "best",
+                  "Separated, she can't spread anything and you can see if she eats and drinks; if she doesn't pick "
+                  "up, a vet who treats poultry."),
+                 ("Give her some of your own antibiotics", "wrong",
+                  "Never: the wrong drug and dose, and some aren't allowed at all in birds whose eggs you eat.")),
+          ), "flock_care"),
     Drill("first_cut", "carpentry", "Cutting a 2x6 to length",
           "You're cutting a 2x6 to length with a circular saw, the board across two sawhorses, the cut near the "
           "middle.",
@@ -280,6 +316,7 @@ def by_id(drill_id: str) -> Optional[Drill]:
 
 # Words that name a drill besides its title's ("the power outage drill", "a blackout drill").
 ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "generator", "power"),
+        "flock_night": ("flock", "chicken", "chickens", "hens", "coop", "poultry"),
         "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw")}
 
 

@@ -9,7 +9,8 @@ why and what to watch for, checks said or counted, homework missions from the pr
 
 Written from: US land-grant extension vegetable gardening guides (soil testing, planting and watering); Mel
 Bartholomew, All New Square Foot Gardening; USDA Complete Guide to Home Canning (2015) and the National Center for Home
-Food Preservation. Its XP goes to the Gardening skill.
+Food Preservation; land-grant extension backyard poultry guides (predator-proofing, feed and water, winter ventilation,
+the fire risk of heat lamps) for the flock. Its XP goes to the Gardening skill.
 """
 
 from __future__ import annotations
@@ -74,6 +75,17 @@ STAGES: tuple[Stage, ...] = (
             "Only then the least-toxic treatment that names the pest, used exactly as its label says."),
             "Most damage is stopped by noticing early; sprays used first kill the insects that eat the pests.",
             ("Spraying without knowing what the pest is.",)),
+        Lesson("flock_care", "Keeping a small flock", (
+            "Close the coop at dusk, every night, once the birds are in: most predator losses happen after dark.",
+            "Cover openings with hardware cloth, buried or skirted at the base: chicken wire keeps chickens in, but "
+            "raccoons and dogs tear or reach through it.",
+            "Fresh water every day and a complete layer feed, with oyster shell on the side for strong eggshells.",
+            "In winter, ventilation high in the coop rather than heat: moisture, not cold, causes frostbite, and heat "
+            "lamps start coop fires.",
+            "Collect eggs every day. A bird that's hunched, off its feed or not like the others gets separated, "
+            "watched, and seen by a vet who treats poultry if it doesn't pick up."),
+            "A flock does well on routine: shut in at night, clean water, the right feed, and an eye on each bird.",
+            ("Chicken wire as predator protection.", "A heat lamp in the coop.")),
     ), (
         Check("first_harvest", "Bring in a first harvest from a crop you planned", "said"),
         Check("rotation_planned", "Plan next year's beds so no family grows where it grew this year", "said"),

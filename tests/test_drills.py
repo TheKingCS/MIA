@@ -10,6 +10,7 @@ The canning and carpentry drills by their courses' words, and the Classroom's li
 And ordinary messages (a stud, a worst case scenario, a drill at work) that never start one, with commands let
 through while one waits.
 The power outage drill too, named by its own words.
+The flock drill too, its extension rules kept.
 """
 
 from types import SimpleNamespace
@@ -65,7 +66,8 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     """"Give me a canning drill" is the green beans; "run a carpentry drill" the 2x6; water-bathing green beans is
     wrong. The Classroom's Hands-on labs lists the board courses first (ESP32, Arduino), then each course with drills,
     said with its count.
-    Survival has four drills now, the power outage among them."""
+    Survival has four drills now, the power outage among them.
+    Gardening and homesteading has two drills now, the flock's beside the canning one."""
     canning = drills.reply(None, _said(), "give me a canning drill")
     assert canning.startswith("Drill: Putting up green beans.")
     assert drills.reply(None, _said(), "run a carpentry drill").startswith("Drill: Cutting a 2x6 to length.")
@@ -73,7 +75,7 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     assert drills.judge(beans, 2, 1)["verdict"] == "wrong" and "pressure canner" in drills.judge(beans, 2, 1)["best"]
     listed = lab_page.hands_on()
     assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "carpentry"]
-    assert listed[3]["what"] == "Lessons, and 1 drill that judges each call"
+    assert listed[3]["what"] == "Lessons, and 2 drills that judge each call"
     assert listed[2]["what"] == "Lessons, and 4 drills that judge each call"
 
 
@@ -126,3 +128,13 @@ def test_the_power_outage_drill_is_named_by_its_own_words_and_keeps_the_cdc_and_
     assert drills.judge(outage, 1, 0)["verdict"] == "wrong" and "20 feet" in drills.judge(outage, 1, 0)["best"]
     assert "above 40 °F for more than 2 hours" in drills.judge(outage, 3, 0)["best"]
     assert drills.reply(None, _said(), "is the power out?") is None
+
+
+def test_the_flock_drill_keeps_the_extension_rules_and_isnt_started_by_a_question_about_his_hens():
+    """"Give me a chicken drill" starts it; chicken wire is wrong (hardware cloth best), a heat lamp wrong (fire),
+    venting best, antibiotics of his own wrong; "how are my hens doing?" isn't a drill."""
+    assert drills.reply(None, _said(), "give me a chicken drill").startswith("Drill: A night at the coop.")
+    flock = drills.by_id("flock_night")
+    assert drills.judge(flock, 2, 0)["verdict"] == "wrong" and "Hardware cloth" in drills.judge(flock, 2, 0)["best"]
+    assert "fires" in drills.judge(flock, 3, 0)["why"] and drills.judge(flock, 4, 2)["verdict"] == "wrong"
+    assert drills.reply(None, _said(), "how are my hens doing?") is None
