@@ -140,7 +140,8 @@ def _gallons(n: float) -> str:
 def say(context) -> str:
     """The power line for "how prepared am I?": the fuel he has, and how many days his generator runs on its fuel at
     his hours a day (less than a day said in hours; other fuel on hand said when his generator's isn't); or, without
-    his burn rate, what to tell her."""
+    his burn rate, what to tell her.
+    With no fuel at all, it says how to log it so it can be counted (the size in the name, "5 gal gas cans")."""
     found, unread = fuel_on_hand(_records(context))
     gph = _number(context, "prepared.generator_gph", None)
     hours = _number(context, "prepared.generator_hours", HOURS_A_DAY) or HOURS_A_DAY
@@ -158,7 +159,8 @@ def say(context) -> str:
                      + " (give a size, like \"5 gal\").")
         return " ".join(parts)
     if not found:
-        return "Power: no fuel in your records (log it in Inventory, like \"gas cans, 5 gal\", 3)."
+        return ("Power: no fuel in your records. Log it in Inventory with its size in the name, like three "
+                "\"5 gal gas cans\".")
     if not gph:
         parts.append(f"Power: {have} on hand. Tell me your generator's burn rate (gallons an hour, or pounds an hour "
                      f"for propane, in its manual) and I'll count the days.")
