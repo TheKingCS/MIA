@@ -46,7 +46,10 @@ practice and can't breathe", "I cut my hand with the drill"): fixed first (91a78
 honestly (core/claim_check.py, Fix-It kind claimed_done); "remind me to X on a day" goes on the calendar; the day his
 words name wins over a made-up date; "what's on my calendar tomorrow?" is tomorrow's (57992c89); the tax set-aside
 question reaches its tool (415bf3e1). At the PC: "remind me to check the oil Saturday", "what's on my calendar
-tomorrow?", "how much do I owe in quarterly taxes?". A seventh review of these is due.
+tomorrow?", "how much do I owe in quarterly taxes?". The seventh review's fixes (a5291a72: an emergency said right
+after asking for a drill; 6cbec975), a third sweep on conversation (a86f327e: expense dates and an Animals & Feed
+category, tone examples never this conversation, a thanks without a bill tacked on), "what's my next guitar lesson?"
+(908003a4), and the eighth review's fixes (603dedab: every reply keeps its lines and advice again; 5c602ba9).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:

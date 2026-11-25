@@ -52,6 +52,9 @@ Then a sixth review (the emergency floor quiet for an emergency at practice or w
 other findings), a claim of a change no tool made never said (core/claim_check.py), reminders on a day and the day
 his words name on the calendar, the calendar asked for a day says that day, and the tax set-aside question at its
 tool. 8441 passing.
+Then the seventh and eighth reviews' fixes (an emergency said after asking for a drill, the floor's new false alarms,
+every reply's lines and advice kept), the conversation sweep (expense dates, Animals & Feed, examples that leaked,
+no bill after a thanks) and the next lesson of a course named. 8460 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the
