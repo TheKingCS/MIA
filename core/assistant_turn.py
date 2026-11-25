@@ -868,6 +868,8 @@ _SPENT_ON_ASK = re.compile(r"^\s*how much (?:money )?(?:did|have) (?:i|we) (?:sp
 
 _PLANT_WHEN = re.compile(r"^\s*when\s+(?:should|do|can|would)\s+(?:i|we)\s+(?:start|plant|sow|transplant|put out|set out)"
                          r"\b(?P<rest>.+?)\s*\??\s*$", re.I)
+_PLANT_NOW = re.compile(r"^\s*what (?:should|can|could|do) (?:i|we) (?:plant|sow|grow|start)(?: (?:now|in the spring|this "
+                        r"spring|this month|this week|next|soon|in the garden|this time of year))?\s*\??\s*$", re.I)
 _KIT_ASK = re.compile(r"^\s*(?:what\s+(?:should|would|do i|goes|do you)\s+(?:be\s+|go\s+|i\s+(?:put|pack|have|keep|need)\s+|"
                       r"need\s+|put\s+|pack\s+)?(?:in|into|for)\s+|check\s+|am i missing\s+(?:anything\s+)?(?:from|in|for)?\s*)"
                       r"(?:a|an|my|the|our)?\s*(?:72[- ]?hour|go[- ]?|bug[- ]?out|emergency|disaster|get[- ]home)\s*(?:bag|kit)s?"
@@ -880,9 +882,15 @@ def _garden_kit_reply(context, prompt: str):
     own last frost (core/planting_now.say_crop), and "what should be in a 72 hour bag?" the kit against his records
     (core/ready_kit.say). None otherwise, or for a crop she has no dates for.
     Never "when should I start selling tomatoes?" (a verb after start), and the kit only when what's in it is asked.
-    Spring and string are crops' words, never a verb ("start spring peas")."""
+    Spring and string are crops' words, never a verb ("start spring peas").
+    "What should I plant in the spring?" is what's due to plant from his frost (core/planting_now.say_now,
+    `_PLANT_NOW`)."""
     found = _PLANT_WHEN.match(prompt)
     try:
+        if _PLANT_NOW.match(prompt):  # "what should I plant in the spring?": what's due from his frost (the live sweep)
+            from core import planting_now
+
+            return planting_now.say_now(context)
         if found and re.match(r"\s*(?!spring\b|string\b)\w+ing\b", found.group("rest")) and not re.match(r"\s*(?:my|the|our)\b",
                                                                                      found.group("rest")):
             return None  # "when should I start selling tomatoes?" is no planting date (the eighteenth review)

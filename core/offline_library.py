@@ -846,24 +846,32 @@ def passages(library, question: str, keep: int = 4) -> list[dict]:
             for p in reference_reader.rank(meant if meant is not None else found, keep, len(words))]
 
 
+# Said to the model, never to him: with no pack or nothing matching, she answers from what she knows (the live sweep,
+# 2026-11-25: "how much space do goats need?" was answered "Her offline library has no packs yet", nothing else)
+FROM_WHAT_YOU_KNOW = ("Answer from what you know, as general guidance, in your own words; don't mention the library "
+                      "unless they ask where it comes from.")
+NO_PACKS = "The offline library has no packs yet (they can be fetched on the Knowledge page). " + FROM_WHAT_YOU_KNOW
+
+
 def look_up(library, question: str, keep: int = 4) -> str:
     """Her answer's material from the offline library: the best passages for the question (`passages`), each named
     by pack and article with its ref on a line of its own, framed as outside text and followed by how to talk about
-    them (core/reference_reader.HOW_TO_TALK); or a plain sentence when there are no packs or nothing matches."""
+    them (core/reference_reader.HOW_TO_TALK); or, when there are no packs or nothing matches, a line for the model to
+    answer from what it knows (`FROM_WHAT_YOU_KNOW`), never one said to him as the answer."""
     from core.browser_safety import outside
 
     question = " ".join(str(question or "").split())[:300]
     if not question:
         return "Say what to look up."
     if library is None or not library.list_packs():
-        return "Her offline library has no packs yet: they can be fetched on the Knowledge page."
+        return NO_PACKS
     try:
         found = passages(library, question, keep)
     except Exception as problem:  # noqa: BLE001 - a damaged pack never breaks the turn
         log.warning("The offline library's search failed: %s", problem)
-        return "Her offline library couldn't be searched just now."
+        return "The offline library couldn't be searched just now. " + FROM_WHAT_YOU_KNOW
     if not found:
-        return f"Nothing in her offline library matches \"{question}\"."
+        return f"Nothing in the offline library matches \"{question}\". " + FROM_WHAT_YOU_KNOW
     from core.reference_reader import HOW_TO_TALK
 
     text = "\n\n".join(f"From {p['pack']}, \"{p['article']}\"\nref: {p['ref']}\n{p['text']}" for p in found)

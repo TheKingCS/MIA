@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1832 files, 390,743 lines; 1832 files describe themselves; 21,275 of 21,400 classes and functions are documented.
+1833 files, 390,785 lines; 1833 files describe themselves; 21,277 of 21,402 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-719 files, 203,642 lines; 10,156 of 10,235 classes and functions documented
+719 files, 203,658 lines; 10,156 of 10,235 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1017,7 +1017,7 @@
 
 ## tests/: the test suite: what each part must do
 
-704 files, 105,086 lines; 8,748 of 8,794 classes and functions documented
+705 files, 105,112 lines; 8,750 of 8,796 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1400,6 +1400,7 @@
 - `tests/test_observations_web.py`: Observations' web screen (core/observations_web.py): findings across apps, and the open insights by source, each with its card (kind, the apps it used, where to settle it: DEC-0113).
 - `tests/test_ocr.py`: Reading photos and scans (core/ocr.py) and how the inbox and the textbook tutor use it. Most tests use a stand-in engine so they run anywhere; the ones marked `needs_tesseract` run the real program when it's installed.
 - `tests/test_offline_library.py`: Her offline library (core/offline_library.py, core/pack_index.py; Zac, 2026-11-22): the chosen packs and their sets, Kiwix's catalog read, a download resumed and checked against Kiwix's own hash (a wrong one never installed), one runner at a time, the older version replaced, her own index for packs 
+- `tests/test_offline_library_fallback.py`: With no packs or nothing matching (the live sweep, 2026-11-25), the offline library's look-up tells the model to answer from what it knows, never a sentence about "her library" said to him as the answer. And "what should I plant in the spring?", which the model had answered from nothing, is what's d
 - `tests/test_offline_maps.py`: Vector offline maps (core/offline_maps.py): names, the box around waypoints, a map file's header, the cut.
 - `tests/test_ohms_law.py`: Unit tests for Ohm's law solve() (core/toolbox_calcs.py; modules.toolbox.calculators.ohms_law re-exports it).
 - `tests/test_onboarding.py`: Unit tests for core.onboarding's pure functions — see gui/home_dashboard.py's _inject_first_run_welcome() for how this feeds a brand-new user's very first conversation. Same shape as tests/test_startup_briefing.py.
