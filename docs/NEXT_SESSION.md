@@ -79,7 +79,7 @@ apostrophes, a person without "my", a follow-up with a new emergency answered, 4
 reply's cleaning (2ffafb90: the claim check never replaces a true reply, the repeat filter only back to back and
 never code, <tool_call> tags caught), and the routes that write and the records (710858c3: each acts only on what it
 reads whole; Feb 30 refused; a "null" date heals). 8570 passing. Fable checked those fixes (two regressions: the floor repeating itself, false claims let through) and its findings are fixed too (8575 passing).
-Q-0018 asks Zac whether the six routes that write should stay word patterns. Still open from the sweeps: hook sizes, deer
+Q-0018 asks Zac whether the six routes that write should stay word patterns. Then two courses for his hobbies, checked by Fable and fixed: Fishing basics (a4b09e4e: knots, hook sizes, rigs, where fish hold, release, the rules, keeping a catch; checks from his catch log) and Soldering and the meter (4641a69c, 36455ac1: a Nano's headers, a bridge, the multimeter; never mains). Still open from the sweeps: deer season and field dressing, and 3D printing, if those are his (ask before writing a course). Still open from the sweeps: hook sizes, deer
 season, field dressing, filament and warping, soldering: these want the offline knowledge packs or SearXNG (Zac's call).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
