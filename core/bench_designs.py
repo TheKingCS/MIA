@@ -15,6 +15,9 @@ a circuit that could hurt a part or a board isn't something to guess. Flashing a
 - **Choosing** (`find`): the design his words mean, or None (then the list of what MIA can design).
 - **For his board** (`design`): {id, name, about, parts [{id, spec}], wires, sketch, steps, have, need, check} for a
   board (core/boards.py), with what his Component DB has of each part and the bench's check of the wiring.
+- **Reporting to MIA** (`connected`, `CONNECTED`): on the ESP32, the temperature alarm, the dry-soil alert and the
+  tank gauge can also send their reading to MIA as a sensor (core/sensors.py), at most once a minute, over Wi-Fi;
+  secrets.h holds his Wi-Fi, his PC's address and the sensor's key, typed by him, never by MIA.
 - **By voice** (`reply`, in code before the plans; the tool `design_build`): "build me a motion light": the parts, what
   he has, the wiring as steps, and that it's on My Bench to see.
 His parts matched by whole word (`matching_parts`: "LED" never in "OLED display").
@@ -199,6 +202,59 @@ void loop() {{
 }
 
 
+# Reporting to MIA (core/sensors.py: a sensor he adds on the Sensors page, its key shown once): an ESP32 design's main
+# reading sent to /api/sensors/reading at most once a minute (MIA refuses one sooner than 30 s after the last). The
+# value each design sends, and the line its sketch prints it on (the report goes right after).
+CONNECTED = {"temp_alarm": ("c", "Serial.println(c, 1);"), "soil_alert": ("raw", "Serial.println(raw);"),
+             "tank_level": ("full", "Serial.println(full);")}
+PLACEHOLDER = "type-yours-here"
+SECRETS = f"""// Typed by you: MIA never fills this in, and it stays on your computer.
+#define WIFI_NAME "{PLACEHOLDER}"
+#define WIFI_PASSWORD "{PLACEHOLDER}"
+#define MIA_URL "http://{PLACEHOLDER}:8765/api/sensors/reading"   // your PC's address on your network
+#define SENSOR_KEY "{PLACEHOLDER}"   // the key MIA showed when you added this sensor
+"""
+_REPORT = """#include <WiFi.h>
+#include <HTTPClient.h>
+#include "secrets.h"   // WIFI_NAME, WIFI_PASSWORD, MIA_URL, SENSOR_KEY: typed by you
+
+unsigned long lastReport = 0;
+
+void reportToMia(float value) {   // at most once a minute: MIA refuses a reading sooner than 30 s after the last
+  if (lastReport != 0 && millis() - lastReport < 60000) return;
+  lastReport = millis();
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("MIA WIFI_WAITING");
+    return;
+  }
+  HTTPClient http;
+  http.begin(MIA_URL);
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-Sensor-Key", SENSOR_KEY);
+  int code = http.POST(String("{\\"value\\": ") + String(value, 1) + "}");
+  Serial.print("MIA SENT ");
+  Serial.println(code);   // 200: MIA has it
+  http.end();
+}
+"""
+
+
+def connected(design_id: str, code: str) -> str:
+    """Pure logic. A design's ESP32 sketch that also reports its main reading to MIA (see CONNECTED): Wi-Fi joined in
+    setup, the report after the line that prints the reading. ValueError for a design that has no reading to send."""
+    if design_id not in CONNECTED:
+        raise ValueError("That design has no reading to send to MIA.")
+    value, after = CONNECTED[design_id]
+    if after not in code or "Serial.begin(115200);" not in code:
+        raise ValueError("That design's sketch isn't the ESP32's.")
+    code = code.replace("#include <Arduino.h>\n", "#include <Arduino.h>\n" + _REPORT, 1)
+    code = code.replace("Serial.begin(115200);", "Serial.begin(115200);\n  WiFi.mode(WIFI_STA);\n"
+                                                 "  WiFi.begin(WIFI_NAME, WIFI_PASSWORD);", 1)
+    line = next(x for x in code.splitlines() if after in x)
+    indent = line[:len(line) - len(line.lstrip())]
+    return code.replace(after, f"{after}\n{indent}reportToMia({value});", 1)
+
+
 def find(words: str) -> Optional[str]:
     """Pure logic. The design his words mean (by its own words, or its name), or None."""
     said = " ".join(str(words or "").lower().split())
@@ -228,10 +284,11 @@ def matching_parts(stock: list, spec) -> list:
                                           for w in re.split(r"[\s,/()]+", f"{c.name} {c.category}".lower())]]
 
 
-def design(context, design_id: str, board_id: str = "esp32dev") -> dict:
+def design(context, design_id: str, board_id: str = "esp32dev", report: bool = False) -> dict:
     """A design for his board (see the module's opening): only the parts its wiring for that board uses (the
     Arduino's tank gauge needs no divider), a part used twice counted once with its number. KeyError for one there
-    isn't; ValueError for a board."""
+    isn't; ValueError for a board. `report`: on the ESP32, the sketch that also sends its reading to MIA
+    (`connected`), with the secrets.h he fills in and how to add the sensor; `can_report` says if it can."""
     from core import boards, free_build, part_specs
 
     d = DESIGNS[design_id]
@@ -253,9 +310,18 @@ def design(context, design_id: str, board_id: str = "esp32dev") -> dict:
         (have if on_hand else need).append(name + (f" ({on_hand} on hand)" if on_hand else ""))
     checked = free_build.check(board.id, parts, [tuple(w) for w in wires], specs)
     steps = [f"{_words(a, parts, board)} to {_words(b, parts, board)}" for a, b in wires]
-    return {"id": design_id, "name": d["name"], "about": d["about"], "use": d["use"], "board": board.id,
-            "parts": parts, "wires": wires, "sketch": code, "libs": list(d.get("libs", ())), "steps": steps,
-            "have": have, "need": need, "check": checked}
+    can_report = board.family == "esp32" and design_id in CONNECTED
+    out = {"id": design_id, "name": d["name"], "about": d["about"], "use": d["use"], "board": board.id,
+           "parts": parts, "wires": wires, "sketch": code, "libs": list(d.get("libs", ())), "steps": steps,
+           "have": have, "need": need, "check": checked, "can_report": can_report, "reports": False, "secrets": ""}
+    if report and can_report:
+        out.update(sketch=connected(design_id, code), reports=True, secrets=SECRETS,
+                   report_steps=["In MIA, open Sensors and add a sensor for the series this feeds; copy the key it "
+                                 "shows (it's shown once).",
+                                 "Save secrets.h beside the sketch, and type in your Wi-Fi's name and password, your "
+                                 "PC's address and that key yourself: MIA never fills them in.",
+                                 "Flash it; the serial monitor says MIA SENT 200 each time MIA has a reading."])
+    return out
 
 
 def _words(terminal: str, parts: list, board) -> str:
@@ -272,7 +338,8 @@ def _words(terminal: str, parts: list, board) -> str:
 def _design_tool(context, arguments: dict) -> str:
     """Tool design_build: a design for his goal, said: what it does, what he has and needs, the wiring, and where to
     see it.
-    The board only from board words; the ESP32 otherwise."""
+    The board only from board words; the ESP32 otherwise.
+    "... that reports to MIA" asks for the ESP32's reporting sketch, and how to add the sensor."""
     from core import boards
 
     words = str(arguments.get("goal", "") or "") + " " + str(arguments.get("question", "") or "")
@@ -282,13 +349,19 @@ def _design_tool(context, arguments: dict) -> str:
         return f"I don't have a design for that yet. I can put these on your bench: {names}."
     # the board only from board words ("my nano", "arduino"): a design's own words ("motion light") name no course
     board_id = boards.named_in(words, "arduino") or ("mega" if re.search(r"\barduino\b", words.lower()) else "esp32dev")
-    got = design(context, found, board_id)
+    report = bool(re.search(r"\b(?:reports? to mia|sends? (?:it )?to mia|over wi-?fi|connected|online)\b", words.lower()))
+    got = design(context, found, board_id, report=report)
     said = f"{got['name']} on your {boards.BOARDS[board_id].name}: {got['about']}"
     if got["have"]:
         said += f" You have: {', '.join(got['have'])}."
     if got["need"]:
         said += f" You'd need: {', '.join(got['need'])}."
     said += " Wiring: " + "; ".join(got["steps"]) + ". " + got["use"]
+    if got["reports"]:
+        said += " It reports to MIA: add it as a sensor on the Sensors page, and type your Wi-Fi, your PC's address and " \
+                "its key into secrets.h yourself."
+    elif report and not got["can_report"]:
+        said += " Reporting to MIA needs Wi-Fi: build it on the ESP32 for that."
     return said + " It's on My Bench to see, check and copy the sketch from."
 
 

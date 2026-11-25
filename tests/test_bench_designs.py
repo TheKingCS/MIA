@@ -6,6 +6,7 @@ tests.test_bench_designs
 Mega and the Nano; a design lists only the parts its wiring for that board uses (the Arduino's tank gauge has no
 divider), with what his Component DB has; its sketch is filled in for the board; his words find it, and a goal with
 no design is said plainly; "build me a shed" isn't a circuit.
+And an ESP32 design reporting to MIA, its secrets his to type.
 """
 
 from types import SimpleNamespace
@@ -57,3 +58,17 @@ def test_a_design_asked_for_is_answered_in_code_and_a_shed_is_left_to_the_planne
     assert said.startswith("A greenhouse temperature alarm on your ESP32")
     assert bd.reply(_context(), None, "build me a shed") is None
     assert bd.reply(_context(), None, "what's the water level in the tank?") is None
+
+
+def test_an_esp32_design_can_report_to_mia_and_its_secrets_are_his_to_type():
+    """The tank gauge reporting: Wi-Fi joined in setup, its percent full sent with the sensor's key at most once a
+    minute, the C string's quotes escaped, secrets.h only placeholders; on a Nano: not offered; by voice, "that reports
+    to MIA" asks for it."""
+    got = bd.design(_context(), "tank_level", "esp32dev", report=True)
+    sketch = got["sketch"]
+    assert got["reports"] and "WiFi.begin(WIFI_NAME, WIFI_PASSWORD);" in sketch and "reportToMia(full);" in sketch
+    assert 'http.POST(String("{\\"value\\": ")' in sketch and "X-Sensor-Key" in sketch and "60000" in sketch
+    assert "type-yours-here" in got["secrets"] and "8765/api/sensors/reading" in got["secrets"]
+    assert not bd.design(_context(), "tank_level", "nano", report=True)["reports"]
+    assert not bd.design(_context(), "motion_light", "esp32dev", report=True)["reports"]
+    assert "It reports to MIA" in bd.reply(_context(), None, "build me a tank level gauge that reports to mia")

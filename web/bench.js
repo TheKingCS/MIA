@@ -73,12 +73,14 @@
       "aria-label": "What to build", maxlength: "200" });
     const out = el("div", { class: "crs-ask-answer", "aria-live": "polite" });
     const go = el("button", { type: "submit", class: "btn btn-amber" }, "Design It");
+    const reportBox = el("input", { type: "checkbox" });
+    const reportLabel = el("label", { class: "sim-input" }, reportBox, el("span", {}, "Report its readings to MIA (ESP32, over Wi-Fi)"));
     const form = el("form", { class: "crs-ask", onsubmit: async (e) => {
       e.preventDefault();
       if (!input.value.trim()) return;
       go.disabled = true;
       try {
-        const got = await MIA.benchDesign(input.value.trim(), data.board.id);
+        const got = await MIA.benchDesign(input.value.trim(), data.board.id, reportBox.checked);
         if (!got.found) { fill(out, el("p", {}, "I don't have a design for that yet. I can do: " + got.designs.join(", ").toLowerCase() + ".")); return; }
         fill(out, el("h3", {}, got.name), el("p", {}, got.about),
           got.have.length ? el("p", { class: "dim" }, "You have: " + got.have.join(", ") + ".") : null,
@@ -94,11 +96,17 @@
               MIAShell.refresh();
             } }, "Put It On The Bench"),
             MIAShell.copyButton(got.sketch, "Copy The Sketch", "btn btn-ghost btn-small")),
-          el("pre", { class: "crs-code" }, got.sketch));
+          el("pre", { class: "crs-code" }, got.sketch),
+          got.reports ? el("div", {}, el("h3", {}, "Reporting to MIA"),
+            el("ol", { class: "crs-list" }, got.report_steps.map((s) => el("li", {}, s))),
+            el("div", { class: "row-buttons" }, MIAShell.copyButton(got.secrets, "Copy secrets.h", "btn btn-ghost btn-small"),
+              el("a", { class: "btn btn-ghost btn-small", href: "sensors.html" }, "Open Sensors")),
+            el("pre", { class: "crs-code" }, got.secrets))
+            : (reportBox.checked && !got.can_report ? el("p", { class: "dim" }, "Reporting to MIA needs Wi-Fi: choose the ESP32 board for that.") : null));
       } catch (err) {
         fill(out, el("p", {}, err.message));
       } finally { go.disabled = false; }
-    } }, el("div", { class: "crs-ask-row" }, input, go), out);
+    } }, el("div", { class: "crs-ask-row" }, input, go), reportLabel, out);
     return section("Build me a…", el("p", { class: "dim" }, "Say what you want to make: MIA designs it for your board " +
       "from her tested designs, with what you have, and puts it on the bench to check and change."), form);
   }

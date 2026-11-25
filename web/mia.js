@@ -638,7 +638,7 @@
       : call("GET", "/api/bench?board=" + encodeURIComponent(board || "")),
     benchCheck: (board, parts, wires) => demo ? demoOnly() : call("POST", "/api/bench/check", { board, parts, wires }),
     benchDraft: (part) => demo ? demoOnly() : call("POST", "/api/bench/draft", { part }),
-    benchDesign: (goal, board) => demo ? demoOnly() : call("POST", "/api/bench/design", { goal, board }),
+    benchDesign: (goal, board, report) => demo ? demoOnly() : call("POST", "/api/bench/design", { goal, board, report: !!report }),
     courseAsk: (course, lesson, question, drill, n) => demo ? demoOnly()
       : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/ask", { lesson, question, drill: drill || "", n: n || 0 }),
     courseSim: (course, lesson, wires, inputs, seconds, board) => demo ? demoOnly()

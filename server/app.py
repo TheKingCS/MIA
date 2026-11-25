@@ -222,9 +222,11 @@ class BenchCheckRequest(BaseModel):
 
 
 class BenchDesignRequest(BaseModel):
-    """"Build me a ..." on My Bench (POST /api/bench/design): his goal in words, and his board."""
+    """"Build me a ..." on My Bench (POST /api/bench/design): his goal in words, and his board.
+    `report`: on the ESP32, the sketch that also sends its reading to MIA."""
     goal: str
     board: str = "esp32dev"
+    report: bool = False  # on the ESP32: the sketch that also reports its reading to MIA
 
 
 class BenchDraftRequest(BaseModel):
@@ -672,7 +674,8 @@ def create_app(context: AppContext) -> FastAPI:
     The labs' routes take Build With Arduino too, with the board he chose (`board`).
     My Bench, the free build: GET /api/bench, POST /api/bench/check and /api/bench/draft (core/free_build.py,
     core/part_specs.py).
-    "Build me a ..." on My Bench is POST /api/bench/design (core/bench_designs.py)."""
+    "Build me a ..." on My Bench is POST /api/bench/design (core/bench_designs.py).
+    A bench design can report its reading to MIA as a sensor (`report`)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3347,7 +3350,8 @@ def create_app(context: AppContext) -> FastAPI:
         if found is None:
             return {"found": False, "designs": [d["name"] for d in bench_designs.DESIGNS.values()]}
         try:
-            return dict(bench_designs.design(view_for(context, profile_id), found, request.board), found=True)
+            return dict(bench_designs.design(view_for(context, profile_id), found, request.board, request.report),
+                        found=True)
         except ValueError as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
 
