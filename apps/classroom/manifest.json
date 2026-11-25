@@ -69,7 +69,8 @@
       "start_drill",
       "import_part_spec",
       "part_specs",
-      "design_build"
+      "design_build",
+      "bench_builds"
     ],
     "actions": [
       "course.add",
@@ -94,7 +95,10 @@
       "esplab.flash",
       "path.start",
       "partspec.add",
-      "partspec.remove"
+      "partspec.remove",
+      "benchbuild.save",
+      "benchbuild.remove",
+      "benchbuild.built"
     ],
     "tiers": {
       "add_course": "act_within_grant",
@@ -142,6 +146,10 @@
       "import_part_spec": "act_with_approval",
       "part_specs": "observe",
       "design_build": "observe",
+      "bench_builds": "observe",
+      "benchbuild.save": "act_within_grant",
+      "benchbuild.remove": "act_within_grant",
+      "benchbuild.built": "act_with_approval",
       "partspec.add": "act_with_approval",
       "partspec.remove": "act_with_approval",
       "esplab.flash": "act_with_approval",

@@ -154,6 +154,7 @@ SEALED = frozenset({
     "business_use.json",
     "component_usage_log.json",
     "components.json",
+    "bench_builds.json",  # his builds on My Bench (core/bench_builds.py)
     "insights.json",
     "recommendations.json",
     "inventory_items.json",

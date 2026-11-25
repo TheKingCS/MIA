@@ -368,10 +368,13 @@ def _list_tool(context, arguments: dict) -> str:
 
 
 def register_part_spec_tools(registry) -> None:
-    """Registers import_part_spec and part_specs, and the bench's designs (core/bench_designs.design_build)."""
+    """Registers import_part_spec and part_specs, and the bench's designs (core/bench_designs.design_build) and
+    saved builds (core/bench_builds.bench_builds)."""
+    from core.bench_builds import register_build_tools
     from core.bench_designs import register_design_tools
 
     register_design_tools(registry)
+    register_build_tools(registry)
     _register_specs(registry)
 
 

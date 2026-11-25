@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1773 files, 383,138 lines; 1773 files describe themselves; 20,908 of 21,038 classes and functions are documented.
+1775 files, 383,492 lines; 1775 files describe themselves; 20,934 of 21,064 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-708 files, 199,201 lines; 10,024 of 10,110 classes and functions documented
+709 files, 199,447 lines; 10,043 of 10,129 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -110,6 +110,7 @@
 - `core/avatar_manager.py`: Companion-avatar camera source for the Home Dashboard's Companion Avatar widget (gui/home_dashboard.py, gui/widgets/avatar_camera_widget.py). Built for VMagicMirror (https://malaybaku.github.io/VMagicMirror/), a separately-running, Windows-only Unity/VRM avatar app the user has been running alongsid
 - `core/background_jobs.py`: Everything MIA does on a schedule, with no window needed (the MIA Runtime, DEC-0155; steps 1 and 3 of `docs/mia_os/preliminary/MIA_OS_INITIAL_IMPLEMENTATION_PLAN.md`).
 - `core/backup_manager.py`: Export/import MIA's config + data directory as a single backup file, per docs/ROADMAP.md milestone 2.7. Optionally passphrase-encrypted via core/secrets_manager.py.
+- `core/bench_builds.py`: His builds on My Bench, kept (brainstorm round 13, idea 5; 2026-11-25): a free build or one of MIA's designs saved by name with its board, parts, wires and sketch, opened on the bench again later, and marked built, which takes its parts out of his Component DB's counts (core/component_manager.py). K
 - `core/bench_designs.py`: "Build me a ..." on My Bench (brainstorm round 13, idea 2; Zac, 2026-11-25): he names a goal, MIA puts a design for it on his board: the parts (checked against his Component DB: what he has and what he'd need), the wiring for his board, and a sketch; the bench's checker (core/free_build.py) judges t
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week, 
 - `core/best_customers.py`: Who his best customers are, and who's gone quiet (Jarvis brainstorm round 7, 2026-11-24; his businesses): "who are my best customers?", "which customers haven't ordered in a while?". The customers, their orders and the ledger read together.
@@ -1006,7 +1007,7 @@
 
 ## tests/: the test suite: what each part must do
 
-656 files, 101,984 lines; 8,513 of 8,557 classes and functions documented
+657 files, 102,059 lines; 8,520 of 8,564 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1057,6 +1058,7 @@
 - `tests/test_avatar_manager.py`: Unit tests for core.avatar_manager. list_devices()/is_available() are tested against a monkeypatched QMediaDevices.videoInputs() (same "mock the OS-level query, test our own mapping/decision logic" reasoning as test_power_manager.py mocking psutil and test_volume_manager.py mocking subprocess.run) —
 - `tests/test_background_jobs.py`: MIA's scheduled jobs without the window (core/background_jobs.py, DEC-0155): the ten jobs and 43 daily checks are pinned so none is lost on the way to MIA OS; they run with no Qt; and the desktop app runs the very same ones.
 - `tests/test_backup_manager.py`: Unit tests for core.backup_manager. Isolates _CONFIG_FILE/_DATA_DIR into a tmp_path scratch area (same monkeypatch pattern as test_config_manager.py) so these tests never touch the real config/config.json or data/ directory. Also a restore that waits for the next start (schedule_restore, then apply_
+- `tests/test_bench_builds.py`: His builds on My Bench (core/bench_builds.py): saved by name (the same name on the same board a new version), kept sealed through atomic writes, listed newest first and by voice; Mark It Built says each Component DB count it changes and the parts he has no record of, then takes them; deleting one.
 - `tests/test_bench_designs.py`: "Build me a ..." on My Bench (core/bench_designs.py): every design passes the bench's own check on the ESP32, the Mega and the Nano; a design lists only the parts its wiring for that board uses (the Arduino's tank gauge has no divider), with what his Component DB has; its sketch is filled in for the
 - `tests/test_benchmarks.py`: The weekly benchmarks (build plan step 5, core/benchmarks.py): graded by code against the run before, kept as grades only (never an answer), read by the answers.* loops.
 - `tests/test_best_customers.py`: Who his best customers are (core/best_customers.py): ranked by what's been paid on their orders (cancelled ones left out), each one's share, the regulars with no order in six months named as gone quiet, a customer with no orders not ranked, nobody with an order still open called quiet, a payment two
@@ -1667,7 +1669,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-123 files, 23,195 lines
+123 files, 23,228 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

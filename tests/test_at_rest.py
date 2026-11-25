@@ -253,6 +253,7 @@ SEALED_STORES = [
     ("core.business_use", "BusinessUseManager", "business_use.json"),
     ("core.component_manager", "ComponentManager", "component_usage_log.json"),
     ("core.component_manager", "ComponentManager", "components.json"),
+    ("core.bench_builds", "BuildBook", "bench_builds.json"),
     ("core.insight_manager", "InsightManager", "insights.json"),
     ("core.insight_manager", "InsightManager", "recommendations.json"),
     ("core.inventory_manager", "InventoryManager", "inventory_items.json"),

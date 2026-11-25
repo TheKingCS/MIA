@@ -492,6 +492,10 @@
   "action:partspec": {
    "status": "none",
    "why": "a part's spec he approved for the free build (core/part_specs.py); each is checked in code when drafted and confirmed by him against its datasheet, and a wrong one shows at once as a wrong check on his bench, fixed by removing it"
+  },
+  "action:benchbuild": {
+   "status": "none",
+   "why": "his own builds saved, opened and marked built from My Bench (core/bench_builds.py): each is his press, undoable, and marking one built changes his Component DB only on his approval with each count shown"
   }
  }
 }

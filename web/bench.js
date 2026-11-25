@@ -19,6 +19,7 @@
     return null;
   };
   let boardId = store("mia.bench.board") || "esp32dev";
+  let lastSketch = "";  // the sketch of the design or saved build last put on the bench, kept with a save
   const partsKey = () => "mia.bench.parts." + boardId;
   const wiresKey = () => "bench." + boardId;  // web/labsim.js keeps the wires as mia.labsim.<this>
 
@@ -89,6 +90,7 @@
             el("button", { type: "button", class: "btn btn-amber", onclick: () => {
               store(partsKey(), got.parts);
               store("mia.labsim." + wiresKey(), got.wires);
+              lastSketch = got.sketch;
               MIAShell.refresh();
             } }, "Put It On The Bench"),
             MIAShell.copyButton(got.sketch, "Copy The Sketch", "btn btn-ghost btn-small")),
@@ -99,6 +101,36 @@
     } }, el("div", { class: "crs-ask-row" }, input, go), out);
     return section("Build me a…", el("p", { class: "dim" }, "Say what you want to make: MIA designs it for your board " +
       "from her tested designs, with what you have, and puts it on the bench to check and change."), form);
+  }
+
+  // His builds (core/bench_builds.py): Save This Build keeps what's on the board by name; each saved one can be opened
+  // here again, marked built (his Component DB's counts go down: approved) or deleted.
+  function builds(data, parts) {
+    const name = el("input", { type: "text", class: "crs-ask-input", placeholder: "A name, like freezer alarm v1",
+      "aria-label": "The build's name", maxlength: "80" });
+    const save = el("form", { class: "crs-ask", onsubmit: (e) => {
+      e.preventDefault();
+      if (!name.value.trim()) { name.focus(); return; }
+      MIAShell.act({ kind: "benchbuild.save", params: { name: name.value.trim(), board: data.board.id, parts,
+        wires: store("mia.labsim." + wiresKey()) || [], sketch: lastSketch } });
+    } }, el("div", { class: "crs-ask-row" }, name, el("button", { type: "submit", class: "btn btn-amber",
+      disabled: parts.length ? null : true }, "Save This Build")));
+    const list = (data.builds || []).length ? el("ul", { class: "crs-list" }, data.builds.map((b) => el("li", {},
+      el("strong", {}, b.name), " (" + b.board + ", " + b.parts.length + " parts" + (b.built ? ", built " + b.built.slice(0, 10) : "") + ") ",
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: () => {
+        boardId = b.board;
+        store("mia.bench.board", boardId);
+        store(partsKey(), b.parts);
+        store("mia.labsim." + wiresKey(), b.wires);
+        lastSketch = b.sketch || "";
+        MIAShell.refresh();
+      } }, "Open"),
+      b.built ? null : el("button", { type: "button", class: "btn btn-ghost btn-small",
+        onclick: () => MIAShell.act({ kind: "benchbuild.built", params: { build_id: b.id } }) }, "Mark It Built"),
+      el("button", { type: "button", class: "btn btn-ghost btn-small",
+        onclick: () => MIAShell.act({ kind: "benchbuild.remove", params: { build_id: b.id } }) }, "Delete")))) :
+      el("p", { class: "dim" }, "Nothing saved yet.");
+    return section("Your builds", save, list);
   }
 
   MIAShell.start(async () => {
@@ -141,6 +173,7 @@
         el("div", { class: "row-buttons" }, adding, add)),
       designer(data),
       board,
+      builds(data, parts),
       lookup(data),
       section("What you have", el("p", { class: "dim" }, "From your Component DB (the Workshop)."), mine));
   }, { refreshOnChange: true });

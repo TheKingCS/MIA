@@ -187,8 +187,9 @@ def _judge(board, placed: dict, wires: list) -> dict:
 def page(context, board_id: str = "") -> dict:
     """The bench page's data (web/bench.html): the boards to choose from and the one chosen with its pins drawn, every
     part spec MIA can wire (built in and his), his own parts from the Component DB (name, value, how many), and
-    whether a part can be looked up online now (core/online_lookup.allowed) and why not."""
-    from core import boards, part_specs
+    whether a part can be looked up online now (core/online_lookup.allowed) and why not; and his saved builds
+    (core/bench_builds.py), newest first."""
+    from core import bench_builds, boards, part_specs
     from core.online_lookup import allowed
 
     board = boards.BOARDS.get(board_id) or boards.ESP32
@@ -202,7 +203,9 @@ def page(context, board_id: str = "") -> dict:
                       "left": side(board.left), "right": side(board.right)},
             "specs": [dict(s.to_dict(), builtin=s.id in part_specs.BUILTIN)
                       for s in part_specs.book(context).all().values()],
-            "components": mine, "lookup": {"allowed": ok, "why": why}}
+            "components": mine, "lookup": {"allowed": ok, "why": why},
+            "builds": [{k: b.get(k) for k in ("id", "name", "board", "parts", "wires", "sketch", "built", "updated")}
+                       for b in bench_builds.book(context).all()]}
 
 
 def _term_words(terminal: str, placed: dict, board) -> str:
