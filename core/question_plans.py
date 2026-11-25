@@ -1470,12 +1470,22 @@ NOT_FOR = {
     # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"; nor a question about
     # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
     "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
+                                  r"hens?|chickens?|coop|laying|"
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
                                   r"how(?:'s| is) (?:the|my) \w+ (?:doing|going)|needs? doing|needs? done|readings?|"
                                   r"temperature|humidity)\b", re.I),
     "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?|weekend)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to)\b", re.I),
+    # questions with a tool built for them, which these plans took by meaning (live check through
+    # run_assistant_turn, 2026-11-24): spending against his usual is spending_vs_usual, what to make next is
+    # what_to_make_next, taxes to set aside are tax_set_aside, who owes him is who_owes_me, the coop's light is the
+    # hens' (why_hens_not_laying)
+    "time": re.compile(r"\b(spend\w*|spent|money|eating out|groceries|bills?)\b", re.I),
+    "progress": re.compile(r"\b(make next|for the shop|sell\w*|products?|running low|in stock)\b", re.I),
+    "next dollar": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|owe in tax(es)?|taxes on|tax bracket|irs|"
+                              r"self.?employment|estimated tax|quarterly tax)\b", re.I),
+    "debts": re.compile(r"\b(owes? me|owing me)\b", re.I),
 }
 
 

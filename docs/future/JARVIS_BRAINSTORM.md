@@ -354,6 +354,12 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Plans that took a tool's question** (no decision): *fixed 2026-11-24.* Through the whole turn, "am I spending more
+  than usual?" went to the time plan, "what should I make next?" to progress, "how much should I set aside for taxes?"
+  to the next dollar (its answer began "Dungeon."), "should I add a light in the coop?" to the project picture: each
+  plan's NOT_FOR words now give those to their tools (a tax refund stays the next dollar's). And a tool's answer in
+  whole sentences from his records is said as it is (core/tool_loop.SAID_AS_IS): re-worded, an empty songbook had
+  become "I learned Yesterday" and spending "check the Money app".
 - **Real conversations, checked through the whole turn** (no decision): *fixed 2026-11-24.* Run through
   run_assistant_turn (question plans and code answers first, as on the phone), three things the tool-only checks
   missed: the last turn's follow-up words reached a later code answer ("what's the weather Saturday?" got the canning

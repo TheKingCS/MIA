@@ -21,8 +21,9 @@ up*:
    library result is its first passage and where it's from. A question only
    the library's look-up was offered for, answered without it, is read from
    the library first (`_read_first`). A safety lookup whose answer is worded in code (`SAID_AS_IS`: canning
-   times, a meat cure, bleach for water, heat and wind chill, solar sizing, taxes, the outage clock) is said as it
-   is, never re-worded.
+   times, a meat cure, bleach for water, heat and wind chill, solar sizing, taxes, the outage clock), or one of his
+   records' answers in whole sentences (spending against his usual, what to make next, who owes him, his songbook,
+   what's biting, the hens, the year's harvest, a high bill, when to fish), is said as it is, never re-worded.
 
 While a round of lookups runs and the model reads what they found, her orb says what it's for, from the tools'
 domains (`DOING`, `round_doing`, through core/orb_state.doing: "Thinking · Reading your library"), so the wait is never
@@ -64,8 +65,12 @@ LIBRARY_TOOLS = {"look_up_offline": 7000, "read_reference": 7000}
 # Lookups whose answer is safety numbers worked out and worded in code: said as they are, never re-worded by the
 # model, which squeezed "the wind chill gets down to about 18°F around 7 am..." into "18°F, 7 am, 3 pm." and could
 # drop a pressure, a nitrite level or a warning (live check through run_assistant_turn, 2026-11-24).
+# And his records' answers, already whole sentences: re-worded, "am I spending more than usual?" became "check the
+# Money app", his songbook "I learned Yesterday", and once "$X ... $Y" (the same live check).
 SAID_AS_IS = frozenset({"canning_time", "meat_cure", "bleach_for_water", "work_outside_wind_chill_heat_index",
-                        "size_solar", "tax_set_aside", "power_outage"})
+                        "size_solar", "tax_set_aside", "power_outage",
+                        "spending_vs_usual", "what_to_make_next", "who_owes_me", "songs_i_can_play", "whats_biting",
+                        "why_hens_not_laying", "harvest_this_year", "why_bill_high", "best_time_to_fish"})
 
 # What her orb says while a lookup runs (brainstorm 1.1), by the tool's domain; the rest say "Looking it up".
 DOING = {"library": "Reading your library", "budget": "Checking your money", "debts": "Checking your money",

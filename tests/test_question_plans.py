@@ -7,7 +7,9 @@ number never reaches a sheet; a wet weekend day named for indoor work; and
 quitting by a date he names worked out against the freedom fund; the homestead's
 morning sheet; and the review's
 cases (quoted names kept, estimate-only sheets worded, dates read as said, habits
-and a winter gone kept out, the weekend winning a weekend for winter work)."""
+and a winter gone kept out, the weekend winning a weekend for winter work).
+A question a tool is built for (spending against his usual, what to make next, taxes to set aside, the coop's light,
+who owes him) is never these plans'."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -273,3 +275,17 @@ def test_hows_the_homestead_gathers_every_part_and_says_the_greenhouse_unwatched
     assert {"garden_this_week", "orchard_this_month", "water_budget", "power_picture"} <= set(sheet.looked_up)
     messages, _ = qp.request(life, None, "How's the homestead?", date(2026, 11, 24))
     assert messages[0]["content"].rstrip().endswith(qp.HOW["homestead"])
+
+
+
+@pytest.mark.parametrize("said,plan", [("Am I spending more than usual?", "time"),
+                                       ("What should I make next for the shop?", "progress"),
+                                       ("How much should I set aside for taxes?", "next dollar"),
+                                       ("Should I add a light in the coop?", "project picture"),
+                                       ("Who owes me money?", "debts")])
+def test_a_question_a_tool_is_built_for_isnt_these_plans(said, plan):
+    """Each went to the plan by meaning in the live check; its words now give it to its tool (a tax refund stays the
+    next dollar's)."""
+    assert qp._not_for(plan, said), said
+
+    assert not qp._not_for("next dollar", "where should my tax refund go?")
