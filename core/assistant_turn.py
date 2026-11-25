@@ -127,6 +127,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
+    A monthly reminder (`_monthly_reminder_reply`) too.
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -178,6 +179,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _reminder_reply(context, prompt)  # "remind me to check the oil Saturday", as in a turn
     if walked is None:
         walked = _weekly_reminder_reply(context, prompt)  # "remind me every Monday to ...", as in a turn
+    if walked is None:
+        walked = _monthly_reminder_reply(context, prompt)  # "remind me to change the filter every month", as in a turn
     if walked is None:
         walked = _daily_reminder_reply(context, prompt)  # "remind me every morning to ...", as in a turn
     if walked is None:
@@ -434,6 +437,44 @@ def _daily_reminder_reply(context, prompt: str):
         return context.assistant_actions.execute(context, "add_calendar_event", args)
     except Exception:
         log.exception("Couldn't put the daily reminder on the calendar")
+        return None
+
+
+_REMIND_MONTHLY = re.compile(
+    r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+|would you\s+)?(?:"
+    r"remind me (?:to\s+)?(?P<what>.+?)\s+(?:every month|each month|monthly|once a month)|"
+    r"(?:every|each) month,?\s+remind me to\s+(?P<what2>.+?))"
+    r"(?:\s+on the (?P<day>\d{1,2})(?:st|nd|rd|th)?)?\s*[.!]?\s*$", re.I)
+
+
+def _monthly_reminder_reply(context, prompt: str):
+    """"Remind me to change the furnace filter every month", in code (the live sweep, 2026-11-25: the model called
+    add_maintenance_task for a furnace he hasn't listed, and it was refused): a monthly event on his calendar, from
+    today, or from the next day of the month he names ("on the 1st"), through add_calendar_event (undoable). None
+    otherwise, and None for a bill (his bill tools remind him of those)."""
+    from datetime import date as _date
+
+    found = _REMIND_MONTHLY.match(prompt.replace("’", "'"))
+    if not found:
+        return None
+    what = (found.group("what") or found.group("what2") or "").strip().rstrip(",")
+    if not what or "?" in what or re.search(r"\b(?:pay|bills?|rent|mortgage|loan)\b", what, re.I) \
+            or re.search(r"\b(?:every|each)\b", what, re.I):
+        return None
+    today = _date.today()
+    start = today
+    if found.group("day"):
+        day = int(found.group("day"))
+        if not 1 <= day <= 28:
+            return None  # the 29th to the 31st aren't in every month: the model asks
+        start = today.replace(day=day)
+        if start < today:
+            start = (start.replace(month=start.month % 12 + 1, year=start.year + (start.month == 12)))
+    args = {"title": what[:1].upper() + what[1:], "date": start.isoformat(), "recurrence": "monthly"}
+    try:
+        return context.assistant_actions.execute(context, "add_calendar_event", args)
+    except Exception:
+        log.exception("Couldn't put the monthly reminder on the calendar")
         return None
 
 
@@ -1183,7 +1224,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     What he spent on a category this month is said from his expenses (`_spent_on_reply`).
     When to start a crop and what's in a 72-hour kit are said from his records (`_garden_kit_reply`).
     Hours on a project are logged and read back in code (`_project_time_reply`); an outlet's voltage is said in fixed
-    safe words (`_mains_reply`). A turn the model answers ends a question plan's thread
+    safe words (`_mains_reply`); a monthly reminder goes on his calendar (`_monthly_reminder_reply`). A turn the
+    model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
@@ -1308,6 +1350,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _reminder_reply(context, prompt)  # "remind me to X on Saturday": on his calendar
         if walked is None:
             walked = _weekly_reminder_reply(context, prompt)  # "every Monday": a weekly event on his calendar
+        if walked is None:
+            walked = _monthly_reminder_reply(context, prompt)  # "every month": a monthly event on his calendar
         if walked is None:
             walked = _daily_reminder_reply(context, prompt)  # "every morning": a daily event on his calendar
         if walked is None:

@@ -69,7 +69,8 @@ AUTOMATE = ("Here's what I can take off your plate: reminders that repeat (\"rem
             "water filter\" goes on your calendar), household routines I count as you do them, a skill you teach me by "
             "showing me once (\"watch me: the Friday reset\", then \"that's it\"; after it runs cleanly with you, I can "
             "run it myself), a workflow you publish, and sensors on your bench builds that report to me. The daily "
-            "checks run on their own and only speak up when something needs you.")
+            "checks run on their own and only speak up when something needs you. Bills you've added are watched every "
+            "day already: I tell you before one's due and when one's overdue.")
 
 
 def _automate(context, arguments: dict) -> str:
@@ -91,7 +92,8 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     list_grants and take_back_grant (domain app_registry, the Apps app's). There is no tool that gives a grant
     (core/grant_actions.py says why). describe_app's "depends on" is the app's ("what does the app depend on"), never
     a bare "what depends on", which is the links tool's.
-    And what_can_you_automate."""
+    And what_can_you_automate.
+    what_can_you_automate is reached by "automate my bills" too."""
     registry.register(AssistantAction(
         name="list_grants", domain="app_registry",
         description=("What MIA may do on her own without asking: the skills she has learned and the workflows the "
@@ -112,7 +114,8 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
         handler=_automate, prompt_arg="question",
         trigger_phrases=("what can you automate", "what could you automate", "what can be automated",
                          "what can i automate", "what do you do automatically", "automate for me",
-                         "things you can automate", "help me automate"),
+                         "things you can automate", "help me automate", "automate my bill", "automate my bills",
+                         "automate bill reminders", "automate my reminders"),
         subjects=("automate", "automation"),
     ))
     registry.register(AssistantAction(

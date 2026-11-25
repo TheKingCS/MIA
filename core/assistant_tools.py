@@ -3968,16 +3968,28 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_bill(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_bill`: adds a bill with an amount, due date, category and recurrence. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_bill`: adds a bill with an amount, due date, category and recurrence. Returns the reply in words (a missing or unknown name says so, nothing changes).
+        Never added with no amount, a generic name ("bill reminders") or a day that doesn't read."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add a bill."
         amount = arguments.get("amount")
-        if amount is None:
-            return "I need an amount to add a bill."
+        try:
+            amount = float(amount)
+        except (TypeError, ValueError):
+            amount = 0.0
+        if amount <= 0:  # the live sweep, 2026-11-25: "Can you automate my bill reminders?" had added a $0.00 bill
+            return "I need the bill's amount to add it."
+        import re
+
+        if re.fullmatch(r"(?:the\s+|my\s+)?(?:bills?|bill reminders?|reminders?|payments?)", name, re.I):
+            return "Which bill? Say its name, amount and due day, like \"add my electric bill, $120, due the 15th\"."
         due_date = str(arguments.get("due_date", "") or "").strip()
+        from core.budget_manager import read_date
+
+        due_date = read_date(due_date) or ""
         if not due_date:
-            return "I need a due date (YYYY-MM-DD) to add a bill."
+            return "When is it due? Say a date, like 2026-12-15 or \"December 15\"."
         category = str(arguments.get("category", "") or "Utilities").strip()
         recurrence = str(arguments.get("recurrence", "") or "").strip().lower() or None
         bill = context.budget.add_bill(
