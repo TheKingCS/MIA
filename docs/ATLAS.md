@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1801 files, 386,866 lines; 1801 files describe themselves; 21,084 of 21,210 classes and functions are documented.
+1802 files, 386,907 lines; 1802 files describe themselves; 21,086 of 21,212 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,599 lines; 10,104 of 10,185 classes and functions documented
+714 files, 201,597 lines; 10,104 of 10,185 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-678 files, 103,252 lines; 8,609 of 8,654 classes and functions documented
+679 files, 103,295 lines; 8,611 of 8,656 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1206,6 +1206,7 @@
 - `tests/test_firewood.py`: Firewood for the winter (core/firewood.py): cords read from his inventory (full cords, face cords and ricks at about a third), against his own winter figure (set with set_preparedness), what's short said; without his figure the usual range said as only that and his number asked for; a pile with no m
 - `tests/test_first_aid_drills.py`: The first-aid drills (core/drills.py: a deep cut, choking at dinner), written in the emergency floor's words (core/first_aid_floor.py) so a drill never teaches what the floor wouldn't say; asking for one never trips the floor, and anything that says it's real still does, even with "practice" or "dri
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
+- `tests/test_first_aid_floor_never_misses.py`: Every real emergency phrasing the reviews found (2026-11-25, the sixth to ninth) reaches the emergency floor (core/first_aid_floor.detect). Narrowing its words to quiet a false alarm had twice silenced real ones ("grandma fell off the horse and isn't breathing", "dad has collapsed", "she choked at s
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
 - `tests/test_fishing_times.py`: "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a new or full moon, the week's best days, his own log's best time, a
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
@@ -1492,7 +1493,7 @@
 - `tests/test_review_2026_11_22.py`: Fable's review of 2026-11-22 (three independent reviewers over WP-01 to FW-12): each fixed finding held by a test of the behaviour it described.
 - `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
 - `tests/test_review_7.py`: The seventh review's findings (2026-11-25), each kept fixed: the claim check leaves alone a sentence about anything but his records, a story, and a lookup's "your alarm is set"; a date his words state is never replaced by a weekday, a weekday after "on" or "for" beats one in a title, "next Friday" i *(1 undocumented)*
-- `tests/test_review_8.py`: The eighth review's findings (2026-11-25), each kept fixed: a family member named bare is an emergency only with nothing after the verb ("grandma collapsed", never "mom passed out the cookies"), "he" is never found inside "the", and paint, a movie or a list never bleed; "create a task" and "change m
+- `tests/test_review_8.py`: The eighth review's findings (2026-11-25), each kept fixed but the floor's false alarms ("mom passed out the cookies"), which are kept since quieting them silenced real emergencies (the ninth review); "create a task" and "change my alarm" are changes asked for; "Tuesday's meeting" is never the remin
 - `tests/test_review_bench_3.py`: The third review (2026-11-25), each finding as its failing input: "build me a ..." only as a request at the start, never a reminder, a note, a time or a stand; her designs only proper names, asked about exactly, and a plan said only when its decision calls it one; parts matched by whole word, severa
 - `tests/test_review_labs_2.py`: The second review of the labs (2026-11-25), each finding as its failing input: the Mega's I2C on its own header, never A4/A5; power backwards a stop in the free build and the course simulator; a part's input held to its range and an output tied to a rail warned; a lab named as one deciding the cours
 - `tests/test_review_labs_5.py`: The fifth review's findings (2026-11-25), each kept fixed: a photo of an ordinary thing never gets a part's spec and the first part named wins; a check's question uses the same words its course was looked for by, and words a started course uses for itself stay its; a lab's why never takes a request 

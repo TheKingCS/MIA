@@ -28,6 +28,11 @@ already gives it.
 **After it** (`floor_kind_of`): his next words in the same emergency go on to the model, which reads the conversation
 with the floor's reply in it; the fixed words are said again only for a different emergency.
 
+**Missing one is worse than a false alarm** (the ninth review, 2026-11-25): narrowing these words to quiet a false
+alarm ("mom passed out the cookies") had silenced real ones ("grandma fell off the horse and isn't breathing", "dad
+has collapsed", "he cut his finger off a minute ago help"), so the words stay wide, and a false alarm is the accepted
+cost; tests/test_first_aid_floor_never_misses.py holds every real phrasing the reviews found.
+
 **Scope, honestly:** a floor, not a medic. It catches clear words and misses some indirect ones (the tests list both);
 a false positive costs one careful message with the number in it. Reviewed 2026-11-23 against a corpus of panicked
 phrasings and everyday sentences (tests/test_first_aid_floor.py).
@@ -38,12 +43,10 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-_WHO = (r"(?<![a-z'])(?:he|she|they|i|we|someone|somebody|the baby|baby|my (?:\w+ ){0,2}(?:wife|husband|son|daughter|dad|father|"
+_WHO = (r"(?:he|she|they|i|we|someone|somebody|the baby|baby|grandma|grandpa|granny|mom|mum|dad|mother|father|"
+        r"my (?:\w+ ){0,2}(?:wife|husband|son|daughter|dad|father|"
         r"mom|mother|friend|kid|baby|child|brother|sister|grandpa|grandma|grandfather|grandmother|neighbou?r|partner|"
         r"boy|girl|uncle|aunt|cousin))")
-# A family member named bare ("grandma collapsed"): only with the emergency at the end of its clause, never an object
-# after it ("mom passed out the cookies", "dad collapsed the tent": the eighth review)
-_FAMILY = r"(?<![a-z'])(?:grandma|grandpa|granny|nana|mom|mum|dad|mother|father)"
 _CPR_SHORT = "If they stop responding and aren't breathing normally, start CPR: push hard and fast in the center of the chest."
 
 # Each kind: (id, the words that say it, what to do after "Call {number} now."). Most time-critical first; when several
@@ -89,11 +92,10 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                             r"\b(?:he|she|they|i|baby|it)(?:'s| is| am| are|'m|'re)? (?:still )?bleeding\b"
                             r"(?! (?:the|my|our|his|her|a) (?:brakes?|radiators?|lines?|air|pipes?|system|hydraulics))|"
                             r"\bblood (?:is )?(?:spurting|pouring|everywhere|gushing)\b|"
-                            r"\bbleeding (?:won'?t|will not|doesn'?t|isn'?t|is not) stop\w*\b"
-                            r"(?! (?:on|in) (?:this|the|my) (?:paint|stain|print|shirt|wash|dye))|"
-                            r"\b(?:gushing|spurting|pouring) blood\b(?! in (?:the|a|that) (?:movie|film|show|game|scene))|"
+                            r"\bbleeding (?:won'?t|will not|doesn'?t|isn'?t|is not) stop\w*\b|"
+                            r"\b(?:gushing|spurting|pouring) blood\b|"
                             r"\bcut (?:my|his|her|their|the baby'?s|a) (?:\w+ )?(?:finger|thumb|toe|hand|arm|leg|foot)s? "
-                            r"(?:off|clean off)\b(?! (?:the|a|my|of) )|"
+                            r"(?:off|clean off)\b|"
                             r"\b(?:severe|heavy|serious|bad) bleeding\b|\bdeep (?:cut|gash|wound)\b|"
                             r"\bcut (?:my |his |her |their |the baby'?s |a )?(?:hand|finger|thumb|leg|arm|foot|"
                             r"toe|head|face|wrist|knee|neck|palm|shin)\b.{0,25}\b(?:deep|to the bone|bad|badly)\b|\b(?:been|got|was|i'?m) (?:shot|stabbed)\b|"
@@ -119,10 +121,7 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "Have them stop and sit down, resting; loosen anything tight. Tell the operator about any medicines they take: "
      "they may tell you to have them chew an aspirin. If they stop responding and aren't breathing normally, start "
      "CPR."),
-    ("unconscious", re.compile(_FAMILY + r"\s+(?:just |suddenly )?(?:collapsed|passed out|fainted|blacked out|"
-                               r"won'?t wake up|is unconscious|is unresponsive|isn'?t responding)(?=\s*(?:[.!,?]|$|and\b|on\b|"
-                               r"in\b|at\b|while\b|again\b|just\b|when\b))|"
-                               + _WHO + r"\b(?:'s|'re| is| are| has| just| was)?\s?(?:just |suddenly )?(?:collapsed|"
+    ("unconscious", re.compile(_WHO + r"\b(?:'s|'re| is| are| has| just| was)?\s?(?:just |suddenly )?(?:collapsed|"
                                r"won'?t wake up|not waking up|not responding|unresponsive|unconscious|fainted|"
                                r"blacked out|passed out)\b|\b(?:got|was|been|is) knocked (?:out|unconscious)\b|"
                                r"\bunconscious\b(?! (?:bias|mind|thoughts?))|\bunresponsive\b|"
@@ -172,8 +171,7 @@ _HAPPENING = re.compile(r"\bright now\b|\bhelp\b|!|\b(?:he|she|they)(?:'s| is| a
 _PAST = re.compile(r"\bin (?:19|20)\d\d\b|\b(?:years?|months?|weeks?) ago\b|\blast (?:year|month|week)\b|"
                    r"\bwhen (?:i|he|she) was (?:a )?(?:kid|young|little|child)\b", re.I)
 # A figure of speech: "I'm drowning in work", "choking on all this paperwork", "almost had a heart attack".
-_FIGURE = re.compile(r"\b(?:movie|film|show|episode|game|scene|book|video)\b.{0,30}\b(?:gushing|spurting|pouring) "
-                     r"blood\b|\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that|the|my|these) (?:paperwork|work|news|"
+_FIGURE = re.compile(r"\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that|the|my|these) (?:paperwork|work|news|"
                      r"traffic|emails?|bills?|deadlines?)\b|\b(?:almost|nearly) (?:had|died|choked|drowned)\b|"
                      r"\bgave me a heart attack\b|\bmy heart (?:almost |nearly )?stopped when\b|\bunresponsive "
                      r"(?:app|page|website|computer|laptop|screen|server)\b|\b(?:app|page|website|site|computer|"
