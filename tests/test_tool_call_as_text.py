@@ -13,6 +13,7 @@ from core.llm_manager import _looks_like_malformed_tool_call
 
 
 def test_a_tool_calls_opening_is_caught_even_when_the_json_is_broken():
+    """A call's opening is caught with broken JSON; a fenced example or prose never is."""
     broken = '{"name": "draft_email", "parameters": {"subject": "Fence", "body": "The cost is \\$$X."}}'
     assert _looks_like_malformed_tool_call(broken)
     # a fenced example is an explanation, never a call (the twelfth review)
