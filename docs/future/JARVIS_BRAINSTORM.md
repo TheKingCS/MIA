@@ -354,6 +354,12 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Why did my hens stop laying?** (no decision, asked): *built 2026-11-24 (`core/hen_laying.py`, the tool
+  `why_hens_not_laying`).* His flock's lay rate this week against the four before, then the likely causes, most likely
+  first: a change in the flock, feed run out, too young, the day's daylight against 14 hours with the day it's back
+  (from the sun for his town, offline) and a timer light in the morning as the fix, molt season by hemisphere, age,
+  heat; then what only he can check. Sun times are read in the town's solar time: in UTC a summer sunset falls on the
+  next day and the day came out negative.
 - **When's the best time to fish?** (no decision; fishing is his): *built 2026-11-24 (`core/fishing_times.py`, the
   tool `best_time_to_fish`).* Offline, from the sun and moon for his town: dawn and dusk first, the solunar majors (the
   moon overhead and underfoot) and minors (moonrise and moonset), the ones lining up with dawn or dusk as the best,

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1735 files, 374,091 lines; 1735 files describe themselves; 20,532 of 20,662 classes and functions are documented.
+1737 files, 374,348 lines; 1737 files describe themselves; 20,546 of 20,676 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-691 files, 193,077 lines; 9,799 of 9,885 classes and functions documented
+692 files, 193,273 lines; 9,808 of 9,894 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -291,6 +291,7 @@
 - `core/health_actions.py`: Every change to Health (core/health_manager.py) as an action, so the page, the phone, the glasses and voice agree and undo takes each one back, and the Health page's data (`health_page`) with its forms.
 - `core/health_manager.py`: Health and Fitness's records (DEC-0129, Zac 2026-11-08: "sleep, doctor and dentist visits, medications and supplements, health records... are good"). One personal store, `health.json` in the person's own folder, sealed at rest (core/at_rest.SEALED, DEC-0126), never on a shared screen and never sent 
 - `core/heavy_jobs.py`: Heavy jobs on the home computer (DEC-0022; Zac, 2026-10-18): when this device can't do a job well itself and it's linked to MIA on the home computer (core/home_link.py), the computer does it:
+- `core/hen_laying.py`: "Why did my hens stop laying?" (Jarvis brainstorm, round 12; asked for, so no unprompted message: the daily check's egg drop is core/unusual.py's): the likely causes for his flock, worked out from his own records and the sun for his town, the most likely first, never one his records rule out.
 - `core/home_link.py`: Supercharged online (DEC-0022, level 2): when the phone can reach MIA on the home computer (same Wi-Fi, or anywhere through Tailscale), Talk uses the computer's bigger model; when it can't, mid-conversation or not, the phone's own model answers. MIA always says which one did (`level`).
 - `core/homeostasis.py`: MIA easing off her own background work (the Living System doctrine's homeostasis, DEC-0173, G2; Zac 2026-11-15: "Mia should slow herself down but make a notice about it").
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
@@ -989,7 +990,7 @@
 
 ## tests/: the test suite: what each part must do
 
-638 files, 99,919 lines; 8,368 of 8,412 classes and functions documented
+639 files, 99,980 lines; 8,373 of 8,417 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1206,6 +1207,7 @@
 - `tests/test_hatch_tracker.py`: Eggs in the incubator as a mission (core/hatch_tracker.py): each bird's milestones dated from the day set (chicken: candle days 7 and 14, lockdown 18, hatch 21), the mission made with a step for each, "how's the hatch going?" saying the day and what's next (saved inside the change), a day set read l
 - `tests/test_health.py`: Health (DEC-0129: core/health_manager.py, core/health_actions.py, core/assistant_health_actions.py): nights of sleep, visits, medications with their reminders, and records, each change an action; what comes due shows on Today; the file is sealed at rest; nothing about a medication's name reaches a s
 - `tests/test_heavy_jobs.py`: Heavy jobs on the home computer (core/heavy_jobs.py): a device without Tesseract, a speech model or a voice sends the job to the linked PC; the PC unreachable means the old answer, and it isn't asked again for a while.
+- `tests/test_hen_laying.py`: "Why did my hens stop laying?" (core/hen_laying.py): short winter days counted from the sun for his town with the day they're back over 14 hours, molt season by hemisphere, a young or old flock by when it came, a change in the flock first, and his log's lay rate this week against before; with no flo
 - `tests/test_history_and_links.py`: The interconnection work from the first self-audit (DEC-0108, 2026-11-07): `life_events.on_change` puts a store's changes in her history, and the new link kinds let the rest of a life's records be linked, with the refs the history carries.
 - `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry; a recorded check counts from the day its stage opened. Each one's skill is a real skill, every recorded check reads a record MIA k *(1 undocumented)*
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
