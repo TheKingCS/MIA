@@ -3334,7 +3334,8 @@ class AssistantTools:
 
     @staticmethod
     def _action_consume_material(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `consume_material`: records a quantity of a material used on a job (stock goes down). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `consume_material`: records a quantity of a material used on a job (stock goes down). Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A quantity of 0 or less asks."""
         job_name = str(arguments.get("job_name", "")).strip().lower()
         material_name = str(arguments.get("material_name", "")).strip().lower()
         job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
@@ -3345,6 +3346,8 @@ class AssistantTools:
             return f"I don't have a material called '{arguments.get('material_name', '')}'."
         try:
             quantity = float(arguments.get("quantity", 0))
+            if quantity <= 0:
+                return "How much? Say the quantity, like \"used 4 sheets of plywood\"."  # never 0 (the Fable re-audit)
         except (TypeError, ValueError):
             return "I need a numeric quantity to record material use."
         context.jobs.consume_material(job.job_id, material.material_id, quantity)
@@ -3352,7 +3355,8 @@ class AssistantTools:
 
     @staticmethod
     def _action_produce_product(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `produce_product`: records a quantity of a product a job made (stock goes up). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `produce_product`: records a quantity of a product a job made (stock goes up). Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A quantity of 0 or less asks."""
         job_name = str(arguments.get("job_name", "")).strip().lower()
         product_name = str(arguments.get("product_name", "")).strip().lower()
         job = next((j for j in context.jobs.all_jobs() if j.name.lower() == job_name), None)
@@ -3363,6 +3367,8 @@ class AssistantTools:
             return f"I don't have a product called '{arguments.get('product_name', '')}'."
         try:
             quantity = float(arguments.get("quantity", 0))
+            if quantity <= 0:
+                return "How much? Say the quantity, like \"used 4 sheets of plywood\"."  # never 0 (the Fable re-audit)
         except (TypeError, ValueError):
             return "I need a numeric quantity to record production."
         context.jobs.produce_product(job.job_id, product.product_id, quantity)
@@ -3732,7 +3738,8 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_maintenance_task(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_maintenance_task`: adds a task for a tracked item, repeating every N days or one-time; a one-time thing with a day ("next Saturday") goes on the calendar instead (live check, 2026-11-24). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_maintenance_task`: adds a task for a tracked item, repeating every N days or one-time; a one-time thing with a day ("next Saturday") goes on the calendar instead (live check, 2026-11-24). Returns the reply in words (a missing or unknown name says so, nothing changes).
+        An interval of 0 days is one-time."""
         asset_name = str(arguments.get("asset_name", "")).strip()
         asset, error = resolve_by_name(context.maintenance.all_assets(), asset_name, lambda a: a.name, "tracked item")
         if error:
@@ -3742,6 +3749,7 @@ class AssistantTools:
             return "I need a task title."
         interval_days = arguments.get("interval_days")
         interval_days = int(interval_days) if interval_days not in (None, "") else None
+        interval_days = interval_days if interval_days and interval_days > 0 else None  # 0 is one-time
         when = str(arguments.get("date", "") or "").strip()
         if when and not interval_days and getattr(context, "calendar", None) is not None:
             # a one-time thing on a day ("next Saturday") goes on the calendar, never a task repeating every 7 days
@@ -4127,12 +4135,17 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_income_source(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_income_source`: adds an expected income source (amount, next date, recurrence). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_income_source`: adds an expected income source (amount, next date, recurrence). Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A zero or missing amount asks, never "$0.00 expected"."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a name to add an income source."
         expected_amount = arguments.get("expected_amount")
-        if expected_amount is None:
+        try:
+            expected_amount = float(expected_amount) if expected_amount is not None else None
+        except (TypeError, ValueError):
+            expected_amount = None
+        if not expected_amount or expected_amount <= 0:  # never "$0.00 expected" (the Fable re-audit)
             return "I need an expected amount to add an income source."
         next_date = str(arguments.get("next_date", "") or "").strip()
         if not next_date:

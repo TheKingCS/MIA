@@ -369,8 +369,22 @@ ACTIVITY_ACTIONS = {a.kind: a for a in (
 ACTION_TYPES.update(ACTIVITY_ACTIONS)
 
 
+def _noting_tool(context, arguments: dict) -> str:
+    """Tool set_activity_noting: on or off as he said; neither said asks (the Fable re-audit: an empty call had
+    switched it off)."""
+    on = arguments.get("on")
+    if isinstance(on, str):
+        on = {"true": True, "on": True, "yes": True, "false": False, "off": False, "no": False}.get(on.strip().lower())
+    if not isinstance(on, bool):
+        return "Should I note which app you're in, or stop?"
+    from core.actions import run_as_tool
+
+    return run_as_tool(context, "activity.noting", {"on": on})
+
+
 def register_activity_actions(registry) -> None:
-    """Registers what_am_i_working_on, set_activity_noting and erase_activity."""
+    """Registers what_am_i_working_on, set_activity_noting and erase_activity.
+    set_activity_noting asks when neither on nor off is said (`_noting_tool`)."""
     from core.actions import run_as_tool
     from core.assistant_actions import AssistantAction
 
@@ -388,7 +402,7 @@ def register_activity_actions(registry) -> None:
         description="Turn on or off MIA noting which app and window title is in front of the person.",
         parameters={"type": "object", "properties": {"on": {"type": "boolean", "description": "true to note"}},
                     "required": ["on"]},
-        handler=lambda context, arguments: run_as_tool(context, "activity.noting", {"on": bool(arguments.get("on"))}),
+        handler=_noting_tool,
         trigger_phrases=("stop noting my apps", "stop watching what i'm working on", "start noting my apps",
                          "note what i'm working on"),
         subjects=("noting", "apps"),

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1836 files, 391,102 lines; 1836 files describe themselves; 21,291 of 21,416 classes and functions are documented.
+1836 files, 391,241 lines; 1836 files describe themselves; 21,295 of 21,420 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-720 files, 203,852 lines; 10,161 of 10,240 classes and functions documented
+720 files, 203,965 lines; 10,164 of 10,243 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1018,7 +1018,7 @@
 
 ## tests/: the test suite: what each part must do
 
-707 files, 105,235 lines; 8,759 of 8,805 classes and functions documented
+707 files, 105,261 lines; 8,760 of 8,806 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1613,7 +1613,7 @@
 - `tests/test_theme_picture.py`: Appearance phase A7's first part (prompt 24 §9, DEC-0184): a theme from a picture, read in code (core/theme_picture.py), and the theme in use nudged by plain words (core/theme_design.adjust). The reference picture gives a blue glass close to Aquatic; a sunset's orange never becomes the accent (it co
 - `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell. The Theme Studio builds a theme from a few choices, refuses warni
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant.
-- `tests/test_tool_args.py`: A tool's arguments as he could have said them (core/tool_args.py, the Fable audit 2026-11-25): placeholders go, for a change a time that isn't one, a negative amount and an update's zero go, and a date in words becomes its YYYY-MM-DD; the tools the audit found saving them now ask instead.
+- `tests/test_tool_args.py`: A tool's arguments as he could have said them (core/tool_args.py, the Fable audit 2026-11-25): placeholders go, for a change a time that isn't one, a negative amount and an update's zero go, and a date in words becomes its YYYY-MM-DD; the tools the audit found saving them now ask instead. Its second
 - `tests/test_tool_call_as_text.py`: A tool call the model writes out as its answer is never said (live sweep, 2026-11-25: '{"name": "draft_email", "parameters": {..."\$$X"...}}' reached him, invalid JSON, so it was neither caught nor retried): its opening is enough to be caught (core/llm_manager._looks_like_malformed_tool_call, so the
 - `tests/test_tool_gate.py`: The Assistant's tool gate (2026-11-10): only a tool offered this turn runs, a tool whose name reads like a lookup but changes records counts as a change (undo, screens refresh), and a change the model asks for right after a lookup that brought in outside text (a web page, a search, the inbox) is hel
 - `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop. A safety lookup worded in code is 

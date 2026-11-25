@@ -231,13 +231,14 @@ def _find_debt(context: AppContext, name: str):
 def _action_add_debt(context: AppContext, arguments: dict) -> str:
     """Assistant tool `add_debt`: starts tracking a debt (balance, APR, minimum, type, a promo rate with its end date); asks for the rate when
     it's missing, since debts rank by it. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
+    A zero balance asks, never a $0.00 debt.
     """
     from core.budget_manager import DEBT_TYPES
 
     name = str(arguments.get("name", "") or "").strip()
     balance = _num(arguments.get("balance"))
-    if not name or balance is None:
-        return "I need the debt's name and current balance."
+    if not name or balance is None or balance <= 0:
+        return "I need the debt's name and current balance."  # never a $0.00 debt (the Fable re-audit)
     rate = _num(arguments.get("interest_rate"), 0.0)
     debt_type = str(arguments.get("debt_type", "") or "").strip()
     debt_type = next((t for t in DEBT_TYPES if t.lower() == debt_type.lower()), "Other" if debt_type else "Credit Card")
