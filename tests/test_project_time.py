@@ -82,9 +82,11 @@ def test_a_day_of_more_than_24_hours_is_refused(book):
 
 
 def test_logging_hours_on_a_project_he_doesnt_have_names_his_projects(book):
+    """Only when his words say it's a project ("the chicken coop build"); never an oven timer or the mower."""
     context = _context(book)
     context.maintenance = SimpleNamespace(all_assets=lambda: [SimpleNamespace(name="Riding Mower")])
-    said = assistant_turn._project_time_reply(context, "Log 2 hours on the chicken coop")
-    assert said.startswith("I don't have a project called 'the chicken coop'.") and "Shed Build" in said
+    said = assistant_turn._project_time_reply(context, "Log 2 hours on the chicken coop build")
+    assert said.startswith("I don't have a project called 'the chicken coop build'.") and "Shed Build" in said
+    assert assistant_turn._project_time_reply(context, "add 30 minutes to the oven timer") is None
     assert assistant_turn._project_time_reply(context, "log 2 hours on the mower") is None  # its engine hours
     assert all(not p.time_log for p in book.all_projects())

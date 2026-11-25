@@ -79,14 +79,19 @@ def _number(params, name: str, label: str, whole: bool = False, signed: bool = F
 
 
 def _day(params) -> str:
-    """The date in the params, or today."""
+    """The date in the params as `read_date` reads it ("yesterday" too), or today."""
     raw = str(params.get("date") or "").strip()
     if not raw:
         return date.today().isoformat()
     try:
         return date.fromisoformat(raw[:10]).isoformat()
     except ValueError:
-        raise ActionError("The date has to look like 2026-10-21.") from None
+        from core.budget_manager import read_date
+
+        said = read_date(raw)  # "yesterday", "last Friday" (the Fable review)
+        if said:
+            return said
+        raise ActionError("Which day? Say a date like 2026-10-21, or \"yesterday\".") from None
 
 
 def _figures(context, f) -> dict:

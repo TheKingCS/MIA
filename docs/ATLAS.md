@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1827 files, 389,923 lines; 1827 files describe themselves; 21,240 of 21,367 classes and functions are documented.
+1828 files, 390,174 lines; 1828 files describe themselves; 21,254 of 21,379 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-717 files, 203,156 lines; 10,149 of 10,230 classes and functions documented
+717 files, 203,281 lines; 10,153 of 10,232 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -123,7 +123,7 @@
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile kept in the person's own folder. The window is visible on the computer, so what she does can be watched.
 - `core/browser_routines.py`: Browser tasks MIA has been taught (DEC-0117, Zac 2026-11-07: "show her, then she practises"). The person does a task once in her browser while she records it; she saves it as a routine and replays it later, the same steps in the same order, checking the page as she goes.
 - `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it. `untrusted()` fra
-- `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(60 undocumented)*
+- `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(58 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
 - `core/build_calcs.py`: Material lists worked out in code (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Each calculator takes a structure's size and gives what to buy and what to cut: a stud wall, a floor or deck frame, a raised garden bed, a fence run,
@@ -1015,7 +1015,7 @@
 
 ## tests/: the test suite: what each part must do
 
-701 files, 104,752 lines; 8,720 of 8,766 classes and functions documented
+702 files, 104,878 lines; 8,730 of 8,776 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1201,6 +1201,7 @@
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
 - `tests/test_fable_review_claims.py`: The Fable review of the claim check (2026-11-25): a true reply is never replaced with "I didn't set that up": a negation, a question back, how it works, words drafted for him and a story stay; a real claim of a change no tool made is still caught. *(1 undocumented)*
 - `tests/test_fable_review_floor.py`: The Fable review of the emergency floor and teaching (2026-11-25): a figure of speech or a past clause takes out only its own words (its real emergencies are in tests/test_first_aid_floor_never_misses.py); a follow-up naming an emergency the floor's last reply didn't cover is answered; freezer burn,
+- `tests/test_fable_review_routes.py`: The Fable review of the code routes that write (2026-11-25): each acts only on a sentence it reads whole, and anything else (another day, a debt, a retraction, a price with a quote, a non-job after "needs", a project named in part) goes to the model, which can ask. Every sentence the review found mi
 - `tests/test_fact_owners.py`: One owner per fact (DEC-0052): a retired copy of a fact never comes back, and every owner named in core/fact_owners.py exists.
 - `tests/test_failure_log.py`: The Fix-It Log (DEC-0049): where MIA stumbles is recorded (privately, redacted), grouped into issues, turned into a fix report with a test to write first, and what the person confirms she learns herself.
 - `tests/test_feed_mix.py`: Two feeds mixed to a target protein, the Pearson square (core/feed_mix.py): the parts and shares of each, a batch's pounds of each, the three percentages and the batch read from what he said ("percent", "a 50-lb bag", the target after want or get, a calcium figure never a feed), and a target outside

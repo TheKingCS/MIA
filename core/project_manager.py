@@ -288,7 +288,7 @@ class ProjectManager:
 
     def log_time(self, project_id: str, hours: float, on: str = "", note: str = "") -> Project:
         """Adds hours he put into a project on a day (today unless `on`, an ISO date), with a note, and records it in
-        the history; more than a day's 24 hours, or none, is refused."""
+        the history; none, or more than a day's 24 hours across all his projects, is refused."""
         project = self.get_project(project_id)
         if project is None:
             raise ValueError(f"No project with id '{project_id}'.")
@@ -296,6 +296,9 @@ class ProjectManager:
         if not 0 < hours <= 24:
             raise ValueError("Hours on a day are more than none and at most 24.")
         on = on or datetime.now().date().isoformat()
+        that_day = sum(float(t.get("hours") or 0) for p in self._projects for t in p.time_log if t.get("date") == on)
+        if that_day + hours > 24:
+            raise ValueError(f"That's more than 24 hours on {on} with what's logged already.")
         project.time_log.append({"date": on, "hours": hours, "note": str(note or "").strip()})
         project.updated_at = datetime.now().isoformat(timespec="seconds")
         self._save()

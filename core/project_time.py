@@ -32,9 +32,10 @@ def _words(text: str) -> set:
     return out
 
 
-def project_named(context, words: str):
-    """His project his words name: one whose name's words are all among his (or his among its), only one; None
-    otherwise."""
+def project_named(context, words: str, whole: bool = False):
+    """His project his words name: one whose name holds all his words (and he left out at most one of its), only
+    one; with `whole`, every word of its name and no other ("I spent 2 hours on the garden" is never the Garden
+    Fence: the Fable review, 2026-11-25). None otherwise."""
     book = getattr(context, "projects", None)
     said = _words(words)
     if book is None or not said:
@@ -43,26 +44,38 @@ def project_named(context, words: str):
     exact = [p for p in projects if p.name.lower().strip() == str(words).lower().strip()]
     if len(exact) == 1:
         return exact[0]
-    found = [p for p in projects if _words(p.name) and (_words(p.name) <= said or said <= _words(p.name))]
+    if whole:
+        found = [p for p in projects if _words(p.name) == said]
+    else:
+        found = [p for p in projects if _words(p.name) and said <= _words(p.name)
+                 and len(_words(p.name)) - len(said) <= 1]
     return found[0] if len(found) == 1 else None
 
 
-_HOURS = re.compile(r"(?P<n>\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*"
-                    r"(?P<unit>hours?|hrs?|h|minutes?|mins?)\b", re.I)
-_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8}
+_HOURS = re.compile(r"\b(?P<n>\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+                    r"half(?: an?)?)(?P<half> and a half)?\s*(?P<unit>hours?|hrs?|h|minutes?|mins?)\b", re.I)
+_NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+            "nine": 9, "ten": 10, "eleven": 11, "twelve": 12}
 
 
 def hours_said(words: str) -> Optional[float]:
-    """The hours his words say ("2 hours", "an hour", "half an hour", "90 minutes", "2.5 hrs"); None when none."""
+    """The hours his words say ("2 hours", "an hour", "half an hour", "90 minutes", "2.5 hrs", "2 hours 30
+    minutes", "2 and a half hours", "ten hours"); None when none."""
     found = _HOURS.search(str(words or ""))
     if not found:
         return None
     n = found.group("n").lower()
     value = 0.5 if n.startswith("half") else float(_NUMBERS.get(n, n) if n in _NUMBERS else n)
+    if found.group("half"):
+        value += 0.5  # "2 and a half hours"
     if found.group("unit").lower().startswith("m"):
         value /= 60
-    if re.search(r"\band a half\b", words[found.end():found.end() + 12], re.I):
-        value += 0.5
+    elif re.search(r"\band a half\b", words[found.end():found.end() + 12], re.I):
+        value += 0.5  # "2 hours and a half"
+    else:
+        more = re.match(r"\s*(?:and\s+)?(\d+)\s*(?:minutes?|mins?)\b", words[found.end():], re.I)
+        if more:
+            value += int(more.group(1)) / 60  # "2 hours 30 minutes"
     return round(value, 2)
 
 
@@ -116,7 +129,8 @@ def _log_tool(context, arguments: dict) -> str:
 
 
 def _hours_tool(context, arguments: dict) -> str:
-    """Tool project_hours: one project's hours (all, and this week), or what he worked on this week, from his logs."""
+    """Tool project_hours: one project's hours (all, and this week), or what he worked on this week, from his logs.
+    A period it doesn't keep ("this month") is said so, never answered as a week."""
     today = date.today()
     monday = today - timedelta(days=today.weekday())
     named = str(arguments.get("project") or "").strip()
@@ -129,6 +143,8 @@ def _hours_tool(context, arguments: dict) -> str:
                 if total(project) else f"No hours logged on {project.name} yet. Say \"log 2 hours on "
                                        f"{project.name.lower()}\" when you've put some in.")
     period = str(arguments.get("period") or "this week").lower()
+    if period not in ("this week", "week", "yesterday", "today", "last week", ""):
+        return "I can say today's, yesterday's, this week's or last week's project hours."  # never "this month" as a week
     start, end, said = (monday, today, "this week")
     if period == "yesterday":
         start = end = today - timedelta(days=1)

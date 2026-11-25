@@ -4024,13 +4024,19 @@ class AssistantTools:
     @staticmethod
     def _action_add_income(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_income`: records income with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes).
-        A day other than today is said in the reply."""
+        A day other than today is said in the reply.
+        A day said that doesn't read is asked, never today in its place."""
         amount = arguments.get("amount")
         if amount is None:
             return "I need an amount to record income."
         category = str(arguments.get("category", "") or "Other").strip()
         description = str(arguments.get("description", "") or "")
         date_str = str(arguments.get("date", "") or "").strip() or None
+        from core.budget_manager import read_date
+
+        if date_str and date_str.lower() not in ("null", "none", "today", "now") and not read_date(date_str):
+            return ("Which day was that? Say a date like 2026-11-20, \"yesterday\" or \"last Friday\", and I'll "
+                    "record it.")  # never today in its place, unsaid (the Fable review, 2026-11-25)
         entry = context.budget.add_income(amount=float(amount), category=category, description=description, date=date_str)
         from core.budget_manager import _today_iso
 
@@ -4040,13 +4046,19 @@ class AssistantTools:
     @staticmethod
     def _action_add_expense(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_expense`: records an expense with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes).
-        A day other than today is said in the reply."""
+        A day other than today is said in the reply.
+        A day said that doesn't read is asked, never today in its place."""
         amount = arguments.get("amount")
         if amount is None:
             return "I need an amount to record an expense."
         category = str(arguments.get("category", "") or "Other").strip()
         description = str(arguments.get("description", "") or "")
         date_str = str(arguments.get("date", "") or "").strip() or None
+        from core.budget_manager import read_date
+
+        if date_str and date_str.lower() not in ("null", "none", "today", "now") and not read_date(date_str):
+            return ("Which day was that? Say a date like 2026-11-20, \"yesterday\" or \"last Friday\", and I'll "
+                    "record it.")  # never today in its place, unsaid (the Fable review, 2026-11-25)
         entry = context.budget.add_expense(amount=float(amount), category=category, description=description, date=date_str)
         from core.budget_manager import _today_iso
 

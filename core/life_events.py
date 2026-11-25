@@ -84,6 +84,7 @@ TYPES = {
     "property_expense": "property expenses",
     "task_done": "tasks done",
     "project_completed": "projects finished",
+    "project_time": "hours put into projects",
     "imported": "imports",
     "starter_added": "starter sets added",
     "undone": "changes undone",

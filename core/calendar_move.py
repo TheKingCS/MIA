@@ -34,14 +34,23 @@ def which(events: list, title: str):
 
 def day_of(text: str, today: Optional[date] = None) -> Optional[str]:
     """Pure logic. A day his words give, as YYYY-MM-DD: a weekday, "tomorrow", "the day after" first (the model passed
-    "Monday" as 2024-01-01: live check, 2026-11-24), else an ISO date."""
+    "Monday" as 2024-01-01: live check, 2026-11-24), else an ISO date that exists."""
     from core.weather import days_meant
 
     days = days_meant(str(text or ""), today or date.today())
     if days:
         return days[0].isoformat()
     found = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", str(text or ""))
-    return found.group(1) if found else None
+    return found.group(1) if found and _real(found.group(1)) else None  # never 2026-02-30 (the Fable review)
+
+
+def _real(iso: str) -> bool:
+    """Pure logic. Whether a YYYY-MM-DD date is a day that exists."""
+    try:
+        date.fromisoformat(iso)
+        return True
+    except ValueError:
+        return False
 
 
 def _line(event, day: Optional[date] = None) -> str:
@@ -113,15 +122,17 @@ def _coming(events: list, start: date, days: int = 366) -> list:
 
 def event_day(date_str: str) -> Optional[str]:
     """Pure logic. A calendar event's day as YYYY-MM-DD: an ISO date as it is, else the day words give ("Friday at
-    2pm", passed as the date: live check, 2026-11-24), else None. For both add_calendar_event handlers."""
+    2pm", passed as the date: live check, 2026-11-24), else None. For both add_calendar_event handlers. A date that
+    doesn't exist (2026-02-30) is None."""
     said = str(date_str or "").strip()
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", said):
-        return said
+        return said if _real(said) else None  # 2026-02-30 is asked again, never stored (the Fable review)
     return day_of(said)
 
 
 def move(context, title: str = "", when: str = "", time: str = "", today: Optional[date] = None) -> str:
-    """Moves the event (see the module's opening) and says where it is now."""
+    """Moves the event (see the module's opening) and says where it is now; a repeating one says its whole series
+    moved, and one stored with a day that doesn't exist asks for a day (the Fable review)."""
     calendar = getattr(context, "calendar", None)
     events = calendar.all_events() if calendar is not None else []
     event = which(events, title)
@@ -134,9 +145,14 @@ def move(context, title: str = "", when: str = "", time: str = "", today: Option
     fields = {"date": new_day} if new_day else {}
     if new_time:
         fields["time"] = new_time
+    if "date" not in fields and not _real(str(event.date)):
+        return f"'{event.title}' has no real day yet. Say one, like \"move it to Sunday\"."
     calendar.update_event(event.event_id, **fields)
     moved = date.fromisoformat(fields.get("date", event.date))
-    return (f"Moved '{event.title}' to {moved:%A, %B} {moved.day}" + (f" at {new_time}" if new_time else "") + ".")
+    series = (f" It repeats {event.recurrence}, so the whole series now starts then."
+              if new_day and getattr(event, "recurrence", "") else "")  # said, never a series moved unsaid
+    return (f"Moved '{event.title}' to {moved:%A, %B} {moved.day}" + (f" at {new_time}" if new_time else "") + "."
+            + series)
 
 
 def _tool(context, arguments: dict) -> str:

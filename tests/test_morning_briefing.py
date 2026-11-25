@@ -4,7 +4,8 @@ tests.test_morning_briefing
 
 The morning briefing he asks for (core/morning_briefing.py; brainstorm round 14): off until he asks, his words set
 its hour (7 unless he says a morning hour), turn it off, or are asked again for an evening hour; the words are
-today's weather and his day from his records; the daily check offers it from his hour, once, until noon.
+today's weather and his day from his records; the daily check offers it from his hour, once, until noon. A
+negation, a question or anything else every morning never sets it (the Fable review).
 """
 
 from datetime import datetime
@@ -44,3 +45,11 @@ def test_it_comes_only_when_asked_from_his_hour_until_noon(monkeypatch):
     [message] = mb.offer(SimpleNamespace(), datetime(2026, 11, 26, 8, 0))
     assert message.topic == "morning_briefing" and message.expires.startswith("2026-11-26T12:00")
     assert mb.offer(SimpleNamespace(), datetime(2026, 11, 26, 13, 0)) == []
+
+
+def test_a_negation_a_question_or_anything_else_every_morning_never_sets_it():
+    for words in ("don't stop the morning briefing", "did you stop the morning briefing?",
+                  "why did you turn off the morning report", "don't give me a morning briefing",
+                  "give me my morning briefing", "Every morning my back hurts, tell me what to do",
+                  "tell me a joke every morning", "Every morning at 6 give me the egg count"):
+        assert mb.asked(words) is None, words

@@ -28,10 +28,19 @@ DEFAULT_HOUR = 7
 
 # Only a briefing asked for, said either way round, never a sentence about his own morning ("every morning I read the
 # Bible", "the morning report from the greenhouse": the eleventh review)
-_SET = re.compile(r"\b(?:every|each)\s+morning\b.{0,40}\b(?:tell|give|brief|show|send|read)\s+me\b|"
-                  r"\b(?:tell|give|brief|show|send|read)\s+me\b.{0,40}\b(?:every|each)\s+morning\b|"
-                  r"\b(?:give me|set up|start|turn on|i want)\s+(?:a\s+|my\s+)?(?:daily\s+)?morning\s+"
-                  r"(?:briefing|brief|summary|rundown)\b", re.I)
+# what's in it, said: "tell me the weather and my day", never "tell me a joke" or "give me the egg count" (the Fable
+# review, 2026-11-25)
+_WHAT = r"\s+(?:the\s+|my\s+|a\s+|today'?s\s+)?(?:weather|day|schedule|calendar|briefing|brief|rundown|summary|agenda|plan)\b"
+_ASK = r"(?:brief me\b|(?:tell|give|show|send|read)\s+me" + _WHAT + ")"
+_SET = re.compile(r"\b(?:every|each)\s+morning\b.{0,40}\b" + _ASK + "|"
+                  r"\b" + _ASK + r".{0,40}\b(?:every|each)\s+morning\b|"
+                  r"\b(?:set up|start|turn on|i want)\s+(?:a\s+|my\s+)?(?:daily\s+)?morning\s+"
+                  r"(?:briefing|brief|summary|rundown)\b|"
+                  r"\bgive me\s+(?:a\s+|my\s+)?(?:daily\s+)?morning\s+(?:briefing|brief|summary|rundown)\s+(?:at|every)\b",
+                  re.I)  # "give me a morning briefing at 8am" is a standing one; "give me my morning briefing" isn't
+# a negation or a question is never a setting: "don't stop the morning briefing", "did you stop it?"
+_NOT_A_SETTING = re.compile(r"\b(?:don'?t|do not|never|didn'?t|did you|why|won'?t|can'?t)\b|\?\s*$|"
+                            r"^\s*(?:can|could|will|would|did|do|does|is|are|what|how|when)\b", re.I)
 _OFF = re.compile(r"\b(?:stop|cancel|turn off|no more|end|pause)\s+(?:the\s+|my\s+)?(?:daily\s+)?morning\s+"
                   r"(?:briefing|brief|summary|report|rundown)s?\b", re.I)
 _AT = re.compile(r"\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?", re.I)
@@ -62,8 +71,11 @@ def asked(words: str) -> Optional[tuple]:
     """Pure logic. ("on", hour) for "every morning at 7, tell me the weather and my day" (7 unless he says an hour
     from 4 to 11 am), ("off", None) for "stop the morning briefing", else None.
     Only a briefing asked for, either way round ("tell me the weather every morning"); never a sentence about his
-    own morning or a reminder."""
+    own morning or a reminder, a negation or a question ("don't stop the morning briefing"), or a one-off ("give me
+    my morning briefing") or anything else every morning ("tell me a joke every morning": the Fable review)."""
     said = str(words or "")
+    if _NOT_A_SETTING.search(said):
+        return None
     if _OFF.search(said):
         return "off", None
     if not _SET.search(said) or re.search(r"\bremind me\b", said, re.I):

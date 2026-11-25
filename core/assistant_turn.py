@@ -498,15 +498,19 @@ def _reminder_reply(context, prompt: str):
     The day first is the same ("remind me tomorrow at 9 to call the vet", `_REMIND_FIRST`: the live sweep, where the
     model had written its alarm call out as text), its date from the day said first, never one in the task. An hour
     from 1 to 5 with no am, pm or morning is the afternoon ("tomorrow at 3").
-    "Morning" counts only in the day and time, never in the task ("the morning glories")."""
+    "Morning" counts only in the day and time, never in the task ("the morning glories"). Said the other way, the
+    day is the one after the task, never one inside it ("remind me to send the invoice by Friday on Monday": the
+    Fable review)."""
     first = _REMIND_FIRST.match(prompt.replace("’", "'"))
-    day_words = prompt
+    day_words = None
     if first:
         prompt = f"{first.group('lead')} to {first.group('what')} {first.group('when')}"
         day_words = first.group("when")  # the day he said first, never one in the task (the eighteenth review)
     found = _REMIND_ON.match(prompt.replace("’", "'"))
     if not found or re.search(r"\b(?:every|each)\b", found.group(1), re.I):
         return None
+    if day_words is None:  # the day said after the task, never one inside it ("send the invoice by Friday on Monday")
+        day_words = prompt.replace("’", "'")[found.end(1):]
     what = found.group(1).strip().rstrip(",")
     args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, day_words)
     evening = re.search(r"\btonight\b|\b(?:this|tomorrow|" + "|".join(_WEEKDAYS) + r")\s+(?:evening|night)\b", day_words,
@@ -518,7 +522,7 @@ def _reminder_reply(context, prompt: str):
         if evening and not found.group(5) and hour == 12:
             hour = 99  # "tonight at 12": noon or midnight? no time rather than a wrong one
         # "morning" in the day and time, never in the task ("check the morning glories saturday at 4", the nineteenth)
-        morning = re.search(r"\bmorning\b", day_words if first else prompt.replace("’", "'")[found.end(1):], re.I)
+        morning = re.search(r"\bmorning\b", day_words, re.I)
         small = not found.group(5) and not morning and 1 <= hour <= 5  # "tomorrow at 3" is the afternoon (the eighteenth)
         hour += 12 if ((found.group(5) or "").lower() == "pm" or (evening and not found.group(5)) or small) \
             and hour < 12 else 0  # "tonight at 9" is 9 pm (the seventh review)
@@ -551,6 +555,10 @@ _BOUGHT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:bought|purchased)\s+(?P<what>
                      r"\s*[.!]*\s*$", re.I)
 # What it was for, by its words: the budget's categories (core/budget_manager.EXPENSE_CATEGORIES)
 _SPENT_ON = (
+    # the Fable review (2026-11-25): "chicken wire" and "the chicken coop" had been Groceries, "a board game" lumber
+    ("Building Materials", r"\bchicken (?:coop|wire|run|tractor)\b|\bhardware cloth\b|\bfencing\b"),
+    ("Entertainment", r"\b(?:board|video|card) games?\b"),
+    ("Medical", r"\bhay fever\b|\ballerg\w*\b"),
     ("Groceries", r"\bchicken (?:breasts?|thighs?|wings?|legs?|drumsticks?|nuggets?|tenders?)\b|\bwhole chicken\b"),
     ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chicks|scratch|oyster shell|dog food|cat food|kibble|goats?|"
                        r"(?:chicken|hen|goat|pig|pet|horse|rabbit) food|food for (?:the )?(?:dogs?|cats?|chickens|hens|"
@@ -595,6 +603,16 @@ _SPENT_WHEN = re.compile(r"\s+(?:on\s+)?(yesterday|today|last week|(?:last\s+)?(
                          r"friday|saturday|sunday))$", re.I)
 
 
+# What's left of "what it was for" that this route can't read whole (the Fable review, 2026-11-25): a day ("two days
+# ago", "last night", "on the 20th", "November 20"), a debt or a payment ("my student loans", "the car payment",
+# "the truck"), a retraction ("scratch that"), or money that fell ("on the floor")
+_NOT_WHOLE = re.compile(r"\b(?:ago|last|tonight|night|tomorrow|next|week|month|year|morning|afternoon|evening|"
+                        r"january|february|march|april|june|july|august|september|october|november|december|"
+                        r"jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec|the \d{1,2}(?:st|nd|rd|th)?|\d{1,2}/\d{1,2}|"
+                        r"loans?|cards?|mortgages?|payments?|installments?|scratch that|never ?mind|actually|wait|"
+                        r"floor|ground|post office|stamps)\b|^(?:the |my |our )?(?:truck|car|house|boat|van)$", re.I)
+
+
 def _spent_reply(context, prompt: str):
     """"I spent $30 on groceries", "spent 12 dollars on gas", "bought 50 lb of layer feed for $22", in code (brainstorm
     round 14's sweep: the first went to the money month's plan and nothing was kept, the second got small talk, a
@@ -607,7 +625,8 @@ def _spent_reply(context, prompt: str):
     A name is a person only when he knows them (`_known_person`): Netflix and Costco are purchases; "last week" or a
     day alone is the model's to ask.
     The bill tools' words are checked again once a day said is cut off ("my phone yesterday"); family words (my
-    mother, the kids) are people."""
+    mother, the kids) are people. Anything left it can't read whole (`_NOT_WHOLE`: another day, a debt, a
+    retraction) is the model's (the Fable review)."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
@@ -632,6 +651,8 @@ def _spent_reply(context, prompt: str):
             return None  # "my phone yesterday" is still his phone's bill (the fourteenth review)
     if not what or _A_PERSON.fullmatch(what) or _known_person(context, what):
         return None  # "spent $30 on Monday" names no thing; money for a person is a gift or a debt, not this
+    if _NOT_WHOLE.search(what):
+        return None  # a day it doesn't read, a debt, a retraction or a dropped bill: the model's (the Fable review)
     amount = float((found.group("d") or found.group("n")).replace(",", ""))
     if amount <= 0:
         return None
@@ -668,9 +689,16 @@ def _morning_briefing_reply(context, prompt: str):
 
 def _job_quote_reply(context, prompt: str):
     """"Write a quote for Sarah's 12 by 16 deck", in code (core/job_quote.reply: the calculators' list, priced from
-    the workshop, a draft quote for his yes); None otherwise."""
+    the workshop, a draft quote for his yes); None otherwise, and None when a price, labor, a second job, his own
+    build or a repair is said with it (the draft would drop them)."""
     from core import job_quote
 
+    # a price, labor, two jobs, his own build or a repair said with it are the model's: the draft would drop them
+    # (the Fable review, 2026-11-25)
+    if re.search(r"\$\s?\d|\b\d+\s*(?:an|per|/)\s*(?:hour|hr)\b|\blabou?r\b|\bhours?\b|\band an? \d|\band (?:a|the) "
+                 r"\d+\s*(?:by|x|foot|ft)|\bi (?:want|plan|need) to build\b|\bmy own\b|\bfor me\b|\brepairs?\b|"
+                 r"\bfix\w*\b", prompt, re.I):
+        return None
     try:
         return job_quote.reply(context, prompt)
     except Exception:
@@ -692,6 +720,15 @@ _NOT_A_TASK = re.compile(r"^\s*(?:gas|fuel|gasoline|diesel|work)\s*$|\d+\s*(?:da
                          r"in|on|at|before|after|by|for|of|with|from|and|or|but|asap|badly|lot|really|again|"
                          r"quarts?|gallons?|liters?)\b|,\s|^(?:\S+\s+){5,}", re.I)
 _FILLER = {"new", "the", "its", "his", "her", "our", "and", "replace", "replacement", "replaced"}
+# What a need is added from: an upkeep job by name, never any noun after "needs" (the Fable review, 2026-11-25:
+# "the truck needs no work", "my truck needs me", "the truck needs a name" had each become a task)
+_UPKEEP_JOB = re.compile(r"\b(?:oil|filters?|brakes?|brake pads?|rotors?|tires?|tyres?|battery|batteries|wipers?|"
+                         r"wiper blades?|tune-?up|belts?|spark plugs?|plugs?|rotation|alignment|inspection|service|"
+                         r"servicing|coolant|antifreeze|transmission|fluid|grease|lube|bearings?|blades?|sharpen\w*|"
+                         r"gutters?|caulk\w*|paint\w*|seal\w*|shingles?|roof|chimney|furnace|hoses?|chain|bar oil|"
+                         r"air filter|fuel filter|shocks?|struts?|muffler|exhaust|headlights?|bulbs?|registration|"
+                         r"tags?|emissions|smog|winteriz\w*|flush|gas cap|caps?|(?:body|brake|engine|paint) work|"
+                         r"pump|gauge|fuel \w+|starter|alternator|radiator|thermostat)\b", re.I)
 
 
 def _assets(context) -> list:
@@ -741,7 +778,9 @@ def _upkeep_reply(context, prompt: str):
     The line is that asset's own (`_task_line`); a need already listed is said, never added twice, and a remark, a
     repeat, a date or a non-task (`_NOT_A_TASK`) is the model's.
     A part or a mileage is a real need ("a new fuel filter", "its 30,000 mile service"); only a lone "gas" or "work"
-    isn't."""
+    isn't.
+    A need is added only for an upkeep job by name (`_UPKEEP_JOB`), never "needs me" or "needs a name" (the Fable
+    review)."""
     assets = _assets(context)
     said = prompt.replace("’", "'")
     found = _DUE.match(said)
@@ -753,7 +792,10 @@ def _upkeep_reply(context, prompt: str):
                 if "no readings" in line.lower() else "")
         return f"{line}.{tail}"
     found = _NEEDS.match(said)
-    if found and found.group("asset").lower() in assets and not _NOT_A_TASK.search(found.group("what")):
+    if found and found.group("asset").lower() in assets and not _NOT_A_TASK.search(found.group("what")) \
+            and _UPKEEP_JOB.search(found.group("what")) \
+            and not re.search(r"\b(?:i think|maybe|probably|no|me|you|him|her|name|bigger|smaller)\b", found.group("what"),
+                              re.I):
         title = found.group("what").strip()
         line = _task_line(context, found.group("asset"), title, same=True)
         if line is not None:
@@ -870,7 +912,9 @@ def _project_time_reply(context, prompt: str):
     "I spent 3 hours on the deck yesterday" or "I worked on the coop for an hour" run log_project_time, only for a
     project of his (core/project_time.project_named); "how many hours have I put into the shed?" and "what did I work
     on this week?" run project_hours. "Log 2 hours on" something that's neither a project nor one of his machines is
-    said as no such project, with his projects' names; a machine's ("the mower") stays its engine hours. None
+    said as no such project, with his projects' names, only when the words say it's a project ("the shed build"); a
+    machine's ("the mower") stays its engine hours, and an oven timer or guitar practice is never one. "I spent 3
+    hours on the deck" needs the project's whole name; a day it doesn't read is the model's (the Fable review). None
     otherwise."""
     from core import project_time
     from core.budget_manager import read_date
@@ -882,15 +926,19 @@ def _project_time_reply(context, prompt: str):
     try:
         for n, pattern in enumerate(_TIME_ON):
             found = pattern.match(said)
-            if found and n == 0 and project_time.project_named(context, found.group("p")) is None:
+            if found and _NOT_WHOLE.search(found.group("p")):
+                return None  # "on the deck on Saturday", "two days ago": a day it doesn't read is the model's
+            if found and n == 0 and project_time.project_named(context, found.group("p")) is None \
+                    and re.search(r"\b(?:build|project|job|remodel|rewire|renovation|reno|addition)\b", found.group("p"),
+                                  re.I):
                 named = project_time._words(found.group("p"))
                 if not any(named & project_time._words(a) for a in _assets(context)):
                     # "log 2 hours on the shed build" with no such project: said so with his projects, never a
                     # machine's hours (the live check); "log 2 hours on the mower" stays its engine's reading
                     return actions.execute(context, "log_project_time", {"project": found.group("p"), "hours": 1})
-            if found and project_time.project_named(context, found.group("p")) is not None:
+            if found and project_time.project_named(context, found.group("p"), whole=n > 0) is not None:
                 hours = project_time.hours_said(found.group("h"))
-                if not hours:
+                if not hours or hours > 24:
                     return None
                 args = {"project": found.group("p"), "hours": hours}
                 if (found.group("day") or "").lower() == "yesterday":

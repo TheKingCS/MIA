@@ -167,12 +167,13 @@ class IncomeEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "IncomeEntry":
+        """An income entry from its saved dict; a date that doesn't read is its created day (`_stored_date`)."""
         return IncomeEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             amount=data.get("amount", 0.0),
             category=data.get("category", "Other"),
             description=data.get("description", ""),
-            date=data.get("date", ""),
+            date=_stored_date(data),
             tax_relevant=data.get("tax_relevant", True),
             property_id=data.get("property_id", ""),
             entity_id=data.get("entity_id", ""),
@@ -233,12 +234,13 @@ class ExpenseEntry:
 
     @staticmethod
     def from_dict(data: dict) -> "ExpenseEntry":
+        """An expense from its saved dict; a date that doesn't read ("null") is its created day (`_stored_date`)."""
         return ExpenseEntry(
             entry_id=data.get("entry_id", uuid.uuid4().hex[:10]),
             amount=data.get("amount", 0.0),
             category=data.get("category", "Other"),
             description=data.get("description", ""),
-            date=data.get("date", ""),
+            date=_stored_date(data),
             tax_relevant=data.get("tax_relevant", False),
             bill_id=data.get("bill_id", ""),
             property_id=data.get("property_id", ""),
@@ -366,6 +368,16 @@ def _dated(month: int, day: int, year: Optional[int], today) -> Optional[str]:
         if year or day_of <= today:
             return day_of.isoformat()
     return None
+
+
+def _stored_date(data: dict) -> str:
+    """Pure logic. A saved entry's date as it reads, or its created day when it doesn't (the Fable review,
+    2026-11-25: an entry saved with "null" before that was fixed was still counted in no month)."""
+    said = read_date(str(data.get("date") or ""))
+    if said:
+        return said
+    created = str(data.get("created_at") or "")[:10]
+    return created if read_date(created) else str(data.get("date") or "")
 
 
 def _entry_date(value: Optional[str]) -> str:
