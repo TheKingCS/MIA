@@ -50,6 +50,12 @@ tomorrow?", "how much do I owe in quarterly taxes?". The seventh review's fixes 
 after asking for a drill; 6cbec975), a third sweep on conversation (a86f327e: expense dates and an Animals & Feed
 category, tone examples never this conversation, a thanks without a bill tacked on), "what's my next guitar lesson?"
 (908003a4), and the eighth review's fixes (603dedab: every reply keeps its lines and advice again; 5c602ba9).
+Then a fourth sweep (automation, homestead, business): weekly reminders on the calendar and "what can you automate?"
+(7226dee1); the ninth review found the floor's narrowing had silenced real emergencies again, so the floor is back to
+its wide version and tests/test_first_aid_floor_never_misses.py holds every real phrasing (7999ffa6; never narrow it);
+its other fixes (73c13acf: dates read more ways, an update keeps its date); the business's how-tos from its course
+(a82c07a9). Still from the sweeps: knowledge questions (mites, a well freezing, goat hay) wait on offline packs or
+SearXNG on the PC.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:

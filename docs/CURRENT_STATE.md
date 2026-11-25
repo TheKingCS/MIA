@@ -55,6 +55,9 @@ tool. 8441 passing.
 Then the seventh and eighth reviews' fixes (an emergency said after asking for a drill, the floor's new false alarms,
 every reply's lines and advice kept), the conversation sweep (expense dates, Animals & Feed, examples that leaked,
 no bill after a thanks) and the next lesson of a course named. 8460 passing.
+Then weekly reminders and "what can you automate?", the emergency floor back to its wide version (narrowing it had
+silenced real emergencies; a test now holds every real phrasing found), dates read more ways, and the business's
+how-tos from its course. 8471 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the
