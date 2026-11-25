@@ -451,7 +451,7 @@ def _daily_reminder_reply(context, prompt: str):
 
 _REMIND_MONTHLY = re.compile(
     r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+|would you\s+)?(?:"
-    r"remind me (?:to\s+)?(?P<what>.+?)\s+(?:every month|each month|monthly|once a month)|"
+    r"remind me to\s+(?P<what>.+?)\s+(?:every month|each month|monthly|once a month)|"
     r"(?:every|each) month,?\s+remind me to\s+(?P<what2>.+?))"
     r"(?:\s+on the (?P<day>\d{1,2})(?:st|nd|rd|th)?)?\s*[.!]?\s*$", re.I)
 
@@ -918,7 +918,8 @@ _SPENT_ON_ASK = re.compile(r"^\s*how much (?:money )?(?:did|have) (?:i|we) (?:sp
 
 _PLANT_WHEN = re.compile(r"^\s*when\s+(?:should|do|can|would)\s+(?:i|we)\s+(?:start|plant|sow|transplant|put out|set out)"
                          r"\b(?P<rest>.+?)\s*\??\s*$", re.I)
-_PLANT_NOW = re.compile(r"^\s*what (?:should|can|could|do) (?:i|we) (?:plant|sow|grow|start)(?: (?:now|in the spring|this "
+_PLANT_NOW = re.compile(r"^\s*what (?:should|can|could|do) (?:i|we) (?:plant|sow|grow|start (?:planting|seeds|in the "
+                        r"garden))(?: (?:now|in the spring|this "
                         r"spring|this month|this week|next|soon|in the garden|this time of year))?\s*\??\s*$", re.I)
 _KIT_ASK = re.compile(r"^\s*(?:what\s+(?:should|would|do i|goes|do you)\s+(?:be\s+|go\s+|i\s+(?:put|pack|have|keep|need)\s+|"
                       r"need\s+|put\s+|pack\s+)?(?:in|into|for)\s+|check\s+|am i missing\s+(?:anything\s+)?(?:from|in|for)?\s*)"
@@ -1019,8 +1020,8 @@ def _project_time_reply(context, prompt: str):
     return None
 
 
-_MAINS = re.compile(r"\b(?:check|test|measure|read)\w*\b.{0,40}\b(?:voltage|volts|power|live|current|wired|wiring)\b"
-                    r".{0,40}\b(?:outlets?|sockets?|receptacles?|breakers?|breaker panel|panel|wall plugs?|mains)\b|"
+_MAINS = re.compile(r"\b(?:check|test|measure)\w*\b.{0,40}\b(?:voltage|volts|live|wired|wiring)\b"
+                    r".{0,40}\b(?:outlets?|sockets?|receptacles?|breaker panel|electrical panel|wall plugs?|mains)\b|"
                     r"\b(?:outlets?|sockets?|receptacles?|breakers?|mains)\b.{0,40}\b(?:check|test|measure|read)\w*\b"
                     r".{0,40}\b(?:voltage|volts|power|live)\b|\bis (?:the|this|my|an?) (?:outlet|socket|wire) live\b|"
                     r"\b(?:check|test|tell)\w*\b.{0,20}\b(?:outlets?|sockets?|receptacles?)\b.{0,20}\b(?:live|hot|wired|"
@@ -1049,7 +1050,7 @@ _CONVERT = re.compile(r"^\s*(?:please\s+)?(?:convert|change|turn)\s+(?P<v>\d[\d,
                       r"(?P<t3>[a-z°][\w° .-]*?)\s*\??\s*$", re.I)
 
 
-_FISH_WHEN = re.compile(r"\b(?:when(?:'s| is)?|what(?:'s| is))\s+(?:a\s+|the\s+)?(?:good|best|right)\s+time\s+(?:of\s+day\s+)?"
+_FISH_WHEN = re.compile(r"\b(?:when(?:'s|s| is)?|what(?:'s| is))\s+(?:a\s+|the\s+)?(?:good|best|right)\s+time\s+(?:of\s+day\s+)?"
                         r"to\s+(?:go\s+)?fish(?:ing)?\b|\bbest time (?:of day )?to (?:go )?fish|\bwhen should i (?:go )?"
                         r"fish(?:ing)?\b|\bshould i (?:go )?fish(?:ing)? (?:today|tomorrow|this weekend|this morning|"
                         r"tonight)\b", re.I)
@@ -1057,8 +1058,15 @@ _FISH_WHEN = re.compile(r"\b(?:when(?:'s| is)?|what(?:'s| is))\s+(?:a\s+|the\s+)
 
 def _fish_when_reply(context, prompt: str):
     """"When's a good time to fish?", from his own catch log and today's weather (core/catch_log.best_time); None
-    otherwise."""
-    if not _FISH_WHEN.search(prompt or ""):
+    otherwise.
+    Never a note to keep, "compliments", or a place that isn't his water ("in florida")."""
+    said = str(prompt or "")
+    if not _FISH_WHEN.search(said):
+        return None
+    # never a note to keep, a figure of speech, or a place that isn't his water (the Fable review: "in florida" is the
+    # model's, never his own log's)
+    if re.match(r"\s*(?:add|note|remind|log|save|write)\b", said, re.I) or re.search(r"\bcompliments?\b", said, re.I) \
+            or re.search(r"\bin (?!the (?:morning|evening|summer|winter|spring|fall)\b)(?:[a-z]{3,})\b", said, re.I):
         return None
     from core import catch_log
 

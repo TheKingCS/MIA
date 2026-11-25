@@ -48,7 +48,8 @@ def _app_status(context, arguments: dict) -> str:
 def _yesterday(context, words: str):
     """What he talked about with her yesterday (or the day his words name): each kept conversation that day,
     summarised (core/conversation_export.summary_of: the model's four headings, or what he asked when there's no
-    model), the two newest; None when his words name no day."""
+    model), the two newest; None when his words name no day.
+    A weekday counts only with "on" or "last" before it, never "Friday's appointment"."""
     import re
     from datetime import date, timedelta
 
@@ -59,7 +60,8 @@ def _yesterday(context, words: str):
     if re.search(r"\b(?:yesterday|last night)\b", said):
         day = (date.today() - timedelta(days=1)).isoformat()
     else:
-        named = re.search(r"\b(?:on |last )?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", said)
+        # a day only when it's when they talked: "what did we talk about on Monday", never "Friday's appointment"
+        named = re.search(r"\b(?:on|last) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b(?!'s)", said)
         day = read_date("last " + named.group(1)) if named else None
     if not day:
         return None

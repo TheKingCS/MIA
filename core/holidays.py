@@ -71,14 +71,18 @@ HOLIDAYS = {
 
 
 def named(words: str, country: str = "US") -> Optional[str]:
-    """Pure logic. The holiday his words name, kept in his country, or None ("new year's eve" before "new year's")."""
+    """Pure logic. The holiday his words name, kept in his country, or None: the one whose words cover the most of
+    what he said ("new year's eve" is never New Year's Day: the Fable review), and never Easter Monday or Orthodox
+    Easter as Easter Sunday."""
     said = " ".join(str(words or "").lower().replace("\u2019", "'").split())
-    order = sorted(HOLIDAYS, key=lambda n: -len(HOLIDAYS[n][0]))  # the longer words first: "christmas eve"
-    for name in order:
-        pattern, where, _ = HOLIDAYS[name]
-        if re.search(rf"\b(?:{pattern})\b", said) and (where is None or country in where):
-            return name
-    return None
+    if re.search(r"\b(?:easter monday|orthodox easter|greek easter)\b", said):
+        return None
+    best, length = None, 0
+    for name, (pattern, where, _fall) in HOLIDAYS.items():
+        found = re.search(rf"\b(?:{pattern})\b", said)
+        if found and (where is None or country in where) and len(found.group()) > length:
+            best, length = name, len(found.group())
+    return best
 
 
 def day_of(name: str, year: int) -> date:
@@ -116,13 +120,15 @@ def coming_line(context, today: Optional[date] = None, days: int = 7) -> str:
     return ("; ".join(said) + ".") if said else ""
 
 
-_ASKED = re.compile(r"^\s*(?:when(?:'s| is| does)?|what (?:day|date)(?: is| does)?|what day of the week is|which day is)\b"
+_ASKED = re.compile(r"^\s*(?:when(?:'s| is| does| was)|what (?:day|date)(?: is| does| was)?|what day of the week is|"
+                    r"which day is)\b"
                     r"(?P<rest>.+?)\s*\??\s*$", re.I)
 
 
 def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """"When is Thanksgiving?", "What day is Easter next year?", "What date is Memorial Day in 2027?": the date, its
-    weekday and how far off; None for anything else, or a holiday his country doesn't keep."""
+    weekday and how far off; None for anything else, or a holiday his country doesn't keep.
+    Only the holiday itself, with a year or a country ("in Canada") at most; a past one is "was"."""
     found = _ASKED.match(str(words or ""))
     if not found:
         return None
@@ -132,8 +138,20 @@ def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
         country = country_of(context) if context is not None else "US"
     except Exception:  # noqa: BLE001 - no settings: the default
         country = "US"
-    name = named(found.group("rest"), country)
+    rest = found.group("rest")
+    if re.search(r"\bin canada\b", rest, re.I):
+        country = "CA"
+    elif re.search(r"\bin the (?:us|usa|states|united states)\b", rest, re.I):
+        country = "US"
+    # only the holiday itself, with a year or a country at most: "when is the christmas concert?", "when is my labor
+    # day party?" and "when should I start the easter ham?" are his own things (the Fable review)
+    bare = re.sub(r"\b(?:this|next|last) year\b|\bin \d{4}\b|\b\d{4}\b|\bin (?:canada|the (?:us|usa|states|united "
+                  r"states))\b|\b(?:is|this|on|fall|falls|land|lands|come|comes|be|the)\b|[?.,!]", " ", rest, flags=re.I)
+    name = named(bare, country)
     if name is None:
+        return None
+    pattern = HOLIDAYS[name][0]
+    if re.sub(rf"\b(?:{pattern})\b", " ", " ".join(bare.lower().replace("\u2019", "'").split())).strip():
         return None
     today = today or date.today()
     year_said = re.search(r"\b(20\d\d)\b", found.group("rest"))
@@ -151,4 +169,5 @@ def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
     away = ("today" if days == 0 else "tomorrow" if days == 1 else f"in {days} days" if days > 0
             else f"{-days} days ago")
     label = name.split(" (")[0]
-    return f"{label} is {when:%A}, {when:%B} {when.day}, {when.year} ({away})."
+    verb = "was" if days < 0 else "is"
+    return f"{label} {verb} {when:%A}, {when:%B} {when.day}, {when.year} ({away})."

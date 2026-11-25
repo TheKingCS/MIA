@@ -5,7 +5,7 @@ tests.test_sweep_16
 The tenth live sweep's fixes (2026-11-25): a unit conversion and a holiday's date are worked out in code (the model
 had said "The conversion is complete." and "I don't have that information"); "I don't know what that means" before
 a real answer goes; "do you remember what I told you yesterday?" is his past conversations, never one person. The
-coming week's holidays, which the morning briefing names.
+coming week's holidays, which the morning briefing names. The Fable review's: each route takes only its own.
 """
 
 from datetime import date
@@ -59,3 +59,28 @@ def test_the_coming_weeks_holidays():
     assert holidays.coming("US", date(2026, 12, 23), 3)[:2] == [("Christmas Eve", date(2026, 12, 24)),
                                                                  ("Christmas", date(2026, 12, 25))]
     assert holidays.coming_line(None, date(2026, 11, 25), 3) == "Thanksgiving is tomorrow."
+
+
+def test_the_fable_reviews_routes_take_only_their_own(monkeypatch):
+    """Holidays only the holiday itself, conversions right, home trouble only a water pipe happening now."""
+    from core import holidays, home_trouble
+
+    today = date(2026, 11, 25)
+    assert holidays.reply(None, "when is new year's eve", today=today).startswith("New Year's Eve is Thursday")
+    assert holidays.reply(None, "When is Thanksgiving in Canada?", today=today).startswith(
+        "Thanksgiving is Monday, October 11, 2027")
+    for words in ("when is easter monday", "when is orthodox easter", "when is the christmas concert",
+                  "when is my labor day party", "when does the halloween store open",
+                  "when should i start the easter ham", "when did we last talk about christmas"):
+        assert holidays.reply(None, words, today=today) is None, words
+    assert holidays.reply(None, "when was easter this year", today=today).startswith("Easter was")
+    for words in ("a power line is broken in my yard", "my brake line broke", "the house is flooded with light",
+                  "how much does it cost to fix a burst pipe", "the pipe is frozen yogurt",
+                  "remind me to call the plumber about the burst pipe"):
+        assert home_trouble.reply(words) is None, words
+    assert home_trouble.reply("the basements full of water").startswith("If water")
+    for words in ("whens the best time to fish for compliments", "add note: best time to fish is dawn",
+                  "what is the best time to go fishing in florida"):
+        assert assistant_turn._fish_when_reply(None, words) is None, words
+    assert assistant_turn._mains_reply(None, "read me the current breaker list") is None
+    assert assistant_turn._monthly_reminder_reply(None, "remind me that the meeting is monthly") is None

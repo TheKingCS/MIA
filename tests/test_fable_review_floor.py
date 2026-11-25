@@ -8,7 +8,8 @@ emergency the floor's last reply didn't cover is answered; freezer burn, a tree'
 the floor's steps; the kitchen's water, a goat shelter, a margin of safety and a quote tweet aren't lessons; the bare
 word "power" never starts the outage drill. Fable's check of those fixes: each kind is said once in a
 conversation and then the model helps, and a how-to's answer never stops a real emergency after it. The home's own
-emergencies (a fire, a gas leak, carbon monoxide) say to get out first and call from outside.
+emergencies (a fire, a gas leak, carbon monoxide) say to get out first and call from outside; a person on fire gets
+stop, drop and roll first, and a downed power line is a shock, never water advice.
 """
 
 from types import SimpleNamespace
@@ -78,3 +79,9 @@ def test_the_homes_own_emergencies_say_get_out_first():
     assert floor.respond("my carbon monoxide alarm is going off", []).startswith("Get out now")
     assert floor.detect("I need to stop at the gas station") is None
     # "what does a gas leak smell like?" gets the floor too: a false alarm is its accepted cost, never narrowed
+
+
+def test_a_person_on_fire_gets_stop_drop_and_roll_first():
+    """My clothes on fire: the burn's steps first, then getting out."""
+    assert floor.kinds("my clothes are on fire")[0] == "burn"
+    assert floor.kinds("a power line is broken in my yard")[0] == "shock"

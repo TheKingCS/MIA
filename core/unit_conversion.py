@@ -192,12 +192,29 @@ def resolve_unit_key(units: dict, text: str) -> Optional[str]:
     Assistant action needs this since the model can't be expected to
     know these exact key strings verbatim. Matches the name part before
     the parenthesis, the abbreviation inside it, or a substring of the
-    name part, case-insensitively."""
-    text = text.strip().lower()
+    name part, case-insensitively: a whole name, abbreviation or plural
+    first, a part of a name only after ("grams" is Grams, never
+    Kilograms), and the aliases people say ("f", "c", "lbs")."""
+    text = " ".join(text.strip().lower().split())
+    text = _ALIASES.get(text, text)
+    parts = []
     for key in units:
         paren_start = key.find("(")
         name_part = (key[:paren_start] if paren_start != -1 else key).strip().lower()
         abbrev_part = key[paren_start + 1 : key.find(")")].strip().lower() if paren_start != -1 else ""
-        if text == name_part or text == abbrev_part or text in name_part:
+        parts.append((key, name_part, abbrev_part))
+    # a whole name or abbreviation first, a plural or singular as the same, and only then a part of a name: "grams"
+    # is never Kilograms, "f" never Feet (the Fable review, 2026-11-25)
+    for key, name_part, abbrev_part in parts:
+        if text in (name_part, abbrev_part, abbrev_part.lstrip("\u00b0")) or text.rstrip("s") == name_part.rstrip("s"):
+            return key
+    for key, name_part, _abbrev in parts:
+        if text in name_part:
             return key
     return None
+
+
+# what people say for a unit that the names don't hold ("f" and "c" for the temperatures)
+_ALIASES = {"f": "fahrenheit", "degrees f": "fahrenheit", "deg f": "fahrenheit", "c": "celsius", "degrees c": "celsius",
+            "deg c": "celsius", "centigrade": "celsius", "k": "kelvin", "gram": "grams", "g": "grams", "lb": "pounds",
+            "lbs": "pounds", "pound": "pounds", "ounce": "ounces"}

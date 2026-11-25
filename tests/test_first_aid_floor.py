@@ -89,7 +89,8 @@ MUST_NOT = [
     "I'm drowning in work",
     "I'm bleeding the brakes on the truck",
     "the engine is seizing up",
-    "the brush pile caught fire",
+    # "the brush pile caught fire" is an emergency now: a fire that caught is never a figure (the Fable review of the
+    # home kinds; a false alarm is the floor's accepted cost)
     "I almost had a heart attack when I saw the price",
     "I can't breathe through my nose this week",
     "my dog is choking",

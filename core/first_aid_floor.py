@@ -67,25 +67,35 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
     # the home's own emergencies, first: get out, then call (2026-11-25: "I smell gas", "my carbon monoxide alarm is
     # going off" and "there's a fire in the kitchen" had reached nothing). From the US Fire Administration's and the
     # NFPA's home fire guidance, gas utilities' leak steps and the CDC's on carbon monoxide.
-    ("fire", re.compile(r"\b(?:house|home|kitchen|room|bedroom|garage|barn|shop|workshop|coop|trailer|camper|"
-                        r"building|attic|basement|shed|apartment|stove|oven|dryer|chimney)\s+(?:is |'s |caught |are )?"
-                        r"(?:on fire|in flames|burning|caught fire)\b|\bthere'?s (?:a )?fire\b|\bfire in (?:the|my|our)\b|"
-                        r"\b(?:i |we )?(?:see|smell) (?:smoke|flames)\b.{0,30}\b(?:house|room|kitchen|inside|walls?|"
-                        r"ceiling|attic|garage|barn)\b|\bgrease fire\b|\bchimney fire\b|\bsmoke (?:is )?(?:coming|pouring) "
-                        r"(?:out|from)\b|\bsmoke alarm\b.{0,30}\b(?:smoke|flames|fire)\b"),
+    # wide on purpose (the Fable review of the home kinds: "the toaster is on fire", "i smell smoke", "help fire" had
+    # been missed): anything on fire, smoke seen or smelled, a fire named; "I'm on fire today" is the accepted false alarm
+    ("fire", re.compile(r"\bon fire\b|\bin flames\b|\bcaught fire\b|\bcatching fire\b|\bburning (?:down|up)\b|"
+                        r"\b(?:barn|house|shed|garage|kitchen|shop|trailer|coop)s?\s+(?:is |'s )?burning\b|"
+                        r"^\s*(?:help\W*)?fire\b|\b(?:house|garage|kitchen|barn|shop|brush|grass|chimney|grease|"
+                        r"electrical|car|truck|wood ?stove|attic|basement|field|wild) ?fire\b|\bfire in (?:the |my |our )?\w+|"
+                        r"\b(?:we|i) (?:have|got) a fire\b|\bthere'?s (?:a )?fire\b|\bthe fire is (?:spreading|growing|"
+                        r"getting bigger|out of control|in the)\b|\bcan'?t (?:put|get) (?:the |it )?(?:fire )?out\b|"
+                        r"\b(?:smell|smells|see|seeing) (?:smoke|flames|something burning)\b|\b(?:full of|filling (?:up )?"
+                        r"with) smoke\b|\bsmoke (?:is )?(?:coming|pouring|rising) (?:out|from|through)\b|\bsmoke alarms?\b"
+                        r".{0,25}\b(?:going off|went off|beeping|won'?t stop|screaming|sounding)\b|\bsomething(?:'s| is)? "
+                        r"burning\b|\bflames? (?:coming|shooting) (?:out|from)\b|\bsparks? (?:and|with) smoke\b"),
      "Get everyone out and stay out; don't stop for things. Crawl low under smoke, and feel a door with the back of "
      "your hand before you open it: if it's hot, use another way out. Close doors behind you, meet outside, and never "
      "go back in. A grease fire on the stove, only if it's small and you can: slide a lid over it and turn off the "
      "heat; never water."),
-    ("gas", re.compile(r"\b(?:smell|smells|smelling|smelled)\s+(?:like\s+)?(?:of\s+)?(?:gas|propane|natural gas|rotten "
-                       r"eggs)\b(?!\s+station)|\b(?:gas|propane)\s+leak\w*\b|\bleaking (?:gas|propane)\b|\bhissing "
-                       r"(?:from|at) the (?:gas|propane)\b"),
+    ("gas", re.compile(r"\b(?:smell|smells|smelling|smelled|reeks?|reeking|stinks?|odor|odour)\b.{0,15}\b(?:gas|propane|"
+                       r"natural gas|rotten eggs?)\b(?!\s+(?:station|prices?|mileage|tank fill))|\b(?:gas|propane)\s+"
+                       r"(?:smell|odou?r|leak\w*|is leaking|leaking)\b|\bleaking (?:gas|propane)\b|\bhissing (?:from|at|by) "
+                       r"the (?:gas|propane)\b|\b(?:hit|cut|broke|nicked|damaged) (?:a |the |our )?gas line\b|\bgas line "
+                       r"(?:is )?(?:broken|broke|cut|hit|damaged|leaking)\b|\bleft the gas on\b|\bgas (?:is )?in the "
+                       r"(?:house|kitchen|basement|room)\b|\brotten egg (?:smell|odou?r)\b|\b(?:propane|gas) tank\b.{0,15}"
+                       r"\b(?:leak\w*|hissing)\b"),
      "Leave now, everyone and the pets, and leave the door open behind you. Don't switch any light or appliance on or "
      "off, don't light anything, and don't use a phone until you're well away outside. Call from outside, and the gas "
      "or propane company's emergency line too. Don't go back in until they say it's safe."),
-    ("co", re.compile(r"\b(?:carbon monoxide|co)\s+(?:alarm|detector|monitor|sensor)\b.{0,30}\b(?:going off|goes off|"
-                      r"went off|beeping|sounding|alarming|is on|keeps going)\b|\bcarbon monoxide poison\w*|"
-                      r"\bcarbon monoxide\b.{0,30}\b(?:house|home|inside|in here|garage)\b"),
+    ("co", re.compile(r"\b(?:carbon monoxide|monoxide|co2?)\s+(?:alarm|detector|monitor|sensor|meter)s?\b|"
+                      r"\bcarbon monoxide\b|\b(?:generator|grill|engine|car|truck|heater) (?:is |was )?(?:running|on) in "
+                      r"the (?:garage|house|basement|shop|tent|camper)\b|\b\d+ ?ppm\b"),
      "Get everyone, the pets too, out into fresh air now, and leave the door open. Call from outside. Anyone with a "
      "headache, dizziness, sleepiness, nausea or confusion needs care now: tell the operator. Don't go back in until "
      "the fire department says it's clear."),
@@ -109,8 +119,10 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "floats. If they aren't breathing normally, start CPR; drowning is a lack of air, so give rescue breaths too if "
      "you know how. Keep them warm."),
     ("shock", re.compile(r"\belectrocut\w*|\b(?:got|been|was|is) (?:shocked|zapped)\b|\belectric(?:al)? shock\b|"
-                         r"\btouched (?:a|the) (?:live|power) (?:wire|line)\b|\bpower line\b.{0,20}\b(?:down|touch\w*|"
-                         r"hit)\b"),
+                         r"\btouched (?:a|the) (?:live|power) (?:wire|line)\b|\bpower lines?\b.{0,25}\b(?:down|touch\w*|"
+                         r"hit|broke|broken|fell|fallen|snapped|on the ground|sparking|arcing|in (?:my|the|our) (?:yard|"
+                         r"driveway|road|field))\b|\bdowned (?:power )?lines?\b|\blive wires?\b.{0,20}\b(?:down|on the "
+                         r"ground|sparking)\b"),
      "Don't touch them until the power is off: switch it off at the breaker or unplug it, or push the source away with "
      "something dry that isn't metal (a wooden broom handle). Stay well back from a downed power line. Once it's off, "
      "if they aren't breathing normally, start CPR; cover any burns loosely."),
@@ -207,7 +219,7 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
      "things near the bite before it swells. Don't cut it, suck it, ice it or put a tourniquet on it."),
     ("burn", re.compile(r"\bburn(?:ed|t)\b.{0,25}\b(?:badly|bad|all over|blister\w*|skin)\b|"
                         r"\b(?:bad|badly|severe|serious|deep) burns?\b|\b(?:clothes|clothing|sleeve|shirt|pants|jeans|hair|jacket|coat|dress|hoodie)\s+(?:caught|are on|is on|on|lit) fire\b|"
-                        r"\b(?:he|she|they|baby|my \w+)(?:'s| is| are|'re) on fire\b|\bon fire\b.{0,15}\b(?:he|she|"
+                        r"\b(?:he|she|they|baby|my \w+|i)(?:'s| is| are|'re|'m| am) on fire\b|\bon fire\b.{0,15}\b(?:he|she|"
                         r"him|her)\b|\b(?:boiling|hot) (?:water|oil|grease)\b.{0,25}\b(?:on|over) (?:the baby|him|her|"
                         r"me|them|my|his|her)\b|\bscald(?:ed|ing)?\b"),
      "Stop the burning: stop, drop and roll, or smother it. Cool the burn under cool (not icy) running water for 10 "
@@ -235,7 +247,8 @@ _HAPPENING = re.compile(r"\bright now\b|\bhelp\b|!|\b(?:he|she|they)(?:'s| is| a
 _PAST = re.compile(r"\bin (?:19|20)\d\d\b|\b(?:years?|months?|weeks?) ago\b|\blast (?:year|month|week)\b|"
                    r"\bwhen (?:i|he|she) was (?:a )?(?:kid|young|little|child)\b", re.I)
 # A figure of speech: "I'm drowning in work", "choking on all this paperwork", "almost had a heart attack".
-_FIGURE = re.compile(r"\bdrowning in\b(?!\s+(?:[\w']+\s+){0,3}(?:pool|lake|pond|river|creek|water|ocean|sea|tub|"
+_FIGURE = re.compile(r"\b(?:i'm|i am|we're|you're|he's|she's|they're|you are)\s+on fire\s+(?:today|tonight|lately|"
+                     r"this (?:week|month|season|year)|at work|at the gym|right now with)\b|\bdrowning in\b(?!\s+(?:[\w']+\s+){0,3}(?:pool|lake|pond|river|creek|water|ocean|sea|tub|"
                      r"bath\w*|canal|tank|trough|reservoir|quarry|surf|waves?))|\bchok(?:ing|ed) on (?:all )?(?:this|that|the|my|these) (?:paperwork|work|news|"
                      r"traffic|emails?|bills?|deadlines?)\b|\b(?:almost|nearly) (?:had a (?:heart attack|stroke|cow|fit)|had|died|choked|drowned)\b|"
                      r"\bgave me a heart attack\b|\bmy heart (?:almost |nearly )?stopped when\b|\bunresponsive "
@@ -319,7 +332,9 @@ def kinds(prompt: str) -> list[str]:
     turns the floor off.
     A figure of speech or a past clause takes out only its own words, and the rest is checked again (the Fable
     review, 2026-11-25); the words are `normalised` first ("hes", "im", "wont").
-    An animal named never quiets the home's own kinds (a fire, gas, carbon monoxide)."""
+    An animal named never quiets the home's own kinds (a fire, gas, carbon monoxide).
+    The home's own are never quieted by a question's opening or a past clause; a person on fire gets the burn's
+    steps first."""
     text = normalised(prompt)
     if not text:
         return []
@@ -330,13 +345,17 @@ def kinds(prompt: str) -> list[str]:
     if _ANIMAL.search(text) and not _PERSON.search(text) and not any(k in HOME for k in found):
         return []
     happening = bool(_HAPPENING.search(text))
-    if _ABOUT.search(text) and not happening:
+    home = any(k in HOME for k in found)  # "why is my carbon monoxide alarm going off?" is still one (the Fable review)
+    if _ABOUT.search(text) and not happening and not home:
         return []
-    if _PAST.search(text) and not happening:
+    if _PAST.search(text) and not happening and not home:
         rest = _without(re.compile(r"[^,.;]*" + _PAST.pattern + r"[^,.;]*", re.I), text)
         found = [kind for kind, words, _do in KINDS if words.search(rest)]  # the past clause out, not the sentence
         if not found:
             return []
+    if "burn" in found and "fire" in found and re.search(r"\b(?:i'm|i am|he's|she's|clothes|shirt|sleeve|hair|"
+                                                        r"pants|jacket|they're)\b", text):
+        found = ["burn"] + [k for k in found if k != "burn"]  # a person on fire: stop, drop and roll first
     if _practice_asked(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)) \
             and not _left_after_drill(text):
         return []  # "help me practice the choking drill" is practice; "help, he's choking" never is

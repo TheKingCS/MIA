@@ -2732,7 +2732,8 @@ class AssistantTools:
 
     @staticmethod
     def _action_convert_units(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `convert_units`: converts a value between units, trying each category of the unit converter (core/unit_conversion.py, shared with the web Toolbox) until both units are recognized in the same one. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `convert_units`: converts a value between units, trying each category of the unit converter (core/unit_conversion.py, shared with the web Toolbox) until both units are recognized in the same one. Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A result of 1,000 or more is said with commas, never in scientific notation."""
         from core.unit_conversion import UNIT_CATEGORIES, convert, resolve_unit_key
 
         from_text = str(arguments.get("from_unit", "")).strip()
@@ -2749,7 +2750,8 @@ class AssistantTools:
             to_key = resolve_unit_key(units, to_text)
             if from_key is not None and to_key is not None:
                 result = convert(category, from_key, to_key, value)
-                return f"{value:g} {from_key} = {result:.4g} {to_key}"
+                shown = (f"{result:,.2f}".rstrip("0").rstrip(".") if abs(result) >= 1000 else f"{result:.4g}")
+                return f"{value:g} {from_key} = {shown} {to_key}"  # never 6.336e+04 (the Fable review)
         return f"I don't recognize '{from_text}' and/or '{to_text}' as units I can convert between."
 
     @staticmethod
