@@ -6,7 +6,8 @@ The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by t
 embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his
 generator and preparedness settings, everyday money questions (bills due, the budget, subscriptions, a tax
 refund, where the money went), how long the generator runs, the weather against his plans, where he left
-off, money ahead, an invoice, the garden's week and year, a build's price, the flock's feed and his learning
+off, money ahead, an invoice, the garden's week and year, a garden crop's watering asked by name (never a
+reminder to water it or "I watered" it), a build's price, the flock's feed and his learning
 programs (woodworking, gardening, fitness, bushcraft), her offline library for how-to questions about the world
 ("how do I purify creek water?", never held to her own help pages); and a plan whose words
 catch a weather, garden, flock or bills question; and everyday talk never reaches a tool it isn't for (self-worth
@@ -148,6 +149,20 @@ def test_self_worth_and_other_peoples_worth_never_get_his_figure(registry, said)
                                         ("what's left in my pantry?", "budget_left")])
 def test_everyday_talk_never_reaches_a_tool_it_isnt_for(registry, said, never):
     assert never not in offered_tools(registry, said, demo_context()), said
+
+
+@pytest.mark.parametrize("said", ["It's so hot, should I water the tomatoes?", "should I water my peppers today?",
+                                  "do I water the bean seedlings tonight?"])
+def test_a_garden_crop_by_name_reaches_the_watering_answer(registry, said):
+    assert "should_i_water" in offered_tools(registry, said, demo_context()), said
+
+
+def test_a_crop_already_watered_or_a_chore_to_remember_isnt_asked_about_watering(registry):
+    """"I watered the tomatoes" is a done task and "remind me to water the peppers" a reminder: neither is answered in
+    code by the watering check."""
+    for said in ("I watered the tomatoes", "Remind me to water the pepper plants every 3 days"):
+        found = registry.direct_lookup(said, demo_context())
+        assert found is None or found.name != "should_i_water", said
 
 
 def test_a_real_today_question_still_reaches_todays_plan():

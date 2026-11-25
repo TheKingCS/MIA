@@ -242,10 +242,20 @@ def _action_anything_unusual(context, arguments: dict) -> str:
     return unusual.say(context)
 
 
+# Garden crops by name, for "should I water the tomatoes?" (each a stem, so "tomato" covers "tomatoes" and "tomato
+# plants"); never a houseplant or an animal, and only asked ("should I", "do I"), never "remind me to water the
+# tomatoes every 2 days" (a maintenance task).
+GARDEN_CROPS = ("tomato", "pepper", "bean", "squash", "cucumber", "corn", "lettuce", "potato", "carrot", "onion",
+                "garlic", "melon", "pumpkin", "peas", "kale", "cabbage", "broccoli", "strawberr", "zucchini", "okra",
+                "spinach", "beet", "radish", "seedlings", "transplants")
+_WATER_A_CROP = tuple(f"{verb} {crop}" for crop in GARDEN_CROPS
+                      for verb in ("should i water the", "should i water my", "do i water the", "do i water my"))
+
+
 def register_today_actions(registry: AssistantActionRegistry) -> None:
     """Registers get_today, get_week, get_weather (never the wind chill or heat index: those go to
     work_outside_wind_chill_heat_index, core/outdoor_work.py), should_i_water (core/weather_watch.say_watering, heard only of the
-    garden, never houseplants or the hens), log_rain (his rain gauge, which that answer counts; heard only when he reads it, never "is an inch of rain enough?"), weather_for_my_plans (the forecast against his garden and flock,
+    garden or a garden crop by name, GARDEN_CROPS: "should I water the tomatoes?", never houseplants or the hens), log_rain (his rain gauge, which that answer counts; heard only when he reads it, never "is an inch of rain enough?"), weather_for_my_plans (the forecast against his garden and flock,
     core/weather_watch.py), anything_unusual (core/unusual.py), where_were_we (core/left_off.py), how_prepared (core/preparedness.py), emergency_kit (core/ready_kit.py), firewood_check (core/firewood.py), bleach_for_water (the EPA's dose, core/eng_calcs.py), set_preparedness (what those count with: people, days, the generator's rate in gallons or a propane
     rate in pounds an hour, the catchment roof the water budget counts, and the battery the power picture counts), evening_wrap (core/evening_wrap.py) and set_weather_place (domain today: the
     Dashboard's). Their trigger phrases cover the everyday ways he'd ask ("plan for 3 people", "how many days could my
@@ -298,9 +308,11 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         description="Whether to water the garden today: rain now or likely tomorrow, a hot dry day, and the soil check.",
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_should_i_water,
-        # garden words only: never "should I water the houseplants?" or "do I need to water the chickens?"
+        # garden words and garden crops by name (GARDEN_CROPS) only: never "should I water the houseplants?" or "do
+        # I need to water the chickens?"
         trigger_phrases=("water the garden", "water the beds", "water the vegetables", "garden need water",
-                         "garden need watering", "need watering", "need to be watered", "watering the garden"),
+                         "garden need watering", "need watering", "need to be watered", "watering the garden",
+                         *_WATER_A_CROP),
     ))
     registry.register(AssistantAction(
         name="weather_for_my_plans", domain="today",

@@ -354,8 +354,9 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
-- *Seen, not changed:* "it's so hot, should I water the tomatoes?" goes to log_maintenance_reading (it did before
-  too): should_i_water answers garden words only, so a crop's name doesn't reach it yet.
+- **"Should I water the tomatoes?"** (no decision): it went to log_maintenance_reading; *fixed 2026-11-24*: the
+  watering check now hears 25 garden crops by name, asked ("should I water the...", "do I water my..."), answered in
+  code; "remind me to water the tomatoes every 2 days" and "I watered the tomatoes" stay Maintenance's.
 
 ## Round 11 (2026-11-24, late): money he can ask about
 

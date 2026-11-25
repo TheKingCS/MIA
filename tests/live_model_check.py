@@ -723,6 +723,7 @@ GOLDEN_CASES = [
     ("storm: is one coming", "Is there a storm coming this week?", "storm_ready"),
     ("storm: get ready", "Help me get ready for the ice storm", "storm_ready"),
     ("outdoor: too hot to work", "Is it too hot to work outside today?", "work_outside_wind_chill_heat_index"),
+    ("water: a crop by name", "Should I water my peppers today?", "should_i_water"),
     ("outdoor: wind chill tomorrow", "What's the wind chill going to be tomorrow while I'm out cutting wood?",
      "work_outside_wind_chill_heat_index"),
     ("storm: the plain forecast is the weather", "What's the weather tomorrow?", "get_weather"),
