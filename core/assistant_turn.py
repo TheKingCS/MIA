@@ -493,6 +493,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A materials question with its size, from the calculators (`_materials_reply`).
     A claim of a change no tool made is said honestly; a reminder on a day goes on the calendar.
     A personal or off-the-record turn's claim is never kept in the Fix-It Log.
+    The model's reply is polished with his words, so a loosely copied humor example goes.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -677,7 +678,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
 
     # Her own words without the model's habitual "Sure!" first and "let me know" last, on every surface, not
     # only the phone (docs/CONVERSATION_REVIEW.md). An offer of hers to do something stays.
-    content = with_offer(conversation, polish(reply.content))
+    content = with_offer(conversation, polish(reply.content, prompt))
     from core.claim_check import honest
 
     content = honest(context, prompt, content, keep=not _personal(conversation)

@@ -242,6 +242,7 @@ class AssistantTools:
         why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py; what_to_make_next from core/make_next.py; work_outside_wind_chill_heat_index from core/outdoor_work.py; tax_set_aside from core/tax_setaside.py; best_time_to_fish from core/fishing_times.py; why_hens_not_laying from core/hen_laying.py; meat_cure from core/meat_cure.py; size_solar from core/solar_size.py; canning_time from core/canning_times.py; rent_collected from core/rent_collected.py; move_calendar_event from core/calendar_move.py; flash_lab, check_lab and lab_board from core/esp32_lab.py; build_along and simulate_lab from core/esp32_sim.py; start_drill from core/drills.py; import_part_spec and part_specs from core/part_specs.py.
         The homestead sums too (water to store, generator hours, hens for eggs).
         list_calendar_events takes his words (`prompt_arg`).
+        add_expense offers the Animals & Feed category.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -2251,7 +2252,7 @@ class AssistantTools:
                 "type": "object",
                 "properties": {
                     "amount": {"type": "number", "description": "The expense amount in dollars."},
-                    "category": {"type": "string", "description": "One of: Utilities, Mortgage/Rent, Insurance, Groceries, Maintenance, Transportation, Taxes, Other. Defaults to 'Other'."},
+                    "category": {"type": "string", "description": "One of: Utilities, Mortgage/Rent, Insurance, Groceries, Animals & Feed, Maintenance, Transportation, Taxes, Other. Defaults to 'Other'."},
                     "description": {"type": "string", "description": "Optional description."},
                     "date": {"type": "string", "description": "Optional date in YYYY-MM-DD format. Defaults to today."},
                 },

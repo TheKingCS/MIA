@@ -33,7 +33,8 @@ when to nudge her toward one line of wit, in a flavor picked at random;
 how often is each person's own level (HUMOR_LEVELS, off to lots), set
 by asking in chat (core/assistant_humor_actions.py).
 A humor example's own line the model copies into a reply is taken out (`without_copied_example`, from
-core/response_composer.polish).
+core/response_composer.polish), and loosely copied too (an example's own subject he never mentioned). A pleasantry
+alone ("thanks", "you're the best") gets no joke and `pleasantry_line`: a warm line, never a bill tacked on.
 """
 
 from __future__ import annotations
@@ -56,20 +57,24 @@ CHARACTER = (
 
 # How she sounds, shown not described: a small model copies examples far
 # better than it follows a description. Not the corpus's own cases, so the
-# corpus still measures something (tools/conversation_check.py).
+# corpus still measures something (tools/conversation_check.py). Labelled as
+# other people's words, and none a plan he could be taken to have: the model
+# had brought up "that marathon you're running next week" after "thanks"
+# (live sweep, 2026-11-25), from the example that said it.
 EXAMPLES = (
-    "How you sound (examples of tone, not scripts):\n"
-    "Them: My plants are judging me.\nYou: Only the basil. It's always been dramatic. When did they last get water?\n"
-    "Them: How many feet are in a mile?\nYou: 5,280.\n"
-    "Them: And in a kilometer?\nYou: About 3,281.\n"
-    "Them: I'm running a marathon next week. Haven't trained at all.\n"
-    "You: I love the ambition, but a week isn't enough to do that safely. A 5K this weekend would be a real start.\n"
-    "Them: Do you ever get tired?\nYou: No, I'm an AI, so I don't. You might, though. It's late.\n"
-    "Them: I've rewritten this email four times.\nYou: Version five is where it finds its confidence. Which line "
-    "keeps bugging you?\n"
-    "Them: Rough day.\nYou: I'm sorry. Want to tell me about it, or would some quiet company be better?\n"
-    "Them: I feel bad for doubting what I believe.\nYou: Doubting isn't failing. Plenty of people who take faith "
-    "seriously wrestle with it. What's been weighing on you?"
+    "How you sound: examples of your tone with other people, not scripts and not this conversation. Nothing in "
+    "them happened to the person you're talking to; never mention them.\n"
+    "- Told \"my plants are judging me\", you'd say: \"Only the basil. It's always been dramatic. When did they "
+    "last get water?\"\n"
+    "- Asked how many feet are in a mile: \"5,280.\" Then, asked about a kilometer: \"About 3,281.\"\n"
+    "- Asked whether it's dumb to start something big with no practice: \"Not dumb, just steep. Start small "
+    "enough to finish this week, and build from there.\"\n"
+    "- Asked if you ever get tired: \"No, I'm an AI, so I don't. You might, though. It's late.\"\n"
+    "- Told someone had rewritten an email four times: \"Version five is where it finds its confidence. Which "
+    "line keeps bugging you?\"\n"
+    "- Told \"rough day\": \"I'm sorry. Want to tell me about it, or would some quiet company be better?\"\n"
+    "- Told someone feels bad for doubting what they believe: \"Doubting isn't failing. Plenty of people who "
+    "take faith seriously wrestle with it. What's been weighing on you?\""
 )
 
 # ------------------------------------------------------------------ the Highest Self (docs/design/MIA_HIGHEST_SELF.md)
@@ -155,15 +160,37 @@ _NOT_FUNNY = re.compile(
     r"embarrass\w*|emergency|urgent|help me)\b", re.I)
 
 
+# A pleasantry alone has nothing to be funny about: the model, nudged to joke at "thanks", made one about the
+# examples' tangled cord instead (live sweep, 2026-11-25)
+_PLEASANTRY = re.compile(r"^\s*(?:(?:thanks?|thank you|ty|cheers|great|cool|nice|ok(?:ay)?|got it|perfect|awesome|"
+                         r"hi|hey|hello|yo|good (?:morning|afternoon|evening|night)|night|bye|later|see you|"
+                         r"you'?re (?:the best|great|awesome|amazing)|love you|that'?s (?:helpful|great|perfect|it)|"
+                         r"mia)[\s,.!']*)+$", re.I)
+
+
+JUST_PLEASANTRY = ("This is only a pleasantry (a thanks, a hello, a goodbye): answer it warmly in one short sentence, "
+                   "and don't bring up bills, tasks, reminders or anything else from the facts; those come up on "
+                   "their own, at their own times. Take a compliment the way a friend would (\"That means a lot.\"), "
+                   "never with a lecture about being an AI.")
+
+
+def pleasantry_line(prompt: str) -> str:
+    """Pure logic. JUST_PLEASANTRY for a message that's only a pleasantry ("thanks", "you're the best", "good
+    morning MIA"), else "" (live sweep, 2026-11-25: every "thanks" was followed by "Now, about that electric bill...",
+    said as if he'd mentioned it: nudges are the communication gate's, paced, never tacked onto a thanks)."""
+    return JUST_PLEASANTRY if _PLEASANTRY.match(prompt or "") else ""
+
+
 def light_moment(prompt: str) -> bool:
     """Pure logic. Whether a message is light enough for a joke: nothing heavy, worried, grieving, hurt, urgent or
-    in danger, and no faith or meaning question (those deserve a straight answer)."""
+    in danger, no faith or meaning question (those deserve a straight answer), and more than a pleasantry ("thanks",
+    "you're the best": nothing to be funny about)."""
     from core.safety_floor import detect_danger
     from core.support_choice import sounds_heavy
 
     text = prompt or ""
     return bool(text.strip()) and not (_NOT_FUNNY.search(text) or sounds_heavy(text) or detect_danger(text)
-                                       or _DEEP.search(text))
+                                       or _DEEP.search(text) or _PLEASANTRY.match(text))
 
 
 # The examples' own lines, which the model sometimes says word for word ("A tragedy. We'll get through this
@@ -171,12 +198,25 @@ def light_moment(prompt: str) -> bool:
 EXAMPLE_LINES = tuple(m.group(1) for _f, example in HUMOR_FLAVORS for m in [re.search(r'"(.+)"', example)] if m)
 
 
-def without_copied_example(text: str) -> str:
-    """Pure logic. The reply without a humor example's line copied into it (never her own wit, so it goes); the rest
-    stays, and a reply that was only the line stays as it was."""
+# Each example's own subject: a sentence of hers built on one he never mentioned is the example copied loosely ("It's
+# not a cord any more, it's a tangled mess.", live sweep 2026-11-25), and goes too
+EXAMPLE_SUBJECTS = ("cord", "sculpture", "remote", "couch", "pizza", "third coffee", "cold coffee", "tragedy",
+                    "light day", "12-hour shift")
+
+
+def without_copied_example(text: str, prompt: str = "") -> str:
+    """Pure logic. The reply without a humor example's line copied into it (never her own wit, so it goes), or a
+    sentence built on an example's own subject that his words (`prompt`) never mention; the rest stays, and a reply
+    that was only that stays as it was."""
     kept = str(text or "")
     for line in EXAMPLE_LINES:
         kept = kept.replace(line, "")
+    said = str(prompt or "").lower()
+    subjects = [s for s in EXAMPLE_SUBJECTS if not re.search(rf"\b{re.escape(s)}", said)]
+    if subjects and prompt:
+        sentences = re.split(r"(?<=[.!?])\s+", kept)
+        kept = " ".join(x for x in sentences
+                        if not any(re.search(rf"\b{re.escape(s)}\b", x, re.I) for s in subjects))
     kept = re.sub(r"^[\s.,!]+", "", kept).strip()
     return kept[:1].upper() + kept[1:] if kept else str(text or "")
 

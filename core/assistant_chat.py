@@ -717,6 +717,7 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
     the words name, carries its step and stop rules (`core.trade_session.context_block`, DEC-0149), and a turn
     about the greenhouse's technology what its node declares (`core.greenhouse_link.context_block`, DEC-0150). A how-to question about MIA herself also
     carries her own facts (`core.self_knowledge.grounding_block`, DEC-0142).
+    A pleasantry alone gets `pleasantry_line` (core/personality.py).
     """
     if is_action_request:
         return _IDENTITY_LINE
@@ -757,6 +758,11 @@ def build_system_message(context, is_action_request: bool, is_teaching_request: 
         funny = humor_for(context, prompt)  # now and then, on a light turn (Zac, 2026-11-07)
         if funny:
             parts.append(funny)
+        from core.personality import pleasantry_line
+
+        nicety = pleasantry_line(prompt)  # a thanks gets a warm line, never "now, about that bill..."
+        if nicety:
+            parts.append(nicety)
         styled = style_for(context)  # how the person likes to be answered, learned from A/B picks (DEC-0138)
         if styled:
             parts.append(styled)

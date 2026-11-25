@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1797 files, 386,419 lines; 1797 files describe themselves; 21,056 of 21,187 classes and functions are documented.
+1798 files, 386,522 lines; 1798 files describe themselves; 21,065 of 21,193 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,345 lines; 10,092 of 10,178 classes and functions documented
+714 files, 201,408 lines; 10,097 of 10,180 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -123,7 +123,7 @@
 - `core/browser.py`: MIA's own web browser (DEC-0117, Zac 2026-11-07): Microsoft Edge, driven by Playwright, in a profile kept in the person's own folder. The window is visible on the computer, so what she does can be watched.
 - `core/browser_routines.py`: Browser tasks MIA has been taught (DEC-0117, Zac 2026-11-07: "show her, then she practises"). The person does a task once in her browser while she records it; she saves it as a routine and replays it later, the same steps in the same order, checking the page as she goes.
 - `core/browser_safety.py`: What MIA may do in her browser on her own, and what stops for the person (DEC-0117, Zac 2026-11-07: "read and navigate freely; anything that commits stops for your approval"). Pure logic, so it's tested exhaustively and never depends on the model: a page can't talk its way past it. `untrusted()` fra
-- `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(65 undocumented)*
+- `core/budget_manager.py`: MIA Home's household bookkeeping — bills, income, and expenses. Named `budget_manager`, deliberately neither `finance_manager` nor `ledger_manager` — both already exist as different concepts. `core/finance_manager.py` is a read-only watched-folder importer for externally-generated Kraken trading-age *(62 undocumented)*
 - `core/budget_nudges.py`: Pure decision logic for a proactive daily budget nudge — 2026-09-08, at the user's explicit request following up on the "Field Manual" brainstorm: "are we meeting our income needs or exceeding our planned expenses, are we paying things on time, and covering what's due next and when next expected pay
 - `core/buffs.py`: Buffs (DEC-0028, the game layer's fifth piece): good effects you've earned by what you really did. **Never debuffs** (DEC-0014): nothing here is ever taken away as a penalty; a buff simply runs out, and earning it again brings it back.
 - `core/build_calcs.py`: Material lists worked out in code (Zac, 2026-11-07: "references for all kinds of stuff like woodworking plans, structure blueprints, material lists"). Each calculator takes a structure's size and gives what to buy and what to cut: a stud wall, a floor or deck frame, a raised garden bed, a fence run,
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-674 files, 103,059 lines; 8,593 of 8,638 classes and functions documented
+675 files, 103,099 lines; 8,597 of 8,642 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1561,6 +1561,7 @@
 - `tests/test_subnet_calculator.py`: Unit tests for core.subnet_calculator — real stdlib `ipaddress` calls, not mocked (there's nothing external to fake; this is pure computation against known-correct real values).
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
+- `tests/test_sweep_8_conversation.py`: The third live sweep's conversation fixes (2026-11-25): an expense's date is a real date or today (the model sent "null", and no month counted it), feed has its own category, the tone examples are other people's and never this conversation (the model brought up "that marathon you're running next wee
 - `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), the PC's own endpoints, and a phone paired again taking the computer's copies 
 - `tests/test_system_health.py`: Unit tests for core.system_health (moved here from modules.diagnostics.module in milestone 5.7 — see that module's own docstring and core/system_health.py's docstring for why). format_system_health() is tested with hand-built snapshots (pure, deterministic). read_system_health()/_read_cpu_temperatur
 - `tests/test_system_helper.py`: FW-06 (PoC 5; DEC-0194, REQ-ARC-010, REQ-AGT-024, REQ-SEC-022): MIA changes the system only through her helper's three fixed operations, each confirmed twice (her card, then his password in polkit's dialog). Checked here, on any machine: the helper's own rules refuse anything but its operations and 

@@ -120,6 +120,8 @@ EXPENSE_CATEGORIES = [
     # 2026-09-28, Finance #2 (homestead builds and tools, see
     # core/homestead_costs.py).
     "Building Materials", "Tools & Equipment",
+    # 2026-11-25: feed, hay, bedding and vet bills had been filed as Groceries (live sweep: "I spent $45 on feed")
+    "Animals & Feed",
     "Other",
 ]
 BUSINESS_ENTITY_TYPES = ["LLC", "Sole Proprietorship", "Other"]
@@ -298,7 +300,18 @@ class Bill:
 
 
 def _today_iso() -> str:
+    """Today as YYYY-MM-DD."""
     return datetime.now().date().isoformat()
+
+
+def _entry_date(value: Optional[str]) -> str:
+    """Pure logic but for today. An entry's date as given when it's a real YYYY-MM-DD date, else today (live sweep,
+    2026-11-25: the model sent the string "null", stored as the date, and no month's totals ever counted it)."""
+    said = str(value or "").strip()[:10]
+    try:
+        return datetime.strptime(said, "%Y-%m-%d").date().isoformat()
+    except ValueError:
+        return _today_iso()
 
 
 def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str]) -> bool:
@@ -927,6 +940,7 @@ class BudgetManager:
         plaid_transaction_id: str = "",
         notes: str = "",
     ) -> IncomeEntry:
+        """Records an income entry and saves it; its date is a real YYYY-MM-DD date or today (`_entry_date`), its category as given."""
         if amount < 0:
             raise ValueError(f"amount must not be negative, got {amount}")
         entry = IncomeEntry(
@@ -934,7 +948,7 @@ class BudgetManager:
             amount=amount,
             category=category if category in INCOME_CATEGORIES else "Other",
             description=description,
-            date=date or _today_iso(),
+            date=_entry_date(date),
             tax_relevant=tax_relevant,
             property_id=property_id,
             entity_id=entity_id,
@@ -1014,6 +1028,7 @@ class BudgetManager:
         asset_purchase: bool = False,
         items: Optional[list] = None,
     ) -> ExpenseEntry:
+        """Records an expense entry and saves it; its date is a real YYYY-MM-DD date or today (`_entry_date`), its category one of the list or "Other"."""
         if amount < 0:
             raise ValueError(f"amount must not be negative, got {amount}")
         entry = ExpenseEntry(
@@ -1021,7 +1036,7 @@ class BudgetManager:
             amount=amount,
             category=category if category in EXPENSE_CATEGORIES else "Other",
             description=description,
-            date=date or _today_iso(),
+            date=_entry_date(date),
             tax_relevant=tax_relevant,
             bill_id=bill_id,
             property_id=property_id,
