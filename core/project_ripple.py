@@ -300,13 +300,17 @@ def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
     takes the whole picture),
     with the month's money and the freedom date gathered here for every kind that touches money (a project with no
     Library plan too), then the offer to draft the plan. A project of no known kind gets money, materials, time and
-    goals."""
+    goals.
+    Its lines are in his own terms ("The project you're planning"), since the sheet in plain words is said to him."""
     from core import question_plans as qp
 
     today = today or date.today()
     kind = kind_of(prompt) or Kind(planned(prompt) or "project", "", "", BASIC)
     what = planned(prompt) or kind.name
-    _fact(sheet, qp.FACT, f"The project he's planning: {what} (a {kind.name}). It touches: {', '.join(kind.touches)}.",
+    # in his own terms, since the sheet in plain words is said to him as it is (the live sweep: "The project he's
+    # planning: goats (a goats)")
+    of_kind = f" (a {kind.name})" if kind.name.lower() not in what.lower() else ""
+    _fact(sheet, qp.FACT, f"The project you're planning: {what}{of_kind}. It touches: {', '.join(kind.touches)}.",
           "your words")
     try:
         draft = _started(context, sheet, kind, what)
@@ -315,9 +319,9 @@ def gather(context, sheet, prompt: str, today: Optional[date] = None) -> None:
         draft = None
     _picture(context, sheet, kind, draft, today)
     if draft is None and kind.shelf:
-        _fact(sheet, qp.ESTIMATE, f"Nothing is planned or bought from this. He can say \"let's plan the {kind.name}\" "
-                                  "and MIA drafts it at his size: the materials against what's on hand, then the "
-                                  "build's steps; nothing is made until he confirms.", "how MIA works")
+        _fact(sheet, qp.ESTIMATE, f"Nothing is planned or bought from this. Say \"let's plan the {kind.name}\" "
+                                  "and I'll draft it at your size: the materials against what's on hand, then the "
+                                  "build's steps; nothing is made until you confirm.", "how MIA works")
 
 
 def _picture(context, sheet, kind: Kind, draft, today: date) -> None:

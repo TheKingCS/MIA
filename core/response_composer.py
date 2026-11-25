@@ -22,6 +22,8 @@ own first sentences are used, never a sentence cut in half. Her own opening
 sentences come first whenever they fit: the model only rewrites an opening
 too long to speak (tried the other way round, the rewrites lost her warmth
 and once added a fact; pc-check, 2026-11-03).
+
+On every surface, a paragraph or sentence the model said twice is said once (`without_repeats`).
 """
 
 from __future__ import annotations
@@ -90,14 +92,43 @@ def tidy(text: str) -> str:
 OFFERING = re.compile(r"\b(?:" + _INVITES + r")\b", re.I)
 
 
+def without_repeats(text: str) -> str:
+    """Pure logic. The answer with a paragraph or sentence it already said dropped (the live sweep, 2026-11-25: the
+    model said "The project you're planning: goats..." five times over). Short ones ("Yes.") and list lines stay."""
+    def norm(said):
+        """Its words, lowercased."""
+        return " ".join(re.findall(r"[a-z0-9']+", said.lower()))
+
+    seen, said, paragraphs = set(), set(), []  # paragraphs and sentences apart: a one-sentence paragraph stays
+    for paragraph in re.split(r"\n\s*\n", text or ""):
+        key = norm(paragraph)
+        if key and key in seen:
+            continue
+        seen.add(key)
+        if "\n" in paragraph or re.match(r"\s*(?:[-*\u2022]|\d+[.)])\s", paragraph):
+            paragraphs.append(paragraph)  # a list's lines stay as they are
+            continue
+        kept = []
+        for sentence in SENTENCE.findall(paragraph) or [paragraph]:
+            key = norm(sentence)
+            if len(key) > 20 and key in said:
+                continue
+            said.add(key)
+            kept.append(sentence)
+        paragraphs.append("".join(kept).strip())
+    return "\n\n".join(p for p in paragraphs if p.strip())
+
+
 def polish(text: str, prompt: str = "") -> str:
     """Pure logic. The whole answer, for a screen: only the filler opening,
     a last sentence that offers more help, and a humor example's line copied
     word for word (core/personality.without_copied_example), or loosely when
-    his words (`prompt`) are given, go. Lists, markdown and length stay."""
+    his words (`prompt`) are given, go. Lists, markdown and length stay.
+    A paragraph or sentence said twice is said once (`without_repeats`)."""
     from core.personality import without_copied_example
 
     text = without_copied_example((text or "").strip(), prompt)  # never a humor example's line said as hers
+    text = without_repeats(text) or text  # never the same paragraph or sentence twice
     trimmed = FILLER.sub("", text).strip() or text
     trimmed = trimmed[:1].upper() + trimmed[1:]
     lines = trimmed.split("\n")

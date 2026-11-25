@@ -87,7 +87,7 @@ def _tool(context, arguments: dict) -> str:
 
 
 def register_make_next_actions(registry) -> None:
-    """Registers what_to_make_next."""
+    """Registers what_to_make_next, reached by \"build next for the shop\" too."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -95,7 +95,8 @@ def register_make_next_actions(registry) -> None:
         description="Which of his workshop's products to make next: the ones that sell, running low on the shelf, "
                     "and what each keeps an hour of his work. Homestead projects to build are get_homestead_next_step.",
         parameters={"type": "object", "properties": {}},
-        handler=_tool, trigger_phrases=("make next", "build next to sell", "running low on stock", "what sells",
+        handler=_tool, trigger_phrases=("make next", "build next to sell", "build next for the shop", "make for the shop",
+                                        "running low on stock", "what sells",
                                         "what's selling", "restock", "make more of", "out of stock",
                                         "products running low", "products are running low", "products are low",
                                         "low on products", "products low"),

@@ -1475,7 +1475,9 @@ NOT_FOR = {
     # a project idea for anyone ("a good beginner woodworking project") isn't his own projects (live sweep 2026-11-25)
     "projects": re.compile(r"\b(?:a|an|some)\s+(?:good|easy|simple|first|starter|beginner|beginners|weekend)\b.{0,30}"
                            r"\bprojects?\b|\bbeginners?\b.{0,20}\bprojects?\b|\bprojects? (?:ideas?|for (?:a )?"
-                           r"beginners?)\b|\bproject ideas?\b", re.I),
+                           r"beginners?)\b|\bproject ideas?\b|"
+                           # "what should I build next for the shop?" is what_to_make_next (the live sweep)
+                           r"\b(?:build|make) next\b.{0,20}\b(?:shop|sell|business)\b|\bfor the shop\b", re.I),
     # his net worth is get_net_worth's, not what his products are worth (live sweep 2026-11-25)
     "products": re.compile(r"\bnet worth\b|\bam i worth\b", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b|\brent(al)?\b|\bwater\b", re.I),
