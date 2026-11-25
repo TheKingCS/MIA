@@ -57,7 +57,8 @@
       "remove_textbook",
       "search_textbook",
       "set_lesson_skill",
-      "start_learning"
+      "start_learning",
+      "practice_today"
     ],
     "actions": [
       "course.add",
@@ -115,7 +116,8 @@
       "trade.next": "act_within_grant",
       "trade.plan": "act_within_grant",
       "trade.start": "act_within_grant",
-      "trade.stop": "act_within_grant"
+      "trade.stop": "act_within_grant",
+      "practice_today": "observe"
     },
     "outside": []
   },

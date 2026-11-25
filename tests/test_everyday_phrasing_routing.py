@@ -15,6 +15,7 @@ never gets his net worth, "where is my wife?" never the inventory, "I ran out of
 never the month's spending), while a real today question still gets today's plan; and a question never forces a
 change, even one starting with a tool's phrase (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
 Training and practice questions reach their tools.
+What to practise today is read from his plan, writing nothing.
 """
 
 import pytest
@@ -186,7 +187,25 @@ def test_a_question_never_forces_a_change(registry):
 
 
 @pytest.mark.parametrize("said,tool", [("How's my training going this week?", "get_workout_summary"),
-                                       ("What should I practice on guitar today?", "learning_lesson")])
+                                       ("What should I practice on guitar today?", "practice_today")])
 def test_training_and_practice_questions_reach_their_tools(registry, said, tool):
     """Each reached nothing (or the day's agenda) in the live check through the whole turn."""
     assert tool in offered_tools(registry, said, demo_context()), said
+
+
+
+def test_practice_today_reads_his_plan_and_writes_nothing():
+    """A started guitar path: today's minutes, the week, the next step; nothing started: how to start."""
+    from types import SimpleNamespace
+
+    from core import assistant_path_actions as apa
+    from core import paths
+
+    program = paths.program_of(SimpleNamespace(paths=None), "guitar")
+    book = SimpleNamespace(started=lambda: ["guitar"], path=lambda pid: {
+        "goal": "", "started": "2026-11-01", "plan": {"days_a_week": 5, "minutes_a_day": 20}, "sessions": [],
+        "attempts": [], "stage": 1}, passed=lambda pid, cid: False, best=lambda pid, cid: None, drafts={})
+    said = apa._action_practice_today(SimpleNamespace(paths=book), {"question": "what should I practice today?"})
+    assert said.startswith(f"{program.name} today: 20 minutes; this week 0 of 5 days") and "next is" in said
+    empty = SimpleNamespace(started=lambda: [], path=lambda pid: None, drafts={})
+    assert "start guitar" in apa._action_practice_today(SimpleNamespace(paths=empty), {}).lower()

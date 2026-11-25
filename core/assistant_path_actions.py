@@ -208,11 +208,46 @@ def _program_names(context) -> list:
     return [p.name for p in paths.PROGRAMS.values()]
 
 
+def _action_practice_today(context, arguments: dict) -> str:
+    """Tool practice_today: what to practise today on a path (the one named, else every one started), read only:
+    today's minutes from the plan and whether today is already in, this week so far, and the next step with its
+    lesson (core/paths.next_step, stats). Nothing is written, so MIA can answer it herself (the model gave generic
+    guitar advice instead: live check through the whole turn, 2026-11-25)."""
+    from datetime import date
+
+    book = _book(context)
+    if book is None:
+        return "Learning paths aren't on this MIA."
+    words = " ".join(str(arguments.get(k) or "") for k in ("path", "question"))
+    chosen = _which(context, book, words) if words.strip() else None
+    programs = [chosen] if chosen else [paths.program_of(context, p) for p in book.started()]
+    programs = [p for p in programs if p is not None]
+    if not programs:
+        found = paths.find_program(context, words) if words.strip() else None
+        return (paths.next_step(book, found) if found is not None else
+                "You haven't started learning anything with me yet: say what you'd like to learn, like \"start "
+                "guitar\".")
+    today = date.today().isoformat()
+    parts = []
+    for program in programs:
+        s = paths.stats(book, program)
+        plan = s["plan"] or {}
+        done_today = any(x["date"] == today for x in (book.path(program.id) or {}).get("sessions", []))
+        minutes = plan.get("minutes_a_day")
+        head = (f"{program.name} today: " + (f"{minutes:g} minutes" if minutes else "a session")
+                + (" (you've already practised today)" if done_today else "")
+                + (f"; this week {s['week_days']} of {plan.get('days_a_week')} days, {s['week_minutes']:g} minutes"
+                   if plan.get("days_a_week") else "") + ".")
+        parts.append(head + " " + paths.next_step(book, program))
+    return " ".join(parts)
+
+
 def register_path_actions(registry) -> None:
     """Registers the learning-path tools: start_learning, learning_lesson, log_practice, learning_check and
     learning_progress, and the words that reach them (`LEARNING_WORDS`, the programs' names), so his own way of
     asking about woodworking, gardening, fitness or bushcraft finds them (tests/test_everyday_phrasing_routing.py).
-    learning_lesson is reached by "what should I practice on guitar today?" too."""
+    practice_today (read only, so MIA can answer it herself) is reached by "what should I practice on guitar
+    today?"."""
     from core.assistant_actions import AssistantAction
 
     s = {"type": "string"}
@@ -240,11 +275,22 @@ def register_path_actions(registry) -> None:
             "topic": {**s, "description": "A lesson or (guitar) a chord, only if they named one."}, "path": path},
             "required": []},
         handler=_action_lesson,
-        # "what should I practice on guitar today?" went to the day's agenda, then the model's own advice (live check)
-        trigger_phrases=("next lesson", "my lesson", "guitar lesson", "show me the", "chord shape", "teach me the",
-                         "what should i practice", "what do i practice", "practice today", "practice on guitar",
-                         "practice on the guitar", "what to practice"),
+        trigger_phrases=("next lesson", "my lesson", "guitar lesson", "show me the", "chord shape", "teach me the"),
         subjects=("lesson", "chord"),
+    ))
+    registry.register(AssistantAction(
+        name="practice_today", domain="learning",
+        description="What to practise today on a learning path (guitar, woodworking...): today's minutes, this week "
+                    "so far, and the next step with its lesson, from his own plan. Teaching a lesson is "
+                    "learning_lesson; logging practice is log_practice.",
+        parameters={"type": "object", "properties": {"path": path, "question": {**s, "description": "his words"}},
+                    "required": []},
+        handler=_action_practice_today, prompt_arg="question",
+        # "what should I practice on guitar today?" went to the day's agenda, then the model's own advice (live check)
+        trigger_phrases=("what should i practice", "what should i practise", "what do i practice", "practice today",
+                         "practise today", "practice on guitar", "practice on the guitar", "what to practice",
+                         "work on today on", "practice tonight"),
+        subjects=("practice", "practise", "guitar"),
     ))
     registry.register(AssistantAction(
         name="log_practice", domain="learning",

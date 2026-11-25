@@ -354,6 +354,12 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **What should I practice today?** (no decision; his guitar and other paths): *built 2026-11-25 (the tool
+  `practice_today`, core/assistant_path_actions.py).* It reached the lesson tool, which changes his records, so the
+  model answered with generic advice instead. Now a read-only answer from his own plan: today's minutes, the week so
+  far, the next step and its lesson, said as it is and answered by MIA herself when the model won't. Workouts too:
+  "I did 30 pushups and a 2 mile run" is logged from his words in code (cardio as a note), and "how's my training
+  going?" answers from it.
 - **"Actually, make it Sunday"** (no decision; smooth conversation): *built 2026-11-25 (`core/calendar_move.py`,
   the tool `move_calendar_event`).* "Remind me to change the truck oil next Saturday" became a task repeating every
   7 days, and "make it Sunday" added a second one: the calendar could add and delete, not move. Now a one-time thing

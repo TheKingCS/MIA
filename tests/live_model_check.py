@@ -822,7 +822,8 @@ def _check_personal_reply(reply, expected, max_words, lists_ok) -> tuple[bool, s
 def _build_context() -> AppContext:
     """A context with every store the golden cases use (the life-event history too), on temporary data, and the real
     model.
-    The greenhouse link is there too, on its own temporary folder."""
+    The greenhouse link is there too, on its own temporary folder.
+    His learning paths are there too, on a temporary folder."""
     config = ConfigManager()
     events = EventBus()
     context = AppContext(config=config, events=events)
@@ -881,6 +882,9 @@ def _build_context() -> AppContext:
     from core.greenhouse_link import GreenhouseLink
 
     context.greenhouse_link = GreenhouseLink(context, data_dir=_TEMP_DATA_DIR / "greenhouse")  # as the app has it
+    from core.paths import PathBook
+
+    context.paths = PathBook(context, data_dir=_TEMP_DATA_DIR / "paths")  # his learning paths, as the app has them
     context.conversations = ConversationManager(context)
     context.user_memories = UserMemoryManager(context)
     context.config.set("maps.trail_map_root_path", str(_TEMP_DATA_DIR / "trail_maps"))
