@@ -129,7 +129,7 @@ def _plain_console() -> None:
 
 
 def main() -> int:
-    """Prints MIA's setup on this computer: the system check, the model, phone access and Tailscale, the voice, start at sign-in and the rest, each with what to do when it's missing."""
+    """Prints MIA's setup on this computer: the system check, the model, phone access and Tailscale, the voice, start at sign-in and the rest, each with what to do when it's missing. Her voice is made as the app makes it, so hearing and speaking are checked for real."""
     _plain_console()
     from core.app_context import AppContext
     from core.config_manager import ConfigManager
@@ -144,6 +144,13 @@ def main() -> int:
         context.profiles = ProfileManager(context)
     except Exception:
         context.profiles = None
+    try:  # her voice as the app makes it, so hearing and speaking are checked for real (2026-11-25: without it, both
+        # read "missing" on every PC, the voices and the speech model there or not)
+        from core.voice_manager import VoiceManager
+
+        context.voice = VoiceManager(context)
+    except Exception:
+        context.voice = None
     print("\nMIA's setup:")
     essential_missing = False
     for c in run_checks(context):
