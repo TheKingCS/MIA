@@ -238,6 +238,26 @@
     ];
   }
 
+  // His catch log (core/catch_log.py): Log A Catch (catch.log), the latest few, and what his log says.
+  function catchCard() {
+    const c = page.catches || { count: 0, latest: [], said: "" };
+    const logCatch = async () => {
+      const v = await MIAShell.form("Log A Catch", [
+        { name: "species", label: "What it was", type: "text", required: true, options: [], default: null },
+        { name: "length", label: "Length (inches)", type: "number", required: false, options: [], default: null },
+        { name: "weight", label: "Weight (pounds)", type: "number", required: false, options: [], default: null },
+        { name: "where", label: "Where", type: "text", required: false, options: [], default: null },
+        { name: "bait", label: "Bait or lure", type: "text", required: false, options: [], default: null }], {});
+      if (v) act({ kind: "catch.log", params: v });
+    };
+    return section("Catch Log", btn("Log A Catch", "btn-amber", logCatch),
+      c.latest.length ? el("div", { class: "rows" }, c.latest.map((f) => el("div", { class: "row money-row" },
+        el("div", {}, el("div", { class: "row-title" }, "🐟 " + f.species), el("div", { class: "row-sub" },
+          [f.length ? f.length + " in" : "", f.weight ? f.weight + " lb" : "", f.where, f.when].filter(Boolean).join(" · "))))))
+        : el("p", { class: "empty" }, "No catches yet. Log one when you land it: what, how big, where, on what."),
+      c.said ? el("p", { class: "dim" }, c.said) : null);
+  }
+
   function draw() {
     const c = page.counts;
     $("strip").replaceChildren(
@@ -255,6 +275,7 @@
       past.length ? el("h2", { class: "ex-label" }, "Done") : null,
       past.length ? el("div", { class: "ex-rows" }, past.map(row)) : null,
       page.expeditions.length ? null : el("p", { class: "empty" }, "No expeditions yet. Plan one: a weekend at the lake, a long hike."),
+      catchCard(),
       el("div", { class: "journal-actions ex-actions" }, btn("Plan An Expedition", "btn-ghost", addExpedition),
         el("a", { class: "btn btn-ghost", href: "worldmap.html" }, "World Map")),
     ].filter(Boolean));

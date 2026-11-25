@@ -351,6 +351,14 @@ New ideas, each checked against what's there first:
   against his usual month (the last three full months', the same normal the daily unusual check learns); or, asked in
   general, the categories running over. The first five days are too early to tell.
 
+- **His fishing** (no decision; fishing is his, docs/VISION.md): *built 2026-11-24 (`core/catch_log.py`, Log A Catch
+  on Expeditions, "caught an 18 inch bass on a jig at the pond", "what's been biting?").* Each catch kept in his
+  history; a personal best said the moment it's one; what his own log says about bait, time and spot; the Angler
+  achievements (First Fish to Legend Of The Lake) and a Fishing Week in the Chronicle. Reached only by fishing
+  words, never a bare "caught a" ("I caught a cold").
+- *Found already there:* "can I afford it?" (the afford question plan); first aid (the emergency floor) and
+  bushcraft (a learning path).
+
 ## Round 10 (2026-11-24, night): survival at home, money and automation, checked against the code
 
 - **The power's out** (no decision): *built 2026-11-24 (`core/outage.py`, "the power went out at 6 am", the Power

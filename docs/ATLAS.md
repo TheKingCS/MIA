@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1724 files, 372,348 lines; 1724 files describe themselves; 20,434 of 20,564 classes and functions are documented.
+1727 files, 372,726 lines; 1727 files describe themselves; 20,455 of 20,585 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-685 files, 191,855 lines; 9,738 of 9,824 classes and functions documented
+687 files, 192,145 lines; 9,755 of 9,841 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -145,6 +145,8 @@
 - `core/capability_registry.py`: The capability truth registry (WP-08, DEC-0220, REQ-SLF-003/004/005; docs/mia_os/MIA_OS_CAPABILITY_TRUTH_REGISTRY.md and MIA_OS_CAPABILITY_STATE_MODEL.md). One record per capability (each app), joining what's said about it elsewhere:
 - `core/capability_reminders.py`: Now and then, MIA reminds the person of what they're already capable of doing right now — "did you know you could go do X?" (Zac, 2026-11-08). It isn't a new task and it isn't a value to live up to: it's a subtle redirect that meets him where he is — the gentle reminder that the ability is already i
 - `core/carpentry.py`: Carpentry, the first of Trade Master's apprentice programs (DEC-0149; Zac, 2026-11-08: "She should become a Trade master and be able to teach an entry level Apprentice"). A learning path on core/paths.py's method, the same as guitar (core/guitar.py): stages of lessons, each with steps, why and what 
+- `core/catch_actions.py`: His catch log from the screen and by voice (core/catch_log.py; DEC-0125, both ways): the action `catch.log` (Expeditions, Log A Catch) and the tools `log_catch` ("caught an 18 inch bass on a jig at the pond") and `whats_biting` ("what's been biting?"). Taking one back is "undo that".
+- `core/catch_log.py`: His fishing (Jarvis brainstorm, round 11: knowledgeable about his hobbies; fishing is one of his own, docs/VISION.md): each fish he catches kept, and what his own catches say about what's biting.
 - `core/change_history.py`: The lasting history of what MIA changed, with undo by time and subject (prompt 23's review, UI-3; DEC-0188; REQ-TRU-001, REQ-TRU-002; `docs/mia_os/MIA_OS_UNIVERSAL_INTELLIGENCE_REVIEW.md` sections 3 and 14). "Undo that" (core/undo_log.py) keeps the last 20 changes in memory, so it's for "oops, just 
 - `core/character_stats.py`: Real character stats (DEC-0028, the game layer's fourth piece): six RPG attributes, each 1 to 20, made from what the person has really done. Every point says where it came from.
 - `core/chat_worker.py`: Runs a single `AppContext.llm.chat_with_tools()` call off the GUI thread — docs/ROADMAP.md milestones 5.2/5.5. A blocking HTTP call to Ollama (core/llm_manager.py) on the GUI thread would freeze the whole app for the duration of every reply. This is the first module to need the scoped worker-thread 
@@ -983,7 +985,7 @@
 
 ## tests/: the test suite: what each part must do
 
-633 files, 99,419 lines; 8,331 of 8,375 classes and functions documented
+634 files, 99,486 lines; 8,335 of 8,379 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1065,6 +1067,7 @@
 - `tests/test_capability_reminders.py`: The gentle "did you know you could go do X right now?" reminder MIA offers (core/capability_reminders.py, Zac 2026-11-08). It only ever fires with a real ability behind it (empty in, empty out), it wraps the ability in a warm, low-pressure frame and appends the honest reason, and a given roll always
 - `tests/test_capture_indicator.py`: REQ-DSK-025 (FW-11): whenever a page of MIA's has the microphone open, the frame shows it, and one press closes it: Talk's recorder and the guitar check register with the frame's indicator, and its Stop closes every stream.
 - `tests/test_carpentry.py`: The Carpentry apprentice program (core/carpentry.py, DEC-0149): a learning path on core/paths.py's method, three stages in an apprentice's order (safety first), every lesson with steps, why and what to watch for, every check verifiable, found by the words someone uses, and a trade specialist for eac
+- `tests/test_catch_log.py`: His catch log (core/catch_log.py): a fish kept in his own history with only what he said, a personal best said the moment it's one, what's been biting from his own catches, the Angler achievement at once, and the page and voice.
 - `tests/test_change_history.py`: The lasting history of MIA's changes (prompt 23's review, UI-3; core/change_history.py): every change is kept with its files' bytes before (sealed, compressed, once per content), so it outlives a restart; "undo what you did this afternoon" puts changes back newest first, each whole or not at all, an *(1 undocumented)*
 - `tests/test_character_module.py`: Unit tests for modules.character.module's pure functions, same style as tests/test_household_module.py (no Qt event loop, no fixtures).
 - `tests/test_character_panel.py`: Unit test for gui.character_panel.reaction_for_module — pure lookup logic, no Qt event loop needed. The reactive subscribe/unsubscribe widget behavior itself was verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior — see tests/test_assistant_module.py's
@@ -1621,7 +1624,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-120 files, 22,483 lines
+120 files, 22,504 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

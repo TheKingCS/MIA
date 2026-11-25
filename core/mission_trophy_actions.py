@@ -39,7 +39,8 @@ def _target(params) -> float:
 ALIASES = {"pounds": "produce_pounds", "harvest": "produce_pounds", "harvested": "produce_pounds",
            "vegetables": "produce_pounds", "canning": "jars_canned", "canned": "jars_canned", "jars": "jars_canned",
            "meals": "meals_cooked", "cooking": "meals_cooked", "workouts": "workout_hours_logged",
-           "exercise": "workout_hours_logged", "songs": "songs_learned", "song": "songs_learned"}
+           "exercise": "workout_hours_logged", "songs": "songs_learned", "song": "songs_learned",
+           "fish": "fish_caught", "catches": "fish_caught"}
 
 
 def _stat(params) -> str:

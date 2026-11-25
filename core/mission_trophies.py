@@ -61,6 +61,7 @@ STATS: dict[str, str] = {
     "meals_cooked": "meals cooked", "workout_hours_logged": "hours of workouts", "projects_completed": "projects done",
     "missions_completed": "missions done", "engine_hours_logged": "engine hours", "vehicle_miles_logged": "miles",
     "songs_learned": "songs learned", "sales_made": "sales made", "debts_paid_off": "debts paid off",
+    "fish_caught": "fish caught",
 }
 
 

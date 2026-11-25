@@ -49,7 +49,9 @@
       "list_trips",
       "log_arrival",
       "recall_expedition",
-      "toggle_gear_packed"
+      "toggle_gear_packed",
+      "log_catch",
+      "whats_biting"
     ],
     "actions": [
       "expedition.add",
@@ -65,7 +67,8 @@
       "trip.edit",
       "trip.route_add",
       "trip.route_remove",
-      "trip.status"
+      "trip.status",
+      "catch.log"
     ],
     "tiers": {
       "add_expedition": "act_within_grant",
@@ -95,7 +98,10 @@
       "trip.edit": "act_within_grant",
       "trip.route_add": "act_within_grant",
       "trip.route_remove": "act_within_grant",
-      "trip.status": "act_within_grant"
+      "trip.status": "act_within_grant",
+      "log_catch": "act_within_grant",
+      "whats_biting": "observe",
+      "catch.log": "act_within_grant"
     },
     "outside": []
   },

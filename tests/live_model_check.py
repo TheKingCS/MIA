@@ -726,6 +726,9 @@ GOLDEN_CASES = [
     ("spending: a category against usual", "Am I spending more on groceries than usual?", "spending_vs_usual"),
     ("spending: overspending at all", "Am I overspending this month?", "spending_vs_usual"),
     ("spending: what's left is the budget", "How much do I have left in my grocery budget?", "budget_left"),
+    ("fishing: a catch", "I caught an 18 inch bass on a jig at the pond", "log_catch"),
+    ("fishing: a catch, said otherwise", "Landed a 22 inch walleye at the river", "log_catch"),
+    ("fishing: what's biting", "What's been biting lately?", "whats_biting"),
     ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),
     # ("How long will my water last?" is answered in code, direct_lookup, before any model: tests/test_water_budget.py)
     ("water: the budget", "What's my water budget?", "water_budget"),

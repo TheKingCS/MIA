@@ -109,6 +109,7 @@ from core.greenhouse_adjust import register_greenhouse_adjust_actions
 from core.outage_actions import register_outage_actions
 from core.utility_bills import register_utility_bill_actions
 from core.spending_pace import register_spending_pace_actions
+from core.catch_actions import register_catch_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
@@ -348,7 +349,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     fix_jar_count (core/canning_fix.py) is among them.
     adjust_greenhouse (core/greenhouse_adjust.py) is among them.
     power_outage (core/outage_actions.py) is among them.
-    why_bill_high (core/utility_bills.py) and spending_vs_usual (core/spending_pace.py) are among them."""
+    why_bill_high (core/utility_bills.py) spending_vs_usual (core/spending_pace.py) and the catch log's tools (core/catch_actions.py) are among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -383,6 +384,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_outage_actions(registry)  # the power outage clock
     register_utility_bill_actions(registry)  # why an energy bill was high
     register_spending_pace_actions(registry)  # spending against his usual month
+    register_catch_actions(registry)  # his catch log
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

@@ -274,6 +274,7 @@ STAT_DEFINITIONS: list[StatDefinition] = [
     # The business and the money (2026-11-24, core/life_milestones.py).
     StatDefinition("sales_made", "Sales Made", "", "🏷️"),
     StatDefinition("debts_paid_off", "Debts Paid Off", "", "⛓️"),
+    StatDefinition("fish_caught", "Fish Caught", "", "🎣"),  # his catch log (core/catch_log.py)
 ]
 
 #: v2 reward set — real escalating chains against the real stats above,
@@ -412,6 +413,17 @@ CHALLENGE_CHAINS: list[ChallengeChain] = [
             ChallengeTier("debt_first_gone", "First Debt Gone", "Pay a debt off completely.", "✂️", 1.0, 2),
             ChallengeTier("debt_chains_breaking", "Chains Breaking", "Pay off 3 debts.", "⛓️", 3.0, 3),
             ChallengeTier("debt_slayer", "Debt Slayer", "Pay off 5 debts.", "🗡️", 5.0, 4),
+        ),
+    ),
+    ChallengeChain(
+        chain_id="angler",
+        stat_id="fish_caught",
+        tiers=(
+            ChallengeTier("angler_first_fish", "First Fish", "Log your first catch.", "🐟", 1.0, 0),
+            ChallengeTier("angler_stringer", "Full Stringer", "Catch 10 fish.", "🎣", 10.0, 1),
+            ChallengeTier("angler_regular", "Regular At The Water", "Catch 50 fish.", "🛶", 50.0, 2),
+            ChallengeTier("angler_master", "Master Angler", "Catch 200 fish.", "🏆", 200.0, 3),
+            ChallengeTier("angler_legend", "Legend Of The Lake", "Catch 1,000 fish.", "🐋", 1000.0, 4),
         ),
     ),
 ]
@@ -608,7 +620,7 @@ class RewardsManager:
         """One stat's value for a person, worked out now from the records (0 for an unknown stat).
         Produce, eggs and jars are read from core/life_milestones.py.
         Songs learned are read from his songbook (core/repertoire.py); sales and debts paid off from the ledger
-        and the history (core/life_milestones.py)."""
+        and the history (core/life_milestones.py); fish caught from his catch log (core/catch_log.py)."""
         if stat_id == "engine_hours_logged":
             return self._compute_engine_hours_logged(profile_id)
         if stat_id == "workout_hours_logged":
@@ -629,6 +641,10 @@ class RewardsManager:
             from core import repertoire
 
             return repertoire.count(self.context)
+        if stat_id == "fish_caught":
+            from core import catch_log
+
+            return catch_log.count(self.context)
         return 0.0
 
     def all_stat_values(self, profile_id: str) -> dict[str, float]:

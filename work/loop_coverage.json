@@ -21,6 +21,10 @@
    "status": "none",
    "why": "outage.start and outage.end are him saying when the power went out and came back; the food times are FoodSafety.gov's, nothing of MIA's to tune"
   },
+  "action:catch": {
+   "status": "none",
+   "why": "catch.log is him saying what he caught; his own record, nothing of MIA's to improve"
+  },
   "action:activity": {
    "status": "none",
    "why": "turning noting on or off and erasing what was noted are his own choices about his privacy (DEC-0197); nothing of MIA's to improve in them"

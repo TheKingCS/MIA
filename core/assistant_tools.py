@@ -85,6 +85,7 @@ from core.greenhouse_adjust import register_greenhouse_adjust_actions
 from core.outage_actions import register_outage_actions
 from core.utility_bills import register_utility_bill_actions
 from core.spending_pace import register_spending_pace_actions
+from core.catch_actions import register_catch_actions
 from core.assistant_ownership_actions import register_ownership_actions
 from core.assistant_path_actions import register_path_actions
 from core.assistant_plan_actions import register_plan_actions
@@ -223,7 +224,7 @@ class AssistantTools:
         fix_jar_count (a batch put up with the wrong count) comes from core/canning_fix.py.
         adjust_greenhouse (the greenhouse node's targets, DEC-0185) comes from core/greenhouse_adjust.py.
         power_outage (the power outage clock) comes from core/outage_actions.py.
-        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py.
+        why_bill_high (why an energy bill was high) comes from core/utility_bills.py; spending_vs_usual from core/spending_pace.py; log_catch and whats_biting from core/catch_actions.py.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -277,6 +278,7 @@ class AssistantTools:
         register_outage_actions(self.context.assistant_actions)  # the power outage clock
         register_utility_bill_actions(self.context.assistant_actions)  # why an energy bill was high
         register_spending_pace_actions(self.context.assistant_actions)  # spending against his usual month
+        register_catch_actions(self.context.assistant_actions)  # his catch log
         register_screen_tools(self.context.assistant_actions)  # look it up online, what isn't working, past conversations
         register_dungeon_actions(self.context.assistant_actions)  # the Dungeon: shifts, loot, quests (DEC-0046)
         register_closet_actions(self.context.assistant_actions)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

@@ -70,6 +70,8 @@ THREADS = (
      lambda n: f"You gathered eggs or put up jars {_times(n)}."),
     ("music", ("song_learned",), "The Week Of Music", "Music filled the week.",
      lambda n: f"You learned {_n(n, 'song')}."),
+    ("fishing", ("fish_caught",), "The Fishing Week", "The fish were biting.",
+     lambda n: f"You caught {_n(n, 'fish', 'fish')}."),
     ("wins", ("reward_unlocked", "trophy_earned"), "The Week Of Wins", "You earned things worth celebrating.",
      lambda n: f"You unlocked {_n(n, 'achievement or reward', 'achievements and rewards')}."),
 )

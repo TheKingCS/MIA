@@ -183,12 +183,24 @@ def workshop_page(context, today: Optional[date] = None) -> dict:
 # ------------------------------------------------------------------ expeditions
 
 
+def _catch_card(context) -> dict:
+    """The Expeditions page's catch log: the latest five catches and what his log says (core/catch_log.say)."""
+    from core import catch_log
+
+    rows = catch_log.catches(context)
+    return {"count": len(rows), "latest": [{"species": c.get("species"), "length": c.get("length"),
+                                            "weight": c.get("weight"), "where": c.get("where") or "",
+                                            "when": str(c.get("at", ""))[:10]} for c in rows[:5]],
+            "said": catch_log.say(context) if rows else ""}
+
+
 def expeditions_page(context, today: Optional[date] = None) -> dict:
     """The data the Expeditions screen shows, assembled here (the web only draws it); {"available": False} when expeditions or trips aren't here. Each expedition with when it is
     (now, upcoming, past), days away, its media and its trips (gear packed, distance, photos, journal notes, the route
     and checkpoints: core/trip_route.route_card), the
     packing and distance across them and what has to happen first (`_trip_heads_up`); current ones first, then past
     ones newest first; counts, forms (with the journal's, for a trip's log and its weather) and the saved waypoints a stop is picked from.
+    And his catch log (catches: the latest five and what it says, core/catch_log.py).
     """
     today = today or date.today()
     expeditions, trips = getattr(context, "expeditions", None), getattr(context, "trips", None)
@@ -255,6 +267,8 @@ def expeditions_page(context, today: Optional[date] = None) -> dict:
                    "trips": sum(len(c["trips"]) for c in cards)},
         "forms": {k: v for k, v in _forms().items() if k in ("expedition", "trip", "journal")},
         "waypoints": waypoint_choices(context),
+        # His catch log (core/catch_log.py): the latest few and what they say.
+        "catches": _catch_card(context),
     }
 
 
