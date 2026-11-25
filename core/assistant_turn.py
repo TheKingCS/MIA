@@ -126,6 +126,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
+    The hours he puts into his projects (`_project_time_reply`) too.
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -189,6 +190,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _spent_on_reply(context, prompt)  # "how much did I spend on groceries this month?", as in a turn
     if walked is None:
         walked = _garden_kit_reply(context, prompt)  # a crop's dates, the 72-hour kit, as in a turn
+    if walked is None:
+        walked = _project_time_reply(context, prompt)  # "log 2 hours on the shed", as in a turn
     if walked is None:
         walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
@@ -848,6 +851,54 @@ def _garden_kit_reply(context, prompt: str):
     return None
 
 
+_TIME_ON = (
+    re.compile(r"^\s*(?:please\s+)?(?:log|put down|add|record|track)\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"\s+(?:on|to|for|into)\s+(?P<p>.+?)"
+               r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
+    re.compile(r"^\s*i\s+(?:just\s+)?(?:worked|spent|put in|put)\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"\s+(?:on|into|at)\s+(?P<p>.+?)"
+               r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
+    re.compile(r"^\s*i\s+worked\s+on\s+(?P<p>.+?)\s+for\s+" + r"(?P<h>(?:\d+(?:\.\d+)?|an?|one|two|three|four|five|six|seven|eight|half an?)\s*(?:hours?|hrs?|minutes?|mins?)(?: and a half)?)" + r"(?:\s+(?P<day>today|yesterday))?\s*[.!]?\s*$", re.I),
+)
+_HOURS_ASK = re.compile(r"^\s*how many hours (?:have|did) (?:i|we) (?:put|spent|spend|logged|log|worked)\s+(?:in\s+)?"
+                        r"(?:into|on|in)\s+(?P<p>.+?)\s*\??\s*$", re.I)
+_WORKED_ASK = re.compile(r"^\s*what (?:did|have) i (?:work|been working) on\s+(?P<when>today|yesterday|this week|last week)"
+                         r"\s*\??\s*$", re.I)
+
+
+def _project_time_reply(context, prompt: str):
+    """The hours he puts into his projects, in code (the live sweep, 2026-11-25: "log 2 hours on the shed build" had
+    been a maintenance reading, and "what did I work on yesterday?" read as his workouts): "log 2 hours on the shed",
+    "I spent 3 hours on the deck yesterday" or "I worked on the coop for an hour" run log_project_time, only for a
+    project of his (core/project_time.project_named); "how many hours have I put into the shed?" and "what did I work
+    on this week?" run project_hours. None otherwise."""
+    from core import project_time
+    from core.budget_manager import read_date
+
+    said = prompt.replace("’", "'")
+    actions = getattr(context, "assistant_actions", None)
+    if actions is None:
+        return None
+    try:
+        for pattern in _TIME_ON:
+            found = pattern.match(said)
+            if found and project_time.project_named(context, found.group("p")) is not None:
+                hours = project_time.hours_said(found.group("h"))
+                if not hours:
+                    return None
+                args = {"project": found.group("p"), "hours": hours}
+                if (found.group("day") or "").lower() == "yesterday":
+                    args["date"] = read_date("yesterday") or ""
+                return actions.execute(context, "log_project_time", args)
+        found = _HOURS_ASK.match(said)
+        if found and project_time.project_named(context, found.group("p")) is not None:
+            return actions.execute(context, "project_hours", {"project": found.group("p")})
+        found = _WORKED_ASK.match(said)
+        if found:
+            return actions.execute(context, "project_hours", {"period": found.group("when").lower()})
+    except Exception:
+        log.exception("Couldn't log or read his project hours")
+    return None
+
+
 _OVER_BUDGET = re.compile(r"^\s*(?:am i|are we|is anything|anything)\s+(?:over|under)\s+(?:my\s+|our\s+|the\s+)?budgets?"
                           r"(?:\s+(?:anywhere|on anything|at all|this month|yet))?\s*\??\s*$", re.I)
 
@@ -1039,6 +1090,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     LED's resistor (`_led_reply`) are taken in code too.
     What he spent on a category this month is said from his expenses (`_spent_on_reply`).
     When to start a crop and what's in a 72-hour kit are said from his records (`_garden_kit_reply`).
+    Hours on a project are logged and read back in code (`_project_time_reply`).
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
@@ -1174,6 +1226,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _spent_on_reply(context, prompt)  # what he spent on a category, from his expenses
         if walked is None:
             walked = _garden_kit_reply(context, prompt)  # a crop's dates from his frost, the kit against his records
+        if walked is None:
+            walked = _project_time_reply(context, prompt)  # the hours he puts into his projects, logged and read
         if walked is None:
             walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:

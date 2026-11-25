@@ -85,7 +85,8 @@ def routes(tmp_path):
     The morning briefing's reading of the words too.
     And the job quote's.
     And the daily reminder's.
-    His upkeep's and an LED's resistor's too, and what he spent on a category, and a crop's dates or the kit."""
+    His upkeep's and an LED's resistor's too, and what he spent on a category, and a crop's dates or the kit.
+    And his project hours'."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -105,6 +106,7 @@ def routes(tmp_path):
         "led": lambda w: turn._led_reply(context, w),
         "spent on": lambda w: turn._spent_on_reply(context, w),
         "garden kit": lambda w: turn._garden_kit_reply(context, w),
+        "project time": lambda w: turn._project_time_reply(context, w),
         "job quote": lambda w: _job_words(w),
         "morning briefing": lambda w: _briefing_words(w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),
@@ -122,6 +124,7 @@ MEANT = {
     "spent": "I spent $30 on groceries",
     "led": "what resistor do I need for an LED on 5 volts?",
     "garden kit": "When should I start tomato seeds?",
+    "project time": "what did I work on this week?",
     "job quote": "write a quote for Sarah's 12 by 16 deck",
     "morning briefing": "every morning at 7, tell me the weather and my day",
 }

@@ -101,7 +101,9 @@
       "evening_wrap",
       "water_emergency",
       "storm_ready",
-      "work_outside_wind_chill_heat_index"
+      "work_outside_wind_chill_heat_index",
+      "log_project_time",
+      "project_hours"
     ],
     "actions": [
       "direction.add",
@@ -204,7 +206,9 @@
       "evening_wrap": "observe",
       "water_emergency": "observe",
       "storm_ready": "observe",
-      "work_outside_wind_chill_heat_index": "observe"
+      "work_outside_wind_chill_heat_index": "observe",
+      "log_project_time": "act_within_grant",
+      "project_hours": "observe"
     },
     "outside": [
       "whats_in_the_workspace"

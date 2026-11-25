@@ -111,6 +111,7 @@ from core.utility_bills import register_utility_bill_actions
 from core.spending_pace import register_spending_pace_actions
 from core.catch_actions import register_catch_actions
 from core.make_next import register_make_next_actions
+from core.project_time import register_project_time_actions
 from core.outdoor_work import register_outdoor_work_actions
 from core.tax_setaside import register_tax_setaside_actions
 from core.fishing_times import register_fishing_times_actions
@@ -369,7 +370,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     (core/rent_collected.py) move_calendar_event (core/calendar_move.py) the ESP32 lab bench's tools
     (core/esp32_lab.py), start_drill (core/drills.py) and the part specs' tools (core/part_specs.py) are among them.
     The homestead sums too (core/homestead_sums.py).
-    list_calendar_events takes his words."""
+    list_calendar_events takes his words.
+    The hours he puts into his projects too (log_project_time, project_hours: core/project_time.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -406,6 +408,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_spending_pace_actions(registry)  # spending against his usual month
     register_catch_actions(registry)  # his catch log
     register_make_next_actions(registry)  # what to make next to sell
+    register_project_time_actions(registry)  # the hours he puts into his projects
     register_outdoor_work_actions(registry)  # heat index and wind chill for work
     register_tax_setaside_actions(registry)  # taxes to set aside on the workshop
     register_fishing_times_actions(registry)  # when to go fishing

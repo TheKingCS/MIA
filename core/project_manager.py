@@ -15,6 +15,9 @@ consistent with this project's non-destructive bias elsewhere (see
 core/expedition_manager.py's own docstring for the same rationale); a
 Task whose project_id no longer resolves just stops showing up under
 any Project, but isn't deleted itself.
+
+The hours he puts into a project are its time log (`ProjectManager.log_time`, 2026-11-25; core/project_time.py
+reads and says them).
 """
 
 from __future__ import annotations
@@ -47,7 +50,7 @@ PROJECT_STATUSES = ("Planning", "Active", "On Hold", "Complete")
 @dataclass
 class Project:
     """A project: its status, due date, description, the reason it serves (an intent), the skills it trains (credited
-    once, when it's first completed) and a budget.
+    once, when it's first completed), a budget and the hours he's logged on it (`time_log`).
     """
     project_id: str
     name: str
@@ -87,9 +90,13 @@ class Project:
     # 0 means no budget set. Spending is the sum of expenses tagged with
     # this project_id (core/homestead_costs.py), never stored here.
     budget: float = 0.0
+    # 2026-11-25: the hours he's put in ("log 2 hours on the shed build", core/project_time.py): each
+    # {"date": ISO date, "hours": float, "note": str}, in the order logged.
+    time_log: list = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        """The record as the plain dict saved in its JSON file."""
+        """The record as the plain dict saved in its JSON file.
+        The time log too."""
         return {
             "project_id": self.project_id,
             "name": self.name,
@@ -102,11 +109,13 @@ class Project:
             "skill_weights": [{"skill_id": w.skill_id, "xp": w.xp} for w in self.skill_weights],
             "skill_weights_credited": self.skill_weights_credited,
             "budget": self.budget,
+            "time_log": [dict(t) for t in self.time_log],
         }
 
     @staticmethod
     def from_dict(data: dict) -> "Project":
-        """A record from its saved dict; a missing field takes its default, so older files load."""
+        """A record from its saved dict; a missing field takes its default, so older files load.
+        The time log too."""
         return Project(
             project_id=data.get("project_id", uuid.uuid4().hex[:10]),
             name=data.get("name", ""),
@@ -121,6 +130,7 @@ class Project:
             ],
             skill_weights_credited=bool(data.get("skill_weights_credited", False)),
             budget=float(data.get("budget", 0.0) or 0.0),
+            time_log=[dict(t) for t in (data.get("time_log") or []) if isinstance(t, dict)],
         )
 
 
@@ -274,6 +284,23 @@ class ProjectManager:
                 f"'{project.name}' also taught you something — crediting it now.",
                 skill_weights=[weight],
             )
+        return project
+
+    def log_time(self, project_id: str, hours: float, on: str = "", note: str = "") -> Project:
+        """Adds hours he put into a project on a day (today unless `on`, an ISO date), with a note, and records it in
+        the history; more than a day's 24 hours, or none, is refused."""
+        project = self.get_project(project_id)
+        if project is None:
+            raise ValueError(f"No project with id '{project_id}'.")
+        hours = round(float(hours), 2)
+        if not 0 < hours <= 24:
+            raise ValueError("Hours on a day are more than none and at most 24.")
+        on = on or datetime.now().date().isoformat()
+        project.time_log.append({"date": on, "hours": hours, "note": str(note or "").strip()})
+        project.updated_at = datetime.now().isoformat(timespec="seconds")
+        self._save()
+        life_events.record(self, "project_time", f"Put {hours:g} hours into {project.name}",
+                           [f"project:{project.project_id}"])
         return project
 
     def delete_project(self, project_id: str) -> None:

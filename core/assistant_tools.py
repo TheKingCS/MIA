@@ -87,6 +87,7 @@ from core.utility_bills import register_utility_bill_actions
 from core.spending_pace import register_spending_pace_actions
 from core.catch_actions import register_catch_actions
 from core.make_next import register_make_next_actions
+from core.project_time import register_project_time_actions
 from core.outdoor_work import register_outdoor_work_actions
 from core.tax_setaside import register_tax_setaside_actions
 from core.fishing_times import register_fishing_times_actions
@@ -244,6 +245,7 @@ class AssistantTools:
         list_calendar_events takes his words (`prompt_arg`).
         add_expense offers the Animals & Feed category.
         add_calendar_event offers a daily repeat.
+        The hours he puts into his projects too (core/project_time.py).
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -299,6 +301,7 @@ class AssistantTools:
         register_spending_pace_actions(self.context.assistant_actions)  # spending against his usual month
         register_catch_actions(self.context.assistant_actions)  # his catch log
         register_make_next_actions(self.context.assistant_actions)  # what to make next to sell
+        register_project_time_actions(self.context.assistant_actions)  # the hours he puts into his projects
         register_outdoor_work_actions(self.context.assistant_actions)  # heat index and wind chill for work
         register_tax_setaside_actions(self.context.assistant_actions)  # taxes to set aside on the workshop
         register_fishing_times_actions(self.context.assistant_actions)  # when to go fishing
