@@ -10,7 +10,8 @@ chat_with_tools mocks and manual/live-model verification). These are
 all plain @staticmethods (context, arguments) -> str, so they're called
 directly here with real manager instances (data dirs isolated to
 tmp_path, same pattern as test_alarm_manager.py's isolated_paths) —
-no Qt, no LLM, no MIAApplication instance needed.
+no Qt, no LLM, no MIAApplication instance needed. The sun and moon
+answer for his town when no waypoint is named.
 """
 
 from __future__ import annotations
@@ -1635,6 +1636,18 @@ def test_get_trip_summary_reports_planned_route_distance(context):
 # ----------------------------------------------------------------------
 # Sun / moon
 # ----------------------------------------------------------------------
+
+def test_get_sun_moon_info_without_a_waypoint_uses_his_town_or_asks_for_one(context, monkeypatch):
+    """No waypoint named: his town's sun and moon, with the moon tonight; no town yet: asked for one."""
+    from core import weather
+
+    monkeypatch.setattr(weather, "place", lambda ctx: {"name": "Springfield", "lat": 39.8, "lon": -89.6})
+    said = MIAApplication._action_get_sun_moon_info(context, {})
+    assert said.startswith("For Springfield: Sunrise:") and "Moon: " in said and "moon" in said.split("Moon: ")[1]
+    assert MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": "null"}).startswith("For Springfield")
+    monkeypatch.setattr(weather, "place", lambda ctx: None)
+    assert "I don't know your town yet" in MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": ""})
+
 
 def test_get_sun_moon_info_unknown_waypoint_reports_not_found(context):
     result = MIAApplication._action_get_sun_moon_info(context, {"waypoint_name": "Nonexistent"})

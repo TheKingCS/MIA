@@ -361,7 +361,10 @@ New ideas, each checked against what's there first:
   three, and the solunar idea is said as tradition. astral reads the moon's height in UTC whatever the zone: caught
   by a test that the moon a day before full is highest near midnight. The live check also caught "a 3 pound catfish"
   logged as 3 inches at "unknown": the catch log now drops a placeholder and a length no fish that heavy could have.
-  *Seen, not changed:* "what phase is the moon tonight?" offers no tool (get_sun_moon_info needs a waypoint).
+  *Fixed the same day:* "what phase is the moon tonight?" and "when's the next full moon?" reach get_sun_moon_info,
+  which now answers for his town when no waypoint is named, with days to the full or new moon, moonrise and moonset,
+  and the next full and new moon (core/sun_moon.moon_tonight). astral's phase runs 0 to 28 with full at 14 (its own
+  scale, not the 29.5-day month): checked against the full moon of 2026-11-24.
 - **How much should I set aside for taxes?** (no decision; his businesses, US): *built 2026-11-24
   (`core/tax_setaside.py`, the tool `tax_set_aside`).* This year's workshop profit from his ledger, self-employment tax
   worked out in code (15.3% of 92.35%, from $400), income tax at 12% and 22% side by side (and a bracket he gives),

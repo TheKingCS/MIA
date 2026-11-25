@@ -192,7 +192,8 @@ class AssistantTools:
         milestone 5.5 (MIA OS's settings pages and Linux apps among them, FW-11; her offline library's look-ups and fetches, core/assistant_library_actions.py; plans made together, core/assistant_project_plan_actions.py; their trigger phrases cover everyday ways of
         asking, "spent $120 at the feed store", "I bought 3 bags of chicken feed", "how's my budget looking", "where did I
         put the post hole digger", "what did I miss?", "we bought the house" as a property: never "where is my wife?" or
-        "what's new in the news": tests/test_everyday_phrasing_routing.py).
+        "what's new in the news": tests/test_everyday_phrasing_routing.py; "what phase is the moon tonight?" and "when's
+        the next full moon?" reach get_sun_moon_info, never "howl at the full moon").
         Registered here (not in modules/assistant/) for
         the same reason search providers and calculators are: this is
         the one place independent core services get wired together
@@ -719,21 +720,24 @@ class AssistantTools:
             name="get_sun_moon_info",
             domain="waypoints",
             description=(
-                "Get today's sunrise/sunset times and moon phase for a saved waypoint's "
-                "location — real survival-relevant info (how much daylight is left, "
-                "moon phase for night navigation)."
+                "Today's sunrise and sunset, and the moon tonight: its phase (days to the full or new moon), "
+                "moonrise and moonset, for his town or a saved waypoint he names — how much daylight is left, "
+                "the moon for night navigation. When to fish by the moon is best_time_to_fish."
             ),
             parameters={
                 "type": "object",
                 "properties": {
-                    "waypoint_name": {"type": "string", "description": "The name of the saved waypoint."},
+                    "waypoint_name": {"type": "string",
+                                      "description": "A saved waypoint, only if he named one; else his town."},
                 },
-                "required": ["waypoint_name"],
+                "required": [],
             },
             handler=self._action_get_sun_moon_info,
             trigger_phrases=(
                 "sunrise", "sunset", "moon phase", "when does the sun", "when will the sun",
-                "what time does the sun", "how much daylight",
+                "what time does the sun", "how much daylight", "phase of the moon", "phase is the moon",
+                "moonrise", "moonset", "moon rise", "moon come up", "next full moon", "next new moon",
+                "full moon tonight", "is the full moon", "the full moon be", "is the new moon",
             ),
         ))
         self.context.assistant_actions.register(AssistantAction(
@@ -2748,17 +2752,29 @@ class AssistantTools:
 
     @staticmethod
     def _action_get_sun_moon_info(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `get_sun_moon_info`: today's sunrise, sunset and moon phase at a named waypoint (the Navigation module's summary). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `get_sun_moon_info`: today's sunrise, sunset and moon phase (the Navigation module's
+        summary) with the moon tonight (core/sun_moon.moon_tonight: days to the full or new moon, moonrise and
+        moonset), at a named waypoint, else his town (core/weather.place). Returns the reply in words (an unknown
+        waypoint, or no town yet, says so; nothing changes)."""
         from datetime import date as _date
 
-        from core.sun_moon import format_sun_moon_summary
+        from core import weather
+        from core.sun_moon import format_sun_moon_summary, moon_tonight
 
-        name = str(arguments.get("waypoint_name", "")).strip().lower()
-        match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
-        if match is None:
-            return f"I don't have a waypoint called '{arguments.get('waypoint_name', '')}'."
-        summary = format_sun_moon_summary(match.latitude, match.longitude, _date.today())
-        return f"For '{match.name}': {summary}"
+        name = str(arguments.get("waypoint_name", "") or "").strip().lower()
+        if name and name not in ("my town", "home", "here", "town", "null", "none", "unknown", "n/a"):
+            match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
+            if match is None:
+                return f"I don't have a waypoint called '{arguments.get('waypoint_name', '')}'."
+            lat, lon, label = match.latitude, match.longitude, f"'{match.name}'"
+        else:
+            town = weather.place(context)
+            if town is None:
+                return ("I don't know your town yet. Tell me which one, like \"my town is Springfield, Illinois\", "
+                        "or name a saved waypoint.")
+            lat, lon, label = town["lat"], town["lon"], town["name"] or "your town"
+        today = _date.today()
+        return f"For {label}: {format_sun_moon_summary(lat, lon, today)}\n{moon_tonight(lat, lon, today)}"
 
     @staticmethod
     def _action_get_system_health(context: AppContext, arguments: dict) -> str:

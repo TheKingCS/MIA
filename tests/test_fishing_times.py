@@ -4,7 +4,8 @@ tests.test_fishing_times
 
 "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon
 overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a
-new or full moon, the week's best days, his own log's best time, and a town asked for first.
+new or full moon, the week's best days, his own log's best time, and a town asked for first; the moon tonight in
+words, with the next full and new moon (core/sun_moon.py).
 """
 
 from datetime import date, datetime
@@ -62,3 +63,14 @@ def test_without_a_town_its_asked_for(monkeypatch):
 
     monkeypatch.setattr(weather, "place", lambda context: None)
     assert ft.say(SimpleNamespace(), "today").startswith("I don't know your town yet")
+
+
+
+def test_the_moon_tonight_in_words():
+    """The full moon of 2026-11-24 (astral's phase 13.8 of its 0-28 scale): said as today, with its rise and set, and
+    the next new moon (core/sun_moon.moon_tonight)."""
+    from core.sun_moon import moon_tonight
+
+    said = moon_tonight(LAT, LON, date(2026, 11, 24), TZ)
+    assert said.startswith("Moon: ") and "full moon" in said and "rises 4:24 pm" in said and "sets 7:07 am" in said
+    assert "Full moon today" in said and "next new moon around Wednesday, December 9" in said

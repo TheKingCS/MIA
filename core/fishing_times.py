@@ -26,7 +26,7 @@ from typing import Optional
 
 STEP_MINUTES = 10
 PHASE_DAYS = 2  # days either side of new (0 / 29.5) or full (14.75) that count as the strong stretch
-LUNATION = 29.53
+LUNATION = 28.0  # astral's moon.phase scale: 0 new, 14 full, 27.99 the end (its own docs), not the 29.53-day month
 
 
 def _tz():
@@ -93,7 +93,7 @@ def phase_word(day: date) -> tuple:
     """(words, strong): "a full moon", "two days past the new moon"... and whether it's the strong stretch."""
     from astral import moon
 
-    p = moon.phase(day)  # 0 new, about 14 full, 27.99 the end of the cycle
+    p = moon.phase(day)  # 0 new, 14 full, 27.99 the end of the cycle (checked: 13.8 on 2026-11-24, that day's full moon)
     to_new = min(p, LUNATION - p)
     to_full = abs(p - LUNATION / 2)
     near, gap = ("new", to_new) if to_new <= to_full else ("full", to_full)

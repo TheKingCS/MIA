@@ -259,6 +259,7 @@ GOLDEN_CASES = [
     ("get trip summary", "How far did I go on my Day 1 trip?", "get_trip_summary"),
     ("sunrise/sunset for a waypoint", "What time does the sun set at my Cabin waypoint?", "get_sun_moon_info"),
     ("moon phase for a waypoint", "What's the moon phase at Cabin tonight?", "get_sun_moon_info"),
+    ("moon phase for his town", "What phase is the moon tonight?", "get_sun_moon_info"),
     ("convert units", "Convert 5 miles to kilometers", "convert_units"),
     ("convert units, temperature", "What is 100 fahrenheit in celsius?", "convert_units"),
     ("ohms law", "I have 2 amps through a 10 ohm resistor, what's the voltage?", "calculate_ohms_law"),

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1735 files, 374,000 lines; 1735 files describe themselves; 20,528 of 20,658 classes and functions are documented.
+1735 files, 374,091 lines; 1735 files describe themselves; 20,532 of 20,662 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-691 files, 193,012 lines; 9,797 of 9,883 classes and functions documented
+691 files, 193,077 lines; 9,799 of 9,885 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -562,7 +562,7 @@
 - `core/storm_ready.py`: "Is a storm coming? Get me ready." (Jarvis brainstorm, round 10; asked for, so no unprompted message): the next three days' forecast (core/weather.py) read for a storm, and one checklist from his own records for it.
 - `core/subnet_calculator.py`: Subnet/CIDR calculator — docs/ROADMAP.md milestone 11.5, Field Kit's Security/Network Toolkit. A thin wrapper around stdlib `ipaddress` (handles both IPv4 and IPv6 correctly) rather than hand-rolling bitmask math — "don't reinvent the wheel", same reasoning behind this project's other integration de
 - `core/subscriptions.py`: DEC-0054's "still using it?" mark on subscriptions (2026-11-07; the unused-subscription finding core/findings.py listed as not built "for want of data": nothing recorded use). Now the person records it: "I still use Netflix", or Still Using on the bill in Money, stamps the bill's `still_using_on` wi
-- `core/sun_moon.py`: Sunrise, sunset and the moon's phase for a place and a day, in words (the Navigation app's summary and the `get_sun_moon_info` tool). Moved here from `modules/navigation/module.py` on 2026-11-15 so the tool works without the desktop's Qt screens (the MIA Runtime, DEC-0155). Pure formatting over `ast
+- `core/sun_moon.py`: Sunrise, sunset and the moon's phase for a place and a day, in words (the Navigation app's summary and the `get_sun_moon_info` tool), and the moon tonight in words (`moon_tonight`: how many days to the full or new moon, core/fishing_times.phase_word, and its rise and set). Moved here from `modules/n
 - `core/support_choice.py`: "When it's ambiguous, MIA asks instead of guessing" (2026-09-28), the part of slice B that was deferred (docs/COGNITIVE_EXTENSION_PROPOSAL.md, sections 8 and 9).
 - `core/sync.py`: Two-way sync between the phone and the home computer (DEC-0022, the step after the link; Zac, 2026-10-18). A change on either one shows up on the other: missions, the kitchen, money, the journal, quests, everything that lives in MIA's data files, and the XP and credits you earned.
 - `core/system_check.py`: "Is everything set up?" (2026-10-01, accounts stage 5): one list that says what works on this device, what's missing, and exactly what to do about each, so a new person (or a new Raspberry Pi) doesn't have to guess why voice or photos of receipts don't work.
@@ -989,7 +989,7 @@
 
 ## tests/: the test suite: what each part must do
 
-638 files, 99,893 lines; 8,366 of 8,410 classes and functions documented
+638 files, 99,919 lines; 8,368 of 8,412 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
