@@ -27,6 +27,12 @@ core/free_build.py, core/part_specs.py): his parts on his board wired freely and
 MIA doesn't know drafted from his own SearXNG and kept on his yes. A fresh review found nine bugs in the labs (drills
 and builds taking ordinary messages, 5 V on a 3.3 V pin missed, a flash that could pick the wrong board): all fixed.
 8362 passing.
+Later still: a second review's seven fixes (the Mega's I2C, power backwards a stop); most-specific routing among
+several matched tools; a power outage drill; "build me a ..." on My Bench (core/bench_designs.py: four designs checked
+on every board) and saved builds (core/bench_builds.py, Mark It Built takes his parts); MIA knows her own designs
+(core/self_knowledge.py: a decision or spec named is described from its records, and one nothing builds yet is said
+as a plan, in code: the Fix-It Log's top issue); the speech-to-text model downloaded on the PC (MIA can hear now) and
+the PC check checking voice for real. Brainstorm round 13 is in docs/future/JARVIS_BRAINSTORM.md. 8380 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the

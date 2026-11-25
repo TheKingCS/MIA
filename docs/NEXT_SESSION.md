@@ -16,8 +16,11 @@ carpentry on the same frame. Phase B of the smart-ag plan, named next below, is 
 Later: Build With Arduino for his Mega and Nanos, Ask MIA on course pages, and My Bench (Learning > My Bench). At the
 PC: "flash the blink lab to my nano"; on My Bench, put an HC-SR04 on the ESP32 and wire ECHO straight to a pin.
 Waiting: SearXNG isn't running on the PC, so "look up the specs for..." can't search yet (docs/ONLINE_LOOKUP.md).
-Loose end: "what parts can I wire in the simulator?" reaches three tools by "what parts", so the model answers in
-text; a most-specific-phrase rule in direct_lookup would fix it (K-0482).
+Loose end (fixed 2026-11-25, ad92e570): "what parts can I wire in the simulator?" now reaches part_specs alone.
+Then: "build me a motion light" and saved builds on My Bench; MIA describes her own plans (the Life Enrichment
+Protocol as a plan); MIA can hear (the Vosk model is in voice_models/ on the PC). At the PC: say "can you hear me?"
+with the mic; on My Bench, "build me a tank level gauge", Put It On The Bench, Save This Build. Next ideas: brainstorm
+round 13 (the greenhouse node as the ESP32 capstone, drills for the flock and money, a part from a photo).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
