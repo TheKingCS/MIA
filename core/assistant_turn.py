@@ -109,7 +109,9 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     (core/conversation_state.follows_a_tool), or it's for the model. Never in a
     personal mode or the journal, except "stop", "stop everything" and
     "carry on" (core/stop.py), asked first in every conversation, as in
-    a turn."""
+    a turn.
+    Building an ESP32 lab along with MIA (core/esp32_sim.reply) is answered there too, after the greenhouse and what
+    MIA runs on."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -136,6 +138,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _greenhouse_reply(context, prompt)  # the greenhouse and its hardware (DEC-0150), as in a turn
     if walked is None:
         walked = _service_reply(context, prompt)  # "what breaks if Ollama stops?" (core/service_map.py, T-0007)
+    if walked is None:
+        walked = _lab_build_reply(context, conversation, prompt)  # building a lab along with MIA, as in a turn
     if walked is not None:
         return walked
     from core.quick_commands import handle
@@ -162,6 +166,18 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     if follows_a_tool(context, conversation, prompt):  # a follow-up to a tool's answer is the model's, with that tool
         return None
     return _direct_lookup(context, prompt)
+
+
+def _lab_build_reply(context, conversation, prompt: str):
+    """Building an ESP32 lab along with MIA, in code (core/esp32_sim.reply): a lab named to build, or "next step"
+    right after a step; None when the words aren't for it."""
+    from core import esp32_sim
+
+    try:
+        return esp32_sim.reply(context, conversation, prompt)
+    except Exception:
+        log.exception("Couldn't follow the lab's build")
+        return None
 
 
 def _service_reply(context, prompt: str):
@@ -264,6 +280,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     question plans and code answers for the model with that tool (core/conversation_state.follows_a_tool).
     A reply that only echoes the question is never said as an answer (ECHO_REPLY).
     An echo of one of his messages from a moment ago is caught too.
+    Building an ESP32 lab along with MIA is taken in code there too, before the plans ("walk me through building the
+    pot lab", then "next step": core/esp32_sim.reply).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -353,6 +371,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _greenhouse_reply(context, prompt)  # "take over the greenhouse", "flash the safety MCU" (DEC-0150)
         if walked is None:
             walked = _service_reply(context, prompt)  # "what breaks if Ollama stops?" (core/service_map.py, T-0007)
+        if walked is None:
+            walked = _lab_build_reply(context, conversation, prompt)  # "walk me through building the pot lab", "next"
         if walked is not None:
             add_message(conversation, "assistant", walked)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [walked], route="code")

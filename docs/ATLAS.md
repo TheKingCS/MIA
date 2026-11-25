@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1756 files, 378,201 lines; 1756 files describe themselves; 20,716 of 20,846 classes and functions are documented.
+1759 files, 379,417 lines; 1759 files describe themselves; 20,763 of 20,893 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-700 files, 195,766 lines; 9,900 of 9,986 classes and functions documented
+701 files, 196,541 lines; 9,935 of 10,021 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -229,6 +229,7 @@
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
 - `core/esp32_lab.py`: The lab bench for Build With ESP32 (core/esp32_path.py; the standard is docs/future/INTERACTIVE_LABS_PLAN.md): MIA builds a lab's sketch, flashes it to his board on his yes, and reads what the board says to check the lab.
 - `core/esp32_path.py`: Build With ESP32, MIA's first interactive lab course (Zac, 2026-11-25: "an interactive environment made for learning how to build with esp32's ... this could be used as a standard for other teaching areas"; the standard is docs/future/INTERACTIVE_LABS_PLAN.md). A learning path (core/paths.py: stages
+- `core/esp32_sim.py`: The ESP32 lab simulator (docs/future/INTERACTIVE_LABS_PLAN.md, step 3; Zac, 2026-11-25: build and test the hardware in a simulator, and MIA walking him through building alongside it). Pure logic: no board, no network, nothing kept.
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), "trac
 - `core/evening_wrap.py`: The evening wrap (DEC-0292; Zac, 2026-11-23: "Yes"): once an evening, two sentences: what got done today, then tomorrow's first thing and tomorrow's weather. Everything from his records, worked out in code: today's wins from the history (core/life_events.py), tomorrow's list (core/today.py, overdue 
 - `core/event_bus.py`: A minimal publish/subscribe event bus.
@@ -711,7 +712,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,895 lines; 60 of 60 classes and functions documented
+2 files, 4,922 lines; 61 of 61 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -998,7 +999,7 @@
 
 ## tests/: the test suite: what each part must do
 
-649 files, 101,153 lines; 8,450 of 8,494 classes and functions documented
+650 files, 101,313 lines; 8,461 of 8,505 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1166,6 +1167,7 @@
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_esp32_lab.py`: The ESP32 lab bench (core/esp32_lab.py): a lab's PlatformIO project written (its libraries, its sketch, a Wi-Fi secrets file with placeholders he fills in himself), never flashed with the placeholders still there or without PlatformIO or a board; a flash runs pio's upload on the board's port; the bo
 - `tests/test_esp32_path.py`: Build With ESP32 (core/esp32_path.py): the course has a sound shape, every lab its parts and a sketch that prints the marker its check reads, the check passes from what the board said (seen, a mark, a spread, a range), a pass is kept as an attempt on his path, and "I want to learn ESP32" finds it. A
+- `tests/test_esp32_sim.py`: The ESP32 lab simulator (core/esp32_sim.py): a circuit judged the way it would behave (an LED backwards, with no resistor, or with the resistor on its other side; a short; 5 V on the pot; a sensor on the wrong pin; an input-only pin asked to drive), the build along with MIA (steps ticked, a resistor
 - `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
@@ -1652,7 +1654,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-121 files, 22,658 lines
+122 files, 22,912 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 
@@ -1710,6 +1712,7 @@
 - `web/knowledge.js`: knowledge.js — the offline reference library (claude, 2026-11-06). Renders MIA.knowledge(q) (core/reference_library_manager.py): the installed packs, a search across all of them, and an article read as plain text (MIA.knowledgeArticle), and the plans shelf (MIA.knowledgePlans, core/plan_library.py):
 - `web/lab.js`: lab.js — The Lab (claude, 2026-11-07, DEC-0125; the design canvas's Lab, DEC-0113). Renders MIA.lab() (core/web_lab.py): the series as chips, the chosen one's chart (points placed by core, 0..1), its plain numbers and readings newest first, and Add a Reading. Other apps' series (Power, Garage) are l
 - `web/label.js`: label.js — printable labels for a homestead good (DEC-0036). Reads MIA.workshop()'s goods: ?recipe=<id> (today's date) or &job=<batch> (that batch's made date). Formatting only; the words are the person's own.
+- `web/labsim.js`: labsim.js — the ESP32 simulator on a course's page (claude, 2026-11-25; core/esp32_sim.py, web/course.html). MIALabSim.render(course, lab) gives the Simulator section for a lab with a circuit: the board's pins and the lab's parts drawn as a breadboard, where a wire is made by picking two terminals (
 - `web/look.js`: look.js — Look: show MIA something (claude, 2026-11-07, build plan step 15). A photo (the camera, or one you have) and a question ("what is this?", "read this label", "inspect this part"), answered on MIA's PC by her local vision model (core/sight.py, POST /api/sight). The photo isn't kept. She neve
 - `web/lookup.js`: lookup.js — Look It Up Online (claude, 2026-11-08, DEC-0053 / T-0017). Renders MIA.lookup() (core/web_lookup.screen): whether a lookup is allowed now and the rules; Search runs MIA.lookupSearch(words) (core/web_lookup.look): what was actually sent (the scrubbed words), then each result with its site
 - `web/made.js`: made.js: every screen MIA makes (claude, 2026-11-04, DEC-0088 to DEC-0091). Draws a creation's blocks as core assembled them (core/creation_spec.py): stats, chart, table, list, cards, meter, timeline, form, note. Only MIA's own classes and tokens, no styling of its own, so whatever she makes looks l

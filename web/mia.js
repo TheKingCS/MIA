@@ -631,6 +631,8 @@
     // board checks the lab. (Not the Data Logger's Lab above, MIA.lab.)
     course: (course, lesson) => read("/api/labs/" + encodeURIComponent(course || "esp32") +
       (lesson ? "?lesson=" + encodeURIComponent(lesson) : ""), "course"),
+    courseSim: (course, lesson, wires, inputs, seconds) => demo ? demoOnly()
+      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/sim", { lesson, wires, inputs, seconds }),
     courseRead: (course, lesson, seconds) => demo ? demoOnly()
       : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/read", { lesson, seconds: seconds || 8 }),
     achievementsNew: () => demo ? Promise.resolve({ cards: [], more: 0 }) : call("GET", "/api/achievements/new"),

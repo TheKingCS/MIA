@@ -62,7 +62,9 @@
       "practice_today",
       "flash_lab",
       "check_lab",
-      "lab_board"
+      "lab_board",
+      "build_along",
+      "simulate_lab"
     ],
     "actions": [
       "course.add",
@@ -127,6 +129,8 @@
       "flash_lab": "act_with_approval",
       "check_lab": "act_within_grant",
       "lab_board": "observe",
+      "build_along": "act_within_grant",
+      "simulate_lab": "observe",
       "esplab.flash": "act_with_approval",
       "path.start": "act_within_grant"
     },

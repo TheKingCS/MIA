@@ -8,7 +8,8 @@ learning paths, the first Build With ESP32 (core/esp32_path.py).
 `page(context, course, lesson)`: the course (its name and what it's for), whether he's started it, its stages each
 with its state (done, current, later), lessons and checks (passed or not), the lab chosen (the one asked for, else
 the next on his path) with its goal, steps, why, what to watch for, and for a hands-on lab its parts, wiring, sketch,
-platformio.ini and whether it needs his Wi-Fi typed in; the board (its port, or what's missing) for a course worked
+platformio.ini and whether it needs his Wi-Fi typed in, and its circuit for the simulator (core/esp32_sim.circuit_of)
+with what to do there to pass; the board (its port, or what's missing) for a course worked
 on one; and what's next. Read only: starting the course is the action `path.start`, flashing `esplab.flash`, reading
 the board POST /api/labs/{course}/read.
 """
@@ -28,7 +29,8 @@ def _labs(course: str) -> dict:
 
 
 def page(context, course: str = "esp32", lesson: str = "") -> dict:
-    """The course page's data (see the module's opening)."""
+    """The course page's data (see the module's opening).
+    For an ESP32 lab, the circuit for the simulator and what to do there to pass (core/esp32_sim)."""
     from core import paths
 
     program = paths.program_of(context, course)
@@ -56,6 +58,11 @@ def page(context, course: str = "esp32", lesson: str = "") -> dict:
     lab = labs.get(the.id)
     shown = {"id": the.id, "title": the.title, "stage": stage.number, "steps": list(the.steps), "why": the.why,
              "watch": list(the.watch)}
+    if program.id == "esp32":
+        from core import esp32_sim
+
+        shown["circuit"] = esp32_sim.circuit_of(the.id)
+        shown["try"] = esp32_sim.TRY.get(the.id, "")
     if lab is not None:
         from core.esp32_lab import checks_of, ini
 

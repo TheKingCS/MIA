@@ -44,6 +44,8 @@ and says it was drafted.
 **The store** (`PathBook`, each person's own, `paths.json`): every path they've
 started (goal, plan, sessions, attempts, stage) and their drafts. Practice,
 passed checks and finished stages are life events.
+Where someone is in building a lab along with MIA is kept on the path too (`build_at`, `set_build`; core/esp32_sim's
+build_along).
 """
 
 from __future__ import annotations
@@ -264,6 +266,21 @@ class PathBook:
     def path(self, path_id: str) -> Optional[dict]:
         """A started path's record, or None."""
         return self.paths.get(path_id)
+
+    def build_at(self, path_id: str) -> Optional[dict]:
+        """Where they are in building a lab along with MIA ({lesson, step, date}), or None (core/esp32_sim)."""
+        record = self.paths.get(path_id)
+        return (record or {}).get("build")
+
+    def set_build(self, program: Program, lesson_id: str, step: int) -> dict:
+        """Keeps where they are in building a lab along with MIA, so "next step" follows. ValueError for a path not
+        started."""
+        record = self.paths.get(program.id)
+        if record is None:
+            raise ValueError(f"Start {program.name} first.")
+        record["build"] = {"lesson": str(lesson_id), "step": max(1, int(step)), "date": date.today().isoformat()}
+        self._save()
+        return record["build"]
 
     def started(self) -> list[str]:
         """The paths started, in the order they were."""

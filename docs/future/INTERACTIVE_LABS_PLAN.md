@@ -48,8 +48,17 @@ never MIA's.
    This Lab (`esplab.flash`, approved), and the serial monitor: Read The Board reads it for a few seconds
    (POST /api/labs/{course}/read) and checks the lab from what it said. `page()` is course-neutral: another area
    gives its labs in `_labs()` and its own "see it" panel (the guitar's ear, a photo) in place of the bench.
-3. **Simulated, with no board** (his say: it needs an online simulator or a local one to be chosen): a lab run in a
-   simulator when the board isn't on the desk.
+3. **Simulated, with no board, and built along with MIA**: *built 2026-11-25 (core/esp32_sim.py, web/labsim.js),
+   after Zac named simulation as what he liked most in the site that started this: building and testing the hardware
+   in a simulator, with MIA walking him through the build alongside it.* Each lab has its circuit as parts and build
+   steps; on the course page he wires it on a drawn breadboard (a 30-pin DevKit's pins, the lab's parts), each step
+   ticked as his wires make it and the next one lit; the circuit is judged as it would behave (an LED backwards or
+   with no resistor, a short, 5 V on the pot, a sensor on the wrong pin, an input-only pin asked to drive), and Run It
+   plays back what the sketch would print and what the LED and relay would do, with whether the check would pass. By
+   voice: "walk me through building the pot lab", "next step", "go back" (`build_along`, where he is kept on his
+   path), and "what will the dht lab print?" (`simulate_lab`). A run in the simulator never passes a check: only the
+   board's own words do. Still his call: running the real compiled sketch in a simulator (Wokwi, online with a free
+   account token, or Espressif's QEMU, local but serial-only for most labs).
 4. **The other areas on the same frame**: guitar (already verified by ear), carpentry and woodworking (a
    measurement, a photo), gardening (his own logged readings), bushcraft and first aid (a said check, a photo).
 5. **His own labs**: the greenhouse node's firmware as the capstone, and labs drafted for a new interest

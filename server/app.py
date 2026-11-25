@@ -93,7 +93,7 @@ Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
 screen; /api/taught-skills/run, /answer and /stop move a run one step at a
 time, each step through its own gate.
 An achievement card closed is marked seen by POST /api/achievements/seen (AchievementsSeenRequest).
-A course's labs (web/course.html): GET /api/labs/{course} (core/lab_page.py) and POST /api/labs/{course}/read (LabReadRequest: his
+A course's labs (web/course.html), with the simulator at POST /api/labs/{course}/sim: GET /api/labs/{course} (core/lab_page.py) and POST /api/labs/{course}/read (LabReadRequest: his
 board's serial output read and the lab checked from it, core/esp32_lab.py).
 YouTube in Music: GET /api/music/youtube/search and POST /api/music/youtube/key (YouTubeKeyRequest); the
 Content-Security-Policy allows YouTube's privacy-enhanced player and its thumbnails, nothing else from outside.
@@ -198,6 +198,15 @@ class LabReadRequest(BaseModel):
     lesson: str
     port: str = ""
     seconds: float = 8.0
+
+
+class LabSimRequest(BaseModel):
+    """A lab run in the simulator (POST /api/labs/{course}/sim): his wires (pairs of terminals), the inputs he set (the
+    knob, the room, the soil, presses, requests) and how long."""
+    lesson: str
+    wires: list[list[str]] = []
+    inputs: dict = {}
+    seconds: float = 10.0
 
 
 class AchievementsSeenRequest(BaseModel):
@@ -622,7 +631,8 @@ def create_app(context: AppContext) -> FastAPI:
     /api/music/youtube/next and /next/played hand MIA's pick by voice to the frame's small player.
     /favicon.ico answers 204 (no icon yet) instead of a 404 in every page's console.
     A course's labs (web/course.html) read /api/labs/{course}, and reading the board to check a lab is POST
-    /api/labs/{course}/read."""
+    /api/labs/{course}/read.
+    The ESP32 simulator runs a lab on his wires at POST /api/labs/{course}/sim (core/esp32_sim)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3249,6 +3259,23 @@ def create_app(context: AppContext) -> FastAPI:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Which lab? Like blink or dht.")
         view = view_for(context, profile_id)
         return esp32_lab.read_and_check(view, request.lesson, request.port, max(2.0, min(20.0, request.seconds)))
+
+    @app.post("/api/labs/{course}/sim")
+    def web_lab_sim(course: str, request: LabSimRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Runs a lab in the simulator on his wires (core/esp32_sim.simulate) and where his build is
+        (build_progress): pure, nothing kept, never a pass."""
+        from core import esp32_sim
+
+        if course != "esp32":
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That course has no simulator.")
+        if request.lesson not in esp32_sim.CIRCUITS or len(request.wires) > 60:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Which lab? Like blink or dht.")
+        try:
+            wires = [tuple(w) for w in request.wires if len(w) == 2]
+            return {"sim": esp32_sim.simulate(request.lesson, wires, request.inputs, request.seconds),
+                    "build": esp32_sim.build_progress(request.lesson, wires)}
+        except (ValueError, TypeError) as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
 
     @app.get("/api/achievements")
     def web_achievements(profile_id: str = Depends(require_profile_id)) -> dict:

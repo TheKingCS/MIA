@@ -3,7 +3,8 @@
  * Renders MIA.course(course, lesson) (core/lab_page.py): the course map, the lab chosen in its parts (why, steps,
  * watch for, parts, wiring, the sketch), the board, and a serial monitor. Changes go through the action contract,
  * each approved: Start This Course (path.start), Flash This Lab (esplab.flash). Read The Board (MIA.courseRead)
- * reads the board's serial output for a few seconds and checks the lab from what it said. Formatting only.
+ * reads the board's serial output for a few seconds and checks the lab from what it said. The Simulator section,
+ * building along with MIA, is web/labsim.js. Formatting only.
  */
 (function () {
   "use strict";
@@ -92,6 +93,7 @@
     ];
     if (lab.code) {
       parts.push(section("Parts and wiring", list(lab.parts), wiring(lab)));
+      if (lab.circuit && window.MIALabSim) parts.push(MIALabSim.render(course, lab));
       parts.push(section("The sketch",
         el("div", { class: "row-buttons" },
           MIAShell.copyButton(lab.code, "Copy The Sketch", "btn btn-ghost btn-small"),

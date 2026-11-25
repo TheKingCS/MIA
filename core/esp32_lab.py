@@ -273,11 +273,14 @@ def _board_tool(context, arguments: dict) -> str:
 
 
 def register_esp32_lab_actions(registry) -> None:
-    """Registers flash_lab, check_lab and lab_board, and "esp32" and "microcontroller" as learning words (so "what's
-    my next ESP32 lesson?" brings the learning tools: the live check, 2026-11-25)."""
+    """Registers flash_lab, check_lab and lab_board, the simulator's build_along and simulate_lab
+    (core/esp32_sim.py), and "esp32" and "microcontroller" as learning words (so "what's my next ESP32 lesson?"
+    brings the learning tools: the live check, 2026-11-25)."""
     from core.assistant_actions import AssistantAction
+    from core.esp32_sim import register_sim_tools
 
-    registry.register_domain_keywords("learning", ("esp32", "microcontroller"))
+    registry.register_domain_keywords("learning", ("esp32", "microcontroller", "breadboard"))
+    register_sim_tools(registry)
     lab = {"type": "string", "description": "which lab (blink, hello, button, pot, dht, soil, fade, relay, wifi, "
                                             "web, sleep), only if he named one"}
     words = {"type": "string", "description": "his words"}
@@ -294,8 +297,8 @@ def register_esp32_lab_actions(registry) -> None:
     ))
     registry.register(AssistantAction(
         name="check_lab", domain="learning",
-        description="Read what his ESP32 is printing and check the lab from it (Build With ESP32): passed or not, "
-                    "and why.",
+        description="Check his lab on the real ESP32 now: reads its serial output for a few seconds and says whether "
+                    "the check passed, and why. What a lab will or should print is simulate_lab, not this.",
         parameters={"type": "object", "properties": {"lab": lab, "question": words}, "required": []},
         handler=_check_tool, trigger_phrases=("check my lab", "check the lab", "did my lab pass", "did it pass",
                                              "read my board", "what's my board saying", "check my board"),

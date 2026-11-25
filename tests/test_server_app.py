@@ -27,6 +27,7 @@ core/application.py hands it, not a hand-rolled stand-in. Also wires
 context.push_subscriptions directly (build_core_context() doesn't —
 that's core/application.py's job, gated by server.enabled).
 Also a course's labs page, and reading the board to check a lab.
+And the ESP32 simulator's route: a lab run on his wires and where his build is.
 """
 
 from __future__ import annotations
@@ -1136,3 +1137,20 @@ def test_a_courses_labs_page_and_reading_the_board_check_the_lab(client, context
     assert context.paths.passed("esp32", "esp_blink")
     assert client.post("/api/labs/esp32/read", headers=auth, json={"lesson": "nope"}).status_code == 422
     assert client.post("/api/labs/guitar/read", headers=auth, json={"lesson": "blink"}).status_code == 404
+
+
+def test_the_simulator_runs_a_lab_on_his_wires_and_says_where_his_build_is(client, context):
+    """POST /api/labs/esp32/sim: the blink lab's LED backwards runs (serial counts) with the warning, step 1 done;
+    a short doesn't run; an unknown terminal or lab is 422, another course 404, and it needs a sign-in."""
+    auth = _signed_in(client, context)
+    body = {"lesson": "blink", "wires": [["GPIO 2", "r1.a"], ["r1.b", "led1.cathode"], ["led1.anode", "GND"]]}
+    assert client.post("/api/labs/esp32/sim", json=body).status_code == 401
+    got = client.post("/api/labs/esp32/sim", headers=auth, json=body).json()
+    assert got["sim"]["ran"] and "MIA BLINK" in got["sim"]["serial"] and "backwards" in got["sim"]["said"]
+    assert [s["done"] for s in got["build"]["steps"]] == [True, False, False]
+    short = client.post("/api/labs/esp32/sim", headers=auth, json={"lesson": "pot", "wires": [["3V3", "GND"]]}).json()
+    assert short["sim"]["ran"] is False
+    bad = {"lesson": "blink", "wires": [["GPIO 2", "nowhere"]]}
+    assert client.post("/api/labs/esp32/sim", headers=auth, json=bad).status_code == 422
+    assert client.post("/api/labs/esp32/sim", headers=auth, json={"lesson": "nope"}).status_code == 422
+    assert client.post("/api/labs/guitar/sim", headers=auth, json={"lesson": "blink"}).status_code == 404

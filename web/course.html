@@ -18,7 +18,8 @@
     the learning paths, first Build With ESP32. The course map (stages, labs, checks passed), the lab chosen (why,
     steps, what to watch for, parts, wiring, the sketch to copy or flash), the board, a serial monitor that reads the
     board and checks the lab from what it said, and what's next. From MIA.course() (core/lab_page.py); flashing is the
-    action esplab.flash and starting the course path.start, each approved; reading the board MIA.courseRead().
+    action esplab.flash and starting the course path.start, each approved; reading the board MIA.courseRead(); the
+    simulator, to build the lab along with MIA and run it with no board, web/labsim.js (MIA.courseSim()).
     ?course=esp32&lesson=blink
   -->
   <div class="layout" id="app" hidden>
@@ -40,6 +41,7 @@
   <script src="sound.js"></script>
   <script src="places-watch.js"></script>
   <script src="shell.js"></script>
+  <script src="labsim.js"></script>
   <script src="course.js"></script>
 </body>
 </html>

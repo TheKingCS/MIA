@@ -171,33 +171,224 @@
     }
   ],
   "lab": {
-    "id": "hello",
-    "title": "Talk over serial",
+    "id": "blink",
+    "title": "Blink the LED",
     "stage": 1,
     "steps": [
-      "Flash the hello lab; open the serial monitor at 115200 baud.",
-      "Serial.begin sets the speed; both ends must agree, or you see garbage.",
-      "Watch MIA UPTIME count the seconds since it started; press EN (reset) and see it start over."
+      "Plug the board in with a data USB cable; MIA finds its serial port (the course page, or \"which board is plugged in?\").",
+      "Read the sketch: setup() runs once, loop() over and over; pinMode makes GPIO 2 an output.",
+      "Say \"flash the blink lab\" (or press Flash This Lab on the course page) and approve it: MIA builds it with PlatformIO and writes it to the board.",
+      "Watch the LED blink once a second, and the serial monitor count MIA BLINK 1, 2, 3.",
+      "Change delay(500) to delay(100), flash again, and see it blink faster."
     ],
-    "why": "The serial monitor is your window into the board: every later lab tells you what it's doing through it.",
+    "why": "Every project starts here: proving the board, the cable, the upload and your code all work.",
     "watch": [
-      "The wrong baud rate: gibberish on the monitor.",
-      "Printing too fast, which floods the monitor."
+      "A charge-only USB cable: the board lights but no port appears.",
+      "A board that won't take the upload: hold BOOT while it starts uploading."
     ],
+    "circuit": {
+      "pin": "GPIO 2",
+      "parts": [
+        {
+          "id": "r1",
+          "kind": "resistor",
+          "name": "220 ohm resistor",
+          "pins": [
+            {
+              "id": "r1.a",
+              "name": "one end"
+            },
+            {
+              "id": "r1.b",
+              "name": "the other end"
+            }
+          ]
+        },
+        {
+          "id": "led1",
+          "kind": "led",
+          "name": "LED",
+          "pins": [
+            {
+              "id": "led1.anode",
+              "name": "long leg (+)"
+            },
+            {
+              "id": "led1.cathode",
+              "name": "short leg (-)"
+            }
+          ]
+        }
+      ],
+      "left": [
+        {
+          "id": "EN",
+          "label": "EN"
+        },
+        {
+          "id": "GPIO 36",
+          "label": "VP"
+        },
+        {
+          "id": "GPIO 39",
+          "label": "VN"
+        },
+        {
+          "id": "GPIO 34",
+          "label": "D34"
+        },
+        {
+          "id": "GPIO 35",
+          "label": "D35"
+        },
+        {
+          "id": "GPIO 32",
+          "label": "D32"
+        },
+        {
+          "id": "GPIO 33",
+          "label": "D33"
+        },
+        {
+          "id": "GPIO 25",
+          "label": "D25"
+        },
+        {
+          "id": "GPIO 26",
+          "label": "D26"
+        },
+        {
+          "id": "GPIO 27",
+          "label": "D27"
+        },
+        {
+          "id": "GPIO 14",
+          "label": "D14"
+        },
+        {
+          "id": "GPIO 12",
+          "label": "D12"
+        },
+        {
+          "id": "GPIO 13",
+          "label": "D13"
+        },
+        {
+          "id": "GND",
+          "label": "GND"
+        },
+        {
+          "id": "VIN",
+          "label": "VIN"
+        }
+      ],
+      "right": [
+        {
+          "id": "GPIO 23",
+          "label": "D23"
+        },
+        {
+          "id": "GPIO 22",
+          "label": "D22"
+        },
+        {
+          "id": "GPIO 1",
+          "label": "TX0"
+        },
+        {
+          "id": "GPIO 3",
+          "label": "RX0"
+        },
+        {
+          "id": "GPIO 21",
+          "label": "D21"
+        },
+        {
+          "id": "GPIO 19",
+          "label": "D19"
+        },
+        {
+          "id": "GPIO 18",
+          "label": "D18"
+        },
+        {
+          "id": "GPIO 5",
+          "label": "D5"
+        },
+        {
+          "id": "GPIO 17",
+          "label": "TX2"
+        },
+        {
+          "id": "GPIO 16",
+          "label": "RX2"
+        },
+        {
+          "id": "GPIO 4",
+          "label": "D4"
+        },
+        {
+          "id": "GPIO 2",
+          "label": "D2"
+        },
+        {
+          "id": "GPIO 15",
+          "label": "D15"
+        },
+        {
+          "id": "GND 2",
+          "label": "GND"
+        },
+        {
+          "id": "3V3",
+          "label": "3V3"
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "a": "GPIO 2",
+          "b": "r1.a",
+          "words": "D2 (GPIO 2) to one end of the 220 ohm resistor",
+          "why": "The pin drives the LED through the resistor, which limits the current: without it the LED and the pin take far more than they should."
+        },
+        {
+          "n": 2,
+          "a": "r1.b",
+          "b": "led1.anode",
+          "words": "the other end of the 220 ohm resistor to the LED's long leg (+)",
+          "why": "The LED's long leg (+) faces the pin: an LED passes current one way only."
+        },
+        {
+          "n": 3,
+          "a": "led1.cathode",
+          "b": "GND",
+          "words": "the LED's short leg (-) to GND",
+          "why": "The short leg (-) to ground closes the loop."
+        }
+      ],
+      "note": "The onboard LED on GPIO 2 blinks too, with nothing wired: this build is your own LED on the same pin."
+    },
+    "try": "",
     "parts": [
       "ESP32 dev board",
-      "USB cable"
+      "USB cable (data, not charge-only)"
     ],
-    "wiring": [],
-    "code": "#include <Arduino.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  delay(500);\n  Serial.println(\"MIA HELLO\");\n}\n\nvoid loop() {\n  Serial.printf(\"MIA UPTIME %lu\\n\", millis() / 1000);   // seconds since it started\n  delay(2000);\n}\n",
+    "wiring": [
+      [
+        "onboard LED",
+        "GPIO 2 (on most dev boards; else an LED and 220 ohm resistor from GPIO 2 to GND)"
+      ]
+    ],
+    "code": "#include <Arduino.h>\n\nconst int LED = 2;   // the onboard LED on most ESP32 dev boards\nint blinks = 0;\n\nvoid setup() {\n  Serial.begin(115200);\n  pinMode(LED, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(LED, HIGH);\n  delay(500);\n  digitalWrite(LED, LOW);\n  delay(500);\n  blinks++;\n  Serial.printf(\"MIA BLINK %d\\n\", blinks);   // MIA reads this to check the lab\n}\n",
     "ini": "[env:esp32dev]\nplatform = espressif32\nboard = esp32dev\nframework = arduino\nmonitor_speed = 115200\n",
     "secrets": false,
     "libs": [],
     "checks": [
       {
-        "id": "esp_hello",
-        "what": "Have the board say hello over serial",
-        "passed": false
+        "id": "esp_blink",
+        "what": "Blink the LED five times, the board saying so",
+        "passed": true
       }
     ]
   },

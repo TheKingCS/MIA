@@ -27,13 +27,15 @@ def no_board(monkeypatch):
 
 
 def test_the_course_page_before_he_starts_shows_the_first_lab_and_the_map(tmp_path, no_board):
-    """Not started: stage 1 current, the rest later, nothing passed; the blink lab with its sketch and ini; no board."""
+    """Not started: stage 1 current, the rest later, nothing passed; the blink lab with its sketch and ini; no board.
+    The blink lab's circuit is there for the simulator, its build starting at GPIO 2."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path))
     page = lab_page.page(context, "esp32")
     assert page["available"] and not page["started"]
     assert [s["state"] for s in page["stages"]][:2] == ["current", "later"]
     assert not any(c["passed"] for s in page["stages"] for c in s["checks"])
     assert page["lab"]["id"] == "blink" and "MIA BLINK" in page["lab"]["code"] and "[env:" in page["lab"]["ini"]
+    assert [s["a"] for s in page["lab"]["circuit"]["steps"]] == ["GPIO 2", "r1.b", "led1.cathode"]
     assert page["board"]["ready"] is False and page["course"]["name"] == "Build With ESP32"
 
 
