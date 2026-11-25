@@ -29,11 +29,18 @@ _WHOSE = re.compile(r"^(?:(?:the\s+)?(?P<who>[A-Za-z][\w-]*(?:\s+[A-Z][\w-]*)?)(
 def job_of(words: str) -> Optional[tuple]:
     """Pure logic. (customer's name or "", the job's words) for "write a quote for Sarah's 12 by 16 deck" or "make a
     quote for a 12 by 16 deck for Sarah", else None.
-    A customer as "the Smiths'", "Sarah Miller's" or "for the Johnsons" (capitalized after "for": never "tomorrow")."""
+    A customer as "the Smiths'", "Sarah Miller's" or "for the Johnsons" (capitalized after "for": never "tomorrow").
+    A name said lowercase ("for sarah") and a time after it ("tomorrow") are read."""
     found = ASK.match(str(words or ""))
     if not found:
         return None
     rest = found.group("rest").strip()
+    rest = re.sub(r"\s+(?:by\s+)?(?:tomorrow|today|tonight|this week|next week|asap|soon)$", "", rest, flags=re.I)
+    # a name said lowercase (speech to text: "for sarah") is still a name, unless it's a time or a material
+    spoken = re.match(r"^(?P<job>.+?)\s+for\s+(?:the\s+)?(?P<who>[a-z][\w-]*)$", rest)
+    if spoken and not re.fullmatch(r"(?:cedar|pine|oak|maple|treated|cash|free|me|him|her|them|us|you|it|now|"
+                                   r"later|sale|rent)", spoken.group("who")):
+        rest = f"{spoken.group('job')} for {spoken.group('who').capitalize()}"
     whose = _WHOSE.match(rest)
     if whose:
         who = whose.group("who") or whose.group("who2") or ""
@@ -63,7 +70,8 @@ def priced(context, items: list) -> tuple:
 def reply(context, words: str) -> Optional[str]:
     """The draft quote for the job his words name, or None when they aren't a quote for a structure with its size
     (then "make a quote for ..." goes to make_quote as before).
-    "2 12 by 16 decks" is two; several customers by the name are asked which, before any quote."""
+    "2 12 by 16 decks" is two; several customers by the name are asked which, before any quote.
+    "The Smiths'" finds a John Smith."""
     from core.assistant_plan_actions import calculate, size_words, sizes_for, structure_for
 
     found = job_of(words)
@@ -97,6 +105,8 @@ def reply(context, words: str) -> Optional[str]:
     named = ""
     if who and book is not None:
         person = _one(list(book.customers), who.lower(), lambda c: c.name, "customer")
+        if isinstance(person, str) and who.lower().endswith("s"):  # "the Smiths'" is John Smith
+            person = _one(list(book.customers), who.lower()[:-1], lambda c: c.name, "customer")
         if isinstance(person, str) and person.startswith("Which"):
             return person  # several customers by that name: which one, before any quote (the eleventh review)
         if isinstance(person, str):

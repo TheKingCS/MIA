@@ -27,12 +27,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from core.calendar_manager import RECURRENCE_TYPES, CalendarEvent
+from core.calendar_manager import CALENDAR_RECURRENCE_TYPES, CalendarEvent
 
 _ISO_DATE_FORMAT = "yyyy-MM-dd"
 _TIME_FORMAT = "HH:mm"
 # Display label -> stored recurrence value, "None" first (not recurring).
-_RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in RECURRENCE_TYPES]
+_RECURRENCE_LABELS = [("Never", None)] + [(r.capitalize(), r) for r in CALENDAR_RECURRENCE_TYPES]  # daily too
 
 
 class AddEditEventDialog(QDialog):

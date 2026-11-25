@@ -997,6 +997,7 @@ def _action_adjust_inventory_quantity(context: AppContext, arguments: dict) -> s
 def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
     """Core's voice tool `add_calendar_event`: adds a calendar event with a date (words like "Friday at 2pm" read as their day, core/calendar_move.event_day), optional time and notes. The same behavior as core/application.py's handler, kept here so headless Core never
     imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
+    Its repeat too, as the desktop's.
     """
     title = str(arguments.get("title", "")).strip()
     date_str = str(arguments.get("date", "") or "").strip()
@@ -1011,9 +1012,15 @@ def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
         return "Which day? Say a day like \"Friday\" or a date, and I'll put it on the calendar."
     time_str = str(arguments.get("time", "") or "").strip() or None
     notes = str(arguments.get("notes", "") or "")
-    event = context.calendar.add_event(title=title, date=date_str, time=time_str, notes=notes)
+    from core.calendar_manager import CALENDAR_RECURRENCE_TYPES
+
+    recurrence = str(arguments.get("recurrence", "") or "").strip().lower() or None
+    if recurrence not in (None, *CALENDAR_RECURRENCE_TYPES):
+        recurrence = None  # the desktop's rule: an unknown repeat is none (the twelfth review: it was dropped here)
+    event = context.calendar.add_event(title=title, date=date_str, time=time_str, notes=notes, recurrence=recurrence)
     time_part = f" at {event.time}" if event.time else ""
-    return f"Calendar event '{event.title}' added for {event.date}{time_part}."
+    recurrence_part = f", repeating {event.recurrence}" if event.recurrence else ""
+    return f"Calendar event '{event.title}' added for {event.date}{time_part}{recurrence_part}."
 
 
 def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:

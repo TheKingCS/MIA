@@ -243,6 +243,7 @@ class AssistantTools:
         The homestead sums too (water to store, generator hours, hens for eggs).
         list_calendar_events takes his words (`prompt_arg`).
         add_expense offers the Animals & Feed category.
+        add_calendar_event offers a daily repeat.
         """
         self.context.assistant_actions.register(connectivity_action())
         self.context.assistant_actions.register(remind_when_online_action())
@@ -1056,8 +1057,8 @@ class AssistantTools:
                     "recurrence": {
                         "type": "string",
                         "description": (
-                            "Optional: 'yearly', 'monthly', or 'weekly' for a repeating event (e.g. a "
-                            "birthday or anniversary). Leave empty for a one-time event."
+                            "Optional: 'yearly', 'monthly', 'weekly' or 'daily' for a repeating event (e.g. a "
+                            "birthday or anniversary, a reminder every morning). Leave empty for a one-time event."
                         ),
                     },
                 },

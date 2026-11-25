@@ -276,7 +276,8 @@ def day_label(day: date, today: date) -> str:
 
 
 def calendar_page(context, today: Optional[date] = None, month: Optional[str] = None) -> dict:
-    """The Calendar screen: a month grid and the Past Due / Today / Due Soon agenda."""
+    """The Calendar screen: a month grid and the Past Due / Today / Due Soon agenda.
+    Its repeat choices include daily."""
     today = today or date.today()
     try:
         year, mon = (int(x) for x in (month or "").split("-")[:2])
@@ -329,7 +330,7 @@ def calendar_page(context, today: Optional[date] = None, month: Optional[str] = 
             {"name": "date", "label": "Date", "type": "date", "required": True, "options": [], "default": iso_today},
             {"name": "time", "label": "Time", "type": "text", "required": False, "options": [], "default": None},
             {"name": "recurrence", "label": "Repeats", "type": "choice", "required": False,
-             "options": ["", "weekly", "biweekly", "monthly", "yearly"], "default": ""},
+             "options": ["", "daily", "weekly", "biweekly", "monthly", "yearly"], "default": ""},
             {"name": "notes", "label": "Notes", "type": "text", "required": False, "options": [], "default": None},
         ]}},
     }

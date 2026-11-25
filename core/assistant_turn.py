@@ -371,7 +371,8 @@ def _daily_reminder_reply(context, prompt: str):
     """"Remind me every morning to give the dog his meds", "remind me daily to check the water", in code (the
     eleventh review: it had no home, and the morning briefing took it): a daily event on his calendar from today,
     through add_calendar_event (undoable), at the time said ("at 7", in the evening for "night" or "evening"). None
-    otherwise."""
+    otherwise.
+    "At 12" with no am or pm sets no time; two times, or a question in the title, are the model's."""
     from datetime import date as _date
 
     found = _REMIND_DAILY.match(prompt.replace("’", "'"))
@@ -379,11 +380,16 @@ def _daily_reminder_reply(context, prompt: str):
         return None
     what = (found.group("what1") or found.group("what2") or "").strip().rstrip(",")
     what = re.sub(r",?\s+(?:or|and|but)\s+(?:is|would|should|will|do|does|can)\b.*$", "", what, flags=re.I).strip()
-    if not what or "?" in what:
+    # an aside or a question is no part of it, nor a second time ("at 7 to take meds at 9": the twelfth review)
+    if not what or "?" in what or re.search(r",\s*(?:is|was|do|does|should|would|can|could)\b", what, re.I) \
+            or (found.group("h") and found.group("h2")) \
+            or (re.search(r"\bat\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?\b", what, re.I) and (found.group("h") or found.group("h2"))):
         return None
     args = {"title": what[:1].upper() + what[1:], "date": _date.today().isoformat(), "recurrence": "daily"}
     hour_said, minute_said, ap = (found.group("h") or found.group("h2"), found.group("m") or found.group("m2"),
                                   (found.group("ap") or found.group("ap2") or "").lower())
+    if hour_said and int(hour_said) == 12 and not ap:
+        hour_said = None  # "every night at 12": noon or midnight? no time rather than a wrong one
     if hour_said:
         hour, minute = int(hour_said), int(minute_said or 0)
         later = ap == "pm" or (not ap and (found.group("part") or "").lower() in ("night", "evening", "afternoon"))
@@ -502,10 +508,10 @@ _BOUGHT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:bought|purchased)\s+(?P<what>
                      r"\s*[.!]*\s*$", re.I)
 # What it was for, by its words: the budget's categories (core/budget_manager.EXPENSE_CATEGORIES)
 _SPENT_ON = (
-    ("Groceries", r"\bchicken (?:breasts?|thighs?|wings?|legs?|drumsticks?|nuggets?|tenders?)\b|\bwhole chicken\b|"
-                  r"\b(?:groceries|grocery|milk|bread|eggs|meat|produce|walmart|aldi|kroger|costco)\b"),
-    ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chicks|scratch|oyster shell|dog food|cat food|kibble)\b"),
-    ("Groceries", r"\bfood\b"),
+    ("Groceries", r"\bchicken (?:breasts?|thighs?|wings?|legs?|drumsticks?|nuggets?|tenders?)\b|\bwhole chicken\b"),
+    ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chicks|scratch|oyster shell|dog food|cat food|kibble|goats?|"
+                       r"horses?|pigs?|piglets?|livestock|lambs?|calf|calves)\b"),
+    ("Groceries", r"\b(?:groceries|grocery|milk|bread|eggs|meat|produce|chicken|food|walmart|aldi|kroger|costco)\b"),
     ("Maintenance", r"\b(?:repairs?|fix(?:ing|ed)?|plumber|electrician|mechanic|parts)\b"),
     ("Transportation", r"\b(?:gas|fuel|diesel|gasoline|oil change|tires?|parking|toll)\b"),
     ("Building Materials", r"\b(?:lumber|2x\d+s?|plywood|screws|nails|concrete|fence|posts?|shingles|boards?)\b"),
@@ -517,10 +523,12 @@ _SPENT_ON = (
 # expense; money paid back isn't spending; a quote, an offer, a refund or a job is money that wasn't spent (the
 # eleventh review: "I got a quote for $3,000" had been an expense)
 _NOT_SPENDING = re.compile(r"\b(?:bills?|rent|loan|mortgage|card|insurance|invoice|deposit|back|internet|electricity|"
-                           r"electric|phone|cable|utilit\w*|subscription|quote|offer|refund|job|shift|raise|bonus)\b",
+                           r"electric|phone bill|cable|utilit\w*|subscription|quote|offer|refund|raise|bonus)\b",
                            re.I)
-_SPENT_WHEN = re.compile(r"\s+(yesterday|today|last (?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))$",
-                         re.I)
+# A person, not a thing: "I paid $100 for Sarah", "I spent $50 on him" (the twelfth review)
+_A_PERSON = re.compile(r"(?:him|her|them|you|us|me|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)")
+_SPENT_WHEN = re.compile(r"\s+(?:on\s+)?(yesterday|today|last week|(?:last\s+)?(?:monday|tuesday|wednesday|thursday|"
+                         r"friday|saturday|sunday))$", re.I)
 
 
 def _spent_reply(context, prompt: str):
@@ -530,21 +538,26 @@ def _spent_reply(context, prompt: str):
     the vet are Animals & Feed), undoable; feed with its weight goes to the flock's feed log (log_feed) when there's a
     flock. Never a question, a bill, rent, a loan, a card or money paid to a person (their own tools). None otherwise.
     Never a quote, an offer, a refund, "it" or two amounts at once; a repair is Maintenance, grocery chicken
-    Groceries, goat feed never the hens', and "yesterday" dates it."""
+    Groceries, goat feed never the hens', and "yesterday" dates it.
+    Never money for a person ("for Sarah", "on him"); a weekday said after ("on Monday") is the one just gone."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
         return None
     what = found.group("what").strip().rstrip(",.")
     if _NOT_SPENDING.search(what) or re.search(r"\$\s?\d|\b\d+\s*(?:dollars|bucks)\b", what, re.I) \
-            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I):
+            or re.fullmatch(r"(?:it|that|this|them|one)", what, re.I) or _A_PERSON.fullmatch(what):
         return None  # two amounts in one ("$5 on a coffee and $10 on gas") are the model's to split
     when = _SPENT_WHEN.search(what)
     day = ""
     if when:  # "spent $30 on groceries yesterday": its day, out of what it was for
         from core.budget_manager import read_date
 
-        day, what = read_date(when.group(1)) or "", what[:when.start()].strip()
+        said_day = when.group(1).lower()
+        if re.fullmatch(r"(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)", said_day):
+            said_day = "last " + said_day  # "gas on Monday", said after: the Monday just gone
+        day = "" if said_day == "last week" else read_date(said_day) or ""
+        what = what[:when.start()].strip()
     amount = float((found.group("d") or found.group("n")).replace(",", ""))
     if amount <= 0:
         return None
@@ -552,7 +565,8 @@ def _spent_reply(context, prompt: str):
     weight = re.search(r"\b(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b", what, re.I)
     flock = getattr(context, "flock", None)
     try:
-        poultry = not re.search(r"\b(?:goat|horse|pig|hog|cattle|cow|rabbit|dog|cat|sheep|llama|alpaca)\b", what, re.I)
+        poultry = not re.search(r"\b(?:goats?|horses?|pigs?|hogs?|cattle|cows?|rabbits?|dogs?|cats?|sheep|llamas?|"
+                                r"alpacas?)\b", what, re.I)
         if category == "Animals & Feed" and weight and re.search(r"\bfeed\b", what, re.I) and poultry \
                 and flock is not None and getattr(flock, "flocks", None):  # goat feed never counts for the hens
             return context.assistant_actions.execute(context, "log_feed", {"pounds": float(weight.group(1)),
@@ -733,6 +747,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A quote from a job's words, a draft for his yes (`_job_quote_reply`).
     A tool call written out as the answer is never said (GARBLED_REPLY).
     A reminder every day goes on the calendar daily (`_daily_reminder_reply`).
+    A reply is taken for a tool call only when it names one of her tools.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -937,7 +952,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
     if echoes(content, prompt) or any(echoes(content, said) for said in earlier):
         content = ECHO_REPLY  # never the person's own words (now or a moment ago) said back as if an answer
-    if _garbled(content):
+    if _garbled(content, context):
         content = GARBLED_REPLY  # never a tool call written out as the answer, even after the retry without tools
     add_message(conversation, "assistant", content)
     _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
@@ -946,14 +961,22 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
                          route="model", tools_offered=offered)
 
 
-def _garbled(content: str) -> bool:
-    """Whether the model's reply is a tool call written as text instead of made (a malformed call)."""
+def _garbled(content: str, context=None) -> bool:
+    """Whether the model's reply is a tool call written as text instead of made (a malformed call); with a context, only
+    when the name it gives is one of her tools (the twelfth review: a JSON example he asked for, {"name": "Zac"}, had
+    been replaced)."""
     from core.llm_manager import _looks_like_malformed_tool_call
 
     try:
-        return bool(_looks_like_malformed_tool_call(content))
+        if not _looks_like_malformed_tool_call(content):
+            return False
     except Exception:
         return False
+    if context is None:
+        return True
+    named = re.search(r'"(?:name|function|tool)"\s*:\s*"([\w.]+)"', str(content or ""))
+    tools = getattr(getattr(context, "assistant_actions", None), "_actions", {}) or {}
+    return bool(named and named.group(1) in tools)
 
 
 def echoes(content: str, prompt: str) -> bool:

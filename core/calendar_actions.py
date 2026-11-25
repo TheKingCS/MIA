@@ -16,12 +16,13 @@ from datetime import date
 
 from core.actions import ACTION_TYPES, ActionError, ActionType, _need
 
-_REPEATS = ("weekly", "biweekly", "monthly", "yearly")
+_REPEATS = ("daily", "weekly", "biweekly", "monthly", "yearly")  # daily: a reminder every morning (2026-11-25)
 
 
 def _event_fields(params) -> dict:
     """An event's fields from the params, checked: a title, a real date, a time read as 14:30 or 2:30 pm (made
     24-hour), a repeat from the allowed ones, and notes; ActionError for anything that won't do.
+    Daily is one of the repeats.
     """
     title = str(params.get("title") or "").strip()
     if not title:
@@ -44,7 +45,7 @@ def _event_fields(params) -> dict:
         time = f"{hour:02d}:{minute:02d}"
     repeats = str(params.get("recurrence") or "").strip().lower() or None
     if repeats and repeats not in _REPEATS:
-        raise ActionError("It can repeat weekly, every two weeks, monthly or yearly.")
+        raise ActionError("It can repeat daily, weekly, every two weeks, monthly or yearly.")
     return {"title": title, "date": day.isoformat(), "time": time, "recurrence": repeats,
             "notes": str(params.get("notes") or "").strip()}
 

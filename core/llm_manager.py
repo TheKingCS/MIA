@@ -743,8 +743,8 @@ def _start_ollama() -> bool:
 
 # A tool call's own opening, whether or not the rest parses: the model wrote '{"name": "draft_email", "parameters":
 # {... "\$$X" ...}}' as its answer (live sweep, 2026-11-25), invalid JSON, so it was neither caught nor retried
-_CALL_SHAPE = re.compile(r'^\s*(?:```(?:json)?\s*)?\{\s*"(?:name|function|tool)"\s*:\s*"[A-Za-z_][\w.]*"\s*,\s*'
-                         r'"(?:parameters|arguments|args|input)"\s*:')
+_CALL_SHAPE = re.compile(r'^\s*\{\s*"(?:name|function|tool)"\s*:\s*"[A-Za-z_][\w.]*"\s*,\s*'
+                         r'"(?:parameters|arguments)"\s*:')  # never a fenced example, nor {"name": ..., "input": 3}
 
 
 def _looks_like_malformed_tool_call(content: str) -> bool:

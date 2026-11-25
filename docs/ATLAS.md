@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1814 files, 388,179 lines; 1814 files describe themselves; 21,147 of 21,273 classes and functions are documented.
+1815 files, 388,297 lines; 1815 files describe themselves; 21,154 of 21,280 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-716 files, 202,274 lines; 10,125 of 10,206 classes and functions documented
+716 files, 202,317 lines; 10,125 of 10,206 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1014,7 +1014,7 @@
 
 ## tests/: the test suite: what each part must do
 
-689 files, 103,890 lines; 8,651 of 8,696 classes and functions documented
+690 files, 103,965 lines; 8,658 of 8,703 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1495,6 +1495,7 @@
 - `tests/test_retention.py`: Tests for LS-03: the retention registry (DEC-0286, core/retention.py) decides what syncs, and a field changed on two devices keeps its losing value in the change history with one note that quotes no value (DEC-0285, core/sync.py).
 - `tests/test_review_10.py`: The tenth review's findings (2026-11-25), each kept fixed: the pricing lesson never takes his own margin or another store's markup, the flock lesson never a dog's mites or head lice, the terms lesson never a tax estimate or a deposit; a real cut list with 30 in legs is his; a rate or "about a day" n
 - `tests/test_review_11.py`: The eleventh review's findings (2026-11-25), each kept fixed: money that wasn't spent (a quote, a refund, "it") is never an expense, two amounts in one sentence are the model's, no name is hardcoded, grocery chicken is groceries, goat feed never counts for the hens, a repair is Maintenance, a utilit
+- `tests/test_review_12.py`: The twelfth review's findings (2026-11-25), each kept fixed: a daily event survives being edited (the web and phone form, the actions, the model's tool, headless Core all know "daily"); a daily reminder never sets noon for "at 12", nor guesses between two times or keeps a question as its title; mone
 - `tests/test_review_2026_11_20_authority.py`: Fable's review of Opus's work, 2026-11-20, batch A (authority and actions): the capability check sees how tools really reach kinds; the lab's proof must be seen to pass; the read-back checks the record a line is about; a failed change takes its history back; a stop isn't a taught task's failure; a h
 - `tests/test_review_2026_11_20_data.py`: Fable's review of Opus's work, 2026-11-20, batch B (data, sync, learning): an older phone's sync isn't ended by a file that stays on one device now; the homestead's snapshots sync; a sync conflict's kept copy is sealed, never swept into another undo, and its note quotes nothing; the daily budget is 
 - `tests/test_review_2026_11_20_low.py`: The review of 2026-11-20's low findings, fixed: code beyond Python needs the lab's proof; a taught skill's hold is refused; the phone removes the PC's greenhouse link once; a summer date gets summer time; a pick with no offer is learned; a busy port is tried again; a site opens in his browser, not t
