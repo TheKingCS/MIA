@@ -5,6 +5,7 @@ tests.test_assistant_actions
 Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM
 or Ollama involved — these test the registry's own execute()/
 to_ollama_tools() logic directly with fake handlers.
+And the most specific phrase deciding among several matches only when it covers their words.
 """
 
 from __future__ import annotations
@@ -240,3 +241,21 @@ def test_destructive_action_names_returns_only_flagged_actions():
     registry.register(_make_action(name="list_alarms"))
 
     assert registry.destructive_action_names() == {"delete_alarm"}
+
+
+def test_the_most_specific_phrase_decides_only_when_it_covers_the_others_words():
+    """"What parts can I wire?": part_specs' "parts can i wire" is 6+ letters longer than "what parts" and over the
+    same words, so it alone; two phrases of near length, or apart in the message, leave all of them to the model."""
+    from types import SimpleNamespace as N
+
+    from core.assistant_actions import most_specific
+
+    specs = N(name="part_specs", trigger_phrases=("parts can i wire",))
+    stock = N(name="list_components", trigger_phrases=("what parts",))
+    said = " what parts can i wire in the simulator? "
+    assert most_specific([stock, specs], said) == [specs]
+    near = N(name="near", trigger_phrases=("what parts ca",))
+    assert len(most_specific([stock, specs, near], said)) == 3
+    apart = N(name="apart", trigger_phrases=("simulator",))
+    assert len(most_specific([apart, N(name="long", trigger_phrases=("what parts can i",))], said)) == 2
+    assert most_specific([stock], said) == [stock]

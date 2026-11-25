@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1770 files, 382,426 lines; 1770 files describe themselves; 20,883 of 21,013 classes and functions are documented.
+1770 files, 382,487 lines; 1770 files describe themselves; 20,886 of 21,016 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-707 files, 198,734 lines; 10,014 of 10,100 classes and functions documented
+707 files, 198,776 lines; 10,016 of 10,102 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1005,7 +1005,7 @@
 
 ## tests/: the test suite: what each part must do
 
-654 files, 101,804 lines; 8,499 of 8,543 classes and functions documented
+654 files, 101,823 lines; 8,500 of 8,544 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1042,7 +1042,7 @@
 - `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
 - `tests/test_assistant_action_gating.py`: Regression tests tying modules.assistant.module.looks_like_action_request() to the REAL trigger_phrases registered in core.application's _register_assistant_actions() (milestone 5.7-5.9) — not a hand-copied keyword list. Two real gaps were found only by live-model testing and are pinned here so they
 - `tests/test_assistant_action_handlers.py`: Unit tests for core.application.MIAApplication's assistant action handlers (_action_*) — milestone 5.7's read/list actions, plus regression coverage for the pre-existing write actions that had no direct unit test before (only exercised via test_llm_manager.py's chat_with_tools mocks and manual/live-
-- `tests/test_assistant_actions.py`: Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM or Ollama involved — these test the registry's own execute() to_ollama_tools() logic directly with fake handlers.
+- `tests/test_assistant_actions.py`: Unit tests for core.assistant_actions.AssistantActionRegistry. No LLM or Ollama involved — these test the registry's own execute() to_ollama_tools() logic directly with fake handlers. And the most specific phrase deciding among several matches only when it covers their words.
 - `tests/test_assistant_chat.py`: Unit tests for core.assistant_chat's pure logic — format_chat_line, looks_like_action_request, build_chat_request, and split_safe_tool_calls — no Qt event loop needed. Moved here from tests/test_assistant_module.py (2026-07-14 aesthetic pass part 4) alongside the functions themselves moving from mod
 - `tests/test_assistant_domain_actions.py`: Runs the Assistant's conversational actions (core/assistant_domain_actions.py plus the reworked Maintenance handlers in core/application.py) through the real registry against real managers on temp data — i.e. "the user said X, the model called tool Y with their words; did the right record change?"
 - `tests/test_assistant_energy_actions.py`: Energy by voice (core/assistant_energy_actions.py, T-0053): each source with its latest reading per meter, one named source, and the empty cases.

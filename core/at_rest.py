@@ -240,6 +240,7 @@ PUBLIC: dict[str, str] = {
     "vocab.json": "a model's vocabulary card, not about anyone",
     "meaning.json": "a cache of example sentences' vectors for matching words, not his records",
     "decided.json": "the Chronicle candidates accepted or dropped: the project's history in work/saga/, read by every session",
+    "part_specs.json": "electronics parts' pins and voltages from their datasheets (core/part_specs.py), not about anyone",
 }
 
 # Every store reading a SEALED file uses open_text and catches ValueError (UnreadableFile is one) with OSError, so a

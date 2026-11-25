@@ -59,6 +59,8 @@ domain specifically so they still get attached together, same as
 before this change). Verified against the live model in
 tests/live_model_check.py before/after — see docs/ROADMAP.md for the
 verification writeup.
+When several actions match a message, the one whose own phrase says the most decides alone if it covers the others'
+words (`most_specific`, 2026-11-25).
 """
 
 from __future__ import annotations
@@ -399,14 +401,15 @@ class AssistantActionRegistry:
         trigger phrase matches, it needs no arguments, and nothing that
         changes records matches too, and, past the lookup's own words, it names no other app's record ("what's
         running on the pickup truck?" is the truck's; "how many eggs this week?" stays the egg count); otherwise None
-        and the model decides."""
+        and the model decides.
+        Of several matches, the most specific decides when there is one (`most_specific`)."""
         from core.child_accounts import tool_allowed
 
         lowered = f" {prompt.lower().strip()} "
         if not looks_like_question(prompt):
             return None
-        matched = [a for a in self._actions.values() if any(p in lowered for p in a.trigger_phrases)
-                   and tool_allowed(context, a.domain)]
+        matched = most_specific([a for a in self._actions.values() if any(p in lowered for p in a.trigger_phrases)
+                                 and tool_allowed(context, a.domain)], lowered)
         if not matched or any(changes_records(a.name) for a in matched):
             return None
         # No details at all (a search word, a date, a filter needs the model to
@@ -439,10 +442,12 @@ class AssistantActionRegistry:
         when the message
         starts with that phrase ("Add a recipe for...", never "do I have a
         recipe for chili?"). And the message says what it's about ("do I
-        have" alone never names list_inventory). Else None."""
+        have" alone never names list_inventory). Else None.
+        Of several matches, the most specific counts as the one (`most_specific`)."""
         lowered = f" {prompt.lower().strip()} "
         offered = set(offered)
-        matched = [a for a in self._actions.values() if a.name in offered and any(p in lowered for p in a.trigger_phrases)]
+        matched = most_specific([a for a in self._actions.values() if a.name in offered
+                                 and any(p in lowered for p in a.trigger_phrases)], lowered)
         if len(matched) != 1 or matched[0].destructive or not _names_its_subject(matched[0], prompt):
             return None
         action = matched[0]
@@ -542,6 +547,42 @@ _QUESTION_STARTS = ("what", "when", "which", "who", "where", "how many", "how mu
 def _singular(word: str) -> str:
     """A word without a plural s (not "ss", not short words)."""
     return word[:-1] if len(word) > 3 and word.endswith("s") and not word.endswith("ss") else word
+
+
+SPECIFIC_BY = 6  # how many more letters the longest phrase needs over every other match's to decide alone
+
+
+def _spans(phrase: str, lowered: str) -> list:
+    """Where a phrase sits in the message: [(start, end)] of each time it's there."""
+    out, at = [], lowered.find(phrase)
+    while at >= 0:
+        out.append((at, at + len(phrase)))
+        at = lowered.find(phrase, at + 1)
+    return out
+
+
+def most_specific(matched: list, lowered: str) -> list:
+    """Pure logic. Of the actions a message matched, the one whose own phrase says the most, when it does: its
+    longest matched phrase at least SPECIFIC_BY letters longer than every other match's, and over the same words of
+    the message as each of theirs ("what parts can I wire in the simulator?": "parts can i wire" is part_specs', and
+    the Component DB's "what parts" is inside the same words). Otherwise all of them, and the model decides
+    (2026-11-25: three tools matched, so the model answered from memory)."""
+    if len(matched) < 2:
+        return matched
+
+    def best(action):
+        """(the longest phrase of the action in the message, its spans)."""
+        phrase = max((p for p in action.trigger_phrases if p in lowered), key=len)
+        return phrase, _spans(phrase, lowered)
+
+    ranked = sorted(((best(a), a) for a in matched), key=lambda x: len(x[0][0]), reverse=True)
+    (top, top_spans), winner = ranked[0]
+    for (phrase, spans), _ in ranked[1:]:
+        if len(top) < len(phrase) + SPECIFIC_BY:
+            return matched
+        if not any(s < te and ts < e for s, e in spans for ts, te in top_spans):
+            return matched
+    return [winner]
 
 
 def _names_its_subject(action: AssistantAction, prompt: str) -> bool:
