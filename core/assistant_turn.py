@@ -112,7 +112,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     a turn.
     Building an ESP32 lab along with MIA (core/esp32_sim.reply) is answered there too, after the greenhouse and what
     MIA runs on.
-    A scenario drill (core/drills.reply) is answered there too."""
+    A scenario drill (core/drills.reply) is answered there too.
+    A design of hers not built yet is answered there too, as a plan."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -143,6 +144,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _lab_build_reply(context, conversation, prompt)  # building a lab along with MIA, as in a turn
     if walked is None:
         walked = _drill_reply(context, conversation, prompt)  # a scenario drill, as in a turn
+    if walked is None:
+        walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
         return walked
     from core.quick_commands import handle
@@ -181,6 +184,18 @@ def _lab_build_reply(context, conversation, prompt: str):
         return bench_designs.reply(context, conversation, prompt) or esp32_sim.reply(context, conversation, prompt)
     except Exception:
         log.exception("Couldn't follow the lab's build")
+        return None
+
+
+def _plan_reply(prompt: str):
+    """A design of hers that nothing builds yet, said in code as a plan (core/self_knowledge.plan_reply); None
+    otherwise."""
+    from core.self_knowledge import plan_reply
+
+    try:
+        return plan_reply(prompt)
+    except Exception:
+        log.exception("Couldn't say what her plan is")
         return None
 
 
@@ -300,6 +315,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     pot lab", then "next step": core/esp32_sim.reply).
     A scenario drill is taken in code too, after the lab's build ("give me a survival drill", then "B":
     core/drills.reply).
+    A design of hers nothing builds yet is said in code as a plan (core/self_knowledge.plan_reply).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -393,6 +409,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _lab_build_reply(context, conversation, prompt)  # "walk me through building the pot lab", "next"
         if walked is None:
             walked = _drill_reply(context, conversation, prompt)  # "give me a survival drill", then "B"
+        if walked is None:
+            walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:
             add_message(conversation, "assistant", walked)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [walked], route="code")

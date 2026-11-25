@@ -21,6 +21,8 @@ description of her is kept here, so none can go stale.
 Her own designs too (2026-11-25, the fix report): what her decisions and specs name (`designs_in`, `design_asked`),
 so "what is the Life Enrichment Protocol?" is answered from DEC-0161 and its spec, with its status; and the
 conversations topic, so "how do I export this chat?" is answered from core/conversation_export.py.
+Whether her code builds a design yet (`built_by`); one that nothing builds is said in code as a plan (`plan_reply`),
+since the model, told it wasn't built, still called it a subsystem.
 """
 
 from __future__ import annotations
@@ -303,6 +305,45 @@ def designs_in(text: str) -> list:
     said = f" {_norm(text)} "
     named = [(n, d) for n, d in _designs().items() if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", said)]
     return sorted(named, key=lambda x: len(x[0]), reverse=True)[:2]
+
+
+def built_by(name: str) -> str:
+    """Pure logic, with her code. The core file that builds a design of hers ("smart closet": core/smart_closet.py,
+    or a file whose opening names it), or "" when nothing does yet."""
+    stem = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+    if (ROOT / "core" / f"{stem}.py").exists():
+        return f"core/{stem}.py"
+    for path in sorted((ROOT / "core").glob("*.py")):
+        if name.lower() in _opening(f"core/{path.name}", 1500).lower():
+            return f"core/{path.name}"
+    return ""
+
+
+def plan_reply(prompt: str) -> Optional[str]:
+    """In code: "what is the Life Enrichment Protocol?" about a design of hers nothing builds yet. That it's a plan,
+    not something she can do now, then what it's for, from its decision, said to him ("you", "my"); None for a design
+    that's built (the model describes it from her records) or a question that isn't one (live check, 2026-11-25: told
+    it wasn't built, the model still called it "a major MIA subsystem")."""
+    from core import self_docs
+
+    found = design_asked(_norm(prompt))
+    if len(found) != 1 or built_by(found[0][0]):
+        return None
+    name, design = found[0]
+    decision = _safe(lambda: self_docs.decision(design["decisions"][0], 600), None) if design["decisions"] else None
+    title = (decision or {}).get("title", "")
+    shown = re.search(re.escape(name), title, re.I)
+    proper = title[shown.start():shown.end()] if shown else name
+    gist = re.sub(r"\s+", " ", str((decision or {}).get("gist", ""))).strip()
+    first = re.split(r"(?<=[.!?])\s", gist, maxsplit=1)[0] if gist else ""
+    first = re.sub(r"\bthe person's\b", "your", re.sub(r"\bthe person\b", "you", first))
+    first = re.sub(r"\bMIA's\b", "my", first)
+    status = (decision or {}).get("status", "").lower()
+    where = (f" It's approved as a direction ({design['decisions'][0]})" if "approved" in status
+             else f" It's proposed ({design['decisions'][0]})" if design["decisions"] else " It's written up")
+    where += f", and its plan is in {design['spec']}." if design["spec"] else "."
+    return (f"The {proper} is one of my plans, not something I can do yet. " + (first + " " if first else "")
+            + where.strip())
 
 
 def design_asked(text: str) -> list:
@@ -682,7 +723,8 @@ def block_for(context, prompt: str) -> str:
     """Her own records on what a message asks about her, for the model's system message: the matched topics' live
     facts, then the apps, the decisions with their status, and the opening words of the source files, every line
     saying where it comes from. Whole lines only, within BLOCK_CHARS. "" when the message isn't about her. A design
-    of hers named in a question (`designs_in`) brings its decisions and its spec."""
+    of hers named in a question (`designs_in`) brings whether her code builds it yet (`built_by`), its decisions and
+    its spec."""
     text = _norm(prompt)
     if not text or _DOING.match(text):  # "can you show the list on my glasses?" is a thing to do
         return ""
@@ -707,7 +749,11 @@ def block_for(context, prompt: str) -> str:
         if not names:
             return ""
         lines.append(f"[app registry] My {len(names)} apps: " + ", ".join(names) + ".")
-    for _, design in designs:  # her own designs: the decision (with its status) and the spec's opening
+    for name, design in designs:  # her own designs: whether it's built, the decision (its status), the spec's opening
+        code = built_by(name)
+        lines.append(f"[my code] The {name} is built: {code}." if code else
+                    f"[my code] Nothing in my code builds the {name} yet: it's a plan, not something I can do now. "
+                    "Say so plainly.")
         decisions += [d for d in design["decisions"][:2] if d not in decisions]
         if design["spec"] and design["spec"] not in files:
             files.append(design["spec"])

@@ -8,6 +8,7 @@ reports her real scale from the system map; `my_focus` reflects her Night School
 is honest about how much she knows; a missing source is a quiet gap, not a crash; and a question about her (not
 about one of her apps) gets these facts, her scale read once and kept a while for answers.
 And her own designs described from their decision and spec, and taking a chat out answered from the export code.
+And a design not built yet said as a plan, in code.
 """
 
 from types import SimpleNamespace
@@ -216,3 +217,16 @@ def test_how_to_take_a_chat_out_is_answered_from_the_export_code():
 
     assert "core/conversation_export.py" in sk.block_for(None, "How do I copy this whole chat?")
     assert "core/conversation_export.py" in sk.block_for(None, "can I export our conversation?")
+
+
+def test_a_design_not_built_yet_is_said_as_a_plan_in_code():
+    """"What is the Life Enrichment Protocol?": nothing builds it, so code says it's a plan and not something she can do
+    yet, what it's for (to "you"), and where its plan is; the smart closet is built (core/smart_closet.py), so it's
+    the model's to describe."""
+    from core import self_knowledge as sk
+
+    said = sk.plan_reply("What is the Life Enrichment Protocol?")
+    assert said.startswith("The Life Enrichment Protocol is one of my plans, not something I can do yet.")
+    assert "helps you discover" in said and "DEC-0161" in said and "LIFE_ENRICHMENT_PROTOCOL.md" in said
+    assert sk.built_by("smart closet") == "core/smart_closet.py" and sk.plan_reply("What's the smart closet?") is None
+    assert sk.plan_reply("what's the weather tomorrow?") is None
