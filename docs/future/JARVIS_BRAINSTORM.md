@@ -344,6 +344,37 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 13 (2026-11-25): from labs to a maker who builds his own homestead tech
+
+Built today: interactive labs as a teaching standard (Build With ESP32, Build With Arduino for his ELEGOO Mega and
+Nanos), a simulator he builds in alongside MIA, scenario drills (survival, canning, a saw cut, a power outage), Ask
+MIA on every course page, and My Bench (his own parts, checked by their specs). Ideas that grow from it, each in the
+vision, each with what it needs:
+
+- **The capstone: his greenhouse node's firmware as the last lab** (plan step 5; needs nothing new). The ESP32 course
+  ends at a sleeping soil node; the next stage builds the real greenhouse node's sensors one by one on the bench,
+  each checked by what it prints, then hands off to homestead/ (its own rules: DEC-0185, read homestead/CLAUDE.md).
+  He'd learn by building the thing his homestead runs on.
+- **"Build me a ..." from My Bench** (needs nothing): he names a goal ("a coop door that opens at sunrise", "a
+  freezer alarm"), MIA picks the parts from his Component DB and the specs, draws the circuit on the bench, checks it,
+  and writes the sketch; flashing stays his yes. The free build becomes a designer, not only a checker.
+- **A sketch run for real in a simulator** (his say: Wokwi online with a token, or QEMU local): the labs' checks
+  today run a model of each sketch; running his compiled code would test his own edits before he flashes.
+- **Drills for every course and for money** (needs nothing but sources): the flock (a sick hen, a predator at night),
+  first aid with the emergency floor's rules (choking, a bad cut: Red Cross only), a market day (pricing, a refund,
+  the cash box), and money (a surprise bill against the buffer, a slow month for the rentals), each judged with why.
+- **Guitar and carpentry on the same course page** (needs nothing): guitar's "see it" panel is its ear check; the
+  carpentry course gets a cut-list drill and a measure-twice check from a photo (Look).
+- **The bench remembers what he built** (needs nothing): a free build kept as a project of his ("the freezer alarm,
+  v1"), with its parts drawn from the Component DB (counts going down when it's built) and its wiring and sketch kept
+  for the next time.
+- **Shop mode with the labs** (his say on how it starts, round 10's idea): "next step" hands-free at the bench while
+  he wires, already built for the labs' builds; the same for a carpentry cut list.
+- **A part he photographs** (needs Look and the specs): a picture of a module's silkscreen read for its model, then its
+  spec found or drafted, so "what's this board?" gets an answer.
+- **SearXNG on the PC** (WAITING_ON: his yes to run it): the web spec import and every "look it up online" answer
+  wait on his own search engine running.
+
 ## Round 12 (2026-11-24, night): the greenhouse counted, and the day's heat and cold
 
 - **The greenhouse's harvests in his totals** (no decision): *built 2026-11-24 (`core/greenhouse_link.keep_harvests`).*
