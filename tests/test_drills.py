@@ -68,7 +68,7 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     """"Give me a canning drill" is the green beans; "run a carpentry drill" the 2x6; water-bathing green beans is
     wrong. The Classroom's Hands-on labs lists the board courses first (ESP32, Arduino), then each course with drills,
     said with its count.
-    Survival has four drills now, the power outage among them.
+    Survival has six drills now, the power outage and two for first aid among them.
     Gardening and homesteading has two drills now, the flock's beside the canning one.
     Money basics is listed among them too.
     Small business basics is listed too."""
@@ -81,7 +81,7 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "money", "business",
                                          "carpentry"]
     assert listed[3]["what"] == "Lessons, and 2 drills that judge each call"
-    assert listed[2]["what"] == "Lessons, and 4 drills that judge each call"
+    assert listed[2]["what"] == "Lessons, and 6 drills that judge each call"
 
 
 def test_ordinary_messages_never_start_a_drill_and_a_waiting_drill_lets_commands_through():

@@ -10,7 +10,8 @@ is set up (the desktop's three chat boxes ask `detect` before giving up on a tur
 **When** (`detect`): the words name an emergency (each kind's own pattern in `KINDS`) and don't read as a question
 about the topic or a past one. A question ("what are the signs of a stroke?", "how do you treat a snakebite?") goes
 to her library as usual, unless the same words say it's happening ("what do I do, my baby is choking right now").
-Something from the past ("my dad had a heart attack in 2019") isn't one. Panicked words are short, so no pronoun is
+Something from the past ("my dad had a heart attack in 2019") isn't one, nor practice asked for ("give me a choking
+drill", core/drills.py), unless the same words say it's real ("he's choking, this is not a drill"). Panicked words are short, so no pronoun is
 needed: "baby not breathing" counts. Each pattern asks for a person or body where an everyday sentence could match
 ("my laptop won't wake up", "a 2-stroke chainsaw", "the power got cut off", "my heart stopped when I saw the bill").
 
@@ -178,6 +179,10 @@ _FIGURE = re.compile(r"\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that
                      r"brakes?|air)\b|\b(?:throttle|mower|engine|tractor|truck|pump|controller|sensor|remote|valve)\b"
                      r".{0,25}\b(?:unresponsive|not responding)\b|\boverdos\w*\s+(?:the\s+|my\s+)?(?:tomatoes|plants?|"
                      r"garden|lawn|soil|seedlings?)\b|\bon (?:fertili[sz]er|nitrogen)\b", re.I)
+# Practice asked for, not an emergency: "give me a choking drill", "quiz me on bleeding" (core/drills.py's first-aid
+# drills); "this is not a drill" and anything that says it's happening still are.
+_PRACTICE = re.compile(r"\b(?:drills?|scenarios?|quiz|rehears\w*|practi[cs]e)\b")
+_REAL = re.compile(r"\b(?:not|isn'?t|no|ain'?t) (?:a |no )?drill\b|\bfor real\b|\breal(?:ly)? happening\b")
 # An animal and no person: the vet's work, not these words ("my dog is choking", "the hens are gasping").
 _ANIMAL = re.compile(r"\b(?:dog|dogs|puppy|cat|cats|kitten|chickens?|hens?|rooster|horse|goat|cow|calf|pig|sheep|"
                      r"lamb|duck|rabbit|bird|birds|chicks?)\b", re.I)
@@ -187,7 +192,8 @@ MARK = "or have someone else call while you help."
 
 
 def kinds(prompt: str) -> list[str]:
-    """Pure logic. Every kind of emergency these words say is happening now, most time-critical first ([] for none)."""
+    """Pure logic. Every kind of emergency these words say is happening now, most time-critical first ([] for none).
+    A drill or practice asked for isn't one, unless the words also say it's happening or real."""
     text = " ".join(str(prompt or "").lower().replace("’", "'").split())
     if not text:
         return []
@@ -199,6 +205,8 @@ def kinds(prompt: str) -> list[str]:
     happening = bool(_HAPPENING.search(text))
     if (_ABOUT.search(text) or _PAST.search(text)) and not happening:
         return []
+    if _PRACTICE.search(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)):
+        return []  # "help me practice the choking drill" is practice; "help, he's choking" never is
     return found
 
 
@@ -256,6 +264,43 @@ def library_floor(prompt: str, answer: str, where=None) -> str:
         return answer
     return (str(answer or "").rstrip() + f" If it's happening now, or it's severe, call {number} first; this is "
             "first aid until help comes, not instead of it.")
+
+
+# A first-aid question's subject, in plainer words than an emergency's ("how do you use a tourniquet?")
+_TOPIC: list[tuple[str, re.Pattern]] = [
+    ("choking", re.compile(r"\bchok\w*|\bheimlich\b|\babdominal thrusts?\b")),
+    ("bleeding", re.compile(r"\btourniquets?\b|\bbleed\w*|\b(?:deep|bad) cuts?\b|\bwounds?\b")),
+    ("cpr", re.compile(r"\bcpr\b|\bchest compressions?\b")),
+    ("anaphylaxis", re.compile(r"\banaphyla\w*|\bepi-?pens?\b|\ballergic reactions?\b")),
+    ("heat", re.compile(r"\b(?:heat|sun)[\s-]?stroke\b|\bheat exhaustion\b")),
+    ("hypothermia", re.compile(r"\bhypotherm\w*|\bfrostbit\w*")),
+    ("burn", re.compile(r"\bburns?\b")),
+    ("drowning", re.compile(r"\bdrown\w*")),
+    ("snakebite", re.compile(r"\bsnake ?bites?\b")),
+]
+_HOWTO = re.compile(r"^\s*(?:how (?:do|should|would|can|could) (?:i|you|one|we|people|someone) |how to |what (?:should|"
+                    r"do|would) (?:i|you|one|we) do (?:if|when|for|about|with)|what to do (?:if|when|for|about)|"
+                    r"what'?s the (?:right |best )?way to |teach me (?:how )?to )")
+
+
+def teach(prompt: str, where=None) -> Optional[str]:
+    """Pure logic. A how-to question about first aid ("how do you use a tourniquet?", "what do you do if someone is
+    choking?") answered in the floor's own words, from the Red Cross's and the AHA's guidance, with the number to call
+    when it's real (live check, 2026-11-25: the model refused the tourniquet). None for anything else: one happening
+    now is `respond`'s, and signs and symptoms are the library's."""
+    from core.region import DEFAULT, REGIONS
+
+    text = " ".join(str(prompt or "").lower().replace("’", "'").split())
+    if not _HOWTO.search(text) or detect(text) or _FIGURE.search(text) or (_ANIMAL.search(text)
+                                                                          and not _PERSON.search(text)):
+        return None
+    kind = next((k for k, words in _TOPIC if words.search(text)), None)
+    do = next((d for k, _w, d in KINDS if k == kind), None)
+    if do is None:
+        return None
+    number = (where or REGIONS[DEFAULT]).emergency
+    return (f"The standard first aid, from the American Red Cross and the American Heart Association: {do} When it's "
+            f"real, call {number} first, or have someone else call while you help.")
 
 
 def floor_kind_of(text: str) -> Optional[str]:

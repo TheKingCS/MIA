@@ -248,7 +248,8 @@ def detect_mode_change(prompt: str) -> ModeChange:
     "Back to normal" wins over everything else in the same message
     (it's the way out, and must always work). Otherwise a journal start
     implies Listen unless another mode was also named ("I want to
-    journal, no bullshit").
+    journal, no bullshit"). A drill asked for ("quiz me on first aid",
+    core/drills.requested) is never the quiz or study mode.
     """
     text = prompt.lower().replace("’", "'")
     change = ModeChange()
@@ -257,7 +258,12 @@ def detect_mode_change(prompt: str) -> ModeChange:
         return ModeChange(mode=COMPANION, journal=False, off_record=False)
 
     # Perspective first: "no bullshit, remind me why" needs the facts more than a tone.
+    from core.drills import requested
+
+    drill = requested(text) is not None  # "quiz me on first aid" is a drill, not the textbooks' quiz
     for pattern, mode in ((_QUIZ, QUIZ), (_STUDY, STUDY), (_PERSPECTIVE, PERSPECTIVE), (_GAME_MASTER, GAME_MASTER), (_DIRECT, DIRECT), (_MOMENTUM, MOMENTUM), (_PLAN, PLAN), (_LISTEN, LISTEN)):
+        if drill and mode in (QUIZ, STUDY):
+            continue
         if pattern.search(text):
             change.mode = mode
             break

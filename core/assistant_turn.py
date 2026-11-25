@@ -113,7 +113,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     Building an ESP32 lab along with MIA (core/esp32_sim.reply) is answered there too, after the greenhouse and what
     MIA runs on.
     A scenario drill (core/drills.reply) is answered there too.
-    A design of hers not built yet is answered there too, as a plan."""
+    A design of hers not built yet is answered there too, as a plan.
+    A first-aid how-to too (`_first_aid_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -144,6 +145,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _lab_build_reply(context, conversation, prompt)  # building a lab along with MIA, as in a turn
     if walked is None:
         walked = _drill_reply(context, conversation, prompt)  # a scenario drill, as in a turn
+    if walked is None:
+        walked = _first_aid_reply(context, prompt)  # "how do you use a tourniquet?", as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -209,6 +212,24 @@ def _drill_reply(context, conversation, prompt: str):
     except Exception:
         log.exception("Couldn't follow the drill")
         return None
+
+
+def _first_aid_reply(context, prompt: str):
+    """A first-aid how-to, in code (core/first_aid_floor.teach): the floor's own Red Cross and AHA words and the number
+    for his country, then the drill to practise it when there is one (core/drills.FOR_KIND); None otherwise."""
+    from core import drills, first_aid_floor
+    from core.region import region_for
+
+    try:
+        taught = first_aid_floor.teach(prompt, region_for(context))
+    except Exception:
+        log.exception("Couldn't teach the first aid")
+        return None
+    if taught is None:
+        return None
+    kind = next((k for k, words in first_aid_floor._TOPIC if words.search(prompt.lower())), "")
+    drill = drills.FOR_KIND.get(kind)
+    return taught + (f" To practise it, say \"give me a {drill} drill\"." if drill else "")
 
 
 def _service_reply(context, prompt: str):
@@ -316,6 +337,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A scenario drill is taken in code too, after the lab's build ("give me a survival drill", then "B":
     core/drills.reply).
     A design of hers nothing builds yet is said in code as a plan (core/self_knowledge.plan_reply).
+    A first-aid how-to is answered in the floor's own words (`_first_aid_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -409,6 +431,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _lab_build_reply(context, conversation, prompt)  # "walk me through building the pot lab", "next"
         if walked is None:
             walked = _drill_reply(context, conversation, prompt)  # "give me a survival drill", then "B"
+        if walked is None:
+            walked = _first_aid_reply(context, prompt)  # "how do you use a tourniquet?": the floor's own words
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:

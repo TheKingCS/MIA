@@ -8,7 +8,9 @@ it in a simulator first). A drill puts him in a situation and asks a few decisio
 best, fine or wrong, with why, written from the course's own sources (a survival drill from core/bushcraft.py's:
 US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA, and for a power outage the CDC on generators and
 carbon monoxide and the USDA on food in a fridge and freezer without power; the flock from land-grant extension
-backyard poultry guides; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); a market day from
+backyard poultry guides; first aid (a deep cut, choking) from the American Red Cross and the American Heart
+Association, in the same words as the emergency floor (core/first_aid_floor.py), so a drill never teaches what the
+floor wouldn't say, and with no medicine doses; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); a market day from
 core/business_path.py's (the SBA's guides); canning from core/gardening_path.py's, the USDA Complete
 Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
 logic; nothing kept.
@@ -195,6 +197,82 @@ DRILLS: tuple = (
                  ("Close off one room, layer up, and keep a working CO alarm with fresh batteries", "best",
                   "A small room holds its warmth, layers hold yours, and the alarm guards against any fuel burning "
                   "nearby.")),
+          ), "priorities"),
+    Drill("deep_cut", "bushcraft", "A deep cut",
+          "You're working in the shop with a friend when a chisel slips and opens a deep cut on their forearm. Blood "
+          "is flowing steadily, and town is 30 minutes away. (A drill: the real thing starts with the emergency "
+          "number.)",
+          (
+              _q("What do you do first?",
+                 ("Rinse it under the tap to see how deep it is", "wrong",
+                  "Every minute it bleeds matters more than seeing it: pressure first, the cleaning comes later."),
+                 ("Have someone call the emergency number, and press hard on the wound with a clean cloth", "best",
+                  "Firm, steady pressure stops most bleeding, and help is on its way while you hold it."),
+                 ("Get them in the truck and drive to town", "wrong",
+                  "Driving, nobody is holding pressure for 30 minutes; call, press, and let help come to you or tell "
+                  "you where to meet.")),
+              _q("Blood soaks through the cloth. What now?",
+                 ("Lift it off to see if it's slowing", "wrong",
+                  "Lifting pulls away the clot that's starting to form; don't lift it to look."),
+                 ("Swap it for a fresh, clean cloth", "wrong",
+                  "Taking the first one off undoes the pressure and the clot; leave it there."),
+                 ("Put more cloth on top and keep pressing hard", "best",
+                  "That's the Red Cross's way: add more on top, never take the first off, and keep the pressure on.")),
+              _q("It's still bleeding hard through steady pressure. It's an arm. What do you do?",
+                 ("A tourniquet 2 to 3 inches above the wound, tight until the bleeding stops, and note the time",
+                  "best",
+                  "Above the wound, between it and the heart, and tight enough to stop it; the time tells the medics "
+                  "how long it's been on."),
+                 ("A tourniquet right over the cut", "wrong",
+                  "On the wound it can't close off the vessel feeding it: 2 to 3 inches above."),
+                 ("Tie it loosely so it doesn't hurt, and loosen it every few minutes", "wrong",
+                  "Loose, it can make bleeding worse; once it's on, leave it tight and leave it for the medics to "
+                  "take off.")),
+              _q("While you wait for help, what about them?",
+                 ("Have them walk around so they stay alert", "wrong",
+                  "Moving makes the heart work harder and they may faint; keep them still."),
+                 ("Keep them lying down and warm, and keep watching them", "best",
+                  "Blood loss can bring on shock: lying down, a blanket, and you watching their breathing until help "
+                  "takes over."),
+                 ("Give them a drink and a painkiller for the pain", "wrong",
+                  "Nothing by mouth: they may need surgery, and medicine is for the medics to give.")),
+          ), "priorities"),
+    Drill("choking", "bushcraft", "Choking at dinner",
+          "At dinner, a friend suddenly grabs their throat. (A drill: the real thing starts with the emergency "
+          "number.)",
+          (
+              _q("They're coughing hard and can still say a few words. What do you do?",
+                 ("Give back blows right away", "wrong",
+                  "A strong cough is the best way to clear it: blows are for when they can't cough, speak or "
+                  "breathe."),
+                 ("Tell them to keep coughing, and stay right with them", "best",
+                  "While air still moves, coughing does the work; you're there the moment it stops."),
+                 ("Give them water to wash it down", "wrong",
+                  "Water can't get past a blocked airway and can make it worse.")),
+              _q("Now they can't cough, speak or breathe. What do you do?",
+                 ("Sweep your finger in their mouth to hook it out", "wrong",
+                  "A blind sweep can push it further down; only take out something you can see."),
+                 ("Have someone call, then 5 firm back blows between the shoulder blades and 5 quick thrusts in and "
+                  "up just above the belly button, switching until it comes out", "best",
+                  "That's the Red Cross's five and five: back blows with the heel of your hand, then abdominal "
+                  "thrusts, and keep going."),
+                 ("Wait a minute to see if it clears on its own", "wrong",
+                  "With no air moving, there's no time to wait: start now.")),
+              _q("They go limp and stop responding. What now?",
+                 ("Keep doing thrusts while holding them up", "wrong",
+                  "Once they stop responding, get them down and onto CPR."),
+                 ("Lower them to the floor, make sure help is called, and start CPR, taking out the object only if "
+                  "you can see it", "best",
+                  "Chest compressions can push it out; look in the mouth before breaths, never a blind sweep."),
+                 ("Lay them on their side and wait for help", "wrong",
+                  "Not breathing, they need CPR now, not waiting.")),
+              _q("It comes out, and they say they feel fine. Anything else?",
+                 ("No, they're fine now", "wrong",
+                  "Abdominal thrusts can hurt inside, and a bit can stay behind: they should be checked."),
+                 ("Have a doctor check them, even if they feel fine", "best",
+                  "The Red Cross says to get medical care after thrusts were needed."),
+                 ("Give them something to eat to settle their throat", "wrong",
+                  "Let them be checked first; a sore or swollen throat can make swallowing harder.")),
           ), "priorities"),
     Drill("canning_day", "gardening", "Putting up green beans",
           "A Saturday with a bushel of green beans from the garden. You have a boiling-water canner, a pressure "
@@ -391,7 +469,9 @@ ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "genera
         "flock_night": ("flock", "chicken", "chickens", "hens", "coop", "poultry"),
         "surprise_bill": ("money", "finance", "budget", "surprise bill", "debt"),
         "market_day": ("market day", "market", "business", "farmers market", "pricing"),
-        "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw")}
+        "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw"),
+        "deep_cut": ("deep cut", "bad cut", "bleeding", "tourniquet", "wound"),
+        "choking": ("choking", "heimlich")}
 
 
 def named(words: str) -> Optional[Drill]:
@@ -408,17 +488,22 @@ def named(words: str) -> Optional[Drill]:
     return None
 
 
+FIRST_AID = ("deep_cut", "choking")  # "a first aid drill": one of these, by the day
+FOR_KIND = {"bleeding": "deep cut", "choking": "choking"}  # an emergency floor kind's drill, said to start it
 _COURSE_WORDS = {"gardening": r"\b(canning|preserving|food safety)\b",
                  "carpentry": r"\b(carpentry|circular saw|saw|woodworking)\b"}
 
 
 def find(words: str, today: Optional[date] = None) -> Optional[Drill]:
     """Pure logic. The drill his words name (`named`), else one of the course his words mean (a canning drill, a
-    carpentry drill), else a survival one; by the day among them (so asking each day brings a different one)."""
+    carpentry drill, a first aid one), else a survival one; by the day among them (so asking each day brings a
+    different one)."""
     drill = named(words)
     if drill is not None:
         return drill
     said = str(words or "").lower()
+    if re.search(r"\bfirst[ -]aid\b", said):
+        return by_id(FIRST_AID[(today or date.today()).toordinal() % len(FIRST_AID)])
     course = next((c for c, w in _COURSE_WORDS.items() if re.search(w, said)), "bushcraft")
     survival = of_program(course)
     if not survival:
@@ -472,9 +557,10 @@ _SURVIVAL = re.compile(r"\b(survival|bushcraft|wilderness|outdoor|outdoors|woods
 # A drill is started only when one is asked for, its subject right beside the word: "a canning drill", "run the water
 # drill", "drill me on survival" (the review: "can I drill into the stud?", "worst case scenario for water" and "a drill
 # at work today" had each started one).
-_REQUEST = re.compile(r"\b(give me|run|start|do|try|let's|lets|i want|i'd like|how about|another|new|drill me|quiz me|"
+_REQUEST = re.compile(r"\b(give me|run|start|do|try|let's|lets|i want|i'd like|how about|another|new|drill me|quiz me|practi[cs]e|"
                       r"test me)\b")
 _SUBJECTS = sorted({"survival", "bushcraft", "wilderness", "outdoor", "canning", "preserving", "food safety",
+                    "first aid", "first-aid",
                     "carpentry", "circular saw", "saw", "green beans", "dusk"}
                    | {w for d in DRILLS for w in d.title.lower().split() if len(w) > 3 and w != "fire"}
                    | {w for words in ALSO.values() for w in words}, key=len,
@@ -537,7 +623,8 @@ def reply(context, conversation, text: str) -> Optional[str]:
     or "give me a survival drill"; None when the words aren't for a drill. A drill starts only when one is asked for,
     its subject beside the word ("a canning drill", "drill me on survival"); while one waits, only an attempt at an
     answer ("e", "not sure") is asked for the letter again, and anything else ends it.
-    A money or business drill needs the word "drill": "a budget scenario" is his own planning."""
+    A money or business drill needs the word "drill": "a budget scenario" is his own planning.
+    Which drill is asked for is `requested`'s."""
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     live = where(conversation)
     if live is not None:
@@ -555,14 +642,23 @@ def reply(context, conversation, text: str) -> Optional[str]:
             return (f"Which one: {', '.join(letters[:-1])} or {letters[-1]}? Or \"repeat\" to hear it again, or "
                     f"\"stop the drill\". (Drill {drill.id}: question {n} of {len(drill.questions)}, {right} best so "
                     f"far.)")
-    if _REQUEST.search(said) and _ASKED_FOR.search(said) and not _NOT_THIS.search(said) \
-            and not re.search(r"\b(fire drill|drill at work|drills? at work|at work)\b", said):
-        drill = find(said)
-        if drill is not None and drill.program in ("money", "business") and not re.search(r"\bdrills?\b", said):
-            return None  # "a budget scenario", "quiz me on my budget": his own planning, not a drill (fourth review)
-        if drill is not None:
-            return start(drill)
-    return None
+    drill = requested(said)
+    return start(drill) if drill is not None else None
+
+
+def requested(words: str) -> Optional[Drill]:
+    """Pure logic. The drill his words ask for, or None: asked for with its subject beside the word ("a canning drill",
+    "quiz me on first aid"), never "a drill at work" or "drill the holes"; a money or business one only with the word
+    "drill" ("a budget scenario" is his own planning). The quiz and study modes step aside for one
+    (core/conversation_modes.py: "quiz me on first aid" had gone to the textbooks)."""
+    said = " ".join(str(words or "").lower().replace("’", "'").split())
+    if not (_REQUEST.search(said) and _ASKED_FOR.search(said)) or _NOT_THIS.search(said) \
+            or re.search(r"\b(fire drill|drill at work|drills? at work|at work)\b", said):
+        return None
+    drill = find(said)
+    if drill is not None and drill.program in ("money", "business") and not re.search(r"\bdrills?\b", said):
+        return None  # "a budget scenario", "quiz me on my budget": his own planning, not a drill (fourth review)
+    return drill
 
 
 def courses() -> list:
