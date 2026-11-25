@@ -65,6 +65,20 @@ def _grants(context, arguments: dict) -> str:
     return f"On my own I may run: {said}. Paying, sending and deleting always need your yes. You can take any of these back."
 
 
+AUTOMATE = ("Here's what I can take off your plate: reminders that repeat (\"remind me every Monday to check the "
+            "water filter\" goes on your calendar), household routines I count as you do them, a skill you teach me by "
+            "showing me once (\"watch me: the Friday reset\", then \"that's it\"; after it runs cleanly with you, I can "
+            "run it myself), a workflow you publish, and sensors on your bench builds that report to me. The daily "
+            "checks run on their own and only speak up when something needs you.")
+
+
+def _automate(context, arguments: dict) -> str:
+    """Tool what_can_you_automate: what MIA can run for him and how each is started (`AUTOMATE`), then what she may
+    already do on her own (`_grants`). Read only (live sweep, 2026-11-25: "what can you automate for me?" got a
+    chatbot's list of answering questions and writing)."""
+    return f"{AUTOMATE} Right now: {_grants(context, {})}"
+
+
 def _take_back(context, arguments: dict) -> str:
     """Tool take_back_grant: proposes `grant.take_back` for the one named."""
     from core.actions import run_as_tool
@@ -76,7 +90,8 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
     """Registers list_my_apps, describe_app (which also answers "is the X app working?"), which_app, check_my_apps,
     list_grants and take_back_grant (domain app_registry, the Apps app's). There is no tool that gives a grant
     (core/grant_actions.py says why). describe_app's "depends on" is the app's ("what does the app depend on"), never
-    a bare "what depends on", which is the links tool's."""
+    a bare "what depends on", which is the links tool's.
+    And what_can_you_automate."""
     registry.register(AssistantAction(
         name="list_grants", domain="app_registry",
         description=("What MIA may do on her own without asking: the skills she has learned and the workflows the "
@@ -87,6 +102,18 @@ def register_app_registry_actions(registry: AssistantActionRegistry) -> None:
                          "what are you allowed to do", "your permissions", "what have i granted", "my grants",
                          "list grants", "what did i let you do"),
         subjects=("permissions", "grants"),
+    ))
+    registry.register(AssistantAction(
+        name="what_can_you_automate", domain="app_registry",
+        description="What MIA can automate for him (repeating reminders, routines, skills taught by showing her, "
+                    "workflows, sensors) and how each is started, then what she may already do on her own.",
+        parameters={"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
+                    "required": []},
+        handler=_automate, prompt_arg="question",
+        trigger_phrases=("what can you automate", "what could you automate", "what can be automated",
+                         "what can i automate", "what do you do automatically", "automate for me",
+                         "things you can automate", "help me automate"),
+        subjects=("automate", "automation"),
     ))
     registry.register(AssistantAction(
         name="take_back_grant", domain="app_registry",

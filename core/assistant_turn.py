@@ -122,7 +122,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     Days of water too (`_water_on_hand_reply`).
     A materials question too (`_materials_reply`).
     A reminder on a day too (`_reminder_reply`).
-    A course's next lesson too (`_next_lesson_reply`)."""
+    A course's next lesson too (`_next_lesson_reply`).
+    A weekly reminder too (`_weekly_reminder_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -165,6 +166,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _next_lesson_reply(context, prompt)  # "what's my next guitar lesson?", as in a turn
     if walked is None:
         walked = _reminder_reply(context, prompt)  # "remind me to check the oil Saturday", as in a turn
+    if walked is None:
+        walked = _weekly_reminder_reply(context, prompt)  # "remind me every Monday to ...", as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -334,6 +337,45 @@ _REMIND_ON = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can yo
                         r"\s+(?:on\s+|this\s+|next\s+|this coming\s+)?(today|tonight|tomorrow|monday|tuesday|wednesday|"
                         r"thursday|friday|saturday|sunday)(?:\s+(?:morning|afternoon|evening|night))?"
                         r"(?:\s+at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?)?\s*[.!]?\s*$", re.I)
+
+
+_EVERY = r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday)"
+_REMIND_EVERY = re.compile(
+    r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+|would you\s+)?"
+    r"(?:remind me (?:to\s+(?P<what1>.+?)\s+)?every\s+" + _EVERY + r"(?:\s+to\s+(?P<what2>.+?))?|"
+    r"(?:automate|set up|add|make|create|schedule)\s+(?:a\s+)?(?:weekly\s+)?reminder\s+(?:for\s+)?every\s+"
+    + _EVERY.replace("(", "(?P<day2>", 1) + r"\s+to\s+(?P<what3>.+?))"
+    r"(?:\s+at\s+(?P<h>\d{1,2})(?::(?P<m>\d{2}))?\s*(?P<ap>am|pm)?)?\s*[.!?]?\s*$", re.I)
+
+
+def _weekly_reminder_reply(context, prompt: str):
+    """"Remind me every Monday to check the water filter", "can you automate a reminder every Monday to ...", in code
+    (live sweep, 2026-11-25: no tool was called, and the model promised a notification about the electric bill): a
+    weekly event on his calendar from the next one of that weekday, through add_calendar_event (undoable). None
+    otherwise."""
+    from datetime import date as _date, timedelta
+
+    found = _REMIND_EVERY.match(prompt.replace("’", "'"))
+    if not found:
+        return None
+    what = (found.group("what1") or found.group("what2") or found.group("what3") or "").strip().rstrip(",")
+    weekday = (found.group(2) or found.group("day2") or "").lower()
+    if not what or not weekday:
+        return None
+    today = _date.today()
+    first = today + timedelta(days=(_WEEKDAYS.index(weekday) - today.weekday()) % 7)
+    args = {"title": what[:1].upper() + what[1:], "date": first.isoformat(), "recurrence": "weekly"}
+    if found.group("h"):
+        hour, minute = int(found.group("h")), int(found.group("m") or 0)
+        hour += 12 if (found.group("ap") or "").lower() == "pm" and hour < 12 else 0
+        hour = 0 if (found.group("ap") or "").lower() == "am" and hour == 12 else hour
+        if hour < 24 and minute < 60:
+            args["time"] = f"{hour:02d}:{minute:02d}"
+    try:
+        return context.assistant_actions.execute(context, "add_calendar_event", args)
+    except Exception:
+        log.exception("Couldn't put the weekly reminder on the calendar")
+        return None
 
 
 def _reminder_reply(context, prompt: str):
@@ -517,6 +559,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A personal or off-the-record turn's claim is never kept in the Fix-It Log.
     The model's reply is polished with his words, so a loosely copied humor example goes.
     A course's next lesson, named, in code (`_next_lesson_reply`).
+    A reminder every week goes on the calendar repeating (`_weekly_reminder_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -622,6 +665,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _next_lesson_reply(context, prompt)  # a course's next step, or that it isn't started
         if walked is None:
             walked = _reminder_reply(context, prompt)  # "remind me to X on Saturday": on his calendar
+        if walked is None:
+            walked = _weekly_reminder_reply(context, prompt)  # "every Monday": a weekly event on his calendar
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:

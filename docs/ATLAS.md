@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1800 files, 386,744 lines; 1800 files describe themselves; 21,078 of 21,204 classes and functions are documented.
+1801 files, 386,866 lines; 1801 files describe themselves; 21,084 of 21,210 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,522 lines; 10,102 of 10,183 classes and functions documented
+714 files, 201,599 lines; 10,104 of 10,185 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-677 files, 103,207 lines; 8,605 of 8,650 classes and functions documented
+678 files, 103,252 lines; 8,609 of 8,654 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1564,6 +1564,7 @@
 - `tests/test_subscriptions.py`: The "still using it?" mark on subscriptions (core/subscriptions.py, DEC-0054): which bills are subscriptions, the quiet finding for ones not checked in three months (never unprompted), Money's Still Using as bill.still_using, and the same by voice.
 - `tests/test_support_choice.py`: MIA asks which kind of support when it isn't clear (core/support_choice.py, wired through core/talk_it_out.pre_turn).
 - `tests/test_sweep_8_conversation.py`: The third live sweep's conversation fixes (2026-11-25): an expense's date is a real date or today (the model sent "null", and no month counted it), feed has its own category, the tone examples are other people's and never this conversation (the model brought up "that marathon you're running next wee
+- `tests/test_sweep_9_automation.py`: The fourth live sweep's fixes (2026-11-25): "remind me every Monday to check the water filter" and "can you automate a reminder every Monday to ..." go on the calendar as a weekly event in code (no tool had been called, and the model promised a notification); a promise with words between ("I'll also
 - `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), the PC's own endpoints, and a phone paired again taking the computer's copies 
 - `tests/test_system_health.py`: Unit tests for core.system_health (moved here from modules.diagnostics.module in milestone 5.7 — see that module's own docstring and core/system_health.py's docstring for why). format_system_health() is tested with hand-built snapshots (pure, deterministic). read_system_health()/_read_cpu_temperatur
 - `tests/test_system_helper.py`: FW-06 (PoC 5; DEC-0194, REQ-ARC-010, REQ-AGT-024, REQ-SEC-022): MIA changes the system only through her helper's three fixed operations, each confirmed twice (her card, then his password in polkit's dialog). Checked here, on any machine: the helper's own rules refuse anything but its operations and 
