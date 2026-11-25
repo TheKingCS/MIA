@@ -40,7 +40,8 @@
       "log_energy_reading",
       "power_picture",
       "set_power_load",
-      "power_outage"
+      "power_outage",
+      "size_solar"
     ],
     "actions": [
       "energy.reading",
@@ -62,7 +63,8 @@
       "energy_source.edit": "act_within_grant",
       "power_outage": "act_within_grant",
       "outage.start": "act_within_grant",
-      "outage.end": "act_within_grant"
+      "outage.end": "act_within_grant",
+      "size_solar": "observe"
     },
     "outside": []
   },

@@ -96,7 +96,8 @@ def test_embedded_calculators_match_examples_worked_by_hand():
 
 
 def test_structural_and_craft_calculators():
-    """The joist, brine salt, meat cure (a level teaspoon of cure #1 for 5 lb at 156 ppm; nitrite past 200 refused)
+    """The joist, a solar array (30 kWh a day at 4.5 sun hours: 8.9 kW, 23 panels of 400 W; 10 kWh for two days at
+    80%: a 25 kWh battery), brine salt, meat cure (a level teaspoon of cure #1 for 5 lb at 156 ppm; nitrite past 200 refused)
     and candle wax against hand-worked examples."""
     joist = calculate("floor_joist", {"span": "12 ft"})
     assert joist["choice"].startswith("2x") and joist["caveat"] == CAVEAT
@@ -105,6 +106,9 @@ def test_structural_and_craft_calculators():
     assert near(calculate("brine_salt", {"water": "1000 g", "vegetables": "500 g"})["values"]["salt"], 30, "g")
     assert near(calculate("brine_salt", {"water": "2 lb", "vegetables": "1 lb", "strength": "3 %"})["values"]["salt"],
                 3 * 453.59237 * 0.03, "g")
+    solar = calculate("solar_array", {"daily": "30 kWh", "sun": "4.5 h"})
+    assert near(solar["values"]["array"], 30 / (4.5 * 0.75) * 1000, "W") and solar["values"]["panels"].si == 23
+    assert calculate("solar_array", {"daily": "10 kWh", "days": "2"})["values"]["battery"].number("kWh") == 25
     cure = calculate("meat_cure", {"meat": "5 lb"})
     assert near(cure["values"]["cure"], 5 * 453.59237 * 156 / 1e6 / 0.0625, "g") and cure["caveat"] == CAVEAT
     assert abs(cure["values"]["teaspoons"].si - 1) < 0.01  # a level teaspoon for 5 lb at 156 ppm

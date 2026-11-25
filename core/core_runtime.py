@@ -116,6 +116,7 @@ from core.tax_setaside import register_tax_setaside_actions
 from core.fishing_times import register_fishing_times_actions
 from core.hen_laying import register_hen_laying_actions
 from core.meat_cure import register_meat_cure_actions
+from core.solar_size import register_solar_size_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
@@ -356,8 +357,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     adjust_greenhouse (core/greenhouse_adjust.py) is among them.
     power_outage (core/outage_actions.py) is among them.
     why_bill_high (core/utility_bills.py) spending_vs_usual (core/spending_pace.py) the catch log's tools (core/catch_actions.py) what_to_make_next (core/make_next.py) work_outside_wind_chill_heat_index (core/outdoor_work.py) tax_set_aside
-    (core/tax_setaside.py) best_time_to_fish (core/fishing_times.py) why_hens_not_laying (core/hen_laying.py) and meat_cure
-    (core/meat_cure.py) are among them."""
+    (core/tax_setaside.py) best_time_to_fish (core/fishing_times.py) why_hens_not_laying (core/hen_laying.py) meat_cure
+    (core/meat_cure.py) and size_solar (core/solar_size.py) are among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -399,6 +400,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_fishing_times_actions(registry)  # when to go fishing
     register_hen_laying_actions(registry)  # why the hens stopped laying
     register_meat_cure_actions(registry)  # curing salt for meat
+    register_solar_size_actions(registry)  # sizing solar from his use
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

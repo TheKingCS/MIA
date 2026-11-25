@@ -92,6 +92,8 @@ TASKS: tuple[Task, ...] = (
          {"volts": "12 V", "amps": "20 A", "length": "30 ft"}, "gauge", "", 0.0),
     Task("e7", "What wire gauge do I need for a 30 amp load at 240 volts?", "wire_gauge",
          {"volts": "240 V", "amps": "30 A"}, missing="length"),
+    Task("e8", "How many 400 watt solar panels for 30 kWh a day at 4.5 peak sun hours and 75% after losses?",
+         "solar_array", {"daily": "30 kWh", "sun": "4.5 h", "panel": "400 W", "derate": "75 %"}, "panels", ""),
     # ---- embedded
     Task("m1", "What resistor (the exact value in ohms) puts 20 milliamps through an LED with a 2 volt forward voltage "
          "from a 5 volt supply?", "led_resistor", {"supply": "5 V", "forward": "2 V", "current": "20 mA"}, "exact", "ohm"),

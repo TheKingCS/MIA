@@ -354,6 +354,11 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **How many solar panels would I need?** (no decision; his power): *built 2026-11-24 (`core/solar_size.py`, the tool
+  `size_solar`, the calculator `solar_array`).* From his kWh meter's months, the kWh a month he says, or his
+  essentials off-grid with two days of battery: the array's kW and panel count at his sun hours (else 4, said as an
+  assumption), and the battery at 80% usable. Live model: "do I have enough solar?" still comes here, so it's answered
+  with the power picture in code; a bare "900 kWh" from the model is a month's.
 - **Curing meat** (no decision; his homestead): *built 2026-11-24 (`core/meat_cure.py`, the tool `meat_cure`, the
   calculator `meat_cure` in core/eng_calcs.py).* "How much curing salt for 5 pounds of pork belly for bacon?": curing
   salt #1 by weight at the USDA's 120 ppm for bacon or 156 for other cured meat (a level teaspoon for 5 lb at 156),

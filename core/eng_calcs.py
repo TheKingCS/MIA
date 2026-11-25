@@ -20,7 +20,7 @@ it, DEC-0198 Q-57). `calculate(id, inputs)` reads the inputs with units
 the values, a sentence, the basis and the caveat.
 
 The first set: electrical (power, voltage drop, wire gauge, circuit load,
-battery runtime), embedded (LED resistor, voltage divider, battery life
+battery runtime, a solar array and its battery), embedded (LED resistor, voltage divider, battery life
 with sleep, regulator heat, ADC step), structural (floor joist), and
 structural (stair risers, board feet, concrete), homestead crafts (brine salt, a meat cure, candle wax, soap
 lye, alum mordant), and the greenhouse (heat loss, fan size, drip water, heater propane; S4's first specialist).
@@ -148,6 +148,26 @@ def _battery_runtime(capacity: Quantity, volts: Quantity, load: Quantity, usable
     return {"values": {"energy": energy, "runtime": hours},
             "said": f"{capacity} at {volts} holds {energy}. Using {usable.si * 100:g}% of it at {efficiency.si * 100:g}% "
                     f"efficiency, a {load} load runs about {hours}."}
+
+
+def _solar_array(daily: Quantity, sun: Quantity, panel: Quantity, derate: Quantity, days: Quantity,
+                 usable: Quantity) -> dict:
+    """A solar array for a day's use: kW = kWh a day / (peak sun hours x the share that survives losses: wiring,
+    heat, dust, the inverter), panels of a size rounded up, and a battery for `days` without sun at the usable share
+    of its capacity (0 days: grid-tied, no battery)."""
+    kwh = daily.number("kWh")
+    hours = sun.number("h")
+    if kwh <= 0 or hours <= 0:
+        raise CalcError("A day's use and the peak sun hours must be more than zero.")
+    array_kw = kwh / (hours * derate.si)
+    panels = math.ceil(array_kw * 1000 / panel.number("W") - 1e-9)
+    battery = kwh * days.si / usable.si if days.si else 0.0
+    said = (f"{kwh:.3g} kWh a day at {hours:g} peak sun hours and {derate.si * 100:g}% after losses needs about "
+            f"{array_kw:.2f} kW of panels: {panels} panels of {panel}.")
+    if battery:
+        said += f" For {days.si:g} days without sun, a battery of about {battery:.3g} kWh ({usable.si * 100:g}% usable)."
+    return {"values": {"array": q(array_kw * 1000, "W"), "panels": q(panels, ""), "battery": q(battery * 3.6e6, "J")},
+            "said": said}
 
 
 def _led_resistor(supply: Quantity, forward: Quantity, current: Quantity) -> dict:
@@ -664,6 +684,15 @@ CALCULATORS: tuple[Calculator, ...] = (
     Calculator("circuit_load", "electrical", "Circuit Load", "What a breaker may carry, briefly and continuously.",
                {"breaker": ("A", "the breaker's rating", None), "volts": ("V", "the circuit's voltage", None)},
                _circuit_load, "a load of three hours or more is held to 80% of the breaker", True),
+    Calculator("solar_array", "electrical", "Solar Array", "Solar panels, and a battery, for a day's use.",
+               {"daily": ("kWh", "the energy used a day", None), "sun": ("h", "the peak sun hours a day", "4 h"),
+                "panel": ("W", "one panel's rating", "400 W"),
+                "derate": ("%", "the share left after wiring, heat, dust and inverter losses", "75 %"),
+                "days": ("", "days the battery carries it without sun (0 for grid-tied)", "0"),
+                "usable": ("%", "the battery's usable share (80% for lithium iron phosphate)", "80 %")},
+               _solar_array, "array kW = kWh a day / (peak sun hours x 0.75 for losses), panels rounded up; battery "
+               "= kWh a day x days / usable share; peak sun hours vary by place and season (NREL's PVWatts gives a "
+               "site's own)", True),
     Calculator("battery_runtime", "electrical", "Battery Runtime", "How long a battery runs a load.",
                {"capacity": ("Ah", "the battery's capacity", None), "volts": ("V", "the battery's voltage", None),
                 "load": ("W", "the load's power", None), "usable": ("%", "how much of the battery may be used", "80 %"),

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1739 files, 374,708 lines; 1739 files describe themselves; 20,569 of 20,699 classes and functions are documented.
+1741 files, 374,917 lines; 1741 files describe themselves; 20,578 of 20,708 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-693 files, 193,498 lines; 9,821 of 9,907 classes and functions documented
+694 files, 193,657 lines; 9,827 of 9,913 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -545,6 +545,7 @@
 - `core/slicing.py`: Slicing a part for his printer (docs/future/HUB_AND_ENGINEER_PLAN.md part 2, step 2): the STL files MIA makes (core/print_parts.py) sliced by Bambu Studio's own command line, on his PC, offline, for the printer Bambu Studio is set up for (its settings' `machine` preset, a Bambu Lab P1P 0.4 nozzle on
 - `core/smart_closet.py`: Smart Closet (DEC-0162; Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them, maybe let me see what they would look like together"). The design is `docs/specs/SMART_CLOSET.md`.
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
+- `core/solar_size.py`: "How many solar panels would I need?" (Jarvis brainstorm, round 12; his power, docs/future/SMART_AG_PLAN.md): the array and battery worked out in code (core/eng_calcs.py `solar_array`), from his own use:
 - `core/specialist_models.py`: Which local model does each specialist's thinking (T1's second part; the local specialists plan, S3; DEC-0197: "the model per specialist is chosen from this table, not from a guide"). The table is the engineering bench's results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.
 - `core/specialist_review.py`: A second local model checks a specialist's work (the local specialists plan, S5; DEC-0198, Q-57: "a safety review can block a design until he's seen it"; the teams design: review is independent only across models).
 - `core/specialist_roster.py`: The specialists' roster and the "counts as added" bar, in code (the Specialist Forge, F1; DEC-0199; `docs/mia_os/MIA_OS_LOCAL_SPECIALISTS_PLAN.md` section 7: "a name with a paragraph is not a specialist").
@@ -991,7 +992,7 @@
 
 ## tests/: the test suite: what each part must do
 
-640 files, 100,115 lines; 8,383 of 8,427 classes and functions documented
+641 files, 100,165 lines; 8,386 of 8,430 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1486,6 +1487,7 @@
 - `tests/test_slicing.py`: Slicing for his printer (core/slicing.py): the printer read from Bambu Studio's settings, its stock profiles found, the print time and grams read from the G-code's header, a slice run through Bambu's command line (a stand-in here: never the real program in a test), and plain words when Bambu or a pr
 - `tests/test_smart_closet.py`: Smart Closet (DEC-0162): pieces and outfits, ratings, the day's suggestion worked out in code (weather, occasion, rest, colour), insights, the actions with undo, the page and the voice tools.
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py.
+- `tests/test_solar_size.py`: "How many solar panels would I need?" (core/solar_size.py): from the kWh a month he says, else his meter's months, else he's asked for the kWh; the essentials off-grid with two days of battery, typical ones said as typical; his sun hours and panel size used, else 4 hours said as an assumption.
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialist_models.py`: Which local model does each specialist's thinking (core/specialist_models.py, DEC-0197): chosen from this PC's bench results in the worksheet's own mode, over the disciplines that specialist uses; a model that guesses a missing input doesn't pass however many it gets right; the best that didn't pass
