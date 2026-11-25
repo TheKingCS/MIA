@@ -151,8 +151,11 @@ def _action_undo_receipt(context, arguments: dict) -> str:
 
 def _action_set_receipt_autofile(context, arguments: dict) -> str:
     """Tool set_receipt_autofile: whether MIA files emailed receipts on her own (on by default) or leaves them
-    waiting for the person."""
-    on = str(arguments.get("on", "true")).strip().lower() not in ("false", "off", "no", "0")
+    waiting for the person. Neither said asks (the Fable audit: an empty call had turned it on)."""
+    said = str(arguments.get("on") if arguments.get("on") is not None else "").strip().lower()
+    if said not in ("true", "on", "yes", "1", "false", "off", "no", "0"):
+        return "Should I file emailed receipts on my own, or leave them in the Inbox for you?"  # never on by default
+    on = said in ("true", "on", "yes", "1")
     context.config.set("inbox.auto_file", on)
     context.config.save()
     return ("I'll file emailed receipts on my own again, and you can Undo any." if on else

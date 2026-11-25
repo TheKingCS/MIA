@@ -60,8 +60,11 @@ def _fields(params: dict, names: tuple) -> dict:
 
 # ---------------------------------------------------------------- sleep
 def _sleep_log(context, params) -> str:
-    """Does sleep.log."""
-    entry = _call(_store(context).log_sleep, _num(params.get("hours")) or 0, _num(params.get("rested"), int),
+    """Does sleep.log; no hours said asks, never 0 hours logged (the Fable audit)."""
+    hours = _num(params.get("hours"))
+    if not hours or hours <= 0:
+        raise ActionError("How many hours did you sleep?")
+    entry = _call(_store(context).log_sleep, hours, _num(params.get("rested"), int),
                   params.get("night") or None, str(params.get("note") or ""))
     rested = f", rested {entry['rested']} of 5" if entry["rested"] else ""
     return f"Logged {entry['hours']:g} hours for the night of {entry['night']}{rested}."

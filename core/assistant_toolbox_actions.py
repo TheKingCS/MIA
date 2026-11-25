@@ -51,7 +51,8 @@ def _concrete(context, arguments: dict) -> str:
 
 
 def _switch_alarm(context, arguments: dict) -> str:
-    """Tool switch_alarm: turns the alarm with that label on or off (the same action as the Toolbox's switch)."""
+    """Tool switch_alarm: turns the alarm with that label on or off (the same action as the Toolbox's switch); a word
+    that isn't on or off asks."""
     from core.actions import ACTION_TYPES, ActionError
 
     store = getattr(context, "alarms", None)
@@ -62,7 +63,10 @@ def _switch_alarm(context, arguments: dict) -> str:
         (a for a in store.all_alarms() if label and label in a.label.lower()), None)
     if found is None:
         return f"I don't have an alarm called '{arguments.get('label', '')}'."
-    on = str(arguments.get("on") or "yes").lower() in ("yes", "true", "1", "on")
+    said = str(arguments.get("on") if arguments.get("on") is not None else "").strip().lower()
+    if said not in ("yes", "true", "1", "on", "no", "false", "0", "off"):
+        return f"On or off, for '{found.label}'?"  # never off on a word it can't read (the Fable audit)
+    on = said in ("yes", "true", "1", "on")
     params = {"alarm_id": found.alarm_id, "on": "yes" if on else "no"}
     try:
         ACTION_TYPES["alarm.switch"].describe(context, params)

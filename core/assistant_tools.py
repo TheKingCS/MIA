@@ -3175,11 +3175,17 @@ class AssistantTools:
 
     @staticmethod
     def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `add_calendar_event`: adds a calendar event with a date, optional time, notes and recurrence (an unknown recurrence is dropped); a date passed as words ("Friday at 2pm") is read as its day (core/calendar_move.day_of), never kept as words. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `add_calendar_event`: adds a calendar event with a date, optional time, notes and recurrence (an unknown recurrence is dropped); a date passed as words ("Friday at 2pm") is read as its day (core/calendar_move.day_of), never kept as words. Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A title that's only "reminder" or "event" asks what it's for."""
         title = str(arguments.get("title", "")).strip()
         date_str = str(arguments.get("date", "") or "").strip()
         if not title:
             return "I need a title to add a calendar event."
+        import re
+
+        if re.fullmatch(r"(?:an?\s+|the\s+|my\s+)?(?:calendar\s+)?(?:event|reminder|appointment|thing|item|task)s?",
+                        title, re.I):
+            return "What's it for? Say what the event is, like \"the dentist\"."  # never one called "Reminder"
         if not date_str:
             return "I need a date (YYYY-MM-DD) to add a calendar event."
         from core.calendar_move import event_day
@@ -3364,16 +3370,19 @@ class AssistantTools:
 
     @staticmethod
     def _action_record_sale(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `record_sale`: records a product sale in the ledger (quantity and amount). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `record_sale`: records a product sale in the ledger (quantity and amount). Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A sale needs a quantity and an amount above zero, or it asks."""
         product_name = str(arguments.get("product_name", "")).strip().lower()
         product = next((p for p in context.products.all_products() if p.name.lower() == product_name), None)
         if product is None:
             return f"I don't have a product called '{arguments.get('product_name', '')}'."
         try:
-            quantity = float(arguments.get("quantity", 0))
-            amount = float(arguments.get("amount", 0))
+            quantity = float(arguments.get("quantity", 1) or 1)
+            amount = float(arguments["amount"])
         except (TypeError, ValueError):
             return "I need a numeric quantity and sale amount to record a sale."
+        if quantity <= 0 or amount <= 0:
+            return "How many, and for how much? A sale needs both, like \"sold 2 birdhouses for $60\"."  # the Fable audit
         context.ledger.record_sale(product.product_id, quantity, amount)
         return f"Recorded a sale of {quantity:g} '{product.name}' for {money(amount, '.2f')}."
 
@@ -4021,7 +4030,8 @@ class AssistantTools:
 
     @staticmethod
     def _action_mark_bill_paid(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `mark_bill_paid`: marks a bill paid, recording the payment (the amount given, or the bill's). Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `mark_bill_paid`: marks a bill paid, recording the payment (the amount given, or the bill's). Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A zero amount is the bill's own, never a $0.00 payment."""
         name = str(arguments.get("name", "")).strip()
         if not name:
             return "I need a bill name to mark paid."
@@ -4029,7 +4039,12 @@ class AssistantTools:
         if error:
             return error
         amount = arguments.get("amount")
-        amount = float(amount) if amount not in (None, "") else None
+        try:
+            amount = float(amount) if amount not in (None, "") else None
+        except (TypeError, ValueError):
+            amount = None
+        if amount is not None and amount <= 0:
+            amount = None  # a zero paid is the bill's own amount, never a $0.00 payment (the Fable audit)
         entry = context.budget.mark_bill_paid(bill.bill_id, amount=amount)
         return f"Marked '{bill.name}' paid — recorded {money(entry.amount, '.2f')}."
 
@@ -4037,9 +4052,14 @@ class AssistantTools:
     def _action_add_income(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_income`: records income with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes).
         A day other than today is said in the reply.
-        A day said that doesn't read is asked, never today in its place."""
+        A day said that doesn't read is asked, never today in its place.
+        A zero or missing amount asks, never $0.00 saved."""
         amount = arguments.get("amount")
-        if amount is None:
+        try:
+            amount = float(amount) if amount is not None else None
+        except (TypeError, ValueError):
+            amount = None
+        if not amount or amount <= 0:  # never $0.00 (the Fable audit)
             return "I need an amount to record income."
         category = str(arguments.get("category", "") or "Other").strip()
         description = str(arguments.get("description", "") or "")
@@ -4059,9 +4079,14 @@ class AssistantTools:
     def _action_add_expense(context: AppContext, arguments: dict) -> str:
         """Assistant tool `add_expense`: records an expense with a category and date. Returns the reply in words (a missing or unknown name says so, nothing changes).
         A day other than today is said in the reply.
-        A day said that doesn't read is asked, never today in its place."""
+        A day said that doesn't read is asked, never today in its place.
+        A zero or missing amount asks, never $0.00 saved."""
         amount = arguments.get("amount")
-        if amount is None:
+        try:
+            amount = float(amount) if amount is not None else None
+        except (TypeError, ValueError):
+            amount = None
+        if not amount or amount <= 0:  # never $0.00 (the Fable audit)
             return "I need an amount to record an expense."
         category = str(arguments.get("category", "") or "Other").strip()
         description = str(arguments.get("description", "") or "")
@@ -4188,12 +4213,17 @@ class AssistantTools:
 
     @staticmethod
     def _action_record_rental_income(context: AppContext, arguments: dict) -> str:
-        """Assistant tool `record_rental_income`: records rent received for a property. Returns the reply in words (a missing or unknown name says so, nothing changes)."""
+        """Assistant tool `record_rental_income`: records rent received for a property. Returns the reply in words (a missing or unknown name says so, nothing changes).
+        A zero or missing amount asks, never $0.00 saved."""
         property_name = str(arguments.get("property_name", "")).strip()
         if not property_name:
             return "I need a property name to record rental income."
         amount = arguments.get("amount")
-        if amount is None:
+        try:
+            amount = float(amount) if amount is not None else None
+        except (TypeError, ValueError):
+            amount = None
+        if not amount or amount <= 0:  # never $0.00 (the Fable audit)
             return "I need an amount to record rental income."
         prop, error = AssistantTools._resolve_property(context, property_name)
         if error:

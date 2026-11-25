@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1834 files, 390,896 lines; 1834 files describe themselves; 21,282 of 21,407 classes and functions are documented.
+1836 files, 391,102 lines; 1836 files describe themselves; 21,291 of 21,416 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-719 files, 203,717 lines; 10,157 of 10,236 classes and functions documented
+720 files, 203,852 lines; 10,161 of 10,240 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -614,6 +614,7 @@
 - `core/themes.py`: MIA's themes (DEC-0136, Zac 2026-11-08: "One MIA. Multiple interface experiences. Unlimited visual possibilities."). A theme is data, not code: the design tokens it changes (colours, panels, type, shape, motion, an extra backdrop layer), the material its panels are made of, and the 3D room's light. 
 - `core/tile_fetch_worker.py`: Fetches individual missing basemap tiles off the GUI thread for gui/widgets/tile_map_view.py's live pan/zoom — same "network I/O never blocks a paint/input handler" reasoning as modules/field_kit/port_scan_worker.py's PortScanWorker, but shaped as a long-lived queue-processing thread rather than a o
 - `core/today.py`: "Today" (2026-10-01): one list of what needs you today, from every app, so nobody has to open eight screens to find out. Shown at the top of Home (gui/home_dashboard.py), on the phone (`/api/today`), and by the Assistant ("what's on today?"). `week_days` is the Dashboard's Your Week (DEC-0153): toda
+- `core/tool_args.py`: A tool's arguments as he could have said them (the Fable audit, 2026-11-25: the local model fills a tool's details with placeholders, and about 65 of the tools that write records saved them: a bill named "bill reminders" for $0.00 due "null", a debt's balance set to 0, an alarm at "25:99", a sale of
 - `core/tool_loop.py`: The tool loop (DEC-0052 step 2b; docs/REASONING_PLAN.md section 3b; docs/TOOL_CALLING_RESEARCH.md R4). Before: a turn was one round; the model picked lookups, MIA said each result as it was, and nothing was combined or followed up. Now, when the model asks only to *look things up*:
 - `core/toolbox_actions.py`: The Toolbox's changes on the web (DEC-0113 canvas Toolbox, DEC-0125: alarms were set only on the PC or by voice). An alarm is set with `alarm.add` (a label, a clock time said any common way, and once / every day / weekdays weekends), switched on or off with `alarm.switch`, and taken out with `alarm.
 - `core/toolbox_calcs.py`: The Toolbox's calculators as pure math (DEC-0113 canvas Toolbox, DEC-0125: the same answer by voice, on the PC and on the phone). Ohm's law (solve() moved here from modules/toolbox/calculators/ohms_law.py, which re-exports it), Ohm's law from any two of the three, board feet and concrete volume. Uni
@@ -1017,7 +1018,7 @@
 
 ## tests/: the test suite: what each part must do
 
-706 files, 105,164 lines; 8,754 of 8,800 classes and functions documented
+707 files, 105,235 lines; 8,759 of 8,805 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1612,6 +1613,7 @@
 - `tests/test_theme_picture.py`: Appearance phase A7's first part (prompt 24 §9, DEC-0184): a theme from a picture, read in code (core/theme_picture.py), and the theme in use nudged by plain words (core/theme_design.adjust). The reference picture gives a blue glass close to Aquatic; a sunset's orange never becomes the accent (it co
 - `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell. The Theme Studio builds a theme from a few choices, refuses warni
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant.
+- `tests/test_tool_args.py`: A tool's arguments as he could have said them (core/tool_args.py, the Fable audit 2026-11-25): placeholders go, for a change a time that isn't one, a negative amount and an update's zero go, and a date in words becomes its YYYY-MM-DD; the tools the audit found saving them now ask instead.
 - `tests/test_tool_call_as_text.py`: A tool call the model writes out as its answer is never said (live sweep, 2026-11-25: '{"name": "draft_email", "parameters": {..."\$$X"...}}' reached him, invalid JSON, so it was neither caught nor retried): its opening is enough to be caught (core/llm_manager._looks_like_malformed_tool_call, so the
 - `tests/test_tool_gate.py`: The Assistant's tool gate (2026-11-10): only a tool offered this turn runs, a tool whose name reads like a lookup but changes records counts as a change (undo, screens refresh), and a change the model asks for right after a lookup that brought in outside text (a web page, a search, the inbox) is hel
 - `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop. A safety lookup worded in code is 

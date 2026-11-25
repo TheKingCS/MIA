@@ -475,6 +475,8 @@ class AssistantActionRegistry:
         What a tool changes is kept for "undo that", described by its name and
         short arguments for the lasting history (core/change_history.py).
         On a follow-up turn a lookup's "question" carries what the person just said (`_with_follow_up`).
+        Its arguments are `cleaned` first (core/tool_args.py): a placeholder ("null", "N/A"), a time that isn't one, a
+        negative amount and an update's zero are missing, never saved.
         """
         action = self._actions.get(name)
         if action is None:
@@ -493,6 +495,10 @@ class AssistantActionRegistry:
             log.info("Refused '%s' for a child account.", name)
             return ASK_A_PARENT
         arguments = _with_follow_up(action, name, arguments)
+        from core.tool_args import cleaned
+
+        # a detail he never gave is missing, never a placeholder saved (core/tool_args.py, the Fable audit)
+        arguments = cleaned(name, arguments, changes_records(name))
         # "Undo that" (core/undo_log.py): what this tool changes can be put back.
         undo = getattr(context, "undo", None)
         recording = undo is not None and changes_records(name) and name != "undo_last_change"
