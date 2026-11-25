@@ -39,6 +39,7 @@
       "get_power_status",
       "log_energy_reading",
       "power_picture",
+      "generator_runtime",
       "set_power_load",
       "power_outage",
       "size_solar"
@@ -55,6 +56,7 @@
       "get_energy": "observe",
       "get_power_status": "observe",
       "power_picture": "observe",
+      "generator_runtime": "observe",
       "set_power_load": "act_within_grant",
       "log_energy_reading": "act_within_grant",
       "energy.reading": "act_within_grant",

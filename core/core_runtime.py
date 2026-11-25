@@ -115,6 +115,7 @@ from core.outdoor_work import register_outdoor_work_actions
 from core.tax_setaside import register_tax_setaside_actions
 from core.fishing_times import register_fishing_times_actions
 from core.hen_laying import register_hen_laying_actions
+from core.homestead_sums import register_homestead_sum_actions
 from core.meat_cure import register_meat_cure_actions
 from core.solar_size import register_solar_size_actions
 from core.canning_times import register_canning_time_actions
@@ -366,7 +367,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     (core/tax_setaside.py) best_time_to_fish (core/fishing_times.py) why_hens_not_laying (core/hen_laying.py) meat_cure
     (core/meat_cure.py) size_solar (core/solar_size.py) canning_time (core/canning_times.py) rent_collected
     (core/rent_collected.py) move_calendar_event (core/calendar_move.py) the ESP32 lab bench's tools
-    (core/esp32_lab.py), start_drill (core/drills.py) and the part specs' tools (core/part_specs.py) are among them."""
+    (core/esp32_lab.py), start_drill (core/drills.py) and the part specs' tools (core/part_specs.py) are among them.
+    The homestead sums too (core/homestead_sums.py)."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -407,6 +409,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_tax_setaside_actions(registry)  # taxes to set aside on the workshop
     register_fishing_times_actions(registry)  # when to go fishing
     register_hen_laying_actions(registry)  # why the hens stopped laying
+    register_homestead_sum_actions(registry)  # water to store, generator hours, hens for eggs
     register_meat_cure_actions(registry)  # curing salt for meat
     register_solar_size_actions(registry)  # sizing solar from his use
     register_canning_time_actions(registry)  # canning times for his altitude

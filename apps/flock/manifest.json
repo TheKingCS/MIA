@@ -41,7 +41,8 @@
       "hatch_status",
       "start_broilers",
       "broilers_status",
-      "why_hens_not_laying"
+      "why_hens_not_laying",
+      "hens_for_eggs"
     ],
     "actions": [
       "flock.add",
@@ -72,7 +73,8 @@
       "start_broilers": "act_within_grant",
       "broilers_status": "observe",
       "broilers.start": "act_within_grant",
-      "why_hens_not_laying": "observe"
+      "why_hens_not_laying": "observe",
+      "hens_for_eggs": "observe"
     },
     "outside": []
   },
