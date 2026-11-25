@@ -382,13 +382,15 @@ def _action_shopping_list(context, arguments: dict) -> str:
 def _action_cut_list(context, arguments: dict) -> str:
     """Tool cut_list: the person's own parts worked out into boards and sheets to buy (core/build_calcs.custom_cuts);
     kept as a woodworking plan when asked.
-    Its own description's example sent back is no parts."""
+    Its own description's example sent back is no parts.
+    Only the example exactly: a real list with 30 in legs is his."""
     from core.build_calcs import custom_cuts
 
-    given = " ".join(str(arguments.get("parts") or "").lower().split())
-    # the description's own example sent back as his parts is no parts (live sweep, 2026-11-25: "how do I write a
-    # quote for a deck job?" got a cut list of 4 legs and 2 sides)
-    parts = [] if "4 legs at 30 in" in given and "2 sides" in given else parse_parts(str(arguments.get("parts") or ""))
+    given = re.sub(r"[^a-z0-9/ ]+", " ", str(arguments.get("parts") or "").lower())
+    # the description's own example sent back, exactly, as his parts is no parts (live sweep, 2026-11-25: "how do I
+    # write a quote for a deck job?" got a cut list of 4 legs and 2 sides); a real list with 30 in legs is his
+    example = "4 legs at 30 in 2x4 2 sides 11 1/4 x 72 in 3/4 plywood"
+    parts = [] if " ".join(given.split()) == example else parse_parts(str(arguments.get("parts") or ""))
     if not parts:
         return ("List the parts with their sizes, one per line: \"4 legs at 30 in 2x4\", \"2 sides 11 1/4 x 72 in "
                 "3/4 plywood\".")

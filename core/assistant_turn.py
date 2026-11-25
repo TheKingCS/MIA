@@ -352,7 +352,9 @@ def _weekly_reminder_reply(context, prompt: str):
     """"Remind me every Monday to check the water filter", "can you automate a reminder every Monday to ...", in code
     (live sweep, 2026-11-25: no tool was called, and the model promised a notification about the electric bill): a
     weekly event on his calendar from the next one of that weekday, through add_calendar_event (undoable). None
-    otherwise."""
+    otherwise.
+    An aside (", or is that too much?") and a time said at its end ("at 9 tonight", "at noon") come out of the
+    title."""
     from datetime import date as _date, timedelta
 
     found = _REMIND_EVERY.match(prompt.replace("’", "'"))
@@ -360,11 +362,32 @@ def _weekly_reminder_reply(context, prompt: str):
         return None
     what = (found.group("what1") or found.group("what2") or found.group("what3") or "").strip().rstrip(",")
     weekday = (found.group(2) or found.group("day2") or "").lower()
-    if not what or not weekday:
+    # an aside or a question is no part of it (the tenth review: "..., or is that too much?" had been the title)
+    what = re.sub(r",?\s+(?:or|and|but)\s+(?:is|would|should|will|do|does|can)\b.*$", "", what, flags=re.I).strip()
+    if not what or not weekday or "?" in what:
         return None
+    clock = re.search(r"\s+at\s+(noon|midnight|\d{1,2})(?::(\d{2}))?\s*(am|pm)?(?:\s+(tonight|in the (?:morning|"
+                      r"afternoon|evening)|at night))?\s*$", what, re.I)
+    if clock and not found.group("h"):  # "check the filter at 9 tonight", "at noon": the time, out of the title
+        what = what[:clock.start()].strip()
+        word, part = clock.group(1).lower(), (clock.group(4) or "").lower()
+        hour = 12 if word == "noon" else 0 if word == "midnight" else int(word)
+        if word.isdigit():
+            ap = (clock.group(3) or "").lower()
+            later = ap == "pm" or (not ap and any(w in part for w in ("tonight", "evening", "night", "afternoon")))
+            hour += 12 if later and hour < 12 else 0
+            hour = 0 if ap == "am" and hour == 12 else hour
+        if hour < 24:
+            found_time = f"{hour:02d}:{int(clock.group(2) or 0):02d}"
+        else:
+            found_time = ""
+    else:
+        found_time = ""
     today = _date.today()
     first = today + timedelta(days=(_WEEKDAYS.index(weekday) - today.weekday()) % 7)
     args = {"title": what[:1].upper() + what[1:], "date": first.isoformat(), "recurrence": "weekly"}
+    if found_time:
+        args["time"] = found_time
     if found.group("h"):
         hour, minute = int(found.group("h")), int(found.group("m") or 0)
         hour += 12 if (found.group("ap") or "").lower() == "pm" and hour < 12 else 0

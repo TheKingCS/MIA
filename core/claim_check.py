@@ -36,8 +36,9 @@ _RECORD = re.compile(r"\b(?:reminders?|alarms?|timers?|events?|calendar|appointm
 _PASSIVE = re.compile(r"\byou(?:'ve| have) been reminded\b|\b(?:reminder|alarm|event|task|appointment|note)\s+(?:is|has "
                       r"been|was|'s)\s+(?:now\s+)?(?:set|added|scheduled|created|saved|booked)\b", re.I)
 # A promise to remind or notify him is a claim by itself (nothing would remind him): "I'll remind you when it's due"
-_PROMISE = re.compile(r"\bi(?:'ll| will)\s+(?:also\s+|be sure to\s+|make sure to\s+|definitely\s+|always\s+){0,3}"
-                      r"(?:send|remind|notify|ping|alert)\s+(?:you|a notification)\b", re.I)  # "I'll also make sure to"
+_PROMISE = re.compile(r"\bi(?:'ll| will)\s+(?:also\s+|be sure to\s+|make sure to\s+|definitely\s+){0,3}"
+                      r"(?:send|remind|notify|ping|alert)\s+(?:you|a notification)\b(?!\s+(?:how|that|of|why|what)\b)",
+                      re.I)  # never "I'll always remind you how far you've come" (the tenth review)  # "I'll also make sure to"
 # Offers and questions, which claim nothing: "I can add it", "want me to set one?", "if you'd like, I'll add it"
 _OFFER = re.compile(r"\b(?:i can|i could|want me to|would you like|shall i|should i|if you(?:'d| would) like|"
                     r"just say|say the word|let me know if)\b", re.I)

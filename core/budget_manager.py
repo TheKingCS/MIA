@@ -313,7 +313,8 @@ def read_date(value: Optional[str]) -> Optional[str]:
     """Pure logic but for today. A date said as YYYY-MM-DD (or YYYY/MM/DD, a time after it allowed), "today",
     "yesterday", "last Friday", "11/20/2026" or "11-20-2026" (month first, unless the first number is over 12:
     "25/11/2026" is the 25th), "Nov 20th, 2026", "Sept 3" (the last one, Feb 29 included), as YYYY-MM-DD; None when it
-    can't be read (the ninth review: an update had moved an entry to today on words it couldn't read)."""
+    can't be read (the ninth review: an update had moved an entry to today on words it couldn't read).
+    A two-digit year is the nearer century ("99" is 1999)."""
     from datetime import timedelta
 
     raw = " ".join(str(value or "").strip().split())
@@ -337,7 +338,9 @@ def read_date(value: Optional[str]) -> Optional[str]:
     if numbers:
         first, second, year = int(numbers.group(1)), int(numbers.group(2)), numbers.group(3)
         month, day = (second, first) if first > 12 and second <= 12 else (first, second)
-        return _dated(month, day, int(year) + (2000 if year and len(year) == 2 else 0) if year else None, today)
+        if year and len(year) == 2:  # "11/20/99" is 1999, "11/20/26" 2026 (the tenth review: 2099)
+            year = str(2000 + int(year) if int(year) <= today.year % 100 + 1 else 1900 + int(year))
+        return _dated(month, day, int(year) if year else None, today)
     named = re.fullmatch(r"([a-z]+) (\d{1,2})(?:,? (\d{4}))?", words)
     if named:
         for form in ("%B", "%b"):

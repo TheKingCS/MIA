@@ -47,13 +47,15 @@ ASKS: dict[tuple, re.Pattern] = {
     # calculator, "how do I write a quote for a deck job?" a cut list)
     ("business", "biz_price"): re.compile(r"\b(?:markup|mark-up|margin|mark (?:it|them|things) up)\b"),
     ("business", "biz_terms"): re.compile(r"\b(?:write|make|put together|do|draw up)\w*\s+(?:up\s+)?(?:a\s+|an\s+)?"
-                                          r"(?:quote|estimate|bid)s?\b|\bdeposit\b.{0,20}\b(?:custom|job|work)\b"),
+                                          r"(?:quote|estimate|bid)s?\b"),
     ("carpentry", "tape"): re.compile(r"\bread\w*\s+(?:a\s+)?tape(?:\s+measure)?\b"),
     ("carpentry", "square_level"): re.compile(r"\b(?:check|tell)\w*\s+(?:if\s+)?(?:\w+\s+){0,3}(?:is\s+)?"
                                               r"(?:plumb|level|square)\b|\b3-4-5\b|\bspeed square\b"),
     ("carpentry", "circular_saw"): re.compile(r"\buse\s+(?:a\s+)?circular saw\b|\bcircular saw\s+safely\b"),
     # the flock (live sweep, 2026-11-25: "how do I know if my chickens have mites?" went to the model)
-    ("gardening", "flock_care"): re.compile(r"\b(?:mites?|lice)\b|\bfeed\w*\s+(?:my\s+|the\s+|laying\s+)*(?:hens|"
+    ("gardening", "flock_care"): re.compile(r"\b(?:mites?|lice)\b(?=.*\b(?:hens?|chickens?|flock|coop|birds?|"
+                                            r"poultry|roosts?)\b)|\b(?:hens?|chickens?|flock|coop|birds?|poultry)\b.*"
+                                            r"\b(?:mites?|lice)\b|\bfeed\w*\s+(?:my\s+|the\s+|laying\s+)*(?:hens|"
                                             r"chickens|flock|layers)\b|\b(?:protect|keep)\w*\s+(?:my\s+|the\s+)?"
                                             r"(?:hens|chickens|flock|coop)\b.{0,30}\b(?:predators?|raccoons?|foxes|"
                                             r"hawks|winter|cold|warm|safe)\b"),
@@ -74,6 +76,11 @@ NOT_ASKS = {
     ("bushcraft", "water"): re.compile(r"\b(?:tank|cistern|aquaponics|pool|hot tub|aquarium|fish|pond|well|softener|"
                                        r"heater|bath|dishwasher|radiator)s?\b"),
     ("gardening", "seed_starting"): re.compile(r"\b(?:company|business|website|money|fund|funding|round|investor)s?\b"),
+    # his own numbers are the plans' (the tenth review): "how much margin did the shop make", "the margin on my
+    # cutting boards", another store's markup; and a tax estimate is no quote
+    ("business", "biz_price"): re.compile(r"\b(?:markup|margin)\s+(?:on|did|does|this|last|was|is)\b|\bmade\b|"
+                                          r"\b(?:home depot|lowe'?s|walmart|amazon|tractor supply)\b"),
+    ("business", "biz_terms"): re.compile(r"\btax(?:es)?\b|\bcleared\b|\bbank\b"),
 }
 # A drill that practises the lesson (core/drills.py), said as the words that start it
 DRILL_FOR = {("gardening", "flock_care"): "flock", ("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list",
