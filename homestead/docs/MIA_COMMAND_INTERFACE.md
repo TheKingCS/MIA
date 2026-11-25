@@ -99,4 +99,5 @@ signed approval applies at once or waits for his press on the node differs (one 
 `humidity_max` (60-90 %, a lone limit with no band), which modules/climate_control.py already reads from
 target_overrides. Scenario `mia_command_sets_the_greenhouse_air_and_humidity`; MIA says "set the greenhouse air
 temperature maximum to 82". Irrigation intervals, light hours and modes wait until the loop reads them from an
-override.
+override. Live run the same day (main.py cycling): the air maximum 85 °F to 80 °F and back, each approved on the node
+and read back as applied.

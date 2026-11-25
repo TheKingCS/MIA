@@ -57,8 +57,15 @@ _ASK = re.compile(rf"\b(?:set|change|raise|lower|move|put|make|adjust)\b.*\bgree
 _TO = re.compile(r"\bto\s+(\d+(?:\.\d+)?)\b")
 _YES = re.compile(r"^\s*yes,? set it[.!]*\s*$")
 WORDS = {"ph_target_min": "pH minimum", "ph_target_max": "pH maximum", "ec_target_min": "EC minimum",
-         "ec_target_max": "EC maximum", "temp_min": "air temperature minimum (°F)",
-         "temp_max": "air temperature maximum (°F)", "humidity_max": "humidity maximum (%)"}
+         "ec_target_max": "EC maximum", "temp_min": "air temperature minimum",
+         "temp_max": "air temperature maximum", "humidity_max": "humidity maximum"}
+UNITS = {"ec_target_min": " uS/cm", "ec_target_max": " uS/cm", "temp_min": " °F", "temp_max": " °F",
+         "humidity_max": "%"}
+
+
+def _v(param: str, value: float) -> str:
+    """Pure logic. A value with its unit: "80 °F", "70%", "6.4"."""
+    return f"{value:g}{UNITS.get(param, '')}"
 
 
 def parse(text: str) -> Optional[tuple[str, float]]:
@@ -111,7 +118,8 @@ def _link(context):
 
 def plan(context, param: str, value, cell: str = "", get: Optional[Callable] = None) -> dict:
     """What would be sent, read fresh from the node: {param, value, cell_id, cell, current}; ActionError when it
-    can't be (no node, not a target she may set, outside the shipped limits, no such cell, the node unreadable)."""
+    can't be (no node, not a target she may set, outside the shipped limits, no such cell, the node unreadable).
+    A value outside the shipped limits is said with its unit."""
     from core.greenhouse_link import LinkError, fetch
 
     if param not in WORDS:
@@ -122,8 +130,8 @@ def plan(context, param: str, value, cell: str = "", get: Optional[Callable] = N
         raise ActionError("To what value?") from None
     limits = shipped_limits().get(param)
     if limits and not (limits["low"] <= value <= limits["high"]):
-        raise ActionError(f"The node won't take a {WORDS[param]} of {value:g}: its limits are "
-                          f"{limits['low']:g} to {limits['high']:g}.")
+        raise ActionError(f"The node won't take a {WORDS[param]} of {_v(param, value)}: its limits are "
+                          f"{_v(param, limits['low'])} to {_v(param, limits['high'])}.")
     link = _link(context)
     try:
         state = fetch(context, link, get=get)
@@ -145,9 +153,10 @@ def plan(context, param: str, value, cell: str = "", get: Optional[Callable] = N
 
 
 def say_plan(p: dict) -> str:
-    """Pure logic. The sentence he approves."""
-    return (f"Set the greenhouse's {WORDS[p['param']]} on {p['cell']} from {p['current']:g} to {p['value']:g}. The "
-            "node checks it against its own limits, and applies it or holds it for your Approve on its dashboard.")
+    """Pure logic. The sentence he approves, each value with its unit (`_v`)."""
+    return (f"Set the greenhouse's {WORDS[p['param']]} on {p['cell']} from {_v(p['param'], p['current'])} to "
+            f"{_v(p['param'], p['value'])}. The node checks it against its own limits, and applies it or holds it for "
+            "your Approve on its dashboard.")
 
 
 def _post(url: str, body: bytes, headers: dict) -> tuple[int, dict]:
@@ -170,7 +179,8 @@ def _post(url: str, body: bytes, headers: dict) -> tuple[int, dict]:
 def send(context, p: dict, approved_by: str = "", post: Optional[Callable] = None,
          get: Optional[Callable] = None) -> str:
     """Sends one planned direction to the node, signed with its key, then reads the node again and says what it
-    became there. ActionError when it can't be sent (no key for this node, not on his network, no answer)."""
+    became there. ActionError when it can't be sent (no key for this node, not on his network, no answer).
+    Values are said with their units (`_v`)."""
     from datetime import datetime
 
     from core.greenhouse_link import LinkError, fetch, own_node
@@ -200,7 +210,7 @@ def send(context, p: dict, approved_by: str = "", post: Optional[Callable] = Non
                           "Pushing the greenhouse again sends the key.")
     if status != 200:
         raise ActionError(f"The node couldn't take it ({status}).")
-    what = f"the {WORDS[p['param']]} on {p['cell']} to {p['value']:g}"
+    what = f"the {WORDS[p['param']]} on {p['cell']} to {_v(p['param'], p['value'])}"
     if answer.get("state") == "refused":
         return f"The node refused {what}: {answer.get('reason', 'no reason given')}."
     try:  # what it became there, from the node's own export
@@ -211,7 +221,8 @@ def send(context, p: dict, approved_by: str = "", post: Optional[Callable] = Non
         row = None
     outcome = (row or {}).get("outcome") or answer.get("state")
     if outcome == "applied":
-        return f"Done: the node applied {what} (it was {p['current']:g}). To set it back, ask me; it allows one change an hour."
+        return (f"Done: the node applied {what} (it was {_v(p['param'], p['current'])}). To set it back, ask me; it "
+                "allows one change an hour.")
     return (f"Sent {what}. The node is holding it for your Approve on its dashboard (and Deny works there too); "
             "I'll see when it's applied.")
 

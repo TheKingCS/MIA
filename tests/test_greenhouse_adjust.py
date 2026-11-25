@@ -9,6 +9,7 @@ node's export, and nothing sent without the node's key or outside his network.
 And the pH and EC said against their targets, read only.
 And a dropped link said plainly, nothing claimed.
 And the air temperature and humidity read from his words.
+And each value said with its unit.
 """
 
 from __future__ import annotations
@@ -122,7 +123,7 @@ def test_the_action_card_reads_the_node_fresh_and_a_refusal_is_said(linked):
     get = lambda url: json.dumps(_state()).encode()  # noqa: E731
     with patch.object(gl, "_get", get):
         card = ACTION_TYPES["greenhouse.adjust"].describe(context, {"param": "ec_target_max", "value": 1600})
-        assert "EC maximum on Pilot from 1400 to 1600" in card
+        assert "EC maximum on Pilot from 1400 uS/cm to 1600 uS/cm" in card
         p = ga.plan(context, "ec_target_max", 1600)
         said = ga.send(context, p, post=lambda *a: (200, {"state": "refused", "reason": "ec_target_max changed less "
                                                                                        "than 60 minutes ago"}))
@@ -186,3 +187,10 @@ def test_the_air_temperature_and_humidity_are_read_from_his_words():
     assert ga.parse("set the greenhouse humidity to 70") == ("humidity_max", 70.0)
     assert ga.parse("what is the greenhouse temperature") is None
     assert {"temp_min", "temp_max", "humidity_max"} <= set(ga.shipped_limits())
+
+
+def test_each_value_is_said_with_its_unit():
+    """"from 85 °F to 80 °F", "70%", and pH without one."""
+    said = ga.say_plan({"param": "temp_max", "value": 80.0, "current": 85.0, "cell": "Cell A"})
+    assert "air temperature maximum on Cell A from 85 °F to 80 °F" in said
+    assert ga._v("humidity_max", 70) == "70%" and ga._v("ph_target_min", 6.4) == "6.4"
