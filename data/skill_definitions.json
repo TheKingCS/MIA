@@ -90,6 +90,7 @@
     { "skill_id": "cooking", "name": "Cooking", "category": "Social", "icon": "🍳", "tier": 1 },
     { "skill_id": "household_management", "name": "Household Management", "category": "Social", "icon": "🏡", "tier": 2, "prerequisite_skill_ids": ["organization", "cooking"] },
     { "skill_id": "finance", "name": "Finance", "category": "Mind", "icon": "💵", "tier": 1 },
+    { "skill_id": "business", "name": "Business", "category": "Social", "icon": "🏪", "tier": 1 },
 
     { "skill_id": "carpentry", "name": "Carpentry", "category": "Construction", "icon": "🪚", "tier": 1 },
     { "skill_id": "plumbing", "name": "Plumbing", "category": "Construction", "icon": "🚿", "tier": 1 },

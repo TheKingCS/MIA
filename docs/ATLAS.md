@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1777 files, 383,983 lines; 1777 files describe themselves; 20,949 of 21,079 classes and functions are documented.
+1778 files, 384,114 lines; 1778 files describe themselves; 20,950 of 21,080 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-710 files, 199,807 lines; 10,050 of 10,136 classes and functions documented
+711 files, 199,925 lines; 10,050 of 10,136 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -132,6 +132,7 @@
 - `core/bushcraft.py`: Survival and bushcraft, a learning program on core/paths.py's method (DEC-0289; Zac, 2026-11-23: "Survival bushcraft"): priorities and the kit, fire and water, shelter and navigation. Stages of lessons with why and what to watch for, checks said, counted or read from his own records (a GPS track for
 - `core/business_actions.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C, core/business_book.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/business_book.py`: Quotes, customers, orders and the portfolio (DEC-0030 phase C): the business loop on top of crafting recipes (core/craft_recipes.py), builds (Jobs) and the workshop ledger, never beside them.
+- `core/business_path.py`: Small business basics, a learning program on core/paths.py's method (Zac's goal: "my businesses skills"; brainstorm round 13: a market-day drill): knowing your numbers, keeping the business's money apart, customers and their terms, and growing what sells. Stages of lessons with why and what to watch
 - `core/business_report.py`: Pure, Qt-free composition of a household + real estate "Business Report" HTML document — 2026-09-08, at the user's explicit request: "I want this to be something I can do business reports with my wife from." Same split as core/budget_nudges.py: this module never touches BudgetManager/RealEstateManag
 - `core/business_tagging.py`: Sorting bank transactions to the owner's businesses (2026-09-28): "auto-tagging business transactions (lawn care, rentals, homestead) to the right business entity after bank sync."
 - `core/business_use.py`: Finance #3 (2026-09-28): the business-use share of personal equipment, starting with the owner's mower ("help me with write offs for my real estate businesses with things like the mower if I do a certain amount of contracted lawn care with it").
@@ -1008,7 +1009,7 @@
 
 ## tests/: the test suite: what each part must do
 
-658 files, 102,183 lines; 8,528 of 8,572 classes and functions documented
+658 files, 102,196 lines; 8,529 of 8,573 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven

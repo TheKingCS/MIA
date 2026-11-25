@@ -12,6 +12,7 @@ through while one waits.
 The power outage drill too, named by its own words.
 The flock drill too, its extension rules kept.
 The money drill too, on Money basics.
+The market day drill too, on Small business basics.
 """
 
 from types import SimpleNamespace
@@ -69,14 +70,16 @@ def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_l
     said with its count.
     Survival has four drills now, the power outage among them.
     Gardening and homesteading has two drills now, the flock's beside the canning one.
-    Money basics is listed among them too."""
+    Money basics is listed among them too.
+    Small business basics is listed too."""
     canning = drills.reply(None, _said(), "give me a canning drill")
     assert canning.startswith("Drill: Putting up green beans.")
     assert drills.reply(None, _said(), "run a carpentry drill").startswith("Drill: Cutting a 2x6 to length.")
     beans = drills.by_id("canning_day")
     assert drills.judge(beans, 2, 1)["verdict"] == "wrong" and "pressure canner" in drills.judge(beans, 2, 1)["best"]
     listed = lab_page.hands_on()
-    assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "money", "carpentry"]
+    assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "money", "business",
+                                         "carpentry"]
     assert listed[3]["what"] == "Lessons, and 2 drills that judge each call"
     assert listed[2]["what"] == "Lessons, and 4 drills that judge each call"
 
@@ -152,3 +155,13 @@ def test_the_money_drill_keeps_the_order_of_a_cushion_and_debt_and_leaves_his_mo
     assert drills.judge(bill, 4, 2)["verdict"] == "wrong"
     for words in ("what is my budget?", "how much debt do I have?"):
         assert drills.reply(None, _said(), words) is None, words
+
+
+def test_the_market_day_drill_keeps_price_records_and_refunds_right_and_leaves_his_business_questions_alone():
+    """"Run a business drill" starts market day; below cost is wrong, the starting change counted is best, takings
+    mixed with groceries wrong; "how is my business doing?" isn't a drill."""
+    assert drills.reply(None, _said(), "run a business drill").startswith("Drill: Market day.")
+    market = drills.by_id("market_day")
+    assert market.program == "business" and drills.judge(market, 1, 0)["verdict"] == "wrong"
+    assert drills.judge(market, 2, 0)["verdict"] == "best" and drills.judge(market, 4, 1)["verdict"] == "wrong"
+    assert drills.reply(None, _said(), "how is my business doing?") is None

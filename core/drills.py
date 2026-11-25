@@ -8,7 +8,8 @@ it in a simulator first). A drill puts him in a situation and asks a few decisio
 best, fine or wrong, with why, written from the course's own sources (a survival drill from core/bushcraft.py's:
 US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA, and for a power outage the CDC on generators and
 carbon monoxide and the USDA on food in a fridge and freezer without power; the flock from land-grant extension
-backyard poultry guides; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); canning from core/gardening_path.py's, the USDA Complete
+backyard poultry guides; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); a market day from
+core/business_path.py's (the SBA's guides); canning from core/gardening_path.py's, the USDA Complete
 Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
 logic; nothing kept.
 
@@ -305,6 +306,39 @@ DRILLS: tuple = (
                   "The highest rate costs you the most every month; unless you're working the snowball on purpose, "
                   "start there.")),
           ), "money_cushion"),
+    Drill("market_day", "business", "Market day",
+          "A Saturday at the farmers' market with your goods. You've worked out each one's full cost, your time "
+          "included, and you have a cash box and a card reader.",
+          (
+              _q("A customer says the stall across the way sells the same for less. What do you do?",
+                 ("Drop your price below your cost to make the sale", "wrong",
+                  "A sale under your cost loses money every time; busy isn't the same as earning."),
+                 ("Keep your price, and say what makes yours worth it", "best",
+                  "Your price covers your cost, your time and a margin; tell them why yours is the one to buy."),
+                 ("Knock a little off, staying above your cost", "fine",
+                  "It can make the sale, but haggle every time and the floor becomes your ceiling.")),
+              _q("Before the market opens, what about the cash box?",
+                 ("Count the starting change and write it down", "best",
+                  "With the starting amount noted, the day's cash sales are the difference at the end."),
+                 ("Just bring whatever's in it", "wrong",
+                  "Without knowing what you started with, you can't tell what you sold or if anything's missing."),
+                 ("Leave it at home and take cards only", "fine",
+                  "Simpler, but you'll lose the customers who carry cash.")),
+              _q("A customer brings back something that broke after a week. What now?",
+                 ("Follow your stated policy, and make it right quickly and kindly", "best",
+                  "A stated policy, applied quickly, keeps a customer who'll come back and tell others."),
+                 ("Argue it was their fault", "wrong",
+                  "Even if it was, arguing in front of the stall costs you more than the item."),
+                 ("Refund anyone anything, no questions", "fine",
+                  "Generous, but without a policy it's hard to keep fair or affordable.")),
+              _q("At the end of the day, what do you do with the takings?",
+                 ("Record every sale and expense today, and put the money in the business account", "best",
+                  "Recorded today and kept apart, the numbers show what's really earning, and tax time is adding up."),
+                 ("Use the cash for the week's groceries", "wrong",
+                  "Mixed with the household money, the business's numbers stop meaning anything."),
+                 ("Note the total and sort the details out at the end of the year", "wrong",
+                  "Records rebuilt from memory miss things; the day it happens is when it's easy.")),
+          ), "biz_price"),
     Drill("first_cut", "carpentry", "Cutting a 2x6 to length",
           "You're cutting a 2x6 to length with a circular saw, the board across two sawhorses, the cut near the "
           "middle.",
@@ -355,6 +389,7 @@ def by_id(drill_id: str) -> Optional[Drill]:
 ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "generator", "power"),
         "flock_night": ("flock", "chicken", "chickens", "hens", "coop", "poultry"),
         "surprise_bill": ("money", "finance", "budget", "surprise bill", "debt"),
+        "market_day": ("market day", "market", "business", "farmers market", "pricing"),
         "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw")}
 
 
