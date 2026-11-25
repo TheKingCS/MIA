@@ -2,8 +2,24 @@
 
 *The two-minute "where are we right now?" for every collaborator
 (`docs/COLLABORATION.md`). Claude rewrites it at the end of each
-session. Last updated: 2026-11-24, late (Opus at the PC: one intelligence, the homestead's brain, the hub and the
-engineer, the game layer), by claude.*
+session. Last updated: 2026-11-24, night (Opus at the PC: one intelligence, the homestead's brain, the hub and the
+engineer, the game layer, brainstorm round 12), by claude.*
+
+**Night 2026-11-24: brainstorm round 12, asked-for answers** (`docs/future/JARVIS_BRAINSTORM.md`, round 12). Built,
+each checked against the PC's model with its neighbours: the greenhouse node's harvests kept once each, counted in his
+produce, the Grower achievements and "what has the garden produced this year?" (fish apart;
+core/greenhouse_link.keep_harvests); "is it safe to work outside?" with the NWS heat index and wind chill from the
+hourly forecast (core/outdoor_work.py, the tool work_outside_wind_chill_heat_index: the name had to say both before
+the model found it); "should I water the tomatoes?" reaching the watering check by crop name; "will the pipes
+freeze?" at a 20 °F night, in "get me ready for the storm" too (asked only: as part of the morning message is his
+say); "how much should I set aside for taxes?" on the workshop's profit (core/tax_setaside.py: self-employment tax in
+code, income tax at 12% and 22%, never called his bracket, since the model passed one unasked); "when's the best time
+to fish?" (core/fishing_times.py: dawn, dusk and the solunar periods from the sun and moon, offline, said as
+tradition), with a catch no longer keeping a length copied from its weight; the moon tonight for his town
+(core/sun_moon.moon_tonight); and "why did my hens stop laying?" (core/hen_laying.py: the day's light against 14
+hours and the day it's back, molt, age, feed, changes). Library quirks found by tests: astral reads the moon's height
+in UTC whatever the zone, its phase runs 0 to 28, and sun times in UTC put a summer sunset on the next day.
+tests/test_living_system's model-switch test failed once in a full run and passed every time since (K-0472).
 
 **Evening 2026-11-24: the game layer** (Zac: missions and achievements tied together, cards that congratulate him,
 rewards that are a structure, a song, a recipe or a skill, and smart music; `docs/future/GAME_LAYER_PLAN.md`).
