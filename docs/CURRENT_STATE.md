@@ -33,6 +33,11 @@ on every board) and saved builds (core/bench_builds.py, Mark It Built takes his 
 (core/self_knowledge.py: a decision or spec named is described from its records, and one nothing builds yet is said
 as a plan, in code: the Fix-It Log's top issue); the speech-to-text model downloaded on the PC (MIA can hear now) and
 the PC check checking voice for real. Brainstorm round 13 is in docs/future/JARVIS_BRAINSTORM.md. 8380 passing.
+Then: the flock (a lesson and a drill on the homesteading course); Money basics (core/money_path.py, a Finance skill)
+and Small business basics (core/business_path.py, a Business skill), each with a drill; ESP32 bench designs that
+report their reading to MIA as a sensor over Wi-Fi (bench_designs.connected); a third and a fourth independent review,
+every finding fixed (bench designs only as a request, her designs only proper names, parts by whole word, planning
+words never a drill, a course's id only as the whole subject). 8391 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the

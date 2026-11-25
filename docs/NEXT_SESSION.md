@@ -21,6 +21,9 @@ Then: "build me a motion light" and saved builds on My Bench; MIA describes her 
 Protocol as a plan); MIA can hear (the Vosk model is in voice_models/ on the PC). At the PC: say "can you hear me?"
 with the mic; on My Bench, "build me a tank level gauge", Put It On The Bench, Save This Build. Next ideas: brainstorm
 round 13 (the greenhouse node as the ESP32 capstone, drills for the flock and money, a part from a photo).
+Since: the flock, money and business courses and drills are built; bench designs can report to MIA (needs MIA's
+server listening on the home network: Phone Access with server.host 0.0.0.0 and port 8765 open, his call). Left from
+round 13: the greenhouse capstone, a part from a photo, Wokwi or QEMU (his say).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
