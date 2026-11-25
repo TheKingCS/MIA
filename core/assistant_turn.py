@@ -1362,7 +1362,8 @@ def _garbled(content: str, context=None) -> bool:
     The name may sit anywhere in the object; a fenced block counts only when it names one of her tools, a made-up
     snake_case name only unfenced with parameters or arguments.
     A function definition he asked for (a "description" beside its parameters) is an answer.
-    A description inside the arguments is still a call (`_defines`)."""
+    A description inside the arguments is still a call (`_defines`).
+    Inside qwen's <tool_call> tags too, and one of hers named with nothing else ({"name": "list_alarms"})."""
     from core.llm_manager import _looks_like_malformed_tool_call
 
     try:
@@ -1372,7 +1373,9 @@ def _garbled(content: str, context=None) -> bool:
         return False
     if context is None:
         return True
-    text = str(content or "").strip()
+    from core.llm_manager import untagged
+
+    text = untagged(content)  # inside qwen's <tool_call> tags too (the Fable review)
     fenced = re.fullmatch(r"```(?:json)?\s*(.+?)\s*```", text, re.S)
     if text.startswith("```") and not fenced:
         return False  # a fenced example with words around it is an explanation
@@ -1380,9 +1383,12 @@ def _garbled(content: str, context=None) -> bool:
     if not text.lstrip().startswith("{"):
         return False
     named = re.search(r'"(?:name|function|tool)"\s*:\s*"([\w.]+)"', text)  # wherever it sits (the fourteenth review)
+    tools = {str(t).lower() for t in (getattr(getattr(context, "assistant_actions", None), "_actions", {}) or {})}
+    if named and named.group(1).lower() in tools and re.fullmatch(r'\{\s*"(?:name|function|tool)"\s*:\s*"[\w.]+"\s*\}',
+                                                                  text.strip()):
+        return True  # {"name": "list_alarms"}: one of hers, called with nothing (the Fable review)
     if not named or not re.search(r'"(?:parameters|arguments|args|input)"\s*:', text):
         return False  # {"name": "Zac", "age": 30} is an answer
-    tools = {str(t).lower() for t in (getattr(getattr(context, "assistant_actions", None), "_actions", {}) or {})}
     name = named.group(1)
     if name.lower() in tools:
         return True  # one of hers, in any case

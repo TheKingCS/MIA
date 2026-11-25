@@ -9,7 +9,8 @@ server's HTTP API (https://github.com/ollama/ollama/blob/main/docs/api.md),
 and a second, `OpenAIBackend` (2026-10-07), for llama.cpp's server on
 the phone (`llm.backend: "openai"`). The server's address is written once
 (`DEFAULT_SERVER`) and every module asks `local_server_url()` for it; embeddings
-and vision go through `OllamaBackend.embed` and `see` (LS-08). When the chosen
+and vision go through `OllamaBackend.embed` and `see` (LS-08). A tool call the model writes out as text, inside
+qwen's <tool_call> tags or not (`untagged`), is asked again without tools (`_looks_like_malformed_tool_call`). When the chosen
 model fails or times out, the first smaller one the server has (`llm.fallback_models`,
 `OllamaBackend.installed`, `with_model`) answers and `level` names it, and the processor when none of it sits on
 the graphics card (`on_gpu`, REQ-HW-012); every call
@@ -750,11 +751,19 @@ _CALL_SHAPE = re.compile(r'^\s*(?:```(?:json)?\s*)?\{\s*"(?:name|function|tool)"
                          r'"+(?:parameters|arguments|args|input)"\s*:')
 
 
+def untagged(content) -> str:
+    """Pure logic. The reply without qwen's own <tool_call> tags around it (the Fable review, 2026-11-25: a call
+    written inside them had been neither retried nor replaced)."""
+    text = str(content or "").strip()
+    found = re.fullmatch(r"<tool_call>\s*(.*?)\s*(?:</tool_call>)?", text, re.S)
+    return found.group(1).strip() if found else text
+
+
 def _looks_like_malformed_tool_call(content: str) -> bool:
     """True if `content` looks like a hallucinated tool-call JSON blob rather than a real answer: JSON with a name,
     or a tool call's own opening even when the rest doesn't parse (`_CALL_SHAPE`, a doubled quote before its key
-    too)."""
-    content = str(content or "").strip()
+    too); inside <tool_call> tags too (`untagged`)."""
+    content = untagged(content)
     if _CALL_SHAPE.match(content):
         return True
     if not content.startswith("{"):

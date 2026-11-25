@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1826 files, 389,804 lines; 1826 files describe themselves; 21,235 of 21,361 classes and functions are documented.
+1827 files, 389,923 lines; 1827 files describe themselves; 21,240 of 21,367 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-717 files, 203,105 lines; 10,148 of 10,229 classes and functions documented
+717 files, 203,156 lines; 10,149 of 10,230 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1015,7 +1015,7 @@
 
 ## tests/: the test suite: what each part must do
 
-700 files, 104,684 lines; 8,716 of 8,761 classes and functions documented
+701 files, 104,752 lines; 8,720 of 8,766 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1199,6 +1199,7 @@
 - `tests/test_expedition_manager.py`: Unit tests for core.expedition_manager. Isolates _DATA_DIR _EXPEDITIONS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths).
 - `tests/test_expedition_sync.py`: Unit tests for core.expedition_sync. Isolates _DATA_DIR/_TRIP_PHOTOS_DIR into a tmp_path scratch area (same monkeypatch pattern as test_backup_manager.py's isolated_paths) so these tests never touch the real data/ or trip_photos/ directories.
 - `tests/test_expeditions_module.py`: Unit tests for modules.expeditions.module's pure functions, same style as tests/test_navigation_module.py (no Qt event loop, no fixtures).
+- `tests/test_fable_review_claims.py`: The Fable review of the claim check (2026-11-25): a true reply is never replaced with "I didn't set that up": a negation, a question back, how it works, words drafted for him and a story stay; a real claim of a change no tool made is still caught. *(1 undocumented)*
 - `tests/test_fable_review_floor.py`: The Fable review of the emergency floor and teaching (2026-11-25): a figure of speech or a past clause takes out only its own words (its real emergencies are in tests/test_first_aid_floor_never_misses.py); a follow-up naming an emergency the floor's last reply didn't cover is answered; freezer burn,
 - `tests/test_fact_owners.py`: One owner per fact (DEC-0052): a retired copy of a fact never comes back, and every owner named in core/fact_owners.py exists.
 - `tests/test_failure_log.py`: The Fix-It Log (DEC-0049): where MIA stumbles is recorded (privately, redacted), grouped into issues, turned into a fix report with a test to write first, and what the person confirms she learns herself.

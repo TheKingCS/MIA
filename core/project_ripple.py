@@ -152,8 +152,9 @@ _LEAD = re.compile(r"^(?:(?:to|on)\s+)?(?:(?:build|put up|set up|start|add|insta
 
 
 def _fact(sheet, kind: str, text: str, source: str) -> None:
-    """Adds one line to the sheet (question_plans' kinds)."""
-    sheet.add(kind, text, source)
+    """Adds one line to the sheet (question_plans' kinds), in his own terms (`to_you`): the sheet in plain words is
+    said to him as it is (the Fable review, 2026-11-25: "from rain or from him", "the build takes him")."""
+    sheet.add(kind, to_you(text), source)
 
 
 def _same_words(name: str, project: str) -> bool:
@@ -487,7 +488,10 @@ _YOU = ((r"\bHis gauge\b", "Your gauge"), (r"\buntil he says his\b", "until you 
         (r"\bwhen he says\b", "when you say"), (r"\bHe can say\b", "You can say"),
         (r"\bthe build takes him\b", "the build takes you"), (r"\bfrom rain or from him\b", "from rain or from you"),
         (r"\bhis week\b", "your week"), (r"\bhe's planning\b", "you're planning"),
-        (r"\bhe confirms\b", "you confirm"), (r"\bat his size\b", "at your size"))
+        (r"\bhe confirms\b", "you confirm"), (r"\bat his size\b", "at your size"),
+        (r"\bHe hasn't\b", "You haven't"), (r"\bhe hasn't\b", "you haven't"), (r"\bhe has\b", "you have"),
+        (r"\bHe has\b", "You have"), (r"\bhis own\b", "your own"), (r"\bfor him\b", "for you"),
+        (r"\btakes him\b", "takes you"), (r"\bhe'd\b", "you'd"), (r"\bhe wants\b", "you want"))
 
 
 def to_you(text: str) -> str:

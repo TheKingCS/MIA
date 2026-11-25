@@ -8,6 +8,7 @@
   "tests/test_change_history.py": 1,
   "tests/test_debt_missions.py": 6,
   "tests/test_evening_wrap.py": 1,
+  "tests/test_fable_review_claims.py": 1,
   "tests/test_feed_runway.py": 1,
   "tests/test_garden_week.py": 1,
   "tests/test_hobby_programs.py": 1,

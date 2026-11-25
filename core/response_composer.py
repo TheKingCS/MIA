@@ -44,7 +44,10 @@ BUDGET = {GLASSES: 25, PHONE: None, PC: None}  # the phone and PC show it whole;
 REWRITE_SECONDS = 6.0  # a glasses answer can't wait longer than this for its spoken version
 REWRITE_LIMIT = 40  # a rewrite longer than this missed the point; use the answer's own sentences
 
-FILLER = re.compile(r"^(certainly|sure thing|sure|of course|absolutely|great question|i'?d be happy to help)[!,.:]*\s+", re.I)
+# never the word that carries the answer: "Absolutely not. That wire is live." keeps its "Absolutely not" (the Fable
+# review, 2026-11-25)
+FILLER = re.compile(r"^(certainly|sure thing|sure|of course|absolutely|great question|i'?d be happy to help)(?! not\b)"
+                    r"[!,.:]*\s+", re.I)
 # A last sentence that only invites more talk, which a model adds by habit. An offer to do something ("Want me
 # to open it?") isn't one: a "yes" to that acts (core/conversation_state.py), so it's never in this list.
 _INVITES = (r"let me know|anything else|feel free|is there anything|just ask|"
@@ -93,28 +96,35 @@ OFFERING = re.compile(r"\b(?:" + _INVITES + r")\b", re.I)
 
 
 def without_repeats(text: str) -> str:
-    """Pure logic. The answer with a paragraph or sentence it already said dropped (the live sweep, 2026-11-25: the
-    model said "The project you're planning: goats..." five times over). Short ones ("Yes.") and list lines stay."""
-    def norm(said):
-        """Its words, lowercased."""
-        return " ".join(re.findall(r"[a-z0-9']+", said.lower()))
+    """Pure logic. The answer with a paragraph or sentence said again right after itself dropped (the live sweep,
+    2026-11-25: the model said "The project you're planning: goats..." five times over). Short ones ("Yes."), list
+    lines, a repeat later on (a refrain, a recipe's second heading) and anything with code stay."""
+    if "```" in str(text or "") or re.search(r"^(?: {4}|\t)\S", str(text or ""), re.M):
+        return text  # code is never touched: a line repeated in code is meant (the Fable review, 2026-11-25)
 
-    seen, said, paragraphs = set(), set(), []  # paragraphs and sentences apart: a one-sentence paragraph stays
+    def norm(said):
+        """Its words and signs, lowercased, so "2 + 2 = 4" and "2 * 2 = 4" stay two."""
+        return " ".join(str(said).lower().split())
+
+    # only a repeat back to back, of something long enough to be a sentence: a refrain, a recipe's second
+    # "Ingredients:", a step said again later and a short "Yes." are meant (the Fable review)
+    paragraphs = []
     for paragraph in re.split(r"\n\s*\n", text or ""):
         key = norm(paragraph)
-        if key and key in seen:
+        if paragraphs and len(key) >= 20 and key == norm(paragraphs[-1]):
             continue
-        seen.add(key)
         if "\n" in paragraph or re.match(r"\s*(?:[-*\u2022]|\d+[.)])\s", paragraph):
             paragraphs.append(paragraph)  # a list's lines stay as they are
             continue
         kept = []
         for sentence in SENTENCE.findall(paragraph) or [paragraph]:
-            key = norm(sentence)
-            if len(key) > 20 and key in said:
-                continue
-            said.add(key)
             kept.append(sentence)
+            for k in range(1, len(kept) // 2 + 1):  # a sentence or a run of them said again right after itself
+                block = norm(" ".join(kept[-k:]))
+                long_one = max(len(norm(s)) for s in kept[-k:]) >= 20  # never "One. One." or "Yes. Yes."
+                if long_one and block == norm(" ".join(kept[-2 * k:-k])):
+                    del kept[-k:]
+                    break
         paragraphs.append("".join(kept).strip())
     return "\n\n".join(p for p in paragraphs if p.strip())
 

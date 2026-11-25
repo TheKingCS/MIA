@@ -41,7 +41,17 @@ _PROMISE = re.compile(r"\bi(?:'ll| will)\s+(?:also\s+|be sure to\s+|make sure to
                       re.I)  # never "I'll always remind you how far you've come" (the tenth review)  # "I'll also make sure to"
 # Offers and questions, which claim nothing: "I can add it", "want me to set one?", "if you'd like, I'll add it"
 _OFFER = re.compile(r"\b(?:i can|i could|want me to|would you like|shall i|should i|if you(?:'d| would) like|"
-                    r"just say|say the word|let me know if)\b", re.I)
+                    r"just say|say the word|let me know if|tell me (?:when|what time|the time|which|what day))\b", re.I)
+# What isn't a claim of hers (the Fable review, 2026-11-25): a negation ("No alarm is set, so there's nothing to
+# cancel"), a condition or how it works ("when you ask, I set a reminder", "I need a time before a reminder is set")
+_NOT_DONE = re.compile(r"\b(?:no|not|isn'?t|aren'?t|wasn'?t|nothing|never|none|there'?s no)\b(?! (?:problem|worries)\b)|"
+                       r"^\s*(?:if|when|whenever|once|after|before|until)\b|\b(?:when|whenever|if|once) you\b|"
+                       r"\bbefore (?:a|an|the|your|it)\b|\buntil (?:a|an|the|you)\b", re.I)
+# Words of his or someone's, not hers: anything in quotes ("I've scheduled the repair", drafted for him)
+_QUOTED = re.compile(r"\"[^\"]*\"|\u201c[^\u201d]*\u201d")
+# A turn whose answer is words for him to use, or a story, claims nothing of hers
+_WRITING = re.compile(r"\b(?:write|draft|compose|word|reply to|respond to|text|message|email|say to|tell (?:him|her|"
+                      r"them)|story|poem|joke|song|example|pretend|role-?play)\b", re.I)
 
 HONEST = ("I didn't set that up: I couldn't do it from what you said, so nothing was added. Say it with what it is and "
           "when, like \"add check the oil to my calendar on Saturday\", and I'll put it there.")
@@ -59,9 +69,12 @@ _ASKED = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+|can you\s+|cou
 def _claiming(sentence: str, asked: bool = True) -> bool:
     """Pure logic. Whether one sentence says it did something to one of his records (`_RECORD`), and isn't an offer
     or a question, or promises to remind or notify him (`_PROMISE`); the "it's set" forms only when he asked for a
-    change (`asked`)."""
+    change (`asked`). Words in quotes, a negation and a condition (`_NOT_DONE`) claim nothing."""
+    sentence = _QUOTED.sub(" ", sentence)  # words in quotes are someone's, never hers
     if _OFFER.search(sentence) or sentence.strip().endswith("?"):
         return False
+    if _NOT_DONE.search(sentence):
+        return False  # "No alarm is set", "when you ask, I set a reminder": nothing claimed
     first_person = bool(_DONE.search(sentence)) and not _PASSIVE.search(sentence) and bool(_RECORD.search(sentence))
     return first_person or bool(_PROMISE.search(sentence)) or (asked and bool(_PASSIVE.search(sentence)))
 
@@ -77,12 +90,20 @@ def honest(context, prompt: str, text: str, keep: bool = True) -> str:
     HONEST; else the reply without its claiming sentences ("how are you?" answered, then "I'll remind you when
     they're due" with no reminder set), or HONEST when nothing would be left. The claim is kept in the Fix-It Log as
     `claimed_done` (never failing the turn), unless `keep` is False (a personal, journal or off-the-record turn: the
-    seventh review)."""
+    seventh review).
+    Words drafted for him or a story are left alone, a question back keeps what she found, and a negation, a
+    condition or words in quotes are never a claim (the Fable review, 2026-11-25)."""
     asked = bool(_ASKED.search(prompt or ""))
+    if _WRITING.search(prompt or "") and not asked:
+        return text  # words drafted for him, or a story: never hers to check (the Fable review)
+    if asked and any(s.strip().endswith("?") for s in _SENTENCES.split(str(text or ""))):
+        asked = False  # a question back ("Which one?") means nothing was done, and what she found stays
     if not claims_done(text, asked):
         return text
     kept = [s for s in _SENTENCES.split(str(text or "")) if s.strip() and not _claiming(s, asked)]
-    said = HONEST if asked or not kept else " ".join(kept)
+    # HONEST only when he asked for a change: otherwise a reply whose every sentence claims is said as nothing
+    # done, never as a refusal of something he didn't ask (the Fable review)
+    said = HONEST if asked else (" ".join(kept) if kept else "I haven't set anything up.")
     book = getattr(context, "failures", None) if keep else None
     if book is not None:
         try:
