@@ -1,7 +1,8 @@
 """What a conversation is about (DEC-0052 step 4, core/conversation_state.py):
 a short follow-up goes back to the last question plan, with both questions; a follow-up to a tool's answer brings
 that question's tools, and the lookup it runs gets the follow-up's words, never a change.
-A follow-up that names no tool settles on its question's, called by code when the retry answers in text."""
+A follow-up that names no tool settles on its question's, called by code when the retry answers in text.
+A follow-up to a tool's answer is the model's unless a plan is in progress, and a leaked role label is taken off."""
 
 from types import SimpleNamespace
 
@@ -220,3 +221,30 @@ def test_a_follow_ups_lookup_is_called_by_code_when_the_retry_answers_in_text():
     cs.set_turn_follow_up("x")
     again = settle_on_named_tool("work_outside_wind_chill_heat_index", [], tools, first, lambda m, t: ChatReply(content="no", tool_calls=[]))
     assert [c.name for c in again.tool_calls] == ["get_weather"]  # not a follow-up: the model's choice stays
+
+
+
+def test_a_follow_up_to_a_tool_answer_is_the_models_unless_a_plan_is_in_progress(monkeypatch):
+    """After a tool's answer, "what about today?" is that tool's follow-up; with a fresh question plan, it's the plan's;
+    a message that isn't a follow-up is neither."""
+    from types import SimpleNamespace
+
+    from core import conversation_state as cs
+
+    monkeypatch.setattr(cs, "followed_question", lambda context, conversation, prompt: "Is it too cold outside?")
+    conv = SimpleNamespace(conversation_id="c-tool", messages=[])
+    assert cs.follows_a_tool(None, conv, "What about today?") == "Is it too cold outside?"
+    assert cs.follows_a_tool(None, conv, "Tell me everything you know about the history of Rome please") is None
+    cs.remember_plan(conv, "today", "what's on today?")
+    assert cs.follows_a_tool(None, conv, "What about today?") is None
+    cs.forget(conv)
+
+
+
+def test_a_role_label_the_model_leaks_is_taken_off_its_reply():
+    """"assistant" and a blank line at the start goes; the word inside a sentence stays."""
+    from core.llm_manager import without_role_label
+
+    assert without_role_label("assistant\n\n25 minutes for quarts.") == "25 minutes for quarts."
+    assert without_role_label("Assistant:\n25 minutes.") == "25 minutes."
+    assert without_role_label("Your assistant pump runs 24 hours.") == "Your assistant pump runs 24 hours."

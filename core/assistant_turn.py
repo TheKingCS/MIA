@@ -103,12 +103,15 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     stops?", core/service_map.py), what they did ("I put away the
     dishes", core/did_it.py), or a question one lookup answers, run by
     code, no model; None when a question plan will answer (it comes
-    first, as in run_assistant_turn) or it's for the model. Never in a
+    first, as in run_assistant_turn), it follows up on a tool's answer
+    (core/conversation_state.follows_a_tool), or it's for the model. Never in a
     personal mode or the journal, except "stop", "stop everything" and
     "carry on" (core/stop.py), asked first in every conversation, as in
     a turn."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
+    from core.conversation_state import set_turn_follow_up
 
+    set_turn_follow_up(prompt)  # a new turn: the last one's follow-up words never reach this one's lookups
     try:
         from core import lockdown
 
@@ -147,12 +150,14 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         did = None
     if did is not None:
         return did
-    from core.conversation_state import follow_up
+    from core.conversation_state import follow_up, follows_a_tool
     from core.question_plans import match
 
     if _about_her(prompt):  # her own records answer it, in the model's turn
         return None
     if match(context, prompt) is not None or follow_up(conversation, prompt) is not None:
+        return None
+    if follows_a_tool(context, conversation, prompt):  # a follow-up to a tool's answer is the model's, with that tool
         return None
     return _direct_lookup(context, prompt)
 
@@ -248,11 +253,16 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     (core/stop.py), in code, first, then mode switches and the safety floor (before anything is stored or the model asked), then
     show-off, "look at this" (opens Look with the camera), "take me to the garage" (an area's hub, DEC-0130), "show me where it says that" (the library article her last answer came from, core/show_source.py), "show my license" (the ID wallet), "summarize this conversation" and "export this chat" (core/conversation_export.py), a taught skill being shown, started or answered (core/taught_skills.take_turn), a job being walked through (core/trade_actions.py), the greenhouse and its hardware (DEC-0150), what MIA runs on (core/service_map.py), plain-word commands, what they did (core/did_it.py), question plans and direct lookups (none in a personal conversation), then the
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
+    Each turn starts by clearing the last one's follow-up note, and a follow-up to a tool's answer skips the
+    question plans and code answers for the model with that tool (core/conversation_state.follows_a_tool).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
     from core import lockdown
+    from core.conversation_state import follows_a_tool, set_turn_follow_up
 
+    set_turn_follow_up(prompt)  # a new turn: the last one's follow-up words never reach this one's lookups
+    tool_follow = follows_a_tool(context, conversation, prompt)
     stopped = lockdown.handle(context, prompt) or stop.handle(context, prompt)
     if stopped is not None:
         add_message(conversation, "user", prompt)
@@ -356,13 +366,14 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             from core.question_plans import answer as plan_answer
 
             # A question about MIA herself isn't one about the person's records (core/self_knowledge.py).
-            planned = None if _about_her(prompt) else plan_answer(context, conversation, prompt)
+            # A follow-up to a tool's answer is the model's, with that tool (core/conversation_state.follows_a_tool).
+            planned = None if (_about_her(prompt) or tool_follow) else plan_answer(context, conversation, prompt)
             if planned is not None:
                 said, _sheet = planned
                 add_message(conversation, "assistant", said)
                 return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [said],
                                      route=f"plan: {_sheet.plan}")
-            quick = _direct_lookup(context, prompt)
+            quick = None if tool_follow else _direct_lookup(context, prompt)
         if quick is not None:
             add_message(conversation, "assistant", quick)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [quick], route="code")

@@ -95,11 +95,14 @@ Ollama reload it, so set `llm.num_ctx` to what the server loads with
 because the PC's model server wasn't up): `LLMManager._ask` starts `ollama serve` with no window,
 waits up to WAKE_WAIT seconds and tries the turn once more. Only for Ollama on this machine, at most
 once every WAKE_COOLDOWN seconds, and never when `llm.start_ollama` is false.
+A role label the model leaks at the start of a reply ("assistant" and a blank line) is taken off
+(`without_role_label`).
 """
 
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -137,6 +140,16 @@ class ChatReply:
     """What a chat turn returned: the model's text and any tools it asked for."""
     content: str
     tool_calls: list[ToolCall] = field(default_factory=list)
+
+
+_ROLE_LABEL = re.compile(r"^\s*(?:assistant|mia)\s*:?\s*\n+", re.IGNORECASE)
+
+
+def without_role_label(text: str) -> str:
+    """Pure logic. The model's text without a role label it leaked at the start ("assistant" and a blank line: qwen2.5
+    after reading a tool's result, the live check through run_assistant_turn, 2026-11-24); a word "assistant" inside
+    a sentence stays."""
+    return _ROLE_LABEL.sub("", text or "", count=1)
 
 
 class LLMBackend(Protocol):
@@ -292,7 +305,9 @@ class OllamaBackend:
             raise LLMUnavailableError(f"Ollama response missing 'response' field: {body}") from exc
 
     def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
-        """One chat turn with tools (/api/chat, not streamed): the reply's text and tool calls. LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable."""
+        """One chat turn with tools (/api/chat, not streamed): the reply's text and tool calls. LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable.
+        Its text comes without a role label the model leaked (`without_role_label`).
+        """
         payload_dict = {
             "model": self._model,
             "messages": messages,
@@ -330,7 +345,7 @@ class OllamaBackend:
             ToolCall(name=call["function"]["name"], arguments=call["function"].get("arguments", {}))
             for call in message.get("tool_calls", []) or []
         ]
-        return ChatReply(content=message.get("content", ""), tool_calls=tool_calls)
+        return ChatReply(content=without_role_label(message.get("content", "")), tool_calls=tool_calls)
 
     def installed(self, timeout: float = 3.0) -> list[str]:
         """The models this Ollama server has (/api/tags), by name; [] when it can't be asked."""
@@ -419,6 +434,7 @@ class OpenAIBackend:
     def chat(self, messages: list[dict], tools: list[dict], timeout: float) -> ChatReply:
         """One chat turn with tools (/v1/chat/completions): the reply's text and tool calls (arguments sent as a JSON
         string are parsed; unreadable ones become empty). LLMUnavailableError when the server can't be reached, answers with an error, or sends back something unreadable.
+        Its text comes without a role label the model leaked (`without_role_label`).
         """
         payload = {"model": self._model, "messages": messages, "temperature": self._temperature, "stream": False}
         if tools:
@@ -438,7 +454,7 @@ class OpenAIBackend:
                 except json.JSONDecodeError:
                     arguments = {}
             tool_calls.append(ToolCall(name=function.get("name", ""), arguments=arguments))
-        return ChatReply(content=message.get("content") or "", tool_calls=tool_calls)
+        return ChatReply(content=without_role_label(message.get("content") or ""), tool_calls=tool_calls)
 
     def is_available(self, timeout: float) -> bool:
         """Whether the server answers (/health)."""

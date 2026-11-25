@@ -354,6 +354,13 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Real conversations, checked through the whole turn** (no decision): *fixed 2026-11-24.* Run through
+  run_assistant_turn (question plans and code answers first, as on the phone), three things the tool-only checks
+  missed: the last turn's follow-up words reached a later code answer ("what's the weather Saturday?" got the canning
+  follow-up's words: now cleared at every turn's start); a follow-up to a tool's answer went to a question plan its
+  words matched ("what about today?" got the day's agenda: now it's the model's, with that tool, unless a plan is in
+  progress); and the model began replies after a tool with "assistant" and a blank line (now taken off where every
+  reply is read, core/llm_manager.without_role_label). Debts and the weekend plan kept their own follow-ups.
 - **The weather for a day he names** (no decision): *built 2026-11-24 (core/weather.days_meant, say_days).* "What's
   the weather Saturday?", "this weekend", "the day after tomorrow", "this week", and "and the day after?" as a
   follow-up, from the week's forecast MIA already keeps (it only ever said today and tomorrow); still answered in code.

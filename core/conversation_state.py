@@ -31,6 +31,8 @@ core/assistant_chat.named_tool, settle_on_named_tool), called by code when the m
 
 Not yet (the rest of section 5): which single record "it" means across
 any turn, and open questions MIA asked.
+A follow-up to a tool's answer outside a plan conversation is the model's, never a plan its words match
+(`follows_a_tool`).
 """
 
 from __future__ import annotations
@@ -179,6 +181,16 @@ def turn_follow_up() -> Optional[tuple]:
     if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
         return None
     return _turn["prompt"], _turn["words"]
+
+
+def follows_a_tool(context, conversation, prompt: str) -> Optional[str]:
+    """The tool question a short follow-up leans on, when no question plan is in progress in this conversation (a plan's
+    own follow-ups go back to it: `follow_up`): then the follow-up is the model's, with that question's tools, never a
+    plan its words happen to match ("what about today?" after "is it too cold to work outside tomorrow?" isn't the
+    day's agenda; live check through run_assistant_turn, 2026-11-24). None otherwise."""
+    if not looks_like_follow_up(prompt) or follow_up(conversation, prompt) is not None:
+        return None
+    return followed_question(context, conversation, prompt)
 
 
 def follow_up_question(prompt: str, follows: str) -> str:
