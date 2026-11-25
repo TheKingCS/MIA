@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1828 files, 390,271 lines; 1828 files describe themselves; 21,259 of 21,384 classes and functions are documented.
+1830 files, 390,463 lines; 1830 files describe themselves; 21,264 of 21,389 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-717 files, 203,309 lines; 10,153 of 10,232 classes and functions documented
+718 files, 203,456 lines; 10,154 of 10,233 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -256,6 +256,7 @@
 - `core/first_account.py`: Making the first account on a device (2026-10-07, DEC-0019 Phase 2): the phone app opens to "create your account" (name, email, password, country, what you want MIA to help with) instead of making a person called "You". Only when no account here has a password yet: after that, people sign in, and mo
 - `core/first_aid_floor.py`: A floor for emergencies happening now (Jarvis brainstorm 4.2; Zac, 2026-11-23: "the ultimate tool offline and online for survival skills"), the same idea as core/safety_floor.py: a deterministic check before the model, so the first words he gets in an emergency never wait on a model that may be slow
 - `core/first_boot.py`: The first time a person meets MIA (slice 2 of docs/GLASSES_FIRST_BOOT_PLAN.md, Zac's brief of 2026-10-29): she doesn't launch, she awakens. This keeps how far each person has got, so the sequence can be left and picked up again on any device, and writes the words she says, so a screen only plays the
+- `core/fishing_path.py`: Fishing basics, a learning program on core/paths.py's method (Zac's goal, 2026-11-25: "knowledgeable and integrated with and about my hobbies"; fishing is one of his own, docs/VISION.md, and the live sweeps found her guessing at hook sizes): the knots and the hooks, rigs and where fish hold, then ha
 - `core/fishing_times.py`: "When's the best time to fish?" (Jarvis brainstorm, round 12; fishing is his, docs/VISION.md): the day's (or the week's) fishing windows for his town (core/weather.place), worked out offline from the sun and the moon (`astral`, as core/sun_moon.py) and beside what his own catch log says (core/catch_
 - `core/fitness_actions.py`: What the fitness screens and plain-word commands change (DEC-0020, H-0026), as action kinds: proposed, approved, recorded, undoable, and credited to the person (core/actions.py). Each logs into the person's fitness store (core/fitness_manager.py) and then brings the fitness missions up to date (core
 - `core/fitness_manager.py`: A person's fitness plan and what they log against it (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md, Muse's H-0026): weigh-ins and their trend, what they ate and its nutrition, timed skill practice (handstand holds in seconds), and milestones. Personal (core/personal_data.py PERSONAL_STORES): each person's
@@ -1015,7 +1016,7 @@
 
 ## tests/: the test suite: what each part must do
 
-702 files, 104,947 lines; 8,735 of 8,781 classes and functions documented
+703 files, 104,992 lines; 8,739 of 8,785 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1216,6 +1217,7 @@
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_aid_floor_never_misses.py`: Every real emergency phrasing the reviews found (2026-11-25, the sixth to ninth) reaches the emergency floor (core/first_aid_floor.detect). Narrowing its words to quiet a false alarm had twice silenced real ones ("grandma fell off the horse and isn't breathing", "dad has collapsed", "she choked at s
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
+- `tests/test_fishing_path.py`: Fishing basics (core/fishing_path.py, 2026-11-25): the course is registered with its stages and checks; its counted checks read his own catch log (a catch, a species); "what size hook for bass?" and "how do I tie a palomar knot?" are answered from its lessons, never a wall hook or the fish tank.
 - `tests/test_fishing_times.py`: "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a new or full moon, the week's best days, his own log's best time, a
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
 - `tests/test_fitness_missions.py`: The fitness plan as missions (core/fitness_missions.py, DEC-0020, H-0026): made once per day and week from the plan, kept in step with the logs (the logs are the truth), ticked through the logs, completing themselves, and letting a missed day go quietly (DEC-0014). Placeholder plan values.

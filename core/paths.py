@@ -148,7 +148,8 @@ def register(program: Program) -> Program:
 def _builtins() -> None:
     """Imports the modules that register built-in programs: guitar, carpentry, and his hobbies' (DEC-0289).
     Build With ESP32 too (core/esp32_path.py, the first interactive lab course), and Build With Arduino
-    (core/arduino_path.py), Money basics (core/money_path.py) and Small business basics (core/business_path.py)."""
+    (core/arduino_path.py), Money basics (core/money_path.py), Small business basics (core/business_path.py) and
+    Fishing basics (core/fishing_path.py)."""
     import core.guitar  # noqa: F401
     import core.carpentry  # noqa: F401  (Trade Master's first apprentice program, DEC-0149)
     import core.woodworking  # noqa: F401  (his hobbies' programs, DEC-0289)
@@ -159,6 +160,7 @@ def _builtins() -> None:
     import core.arduino_path  # noqa: F401  (Build With Arduino, for his Mega and Nanos, 2026-11-25)
     import core.money_path  # noqa: F401  (Money basics, 2026-11-25)
     import core.business_path  # noqa: F401  (Small business basics, 2026-11-25)
+    import core.fishing_path  # noqa: F401  (Fishing basics, 2026-11-25)
 
 
 def program_of(context, path_id: str) -> Optional[Program]:
@@ -635,6 +637,13 @@ def _theirs(entry_profile, context) -> bool:
     return entry_profile in (None, person_id(context))
 
 
+def _catches(context, since: str) -> list:
+    """His catches since a date (core/catch_log.catches, by when each was logged)."""
+    from core.catch_log import catches
+
+    return [c for c in catches(context) if str(c.get("at") or "")[:10] >= str(since or "")[:10]]
+
+
 def _workouts(context, since: str) -> Optional[list]:
     """The person's workouts since a date, or None without a workout store."""
     store = getattr(context, "workout", None)
@@ -676,6 +685,9 @@ SOURCES: dict[str, Source] = {
     "meals_cooked": Source("meals you logged as made", "meals", lambda c, since: _count(_meals(c, since))),
     "recipes_cooked": Source("different recipes you've made", "recipes", lambda c, since: (
         None if (m := _meals(c, since)) is None else float(len({x.recipe_id for x in m})))),
+    "catches": Source("fish you've logged", "catches", lambda c, since: float(len(_catches(c, since)))),
+    "species": Source("species you've logged", "species", lambda c, since: float(len(
+        {str(x.get("species") or "").lower() for x in _catches(c, since) if x.get("species")}))),
 }
 
 

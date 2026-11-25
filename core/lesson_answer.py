@@ -59,10 +59,24 @@ ASKS: dict[tuple, re.Pattern] = {
                                             r"chickens|flock|layers)\b|\b(?:protect|keep)\w*\s+(?:my\s+|the\s+)?"
                                             r"(?:hens|chickens|flock|coop)\b.{0,30}\b(?:predators?|raccoons?|foxes|"
                                             r"hawks|winter|cold|warm|safe)\b"),
+    # fishing (the live sweeps: hook sizes had been guessed)
+    ("fishing", "hooks"): re.compile(r"\bhook sizes?\b|\bsize (?:of )?hooks?\b|\b(?:what|which) (?:size )?hooks?\b|"
+                                     r"\bhooks?\b.{0,25}\b(?:bass|trout|catfish|crappie|bluegill|panfish|sunfish|perch|"
+                                     r"walleye|pike|carp|worms?|minnows?|plastics?)\b|\bcircle hooks?\b"),
+    ("fishing", "knots"): re.compile(r"\b(?:tie|tying)\b.{0,25}\b(?:hooks?|lures?|swivels?|fishing line|jig)\b|"
+                                     r"\b(?:clinch|palomar)\b|\bfishing knots?\b|\bknot\b.{0,20}\b(?:braid|"
+                                     r"fluoro\w*|mono\w*|hooks?|lures?)\b"),
+    ("fishing", "rigs"): re.compile(r"\b(?:texas|carolina|bobber|bottom|drop shot|slip bobber)\s+rigs?\b|"
+                                    r"\brig\w*\b.{0,25}\b(?:bass|catfish|crappie|bluegill|worms?|bobber)\b"),
+    ("fishing", "release"): re.compile(r"\bcatch and release\b|\brelease\w*\s+(?:a\s+|the\s+)?(?:fish|bass|trout)\b|"
+                                       r"\bunhook\w*\b|\bget (?:a|the) hook out\b"),
+    ("fishing", "cleaning"): re.compile(r"\b(?:clean|fillet|gut|scale)\w*\s+(?:a\s+|the\s+|my\s+|these\s+)?"
+                                        r"(?:fish|bass|trout|crappie|bluegill|catfish|perch|walleye|panfish|sunfish)\b"),
     ("gardening", "seed_starting"): re.compile(r"\bstart\w*\s+(?:my\s+|the\s+)?(?:\w+\s+)?seeds?\b|\bseeds?\s+"
                                                r"(?:indoors|inside)\b"),
 }
-_HOWTO = re.compile(r"\b(?:how (?:do|should|would|can|could) (?:i|you|one|we)|how to|what'?s the (?:best|right|safest) "
+_HOWTO = re.compile(r"\b(?:what size|which size|what hook|which hook|what knot|which knot|what(?:'s| is) the best knot|"
+                    r"how (?:do|should|would|can|could) (?:i|you|one|we)|how to|what'?s the (?:best|right|safest) "
                     r"way to|what is the (?:best|right|safest) way to|best way to|"
                     r"teach me (?:how )?to|show me how to|what(?:'s| is) a good|what should i (?:make|build) "
                     r"(?:as|for) (?:a|my)|what(?:'s| is) (?:the|a) (?:right |good |best |usual |typical |fair )?"
@@ -86,6 +100,9 @@ NOT_ASKS = {
     ("business", "biz_price"): re.compile(r"\b(?:markup|margin)\s+(?:on|did|does|this|last|was|is)\b|\bmade\b|"
                                           r"\bmargin of (?:safety|error)\b|"
                                           r"\b(?:home depot|lowe'?s|walmart|amazon|tractor supply)\b"),
+    ("fishing", "hooks"): re.compile(r"\bhooks? (?:for|on) (?:the |my |a )?(?:wall|garage|tools?|towels?|coats?|"
+                                     r"pictures?|hanging|ceiling|shed|keys|hats?|bags?|trailer|chains?)\b|\bhook up\b"),
+    ("fishing", "cleaning"): re.compile(r"\bfish ?tank\b|\baquarium\b|\baquaponics\b"),
     ("business", "biz_terms"): re.compile(r"\btax(?:es)?\b|\bcleared\b|\bbank\b|\btweets?\b|\bquote (?:a |the )?"
                                           r"(?:verse|passage|text|line|source)\b"),
 }
