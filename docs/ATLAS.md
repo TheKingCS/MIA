@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1840 files, 391,819 lines; 1840 files describe themselves; 21,318 of 21,443 classes and functions are documented.
+1841 files, 391,897 lines; 1841 files describe themselves; 21,321 of 21,446 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-722 files, 204,394 lines; 10,177 of 10,256 classes and functions documented
+722 files, 204,437 lines; 10,178 of 10,257 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1020,7 +1020,7 @@
 
 ## tests/: the test suite: what each part must do
 
-709 files, 105,410 lines; 8,770 of 8,816 classes and functions documented
+710 files, 105,445 lines; 8,772 of 8,818 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1727,6 +1727,7 @@
 - `tests/test_workshop_module.py`: Unit tests for modules.workshop.module's pure formatting logic — no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test. format_component_row() covers Components (the original tab); format_material_row()/format_job_row() format_product_row()/format_revenue_row()/fo
 - `tests/test_world_intel.py`: World Intelligence, phase W1 (DEC-0170; core/world_intel.py, core/world_sources.py, core/world_intel_actions.py, core/web_world_intel.py): a watch's words are matched phrase by phrase; the same find is kept once however it's linked; a run reads each source through its kind's adapter and records one 
 - `tests/test_world_map.py`: The world map with fog of war (DEC-0028): finished trips, arrivals, photos with GPS and "I'm Here" clear tiles; waypoints nobody has reached stay in the fog; new ground earns achievements and XP, and the closest one not earned is shown next.
+- `tests/test_yesterday_recalled.py`: "What did I tell you yesterday?" (brainstorm round 15, 2026-11-25): yesterday's kept conversations, summarised, never only their titles; a day with nothing kept says so; no day named lists the newest as before.
 - `tests/test_your_data.py`: Your Data (core/your_data.py, docs/SECURITY.md step 8): every file in the person's folder listed with what it is, how many records and whether it's sealed (DEC-0126), never the temporary or set-aside copies; records counted for lists, objects of lists and JSON lines; her latest answers with the tool
 - `tests/test_your_data_and_undo.py`: Accounts stage 5 (2026-10-01): export and delete your account (core/account_data.py), "undo that" (core/undo_log.py), "why did you tell me that?" / "stop telling me about ..." (core/message_reasons.py), and the setup checker (core/system_check.py).
 - `tests/test_youtube_music.py`: YouTube in Music (core/youtube_music.py, core/youtube_actions.py): links read to their video id, YouTube's embedded player only, a search only with his key and only his scrubbed words sent, songs saved as links (never a file) that playlists hold and a library scan never removes, and MIA's pick by vo

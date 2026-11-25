@@ -45,9 +45,48 @@ def _app_status(context, arguments: dict) -> str:
     return status_summary(context)
 
 
+def _yesterday(context, words: str):
+    """What he talked about with her yesterday (or the day his words name): each kept conversation that day,
+    summarised (core/conversation_export.summary_of: the model's four headings, or what he asked when there's no
+    model), the two newest; None when his words name no day."""
+    import re
+    from datetime import date, timedelta
+
+    from core.budget_manager import read_date
+    from core.conversation_export import kept, summary_of
+
+    said = str(words or "").lower()
+    if re.search(r"\b(?:yesterday|last night)\b", said):
+        day = (date.today() - timedelta(days=1)).isoformat()
+    else:
+        named = re.search(r"\b(?:on |last )?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", said)
+        day = read_date("last " + named.group(1)) if named else None
+    if not day:
+        return None
+    manager = getattr(context, "conversations", None)
+    if manager is None:
+        return "I don't keep conversations on this MIA."
+    that_day = [c for c in manager.all_conversations()
+                if any(str(getattr(m, "timestamp", "") or "")[:10] == day for m in kept(c))]
+    if not that_day:
+        return f"Nothing's kept from {day}: we didn't talk then, or it was off the record."
+    parts = []
+    for c in that_day[:2]:
+        text = summary_of(context, c).get("text") or ""
+        parts.append(text.strip())
+    more = f" ({len(that_day) - 2} more that day on the chat page's History.)" if len(that_day) > 2 else ""
+    return f"From {day}:\n\n" + "\n\n".join(parts) + more
+
+
 def _past(context, arguments: dict) -> str:
-    """Tool list_past_conversations: the newest kept conversations (five), each with when and how it began."""
+    """Tool list_past_conversations: the newest kept conversations (five), each with when and how it began; asked
+    about yesterday or a day ("what did I tell you yesterday?"), that day's conversations summarised (`_yesterday`,
+    brainstorm round 15)."""
     from core.web_conversations import history
+
+    recalled = _yesterday(context, str(arguments.get("question") or ""))
+    if recalled is not None:
+        return recalled
 
     page = history(context)
     rows = page.get("conversations") or []
@@ -96,7 +135,9 @@ def _sensors(context, arguments: dict) -> str:
 
 def register_screen_tools(registry) -> None:
     """Registers look_up_online, get_app_status, list_past_conversations, find_in_conversations and list_sensors.
-    list_past_conversations is reached by "do you remember what I told you" too."""
+    list_past_conversations is reached by "do you remember what I told you" too.
+    list_past_conversations is given his words, so "yesterday" or a day named is that day's conversations
+    summarised."""
     registry.register(AssistantAction(
         name="look_up_online", domain="system",
         description=("Look something up online through the person's own search engine, when they ask you to search "
@@ -123,9 +164,11 @@ def register_screen_tools(registry) -> None:
     ))
     registry.register(AssistantAction(
         name="list_past_conversations", domain="system",
-        description="The person's past conversations with MIA that were kept, newest first.",
-        parameters={"type": "object", "properties": {}, "required": []},
-        handler=_past,
+        description="The person's past conversations with MIA that were kept, newest first; or what they talked about "
+                    "yesterday or on a day they name, summarised.",
+        parameters={"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
+                    "required": []},
+        handler=_past, prompt_arg="question",
         trigger_phrases=("past conversations", "our conversations", "previous conversations", "chat history",
                          "conversation history", "what have we talked about", "what did we talk about",
                          "remember what i told you", "what did i tell you", "what i told you yesterday",
