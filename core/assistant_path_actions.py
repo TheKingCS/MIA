@@ -23,6 +23,7 @@ sent anywhere.
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from core import paths
@@ -35,16 +36,24 @@ def _book(context) -> Optional[paths.PathBook]:
 
 def _which(context, book: paths.PathBook, words: str) -> Optional[paths.Program]:
     """The path the words mean among those started (or the only one started); None when the words name a course
-    that isn't started (`_ask_which` then says so)."""
+    that isn't started (`_ask_which` then says so), unless only by words a started course uses for itself."""
     started = [paths.program_of(context, p) for p in book.started()]
     started = [p for p in started if p is not None]
     if len(started) == 1 and not words:
         return started[0]
     found = paths.find_program(context, words) if words else None
     if found is not None:
-        # a course he named that isn't started is never swapped for the one that is (live check, 2026-11-25: "teach me
-        # small business basics" taught Money basics' first lesson)
-        return found if book.path(found.id) is not None else None
+        if book.path(found.id) is not None:
+            return found
+        # a course he named by its name that isn't started is never swapped for the one that is (live check,
+        # 2026-11-25: "teach me small business basics" taught Money basics' first lesson); but words a started course
+        # uses for itself stay its ("woodworking basics" with Carpentry started: the fifth review)
+        text = f" {words.lower()} "
+        if found.name.lower() not in text:
+            own = [p for p in started if any(re.search(rf"\b{re.escape(w)}\b", text) for w in p.words)]
+            if len(own) == 1:
+                return own[0]
+        return None
     return started[0] if len(started) == 1 else None
 
 
@@ -159,13 +168,14 @@ def _find_check(program: paths.Program, book: paths.PathBook, words: str) -> Opt
 def _action_check(context, arguments: dict) -> str:
     """Tool learning_check: a counted or said check passed or not; a recorded one read from the person's records; one
     a verifier checks points to the page.
-    A course named that isn't started is said as not started."""
+    A course named that isn't started is said as not started.
+    Asked again with the same words its course was looked for by."""
     book = _book(context)
     if book is None:
         return "Learning paths aren't on this MIA."
     program = _which(context, book, str(arguments.get("path") or arguments.get("check") or ""))
-    if program is None:
-        return _ask_which(context, book, str(arguments.get("path") or ""))
+    if program is None:  # the same words as `_which` had (the fifth review: "Which one? Carpentry." for a check)
+        return _ask_which(context, book, str(arguments.get("path") or arguments.get("check") or ""))
     check = _find_check(program, book, str(arguments.get("check") or ""))
     if check is None:
         return "Which check? " + paths.next_step(book, program)

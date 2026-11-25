@@ -6,6 +6,7 @@ The ESP32 course's capstone, the greenhouse's safety brain (core/esp32_path.py s
 `_watchdog`): a watchdog that goes safe on its own after 15 seconds without a heartbeat, refuses a dose while safe or
 mid-dose, recovers on a heartbeat, and stays stopped after BOOT whatever comes next; its checks judged from what the
 board said, its sketch never blocking, and an LED, never a real pump.
+A stop by hand says MIA STOP alone: MIA FALLBACK is the quiet's.
 """
 
 from core import esp32_sim as sim
@@ -36,8 +37,9 @@ def test_the_sketch_never_blocks_and_starts_the_pump_off():
 
 
 def test_quiet_makes_it_go_safe_and_a_heartbeat_brings_it_back():
+    """15 seconds without hb: MIA FALLBACK; hb after it: MIA RECOVERED, and a dose runs again."""
     said = _said(sim.simulate("watchdog", GOOD_LED, {"heartbeats": [1, 17], "doses": [17.5]}, 20))
-    assert said.index("MIA FALLBACK 1 silence") < said.index("MIA HEARTBEAT 2") < said.index("MIA RECOVERED")
+    assert said.index("MIA FALLBACK 1") < said.index("MIA HEARTBEAT 2") < said.index("MIA RECOVERED")
     assert "MIA DOSE 1" in said  # after recovering, a dose runs again
 
 
@@ -48,20 +50,22 @@ def test_a_dose_is_refused_while_safe_and_while_one_is_running():
 
 
 def test_a_stop_by_hand_is_never_undone_by_a_heartbeat():
+    """BOOT: MIA STOP alone (never a FALLBACK, the quiet's), no RECOVERED after it, and the pump left off."""
     result = sim.simulate("watchdog", GOOD_LED, {"heartbeats": [1, 3, 5], "doses": [2.5], "presses": [2.8]}, 8)
     said = _said(result)
-    assert said.index("MIA STOP 1") < said.index("MIA FALLBACK 1 stop")
+    assert "MIA STOP 1" in said and not any(l.startswith("MIA FALLBACK") for l in said)
     assert "MIA RECOVERED" not in said
     pump = [o["led"] for o in result["outputs"] if "led" in o]
     assert pump[-1] == 0.0  # the dose it cut short left the pump off
 
 
 def test_the_lab_shown_passes_both_checks_and_the_board_text_is_judged():
+    """The lab as shown passes both checks in the simulator; MIA FALLBACK passes the quiet's from the board's text."""
     result = sim.simulate("watchdog")
     assert all(c["would_pass"] for c in result["checks"])
     stop, fallback = {c.id: c for c in checks_of("watchdog")}["esp_stop"], \
         {c.id: c for c in checks_of("watchdog")}["esp_fallback"]
-    assert judge(fallback, "MIA SAFE_START\nMIA FALLBACK 1 silence\n")[0]
+    assert judge(fallback, "MIA SAFE_START\nMIA FALLBACK 1\n")[0]
     assert not judge(stop, "MIA SAFE_START\nMIA HEARTBEAT 1\n")[0]
 
 

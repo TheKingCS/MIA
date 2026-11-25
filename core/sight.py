@@ -191,11 +191,12 @@ def _part_note(context, said: str, question: str) -> str:
     """An electronics part the photo shows, tied to what MIA knows (brainstorm round 13: "a part from a photo"): when
     the answer names a part she has a spec for (core/part_specs.named_spec), its pins and limits, said as "if it's"
     (a photo can be wrong); when he asked about a part she has no spec for, how to have its specs looked up. "" when
-    it isn't about a part."""
+    it isn't about a part.
+    Only a model number counts there (`models_only`): a push mower is no push button."""
     from core import part_specs
 
     try:
-        spec = part_specs.named_spec(context, said)
+        spec = part_specs.named_spec(context, said, models_only=True)
     except Exception:
         log.exception("Sight: couldn't match the part to a spec")
         spec = None

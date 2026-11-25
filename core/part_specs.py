@@ -341,14 +341,36 @@ def _import_tool(context, arguments: dict) -> str:
     return f"{card.summary}. It's waiting for your yes: press Approve, or say \"approve it\"."
 
 
-def named_spec(context, words: str) -> Optional[Spec]:
-    """Pure logic, with his specs. The spec his words name, by its id or model ("HC-SR04", "bme280"), or None."""
-    said = re.sub(r"[^a-z0-9]+", "", str(words or "").lower())
+def _model_at(text: str, model: str) -> Optional[int]:
+    """Pure logic. Where a model number stands whole in the text, its parts joined or not ("HC-SR04", "hc sr04",
+    "hcsr04"; never inside a longer word), or None."""
+    pattern = r"(?<![a-z0-9])" + r"[\s_-]?".join(re.escape(ch) for ch in model) + r"(?![a-z0-9])"
+    found = re.search(pattern, text)
+    return found.start() if found else None
+
+
+def named_spec(context, words: str, models_only: bool = False) -> Optional[Spec]:
+    """Pure logic, with his specs. The spec his words name, or None: by a model number with a digit in it, standing
+    whole ("HC-SR04", "bme280", "1-channel"); or, unless `models_only` (a photo's answer, core/sight.py: "a push mower"
+    is no push button), by its whole name or id as words ("the buzzer", "a push button"). When several are named, the
+    first in the words ("a DHT11, or possibly a DHT22" is the DHT11: the fifth review)."""
+    text = " ".join(str(words or "").lower().split())
+    best: Optional[tuple] = None
     for spec in book(context).all().values():
-        model = re.sub(r"[^a-z0-9]+", "", spec.name.lower().split(" ")[0])
-        if len(model) >= 4 and (model in said or spec.id.replace("_", "") in said):
-            return spec
-    return None
+        at = None
+        for model in (re.sub(r"[^a-z0-9]+", "", spec.name.lower().split(" ")[0]), re.sub(r"[^a-z0-9]+", "", spec.id)):
+            if len(model) >= 4 and re.search(r"\d", model):
+                where = _model_at(text, model)
+                if where is not None and (at is None or where < at):
+                    at = where
+        if at is None and not models_only:
+            for phrase in (spec.name.lower(), spec.id.replace("_", " ")):
+                found = re.search(rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])", text)
+                if found and (at is None or found.start() < at):
+                    at = found.start()
+        if at is not None and (best is None or at < best[0]):
+            best = (at, spec)
+    return best[1] if best else None
 
 
 def _list_tool(context, arguments: dict) -> str:

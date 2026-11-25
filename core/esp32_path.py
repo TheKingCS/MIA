@@ -320,12 +320,12 @@ bool safe = false, stopped = false, dosing = false;
 int heartbeats = 0, doses = 0, fallbacks = 0;
 String line = "";
 
-void goSafe(const char* why) {
+void goSafe() {               // the quiet: no heartbeat for SILENCE_MS
   digitalWrite(PUMP, LOW);   // a dosing pump's safe state is always off
   dosing = false;
   safe = true;
   fallbacks++;
-  Serial.printf("MIA FALLBACK %d %s\\n", fallbacks, why);
+  Serial.printf("MIA FALLBACK %d\\n", fallbacks);
 }
 
 void handle(String said) {
@@ -366,12 +366,13 @@ void loop() {
     dosing = false;
     Serial.printf("MIA DOSED %d\\n", doses);
   }
-  if (!safe && millis() - lastHeard >= SILENCE_MS) goSafe("silence");
+  if (!safe && millis() - lastHeard >= SILENCE_MS) goSafe();
   if (!stopped && digitalRead(STOP_BUTTON) == LOW) {   // a stop by hand is only undone by hand (EN restarts it)
     stopped = true;
+    safe = true;
+    digitalWrite(PUMP, LOW);
+    dosing = false;
     Serial.println("MIA STOP 1");
-    if (!safe) goSafe("stop");
-    else { digitalWrite(PUMP, LOW); dosing = false; }
   }
 }
 """,

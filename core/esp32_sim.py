@@ -706,7 +706,9 @@ def reply(context, conversation, text: str) -> Optional[str]:
     the shed?" stays the plans'). None when the words aren't for it.
     A lab of either board course named as one starts it. A lab named with "simulate" runs it in the simulator
     (`_simulate_tool`), and with a why ("why does the watchdog lab refuse a dose?") is answered from its own lesson
-    (`_ask_about`), not a check's result."""
+    (`_ask_about`), not a check's result.
+    "Simulate" only with the lab named right after it, never "simulator"; a why never one for a check, an upload or
+    what it prints (`_NOT_WHY`)."""
     from core import paths
 
     said = " ".join(str(text or "").lower().replace("’", "'").split())
@@ -721,11 +723,11 @@ def reply(context, conversation, text: str) -> Optional[str]:
                       for course, circuits in COURSE_CIRCUITS.items()
                       for stage in paths.program_of(context, course).stages for lesson in stage.lessons
                       if lesson.id in circuits)
-    if names_a_lab and _BUILD_VERB.search(said) and not re.search(r"\b(flash|upload|simulat\w*|print|check)\b", said):
+    if names_a_lab and _BUILD_VERB.search(said) and not re.search(r"\b(flash|upload|simulat(?:e|es|ing)|print|check)\b", said):
         return _build_tool(context, {"question": said})
-    if names_a_lab and re.search(r"\bsimulat\w*\b", said) and not re.search(r"\b(flash|upload)\b", said):
+    if names_a_lab and _SIMULATE.search(said) and not re.search(r"\b(flash|upload)\b", said):
         return _simulate_tool(context, {"question": said})  # live check, 2026-11-25: the model described it from memory
-    if names_a_lab and _WHY.search(said) and not re.search(r"\b(check|checks|pass|passed|fail|failed|flash)\b", said):
+    if names_a_lab and _WHY.search(said) and not _NOT_WHY.search(said):
         return _ask_about(context, said)
     left = _FILLER.sub(" ", _STEP_WORD.sub(" ", re.sub(r"[^\w' ]+", " ", said))).split()
     if _STEP_WORD.search(said) and not left and _last_was_a_step(conversation):
@@ -733,7 +735,12 @@ def reply(context, conversation, text: str) -> Optional[str]:
     return None
 
 
-_WHY = re.compile(r"\b(why|how come|explain|what does|what's the point|what is the point|what's it for)\b")
+_WHY = re.compile(r"\b(why|how come|explain|what's the point|what is the point|what's it for)\b")
+# A why that's another tool's (the fifth review): a check, a flash or upload, what it prints (simulate_lab's)
+_NOT_WHY = re.compile(r"\b(checks?|checking|pass\w*|fail\w*|flash\w*|upload\w*|print\w*|output|serial monitor say)\b")
+# "simulate the pot lab", never "simulator" ("wire the pot lab in the simulator" is building along) or a lab named
+# far from it ("simulate a day in the greenhouse like the web lab")
+_SIMULATE = re.compile(r"\bsimulat(?:e|es|ing)\s+(?:the\s+|my\s+)?(?:[\w']+\s+){0,2}lab\b")
 
 
 def _ask_about(context, said: str) -> Optional[str]:
@@ -902,7 +909,9 @@ def _watchdog(inputs: dict, seconds: float, on: float, off: float) -> tuple:
     """Pure logic. The watchdog lab's sketch over `seconds`: ([(t, line)], [(t, {output: value})]) from the heartbeats,
     doses and BOOT presses (each a list of times), as the sketch does it: a dose pulses the pump for one second, 15
     seconds without a heartbeat goes safe (the pump off, doses refused), a heartbeat recovers it, and BOOT stops it for
-    good (a heartbeat never undoes it). `on` and `off` are the LED's brightness with the pump on and off."""
+    good (a heartbeat never undoes it), saying only MIA STOP (MIA FALLBACK is the quiet's alone, so BOOT can't pass
+    the quiet's check: the fifth review); a dose asked for just as one ends is refused as busy, as the sketch, reading
+    serial first, does. `on` and `off` are the LED's brightness with the pump on and off."""
     def times(key: str) -> list:
         """The input's times within the run, as numbers."""
         out = []
@@ -922,14 +931,16 @@ def _watchdog(inputs: dict, seconds: float, on: float, off: float) -> tuple:
     heartbeats = doses = fallbacks = 0
     for t, what in events:
         quiet_at = heard + 15.0 if not safe else None
-        if dose_end is not None and dose_end <= t and (quiet_at is None or dose_end <= quiet_at):
+        # the sketch reads serial before it ends a dose, so a dose asked for just as one ends is refused as busy
+        ends = dose_end is not None and (dose_end < t or (dose_end == t and what != "dose"))
+        if ends and (quiet_at is None or dose_end <= quiet_at):
             lines.append((dose_end, f"MIA DOSED {doses}"))
             outs.append((dose_end, {"onboard": 0.0, "led": off}))
             dose_end = None
         if quiet_at is not None and quiet_at <= t:
             fallbacks += 1
             safe, dose_end = True, None
-            lines.append((quiet_at, f"MIA FALLBACK {fallbacks} silence"))
+            lines.append((quiet_at, f"MIA FALLBACK {fallbacks}"))
             outs.append((quiet_at, {"onboard": 0.0, "led": off}))
         if what == "hb":
             heard, heartbeats = t, heartbeats + 1
@@ -946,11 +957,8 @@ def _watchdog(inputs: dict, seconds: float, on: float, off: float) -> tuple:
                 lines.append((t, f"MIA DOSE {doses}"))
                 outs.append((t, {"onboard": 1.0, "led": on}))
         elif what == "stop" and not stopped:
-            stopped, dose_end = True, None
+            stopped, safe, dose_end = True, True, None  # safe, but never a FALLBACK: that's the quiet's alone
             lines.append((t, "MIA STOP 1"))
-            if not safe:
-                safe, fallbacks = True, fallbacks + 1
-                lines.append((t, f"MIA FALLBACK {fallbacks} stop"))
             outs.append((t, {"onboard": 0.0, "led": off}))
     return lines, outs
 
