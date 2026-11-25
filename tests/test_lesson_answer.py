@@ -7,6 +7,7 @@ water from a creek, a chisel, seeds indoors, a tape measure, a first woodworking
 and what to watch for, with a drill to practise it and how to start a course he hasn't; never a when, a watering
 question or a project for his business. Also the sweep's plan fixes: a beginner project, a survival how-to and his
 net worth are never his projects', the project picture's or the products', and "The Dungeon." is taken off an answer.
+And the business's how-tos (markup, writing a quote) are its course's, his own product's price and margin the plans'.
 """
 
 from types import SimpleNamespace
@@ -51,3 +52,15 @@ def test_the_sweeps_plan_fixes_hold():
     sheet = SimpleNamespace(facts=[SimpleNamespace(source="the Dungeon (their job)")])
     assert plans.without_source_label("The Dungeon. A good first project is a box.", sheet) == "A good first project is a box."
     assert plans.without_source_label("The Dungeon was cleared this week.", sheet) == "The Dungeon was cleared this week."
+
+
+def test_the_business_how_tos_find_its_lessons_and_leave_his_own_numbers_to_the_plans(tmp_path):
+    """Markup and writing a quote are the business course's lessons, with how to do it with MIA; what he should
+    charge for a product of his, or his own margin, stays the product plans' (worked from his records)."""
+    assert la.find("What's the markup I should use for my woodworking?") == ("business", "biz_price")
+    assert la.find("How do I write a quote for a deck job?") == ("business", "biz_terms")
+    for words in ("What should I charge for a cutting board?", "what's my profit margin on cutting boards?",
+                  "make a quote for the deck job for Sarah"):
+        assert la.find(words) is None, words
+    said = la.reply(SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path)), "How do I write a quote for a deck job?")
+    assert "say \"make a quote for\"" in said

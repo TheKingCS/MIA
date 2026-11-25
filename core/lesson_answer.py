@@ -42,6 +42,11 @@ ASKS: dict[tuple, re.Pattern] = {
                                               r"blade|iron)s?\b|\bhone\s+(?:a\s+|my\s+)?(?:chisel|plane)\b"),
     ("woodworking", "first_piece"): re.compile(r"\b(?:beginner|beginners|first|starter|easy)\b.{0,20}\b(?:woodworking|"
                                                r"wood|woodshop)\s+(?:project|piece|build)s?\b"),
+    # the business (live sweep, 2026-11-25: "what's the markup I should use for my woodworking?" reached the materials
+    # calculator, "how do I write a quote for a deck job?" a cut list)
+    ("business", "biz_price"): re.compile(r"\b(?:markup|mark-up|margin|mark (?:it|them|things) up)\b"),
+    ("business", "biz_terms"): re.compile(r"\b(?:write|make|put together|do|draw up)\w*\s+(?:up\s+)?(?:a\s+|an\s+)?"
+                                          r"(?:quote|estimate|bid)s?\b|\bdeposit\b.{0,20}\b(?:custom|job|work)\b"),
     ("carpentry", "tape"): re.compile(r"\bread\w*\s+(?:a\s+)?tape(?:\s+measure)?\b"),
     ("carpentry", "square_level"): re.compile(r"\b(?:check|tell)\w*\s+(?:if\s+)?(?:\w+\s+){0,3}(?:is\s+)?"
                                               r"(?:plumb|level|square)\b|\b3-4-5\b|\bspeed square\b"),
@@ -52,7 +57,8 @@ ASKS: dict[tuple, re.Pattern] = {
 _HOWTO = re.compile(r"\b(?:how (?:do|should|would|can|could) (?:i|you|one|we)|how to|what'?s the (?:best|right|safest) "
                     r"way to|what is the (?:best|right|safest) way to|best way to|"
                     r"teach me (?:how )?to|show me how to|what(?:'s| is) a good|what should i (?:make|build) "
-                    r"(?:as|for) (?:a|my))\b")
+                    r"(?:as|for) (?:a|my)|what(?:'s| is) (?:the|a) (?:right |good |best |usual |typical |fair )?"
+                    r"(?:markup|mark-up|margin)|how much (?:markup|margin))\b")
 # What a lesson's words also mean but it doesn't teach (the sixth review): a fire pit or fire insurance, the tank's or
 # the aquaponics' water, a seed company
 NOT_ASKS = {
@@ -63,7 +69,12 @@ NOT_ASKS = {
     ("gardening", "seed_starting"): re.compile(r"\b(?:company|business|website|money|fund|funding|round|investor)s?\b"),
 }
 # A drill that practises the lesson (core/drills.py), said as the words that start it
-DRILL_FOR = {("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list"}
+DRILL_FOR = {("bushcraft", "water"): "water", ("carpentry", "circular_saw"): "saw", ("carpentry", "tape"): "cut list",
+             ("business", "biz_price"): "market day"}
+# What to say to do it with MIA, after the lesson
+THEN = {("business", "biz_terms"): "To start one, say \"make a quote for\" and what it's for, and the customer.",
+        ("business", "biz_price"): "For one of your products, ask \"what should I charge for\" it and I'll work it "
+                                   "out from your costs."}
 
 
 def find(words: str) -> Optional[tuple]:
@@ -78,7 +89,8 @@ def find(words: str) -> Optional[tuple]:
 
 def reply(context, words: str) -> Optional[str]:
     """The lesson's answer for a how-to (`find`), from the course's own record: its steps, why and what to watch for,
-    the drill to practise it, and how to start the course when he hasn't. None when it isn't one."""
+    the drill to practise it, and how to start the course when he hasn't. None when it isn't one.
+    Then how to do it with MIA, where there's a way (`THEN`)."""
     from core import paths
 
     found = find(words)
@@ -97,6 +109,8 @@ def reply(context, words: str) -> Optional[str]:
     drill = DRILL_FOR.get(found)
     if drill:
         out += f" To practise it, say \"give me a {drill} drill\"."
+    if found in THEN:
+        out += " " + THEN[found]
     book = getattr(context, "paths", None)
     if book is not None and book.path(course) is None:
         out += f" It's one lesson of the {program.name} course: say \"I want to learn {program.name.lower()}\" to start it."
