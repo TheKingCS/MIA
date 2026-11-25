@@ -7,7 +7,8 @@ Getting ready for what was just said is a follow-up.
 What she can help with is said for the area named, the follow-up's area first.
 A reply that only says the question back is caught.
 A pronoun or a thank-you is never a tool's follow-up, the note goes only to the followed question's lookups and ends
-with the turn, and a copied humor line comes out."""
+with the turn, and a copied humor line comes out.
+A read-only named lookup the model won't call is called by code, and a spoken workout is logged from his words."""
 
 from types import SimpleNamespace
 
@@ -357,3 +358,38 @@ def test_a_humor_examples_own_line_copied_into_a_reply_is_taken_out():
 
     said = polish("A tragedy. We'll get through this together. Seriously, though, I'm glad I could help.")
     assert said == "Seriously, though, I'm glad I could help."
+
+
+
+def test_a_named_lookup_with_nothing_required_is_called_by_code_when_the_model_wont():
+    """The model answers in its own words twice: a read-only lookup with nothing required is called; one needing a
+    detail isn't; a lookup the model chose itself stays its choice."""
+    from core.assistant_chat import settle_on_named_tool
+    from core.llm_manager import ChatReply
+
+    text = ChatReply(content="Practice chord changes.", tool_calls=[])
+    tools = [{"function": {"name": "whats_biting", "parameters": {"required": []}}},
+             {"function": {"name": "get_personal_record", "parameters": {"required": ["exercise"]}}}]
+    got = settle_on_named_tool("whats_biting", [], tools, text, lambda m, t: text)
+    assert [c.name for c in got.tool_calls] == ["whats_biting"]
+    kept = settle_on_named_tool("get_personal_record", [], tools, text, lambda m, t: text)
+    assert kept.content == "Practice chord changes." and not kept.tool_calls
+
+
+
+def test_a_spoken_workout_is_logged_from_his_words_and_cardio_is_never_sets():
+    """"2 mile run" is cardio, not 2 reps; "I did 30 pushups and a 2 mile run" logs 1x30 pushups and the run as a
+    note; words that aren't all exercise aren't a workout."""
+    from types import SimpleNamespace
+
+    from core.assistant_life_actions import parse_exercise_line, spoken_workout
+
+    assert parse_exercise_line("2 mile run")["sets"] == 0 and parse_exercise_line("30 pushups")["reps"] == 30
+    sessions = []
+    workout = SimpleNamespace(all_exercises=lambda: [], add_exercise=lambda name: SimpleNamespace(exercise_id="e",
+                                                                                                name=name),
+                              add_session=lambda **kw: sessions.append(kw))
+    said = spoken_workout(SimpleNamespace(workout=workout), "I did 30 pushups and a 2 mile run")
+    assert said.startswith("Logged your workout: 1x30 Pushups") and "2 mile run" in said
+    assert sessions[0]["sets_logged"][0]["reps"] == 30 and "2 mile run" in sessions[0]["notes"]
+    assert spoken_workout(SimpleNamespace(workout=workout), "I did the dishes and the laundry") is None

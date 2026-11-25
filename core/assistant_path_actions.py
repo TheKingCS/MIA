@@ -211,7 +211,8 @@ def _program_names(context) -> list:
 def register_path_actions(registry) -> None:
     """Registers the learning-path tools: start_learning, learning_lesson, log_practice, learning_check and
     learning_progress, and the words that reach them (`LEARNING_WORDS`, the programs' names), so his own way of
-    asking about woodworking, gardening, fitness or bushcraft finds them (tests/test_everyday_phrasing_routing.py)."""
+    asking about woodworking, gardening, fitness or bushcraft finds them (tests/test_everyday_phrasing_routing.py).
+    learning_lesson is reached by "what should I practice on guitar today?" too."""
     from core.assistant_actions import AssistantAction
 
     s = {"type": "string"}
@@ -239,7 +240,10 @@ def register_path_actions(registry) -> None:
             "topic": {**s, "description": "A lesson or (guitar) a chord, only if they named one."}, "path": path},
             "required": []},
         handler=_action_lesson,
-        trigger_phrases=("next lesson", "my lesson", "guitar lesson", "show me the", "chord shape", "teach me the"),
+        # "what should I practice on guitar today?" went to the day's agenda, then the model's own advice (live check)
+        trigger_phrases=("next lesson", "my lesson", "guitar lesson", "show me the", "chord shape", "teach me the",
+                         "what should i practice", "what do i practice", "practice today", "practice on guitar",
+                         "practice on the guitar", "what to practice"),
         subjects=("lesson", "chord"),
     ))
     registry.register(AssistantAction(

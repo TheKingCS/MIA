@@ -260,8 +260,8 @@ def settle_on_named_tool(named: Optional[str], messages: list[dict], tools: list
     among others: just that call. Asked back, or picked other lookups: one
     more try (`ask`) offered only that tool, kept if it calls it with every
     required detail. A different change the model chose stays its choice.
-    A follow-up settled on its question's lookup (core/conversation_state.follow_up_tool) that the retry still
-    doesn't call: that lookup is called, by code."""
+    A lookup with nothing required, when the model answered in its own words (or a follow-up's lookup,
+    core/conversation_state.follow_up_tool), that the retry still doesn't call: that lookup is called, by code."""
     if reply is None or not named:
         return reply
     called = [call.name for call in reply.tool_calls]
@@ -278,10 +278,12 @@ def settle_on_named_tool(named: Optional[str], messages: list[dict], tools: list
     if retry is None or [call.name for call in retry.tool_calls] != [named]:
         from core.conversation_state import follow_up_tool
 
-        if named == follow_up_tool() and not changes_records(named):
-            # A follow-up to that tool's answer ("what about tomorrow?"): the lookup itself, its question carrying
-            # the follow-up's words (core/assistant_actions._with_follow_up). The retry answered in text with a
-            # heat index it made up (live check, 2026-11-24).
+        required = (tool.get("function", {}).get("parameters") or {}).get("required") or []
+        if not changes_records(named) and (named == follow_up_tool() or (not required and not reply.tool_calls)):
+            # A lookup his words name (or a follow-up's to that tool's answer, "what about tomorrow?") the model
+            # still won't call: the lookup itself, by code, rather than the model's own words for it. The retry
+            # answered in text with a heat index it made up, and "what should I practice on guitar today?" with
+            # generic advice (live checks, 2026-11-24 and 25).
             return ChatReply(content="", tool_calls=[ToolCall(name=named, arguments={})])
         return reply
     arguments = retry.tool_calls[0].arguments or {}

@@ -263,6 +263,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     Each turn starts by clearing the last one's follow-up note, and a follow-up to a tool's answer skips the
     question plans and code answers for the model with that tool (core/conversation_state.follows_a_tool).
     A reply that only echoes the question is never said as an answer (ECHO_REPLY).
+    An echo of one of his messages from a moment ago is caught too.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -431,8 +432,9 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # Her own words without the model's habitual "Sure!" first and "let me know" last, on every surface, not
     # only the phone (docs/CONVERSATION_REVIEW.md). An offer of hers to do something stays.
     content = with_offer(conversation, polish(reply.content))
-    if echoes(content, prompt):  # never the person's own words said back as if an answer
-        content = ECHO_REPLY
+    earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
+    if echoes(content, prompt) or any(echoes(content, said) for said in earlier):
+        content = ECHO_REPLY  # never the person's own words (now or a moment ago) said back as if an answer
     add_message(conversation, "assistant", content)
     _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
              garbled=_garbled(reply.content))

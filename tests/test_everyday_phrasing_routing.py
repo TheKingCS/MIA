@@ -14,6 +14,7 @@ catch a weather, garden, flock or bills question; and everyday talk never reache
 never gets his net worth, "where is my wife?" never the inventory, "I ran out of milk" never a workout, a house bought
 never the month's spending), while a real today question still gets today's plan; and a question never forces a
 change, even one starting with a tool's phrase (the evening's, the week's, what's coming up, the month's money) leaves it to those tools.
+Training and practice questions reach their tools.
 """
 
 import pytest
@@ -181,3 +182,11 @@ def test_a_question_never_forces_a_change(registry):
     assert registry.named_action("add a recipe for venison chili, would you?", ["add_recipe"]) == "add_recipe"
     assert registry.named_action("add a note that says what is the wifi password?", ["add_note"]) == "add_note"
     assert registry.named_action("add a task: the gate is broken?", ["add_task"]) == "add_task"
+
+
+
+@pytest.mark.parametrize("said,tool", [("How's my training going this week?", "get_workout_summary"),
+                                       ("What should I practice on guitar today?", "learning_lesson")])
+def test_training_and_practice_questions_reach_their_tools(registry, said, tool):
+    """Each reached nothing (or the day's agenda) in the live check through the whole turn."""
+    assert tool in offered_tools(registry, said, demo_context()), said

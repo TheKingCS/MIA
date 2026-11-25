@@ -8,6 +8,8 @@ routines, and Classroom learning. Same contract as
 core/assistant_domain_actions.py: handlers are pure functions of
 (context, arguments), find records from the user's own words via
 core.assistant_lookup, never delete, and return one sentence to speak.
+A spoken workout ("I did 30 pushups and a 2 mile run") is logged from his words in code (`spoken_workout`), and
+cardio with a distance or a time is a note, never sets (`_CARDIO`).
 """
 
 from __future__ import annotations
@@ -97,14 +99,37 @@ _WEIGHT = re.compile(r"(?:at|@|with)\s*(\d+(?:\.\d+)?)\s*(lbs?|pounds?|kg|kgs)?"
 _REPS_ONLY = re.compile(r"^(\d+)\s+(?!x\b)", re.I)
 
 
+_CARDIO = re.compile(r"\b(miles?|mi|km|kilomet\w+|k run|minutes?|mins?|hours?|laps?)\b|\b(ran|run|running|jog\w*|"
+                     r"walk\w*|hik\w*|bik\w*|cycl\w*|swim\w*)\b", re.I)
+# "I did 30 pushups and a 2 mile run": logged from his own words, in code (`spoken_workout`)
+_SPOKEN = re.compile(r"^\s*(?:i|just)\s+(?:just\s+)?(?:did|finished|got in|knocked out|did my)\s+(.+?)[.!]?\s*$", re.I)
+
+
+def spoken_workout(context, text: str) -> Optional[str]:
+    """"I did 30 pushups and a 2 mile run" logged in code from his words (each part an exercise or cardio), never the
+    model's lines: it passed "30x10 Push-Ups at 120" (live check through the whole turn, 2026-11-25). None when the
+    words aren't all exercise."""
+    found = _SPOKEN.match(text or "")
+    if not found or getattr(context, "workout", None) is None:
+        return None
+    parts = [p.strip(" ,.") for p in re.split(r",|\band\b|\bthen\b|\bplus\b", found.group(1)) if p.strip(" ,.")]
+    parts = [re.sub(r"^(?:a|an|some)\s+", "", p, flags=re.I) for p in parts]
+    if not parts or not all(_CARDIO.search(p) or parse_exercise_line(p)["sets"] for p in parts):
+        return None
+    return _action_log_workout(context, {"exercises": parts})
+
+
 def parse_exercise_line(line: str) -> dict:
     """Pure logic. "3x10 squats at 185" / "squats 3 sets of 10 @ 185 lbs"
     -> {"name": "squats", "sets": 3, "reps": 10, "weight": 185.0};
-    "20 push-ups" -> 1 set of 20; anything without sets or reps (e.g.
-    "ran 3 miles") -> {"name": line, "sets": 0, ...}, kept as a note."""
+    "20 push-ups" -> 1 set of 20; anything without sets or reps, or cardio
+    with a distance or a time ("ran 3 miles", "2 mile run", `_CARDIO`) ->
+    {"name": line, "sets": 0, ...}, kept as a note."""
     text = str(line).strip()
     sets = reps = 0
     weight = 0.0
+    if _CARDIO.search(text):  # "2 mile run", "a 30 minute bike": a distance or a time, never sets (live check)
+        return {"name": text, "sets": 0, "reps": 0, "weight": 0.0}
     m = _SETS_REPS.search(text)
     if m:
         sets, reps = int(m.group(1)), int(m.group(2))
@@ -582,6 +607,7 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
     (list_inventory and list_materials, list_trips and get_trip_route...).
     add_course is reached by "add a course" and "i want to learn", no longer "learn about", which builds a course
     from her offline library (learn_about, core/library_course.py).
+    get_workout_summary is reached by "how's my training going?" too, its subjects the training words.
     """
     registry.register(AssistantAction(
         name="log_workout", domain="workout",
@@ -601,7 +627,12 @@ def register_life_actions(registry: AssistantActionRegistry) -> None:
         name="get_workout_summary", domain="workout",
         description="How many workouts this week and what the last one was.",
         parameters=_NO_PARAMS, handler=_action_get_workout_summary,
-        trigger_phrases=("my workouts", "workouts this week", "when did i last work out", "last workout"),
+        # and the everyday ways (live check through the whole turn, 2026-11-25: "how's my training going this
+        # week?" reached nothing and the model said the question back)
+        trigger_phrases=("my workouts", "workouts this week", "when did i last work out", "last workout",
+                         "my training", "training going", "training this week", "workouts going",
+                         "how much have i worked out", "have i worked out"),
+        subjects=("training", "workout", "worked out", "exercise"),  # what the question is about, for named_action
     ))
     registry.register(AssistantAction(
         name="get_personal_record", domain="workout",

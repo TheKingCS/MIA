@@ -70,13 +70,20 @@ _REQUEST = re.compile(r"\b(?:on|to|in|onto) (?:the|my) (?:calendar|schedule|list
                       r"week|month)\b|\bat \d{1,2}(?::\d{2})?\s*(?:am|pm)?\b", re.I)
 
 
+# A workout is the workout log's (log_workout), never a noted activity: "I did 30 pushups and a 2 mile run" was noted
+# here, so "how's my training going?" found no workouts (live check through the whole turn, 2026-11-25)
+_EXERCISE = re.compile(r"\b(push-?ups?|pull-?ups?|sit-?ups?|chin-?ups?|squats?|lunges?|burpees?|planks?|reps?|"
+                       r"sets? of|lifted|bench(?:ed)?|deadlift\w*|ran|run|jog\w*|sprints?|mile run|\d+ ?(?:k|km|miles?) "
+                       r"(?:run|walk|hike)|worked out|work ?out|exercis\w*|cardio|yoga|stretch\w*)\b", re.I)
+
+
 def activities(text: str) -> tuple[list[str], bool]:
     """Pure logic. The activities a person says they did, each as said ("put away the dishes"), and whether that's
     all the message is (nothing else in it, no question). "I've been running" is a habit: ("been running"). None for
-    a negative, a question, a vague or self-critical object, or a request (`_REQUEST`: the calendar, a reminder, a
-    day or a time ahead)."""
+    a negative, a question, a vague or self-critical object, a request (`_REQUEST`: the calendar, a reminder, a
+    day or a time ahead), or a workout (`_EXERCISE`: the workout log's)."""
     said = _clean(text)
-    if not said or _NEGATIVE.search(said) or _REQUEST.search(said):
+    if not said or _NEGATIVE.search(said) or _REQUEST.search(said) or _EXERCISE.search(said):
         return [], False
     habit = _HABIT.match(said.rstrip("?"))
     if habit:

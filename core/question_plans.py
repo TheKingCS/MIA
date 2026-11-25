@@ -1485,7 +1485,7 @@ NOT_FOR = {
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
                                   r"how(?:'s| is) (?:the|my) \w+ (?:doing|going)|needs? doing|needs? done|readings?|"
                                   r"temperature|humidity)\b", re.I),
-    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|due|bills?|dinner|lunch|breakfast|"
+    "week review": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|training|workouts?|due|bills?|dinner|lunch|breakfast|"
                               rf"supper|meals?|weekend)\b", re.I),
     "coming up": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|short|cash flow|enough for|enough to|prepared|"
                             r"emergency|emergencies|kit|preparedness)\b", re.I),

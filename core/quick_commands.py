@@ -167,7 +167,8 @@ def _played(context, text: str) -> Optional[str]:
 def handle(context, text: str) -> Optional[str]:
     """Does it, if it's a quick command; returns MIA's reply, or None. Words to a waiting card ("approve it",
     "approve it from now on", core/spoken_approval.py) are heard first.
-    "I burn about 4 cords a winter" is kept here too (core/firewood.reply)."""
+    "I burn about 4 cords a winter" is kept here too (core/firewood.reply).
+    A spoken workout is logged here from his words (core/assistant_life_actions.spoken_workout)."""
     from core.actions import ActionError
     from core.person_settings import person_id
 
@@ -202,6 +203,11 @@ def handle(context, text: str) -> Optional[str]:
     from core.tak import reply as grid_reply
 
     said = grid_reply(context, text)  # "add a waypoint called Spring at 18S UJ 23478 06483" (DEC-0099)
+    if said is not None:
+        return said
+    from core.assistant_life_actions import spoken_workout
+
+    said = spoken_workout(context, text)  # "I did 30 pushups and a 2 mile run", from his words
     if said is not None:
         return said
     from core.firewood import reply as firewood_reply
