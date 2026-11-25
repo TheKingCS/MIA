@@ -1142,6 +1142,7 @@ def _action_add_objective(context: AppContext, arguments: dict) -> str:
     imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
     An objective counted from records is count_toward_mission's (it names what it counts), so a records metric here
     becomes a tally.
+    A target of 0 or less asks.
     """
     mission_name = str(arguments.get("mission_name", "")).strip().lower()
     description = str(arguments.get("description", "")).strip()
@@ -1155,6 +1156,8 @@ def _action_add_objective(context: AppContext, arguments: dict) -> str:
         metric_type = "tally"  # one counted from records is count_toward_mission's, which names what it counts
     try:
         target = float(arguments.get("target", 1))
+        if target <= 0:
+            raise ValueError  # never a target of 0 (the Fable re-audit)
     except (TypeError, ValueError):
         return "I need a numeric target for this objective."
     context.missions.add_objective(mission.mission_id, description, metric_type, target)

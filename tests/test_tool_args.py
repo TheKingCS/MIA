@@ -5,7 +5,8 @@ tests.test_tool_args
 A tool's arguments as he could have said them (core/tool_args.py, the Fable audit 2026-11-25): placeholders go,
 for a change a time that isn't one, a negative amount and an update's zero go, and a date in words becomes its
 YYYY-MM-DD; the tools the audit found saving them now ask instead. Its second audit's: real zeros, temperatures,
-times said any way and "none" as a value stay; lists and own-subject names are cleaned.
+times said any way and "none" as a value stay; lists and own-subject names are cleaned. Its last three: a load
+taken off only when he says so, a mission target above zero, a medication's time read or asked.
 """
 
 from datetime import date, timedelta
@@ -95,3 +96,26 @@ def test_the_re_audits_real_values_stay_and_its_junk_goes():
     assert cleaned("add_note", {"title": "note", "body": "x"}) == {"body": "x"}
     assert cleaned("add_inventory_item", {"name": "item"}) == {}
     assert cleaned("add_note", {"title": "Fence posts"}) == {"title": "Fence posts"}
+
+
+def test_the_audits_last_three_ask_instead(monkeypatch):
+    """A load set to 0 watts it wasn't told to drop, a mission target of 0, and a medication's unreadable time ask."""
+    from core import power_picture
+    from core.assistant_energy_actions import _set_power_load
+    from core.health_actions import _call
+
+    monkeypatch.setattr(power_picture, "set_load", lambda c, name, watts, hours: f"Took the {name} off")
+
+    assert _set_power_load(SimpleNamespace(), {"load": "freezer", "watts": 0}).startswith("How many watts")
+    assert _set_power_load(SimpleNamespace(), {"load": "freezer", "watts": 0,
+                                                "question": "take the freezer off"}) == "Took the freezer off"
+    import pytest
+
+    from core.actions import ActionError
+
+    def broken():
+        """A store refusing a date the way Python does."""
+        raise ValueError("Invalid isoformat string: 'soon'")
+
+    with pytest.raises(ActionError, match="didn't read"):
+        _call(broken)

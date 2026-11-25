@@ -15,6 +15,8 @@ prompt beyond the turn that asked.
 
 from __future__ import annotations
 
+import re
+
 from datetime import date
 from typing import Optional
 
@@ -28,11 +30,15 @@ def _store(context):
 
 
 def _call(fn, *args, **kwargs):
-    """Runs a store change, turning its ValueError or KeyError into the ActionError a person reads."""
+    """Runs a store change, turning its ValueError or KeyError into the ActionError a person reads.
+    Python's own words for a date or time that didn't read are said plainly instead."""
     try:
         return fn(*args, **kwargs)
     except (ValueError, KeyError) as problem:
-        raise ActionError(str(problem).strip("'\"")) from None
+        said = str(problem).strip("'\"")
+        if re.search(r"isoformat|time data|invalid literal|does not match format|could not convert", said, re.I):
+            said = "A date or a time didn't read: say it like 2026-12-01, or 8:00 or 8 pm."  # never Python's words
+        raise ActionError(said) from None
 
 
 def _num(value, kind=float) -> Optional[float]:
@@ -103,9 +109,20 @@ def _visit_delete(context, params) -> str:
 
 # ---------------------------------------------------------------- medications
 def _med_add(context, params) -> str:
-    """Does med.add."""
+    """Does med.add; its times read the common ways ("8am", "20:00", "8 in the evening"), and one that doesn't
+    asks (the Fable re-audit)."""
+    times = params.get("times") or ""
+    if times:
+        from core.tool_args import a_time
+
+        said = [t.strip() for t in (times if isinstance(times, list) else re.split(r"\s*(?:,|\band\b)\s*", str(times)))
+                if str(t).strip()]
+        tidy = [a_time(t) for t in said]
+        if any(t is None for t in tidy):
+            raise ActionError("Which times? Say them like 8:00 and 20:00, or 8 am and 8 pm.")
+        times = tidy
     m = _call(_store(context).add_med, str(params.get("name") or ""), str(params.get("dose") or ""),
-              params.get("times") or "", str(params.get("kind") or "Medication"), _num(params.get("refills"), int),
+              times, str(params.get("kind") or "Medication"), _num(params.get("refills"), int),
               str(params.get("refill_on") or ""), str(params.get("notes") or ""))
     times = (" Reminders at " + ", ".join(m["times"]) + ".") if m["times"] else ""
     return f"Added {m['name']}{' (' + m['dose'] + ')' if m['dose'] else ''}.{times}"

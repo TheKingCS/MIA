@@ -16,6 +16,8 @@ latest, so "undo that" takes it back.
 
 from __future__ import annotations
 
+import re
+
 from core.assistant_actions import AssistantAction, AssistantActionRegistry
 
 
@@ -96,9 +98,18 @@ def _power_picture(context, arguments: dict) -> str:
 
 
 def _set_power_load(context, arguments: dict) -> str:
-    """Tool set_power_load: one of his essential loads, its watts and hours a day (core/power_picture.set_load)."""
+    """Tool set_power_load: one of his essential loads, its watts and hours a day (core/power_picture.set_load); 0
+    watts takes it off only when his words say so (the Fable re-audit: the model's 0 had deleted a load)."""
     from core import power_picture
 
+    try:
+        zero = float(arguments.get("watts")) == 0
+    except (TypeError, ValueError):
+        zero = False
+    said = str(arguments.get("question") or "")
+    if zero and not re.search(r"\b(?:remove|take\b.{0,30}\boff|delete|drop|no longer|don'?t (?:have|run)|0 watts|"
+                              r"zero)\b", said, re.I):
+        return "How many watts does it draw? Say \"take the freezer off\" to remove it."  # never off on a 0 he didn't say
     return power_picture.set_load(context, str(arguments.get("load") or ""), arguments.get("watts"),
                                   arguments.get("hours"))
 
@@ -107,7 +118,8 @@ def register_energy_actions(registry: AssistantActionRegistry) -> None:
     """Registers the get_energy and log_energy_reading tools, and the homestead's power picture: power_picture and
     set_power_load (core/power_picture.py; get_power_status is this computer's own battery, not the homestead's).
     set_power_load is reached by watts or amps with a time ("watts for"), never a bare "draws" ("the dog draws
-    attention")."""
+    attention").
+    set_power_load is given his words, so 0 watts takes a load off only when he says to."""
     registry.register(AssistantAction(
         name="power_picture", domain="power",
         description="The homestead's power: the essential loads a day (well pump, aquaponics pumps, fridge, "
@@ -125,9 +137,11 @@ def register_energy_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {
             "load": {"type": "string", "description": "e.g. 'well pump'"},
             "watts": {"type": "number", "description": "what it draws"},
-            "hours": {"type": "number", "description": "hours a day it runs (24 if always on)"}},
+            "hours": {"type": "number", "description": "hours a day it runs (24 if always on)"},
+            "question": {"type": "string", "description": "his words"}},
             "required": ["load", "watts"]},
-        handler=_set_power_load, trigger_phrases=("watts for", "uses watts", "pulls watts", "amps for"),
+        handler=_set_power_load, prompt_arg="question",
+        trigger_phrases=("watts for", "uses watts", "pulls watts", "amps for"),
     ))
     registry.register(AssistantAction(
         name="get_energy", domain="power",
