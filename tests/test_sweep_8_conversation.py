@@ -34,7 +34,15 @@ def test_a_pleasantry_gets_no_joke_and_no_bill():
 
 
 def test_a_humor_example_copied_loosely_goes_unless_he_brought_it_up():
+    """Only an opening line in an example's own words goes; real advice and a reply's lines stay (the eighth review)."""
     reply = "It's not a cord any more, it's a tangled mess. Glad it helped!"
     assert personality.without_copied_example(reply, "Thanks, that's helpful") == "Glad it helped!"
     assert personality.without_copied_example("That cord is a mess. Try a cable tie.", "how do I fix a tangled cord?") \
         == "That cord is a mess. Try a cable tie."
+    # the eighth review: real advice and a reply's lines are never touched
+    advice = "Keep it 3 feet from anything that burns.\nDon't use an extension cord, it can overheat and start a fire."
+    assert personality.without_copied_example(advice, "is it safe to run a space heater?") == advice
+    plan = "Here is the plan.\n\n1. Buy feed.\n2. Fix the fence.\n\nDone."
+    assert personality.without_copied_example(plan, "what's the plan?") == plan
+    assert personality.without_copied_example("Check the batteries in the TV remote. Then re-pair it.",
+                                              "my tv won't turn on") == "Check the batteries in the TV remote. Then re-pair it."

@@ -198,25 +198,25 @@ def light_moment(prompt: str) -> bool:
 EXAMPLE_LINES = tuple(m.group(1) for _f, example in HUMOR_FLAVORS for m in [re.search(r'"(.+)"', example)] if m)
 
 
-# Each example's own subject: a sentence of hers built on one he never mentioned is the example copied loosely ("It's
-# not a cord any more, it's a tangled mess.", live sweep 2026-11-25), and goes too
-EXAMPLE_SUBJECTS = ("cord", "sculpture", "remote", "couch", "pizza", "third coffee", "cold coffee", "tragedy",
-                    "light day", "12-hour shift")
+# Each example's own distinctive words: an opening line of hers built on them, when his words never had them, is the
+# example copied loosely ("It's not a cord any more, it's a tangled mess.", live sweep 2026-11-25), and goes. Only
+# the opening line, and only these phrases: plain words like "cord" or "remote" are real advice (the eighth review:
+# "don't use an extension cord" had been cut from a space-heater answer, and every reply's lines run together).
+EXAMPLE_SUBJECTS = ("not a cord any more", "it's a sculpture", "last place you'll look", "a tragedy",
+                    "get through this together", "third one? bold", "so, a light day", "take your word for it")
 
 
 def without_copied_example(text: str, prompt: str = "") -> str:
-    """Pure logic. The reply without a humor example's line copied into it (never her own wit, so it goes), or a
-    sentence built on an example's own subject that his words (`prompt`) never mention; the rest stays, and a reply
-    that was only that stays as it was."""
+    """Pure logic. The reply without a humor example's line copied into it (never her own wit, so it goes), or an
+    opening line built on an example's own distinctive words that his words (`prompt`) never had; the rest stays as
+    it was, line breaks and all, and a reply that was only that stays as it was."""
     kept = str(text or "")
     for line in EXAMPLE_LINES:
         kept = kept.replace(line, "")
     said = str(prompt or "").lower()
-    subjects = [s for s in EXAMPLE_SUBJECTS if not re.search(rf"\b{re.escape(s)}", said)]
-    if subjects and prompt:
-        sentences = re.split(r"(?<=[.!?])\s+", kept)
-        kept = " ".join(x for x in sentences
-                        if not any(re.search(rf"\b{re.escape(s)}\b", x, re.I) for s in subjects))
+    opening = re.match(r"\s*[^\n.!?]*[.!?]", kept)  # only the opening line, where the nudge puts a joke
+    if prompt and opening and any(s in opening.group().lower() and s not in said for s in EXAMPLE_SUBJECTS):
+        kept = kept[opening.end():]
     kept = re.sub(r"^[\s.,!]+", "", kept).strip()
     return kept[:1].upper() + kept[1:] if kept else str(text or "")
 
