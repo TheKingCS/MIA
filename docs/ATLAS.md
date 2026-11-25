@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1780 files, 384,371 lines; 1780 files describe themselves; 20,960 of 21,090 classes and functions are documented.
+1781 files, 384,668 lines; 1781 files describe themselves; 20,970 of 21,100 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-711 files, 200,058 lines; 10,052 of 10,138 classes and functions documented
+711 files, 200,253 lines; 10,054 of 10,140 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1009,7 +1009,7 @@
 
 ## tests/: the test suite: what each part must do
 
-660 files, 102,308 lines; 8,537 of 8,581 classes and functions documented
+661 files, 102,400 lines; 8,545 of 8,589 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1598,6 +1598,7 @@
 - `tests/test_volume_manager.py`: Unit tests for core.volume_manager. parse_amixer_output() is tested directly against captured-shape amixer text (pure, deterministic — no real amixer binary involved, same reasoning as test_power_manager.py mocking psutil). AmixerVolumeBackend/VolumeManager are tested against monkeypatched subproces
 - `tests/test_volume_quick_control.py`: Unit tests for gui.widgets.volume_quick_control's pure format_volume_line() — moved here 2026-09-11 from tests/test_home_dashboard.py, alongside removing gui/home_dashboard.py's own dead copy of this function (and the entire dashboard-grid Volume widget it only ever served) — see that module's 2026-
 - `tests/test_warranty_watch.py`: A heads-up before a warranty ends (core/warranty_watch.py).
+- `tests/test_watchdog_lab.py`: The ESP32 course's capstone, the greenhouse's safety brain (core/esp32_path.py stage 7, core/esp32_sim.py `_watchdog`): a watchdog that goes safe on its own after 15 seconds without a heartbeat, refuses a dose while safe or mid-dose, recovers on a heartbeat, and stays stopped after BOOT whatever com
 - `tests/test_water_budget.py`: The whole property's water (core/water_budget.py): the house, garden, orchard and flock a day from his records (each estimate said as one), the greenhouse said as not counted, tanks at their latest logged level, the days the stored water carries the outdoor uses, the roof's catch from his logged rai
 - `tests/test_watering.py`: "Should I water the garden today?" (core/weather_watch.watering): rain now or likely tomorrow says hold off, a hot dry day says water deeply in the morning, the crops in the ground named, every answer ending with the soil check, no forecast still giving the soil check; tomorrow's words read when the
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
@@ -1674,7 +1675,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-123 files, 23,236 lines
+123 files, 23,246 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

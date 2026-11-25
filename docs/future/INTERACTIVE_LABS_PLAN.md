@@ -27,9 +27,11 @@ the stage's checks are done. Safety lines live in the lessons, written in code, 
 
 ## The first: Build With ESP32 (built 2026-11-25)
 
-`core/esp32_path.py`, a learning path of six stages: First light (blink, serial), Inputs (a button, a pot), Sensors
+`core/esp32_path.py`, a learning path of seven stages: First light (blink, serial), Inputs (a button, a pot), Sensors
 (DHT22, soil moisture), Outputs (PWM, a relay, low voltage only), Connected (Wi-Fi, a little web server), A real node
-(deep sleep). Each lab has its parts, its wiring pin to pin, its libraries and an Arduino sketch for PlatformIO's
+(deep sleep), and the capstone, The greenhouse's safety brain (2026-11-25): a watchdog that goes safe on its own when
+the PC goes quiet and stops for good on BOOT, the greenhouse's safety board (homestead/firmware/safety_mcu) in small,
+an LED for the pump. Each lab has its parts, its wiring pin to pin, its libraries and an Arduino sketch for PlatformIO's
 `esp32dev`; every sketch prints `MIA <MARKER> <value>` lines, and the check (`board_says`) passes from what the board
 itself said: a marker seen, a value at least a mark, readings spread apart (a pot turned end to end, soil dry then
 wet), or a value in a range (a room's temperature). Wi-Fi details are his to type into the sketch's own secrets file,

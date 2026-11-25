@@ -7,7 +7,9 @@ how to build with esp32's ... this could be used as a standard for other teachin
 docs/future/INTERACTIVE_LABS_PLAN.md). A learning path (core/paths.py: stages, lessons, checks, practice, homework,
 stats), whose labs are worked on a real board on his desk.
 
-- **The course** (`STAGES`, registered as `PROGRAM`): six stages, from the first blink to a sensor node that sleeps,
+- **The course** (`STAGES`, registered as `PROGRAM`): seven stages, from the first blink to a sensor node that sleeps
+  and, the capstone, a watchdog that goes safe on its own (the greenhouse's safety board in small:
+  homestead/firmware/safety_mcu, the PC proposes and the board decides; an LED stands in for the pump, never a real one),
   each lab a lesson with its steps, why it matters and what to watch for.
 - **Each lab** (`LABS`): the parts, the wiring (pin to pin), the libraries and the sketch (Arduino on the ESP32, for
   PlatformIO's `esp32dev` board), shown with the lesson (`_extra`) and built and flashed by core/esp32_lab.py.
@@ -299,6 +301,81 @@ void setup() {
 void loop() {}
 """,
     },
+    "watchdog": {
+        "parts": ("ESP32 dev board", "LED and 220 ohm resistor (or just the onboard LED)"),
+        "wiring": (("LED long leg, through the resistor", "GPIO 2"), ("LED short leg", "GND"),
+                   ("the BOOT button", "GPIO 0 (already on the board)")),
+        "libs": (),
+        "code": """#include <Arduino.h>
+
+// A small copy of the greenhouse's safety board (homestead/firmware/safety_mcu): the PC proposes, this board decides,
+// and silence means safe. The LED stands in for a dosing pump: never wire a real pump or valve to this lab.
+const int PUMP = 2;                       // the "pump": an LED (the onboard one lights too)
+const int STOP_BUTTON = 0;                // BOOT: the stop by hand
+const unsigned long SILENCE_MS = 15000;   // no heartbeat this long: go safe
+const unsigned long DOSE_MS = 1000;       // a dose is a pulse, never left on
+
+unsigned long lastHeard = 0, doseStarted = 0;
+bool safe = false, stopped = false, dosing = false;
+int heartbeats = 0, doses = 0, fallbacks = 0;
+String line = "";
+
+void goSafe(const char* why) {
+  digitalWrite(PUMP, LOW);   // a dosing pump's safe state is always off
+  dosing = false;
+  safe = true;
+  fallbacks++;
+  Serial.printf("MIA FALLBACK %d %s\\n", fallbacks, why);
+}
+
+void handle(String said) {
+  said.trim();
+  if (said == "hb") {                 // the PC's heartbeat
+    lastHeard = millis();
+    heartbeats++;
+    Serial.printf("MIA HEARTBEAT %d\\n", heartbeats);
+    if (safe && !stopped) { safe = false; Serial.println("MIA RECOVERED"); }
+  } else if (said == "dose") {        // the PC asks; the board decides
+    if (safe) { Serial.println("MIA REFUSED safe"); return; }
+    if (dosing) { Serial.println("MIA REFUSED busy"); return; }
+    dosing = true;
+    doseStarted = millis();
+    digitalWrite(PUMP, HIGH);
+    doses++;
+    Serial.printf("MIA DOSE %d\\n", doses);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PUMP, OUTPUT);
+  digitalWrite(PUMP, LOW);            // start off: the safest default
+  pinMode(STOP_BUTTON, INPUT_PULLUP);
+  lastHeard = millis();
+  Serial.println("MIA SAFE_START");
+}
+
+void loop() {
+  while (Serial.available()) {        // never blocking: it keeps listening, even mid-dose
+    char c = Serial.read();
+    if (c == '\\n') { handle(line); line = ""; }
+    else if (line.length() < 32) line += c;
+  }
+  if (dosing && millis() - doseStarted >= DOSE_MS) {
+    digitalWrite(PUMP, LOW);
+    dosing = false;
+    Serial.printf("MIA DOSED %d\\n", doses);
+  }
+  if (!safe && millis() - lastHeard >= SILENCE_MS) goSafe("silence");
+  if (!stopped && digitalRead(STOP_BUTTON) == LOW) {   // a stop by hand is only undone by hand (EN restarts it)
+    stopped = true;
+    Serial.println("MIA STOP 1");
+    if (!safe) goSafe("stop");
+    else { digitalWrite(PUMP, LOW); dosing = false; }
+  }
+}
+""",
+    },
 }
 
 def _tied(stages: tuple) -> tuple:
@@ -426,6 +503,28 @@ STAGES: tuple[Stage, ...] = _tied((
     ), (
         Check("esp_sleep", "Wake from deep sleep three times", VERIFIER, about="WAKE min", passes_at=3,
               unit="wakes"),
+    )),
+    Stage(7, "The greenhouse's safety brain", "a watchdog that goes safe on its own: the capstone", (
+        Lesson("watchdog", "Go safe on your own", (
+            "Flash the watchdog lab: the LED on GPIO 2 is a dosing pump, the BOOT button the stop by hand.",
+            "In the serial monitor (115200, newline on) type hb: that's the PC's heartbeat, and MIA HEARTBEAT counts "
+            "it. Type dose: the pump pulses for one second and turns itself off, never left on.",
+            "Stop typing. 15 seconds later it says MIA FALLBACK, holds the pump off and refuses a dose until it hears "
+            "hb again.",
+            "Press BOOT: MIA STOP, and it stays stopped even when hb comes back. A stop by hand is only undone by "
+            "hand: EN restarts it."),
+            "The heartbeat guards against the PC failing, not the board: if the PC crashes, freezes or its cable is "
+            "pulled, nothing would ever tell a pump to stop, so the board takes silence to mean the worst and goes "
+            "safe on its own. It refuses a dose while it's safe, because the PC asking may be the broken part, and "
+            "while one is still running, because two at once would double it. This is how the greenhouse's own "
+            "safety board works (homestead/firmware/safety_mcu): the PC proposes, the board decides, and silence "
+            "means safe. That firmware's own LED test, on a board like this one, is the greenhouse's next milestone.",
+            ("A dose done with delay() stops the board listening, even to the stop button: this one never blocks.",
+             "Safe means the pump off: a dosing pump's safe state is always off, never on.",
+             "An LED stands in for the pump: never a real pump or valve on this lab.")),
+    ), (
+        Check("esp_fallback", "Go safe on its own when the PC goes quiet", VERIFIER, about="FALLBACK"),
+        Check("esp_stop", "Stop it by hand with BOOT", VERIFIER, about="STOP"),
     )),
 ))
 

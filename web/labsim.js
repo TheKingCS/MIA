@@ -77,6 +77,16 @@
       const [n, a] = number("Press BOOT", 3);
       return { seconds: 6, view: [a], inputs: () => ({ presses: Array.from({ length: Math.max(0, Math.min(20, Number(n.value) || 0)) }, (_, i) => 1 + i * 0.4) }) };
     }
+    if (id === "watchdog") {
+      // what he'd type in the serial monitor (hb, dose) and BOOT; then the quiet that makes it go safe
+      const [hb, a] = number("Heartbeats from the PC", 2), [d, b] = number("Doses asked for", 1);
+      const [press, c] = tick("Press BOOT near the end", true);
+      const many = (input) => Math.max(0, Math.min(10, Number(input.value) || 0));
+      return { seconds: 20, view: [a, b, c], inputs: (s) => ({
+        heartbeats: Array.from({ length: many(hb) }, (_, i) => 1 + i),
+        doses: Array.from({ length: many(d) }, (_, i) => 1.5 + i * 1.5),
+        presses: press.checked ? [s - 0.5] : [] }) };
+    }
     return { seconds: id === "relay" ? 9 : 6, view: [], inputs: () => ({}) };
   }
 

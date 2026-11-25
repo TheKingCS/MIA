@@ -43,7 +43,7 @@ LABS_ROOT = DATA_DIR / "labs"  # each course's labs in its own folder: labs/esp3
 BAUD = 115200
 READ_SECONDS = 8
 # Labs whose markers come slower than a read of READ_SECONDS sees: a wake every 10 seconds, a browser's request.
-READ_FOR = {"sleep": 25, "web": 20}
+READ_FOR = {"sleep": 25, "web": 20, "watchdog": 25}  # the watchdog goes safe after 15 s of quiet
 FLASH_TIMEOUT = 600
 PLACEHOLDER = "type-yours-here"
 SECRETS = f"""// Your Wi-Fi, typed by you. MIA never fills this in, and it stays on this computer.
@@ -432,14 +432,15 @@ def register_esp32_lab_actions(registry) -> None:
     """Registers flash_lab, check_lab and lab_board, the simulator's build_along and simulate_lab
     (core/esp32_sim.py), and "esp32" and "microcontroller" as learning words (so "what's my next ESP32 lesson?"
     brings the learning tools: the live check, 2026-11-25).
-    "arduino" is a learning word too, and "is my arduino plugged in?" reaches lab_board."""
+    "arduino" is a learning word too, and "is my arduino plugged in?" reaches lab_board.
+    Its labs include the watchdog capstone."""
     from core.assistant_actions import AssistantAction
     from core.esp32_sim import register_sim_tools
 
     registry.register_domain_keywords("learning", ("esp32", "microcontroller", "breadboard", "arduino"))
     register_sim_tools(registry)
     lab = {"type": "string", "description": "which lab (blink, hello, button, pot, dht, soil, fade, relay, wifi, "
-                                            "web, sleep), only if he named one"}
+                                            "web, sleep, watchdog), only if he named one"}
     words = {"type": "string", "description": "his words"}
     registry.register(AssistantAction(
         name="flash_lab", domain="learning",

@@ -11,7 +11,8 @@ it. The question and answer go into his active conversation, so "and what about.
 
 Who she is comes from core/personality.IDENTITY, with this page's teaching line after it.
 `material(course, lesson, drill, n)`: the text the answer stands on. `ask(context, course, lesson, question, drill,
-n)`: {answer, about}. Read only: nothing changes but the conversation.
+n)`: {answer, about}. Read only: nothing changes but the conversation. By voice too: "why does the watchdog lab refuse
+a dose?" comes here from core/esp32_sim.reply, a lab named and a why asked.
 """
 
 from __future__ import annotations
@@ -81,9 +82,10 @@ def _conversation(context):
     return found or store.start_new_active_conversation()
 
 
-def ask(context, course: str, lesson: str, question: str, drill: str = "", n: int = 0) -> dict:
+def ask(context, course: str, lesson: str, question: str, drill: str = "", n: int = 0, record: bool = True) -> dict:
     """His question answered from the material (`material`): {answer, about}. ValueError for an empty question or
-    something that isn't there; the answer says so plainly when the model can't be reached."""
+    something that isn't there; the answer says so plainly when the model can't be reached. Kept in his active
+    conversation unless `record` is False (a voice turn, which keeps its own: core/esp32_sim.reply)."""
     from core.llm_manager import without_role_label
 
     question = " ".join(str(question or "").split())[:600]
@@ -100,7 +102,7 @@ def ask(context, course: str, lesson: str, question: str, drill: str = "", n: in
     if not answer:
         return {"answer": "I can't reach my model right now, so I can't explain it yet. Try again in a moment.",
                 "about": about}
-    conversation = _conversation(context)
+    conversation = _conversation(context) if record else None
     if conversation is not None:
         store = context.conversations
         store.add_message(conversation.conversation_id, "user", f"(On {about}) {question}")

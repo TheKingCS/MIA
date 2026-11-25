@@ -96,6 +96,8 @@ SHOW = {
     "soil": ({"moisture": [[0, 0], [3, 0], [4, 1]]}, 8.0, "dry, then into the cup of water"),
     "sleep": ({"moisture": [[0, 0], [31, 1]]}, 31.0, "for half a minute, the soil watered as it goes"),
     "web": ({"requests": [3.0]}, 5.0, "with one request from a browser"),
+    "watchdog": ({"heartbeats": [1.0, 3.0], "doses": [2.0], "presses": [19.5]}, 20.0,
+                 "with two heartbeats and a dose, then quiet, and BOOT pressed at the end"),
 }
 ARDUINO_SHOW = {
     "button": ({"presses": [1.0, 2.0, 3.0]}, 5.0, "with the button pressed three times"),
@@ -125,6 +127,7 @@ TRY = {
     "soil": "Run it dry, then in water: the readings need to spread at least 500.",
     "web": "Send a request, as a browser opening its address would.",
     "sleep": "Run it for half a minute: it wakes every 10 seconds.",
+    "watchdog": "Send a heartbeat and a dose, then let it go quiet for 15 seconds, and press BOOT to stop it by hand.",
 }
 
 _LED_BUILD = (
@@ -169,6 +172,9 @@ CIRCUITS = {
              "note": "Nothing to wire. In the simulator it joins a pretend network; your real board joins yours."},
     "web": dict(_SOIL, note="The soil sensor from the soil lab, still wired. In the simulator the network is pretend."),
     "sleep": dict(_SOIL, note="The soil sensor from the soil lab, still wired."),
+    "watchdog": {"pin": "GPIO 2", "parts": (("r1", "resistor"), ("led1", "led")), "build": _LED_BUILD,
+                 "note": "The LED is the dosing pump (the onboard one lights too); BOOT, on GPIO 0, is the stop by hand. "
+                         "In the simulator, the heartbeats and doses are what you'd type in the serial monitor."},
 }
 
 
@@ -698,7 +704,9 @@ def reply(context, conversation, text: str) -> Optional[str]:
     soil moisture sensor in the greenhouse"), and right after a
     step, "next step", "go back", "repeat that" or "done" moves it, when nothing else is said ("what's my next step on
     the shed?" stays the plans'). None when the words aren't for it.
-    A lab of either board course named as one starts it."""
+    A lab of either board course named as one starts it. A lab named with "simulate" runs it in the simulator
+    (`_simulate_tool`), and with a why ("why does the watchdog lab refuse a dose?") is answered from its own lesson
+    (`_ask_about`), not a check's result."""
     from core import paths
 
     said = " ".join(str(text or "").lower().replace("’", "'").split())
@@ -715,10 +723,34 @@ def reply(context, conversation, text: str) -> Optional[str]:
                       if lesson.id in circuits)
     if names_a_lab and _BUILD_VERB.search(said) and not re.search(r"\b(flash|upload|simulat\w*|print|check)\b", said):
         return _build_tool(context, {"question": said})
+    if names_a_lab and re.search(r"\bsimulat\w*\b", said) and not re.search(r"\b(flash|upload)\b", said):
+        return _simulate_tool(context, {"question": said})  # live check, 2026-11-25: the model described it from memory
+    if names_a_lab and _WHY.search(said) and not re.search(r"\b(check|checks|pass|passed|fail|failed|flash)\b", said):
+        return _ask_about(context, said)
     left = _FILLER.sub(" ", _STEP_WORD.sub(" ", re.sub(r"[^\w' ]+", " ", said))).split()
     if _STEP_WORD.search(said) and not left and _last_was_a_step(conversation):
         return _build_tool(context, {"question": said})
     return None
+
+
+_WHY = re.compile(r"\b(why|how come|explain|what does|what's the point|what is the point|what's it for)\b")
+
+
+def _ask_about(context, said: str) -> Optional[str]:
+    """A why about a lab he named, answered as Ask MIA on its page answers (core/lab_ask.ask: from the lesson's own
+    material, never the model's memory; live check, 2026-11-25: "why does the watchdog lab refuse a dose?" was
+    answered as not known). None when the lab can't be found."""
+    from core import lab_ask
+    from core.esp32_lab import course_in, lesson_for
+
+    course = course_in(context, said)
+    lesson = lesson_for(context, said, course=course)
+    if not lesson:
+        return None
+    try:
+        return lab_ask.ask(context, course, lesson, said, record=False)["answer"]
+    except ValueError:
+        return None
 
 
 def _simulate_tool(context, arguments: dict) -> str:
@@ -739,12 +771,13 @@ def register_sim_tools(registry) -> None:
     simulator" isn't simulate_lab's, so "what parts can I wire in the simulator?" stays part_specs'); simulate_lab
     takes only his words (the lab is read from them), so code answers "what will the pot lab print?" itself
     (direct_lookup: the model, with a build in the conversation, answered from memory).
-    Both take the Arduino course's labs too."""
+    Both take the Arduino course's labs too.
+    The watchdog capstone among its labs."""
     from core.assistant_actions import AssistantAction
 
     lab = {"type": "string", "description": "which lab (blink, hello, button, pot, dht, soil, fade, relay, wifi, web, "
-                                            "sleep; on the Arduino light, distance, servo, buzzer), only if he named "
-                                            "one"}
+                                            "sleep, watchdog; on the Arduino light, distance, servo, buzzer), only if "
+                                            "he named one"}
     words = {"type": "string", "description": "his words"}
     registry.register(AssistantAction(
         name="build_along", domain="learning",
@@ -865,10 +898,68 @@ def _run_arduino(lesson_id: str, state: dict, inputs: dict, seconds: float, rng:
     return [x for x in lines if x[0] <= seconds], [x for x in outs if x[0] <= seconds]
 
 
+def _watchdog(inputs: dict, seconds: float, on: float, off: float) -> tuple:
+    """Pure logic. The watchdog lab's sketch over `seconds`: ([(t, line)], [(t, {output: value})]) from the heartbeats,
+    doses and BOOT presses (each a list of times), as the sketch does it: a dose pulses the pump for one second, 15
+    seconds without a heartbeat goes safe (the pump off, doses refused), a heartbeat recovers it, and BOOT stops it for
+    good (a heartbeat never undoes it). `on` and `off` are the LED's brightness with the pump on and off."""
+    def times(key: str) -> list:
+        """The input's times within the run, as numbers."""
+        out = []
+        for x in inputs.get(key) or ():
+            try:
+                t = float(x)
+            except (TypeError, ValueError):
+                continue
+            if 0 <= t <= seconds:
+                out.append(t)
+        return out
+
+    events = sorted([(t, "hb") for t in times("heartbeats")] + [(t, "dose") for t in times("doses")]
+                    + [(t, "stop") for t in times("presses")]) + [(float(seconds), "end")]
+    lines, outs = [(0.1, "MIA SAFE_START")], [(0.0, {"onboard": 0.0, "led": off})]
+    heard, safe, stopped, dose_end = 0.0, False, False, None
+    heartbeats = doses = fallbacks = 0
+    for t, what in events:
+        quiet_at = heard + 15.0 if not safe else None
+        if dose_end is not None and dose_end <= t and (quiet_at is None or dose_end <= quiet_at):
+            lines.append((dose_end, f"MIA DOSED {doses}"))
+            outs.append((dose_end, {"onboard": 0.0, "led": off}))
+            dose_end = None
+        if quiet_at is not None and quiet_at <= t:
+            fallbacks += 1
+            safe, dose_end = True, None
+            lines.append((quiet_at, f"MIA FALLBACK {fallbacks} silence"))
+            outs.append((quiet_at, {"onboard": 0.0, "led": off}))
+        if what == "hb":
+            heard, heartbeats = t, heartbeats + 1
+            lines.append((t, f"MIA HEARTBEAT {heartbeats}"))
+            if safe and not stopped:
+                safe = False
+                lines.append((t, "MIA RECOVERED"))
+        elif what == "dose":
+            if safe or dose_end is not None:
+                lines.append((t, f"MIA REFUSED {'safe' if safe else 'busy'}"))
+            else:
+                doses += 1
+                dose_end = t + 1.0
+                lines.append((t, f"MIA DOSE {doses}"))
+                outs.append((t, {"onboard": 1.0, "led": on}))
+        elif what == "stop" and not stopped:
+            stopped, dose_end = True, None
+            lines.append((t, "MIA STOP 1"))
+            if not safe:
+                safe, fallbacks = True, fallbacks + 1
+                lines.append((t, f"MIA FALLBACK {fallbacks} stop"))
+            outs.append((t, {"onboard": 0.0, "led": off}))
+    return lines, outs
+
+
 def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.Random) -> tuple:
     """What the lab's sketch does in `seconds`: ([(t, line)], [(t, {output: value})]).
     The hello lab says MIA HELLO with its seconds every loop, as its sketch does. The Arduino course's own labs run
-    in `_run_arduino`; the ones it shares with the ESP32's run here, on its board's ADC."""
+    in `_run_arduino`; the ones it shares with the ESP32's run here, on its board's ADC.
+    The watchdog lab runs in `_watchdog`."""
     if _COURSE.get() == "arduino":
         ran = _run_arduino(lesson_id, state, inputs, seconds, rng)
         if ran is not None:
@@ -952,6 +1043,8 @@ def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.
             outs.append((2.0 * k, {"relay": bool(state.get("relay1")) and k % 2 == 0}))
             lines.append((2.0 * k, f"MIA RELAY {k + 1}"))
             k += 1
+    elif lesson_id == "watchdog":
+        lines, outs = _watchdog(inputs, seconds, glow if led != "on" else 1.0, 0.0 if led != "on" else 1.0)
     elif lesson_id in ("wifi", "web"):
         if lesson_id == "wifi":
             lines += [(0.5, "MIA WIFI_WAITING"), (1.0, "MIA WIFI_WAITING")]
