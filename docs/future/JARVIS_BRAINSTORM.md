@@ -344,6 +344,13 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 11 (2026-11-24, late): money he can ask about
+
+- **Am I spending more than usual?** (no decision): *built 2026-11-24 (`core/spending_pace.py`, the tool
+  `spending_vs_usual`).* A category in his words (groceries, gas, eating out...) this month so far and at its pace,
+  against his usual month (the last three full months', the same normal the daily unusual check learns); or, asked in
+  general, the categories running over. The first five days are too early to tell.
+
 ## Round 10 (2026-11-24, night): survival at home, money and automation, checked against the code
 
 - **The power's out** (no decision): *built 2026-11-24 (`core/outage.py`, "the power went out at 6 am", the Power

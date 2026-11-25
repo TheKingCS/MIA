@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1722 files, 372,153 lines; 1722 files describe themselves; 20,423 of 20,553 classes and functions are documented.
+1724 files, 372,348 lines; 1724 files describe themselves; 20,434 of 20,564 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-684 files, 191,707 lines; 9,730 of 9,816 classes and functions documented
+685 files, 191,855 lines; 9,738 of 9,824 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -544,6 +544,7 @@
 - `core/specialist_work.py`: A specialist's worksheet (the local specialists plan, S1; DEC-0197): how one of MIA's specialists answers an engineering question on a local model without the model ever producing a number of its own.
 - `core/specialists.py`: MIA's specialists (DEC-0109; Zac, 2026-11-07: "she should be able to specialize agents for each area of skill she is developing, like one that is catered towards construction knowledge, one towards radio technologies, one towards military strategy, one towards homesteading skills, one towards resear
 - `core/speech_split.py`: Her first words sooner (Jarvis brainstorm 1.1(c); Zac, 2026-11-23: "smooth conversation"). Her answer can't be spoken while the model is still writing it: every answer is checked whole first (invented figures, the canning floor, the emergency floor, the response composer), and those checks stay. Wha
+- `core/spending_pace.py`: "Am I spending more on groceries than usual?" (Jarvis brainstorm, round 11; finance from his own records): a spending category this month so far, at the pace it's going, against his usual month, the average of the last three full months it had spending in (the same normal core/unusual.py learns from
 - `core/spoken_approval.py`: Approving a waiting card by voice, "approve it from now on" included (DEC-0215; Zac, 2026-11-17: "MIA should offer an approve for now or Approve going forward option"; the card's two buttons, said). A quick command (core/quick_commands.py): his own words, matched in code, never the model's, so nothi
 - `core/starter_actions.py`: Starter sets on the web's Settings (DEC-0125: offered on the desktop's setup and Settings, and by voice, but not on the web). `starters(context)` lists each set with its parts for the page; `starter.add` adds a set, or just the parts ticked, as one action whose Undo takes it all back (core/starter_t
 - `core/starter_templates.py`: Starter sets (2026-10-01): a new MIA is empty, and an empty app is hard to start with. A starter set fills in the usual things for a kind of life, so there's something to check off on day one:
@@ -982,7 +983,7 @@
 
 ## tests/: the test suite: what each part must do
 
-632 files, 99,372 lines; 8,328 of 8,372 classes and functions documented
+633 files, 99,419 lines; 8,331 of 8,375 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1481,6 +1482,7 @@
 - `tests/test_specialists.py`: MIA's specialists (core/specialists.py, DEC-0109): their charters name real skills, tracks and loops; a workbook keeps only sourced notes; a person confirms or withdraws; study hall takes them in turn; and the answer always says where a note came from and whether it's confirmed. As agents (DEC-0197)
 - `tests/test_specialties.py`: What MIA is trained for and built to do (core/capabilities.py `specialty_list`, Zac 2026-11-08): every line read from the code that makes it true, numbers included; a specialty whose source is missing is left out instead of claimed; painting is only "ready" when its engine runs; the person's own gro
 - `tests/test_speech_split.py`: Her first words sooner (core/speech_split.py, brainstorm 1.1(c)): the first sentence voiced first, the rest a part at a time while it plays, never cut mid-sentence; only for a page that asks (the phone app keeps the whole audio).
+- `tests/test_spending_pace.py`: "Am I spending more on groceries than usual?" (core/spending_pace.py): his words read to a category, this month at its pace against his usual month, the early days said as too early, and the ones running over said when none is named.
 - `tests/test_spoken_approval.py`: Approving a waiting card by voice, "approve it from now on" included (core/spoken_approval.py, DEC-0215). *(1 undocumented)*
 - `tests/test_starter_actions.py`: Starter sets from the web's Settings (core/starter_actions.py, DEC-0125): each set with its parts on the page, and starter.add adding a set, or the parts ticked, as one action whose Undo takes it all back.
 - `tests/test_starter_templates.py`: Starter sets (core/starter_templates.py), 2026-10-01: the usual chores, routines, upkeep schedules and a workout for a kind of life, added in one undoable step, never twice.

@@ -723,6 +723,9 @@ GOLDEN_CASES = [
     ("storm: is one coming", "Is there a storm coming this week?", "storm_ready"),
     ("storm: get ready", "Help me get ready for the ice storm", "storm_ready"),
     ("storm: the plain forecast is the weather", "What's the weather tomorrow?", "get_weather"),
+    ("spending: a category against usual", "Am I spending more on groceries than usual?", "spending_vs_usual"),
+    ("spending: overspending at all", "Am I overspending this month?", "spending_vs_usual"),
+    ("spending: what's left is the budget", "How much do I have left in my grocery budget?", "budget_left"),
     ("orchard: a fruit's needs", "How many chill hours does a peach tree need?", "fruit_tree_facts"),
     # ("How long will my water last?" is answered in code, direct_lookup, before any model: tests/test_water_budget.py)
     ("water: the budget", "What's my water budget?", "water_budget"),

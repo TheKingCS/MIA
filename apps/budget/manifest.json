@@ -78,7 +78,8 @@
       "still_using_subscription",
       "tag_charge",
       "update_debt",
-      "why_bill_high"
+      "why_bill_high",
+      "spending_vs_usual"
     ],
     "actions": [
       "bill.add",
@@ -164,7 +165,8 @@
       "money_ahead": "observe",
       "debt_payoff_mission": "act_with_approval",
       "debts.missions": "act_with_approval",
-      "why_bill_high": "observe"
+      "why_bill_high": "observe",
+      "spending_vs_usual": "observe"
     },
     "outside": [
       "get_receipt"
