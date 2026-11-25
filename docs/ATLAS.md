@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1813 files, 388,155 lines; 1813 files describe themselves; 21,146 of 21,272 classes and functions are documented.
+1814 files, 388,179 lines; 1814 files describe themselves; 21,147 of 21,273 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-716 files, 202,271 lines; 10,125 of 10,206 classes and functions documented
+716 files, 202,274 lines; 10,125 of 10,206 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1014,7 +1014,7 @@
 
 ## tests/: the test suite: what each part must do
 
-688 files, 103,869 lines; 8,650 of 8,695 classes and functions documented
+689 files, 103,890 lines; 8,651 of 8,696 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1680,6 +1680,7 @@
 - `tests/test_web_voice.py`: MIA's voice from Settings and by voice (core/web_voice.py, core/assistant_voice_choice_actions.py): the voices installed, switching one, the AI voice effect and the volume; only the PC's owner changes them.
 - `tests/test_web_why.py`: My Why on the web (core/web_why.py): the chains of reasons with their facts, and linking, unlinking and achieving goals as why.* actions, the same goals the voice tools keep (DEC-0125).
 - `tests/test_web_worlds.py`: Living Worlds on the web (DEC-0134 Phases 1 and 2): the screen, its world.* actions (playing a turn too) and the voice tools, all fiction.
+- `tests/test_week_without_alarms.py`: The week said by voice (get_week, and the weekend plan through it) never lists an alarm as something due (the live sweep, 2026-11-25: the weekend plan said "you've got to pay your electric bill and wake up on time"); the evening wrap and the morning briefing leave alarms out the same way.
 - `tests/test_welcome.py`: What comes after User Sync (core/welcome.py, core/app_intro.py).
 - `tests/test_what_i_used.py`: What I Used (DEC-0029, ALICE pick 1): a turn gets the memories that match what was asked, returns them with the reply, and each can be fixed or forgotten (and the forgetting undone).
 - `tests/test_whimsy.py`: The grounded little inspiration MIA offers toward the slow, made life (core/whimsy.py, 2026-11-08). A seed is composed from real things — the season, the workshop shelf, the person's own standing directions — never improvised; it only grows from a direction the person actually set; a material seed n
