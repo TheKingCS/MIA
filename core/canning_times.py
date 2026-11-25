@@ -17,6 +17,12 @@ tested recipe.
 
 Always with: follow a tested recipe for how the food is prepared and its headspace, and vent the canner 10 minutes
 before pressure. Read-only.
+
+**Checked** 2026-11-24 against the National Center for Home Food Preservation's pages of the USDA guide
+(nchfp.uga.edu/how/can/...: each food's page, all 16 tables and both gauge tables matched). Their notes kept here:
+potatoes, beets, dried beans, ground meat and stock are hot pack only; the fish time is tested only for fatty fish
+(salmon, trout, steelhead, mackerel, bluefish), so a lean fish like bass or catfish gets no time; never white-flesh
+peaches in a water bath; crushed tomatoes always acidified.
 """
 
 from __future__ import annotations
@@ -34,17 +40,20 @@ PRESSURE = {
     "peas": (("green pea", "peas", "pea "), 40, 40, "shelled, raw or hot pack"),
     "dry beans": (("dry bean", "dried bean", "pinto", "kidney bean", "navy bean", "black bean"), 75, 90,
                   "soaked and boiled first"),
-    "meat": (("beef", "venison", "pork", "lamb", "meat", "stew meat", "ground"), 75, 90, "strips, cubes or ground"),
+    "meat": (("beef", "venison", "pork", "lamb", "meat", "stew meat", "ground"), 75, 90,
+             "strips or cubes, hot or raw pack; ground, hot pack"),
     "chicken": (("chicken", "poultry", "turkey", "rabbit"), 75, 90, "boneless; bone-in is 65 minutes for pints and 75 for quarts"),
     "stock": (("stock", "broth", "chicken stock", "chicken broth", "beef stock", "beef broth", "bone broth",
                "turkey stock", "venison stock"), 20, 25, "beef or chicken"),
-    "fish": (("fish", "trout", "salmon", "bass", "catfish"), 100, None, "pints only"),
+    "fish": (("trout", "salmon", "steelhead", "mackerel", "bluefish"), 100, None,
+             "salmon, trout, steelhead, mackerel or bluefish, raw pack, pints only"),
 }
 # food: (words, {jar: (0-1000, 1001-3000, 3001-6000, above 6000 ft) minutes}, the pack)
 WATER_BATH = {
     "crushed tomatoes": (("crushed tomato", "tomato"), {"pints": (35, 40, 45, 50), "quarts": (45, 50, 55, 60)},
                          "crushed, with 1 tablespoon bottled lemon juice a pint (2 a quart)"),
-    "peaches": (("peach",), {"pints": (20, 25, 30, 35), "quarts": (25, 30, 35, 40)}, "hot pack in syrup or water"),
+    "peaches": (("peach",), {"pints": (20, 25, 30, 35), "quarts": (25, 30, 35, 40)},
+                "yellow, hot pack in syrup or water; never white-flesh peaches"),
     "applesauce": (("applesauce", "apple sauce"), {"pints": (15, 20, 20, 25), "quarts": (20, 25, 30, 35)},
                    "hot"),
 }
@@ -115,11 +124,14 @@ TESTED = ("Follow a tested recipe (the USDA's or the National Center for Home Fo
 
 
 def say(context, words: str) -> str:
-    """The answer for what he said (see the module's opening)."""
+    """The answer for what he said (see the module's opening).
+    A lean fish (bass, catfish) isn't in the USDA's tested fish time, so it gets the tested-recipe answer, never 100
+    minutes."""
     found = food_in(words)
     if found is None:
         return ("I only give processing times I have from the USDA's tested tables (green beans, corn, carrots, "
-                "potatoes, beets, peas, dry beans, meat, chicken, stock, fish, crushed tomatoes, peaches, applesauce). "
+                "potatoes, beets, peas, dry beans, meat, chicken, stock, salmon or trout, crushed tomatoes, peaches, "
+                "applesauce). "
                 "For anything else, use a tested recipe from the National Center for Home Food Preservation; never "
                 "guess a time.")
     how, name = found
