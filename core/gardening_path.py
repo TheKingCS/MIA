@@ -80,7 +80,8 @@ STAGES: tuple[Stage, ...] = (
             "Cover openings with hardware cloth, buried or skirted at the base: chicken wire keeps chickens in, but "
             "raccoons and dogs tear or reach through it.",
             "Fresh water every day and a complete layer feed, with oyster shell on the side for strong eggshells.",
-            "In winter, ventilation high in the coop rather than heat: moisture, not cold, causes frostbite, and heat "
+            "In winter, ventilation high in the coop rather than heat: trapped moisture makes frostbite far likelier, "
+            "and heat "
             "lamps start coop fires.",
             "Collect eggs every day. A bird that's hunched, off its feed or not like the others gets separated, "
             "watched, and seen by a vet who treats poultry if it doesn't pick up."),

@@ -17,6 +17,7 @@ a circuit that could hurt a part or a board isn't something to guess. Flashing a
   board (core/boards.py), with what his Component DB has of each part and the bench's check of the wiring.
 - **By voice** (`reply`, in code before the plans; the tool `design_build`): "build me a motion light": the parts, what
   he has, the wiring as steps, and that it's on My Bench to see.
+His parts matched by whole word (`matching_parts`: "LED" never in "OLED display").
 """
 
 from __future__ import annotations
@@ -110,8 +111,8 @@ void loop() {{
                "to your own limits.",
     },
     "soil_alert": {
-        "name": "A dry-soil alert", "words": ("soil alert", "dry soil", "water the plants", "plant alarm",
-                                             "soil moisture alarm", "when the soil is dry", "watering reminder"),
+        "name": "A dry-soil alert", "words": ("soil alert", "dry soil alert", "dry-soil alert", "plant alarm",
+                                             "soil moisture alarm", "soil moisture sensor", "soil sensor"),
         "about": "A capacitive soil sensor read every second; an LED lights when the soil is drier than the level you "
                  "set.",
         "parts": (("soil", "soil_cap"), ("led", "led"), ("r1", "resistor")),
@@ -146,8 +147,8 @@ void loop() {{
                "them. Push it in only up to its line: the top's electronics aren't waterproof.",
     },
     "tank_level": {
-        "name": "A water-tank level gauge", "words": ("tank level", "water level", "rain barrel", "cistern level",
-                                                      "how full the tank", "tank gauge"),
+        "name": "A water-tank level gauge", "words": ("tank level", "water level gauge", "water level sensor",
+                                                      "rain barrel gauge", "cistern level", "tank gauge"),
         "about": "An HC-SR04 above the water measures down to it; the sketch says how full the tank is.",
         "parts": (("sonar", "hcsr04"), ("r1", "resistor"), ("r2", "resistor")),
         "wires": {
@@ -206,14 +207,23 @@ def find(words: str) -> Optional[str]:
 
 
 def _have(context, spec) -> Optional[int]:
-    """How many of a part his Component DB has, by its model or name (None when nothing there matches)."""
+    """How many of a part his Component DB has, by its model or name (None when nothing there matches).
+    By whole word (`matching_parts`)."""
     store = getattr(context, "components", None)
     if store is None:
         return None
-    model = re.sub(r"[^a-z0-9]+", "", spec.name.lower().split(" ")[0])
-    found = [c for c in store.all_components()
-             if model and model in re.sub(r"[^a-z0-9]+", "", f"{c.name} {c.category}".lower())]
+    found = matching_parts(store.all_components(), spec)
     return sum(int(c.quantity or 0) for c in found) if found else None
+
+
+def matching_parts(stock: list, spec) -> list:
+    """Pure logic. His Component DB entries that are this part: its model as a whole word ("HC-SR04" in "HC-SR04
+    sensor"; "LED" never in "OLED display")."""
+    model = re.sub(r"[^a-z0-9]+", "", spec.name.lower().split(" ")[0])
+    if not model:
+        return []
+    return [c for c in stock if model in [re.sub(r"[^a-z0-9]+", "", w)
+                                          for w in re.split(r"[\s,/()]+", f"{c.name} {c.category}".lower())]]
 
 
 def design(context, design_id: str, board_id: str = "esp32dev") -> dict:
@@ -259,16 +269,17 @@ def _words(terminal: str, parts: list, board) -> str:
 
 def _design_tool(context, arguments: dict) -> str:
     """Tool design_build: a design for his goal, said: what it does, what he has and needs, the wiring, and where to
-    see it."""
+    see it.
+    The board only from board words; the ESP32 otherwise."""
     from core import boards
-    from core.esp32_lab import course_in
 
     words = str(arguments.get("goal", "") or "") + " " + str(arguments.get("question", "") or "")
     found = find(words)
     if found is None:
         names = ", ".join(d["name"].lower() for d in DESIGNS.values())
         return f"I don't have a design for that yet. I can put these on your bench: {names}."
-    board_id = boards.named_in(words, "arduino") or ("mega" if course_in(context, words) == "arduino" else "esp32dev")
+    # the board only from board words ("my nano", "arduino"): a design's own words ("motion light") name no course
+    board_id = boards.named_in(words, "arduino") or ("mega" if re.search(r"\barduino\b", words.lower()) else "esp32dev")
     got = design(context, found, board_id)
     said = f"{got['name']} on your {boards.BOARDS[board_id].name}: {got['about']}"
     if got["have"]:
@@ -279,15 +290,22 @@ def _design_tool(context, arguments: dict) -> str:
     return said + " It's on My Bench to see, check and copy the sketch from."
 
 
-_BUILD = re.compile(r"\b(build|make|design|wire up|put together|help me build|how (?:do|would) i build)\b")
+# The request itself, at the start: "build me a ...", "can you design a ...", "how would I build a ...". A reminder,
+# a note or a time ("make a temperature alarm at 6am") is never a design (the third review, 2026-11-25).
+_BUILD = re.compile(r"^(?:hey mia,? |mia,? )?(?:can you |could you |would you |will you |please |let's |lets |i want to "
+                    r"|i'd like to |help me )?(?:build|make|design|wire up|put together)(?: me| us)? (?:a|an) "
+                    r"|^how (?:do|would|could|can) i (?:build|make|wire up) (?:a|an) ")
+_NOT_A_DESIGN = re.compile(r"\b(?:remind|reminder|note|alarm (?:at|for) \d|\d{1,2}(?::\d\d)? ?(?:am|pm)\b|stand|shelf|"
+                           r"cover|lid|frame)\b")
 
 
 def reply(context, conversation, text: str) -> Optional[str]:
     """"Build me a motion light", in code, before the question plans (live check, 2026-11-25: the model routed "build me
-    a temperature alarm" to add_alarm): a build verb and one of the designs' own goals; None otherwise ("build me a
-    shed" is the planner's)."""
+    a temperature alarm" to add_alarm): the request at the start ("build me a", "can you design a") and one of the
+    designs' own goals; never a reminder, a note, a time or a thing built for one ("a rain barrel stand"); None otherwise
+    ("build me a shed" is the planner's)."""
     said = " ".join(str(text or "").lower().split())
-    if not _BUILD.search(said) or find(said) is None:
+    if not _BUILD.match(said) or _NOT_A_DESIGN.search(said) or find(said) is None:
         return None
     return _design_tool(context, {"goal": said})
 

@@ -255,7 +255,8 @@ DRILLS: tuple = (
                  ("A heat lamp over the roost", "wrong",
                   "Heat lamps start coop fires, and birds used to them suffer if the power fails."),
                  ("Ventilation high up, no drafts at roost level, and dry bedding", "best",
-                  "Damp air, not cold, causes frostbite; venting the moisture keeps them dry and their feathers do "
+                  "Damp air makes frostbite far more likely in the cold; venting the moisture keeps them dry and "
+                  "their feathers do "
                   "the rest."),
                  ("Seal every vent to keep the warmth in", "wrong",
                   "Sealed, the coop fills with moisture and ammonia: worse frostbite and sick birds.")),

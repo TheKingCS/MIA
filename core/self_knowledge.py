@@ -277,7 +277,9 @@ _designs_cache: dict = {"at": 0.0, "found": None}
 
 def _designs() -> dict:
     """{name (lowered, no leading "the"): {"decisions": [...], "spec": "docs/specs/X.md" or ""}} from docs/DECISIONS.md's
-    headings and docs/specs' file names; subjects of two to six words only, so a long sentence isn't a name."""
+    headings and docs/specs' file names; subjects of two to six words only, so a long sentence isn't a name.
+    Only proper names count from a decision's heading ("Smart Closet", never "Least privilege"), each kept with its
+    own spelling."""
     now = time.monotonic()
     if _designs_cache["found"] is not None and now - _designs_cache["at"] < 600:
         return _designs_cache["found"]
@@ -287,14 +289,19 @@ def _designs() -> dict:
     except OSError:
         text = ""
     for dec, title in _DECISION_HEAD.findall(text):
-        subject = _SUBJECT_END.split(title.strip(), maxsplit=1)[0]
-        subject = re.sub(r"^(?:the|a|an)\s+", "", subject.strip().lower()).strip(" .,;")
-        if 2 <= len(subject.split()) <= 6 and not re.search(r"\b(?:mia|claude|zac|we|he|she|it|they)\b", subject):
-            found.setdefault(subject, {"decisions": [], "spec": ""})["decisions"].append(dec)
+        said = re.sub(r"^(?:The|A|An)\s+", "", _SUBJECT_END.split(title.strip(), maxsplit=1)[0].strip()).strip(" .,;")
+        words = said.split()
+        # A name of hers, written as one ("Life Enrichment Protocol", "Smart Closet"): every word capitalized but the
+        # small ones; never a phrase ("Least privilege", "critical path", "her face": the third review, 2026-11-25).
+        proper = all(w[:1].isupper() or w.lower() in ("of", "and", "the", "for", "a", "an", "in", "on", "to")
+                     for w in words) and words and words[0][:1].isupper()
+        subject = said.lower()
+        if proper and 2 <= len(words) <= 6 and not re.search(r"\b(?:mia|claude|zac|we|he|she|it|they)\b", subject):
+            found.setdefault(subject, {"decisions": [], "spec": "", "name": said})["decisions"].append(dec)
     for spec in sorted((ROOT / "docs" / "specs").glob("*.md")):
         name = spec.stem.lower().replace("_", " ")
         if 2 <= len(name.split()) <= 6:
-            found.setdefault(name, {"decisions": [], "spec": ""})["spec"] = f"docs/specs/{spec.name}"
+            found.setdefault(name, {"decisions": [], "spec": "", "name": name.title()})["spec"] = f"docs/specs/{spec.name}"
     _designs_cache.update(at=now, found=found)
     return found
 
@@ -323,7 +330,9 @@ def plan_reply(prompt: str) -> Optional[str]:
     """In code: "what is the Life Enrichment Protocol?" about a design of hers nothing builds yet. That it's a plan,
     not something she can do now, then what it's for, from its decision, said to him ("you", "my"); None for a design
     that's built (the model describes it from her records) or a question that isn't one (live check, 2026-11-25: told
-    it wasn't built, the model still called it "a major MIA subsystem")."""
+    it wasn't built, the model still called it "a major MIA subsystem").
+    Only a design its own decision calls a plan (a direction, proposed, planned); any other is the model's, with her
+    records."""
     from core import self_docs
 
     found = design_asked(_norm(prompt))
@@ -331,9 +340,12 @@ def plan_reply(prompt: str) -> Optional[str]:
         return None
     name, design = found[0]
     decision = _safe(lambda: self_docs.decision(design["decisions"][0], 600), None) if design["decisions"] else None
-    title = (decision or {}).get("title", "")
-    shown = re.search(re.escape(name), title, re.I)
-    proper = title[shown.start():shown.end()] if shown else name
+    # Only a design its own decision calls a plan (a direction, proposed, planned): any other is left to the model
+    # with her records, never called unbuilt on a guess (the third review: built features were called plans).
+    if not re.search(r"\b(?:direction|proposed|planned|plan|not built|future)\b",
+                     str((decision or {}).get("status", "")).lower()):
+        return None
+    proper = design.get("name") or name
     gist = re.sub(r"\s+", " ", str((decision or {}).get("gist", ""))).strip()
     first = re.split(r"(?<=[.!?])\s", gist, maxsplit=1)[0] if gist else ""
     first = re.sub(r"\bthe person's\b", "your", re.sub(r"\bthe person\b", "you", first))
@@ -346,17 +358,18 @@ def plan_reply(prompt: str) -> Optional[str]:
             + where.strip())
 
 
+_TELL_ABOUT = re.compile(r"^(?:tell me (?:more )?about|what do you know about|explain|describe)\s+(.+?)\s*\??$")
+
+
 def design_asked(text: str) -> list:
     """Pure logic, with her documents. The designs a lowered message asks her to describe: one that's the whole subject
-    of "what is ...?" ("what is the Life Enrichment Protocol?"), or one named in "tell me about your ..." / "do you
-    have ..."; never a design's words in passing ("what's in phase 2 of the greenhouse plan?")."""
-    defined = _DEFINE.match(text)
-    if defined:
-        rest = re.sub(r"^(?:the|a|an|your|mia's)\s+", "", defined.group(1).strip(" ?.!"))
-        found = designs_in(rest)
-        if found and len(rest) <= len(found[0][0]) + 4:
-            return found
-    return designs_in(text) if _ABOUT_FORM.match(text) else []
+    of "what is ...?" or "tell me about ..." ("what is the Life Enrichment Protocol?"), exactly; never with "my" or
+    anything else beside it, and never a design's words in passing."""
+    defined = _DEFINE.match(text) or _TELL_ABOUT.match(text)
+    if not defined:
+        return []
+    rest = re.sub(r"^(?:the|a|an|your|mia's)\s+", "", defined.group(1).strip(" ?.!"))
+    return [(n, d) for n, d in designs_in(rest) if n == rest]  # the design is exactly what's asked about
 
 
 def _norm(prompt: str) -> str:

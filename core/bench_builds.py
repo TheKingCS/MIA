@@ -59,7 +59,8 @@ class BuildBook:
 
     def save(self, name: str, board: str, parts: list, wires: list, sketch: str = "", design: str = "") -> dict:
         """Keeps a build (one of the same name on the same board is replaced: a new version). ValueError for no name
-        or nothing on the board."""
+        or nothing on the board.
+        A re-saved build is a new version, not built."""
         name = " ".join(str(name or "").split())[:80]
         if not name:
             raise ValueError("Give the build a name.")
@@ -67,7 +68,8 @@ class BuildBook:
             raise ValueError("There's nothing on the board to save.")
         now = datetime.now().isoformat(timespec="minutes")
         found = next((b for b in self.builds if b["name"].lower() == name.lower() and b["board"] == board), None)
-        build = found or {"id": uuid.uuid4().hex[:8], "created": now, "built": ""}
+        build = found or {"id": uuid.uuid4().hex[:8], "created": now}
+        build["built"] = ""  # a new version isn't built yet
         build.update({"name": name, "board": str(board), "parts": [dict(id=str(p["id"]), spec=str(p["spec"]))
                                                                     for p in parts][:20],
                       "wires": [[str(a), str(b)] for a, b in wires][:80], "sketch": str(sketch or "")[:20000],
@@ -111,8 +113,8 @@ def book(context=None) -> BuildBook:
 
 
 def parts_used(context, build: dict) -> list:
-    """Each kind of part a build takes: {spec, name, count, component (his matching Component DB entry, or None),
-    on_hand}."""
+    """Each kind of part a build takes: {spec, name, count, component (his one matching Component DB entry, by whole
+    word; None when none or several could be it), several, on_hand}."""
     from core import part_specs
 
     specs = part_specs.book(context).all()
@@ -126,9 +128,11 @@ def parts_used(context, build: dict) -> list:
         spec = specs.get(spec_id)
         name = spec.name if spec else spec_id
         model = re.sub(r"[^a-z0-9]+", "", name.lower().split(" ")[0])
-        match = next((c for c in stock if model and model in re.sub(r"[^a-z0-9]+", "", f"{c.name} {c.category}".lower())),
-                     None)
-        out.append({"spec": spec_id, "name": name, "count": n, "component": match,
+        from core.bench_designs import matching_parts
+
+        found = matching_parts(stock, spec) if spec else []
+        match = found[0] if len(found) == 1 else None  # several that could be it: never a guess
+        out.append({"spec": spec_id, "name": name, "count": n, "component": match, "several": len(found) > 1,
                     "on_hand": int(match.quantity or 0) if match else None})
     return out
 
@@ -172,14 +176,18 @@ def _remove_execute(context, params) -> str:
 
 
 def _built_describe(context, params) -> str:
-    """What benchbuild.built says: each Component DB count it changes, and the parts he has no record of."""
+    """What benchbuild.built says: each Component DB count it changes, and the parts he has no record of.
+    One already built is refused; a part several of his could be is named, never guessed."""
     build = book(context).get(str(params.get("build_id", "")))
     if build is None:
         raise ActionError("That build isn't saved.")
+    if build.get("built"):
+        raise ActionError(f"\"{build['name']}\" is already marked built.")
     changes, unknown = [], []
     for used in parts_used(context, build):
         if used["component"] is None:
-            unknown.append(used["name"])
+            unknown.append(used["name"] + (" (several of your parts could be it: change the count yourself)"
+                                           if used.get("several") else ""))
         else:
             changes.append(f"{used['component'].name}: {used['on_hand']} to {max(0, used['on_hand'] - used['count'])}")
     said = f"Mark \"{build['name']}\" built" + (f", taking its parts from your Component DB ({'; '.join(changes)})"
@@ -188,11 +196,13 @@ def _built_describe(context, params) -> str:
 
 
 def _built_execute(context, params) -> str:
-    """Does benchbuild.built: the counts down, the day kept."""
+    """Does benchbuild.built: the counts down, the day kept; never twice."""
     build = book(context).get(str(params.get("build_id", "")))
     store = getattr(context, "components", None)
     if build is None:
         raise ActionError("That build isn't saved.")
+    if build.get("built"):
+        raise ActionError(f"\"{build['name']}\" is already marked built.")
     taken = []
     for used in parts_used(context, build):
         if used["component"] is not None and store is not None:
