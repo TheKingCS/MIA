@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1831 files, 390,636 lines; 1831 files describe themselves; 21,267 of 21,392 classes and functions are documented.
+1832 files, 390,743 lines; 1832 files describe themselves; 21,275 of 21,400 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-719 files, 203,585 lines; 10,154 of 10,233 classes and functions documented
+719 files, 203,642 lines; 10,156 of 10,235 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1017,7 +1017,7 @@
 
 ## tests/: the test suite: what each part must do
 
-703 files, 105,036 lines; 8,742 of 8,788 classes and functions documented
+704 files, 105,086 lines; 8,748 of 8,794 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1591,6 +1591,7 @@
 - `tests/test_sweep_11.py`: The fifth live sweep's fixes (2026-11-25, hobbies and the truck): "I caught 3 bass" logs three catches; "when is my truck due for an oil change?" is that task's line from his own maintenance, and "the truck needs new brakes" adds the task, only for an asset of his (never "the garden needs water"); "
 - `tests/test_sweep_12.py`: The sixth live sweep's fixes (2026-11-25): "remind me tomorrow at 9 to call the vet" goes on his calendar like "remind me to call the vet tomorrow at 9"; a tool call written out with a doubled quote before its key is caught; what he spent on a category and "am I over budget?" are from his own record
 - `tests/test_sweep_13.py`: The seventh live sweep's fixes (2026-11-25): an answer never says the same paragraph or sentence twice ("The project you're planning: goats" had come five times over), and the project picture speaks to him, never of him.
+- `tests/test_sweep_14.py`: The eighth live sweep's fixes (2026-11-25): a turn the model answers ends a plan's thread and "thanks" never follows one up; "what should I plant in the spring?" is no project's picture; a reply that is only a humor example is never said; an outlet's voltage is said in fixed safe words; his request 
 - `tests/test_sweep_8_conversation.py`: The third live sweep's conversation fixes (2026-11-25): an expense's date is a real date or today (the model sent "null", and no month counted it), feed has its own category, the tone examples are other people's and never this conversation (the model brought up "that marathon you're running next wee
 - `tests/test_sweep_9_automation.py`: The fourth live sweep's fixes (2026-11-25): "remind me every Monday to check the water filter" and "can you automate a reminder every Monday to ..." go on the calendar as a weekly event in code (no tool had been called, and the model promised a notification); a promise with words between ("I'll also
 - `tests/test_sync.py`: Two-way sync between the phone and the home computer (core/sync.py): the merge rules, one full sync against a computer that answers like MIA on the PC does (and an edit made on the phone while it answers, which survives), the PC's own endpoints, and a phone paired again taking the computer's copies 

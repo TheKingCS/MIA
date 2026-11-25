@@ -126,7 +126,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
-    The hours he puts into his projects (`_project_time_reply`) too.
+    The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -192,6 +192,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _garden_kit_reply(context, prompt)  # a crop's dates, the 72-hour kit, as in a turn
     if walked is None:
         walked = _project_time_reply(context, prompt)  # "log 2 hours on the shed", as in a turn
+    if walked is None:
+        walked = _mains_reply(context, prompt)  # an outlet's voltage, in fixed safe words, as in a turn
     if walked is None:
         walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
@@ -959,6 +961,28 @@ def _project_time_reply(context, prompt: str):
     return None
 
 
+_MAINS = re.compile(r"\b(?:check|test|measure|read)\w*\b.{0,40}\b(?:voltage|volts|power|live|current|wired|wiring)\b"
+                    r".{0,40}\b(?:outlets?|sockets?|receptacles?|breakers?|breaker panel|panel|wall plugs?|mains)\b|"
+                    r"\b(?:outlets?|sockets?|receptacles?|breakers?|mains)\b.{0,40}\b(?:check|test|measure|read)\w*\b"
+                    r".{0,40}\b(?:voltage|volts|power|live)\b|\bis (?:the|this|my|an?) (?:outlet|socket|wire) live\b|"
+                    r"\b(?:check|test|tell)\w*\b.{0,20}\b(?:outlets?|sockets?|receptacles?)\b.{0,20}\b(?:live|hot|wired|"
+                    r"working|has power|getting power)\b",
+                    re.I)
+MAINS_REPLY = ("The safe way to check an outlet: a plug-in outlet tester (its lights say whether it's live and wired "
+               "right), or a non-contact voltage tester held near it, which beeps at a live wire without touching it. "
+               "A multimeter on an outlet means touching live mains: only with a meter rated CAT II or higher, set to AC "
+               "volts, probes with finger guards, one hand where you can. If anything reads wrong, or there's heat, "
+               "buzzing or a burning smell, switch that breaker off and call an electrician.")
+
+
+def _mains_reply(context, prompt: str):
+    """"How do I check the voltage at an outlet?", in fixed words (the live sweep, 2026-11-25: the model walked him
+    through a multimeter on a live outlet, setting it to "V or \u03a9"): a plug-in outlet tester or a non-contact
+    tester first, a meter only rated for mains, and the breaker and an electrician when anything's off. None
+    otherwise."""
+    return MAINS_REPLY if _MAINS.search(prompt or "") else None
+
+
 _OVER_BUDGET = re.compile(r"^\s*(?:am i|are we|is anything|anything)\s+(?:over|under)\s+(?:my\s+|our\s+|the\s+)?budgets?"
                           r"(?:\s+(?:anywhere|on anything|at all|this month|yet))?\s*\??\s*$", re.I)
 
@@ -1150,7 +1174,9 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     LED's resistor (`_led_reply`) are taken in code too.
     What he spent on a category this month is said from his expenses (`_spent_on_reply`).
     When to start a crop and what's in a 72-hour kit are said from his records (`_garden_kit_reply`).
-    Hours on a project are logged and read back in code (`_project_time_reply`).
+    Hours on a project are logged and read back in code (`_project_time_reply`); an outlet's voltage is said in fixed
+    safe words (`_mains_reply`). A turn the model answers ends a question plan's thread
+    (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
@@ -1289,6 +1315,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         if walked is None:
             walked = _project_time_reply(context, prompt)  # the hours he puts into his projects, logged and read
         if walked is None:
+            walked = _mains_reply(context, prompt)  # an outlet's voltage: a tester first, an electrician if off
+        if walked is None:
             walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
@@ -1325,6 +1353,11 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         if quick is not None:
             add_message(conversation, "assistant", quick)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [quick], route="code")
+    from core import conversation_state
+
+    # the model answers this one, so the plan's thread is over: "how much space do they need?" two turns after "I'm
+    # thinking about getting goats" is no follow-up to the project picture (the live sweep, 2026-11-25)
+    conversation_state.forget(conversation)
     notices = []
     if prepared.notice:
         add_message(conversation, "assistant", prepared.notice)
@@ -1377,8 +1410,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     content = honest(context, prompt, content, keep=not _personal(conversation)
                      and not getattr(conversation, "off_record", False))  # never "I've added a reminder" (claim_check)
     earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
-    if echoes(content, prompt) or any(echoes(content, said) for said in earlier):
-        content = ECHO_REPLY  # never the person's own words (now or a moment ago) said back as if an answer
+    from core.personality import only_example
+
+    if echoes(content, prompt) or any(echoes(content, said) for said in earlier) or only_example(content):
+        content = ECHO_REPLY  # never the person's own words, or a humor example alone, said back as if an answer
     if _garbled(content, context):
         content = GARBLED_REPLY  # never a tool call written out as the answer, even after the retry without tools
     add_message(conversation, "assistant", content)

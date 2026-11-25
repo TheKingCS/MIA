@@ -33,7 +33,8 @@ when to nudge her toward one line of wit, in a flavor picked at random;
 how often is each person's own level (HUMOR_LEVELS, off to lots), set
 by asking in chat (core/assistant_humor_actions.py).
 A humor example's own line the model copies into a reply is taken out (`without_copied_example`, from
-core/response_composer.polish), and loosely copied too (an example's own subject he never mentioned). A pleasantry
+core/response_composer.polish), and loosely copied too (an example's own subject he never mentioned); a reply that
+is only an example's line is never said (`only_example`, checked by the turn). A pleasantry
 alone ("thanks", "you're the best") gets no joke and `pleasantry_line`: a warm line, never a bill tacked on.
 """
 
@@ -219,6 +220,15 @@ def without_copied_example(text: str, prompt: str = "") -> str:
         kept = kept[opening.end():]
     kept = re.sub(r"^[\s.,!]+", "", kept).strip()
     return kept[:1].upper() + kept[1:] if kept else str(text or "")
+
+
+def only_example(text: str) -> bool:
+    """Pure logic. Whether a reply is nothing but a humor example's line (the live sweep, 2026-11-25: "Give me a quick
+    survival tip" answered only "It's in the last place you'll look. Statistically, that's the couch.")."""
+    kept = str(text or "")
+    for line in EXAMPLE_LINES:
+        kept = kept.replace(line, "")
+    return bool(str(text or "").strip()) and not re.sub(r"[\s\"'.,!]+", "", kept)
 
 
 def humor_line(prompt: str, roll: float, flavor_roll: float, chance: float = HUMOR_CHANCE) -> str:

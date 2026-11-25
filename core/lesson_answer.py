@@ -171,7 +171,9 @@ _PLAIN = {"what", "when", "where", "which", "should", "would", "could", "about",
           "know", "tell", "best", "your", "mine", "they", "them", "there", "their", "into", "does", "want",
           # what a lesson is about, not which step of it: "chickens" ties the mites step with the coop's wire
           "chicken", "chickens", "hens", "flock", "birds", "coop", "layers", "laying", "plants", "garden", "wood",
-          "water", "fire", "seeds"}
+          "water", "fire", "seeds",
+          # the fishing and soldering lessons' own subjects: "what size hook for catfish?" leads with catfish's step
+          "hook", "hooks", "size", "sizes", "fish", "fishing", "knot", "knots", "solder", "soldering", "meter"}
 
 
 def steps_for(steps: tuple, words: str) -> list:

@@ -257,11 +257,14 @@ def what_it_means(context, conversation, prompt: str) -> Optional[str]:
 
 
 def looks_like_follow_up(text: str) -> bool:
-    """Pure logic. A short message that leans on what came before."""
+    """Pure logic. A short message that leans on what came before; never thanks ("Thanks, that's helpful")."""
     said = (text or "").strip()
     words = said.split()
     if not words or len(words) > MAX_WORDS:
         return False
+    if re.match(r"(?:thanks|thank you|thx|cool|nice|great|awesome|perfect|got it|ok(?:ay)?|sounds good|that'?s "
+                r"(?:helpful|great|good|perfect))\b", said, re.I) and "?" not in said:
+        return False  # "Thanks, that's helpful" thanks her; it asks the plan nothing (the live sweep)
     return bool(_LEADS.match(said)) or bool(_LEANS.search(said))
 
 

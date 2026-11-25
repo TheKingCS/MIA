@@ -134,11 +134,16 @@ def polish(text: str, prompt: str = "") -> str:
     a last sentence that offers more help, and a humor example's line copied
     word for word (core/personality.without_copied_example), or loosely when
     his words (`prompt`) are given, go. Lists, markdown and length stay.
-    A paragraph or sentence said twice is said once (`without_repeats`)."""
+    A paragraph or sentence said twice is said once (`without_repeats`), and his request said back as her opening
+    ("I want to learn about tying a bowline.") goes."""
     from core.personality import without_copied_example
 
     text = without_copied_example((text or "").strip(), prompt)  # never a humor example's line said as hers
     text = without_repeats(text) or text  # never the same paragraph or sentence twice
+    if re.match(r"\s*(?:teach|tell|show|explain|help)\b", prompt or "", re.I):
+        # "Teach me how to tie a bowline" answered "I want to learn about tying a bowline." first (the live sweep)
+        text = re.sub(r"^\s*I(?:'d like| want| would like) to (?:learn|know|understand)\b[^.!?\n]*[.!?]\s*", "", text) \
+            or text
     trimmed = FILLER.sub("", text).strip() or text
     trimmed = trimmed[:1].upper() + trimmed[1:]
     lines = trimmed.split("\n")
