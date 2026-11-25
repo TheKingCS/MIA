@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1816 files, 388,429 lines; 1816 files describe themselves; 21,161 of 21,287 classes and functions are documented.
+1817 files, 388,517 lines; 1817 files describe themselves; 21,166 of 21,292 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-716 files, 202,371 lines; 10,127 of 10,208 classes and functions documented
+716 files, 202,396 lines; 10,127 of 10,208 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1014,7 +1014,7 @@
 
 ## tests/: the test suite: what each part must do
 
-691 files, 104,043 lines; 8,663 of 8,708 classes and functions documented
+692 files, 104,106 lines; 8,668 of 8,713 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1497,6 +1497,7 @@
 - `tests/test_review_11.py`: The eleventh review's findings (2026-11-25), each kept fixed: money that wasn't spent (a quote, a refund, "it") is never an expense, two amounts in one sentence are the model's, no name is hardcoded, grocery chicken is groceries, goat feed never counts for the hens, a repair is Maintenance, a utilit
 - `tests/test_review_12.py`: The twelfth review's findings (2026-11-25), each kept fixed: a daily event survives being edited (the web and phone form, the actions, the model's tool, headless Core all know "daily"); a daily reminder never sets noon for "at 12", nor guesses between two times or keeps a question as its title; mone
 - `tests/test_review_13.py`: The thirteenth review's findings (2026-11-25), each kept fixed: a brand or a store (Netflix, Costco, Uber, Roundup) is a purchase, a person only someone he knows; "on Monday" alone or "last week" is the model's to ask, never today; his phone or a job is the bill tools'; "at 12:30" keeps its time; a 
+- `tests/test_review_14.py`: The fourteenth review's findings (2026-11-25), each kept fixed: "every night at 12:30" is half past midnight and "every evening at 12:30" sets no time; a tool call is caught wherever its name sits, a fenced function-call example is an answer; "my phone yesterday" and "the job on Monday" are still th
 - `tests/test_review_2026_11_20_authority.py`: Fable's review of Opus's work, 2026-11-20, batch A (authority and actions): the capability check sees how tools really reach kinds; the lab's proof must be seen to pass; the read-back checks the record a line is about; a failed change takes its history back; a stop isn't a taught task's failure; a h
 - `tests/test_review_2026_11_20_data.py`: Fable's review of Opus's work, 2026-11-20, batch B (data, sync, learning): an older phone's sync isn't ended by a file that stays on one device now; the homestead's snapshots sync; a sync conflict's kept copy is sealed, never swept into another undo, and its note quotes nothing; the daily budget is 
 - `tests/test_review_2026_11_20_low.py`: The review of 2026-11-20's low findings, fixed: code beyond Python needs the lab's proof; a taught skill's hold is refused; the phone removes the PC's greenhouse link once; a summer date gets summer time; a pick with no offer is learned; a busy port is tried again; a site opens in his browser, not t

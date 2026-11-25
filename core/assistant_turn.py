@@ -373,7 +373,8 @@ def _daily_reminder_reply(context, prompt: str):
     through add_calendar_event (undoable), at the time said ("at 7", in the evening for "night" or "evening"). None
     otherwise.
     "At 12" with no am or pm sets no time; two times, or a question in the title, are the model's.
-    "At 12:30" keeps its time."""
+    "At 12:30" keeps its time.
+    "Every night at 12:30" is half past midnight; "every evening at 12:30" sets no time."""
     from datetime import date as _date
 
     found = _REMIND_DAILY.match(prompt.replace("’", "'"))
@@ -391,9 +392,14 @@ def _daily_reminder_reply(context, prompt: str):
                                   (found.group("ap") or found.group("ap2") or "").lower())
     if hour_said and int(hour_said) == 12 and not ap and not minute_said:
         hour_said = None  # "every night at 12": noon or midnight? no time rather than a wrong one ("12:30" is kept)
+    part = (found.group("part") or "").lower()
+    if hour_said and int(hour_said) == 12 and not ap and part == "evening":
+        hour_said = None  # "every evening at 12:30" isn't clear: no time rather than a wrong one
+    if hour_said and int(hour_said) == 12 and not ap and part == "night":
+        ap = "am"  # "every night at 12:30" is half past midnight (the fourteenth review: it had been noon)
     if hour_said:
         hour, minute = int(hour_said), int(minute_said or 0)
-        later = ap == "pm" or (not ap and (found.group("part") or "").lower() in ("night", "evening", "afternoon"))
+        later = ap == "pm" or (not ap and part in ("night", "evening", "afternoon"))
         hour += 12 if later and hour < 12 else 0
         hour = 0 if ap == "am" and hour == 12 else hour
         if hour < 24 and minute < 60:
@@ -528,20 +534,25 @@ _NOT_SPENDING = re.compile(r"\b(?:bills?|rent|loan|mortgage|card|insurance|invoi
                            r"\b(?:my|the) phone$|^(?:the|a|that) job$", re.I)  # his phone, or a job: his bill tools
 # A person, not a thing: "I paid $100 for Sarah", "I spent $50 on him" (the twelfth review); a name counts only when
 # it's someone he knows (`_known_person`), never Netflix, Costco or Uber (the thirteenth)
-_A_PERSON = re.compile(r"(?:him|her|them|you|us|me|my (?:wife|husband|son|daughter|kid|kids|mom|dad|brother|sister|friend))")
+_A_PERSON = re.compile(r"(?:him|her|them|you|us|me|(?:my|the|our) (?:wife|husband|son|daughter|kid|kids|mom|dad|"
+                       r"mother|father|brother|sister|friend|girlfriend|boyfriend|grandkids|grandson|granddaughter|"
+                       r"parents|in-laws|nephew|niece|aunt|uncle|cousin|grandma|grandpa))", re.I)
 
 
 def _known_person(context, words: str) -> bool:
-    """Whether the words are only the name of someone in his people or his customers."""
-    said = " ".join(str(words or "").lower().split())
-    names = set()
+    """Whether the words are only the name of someone in his people or his customers.
+    A first name counts only written as a name (capitalized): "gas" is never Gas Station Co."""
+    said = " ".join(str(words or "").split())
+    full, first = set(), set()
     people = getattr(context, "relationships", None)
-    for person in (people.all_people() if people is not None and hasattr(people, "all_people") else []):
-        names |= {str(person.name).lower(), str(person.name).lower().split(" ")[0]}
+    named = [str(p.name) for p in (people.all_people() if people is not None and hasattr(people, "all_people") else [])]
     book = getattr(context, "business", None)
-    for customer in (getattr(book, "customers", None) or []):
-        names |= {str(customer.name).lower(), str(customer.name).lower().split(" ")[0]}
-    return bool(said) and said in names
+    named += [str(c.name) for c in (getattr(book, "customers", None) or [])]
+    for name in named:
+        full.add(name.lower())
+        first.add(name.lower().split(" ")[0])
+    # a first name only as he wrote a name, capitalized ("Sarah"): "gas" is never Gas Station Co (the fourteenth review)
+    return bool(said) and (said.lower() in full or (said[:1].isupper() and said.lower() in first))
 _SPENT_WHEN = re.compile(r"\s+(?:on\s+)?(yesterday|today|last week|(?:last\s+)?(?:monday|tuesday|wednesday|thursday|"
                          r"friday|saturday|sunday))$", re.I)
 
@@ -556,7 +567,9 @@ def _spent_reply(context, prompt: str):
     Groceries, goat feed never the hens', and "yesterday" dates it.
     Never money for a person ("for Sarah", "on him"); a weekday said after ("on Monday") is the one just gone.
     A name is a person only when he knows them (`_known_person`): Netflix and Costco are purchases; "last week" or a
-    day alone is the model's to ask."""
+    day alone is the model's to ask.
+    The bill tools' words are checked again once a day said is cut off ("my phone yesterday"); family words (my
+    mother, the kids) are people."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
@@ -577,6 +590,8 @@ def _spent_reply(context, prompt: str):
             said_day = "last " + said_day  # "gas on Monday", said after: the Monday just gone
         day = read_date(said_day) or ""
         what = (" " + what)[:when.start()].strip()
+        if _NOT_SPENDING.search(what):
+            return None  # "my phone yesterday" is still his phone's bill (the fourteenth review)
     if not what or _A_PERSON.fullmatch(what) or _known_person(context, what):
         return None  # "spent $30 on Monday" names no thing; money for a person is a gift or a debt, not this
     amount = float((found.group("d") or found.group("n")).replace(",", ""))
@@ -988,7 +1003,9 @@ def _garbled(content: str, context=None) -> bool:
     been replaced).
     With a context: a call's shape (a name, then parameters, arguments, args or input), as the whole reply or one
     fenced block, naming one of her tools in any case or a made-up snake_case one; never {"name": "Zac", "age": 30}
-    or a fenced example with words around it."""
+    or a fenced example with words around it.
+    The name may sit anywhere in the object; a fenced block counts only when it names one of her tools, a made-up
+    snake_case name only unfenced with parameters or arguments."""
     from core.llm_manager import _looks_like_malformed_tool_call
 
     try:
@@ -1003,12 +1020,18 @@ def _garbled(content: str, context=None) -> bool:
     if text.startswith("```") and not fenced:
         return False  # a fenced example with words around it is an explanation
     text = fenced.group(1) if fenced else text
-    named = re.match(r'\s*\{\s*"(?:name|function|tool)"\s*:\s*"([\w.]+)"\s*,\s*"(?:parameters|arguments|args|input)"', text)
-    if not named:
+    if not text.lstrip().startswith("{"):
+        return False
+    named = re.search(r'"(?:name|function|tool)"\s*:\s*"([\w.]+)"', text)  # wherever it sits (the fourteenth review)
+    if not named or not re.search(r'"(?:parameters|arguments|args|input)"\s*:', text):
         return False  # {"name": "Zac", "age": 30} is an answer
     tools = {str(t).lower() for t in (getattr(getattr(context, "assistant_actions", None), "_actions", {}) or {})}
     name = named.group(1)
-    return name.lower() in tools or "_" in name  # one of hers in any case, or a made-up tool's snake_case name
+    if name.lower() in tools:
+        return True  # one of hers, in any case
+    # a made-up tool's snake_case name, only unfenced and with parameters or arguments: a fenced function-call example
+    # he asked for ("get_current_weather") is an answer
+    return not fenced and "_" in name and bool(re.search(r'"(?:parameters|arguments)"\s*:', text))
 
 
 def echoes(content: str, prompt: str) -> bool:
