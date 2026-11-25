@@ -4,7 +4,8 @@ that question's tools, and the lookup it runs gets the follow-up's words, never 
 A follow-up that names no tool settles on its question's, called by code when the retry answers in text.
 A follow-up to a tool's answer is the model's unless a plan is in progress, and a leaked role label is taken off.
 Getting ready for what was just said is a follow-up.
-What she can help with is said for the area named, the follow-up's area first."""
+What she can help with is said for the area named, the follow-up's area first.
+A reply that only says the question back is caught."""
 
 from types import SimpleNamespace
 
@@ -272,3 +273,12 @@ def test_what_she_can_help_with_is_said_for_the_area_named():
     assert set(focus_areas("And for my woodworking business? (after: What can you help me with on the homestead?)")) \
         == {"Money", "Making things"}
     assert focus_areas("what can you do?") == []
+
+
+
+def test_a_reply_that_only_says_the_question_back_is_caught():
+    """The question back, word for word (case and marks aside), is an echo; an answer that starts with its words isn't."""
+    from core.assistant_turn import echoes
+
+    assert echoes("How's my training going this week?", "how's my training going this week")
+    assert not echoes("Your training this week: three workouts.", "How's my training going this week?")

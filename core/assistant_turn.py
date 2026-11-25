@@ -15,10 +15,12 @@ session: core/talk_it_out.py) is deliberately returned as a follow-up
 call, and running it before the reply is spoken/sent would add its
 full latency to every answer. Callers speak/send first, then call
 `run_followup()`.
+A model reply that only says the person's words back (`echoes`) is replaced by a plain line asking again.
 """
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -255,6 +257,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     model with the tools offered for what was said; a tool the model calls that wasn't offered isn't run.
     Each turn starts by clearing the last one's follow-up note, and a follow-up to a tool's answer skips the
     question plans and code answers for the model with that tool (core/conversation_state.follows_a_tool).
+    A reply that only echoes the question is never said as an answer (ECHO_REPLY).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -423,6 +426,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # Her own words without the model's habitual "Sure!" first and "let me know" last, on every surface, not
     # only the phone (docs/CONVERSATION_REVIEW.md). An offer of hers to do something stays.
     content = with_offer(conversation, polish(reply.content))
+    if echoes(content, prompt):  # never the person's own words said back as if an answer
+        content = ECHO_REPLY
     add_message(conversation, "assistant", content)
     _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
              garbled=_garbled(reply.content))
@@ -438,6 +443,19 @@ def _garbled(content: str) -> bool:
         return bool(_looks_like_malformed_tool_call(content))
     except Exception:
         return False
+
+
+def echoes(content: str, prompt: str) -> bool:
+    """Pure logic. Whether the model's reply is only the person's own words back ("How's my training going this
+    week?" answered with itself: the live check through the whole turn, 2026-11-24)."""
+    def norm(text):
+        return " ".join(re.findall(r"[a-z0-9']+", str(text or "").lower()))
+
+    said = norm(content)
+    return bool(said) and said == norm(prompt)
+
+
+ECHO_REPLY = "I didn't get an answer together for that one. Ask me again, or in other words, and I'll try once more."
 
 
 def _observe(context, conversation, prompt: str, offered: list, **outcome) -> Optional[str]:

@@ -286,7 +286,10 @@ def test_hows_the_homestead_gathers_every_part_and_says_the_greenhouse_unwatched
                                        ("How prepared am I for an emergency?", "coming up"),
                                        ("How much rent did I collect this month?", "money month"),
                                        ("What's still unpaid?", "open loops"),
-                                       ("What can you help me with on the homestead?", "homestead")])
+                                       ("What can you help me with on the homestead?", "homestead"),
+                                       ("What's my water budget?", "money month"),
+                                       ("What should I practice on guitar today?", "today"),
+                                       ("How much firewood do I need for winter?", "winter")])
 def test_a_question_a_tool_is_built_for_isnt_these_plans(said, plan):
     """Each went to the plan by meaning in the live check; its words now give it to its tool (a tax refund stays the
     next dollar's)."""

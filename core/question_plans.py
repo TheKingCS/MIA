@@ -1453,16 +1453,17 @@ NOT_FOR = {
     "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|first (thing )?tomorrow|tomorrow first)\b",
                           re.I),
     # what she did on her own today is "catch me up"'s (her own changes), not today's list
-    "today": re.compile(r"\b(on your own|you been up to|while i was (out|gone|away))\b"
+    "today": re.compile(rf"\b(on your own|you been up to|while i was (out|gone|away)|{_LEARNING})\b"
                         r"|\bwhat did i miss\b(?!.*\b(do|deadlines?|priorit\w*|supposed)\b)", re.I),
     # quitting a habit or a club isn't quitting the job
     "quit by": re.compile(r"\b(smoking|drinking|vaping|chew|caffeine|coffee|soda|sugar|gym|band|team|club|league|"
                           r"class|course|game|drugs?|alcohol)\b", re.I),
     # a weekend for winter work is the weekend's (it names its days); a winter gone is a conversation or the seasons'
-    "winter": re.compile(r"\b(weekend|saturday|sunday|last|was|were|did|went|got through)\b", re.I),
+    "winter": re.compile(r"\b(weekend|saturday|sunday|last|was|were|did|went|got through|firewood|cords?|wood)\b",
+                         re.I),
     # quitting by a date is its own plan's ("what if I quit at the end of next year?"), not the year's priorities
     "priorities": re.compile(r"\b(quit|quitting|leave (my|the) job|leaving (my|the) job)\b", re.I),
-    "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b|\brent(al)?\b", re.I),
+    "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b|\brent(al)?\b|\bwater\b", re.I),
     # a weekend gone is a conversation or recall; a shop's hours, a meal or a meeting on a weekend day isn't the plan
     "weekend": re.compile(r"\b(was|were|did|went|go|last|spent|happened|open|close[sd]?|hours|dinner|lunch|breakfast|"
                           r"meals?|remind|meeting|appointment)\b", re.I),
