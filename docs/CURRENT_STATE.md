@@ -5,6 +5,18 @@
 session. Last updated: 2026-11-24, night (Opus at the PC: one intelligence, the homestead's brain, the hub and the
 engineer, the game layer, brainstorm round 12), by claude.*
 
+**Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
+in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the
+tropics, a flock's age, the sun far north...): all fixed but one (K-0474). Built: curing meat (core/meat_cure.py),
+solar sizing from his use (core/solar_size.py) and canning times for his altitude (core/canning_times.py); the
+canning table and the cure's figures were then checked against the USDA's tables on the NCHFP site and FSIS (all
+matched; the fish time narrowed to the fatty fish it was tested on). Conversation: a follow-up to a tool's answer
+("and what about corn?", "what about 8 pounds?") brings that question's tools, its words reach the lookup in code,
+and when the model won't call the tool, code does (core/conversation_state.py); then, checked through the whole turn
+as the phone runs it, each turn clears the last one's follow-up words, a tool's follow-up skips plans its words
+happen to match, a role label the model leaks is taken off, and safety lookups worded in code are said as they are
+(core/tool_loop.SAID_AS_IS). The weather for a named day and eggs last week or this month, too. 8263 passing.
+
 **Night 2026-11-24: brainstorm round 12, asked-for answers** (`docs/future/JARVIS_BRAINSTORM.md`, round 12). Built,
 each checked against the PC's model with its neighbours: the greenhouse node's harvests kept once each, counted in his
 produce, the Grower achievements and "what has the garden produced this year?" (fish apart;
