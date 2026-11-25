@@ -5,6 +5,8 @@ tests.test_sweep_12
 The sixth live sweep's fixes (2026-11-25): "remind me tomorrow at 9 to call the vet" goes on his calendar like
 "remind me to call the vet tomorrow at 9"; a tool call written out with a doubled quote before its key is caught;
 what he spent on a category and "am I over budget?" are from his own records; a crop's dates and the 72-hour kit are hers.
+The eighteenth review's: the day said first is the day, "at 3" the afternoon; a period it can't read, two things or
+a verb after "start" are the model's; the animals' food is Animals & Feed.
 """
 
 from types import SimpleNamespace
@@ -72,3 +74,41 @@ def test_a_crops_dates_and_the_kit_are_hers(monkeypatch):
     for words in ("when should I start my workout?", "when should I start the business?", "what's in my bag?",
                   "the emergency kit is in the truck"):
         assert assistant_turn._garden_kit_reply(None, words) is None, words
+
+
+
+def test_the_day_said_first_is_the_day_and_three_is_the_afternoon():
+    from datetime import date, timedelta
+
+    added = []
+    context = SimpleNamespace(assistant_actions=SimpleNamespace(execute=lambda c, n, a: added.append(a) or "ok"))
+    assistant_turn._reminder_reply(context, "remind me tonight to set an alarm for tomorrow")
+    assert added[-1]["date"] == date.today().isoformat() and added[-1]["title"] == "Set an alarm for tomorrow"
+    assistant_turn._reminder_reply(context, "remind me tomorrow at 3 to pick up the feed")
+    assert added[-1]["date"] == (date.today() + timedelta(days=1)).isoformat() and added[-1]["time"] == "15:00"
+    assistant_turn._reminder_reply(context, "remind me tomorrow morning at 5 to feed the hens")
+    assert added[-1]["time"] == "05:00"
+
+
+def test_spending_it_cant_read_is_the_models():
+    context = SimpleNamespace(budget=SimpleNamespace(total_expenses_by_category=lambda s, e: {"Animals & Feed": 30.0}))
+    for words in ("how much did I spend on gas last week?", "how much did I spend on gas in October?",
+                  "how much did I spend on groceries yesterday?", "how much did I spend on gas and groceries?"):
+        assert assistant_turn._spent_on_reply(context, words) is None, words
+    for words in ("how much did I spend on chicken food?", "how much did I spend on food for the dogs?"):
+        assert "Animals & Feed" in assistant_turn._spent_on_reply(context, words), words
+    assert "so far" in assistant_turn._spent_on_reply(context, "how much have we spent on feed so far?")
+
+
+def test_a_crop_word_or_a_kit_word_alone_is_no_garden_or_kit_question(monkeypatch):
+    from core import planting_now, ready_kit
+
+    monkeypatch.setattr(planting_now, "say_crop", lambda c, said: "dates")
+    monkeypatch.setattr(ready_kit, "say", lambda c: "the kit")
+    for words in ("when should I start selling tomatoes?", "when do I start canning tomatoes?",
+                  "when can I start eating my lettuce?", "what should I name my emergency kit business",
+                  "what should I do with my old emergency kit?", "what goes in a first aid kit?"):
+        assert assistant_turn._garden_kit_reply(None, words) is None, words
+    assert assistant_turn._garden_kit_reply(None, "when should I plant potatoes?") == "dates"
+    assert assistant_turn._garden_kit_reply(None, "what should I pack in my go bag?") == "the kit"
+    assert assistant_turn._garden_kit_reply(None, "what goes in a bug out bag?") == "the kit"

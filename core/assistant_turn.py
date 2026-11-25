@@ -493,16 +493,19 @@ def _reminder_reply(context, prompt: str):
     "Tonight" or "evening" with an hour and no am or pm is the evening's.
     Evening only for "tonight" or a day's evening; "tonight at 12" sets no time.
     The day first is the same ("remind me tomorrow at 9 to call the vet", `_REMIND_FIRST`: the live sweep, where the
-    model had written its alarm call out as text)."""
+    model had written its alarm call out as text), its date from the day said first, never one in the task. An hour
+    from 1 to 5 with no am, pm or morning is the afternoon ("tomorrow at 3")."""
     first = _REMIND_FIRST.match(prompt.replace("’", "'"))
+    day_words = prompt
     if first:
         prompt = f"{first.group('lead')} to {first.group('what')} {first.group('when')}"
+        day_words = first.group("when")  # the day he said first, never one in the task (the eighteenth review)
     found = _REMIND_ON.match(prompt.replace("’", "'"))
     if not found or re.search(r"\b(?:every|each)\b", found.group(1), re.I):
         return None
     what = found.group(1).strip().rstrip(",")
-    args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, prompt)
-    evening = re.search(r"\btonight\b|\b(?:this|tomorrow|" + "|".join(_WEEKDAYS) + r")\s+(?:evening|night)\b", prompt,
+    args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, day_words)
+    evening = re.search(r"\btonight\b|\b(?:this|tomorrow|" + "|".join(_WEEKDAYS) + r")\s+(?:evening|night)\b", day_words,
                         re.I)  # never "night crawlers" or "game night saturday" (the eighth review)
     if "date" not in args:
         return None
@@ -510,8 +513,10 @@ def _reminder_reply(context, prompt: str):
         hour, minute = int(found.group(3)), int(found.group(4) or 0)
         if evening and not found.group(5) and hour == 12:
             hour = 99  # "tonight at 12": noon or midnight? no time rather than a wrong one
-        hour += 12 if ((found.group(5) or "").lower() == "pm" or (evening and not found.group(5))) and hour < 12 \
-            else 0  # "tonight at 9" is 9 pm (the seventh review)
+        morning = re.search(r"\bmorning\b", day_words, re.I)
+        small = not found.group(5) and not morning and 1 <= hour <= 5  # "tomorrow at 3" is the afternoon (the eighteenth)
+        hour += 12 if ((found.group(5) or "").lower() == "pm" or (evening and not found.group(5)) or small) \
+            and hour < 12 else 0  # "tonight at 9" is 9 pm (the seventh review)
         hour = 0 if (found.group(5) or "").lower() == "am" and hour == 12 else hour
         if hour < 24 and minute < 60:
             args["time"] = f"{hour:02d}:{minute:02d}"
@@ -543,6 +548,8 @@ _BOUGHT = re.compile(r"^\s*(?:i\s+)?(?:just\s+)?(?:bought|purchased)\s+(?P<what>
 _SPENT_ON = (
     ("Groceries", r"\bchicken (?:breasts?|thighs?|wings?|legs?|drumsticks?|nuggets?|tenders?)\b|\bwhole chicken\b"),
     ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chicks|scratch|oyster shell|dog food|cat food|kibble|goats?|"
+                       r"(?:chicken|hen|goat|pig|pet|horse|rabbit) food|food for (?:the )?(?:dogs?|cats?|chickens|hens|"
+                       r"goats|pigs|horses|rabbits|animals|pets)|pets?|"
                        r"horses?|pigs?|piglets?|livestock|lambs?|calf|calves)\b"),
     ("Groceries", r"\b(?:groceries|grocery|milk|bread|eggs|meat|produce|chicken|food|walmart|aldi|kroger|costco)\b"),
     ("Maintenance", r"\b(?:repairs?|fix(?:ing|ed)?|plumber|electrician|mechanic|parts)\b"),
@@ -807,17 +814,23 @@ _SPENT_ON_ASK = re.compile(r"^\s*how much (?:money )?(?:did|have) (?:i|we) (?:sp
 
 _PLANT_WHEN = re.compile(r"^\s*when\s+(?:should|do|can|would)\s+(?:i|we)\s+(?:start|plant|sow|transplant|put out|set out)"
                          r"\b(?P<rest>.+?)\s*\??\s*$", re.I)
-_KIT_ASK = re.compile(r"^\s*(?:what\s+(?:should|do i|goes|would)\b.*|check\s+(?:my|our)\b.*|am i missing\b.*)"
-                      r"\b(?:72[- ]?hour|go[- ]?|bug[- ]?out|emergency|disaster|get[- ]home)\s*(?:bag|kit)s?\b", re.I)
+_KIT_ASK = re.compile(r"^\s*(?:what\s+(?:should|would|do i|goes|do you)\s+(?:be\s+|go\s+|i\s+(?:put|pack|have|keep|need)\s+|"
+                      r"need\s+|put\s+|pack\s+)?(?:in|into|for)\s+|check\s+|am i missing\s+(?:anything\s+)?(?:from|in|for)?\s*)"
+                      r"(?:a|an|my|the|our)?\s*(?:72[- ]?hour|go[- ]?|bug[- ]?out|emergency|disaster|get[- ]home)\s*(?:bag|kit)s?"
+                      r"\s*\??\s*$", re.I)
 
 
 def _garden_kit_reply(context, prompt: str):
     """Two of hers the model passed over (the live sweep, 2026-11-25: it answered from what it knew, with a made-up
     frost date, and asked him to log a kit): "when should I start my tomato seeds?" is that crop's dates from his
     own last frost (core/planting_now.say_crop), and "what should be in a 72 hour bag?" the kit against his records
-    (core/ready_kit.say). None otherwise, or for a crop she has no dates for."""
+    (core/ready_kit.say). None otherwise, or for a crop she has no dates for.
+    Never "when should I start selling tomatoes?" (a verb after start), and the kit only when what's in it is asked."""
     found = _PLANT_WHEN.match(prompt)
     try:
+        if found and re.match(r"\s*\w+ing\b", found.group("rest")) and not re.match(r"\s*(?:my|the|our)\b",
+                                                                                     found.group("rest")):
+            return None  # "when should I start selling tomatoes?" is no planting date (the eighteenth review)
         if found:
             from core import planting_now
 
@@ -841,7 +854,8 @@ def _spent_on_reply(context, prompt: str):
     the money plan's model had said "the fact sheet only mentions..."): the category his words name (`_SPENT_ON`'s
     words, or a category's own name), this month unless he said last month, this week or this year. None when the
     words name no category, or there's no budget.
-    "Am I over budget anywhere?" is his budgets, each spent against its target (budget_left, `_OVER_BUDGET`)."""
+    "Am I over budget anywhere?" is his budgets, each spent against its target (budget_left, `_OVER_BUDGET`).
+    A period it can't read ("last week") or two things are the model's; "so far" is all of it."""
     if _OVER_BUDGET.match(prompt):  # "am I over budget anywhere?": his budgets, from budget_left (the live sweep)
         try:
             return context.assistant_actions.execute(context, "budget_left", {})
@@ -858,6 +872,9 @@ def _spent_on_reply(context, prompt: str):
     from core.region import money
 
     what = found.group("what").strip()
+    if re.search(r"\b(?:last|yesterday|today|week|weekend|year|month|ago|since|in (?:jan|feb|mar|apr|may|jun|jul|aug|"
+                 r"sep|oct|nov|dec)\w*|\d{4}|and|or)\b|,", what, re.I):
+        return None  # a period it doesn't read ("last week"), or two things: the model's (the eighteenth review)
     category = next((c for c in EXPENSE_CATEGORIES if c.lower() == what.lower()), None)
     category = category or next((c for c, words in _SPENT_ON if re.search(words, what, re.I)), None)
     if category is None:
@@ -871,9 +888,15 @@ def _spent_on_reply(context, prompt: str):
         start, end, said = today - timedelta(days=today.weekday()), today, "this week"
     elif when == "this year":
         start, end, said = today.replace(month=1, day=1), today, "this year"
+    elif when == "so far":
+        start, end, said = None, today, "so far"
     else:
         start, end, said = today.replace(day=1), today, "this month"
-    spent = book.total_expenses_by_category(start.isoformat(), end.isoformat()).get(category, 0.0)
+    try:
+        spent = book.total_expenses_by_category(start.isoformat() if start else None, end.isoformat()).get(category, 0.0)
+    except Exception:
+        log.exception("Couldn't total his spending")
+        return None
     if not spent:
         return f"Nothing logged under {category} {said}."
     return f"{money(spent)} on {category} {said}, from what you've logged."
