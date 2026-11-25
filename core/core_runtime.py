@@ -121,6 +121,7 @@ from core.canning_times import register_canning_time_actions
 from core.rent_collected import register_rent_collected_actions
 from core.calendar_move import register_calendar_move_actions
 from core.drills import register_drill_tools
+from core.part_specs import register_part_spec_tools
 from core.esp32_lab import register_esp32_lab_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
@@ -365,7 +366,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     (core/tax_setaside.py) best_time_to_fish (core/fishing_times.py) why_hens_not_laying (core/hen_laying.py) meat_cure
     (core/meat_cure.py) size_solar (core/solar_size.py) canning_time (core/canning_times.py) rent_collected
     (core/rent_collected.py) move_calendar_event (core/calendar_move.py) the ESP32 lab bench's tools
-    (core/esp32_lab.py) and start_drill (core/drills.py) are among them."""
+    (core/esp32_lab.py), start_drill (core/drills.py) and the part specs' tools (core/part_specs.py) are among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -413,6 +414,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_calendar_move_actions(registry)  # moving a calendar event
     register_esp32_lab_actions(registry)  # the ESP32 lab bench
     register_drill_tools(registry)  # scenario drills (core/drills.py)
+    register_part_spec_tools(registry)  # part specs for the free build (core/part_specs.py)
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

@@ -88,12 +88,14 @@ ESP32 = Board("esp32dev", "ESP32 dev board (30-pin DevKit)", "the ESP32", "esp32
                        "GPIO 16": "RX2"})
 
 # The Arduino's pins, as both boards print them; the Mega's 14 to 53 and A8 to A15 aren't used by the labs or drawn.
+# SDA and SCL: the Mega's own I2C header (D20, D21); on the Nano I2C is A4 and A5.
 _ARDUINO = tuple(f"D{n}" for n in range(14)) + tuple(f"A{n}" for n in range(8)) + ("5V", "3V3", "VIN", "GND",
-                                                                                   "GND 2", "RST", "AREF")
+                                                                                   "GND 2", "RST", "AREF", "SDA",
+                                                                                   "SCL")
 MEGA = Board("mega", "Arduino Mega 2560 (ELEGOO MEGA R3)", "the Mega", "arduino", "atmelavr", "megaatmega2560", 9600,
              "5V", 5.0, 1023,
              ("RST", "3V3", "5V", "GND", "GND 2", "VIN", "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7"),
-             tuple(f"D{n}" for n in range(13, -1, -1)) + ("AREF",), ("5V", "3V3", "VIN"),
+             tuple(f"D{n}" for n in range(13, -1, -1)) + ("AREF", "SDA", "SCL"), ("5V", "3V3", "VIN"),
              serial=frozenset({"D0", "D1"}), usb=frozenset({*_ARDUINO_VIDS, _CH340, _FTDI}),
              printed={"D0": "D0 RX0", "D1": "D1 TX0"})
 # The classic Nano's two rows, USB at the top: D13's side, then D12's.

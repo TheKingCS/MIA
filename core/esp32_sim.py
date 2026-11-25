@@ -726,7 +726,8 @@ def _simulate_tool(context, arguments: dict) -> str:
 
 
 def register_sim_tools(registry) -> None:
-    """Registers build_along and simulate_lab (called from core/esp32_lab.register_esp32_lab_actions); simulate_lab
+    """Registers build_along and simulate_lab (called from core/esp32_lab.register_esp32_lab_actions; "in the
+    simulator" isn't simulate_lab's, so "what parts can I wire in the simulator?" stays part_specs'); simulate_lab
     takes only his words (the lab is read from them), so code answers "what will the pot lab print?" itself
     (direct_lookup: the model, with a build in the conversation, answered from memory).
     Both take the Arduino course's labs too."""
@@ -753,7 +754,7 @@ def register_sim_tools(registry) -> None:
                     "needed: \"what will the dht lab print?\", \"simulate the blink lab\". Only the real board passes "
                     "a check.",
         parameters={"type": "object", "properties": {"question": words}, "required": []}, prompt_arg="question",
-        handler=_simulate_tool, trigger_phrases=("simulate the", "simulate my", "in the simulator", "lab print",
+        handler=_simulate_tool, trigger_phrases=("simulate the", "simulate my", "lab print",
                                                 "lab output", "board print", "board say"),
     ))
 

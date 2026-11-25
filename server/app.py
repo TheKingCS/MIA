@@ -93,7 +93,8 @@ Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
 screen; /api/taught-skills/run, /answer and /stop move a run one step at a
 time, each step through its own gate.
 An achievement card closed is marked seen by POST /api/achievements/seen (AchievementsSeenRequest).
-A course's labs (web/course.html), with the simulator at POST /api/labs/{course}/sim and Ask MIA at
+The free build (web/bench.html): GET /api/bench, POST /api/bench/check and /api/bench/draft (core/free_build.py,
+core/part_specs.py). A course's labs (web/course.html), with the simulator at POST /api/labs/{course}/sim and Ask MIA at
 POST /api/labs/{course}/ask (core/lab_ask.py): GET /api/labs/{course} (core/lab_page.py) and POST /api/labs/{course}/read (LabReadRequest: his
 board's serial output read and the lab checked from it, core/esp32_lab.py).
 YouTube in Music: GET /api/music/youtube/search and POST /api/music/youtube/key (YouTubeKeyRequest); the
@@ -211,6 +212,18 @@ class LabAskRequest(BaseModel):
     question: str
     drill: str = ""
     n: int = 0
+
+
+class BenchCheckRequest(BaseModel):
+    """The free build checked (POST /api/bench/check): the board, his part instances ({id, spec}), his wires."""
+    board: str
+    parts: list[dict] = []
+    wires: list[list[str]] = []
+
+
+class BenchDraftRequest(BaseModel):
+    """A part's spec drafted from the web (POST /api/bench/draft): its name or model number."""
+    part: str
 
 
 class LabSimRequest(BaseModel):
@@ -650,7 +663,9 @@ def create_app(context: AppContext) -> FastAPI:
     The ESP32 simulator runs a lab on his wires at POST /api/labs/{course}/sim (core/esp32_sim).
     Ask MIA on a course page is POST /api/labs/{course}/ask (core/lab_ask.py).
     A lab's read runs as long as the lab needs unless asked otherwise (2 to 30 seconds).
-    The labs' routes take Build With Arduino too, with the board he chose (`board`)."""
+    The labs' routes take Build With Arduino too, with the board he chose (`board`).
+    My Bench, the free build: GET /api/bench, POST /api/bench/check and /api/bench/draft (core/free_build.py,
+    core/part_specs.py)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3294,6 +3309,42 @@ def create_app(context: AppContext) -> FastAPI:
                 return lab_ask.ask(view, course, request.lesson, request.question, request.drill, request.n)
         except ValueError as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
+
+    @app.get("/api/bench")
+    def web_bench(board: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """The free build's page (core/free_build.page): the boards, the specs MIA can wire, his parts."""
+        from core.free_build import page
+
+        return _screen(profile_id, "classroom", lambda view: page(view, board))
+
+    @app.post("/api/bench/check")
+    def web_bench_check(request: BenchCheckRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """His free build judged by each part's spec (core/free_build.check): pure, nothing kept."""
+        from core import free_build, part_specs
+
+        if len(request.parts) > 20 or len(request.wires) > 80:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "That's more than the bench holds.")
+        view = view_for(context, profile_id)
+        try:
+            return free_build.check(request.board, request.parts, [tuple(w) for w in request.wires if len(w) == 2],
+                                    part_specs.book(view).all())
+        except (ValueError, TypeError, KeyError) as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
+
+    @app.post("/api/bench/draft")
+    def web_bench_draft(request: BenchDraftRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A part's spec drafted from his own search engine's results (core/part_specs.draft_from_web), to show him
+        before he adds it (partspec.add); nothing kept."""
+        from core import part_specs
+        from core.online_lookup import LookupUnavailable
+
+        view = view_for(context, profile_id)
+        try:
+            with app.state.turn_lock:
+                spec = part_specs.draft_from_web(view, request.part[:60])
+        except (ValueError, LookupUnavailable) as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
+        return {"spec": spec.to_dict(), "summary": part_specs.summary(spec), "source": spec.source}
 
     @app.post("/api/labs/{course}/sim")
     def web_lab_sim(course: str, request: LabSimRequest, profile_id: str = Depends(require_profile_id)) -> dict:

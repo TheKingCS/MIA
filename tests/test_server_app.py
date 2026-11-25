@@ -28,6 +28,7 @@ context.push_subscriptions directly (build_core_context() doesn't —
 that's core/application.py's job, gated by server.enabled).
 Also a course's labs page, and reading the board to check a lab.
 And the ESP32 simulator's route: a lab run on his wires and where his build is.
+And My Bench: a free build checked, and its page.
 """
 
 from __future__ import annotations
@@ -1155,3 +1156,18 @@ def test_the_simulator_runs_a_lab_on_his_wires_and_says_where_his_build_is(clien
     assert client.post("/api/labs/esp32/sim", headers=auth, json=bad).status_code == 422
     assert client.post("/api/labs/esp32/sim", headers=auth, json={"lesson": "nope"}).status_code == 422
     assert client.post("/api/labs/guitar/sim", headers=auth, json={"lesson": "blink"}).status_code == 404
+
+
+def test_the_bench_checks_his_free_build_and_needs_a_sign_in(client, context):
+    """POST /api/bench/check: an HC-SR04's ECHO straight into the ESP32 is a stop; GET /api/bench lists the boards;
+    an unknown part is 422; both need a sign-in."""
+    assert client.get("/api/bench").status_code == 401
+    auth = _signed_in(client, context)
+    assert [b["id"] for b in client.get("/api/bench?board=nano", headers=auth).json()["boards"]][:2] == ["esp32dev",
+                                                                                                    "mega"]
+    body = {"board": "esp32dev", "parts": [{"id": "p1", "spec": "hcsr04"}],
+            "wires": [["p1.vcc", "VIN"], ["p1.gnd", "GND"], ["p1.echo", "GPIO 18"]]}
+    got = client.post("/api/bench/check", headers=auth, json=body).json()
+    assert got["problems"][0]["level"] == "stop" and "D18" in got["problems"][0]["text"]
+    bad = dict(body, parts=[{"id": "p1", "spec": "nope"}])
+    assert client.post("/api/bench/check", headers=auth, json=bad).status_code == 422

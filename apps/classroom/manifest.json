@@ -21,7 +21,8 @@
     "interface": {
       "web": [
         "classroom.html",
-        "course.html"
+        "course.html",
+        "bench.html"
       ],
       "qt": [
         "modules/classroom"
@@ -65,7 +66,9 @@
       "lab_board",
       "build_along",
       "simulate_lab",
-      "start_drill"
+      "start_drill",
+      "import_part_spec",
+      "part_specs"
     ],
     "actions": [
       "course.add",
@@ -88,7 +91,9 @@
       "trade.start",
       "trade.stop",
       "esplab.flash",
-      "path.start"
+      "path.start",
+      "partspec.add",
+      "partspec.remove"
     ],
     "tiers": {
       "add_course": "act_within_grant",
@@ -133,6 +138,10 @@
       "build_along": "act_within_grant",
       "simulate_lab": "observe",
       "start_drill": "observe",
+      "import_part_spec": "act_with_approval",
+      "part_specs": "observe",
+      "partspec.add": "act_with_approval",
+      "partspec.remove": "act_with_approval",
       "esplab.flash": "act_with_approval",
       "path.start": "act_within_grant"
     },

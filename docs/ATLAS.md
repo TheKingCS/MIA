@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1766 files, 381,506 lines; 1766 files describe themselves; 20,840 of 20,970 classes and functions are documented.
+1770 files, 382,426 lines; 1770 files describe themselves; 20,883 of 21,013 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-705 files, 198,110 lines; 9,980 of 10,066 classes and functions documented
+707 files, 198,734 lines; 10,014 of 10,100 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -261,6 +261,7 @@
 - `core/flock_actions.py`: Chickens' actions (DEC-0037, core/flock.py) on the action contract: proposed in plain words, approved, run, undoable.
 - `core/focus_presets.py`: What each person sees first (2026-10-01, accounts stage 2): MIA has dozens of apps, and a student, a homesteader and a small-business owner each need a different handful up front. A **focus** puts the most useful apps first and tucks the unlikely ones away. It never blocks anything: a tucked-away ap
 - `core/food_table.py`: MIA's built-in food table (DEC-0020): nutrition facts for about 7,800 everyday foods from the USDA's FoodData Central (public domain), per 100 g, in data/foods.tsv (tools/make_food_table.py builds it). Offline.
+- `core/free_build.py`: The free build: his own parts, wired to his board as he likes, checked by what each part's spec says (Zac, 2026-11-25: "tell what hardware I have and simulate connecting it"). Where a lab's circuit is judged against its own build (core/esp32_sim.py), here there's no build to follow: each part is jud
 - `core/freedom.py`: Freedom (DEC-0038; Life Runway, slice E of docs/COGNITIVE_EXTENSION_PROPOSAL.md): the way out of the job you're saving to leave, in numbers. The person's own plan, never a child's. Every figure says what it is (`figure_kind`: Fact, Calculation or Missing, DEC-0113).
 - `core/freedom_actions.py`: Freedom's actions (DEC-0038, core/freedom.py) on the action contract: proposed in plain words, approved, run.
 - `core/game_actions.py`: The game layer's changes (DEC-0028, docs/GAME_LAYER.md), on the action contract in core/actions.py.
@@ -429,6 +430,7 @@
 - `core/ownership.py`: Whose is it? (2026-10-01) In a shared household some things belong to one person: the truck is Zac's, the sewing machine is Faith's, the tractor is everyone's. A maintenance item (vehicle, tool, appliance) can name its owner (`MaintenanceAsset.owner_profile_id`; None means shared by the household).
 - `core/pack_index.py`: Her own search index for the offline packs Kiwix didn't index (core/offline_library.py). Many of the most useful ones have no full-text index of their own: iFixit's repair guides, the USDA canning guide, the LibreTexts textbooks, and the preppers' collections, which are PDFs inside the pack (water t
 - `core/parity.py`: Full use both ways, on every device (DEC-0125, Zac 2026-11-07: "MIA should be absolutely 100% voice capable but I also want 100% capable for use on the phone too. Full use when I feel like talking and full use when I don't on all devices"). This measures it, app by app:
+- `core/part_specs.py`: What MIA knows about each electronics part's pins and limits, so his own hardware can be wired in the simulator (Zac, 2026-11-25: "be able to tell what hardware I have and simulate connecting it. She could fetch the specs online and import them"). His parts themselves, with how many and where, stay 
 - `core/party.py`: Party and guild (DEC-0028, the game layer's tenth idea; Zac, 2026-10-17): the household plays together.
 - `core/passing_mentions.py`: "Propose, you confirm" (2026-09-28): when the owner mentions in passing something MIA keeps a record of, she answers as usual and then offers to record it, and does so only on a yes:
 - `core/password_autofill.py`: Filling a login into another app or a website on the phone (DEC-0035's next step: "an Android autofill service"; claude, 2026-11-09). The Android side (android-phone/.../MiaAutofillService.kt, AutofillActivity.kt) finds the username and password boxes and asks here which of the person's logins fit; 
@@ -716,7 +718,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,958 lines; 62 of 62 classes and functions documented
+2 files, 5,009 lines; 64 of 64 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -1003,7 +1005,7 @@
 
 ## tests/: the test suite: what each part must do
 
-653 files, 101,677 lines; 8,492 of 8,536 classes and functions documented
+654 files, 101,804 lines; 8,499 of 8,543 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1200,6 +1202,7 @@
 - `tests/test_flow_loops.py`: The flow loops Night School's teacher drafted (T-0047, core/loops.py): actions that broke or were turned down, email drafts thrown away or left open, unprompted messages dismissed or expired. Each reads records the person already keeps; an action's record carries its kind only, never what was in it.
 - `tests/test_focus_presets.py`: Each person's Apps screen (core/focus_presets.py) and MIA's setup questions (gui/onboarding_dialog.py), 2026-10-01.
 - `tests/test_food_table.py`: MIA's built-in food table (core/food_table.py, DEC-0020): matching an ingredient to a food, turning amounts into grams, and a recipe's nutrition per serving. Uses a small table in the real file's format (real USDA names and values for these foods).
+- `tests/test_free_build.py`: My Bench (core/free_build.py, core/part_specs.py): his own parts wired as he likes, checked by each part's spec and the board's limits (the HC-SR04's 5 V echo into a 3.3 V pin, a 3.3 V-only BME280 on 5 V, I2C off its pins, an analog output with no ADC, a pot across VIN, an LED without its resistor, 
 - `tests/test_freedom.py`: Freedom (DEC-0038): the fund that covers the gap between a month of living and what the homestead earns, plus the builds; the estimated day; progress by period; what a shift buys. Every number from the person's own records, or their own number, and it says which (and what it is: Fact, Calculation or
 - `tests/test_gamification.py`: Unit tests for core.gamification.grant_xp() — the shared "credit XP credits + raise a real notification" helper every routine-completion hook (Workout/Kitchen/Maintenance/Budget) calls through. No Qt needed; fakes stand in for context.profiles/context.notifications/context.skills, same shape as test
 - `tests/test_garage_module.py`: Unit tests for modules.garage.module's pure functions, same style as tests/test_dashboard_module.py (no Qt event loop, no fixtures).
@@ -1661,7 +1664,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-122 files, 23,032 lines
+123 files, 23,150 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 
@@ -1672,6 +1675,7 @@
 - `web/arcade/progress.js`: Lens Arcade — universal progression. One XP/level/achievement profile shared across every game. Games include this file, then call: ArcadeProgress.award('snake', 'newbest', 50) The module persists to localStorage, handles the daily streak, unlocks achievements, and shows gold toast notifications by 
 - `web/asset.js`: asset.js — one asset's page (claude, 2026-10-06, DEC-0017). Renders MIA.asset(id). Done, readings, tasks, the asset itself and its documents all change through equipment actions (confirm, undo); files go through MIA.upload / MIA.download.
 - `web/assistant.js`: assistant.js — MIA Assistant (DEC-0018, claude; the canvas's Talk, DEC-0113: her orb and state in the header, What I used under each answer). Typed turns go through MIA.talk; spoken ones are recorded with the shell's recorder (the mono 16-bit WAV MIA's voice path expects) and sent with MIA.voice. He
+- `web/bench.js`: bench.js — My Bench, the free build (claude, 2026-11-25; core/free_build.py, core/part_specs.py). Renders MIA.bench(board): the board picker, the parts placed (kept in this browser, per board), Add A Part from every spec MIA knows, his Component DB's parts for what he has, and Look Up A Part online 
 - `web/biz.js`: biz.js — one business's own dashboard (claude, 2026-11-11, DEC-0153). Renders MIA.oneBusiness(id) (core/web_businesses.business_dashboard): this month's and this year's money, where it went, the latest income and expenses, its properties, its own Orders & Quotes (Zac: "a section under each business 
 - `web/browser.js`: browser.js — MIA's own browser (claude, 2026-11-07, DEC-0117). Renders MIA.browser() (core/web_browser.py): the page she's on, each step waiting for your OK (its screenshot, Go ahead / Cancel on the step's own proposal), how teaching a task works with the step you're on marked (teaching()), and the 
 - `web/business.js`: business.js — Orders & Quotes (claude, 2026-10-17, DEC-0030 phase C). Renders MIA.business() (core/web_business.py) in tabs: Orders (what's owed, Payment, Start Build, Ready / Delivered), Quotes (what the price is made of, Sent / Accepted / Declined), Customers, and the Portfolio of finished builds 

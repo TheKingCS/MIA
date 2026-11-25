@@ -6,7 +6,8 @@
  * (building along with MIA); what's wrong with the circuit as he wires it; the inputs the lab reads (the knob, the
  * room, the soil, presses, requests); and Run It, which plays back what the board would print and what the LED and
  * relay would do, with whether the lab's check would pass. All judging is core's (POST /api/labs/{course}/sim): this
- * draws and plays it back. His wires are kept in this browser only (localStorage), per lab.
+ * draws and plays it back. His wires are kept in this browser only (localStorage), per lab. The free build
+ * (web/bench.js) uses the same breadboard with its own check (core/free_build.py) and no run.
  */
 (function () {
   "use strict";
@@ -79,11 +80,17 @@
     return { seconds: id === "relay" ? 9 : 6, view: [], inputs: () => ({}) };
   }
 
-  function render(course, lab) {
+  // opts (the free build, web/bench.js): check(wires, inputs, seconds) in place of the lab's simulator, key for the
+  // wires kept, noRun (no sketch to run: the check alone), title and intro, and checkTitle (the problems alone under
+  // it, no build steps).
+  function render(course, lab, opts) {
+    opts = opts || {};
     const c = lab.circuit;
     if (!c) return null;
     const { el } = MIAShell;
-    let wires = load(lab.id);
+    const key = opts.key || lab.id;
+    const check = opts.check || ((w, inputs, seconds) => MIA.courseSim(course, lab.id, w, inputs, seconds, c.board && c.board.id));
+    let wires = load(key);
     let picked = null;
     let build = { steps: c.steps.map((s) => Object.assign({ done: false }, s)), next: c.steps.length ? 1 : null, done: false };
     let timers = [];
@@ -139,6 +146,9 @@
       onboard = svgEl("circle", { cx: (LEFT + RIGHT) / 2, cy: TOP + 6, r: 5, class: "sim-onboard" });
       svg.append(onboard, svgEl("text", { x: (LEFT + RIGHT) / 2, y: TOP + 24, class: "sim-pin-label", "text-anchor": "middle" }, "LED"));
       svg.append(svgEl("rect", { x: (LEFT + RIGHT) / 2 - 16, y: TOP + c.left.length * PIN - 6, width: 32, height: 12, rx: 3, class: "sim-usb" }));
+      // The wires under the pins, so a wire crossing a pin never blocks picking it.
+      const wireLayer = svgEl("g", { class: "sim-wires" });
+      svg.append(wireLayer);
       c.left.forEach((p) => svg.append(...terminal(p.id, ...at[p.id], p.label, 1)));
       c.right.forEach((p) => svg.append(...terminal(p.id, ...at[p.id], p.label, -1)));
       placed.forEach(([part, top]) => {
@@ -167,7 +177,7 @@
         const bend = Math.max(40, Math.abs(bx - ax) / 3);
         const d = "M" + ax + " " + ay + " C" + (ax + out[a] * bend) + " " + ay + " " + (bx + out[b] * bend) + " " + by + " " + bx + " " + by;
         const kind = RAIL[a] || RAIL[b] || "sig";
-        svg.append(svgEl("path", { d, class: "sim-wire " + kind, tabindex: "0", role: "button",
+        wireLayer.append(svgEl("path", { d, class: "sim-wire " + kind, tabindex: "0", role: "button",
           "aria-label": "Wire from " + (names[a] || a) + " to " + (names[b] || b) + ": take it out",
           onclick: () => unwire(i), onkeydown: (e) => { if (e.key === "Enter") unwire(i); } }, svgEl("title", {}, (names[a] || a) + " – " + (names[b] || b))));
       });
@@ -190,9 +200,9 @@
 
     // After every change: where the build is and what's wrong, from core (a one-second run).
     async function changed() {
-      keep(lab.id, wires);
+      keep(key, wires);
       try {
-        const got = await MIA.courseSim(course, lab.id, wires, {}, 1, c.board && c.board.id);
+        const got = await check(wires, {}, 1);
         build = got.build;
         showProblems(got.sim.problems);
         draw();
@@ -214,7 +224,7 @@
       monitor.textContent = "";
       verdict.textContent = "Running…";
       try {
-        const got = await MIA.courseSim(course, lab.id, wires, ctl.inputs(seconds), seconds, c.board && c.board.id);
+        const got = await check(wires, ctl.inputs(seconds), seconds);
         build = got.build;
         draw();
         const sim = got.sim;
@@ -237,21 +247,21 @@
     if (wires.length) changed();
     const btn = (label, cls, onclick) => el("button", { type: "button", class: "btn " + cls, onclick }, label);
     return el("section", { class: "glass money-section sim" },
-      el("div", { class: "sect" }, el("h2", {}, "Simulator")),
-      el("p", { class: "dim" }, "Build it here first, wire for wire, alongside your real breadboard: pick two dots to " +
-        "join them, pick a wire to take it out. MIA checks each one as you go. " + (lab.try || "")),
+      el("div", { class: "sect" }, el("h2", {}, opts.title || "Simulator")),
+      el("p", { class: "dim" }, opts.intro || ("Build it here first, wire for wire, alongside your real breadboard: pick two dots to " +
+        "join them, pick a wire to take it out. MIA checks each one as you go. " + (lab.try || ""))),
       c.note ? el("p", { class: "dim" }, c.note) : null,
       el("div", { class: "sim-grid" }, el("div", { class: "sim-canvas" }, svg),
-        el("div", {}, el("h3", {}, "Build it with MIA"), steps, problems)),
-      ctl.view.length ? el("div", { class: "sim-inputs" }, ...ctl.view) : null,
+        el("div", {}, el("h3", {}, opts.checkTitle || "Build it with MIA"), opts.checkTitle ? null : steps, problems)),
+      !opts.noRun && ctl.view.length ? el("div", { class: "sim-inputs" }, ...ctl.view) : null,
       el("div", { class: "row-buttons" },
-        btn("Run It", "btn-amber", run),
+        opts.noRun ? null : btn("Run It", "btn-amber", run),
         c.steps.length ? btn("Show The Finished Circuit", "btn-ghost", () => { wires = c.steps.map((s) => [s.a, s.b]); changed(); draw(); }) : null,
         wires.length || c.steps.length ? btn("Clear The Wires", "btn-ghost", () => {
           stop(); wires = []; picked = null; light({ onboard: 0, led: 0, relay: false });
           monitor.textContent = "Run it to see what the board prints."; verdict.textContent = ""; changed(); draw();
         }) : null),
-      monitor, verdict);
+      opts.noRun ? null : monitor, opts.noRun ? null : verdict);
   }
 
   window.MIALabSim = { render };

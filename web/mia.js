@@ -633,6 +633,11 @@
     // board checks the lab. (Not the Data Logger's Lab above, MIA.lab.)
     course: (course, lesson, board) => read("/api/labs/" + encodeURIComponent(course || "esp32") +
       "?lesson=" + encodeURIComponent(lesson || "") + "&board=" + encodeURIComponent(board || ""), "course"),
+    // The free build (web/bench.html, core/free_build.py): the page, a check of his wiring, a part's spec drafted.
+    bench: (board) => demo ? Promise.resolve({ boards: [], board: null, specs: [], components: [], lookup: { allowed: false, why: "The bench needs MIA's computer." } })
+      : call("GET", "/api/bench?board=" + encodeURIComponent(board || "")),
+    benchCheck: (board, parts, wires) => demo ? demoOnly() : call("POST", "/api/bench/check", { board, parts, wires }),
+    benchDraft: (part) => demo ? demoOnly() : call("POST", "/api/bench/draft", { part }),
     courseAsk: (course, lesson, question, drill, n) => demo ? demoOnly()
       : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/ask", { lesson, question, drill: drill || "", n: n || 0 }),
     courseSim: (course, lesson, wires, inputs, seconds, board) => demo ? demoOnly()

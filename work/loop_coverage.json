@@ -488,6 +488,10 @@
   "action:esplab": {
    "status": "none",
    "why": "flashing a lab is his choice on a card; whether the lab worked is the board's own output judged in code (core/esp32_path.judge), with no judgement of MIA's in it to tune"
+  },
+  "action:partspec": {
+   "status": "none",
+   "why": "a part's spec he approved for the free build (core/part_specs.py); each is checked in code when drafted and confirmed by him against its datasheet, and a wrong one shows at once as a wrong check on his bench, fixed by removing it"
   }
  }
 }

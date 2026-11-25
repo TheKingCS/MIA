@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>My Bench — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="classroom" class="mod-classroom" data-say="Look up the specs for a BME280">
+  <!--
+    My Bench (claude, 2026-11-25; core/free_build.py, core/part_specs.py): his own parts on his own board, wired as he
+    likes and checked as he goes by each part's spec and the board's limits. Choose the board (the ESP32, his Mega, a
+    Nano), place parts (every spec MIA knows, built in or his), wire them on the same breadboard as the labs
+    (web/labsim.js), and look a part MIA doesn't know up online: its drafted spec is shown, and Add This Part is the
+    approved action partspec.add. His Component DB's parts are listed beside, for what he has.
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true">🛠️</span> My Bench</h1>
+        <p class="tagline">Your parts on your board, wired as you like: MIA checks each wire against the part's specs.</p>
+      </header>
+      <div id="panel"></div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="labsim.js"></script>
+  <script src="bench.js"></script>
+</body>
+</html>
