@@ -28,7 +28,9 @@ from a photo is built (Look reads a module's model and ties it to its spec). The
 typed in the serial monitor, safe after 15 s of quiet, BOOT a stop for good), simulated too; it touches nothing in
 homestead/ and only points at homestead/firmware/safety_mcu, whose own LED test is the greenhouse's next milestone.
 At the PC: "simulate the watchdog lab", "why does the watchdog lab refuse a dose?". Left from round 13: Wokwi or QEMU
-(his say).
+(his say). Since: first aid drills (a deep cut, choking at dinner) and how-tos ("how do you use a tourniquet?") in the
+emergency floor's own words, asking for a drill never tripping the floor; the fifth review's seven fixes. At the PC:
+"quiz me on first aid", "how do you do CPR?".
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
