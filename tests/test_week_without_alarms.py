@@ -13,9 +13,14 @@ from core import assistant_today_actions, today
 
 
 def test_an_alarm_is_never_something_due_this_week(monkeypatch):
+    """An alarm is left out of the week; a bill and a task (the toolbox's too) stay."""
     days = [{"date": date.today().isoformat(), "items": [
         {"module_id": "budget", "record_id": "b1", "title": "Pay Electric", "when": "today", "time": ""},
-        {"module_id": "toolbox", "record_id": "a1", "title": "Wake Up", "when": "today", "time": "07:00"}]}]
+        {"module_id": "toolbox", "record_id": None, "title": "Wake Up", "when": "today", "time": "07:00",
+         "detail": "alarm"},
+        {"module_id": "toolbox", "record_id": "t1", "title": "Call the vet", "when": "today", "time": "",
+         "detail": "due today"}]}]
     monkeypatch.setattr(today, "week_days", lambda context, day=None: days)
     said = assistant_today_actions._action_get_week(None, {})
-    assert "Pay Electric" in said and "Wake Up" not in said
+    # a task shares the toolbox with alarms and stays (the thirteenth review: every task had been dropped)
+    assert "Pay Electric" in said and "Call the vet" in said and "Wake Up" not in said

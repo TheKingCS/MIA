@@ -50,12 +50,13 @@ def _count(n: int, label: str) -> str:
 
 def first_tomorrow(context, tomorrow: date) -> str:
     """Tomorrow's first thing from its own list (a timed one with its time), else what's still open; never an alarm;
-    "" for nothing."""
-    from core.today import today_items
+    "" for nothing.
+    An alarm is told by `core/today.is_alarm`; a task can be the first thing."""
+    from core.today import is_alarm, today_items
 
-    items = [i for i in today_items(context, tomorrow) if i.when == "today" and i.module_id != "toolbox"]
-    if not items:  # nothing of tomorrow's own: what's still open (an alarm is never the day's first thing)
-        items = [i for i in today_items(context, tomorrow) if i.when == "overdue" and i.module_id != "toolbox"]
+    items = [i for i in today_items(context, tomorrow) if i.when == "today" and not is_alarm(i)]
+    if not items:  # nothing of tomorrow's own: what's still open (an alarm is never the day's first thing; a task is)
+        items = [i for i in today_items(context, tomorrow) if i.when == "overdue" and not is_alarm(i)]
     if not items:
         return ""
     first = items[0]

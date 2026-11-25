@@ -54,12 +54,17 @@ def test_tomorrows_weather_comes_from_the_kept_forecast(monkeypatch):
 
 
 def test_an_alarm_is_never_tomorrows_first_thing(monkeypatch):
+    """An alarm (its detail says so) is never the first thing; a meeting or a task is."""
     import core.today as today
 
-    alarm = SimpleNamespace(when="today", title="Alarm", time="06:30", module_id="toolbox")
-    meeting = SimpleNamespace(when="today", title="Meet the roofer", time="09:00", module_id="calendar")
+    alarm = SimpleNamespace(when="today", title="Alarm", time="06:30", module_id="toolbox", detail="alarm")
+    meeting = SimpleNamespace(when="today", title="Meet the roofer", time="09:00", module_id="calendar", detail="")
     monkeypatch.setattr(today, "today_items", lambda context, day: [alarm, meeting])
     assert ew.first_tomorrow(None, NOW.date()) == "Meet the roofer at 09:00"
+    # a task shares the toolbox with alarms, and is a first thing (the thirteenth review)
+    task = SimpleNamespace(when="today", title="Call the vet", time="", module_id="toolbox", detail="due today")
+    monkeypatch.setattr(today, "today_items", lambda context, day: [alarm, task])
+    assert ew.first_tomorrow(None, NOW.date()) == "Call the vet"
 
 
 def test_one_of_a_thing_is_said_singular():

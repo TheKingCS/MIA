@@ -40,11 +40,12 @@ def describe_week(days: list[dict], today: date) -> str:
 def _action_get_week(context, arguments: dict) -> str:
     """Tool get_week: what's due each day this week (core.today.week_days), Your Week on the Dashboard; an alarm is
     never something due (the live sweep, 2026-11-25: the weekend plan said "you've got to ... wake up on time"), as the
-    evening wrap and the morning briefing leave it out too."""
-    from core.today import week_days
+    evening wrap and the morning briefing leave it out too.
+    An alarm is told by `is_alarm`; a task stays."""
+    from core.today import is_alarm, week_days
 
     today = date.today()
-    days = [dict(d, items=[i for i in d["items"] if i.get("module_id") != "toolbox"]) for d in week_days(context, today)]
+    days = [dict(d, items=[i for i in d["items"] if not is_alarm(i)]) for d in week_days(context, today)]
     return describe_week(days, today)
 
 

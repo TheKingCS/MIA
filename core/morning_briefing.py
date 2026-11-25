@@ -90,10 +90,11 @@ def weather_today(context) -> str:
 
 
 def day_today(context, today) -> str:
-    """Today's list in a few words: how many things and the first (a timed one with its time); "" for none."""
-    from core.today import today_items
+    """Today's list in a few words: how many things and the first (a timed one with its time); "" for none.
+    Alarms left out by `core/today.is_alarm`; tasks counted."""
+    from core.today import is_alarm, today_items
 
-    items = [i for i in today_items(context, today) if i.when in ("overdue", "today") and i.module_id != "toolbox"]
+    items = [i for i in today_items(context, today) if i.when in ("overdue", "today") and not is_alarm(i)]
     if not items:
         return ""
     first = items[0]

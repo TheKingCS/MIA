@@ -13,6 +13,8 @@ What it gathers, for the signed-in person (their household's things and
 their own):
 - **Overdue** first: bills past due, maintenance overdue, tasks past
   their date.
+`is_alarm(item)` tells an alarm from something due (by its detail: tasks share the toolbox with alarms).
+
 - **Today**: calendar events (in time order), alarms, bills and
   maintenance due today, tasks due today, paydays, birthdays (People &
   Pets), pantry items expiring.
@@ -44,6 +46,14 @@ log = get_logger(__name__)
 OVERDUE, TODAY, WAITING, SOON = "overdue", "today", "waiting", "soon"
 _ORDER = {OVERDUE: 0, TODAY: 1, WAITING: 2, SOON: 3}
 SOON_DAYS = 3
+
+
+def is_alarm(item) -> bool:
+    """Pure logic. Whether a list item (a TodayItem or its dict) is an alarm: never something due, so the week said by
+    voice, the evening wrap and the morning briefing leave it out. By its detail, never its app: tasks share the
+    toolbox with alarms (the thirteenth review: filtering on the app had dropped every task)."""
+    detail = item.get("detail") if isinstance(item, dict) else getattr(item, "detail", "")
+    return detail == "alarm"
 
 
 @dataclass
