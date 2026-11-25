@@ -671,6 +671,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     What he says he spent is recorded (`_spent_reply`).
     The morning briefing he asks for, set or turned off (`_morning_briefing_reply`).
     A quote from a job's words, a draft for his yes (`_job_quote_reply`).
+    A tool call written out as the answer is never said (GARBLED_REPLY).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -873,6 +874,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
     if echoes(content, prompt) or any(echoes(content, said) for said in earlier):
         content = ECHO_REPLY  # never the person's own words (now or a moment ago) said back as if an answer
+    if _garbled(content):
+        content = GARBLED_REPLY  # never a tool call written out as the answer, even after the retry without tools
     add_message(conversation, "assistant", content)
     _observe(context, conversation, prompt, offered, reply=content, seconds=time.monotonic() - started,
              garbled=_garbled(reply.content))
@@ -901,6 +904,8 @@ def echoes(content: str, prompt: str) -> bool:
 
 
 ECHO_REPLY = "I didn't get an answer together for that one. Ask me again, or in other words, and I'll try once more."
+GARBLED_REPLY = ("I got that mixed up on my end and didn't do it. Say it again, maybe in other words, and I'll try "
+                 "once more.")
 
 
 def _observe(context, conversation, prompt: str, offered: list, **outcome) -> Optional[str]:

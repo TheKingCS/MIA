@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1810 files, 387,900 lines; 1810 files describe themselves; 21,134 of 21,260 classes and functions are documented.
+1811 files, 387,940 lines; 1811 files describe themselves; 21,136 of 21,262 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-716 files, 202,169 lines; 10,124 of 10,205 classes and functions documented
+716 files, 202,183 lines; 10,124 of 10,205 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1014,7 +1014,7 @@
 
 ## tests/: the test suite: what each part must do
 
-685 files, 103,716 lines; 8,639 of 8,684 classes and functions documented
+686 files, 103,742 lines; 8,641 of 8,686 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1590,6 +1590,7 @@
 - `tests/test_theme_picture.py`: Appearance phase A7's first part (prompt 24 §9, DEC-0184): a theme from a picture, read in code (core/theme_picture.py), and the theme in use nudged by plain words (core/theme_design.adjust). The reference picture gives a blue glass close to Aquatic; a sunset's orange never becomes the accent (it co
 - `tests/test_themes.py`: Themes (DEC-0136, core/themes.py): a theme is data checked against what a theme may change, so no theme can restyle a warning or inject anything; each person picks theirs in Settings or by voice, and every page gets it with the shell. The Theme Studio builds a theme from a few choices, refuses warni
 - `tests/test_today.py`: Today (core/today.py), 2026-10-01: one list of what needs you today, across every app; on Home, on the phone, and from the Assistant.
+- `tests/test_tool_call_as_text.py`: A tool call the model writes out as its answer is never said (live sweep, 2026-11-25: '{"name": "draft_email", "parameters": {..."\$$X"...}}' reached him, invalid JSON, so it was neither caught nor retried): its opening is enough to be caught (core/llm_manager._looks_like_malformed_tool_call, so the
 - `tests/test_tool_gate.py`: The Assistant's tool gate (2026-11-10): only a tool offered this turn runs, a tool whose name reads like a lookup but changes records counts as a change (undo, screens refresh), and a change the model asks for right after a lookup that brought in outside text (a web page, a search, the inbox) is hel
 - `tests/test_tool_loop.py`: The tool loop (DEC-0052 step 2b, core/tool_loop.py): lookups go back to the model and it may look up more, a few rounds at most, never the same lookup twice; one answer at the end that never states a number the lookups didn't; a change is never run inside the loop. A safety lookup worded in code is 
 - `tests/test_trace.py`: LS-01 (DEC-0280): one trace id for everything one cause did. A turn runs under one id; a proposal carries the id of what proposed it, and approving it later (from another request) runs under that same id, so what it changed and recorded can be found from the cause; each scheduled job run is a cause 
