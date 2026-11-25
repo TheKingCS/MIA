@@ -1,7 +1,8 @@
 """Harvests by voice (core/harvest_log.py): a harvest goes on his growing batch of that crop (plurals alike), a crop
 not in the grow lab gets a batch dated by him first, two batches of it are asked about, a place none is in is a new
 one, eggs and honey aren't crops; this year's harvest adds up by crop and unit, valued only at a price he recorded in
-the same unit, beside what its plantings cost; and sentences that aren't a harvest don't bring its tools."""
+the same unit, beside what its plantings cost, with the greenhouse node's produce in it and its fish said apart; and
+sentences that aren't a harvest don't bring its tools."""
 
 from datetime import date
 
@@ -96,3 +97,23 @@ def test_saying_a_harvest_reaches_the_tool(garden):
     for said, tool in (("I harvested 5 pounds of tomatoes", "log_harvest"),
                        ("what has the garden produced this year?", "harvest_this_year")):
         assert tool in [a.name for a in garden.assistant_actions.matching_actions(said, garden)], said
+
+
+
+def test_the_greenhouse_nodes_harvests_are_in_this_years_total(tmp_path, monkeypatch):
+    """Lettuce the node harvested joins the year's produce; its tilapia is said on its own, never priced."""
+    from core import greenhouse_link as gl
+    from tests.engine_world import build_world
+
+    world = build_world(tmp_path, monkeypatch)
+    link = gl.GreenhouseLink(world, data_dir=tmp_path / "gh")
+    link.state = {"cells": [], "yield": {"events": [
+        {"id": 1, "item": "lettuce", "quantity": 3, "unit": "lb", "yield_type": "harvest_produce",
+         "timestamp": "2026-11-20 10:00:00"},
+        {"id": 2, "item": "tilapia", "quantity": 4, "unit": "lb", "yield_type": "harvest_fish",
+         "timestamp": "2026-11-21 10:00:00"}]}}
+    gl.keep_harvests(world, link)
+    rows = hl.year(world, date(2026, 11, 24))
+    assert any(r["crop"] == "Lettuce" and r["amount"] == 3 and not r["fish"] for r in rows)
+    said = hl.say_year(world, date(2026, 11, 24))
+    assert "Lettuce: 3 lb" in said and "The greenhouse's fish: Tilapia: 4 lb." in said

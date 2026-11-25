@@ -16,7 +16,8 @@ lab still keeps its harvests, once he says roughly when it was planted (never da
 (units read alike: "lbs" and "pounds" are pounds, `unit_of`), and what it would have cost at the cheapest price he's
 recorded for that crop in the same unit in the last year (core/price_book.py), said beside what its plantings cost
 (the batches' seeds and starts), so it's never called savings it isn't. A crop with no such price is said as not
-valued, never guessed.
+valued, never guessed. The greenhouse node's harvests MIA kept (`greenhouse_harvest` life events,
+core/greenhouse_link.keep_harvests) are in it too, its produce beside the garden's and its fish said on their own.
 """
 
 from __future__ import annotations
@@ -126,8 +127,9 @@ def log(context, crop: str, amount, unit: str = "", where: str = "", last: bool 
 
 def year(context, today: Optional[date] = None) -> list[dict]:
     """This calendar year's harvests, by crop (`singular`: "Tomato" and "tomatoes" together) and unit, heaviest
-    first: each {crop, unit, amount, times, cost (what its batches cost: seeds, starts), value (None without a price),
-    price_from}. Read from the grow lab; prices from his price book, the cheapest per
+    first: each {crop, unit, amount, times, cost (what its batches cost: seeds, starts), value (None without a price,
+    never for fish), price_from, fish}. Read from the grow lab and the greenhouse node's kept harvests
+    (`_node_harvests`); prices from his price book, the cheapest per
     unit for that crop (by `_same_crop`) in the same unit, each store's latest in the last year."""
     today = today or date.today()
     lab = getattr(context, "grow_lab", None)
@@ -142,12 +144,23 @@ def year(context, today: Optional[date] = None) -> list[dict]:
             row["amount"] += float(h.get("amount") or 0)
             row["times"] += 1
             row["batches"].add(b.batch_id)
+    for e in _node_harvests(context, today):
+        fish = e.payload.get("kind") == "harvest_fish"
+        key = (singular(str(e.payload.get("item") or "produce")), unit_of(str(e.payload.get("unit") or "")), fish)
+        row = totals.setdefault(key, {"crop": key[0].capitalize(), "unit": key[1], "amount": 0.0, "times": 0,
+                                      "batches": set(), "fish": fish})
+        try:
+            row["amount"] += float(e.payload.get("quantity") or 0)
+        except (TypeError, ValueError):
+            continue
+        row["times"] += 1
     costs = {b.batch_id: float(b.cost or 0) for b in (lab.batches if lab is not None else [])}
     book = getattr(context, "prices", None)
     for row in totals.values():
         row["cost"] = round(sum(costs.get(i, 0.0) for i in row.pop("batches")), 2)
         row["value"], row["price_from"] = None, ""
-        if book is None:
+        row.setdefault("fish", False)
+        if book is None or row["fish"]:
             continue
         try:
             since = (today - timedelta(days=365)).isoformat()
@@ -165,6 +178,19 @@ def year(context, today: Optional[date] = None) -> list[dict]:
     return sorted(totals.values(), key=lambda r: -r["amount"])
 
 
+def _node_harvests(context, today: date) -> list:
+    """This calendar year's greenhouse harvests MIA kept from the node (`greenhouse_harvest` life events), dated by
+    the node's own time, else when she kept it; [] when none or the history can't be read."""
+    from core import life_events
+
+    try:
+        found = life_events.events_for(context, types=("greenhouse_harvest",))
+    except Exception:  # noqa: BLE001 - a history that can't be read leaves the node's part out
+        log.exception("Couldn't read the greenhouse harvests")
+        return []
+    return [e for e in found if str(e.payload.get("at") or e.at).startswith(str(today.year))]
+
+
 def _amount(row: dict) -> str:
     """Pure logic. "12.5 lb", "3 heads", "2 cups", "3 dozen", "4" for a count (a unit already ending in s, or dozen,
     never gets another)."""
@@ -177,13 +203,19 @@ def _amount(row: dict) -> str:
 
 def say_year(context, today: Optional[date] = None) -> str:
     """This year's harvest in words, with what it would cost at his recorded store prices beside what its plantings
-    cost (never called savings when their cost isn't recorded), and what isn't valued."""
+    cost (never called savings when their cost isn't recorded), and what isn't valued; the greenhouse's fish said on
+    their own, never as produce or priced."""
     from core.region import money
 
     today = today or date.today()
-    if getattr(context, "grow_lab", None) is None:
+    if getattr(context, "grow_lab", None) is None and not _node_harvests(context, today):
         return "The grow lab isn't on this MIA, so there are no harvests to add up."
-    rows = year(context, today)
+    every = year(context, today)
+    rows = [r for r in every if not r["fish"]]
+    fish = [r for r in every if r["fish"]]
+    if fish and not rows:
+        return (f"So far in {today.year} the greenhouse has given you " + "; ".join(
+            f"{r['crop']}: {_amount(r)}" for r in fish) + " of fish, and no produce is logged yet.")
     if not rows:
         return (f"No harvests logged in {today.year} yet. Say \"I harvested 3 pounds of beans\" and I'll keep it with "
                 "that crop.")
@@ -200,4 +232,6 @@ def say_year(context, today: Optional[date] = None) -> str:
     if unvalued:
         out += (" No store price recorded in the same unit for " + ", ".join(unvalued) + ": record one and I'll "
                 "count it.")
+    if fish:
+        out += " The greenhouse's fish: " + "; ".join(f"{r['crop']}: {_amount(r)}" for r in fish) + "."
     return out
