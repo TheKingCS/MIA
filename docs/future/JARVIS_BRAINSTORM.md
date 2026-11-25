@@ -354,6 +354,9 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **The weather for a day he names** (no decision): *built 2026-11-24 (core/weather.days_meant, say_days).* "What's
+  the weather Saturday?", "this weekend", "the day after tomorrow", "this week", and "and the day after?" as a
+  follow-up, from the week's forecast MIA already keeps (it only ever said today and tomorrow); still answered in code.
 - **Follow-ups to a tool's answer** (no decision; smooth conversation): *built 2026-11-24
   (core/conversation_state.followed_question, core/assistant_actions._with_follow_up).* "How long do I process quarts
   of green beans?" then "and what about corn?", "what if I'm at 3,000 feet?", "what about 8 pounds?", "what if I used

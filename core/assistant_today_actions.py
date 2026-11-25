@@ -46,10 +46,11 @@ def _action_get_week(context, arguments: dict) -> str:
 
 
 def _action_get_weather(context, arguments: dict) -> str:
-    """Tool get_weather: the weather in the person's town (core.weather)."""
-    from core.weather import say
+    """Tool get_weather: the weather in the person's town (core.weather), for the days his words name (Saturday, the
+    weekend, the day after tomorrow, this week: core.weather.say_days), else now, today and tomorrow."""
+    from core.weather import say_days
 
-    return say(context)
+    return say_days(context, " ".join(str(arguments.get(k) or "") for k in ("question", "when")))
 
 
 def _action_set_weather_place(context, arguments: dict) -> str:
@@ -264,7 +265,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     "have I been spending more than normal?", "what's first tomorrow":
     tests/test_everyday_phrasing_routing.py).
     The battery size is reached by "battery bank is" or "kWh battery", never "my battery is" ("my battery is at 20
-    percent")."""
+    percent").
+    get_weather takes his words (its prompt_arg, so it's still answered in code) and says the day he names."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -286,10 +288,12 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="get_weather", domain="today",
-        description="The weather in the user's town: now, today's high and low, and tomorrow. Not for the wind chill "
-                    "or heat index, or whether it's safe to work outside: those are work_outside_wind_chill_heat_index.",
-        parameters={"type": "object", "properties": {}, "required": []},
-        handler=_action_get_weather,
+        description="The weather in the user's town: now, today and tomorrow, or a day he names this week (Saturday, "
+                    "the weekend, the day after tomorrow). Not for the wind chill or heat index, or whether it's safe "
+                    "to work outside: those are work_outside_wind_chill_heat_index.",
+        parameters={"type": "object", "properties": {
+            "question": {"type": "string", "description": "his words, with the day if he named one"}}, "required": []},
+        handler=_action_get_weather, prompt_arg="question",  # still answered in code, his words as the question
         trigger_phrases=("weather", "how hot", "how cold", "is it going to rain", "will it rain", "temperature outside",
                          "forecast"),
     ))

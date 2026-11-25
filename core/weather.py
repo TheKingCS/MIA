@@ -24,6 +24,8 @@ How:
   test hands in its own `fetch`.
 - The action `weather.place` sets the town (undoable: the setting writes
   through atomic_write), from the Dashboard's box and the voice tool.
+`say_days(context, words)`: the weather for the days his words name (a weekday, the weekend, the day after tomorrow,
+this week; `days_meant`), from the week's forecast the card keeps, for the get_weather tool.
 """
 
 from __future__ import annotations
@@ -32,8 +34,10 @@ import json
 import os
 import threading
 import time
+import re
 import urllib.parse
 import urllib.request
+from datetime import date, timedelta
 from typing import Callable, Optional
 
 from core import person_settings
@@ -216,7 +220,7 @@ def card(context, fetch: Optional[Callable[[str], dict]] = None) -> dict:
 
 
 def say(context) -> str:
-    """The weather in a sentence, for "what's the weather?"."""
+    """The weather in a sentence, for "what's the weather?" (now, today and tomorrow; a named day is `say_days`)."""
     got = card(context)
     if got.get("set"):
         return "I don't know your town yet. Tell me which one, like \"my town is Springfield, Illinois\"."
@@ -225,6 +229,58 @@ def say(context) -> str:
     line = f"In {got['place']} it's {got['text']}; today {got['high']} and {got['low']}."
     t = got.get("tomorrow")
     return line + (f" Tomorrow: {t['words'].lower()}, {t['high']} and {t['low']}." if t else "")
+
+
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
+
+def days_meant(words: str, today: date) -> Optional[list]:
+    """Pure logic. The days a question asks about ("Saturday", "the day after tomorrow", "this weekend", "this week",
+    "tomorrow"), today on; only a follow-up's own words count (before its " (after: ...)"), so "and the day after?"
+    after "what's the weather tomorrow?" is the day after tomorrow. None when it names no day."""
+    own = str(words or "").lower().split(" (after:")[0]
+    if "weekend" in own:
+        return [today + timedelta(days=i) for i in range(7) if (today + timedelta(days=i)).weekday() >= 5][:2]
+    if "week" in own:
+        return [today + timedelta(days=i) for i in range(7)]
+    if "day after" in own:
+        return [today + timedelta(days=2)]
+    for n, name in enumerate(WEEKDAYS):
+        if re.search(rf"\b{name}\b", own):
+            return [today + timedelta(days=(n - today.weekday()) % 7)]
+    if "tomorrow" in own:
+        return [today + timedelta(days=1)]
+    if re.search(r"\b(?:today|tonight)\b", own):
+        return [today]
+    return None
+
+
+def _day_words(day: dict, unit: str) -> str:
+    """Pure logic. One day in words: "Saturday: light rain, 54 and 39, a 60% chance of rain, gusts to 30 mph"."""
+    when = date.fromisoformat(day["date"])
+    parts = [str(day.get("words") or "").lower(), f"{day['high']} and {day['low']}{unit}"]
+    if day.get("rain") is not None:
+        parts.append(f"a {day['rain']}% chance of rain")
+    if day.get("gust") is not None:
+        parts.append(f"gusts to {day['gust']} {'mph' if 'F' in unit else 'km/h'}")
+    return f"{when.strftime('%A')}: " + ", ".join(p for p in parts if p)
+
+
+def say_days(context, words: str, today: Optional[date] = None) -> str:
+    """The weather for the days his words ask about (`days_meant`), from the week's forecast; `say` when they name
+    none; a day past the forecast said as that."""
+    today = today or date.today()
+    asked = days_meant(words, today)
+    if asked is None:
+        return say(context)
+    got = card(context)
+    if got.get("set") or got.get("loading") or not got.get("days"):
+        return say(context)
+    by_day = {d["date"]: d for d in got["days"]}
+    said = [_day_words(by_day[d.isoformat()], got.get("unit", "")) for d in asked if d.isoformat() in by_day]
+    if not said:
+        return f"The forecast I have doesn't reach that far for {got.get('place') or 'your town'}; it covers the next week."
+    return f"In {got.get('place') or 'your town'}: " + "; ".join(said) + "."
 
 
 def _describe(context, params) -> str:
