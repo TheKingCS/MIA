@@ -8,6 +8,12 @@ the ingoing nitrite (156 ppm for most cured meat, 120 for bacon, `PPM`), and pla
 (2.5% unless he says another). The weight is read from his words (`weight_in`: lb, oz, kg, g), the product from them
 too (bacon, sausage, ham, jerky). Always said with: weigh it on a scale, keep it in the fridge at 34 to 40 F, the
 time from a tested recipe, and curing salt #2 only for long dry-cured meats he won't cook (salami, prosciutto).
+
+**Checked** 2026-11-24: curing salt #1 is 6.25% sodium nitrite, 93.75% salt, and a level teaspoon cures 5 lb (the
+National Center for Home Food Preservation); FSIS caps ingoing nitrite at 120 ppm in pumped or immersion-cured bacon
+(with 550 ppm ascorbate or erythorbate) and 200 ppm in dry-cured bacon (9 CFR 424.21-22), and its quick reference
+gives 156 ppm for comminuted products. So 120 for any bacon here errs low, and the 100 to 200 ppm range refuses a
+long dry cure's 625, which belongs to a tested recipe with curing salt #2.
 """
 
 from __future__ import annotations
