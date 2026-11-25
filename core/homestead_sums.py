@@ -56,11 +56,14 @@ def days_in(words: str) -> Optional[float]:
     """Pure logic. The days his words give: "two weeks", "3 days", "72 hours", "a month" (30), "a year"; None for
     none.
     Hours only when no days, weeks or months are said.
-    A rate ("a gallon a day") never cancels the hours."""
+    A rate ("a gallon a day") never cancels the hours.
+    A span said ("for a week", "one week") wins over hours."""
     said = str(words or "").lower()
     hours = re.search(rf"\b{_NUM}\s+hours?\b", said)
-    if hours and not re.search(r"\b(?:\d+|two|three|four|five|six|seven|eight|nine|ten|a couple of)\s+(?:days?|weeks?|"
-                               r"months?|years?)\b|\bfortnight\b", said):  # "72 hours": 3 days; "a day each" is a rate
+    span = re.search(r"\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|a couple of)\s+(?:days?|weeks?|"
+                     r"months?|years?)\b|\bfortnight\b|\b(?:for|enough for|last\w*|over|about)\s+(?:a|an)\s+"
+                     r"(?:day|week|month|year)\b", said)
+    if hours and not span:  # "72 hours": 3 days; "a gallon a day each" is a rate, "for a week" a span (ninth review)
         return _number(hours.group(1)) / 24
     found = re.search(rf"\b{_NUM}\s+(day|week|month|year)s?\b", said)
     if not found:
@@ -74,7 +77,8 @@ def people_in(words: str) -> Optional[int]:
     """Pure logic. The people his words give: "for 4 people", "for 1 person", "a family of 5", "the two of us", and
     every group said added up ("2 adults and 2 kids" is 4: the sixth review); None for none.
     A total said (a family of 4, 4 people) wins over its breakdown.
-    A family of 4 is the whole; "2 people and 2 kids" adds up, a breakdown with adults doesn't."""
+    A family of 4 is the whole; "2 people and 2 kids" adds up, a breakdown with adults doesn't.
+    Kids are added only with "and", "plus" or "with": "including 2 kids" is a breakdown."""
     said = str(words or "").lower()
     family = re.search(rf"\bfamily of\s+{_NUM}\b", said)
     if family:  # a family of 4 is the whole of it
@@ -82,8 +86,11 @@ def people_in(words: str) -> Optional[int]:
     whole = re.search(rf"\bthe\s+{_NUM}\s+of us\b", said) or re.search(rf"\b{_NUM}\s+(?:people|persons?)\b", said)
     adults = re.findall(rf"\b{_NUM}\s+(?:adults?)\b", said)
     kids = re.findall(rf"\b{_NUM}\s+(?:kids?|children|child|teens?)\b", said)
-    if whole:  # "4 people, 2 adults and 2 kids" is a breakdown; "2 people and 2 kids", "the 2 of us and 3 kids" add up
-        return max(1, int(_number(whole.group(1)) + (0 if adults else sum(_number(k) for k in kids))))
+    if whole:  # "4 people, 2 adults and 2 kids" or "4 people including 2 kids" is a breakdown; "2 people and 2 kids",
+        # "the 2 of us and 3 kids" add up (the ninth review)
+        added = re.search(re.escape(whole.group(0)) + rf"\s*,?\s*(?:and|plus|with|\+)\s+{_NUM}\s+(?:kids?|children|"
+                          r"child|teens?)\b", said)
+        return max(1, int(_number(whole.group(1)) + (_number(added.group(1)) if added and not adults else 0)))
     groups = adults + kids
     return max(1, int(sum(_number(g) for g in groups))) if groups else None
 

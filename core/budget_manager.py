@@ -74,9 +74,14 @@ balance first, for payoff-momentum motivation), and `"hybrid"`
 `_PROMO_URGENCY_WINDOW_DAYS` jumps to the front — a 0% balance about to
 revert to 24.99% is a real, time-boxed emergency that pure APR-today
 ordering would otherwise miss entirely).
+
+An entry's date is read by `read_date` (ISO, "yesterday", "last Friday", "11/20/2026", "Nov 20th", a day-first
+"25/11/2026"); a new entry with none it can read is today's (`_entry_date`), and an update keeps its own.
 """
 
 from __future__ import annotations
+
+import re
 
 from core.data_root import DATA_DIR
 
@@ -304,34 +309,66 @@ def _today_iso() -> str:
     return datetime.now().date().isoformat()
 
 
-def _entry_date(value: Optional[str]) -> str:
-    """Pure logic but for today. An entry's date as given when it's a real YYYY-MM-DD date, or "yesterday", "11/20/2026",
-    "Nov 20, 2026" or "Nov 20" (the last one), else today (live sweep, 2026-11-25: the model sent the string "null",
-    stored as the date, and no month's totals ever counted it)."""
+def read_date(value: Optional[str]) -> Optional[str]:
+    """Pure logic but for today. A date said as YYYY-MM-DD (or YYYY/MM/DD, a time after it allowed), "today",
+    "yesterday", "last Friday", "11/20/2026" or "11-20-2026" (month first, unless the first number is over 12:
+    "25/11/2026" is the 25th), "Nov 20th, 2026", "Sept 3" (the last one, Feb 29 included), as YYYY-MM-DD; None when it
+    can't be read (the ninth review: an update had moved an entry to today on words it couldn't read)."""
     from datetime import timedelta
 
-    raw = str(value or "").strip()
-    said = raw[:10]
-    try:
-        return datetime.strptime(said, "%Y-%m-%d").date().isoformat()
-    except ValueError:
-        pass
-    words = raw.lower()
+    raw = " ".join(str(value or "").strip().split())
+    words = re.sub(r"(\d)(?:st|nd|rd|th)\b", r"\1", raw.lower()).replace(".", "").replace("sept ", "sep ")
     today = datetime.now().date()
-    if words == "yesterday":  # the eighth review: these had silently become today
+    for form in ("%Y-%m-%d", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(words[:10], form).date().isoformat()
+        except ValueError:
+            pass
+    if words == "today":
+        return today.isoformat()
+    if words == "yesterday":
         return (today - timedelta(days=1)).isoformat()
-    for form in ("%m/%d/%Y", "%m/%d/%y", "%B %d, %Y", "%b %d, %Y", "%B %d %Y", "%b %d %Y"):
+    weekdays = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+    last = re.fullmatch(r"(?:last|this past) (" + "|".join(weekdays) + r")", words)
+    if last:
+        back = (today.weekday() - weekdays.index(last.group(1))) % 7 or 7
+        return (today - timedelta(days=back)).isoformat()
+    numbers = re.fullmatch(r"(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2}|\d{4}))?", words)
+    if numbers:
+        first, second, year = int(numbers.group(1)), int(numbers.group(2)), numbers.group(3)
+        month, day = (second, first) if first > 12 and second <= 12 else (first, second)
+        return _dated(month, day, int(year) + (2000 if year and len(year) == 2 else 0) if year else None, today)
+    named = re.fullmatch(r"([a-z]+) (\d{1,2})(?:,? (\d{4}))?", words)
+    if named:
+        for form in ("%B", "%b"):
+            try:
+                month = datetime.strptime(named.group(1), form).month
+            except ValueError:
+                continue
+            return _dated(month, int(named.group(2)), int(named.group(3)) if named.group(3) else None, today)
+    return None
+
+
+def _dated(month: int, day: int, year: Optional[int], today) -> Optional[str]:
+    """Pure logic. YYYY-MM-DD for a month and day in the year given, else the last one on or before today (a Feb 29
+    in the last leap year); None for a day that doesn't exist."""
+    from datetime import date as _date
+
+    years = [year] if year else [today.year - n for n in range(0, 8)]
+    for y in years:
         try:
-            return datetime.strptime(raw, form).date().isoformat()
+            day_of = _date(y, month, day)
         except ValueError:
             continue
-    for form in ("%m/%d", "%B %d", "%b %d"):
-        try:
-            day = datetime.strptime(raw, form).date().replace(year=today.year)
-        except ValueError:
-            continue
-        return (day.replace(year=today.year - 1) if day > today else day).isoformat()  # a month and day: the last one
-    return _today_iso()
+        if year or day_of <= today:
+            return day_of.isoformat()
+    return None
+
+
+def _entry_date(value: Optional[str]) -> str:
+    """Pure logic but for today. An entry's date as `read_date` reads it, else today (live sweep, 2026-11-25: the
+    model sent the string "null", stored as the date, and no month's totals ever counted it)."""
+    return read_date(value) or _today_iso()
 
 
 def _in_range(entry_date: str, start_date: Optional[str], end_date: Optional[str]) -> bool:
@@ -987,7 +1024,7 @@ class BudgetManager:
         return entry
 
     def update_income(self, entry_id: str, **fields) -> IncomeEntry:
-        """Changes an income entry's fields and saves it; a date given is read by `_entry_date` (never "null"), and its creation time can't change."""
+        """Changes an income entry's fields and saves it; a date given is read by `read_date` (one it can't read keeps the entry's own), and its creation time can't change."""
         entry = self.get_income(entry_id)
         if entry is None:
             raise ValueError(f"No income entry with id '{entry_id}'.")
@@ -995,7 +1032,7 @@ class BudgetManager:
             if key == "created_at":
                 raise ValueError("'created_at' can't be set through update_income().")
             if key == "date":
-                value = _entry_date(value)  # never "null" through an update (the eighth review)
+                value = read_date(value) or entry.date  # never "null", nor today for words it can't read
             if not hasattr(entry, key):
                 raise ValueError(f"IncomeEntry has no field '{key}'.")
             setattr(entry, key, value)
@@ -1084,7 +1121,7 @@ class BudgetManager:
         return entry
 
     def update_expense(self, entry_id: str, **fields) -> ExpenseEntry:
-        """Changes an expense entry's fields and saves it; a date given is read by `_entry_date` (never "null"), and its creation time can't change."""
+        """Changes an expense entry's fields and saves it; a date given is read by `read_date` (one it can't read keeps the entry's own), and its creation time can't change."""
         entry = self.get_expense(entry_id)
         if entry is None:
             raise ValueError(f"No expense entry with id '{entry_id}'.")
@@ -1092,7 +1129,7 @@ class BudgetManager:
             if key == "created_at":
                 raise ValueError("'created_at' can't be set through update_expense().")
             if key == "date":
-                value = _entry_date(value)  # never "null" through an update (the eighth review)
+                value = read_date(value) or entry.date  # never "null", nor today for words it can't read
             if not hasattr(entry, key):
                 raise ValueError(f"ExpenseEntry has no field '{key}'.")
             setattr(entry, key, value)

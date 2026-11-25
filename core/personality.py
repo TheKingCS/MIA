@@ -202,8 +202,8 @@ EXAMPLE_LINES = tuple(m.group(1) for _f, example in HUMOR_FLAVORS for m in [re.s
 # example copied loosely ("It's not a cord any more, it's a tangled mess.", live sweep 2026-11-25), and goes. Only
 # the opening line, and only these phrases: plain words like "cord" or "remote" are real advice (the eighth review:
 # "don't use an extension cord" had been cut from a space-heater answer, and every reply's lines run together).
-EXAMPLE_SUBJECTS = ("not a cord any more", "it's a sculpture", "last place you'll look", "a tragedy",
-                    "get through this together", "third one? bold", "so, a light day", "take your word for it")
+EXAMPLE_SUBJECTS = ("not a cord any more", "it's a sculpture", "last place you'll look",  # never "a tragedy":
+                    "get through this together", "third one? bold", "so, a light day", "take your word for it")  # 9th
 
 
 def without_copied_example(text: str, prompt: str = "") -> str:

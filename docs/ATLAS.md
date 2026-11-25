@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1802 files, 386,907 lines; 1802 files describe themselves; 21,086 of 21,212 classes and functions are documented.
+1803 files, 387,000 lines; 1803 files describe themselves; 21,092 of 21,218 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,597 lines; 10,104 of 10,185 classes and functions documented
+714 files, 201,641 lines; 10,106 of 10,187 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-679 files, 103,295 lines; 8,611 of 8,656 classes and functions documented
+680 files, 103,344 lines; 8,615 of 8,660 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1494,6 +1494,7 @@
 - `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
 - `tests/test_review_7.py`: The seventh review's findings (2026-11-25), each kept fixed: the claim check leaves alone a sentence about anything but his records, a story, and a lookup's "your alarm is set"; a date his words state is never replaced by a weekday, a weekday after "on" or "for" beats one in a title, "next Friday" i *(1 undocumented)*
 - `tests/test_review_8.py`: The eighth review's findings (2026-11-25), each kept fixed but the floor's false alarms ("mom passed out the cookies"), which are kept since quieting them silenced real emergencies (the ninth review); "create a task" and "change my alarm" are changes asked for; "Tuesday's meeting" is never the remin
+- `tests/test_review_9.py`: The ninth review's other findings (2026-11-25), each kept fixed: a date is read in more of the ways it's said (last Friday, Nov 20th, Sept 3, 11-20-2026, 2026/11/20, Feb 29, a day-first 25/11/2026), and an update with one it can't read keeps the entry's own date; a span said ("for a week") wins over
 - `tests/test_review_bench_3.py`: The third review (2026-11-25), each finding as its failing input: "build me a ..." only as a request at the start, never a reminder, a note, a time or a stand; her designs only proper names, asked about exactly, and a plan said only when its decision calls it one; parts matched by whole word, severa
 - `tests/test_review_labs_2.py`: The second review of the labs (2026-11-25), each finding as its failing input: the Mega's I2C on its own header, never A4/A5; power backwards a stop in the free build and the course simulator; a part's input held to its range and an output tied to a rail warned; a lab named as one deciding the cours
 - `tests/test_review_labs_5.py`: The fifth review's findings (2026-11-25), each kept fixed: a photo of an ordinary thing never gets a part's spec and the first part named wins; a check's question uses the same words its course was looked for by, and words a started course uses for itself stay its; a lab's why never takes a request 
