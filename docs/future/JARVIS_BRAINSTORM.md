@@ -356,6 +356,10 @@ New ideas, each checked against what's there first:
   history; a personal best said the moment it's one; what his own log says about bait, time and spot; the Angler
   achievements (First Fish to Legend Of The Lake) and a Fishing Week in the Chronicle. Reached only by fishing
   words, never a bare "caught a" ("I caught a cold").
+- **What should I make next?** (no decision; his businesses): *built 2026-11-24 (`core/make_next.py`, the tool
+  `what_to_make_next`).* The products that sold in the last 90 days, under a month of stock first, ranked by what a
+  piece keeps an hour of his work (price less materials, over hours, from the jobs that made it); never one that
+  hasn't sold.
 - *Found already there:* "can I afford it?" (the afford question plan); first aid (the emergency floor) and
   bushcraft (a learning path).
 

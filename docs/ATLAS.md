@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1727 files, 372,794 lines; 1727 files describe themselves; 20,459 of 20,589 classes and functions are documented.
+1729 files, 372,955 lines; 1729 files describe themselves; 20,467 of 20,597 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-687 files, 192,168 lines; 9,756 of 9,842 classes and functions documented
+688 files, 192,274 lines; 9,760 of 9,846 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -350,6 +350,7 @@
 - `core/main_thread.py`: Publishing events safely from background threads (2026-09-28).
 - `core/maintenance_insights.py`: The Maintenance-domain scan for "connective infrastructure" phase 3 (Insight + Recommendation) — see core/insight_manager.py's own docstring for why these are real, new persisted entities. Pure decision logic, no Qt, no manager instance of its own, wired into core/background_jobs.py's existing daily
 - `core/maintenance_manager.py`: Backs the Maintenance module (modules/maintenance/module.py) — recurring upkeep tracking for anything the user owns that needs it: vehicles, power equipment (mower, e-bike), appliances, the property itself, and tools. Same persisted-JSON pattern as core.journal_manager.JournalManager core.calendar_m
+- `core/make_next.py`: "What should I make next?" (Jarvis brainstorm, round 11: his businesses, from his own records): the workshop's products that sell, against what's on the shelf and what each one earns an hour, so the next build is the one that both runs out soonest and pays best.
 - `core/map_share_actions.py`: Showing MIA's places on TAK apps on the local network (build plan step 14, DEC-0099; `docs/MAPS_AND_COMMS.md`), through the action contract (core/actions.py): `map.tak_share` sends each waypoint once as a Cursor on Target event over UDP multicast with a one-hop limit, so it never leaves the network 
 - `core/map_tile_cache.py`: Disk-backed cache for real basemap tiles — the actual "offline maps" imagery gui/widgets/tile_map_view.py renders, unlike gui/widgets/waypoint_map_canvas.py's schematic waypoint plot (which has no basemap imagery at all, by design — see that module's docstring).
 - `core/map_tile_math.py`: Pure Web Mercator "slippy map" tile-numbering math — the same addressing scheme every standard XYZ/ArcGIS tile provider uses (OSM, USGS National Map, etc.), documented publicly as the OSM wiki's "Slippy map tilenames" formulas. Kept separate from core/map_tile_cache.py (which adds real network I/O/d
@@ -985,7 +986,7 @@
 
 ## tests/: the test suite: what each part must do
 
-634 files, 99,531 lines; 8,338 of 8,382 classes and functions documented
+635 files, 99,586 lines; 8,342 of 8,386 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1275,6 +1276,7 @@
 - `tests/test_maintenance_insights.py`: Unit tests for core.maintenance_insights — isolates _DATA_DIR for maintenance/data_logger/insight files into a tmp_path scratch area, same monkeypatch pattern as test_maintenance_manager.py's own isolated_paths, plus insight_manager's files added.
 - `tests/test_maintenance_manager.py`: Unit tests for core.maintenance_manager — the biggest, most complex manager in this codebase (six trigger types, a linear-projection estimator, document storage, Data Logger + Calendar integration) that had zero direct test coverage before this file (only its GUI module's formatting functions were t
 - `tests/test_maintenance_module.py`: Unit tests for the pure logic behind the Maintenance module: core.maintenance_manager's recurrence functions (next_due_date days_until_due/is_overdue, plus v2's meter_used_since_last is_meter_task_due/is_sensor_task_due/predicted_due_date) and modules.maintenance.module's row formatters. No Qt event
+- `tests/test_make_next.py`: "What should I make next?" (core/make_next.py): products that sold in the last 90 days, the ones under a month of stock first, best per hour first among them; nothing that hasn't sold is suggested.
 - `tests/test_manage_mission_skills_dialog.py`: Unit tests for gui.manage_mission_skills_dialog's pure format_skill_reward_row() function, same style as tests/test_manage_project_skills_dialog.py (no Qt event loop, no fixtures).
 - `tests/test_manage_project_skills_dialog.py`: Unit tests for gui.manage_project_skills_dialog's pure format_skill_weight_row() function, same style as tests/test_project_tool.py (no Qt event loop, no fixtures).
 - `tests/test_map_tile_cache.py`: Unit tests for core.map_tile_cache. urllib.request.urlopen() is monkeypatched (same "mock the external query, test our own caching decision logic" reasoning as test_avatar_manager.py mocking QMediaDevices/test_power_manager.py mocking psutil) — no real network call happens in this committed suite, k

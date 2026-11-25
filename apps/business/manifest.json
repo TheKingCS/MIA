@@ -54,7 +54,8 @@
       "add_customer",
       "make_quote",
       "accept_quote",
-      "order_status"
+      "order_status",
+      "what_to_make_next"
     ],
     "actions": [
       "customer.add",
@@ -111,7 +112,8 @@
       "add_customer": "act_within_grant",
       "make_quote": "act_within_grant",
       "accept_quote": "act_within_grant",
-      "order_status": "act_within_grant"
+      "order_status": "act_within_grant",
+      "what_to_make_next": "observe"
     },
     "outside": []
   },
