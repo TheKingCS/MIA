@@ -179,10 +179,22 @@ _FIGURE = re.compile(r"\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that
                      r"brakes?|air)\b|\b(?:throttle|mower|engine|tractor|truck|pump|controller|sensor|remote|valve)\b"
                      r".{0,25}\b(?:unresponsive|not responding)\b|\boverdos\w*\s+(?:the\s+|my\s+)?(?:tomatoes|plants?|"
                      r"garden|lawn|soil|seedlings?)\b|\bon (?:fertili[sz]er|nitrogen)\b", re.I)
-# Practice asked for, not an emergency: "give me a choking drill", "quiz me on bleeding" (core/drills.py's first-aid
-# drills); "this is not a drill" and anything that says it's happening still are.
-_PRACTICE = re.compile(r"\b(?:drills?|scenarios?|quiz|rehears\w*|practi[cs]e)\b")
+# Practice asked for, not an emergency: only a drill actually asked for ("give me a choking drill", "quiz me on
+# bleeding": core/drills.requested, the same words that start one), never the bare noun (the sixth review: "she choked
+# at soccer practice and can't breathe", "I cut my hand with the drill and it won't stop bleeding" had gone quiet);
+# "this is not a drill" and anything that says it's happening still are emergencies.
 _REAL = re.compile(r"\b(?:not|isn'?t|no|ain'?t) (?:a |no )?drill\b|\bfor real\b|\breal(?:ly)? happening\b")
+
+
+def _practice_asked(text: str) -> bool:
+    """Pure logic. Whether the words ask for a drill (core/drills.requested), so they're practice, not an
+    emergency."""
+    try:
+        from core.drills import requested
+
+        return requested(text) is not None
+    except Exception:  # noqa: BLE001 - if it can't tell, it's never practice: the floor answers
+        return False
 # An animal and no person: the vet's work, not these words ("my dog is choking", "the hens are gasping").
 _ANIMAL = re.compile(r"\b(?:dog|dogs|puppy|cat|cats|kitten|chickens?|hens?|rooster|horse|goat|cow|calf|pig|sheep|"
                      r"lamb|duck|rabbit|bird|birds|chicks?)\b", re.I)
@@ -193,7 +205,8 @@ MARK = "or have someone else call while you help."
 
 def kinds(prompt: str) -> list[str]:
     """Pure logic. Every kind of emergency these words say is happening now, most time-critical first ([] for none).
-    A drill or practice asked for isn't one, unless the words also say it's happening or real."""
+    A drill asked for (core/drills.requested) isn't one, unless the words also say it's happening or real; a bare
+    "practice" or "drill" never turns the floor off."""
     text = " ".join(str(prompt or "").lower().replace("’", "'").split())
     if not text:
         return []
@@ -205,7 +218,7 @@ def kinds(prompt: str) -> list[str]:
     happening = bool(_HAPPENING.search(text))
     if (_ABOUT.search(text) or _PAST.search(text)) and not happening:
         return []
-    if _PRACTICE.search(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)):
+    if _practice_asked(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)):
         return []  # "help me practice the choking drill" is practice; "help, he's choking" never is
     return found
 
@@ -278,6 +291,13 @@ _TOPIC: list[tuple[str, re.Pattern]] = [
     ("drowning", re.compile(r"\bdrown\w*")),
     ("snakebite", re.compile(r"\bsnake ?bites?\b")),
 ]
+# A how-to whose words aren't first aid (the sixth review): bleeding a radiator or maple trees, burning stumps or a CD,
+# choking a chainsaw or up on a bat, a spring wound up
+_NOT_FIRST_AID = re.compile(r"\bbleed\w*\s+(?:the\s+|a\s+|my\s+)?(?:radiators?|brakes?|lines?|air|maples?|trees?|"
+                            r"sap|syrup|hydraulics?|injectors?|fuel|system)\b|\bburn\w*\s+(?:the\s+|a\s+|my\s+|off\s+)?"
+                            r"(?:stumps?|brush|piles?|cds?|dvds?|discs?|calories|fat|wood|trash|leaves|fields?|"
+                            r"rubber|clutch|in\b)|\bchok\w*\s+up\b|\bchok\w*\s+(?:the\s+|a\s+|my\s+)?(?:chainsaw|saw|"
+                            r"engine|motor|mower|carb\w*)\b|\bwound up\b|\bwind(?:ing)? up\b")
 _HOWTO = re.compile(r"^\s*(?:how (?:do|should|would|can|could) (?:i|you|one|we|people|someone) |how to |what (?:should|"
                     r"do|would) (?:i|you|one|we) do (?:if|when|for|about|with)|what to do (?:if|when|for|about)|"
                     r"what'?s the (?:right |best )?way to |teach me (?:how )?to )")
@@ -287,12 +307,14 @@ def teach(prompt: str, where=None) -> Optional[str]:
     """Pure logic. A how-to question about first aid ("how do you use a tourniquet?", "what do you do if someone is
     choking?") answered in the floor's own words, from the Red Cross's and the AHA's guidance, with the number to call
     when it's real (live check, 2026-11-25: the model refused the tourniquet). None for anything else: one happening
-    now is `respond`'s, and signs and symptoms are the library's."""
+    now is `respond`'s, signs and symptoms are the library's, an animal's is the vet's, and a how-to in other words
+    (bleeding the brakes, burning stumps, choking a chainsaw: `_NOT_FIRST_AID`) isn't first aid."""
     from core.region import DEFAULT, REGIONS
 
     text = " ".join(str(prompt or "").lower().replace("’", "'").split())
-    if not _HOWTO.search(text) or detect(text) or _FIGURE.search(text) or (_ANIMAL.search(text)
-                                                                          and not _PERSON.search(text)):
+    # an animal named is the vet's, whoever asks ("how do I treat a wound on my horse?": "I" is always a person here)
+    if not _HOWTO.search(text) or detect(text) or _FIGURE.search(text) or _ANIMAL.search(text) \
+            or _NOT_FIRST_AID.search(text):
         return None
     kind = next((k for k, words in _TOPIC if words.search(text)), None)
     do = next((d for k, _w, d in KINDS if k == kind), None)

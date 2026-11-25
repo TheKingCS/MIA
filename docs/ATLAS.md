@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1792 files, 385,768 lines; 1792 files describe themselves; 21,024 of 21,154 classes and functions are documented.
+1792 files, 385,816 lines; 1792 files describe themselves; 21,027 of 21,157 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-713 files, 200,975 lines; 10,080 of 10,166 classes and functions documented
+713 files, 200,997 lines; 10,081 of 10,167 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1011,7 +1011,7 @@
 
 ## tests/: the test suite: what each part must do
 
-670 files, 102,778 lines; 8,573 of 8,617 classes and functions documented
+670 files, 102,804 lines; 8,575 of 8,619 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1202,7 +1202,7 @@
 - `tests/test_finance_summary.py`: Finance #4, money on the phone: core/finance_summary.py's numbers, the /api/finance/summary endpoint, and the phone's money.js drawing the real Python output (under Node, skipped without it).
 - `tests/test_findings.py`: Findings (DEC-0052 step 3, core/findings.py): what MIA notices by putting apps together, with the records it came from, why it matters, a next step, and only Zac's chosen kinds unprompted.
 - `tests/test_firewood.py`: Firewood for the winter (core/firewood.py): cords read from his inventory (full cords, face cords and ricks at about a third), against his own winter figure (set with set_preparedness), what's short said; without his figure the usual range said as only that and his number asked for; a pile with no m
-- `tests/test_first_aid_drills.py`: The first-aid drills (core/drills.py: a deep cut, choking at dinner), written in the emergency floor's words (core/first_aid_floor.py) so a drill never teaches what the floor wouldn't say; asking for one never trips the floor, and anything that says it's real still does.
+- `tests/test_first_aid_drills.py`: The first-aid drills (core/drills.py: a deep cut, choking at dinner), written in the emergency floor's words (core/first_aid_floor.py) so a drill never teaches what the floor wouldn't say; asking for one never trips the floor, and anything that says it's real still does, even with "practice" or "dri
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
 - `tests/test_fishing_times.py`: "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a new or full moon, the week's best days, his own log's best time, a
