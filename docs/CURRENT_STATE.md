@@ -23,8 +23,15 @@ pH/EC target bands, hard limits, stale and too-soon refused, staged for his pres
 POST /mia/command signed with a key MIA sends at provisioning (homestead/core/command_auth.py), hardened after a
 security review (one at a time, re-checked at approval, replay-safe, the node's own limits never pushed over); the
 node reports each direction's outcome in its export (step 3); and MIA's side (core/greenhouse_adjust.py): "set the
-greenhouse pH minimum to 6.4" then "yes, set it", or Set Target on the Greenhouse page, signed, read back. Live run
-against the real export server passed; still to run with main.py cycling (approve on the node, read back applied).
+greenhouse pH minimum to 6.4" then "yes, set it", or Set Target on the Greenhouse page, signed, read back. Live runs
+passed against the node's real control loop: 6.6 to 6.4 and back, each approved on the node and read back as applied.
+Then brainstorm rounds 9-10 (docs/future/JARVIS_BRAINSTORM.md) and their no-decision items: the Chronicle tells the
+homestead, songs and wins; Trade and Debt Free achievements; "how's the greenhouse pH against its target?"; canning as
+a skill; a song reward offered to the songbook and Play Along; the power outage clock (core/outage.py); a day
+without safe water (core/water_day.py); "why was my electric bill so high?" (core/utility_bills.py). Each new tool
+was checked against the PC's model (16 live cases added). Waiting on Zac: 0zu, the YouTube key (0zv), and round 9-10's
+ideas that are his say ("almost there" nudges, the card on phone and glasses, greenhouse target suggestions, a storm
+heads-up, the routines list).
 
 **Later 2026-11-24: the homestead's brain, the hub and the engineer.** Zac widened the vision: MIA as the brain of
 the aquaponics greenhouse, orchard, garden, water and power (`docs/future/SMART_AG_PLAN.md`), and as the hub of his
