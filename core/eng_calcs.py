@@ -22,7 +22,7 @@ the values, a sentence, the basis and the caveat.
 The first set: electrical (power, voltage drop, wire gauge, circuit load,
 battery runtime), embedded (LED resistor, voltage divider, battery life
 with sleep, regulator heat, ADC step), structural (floor joist), and
-structural (stair risers, board feet, concrete), homestead crafts (brine salt, candle wax, soap
+structural (stair risers, board feet, concrete), homestead crafts (brine salt, a meat cure, candle wax, soap
 lye, alum mordant), and the greenhouse (heat loss, fan size, drip water, heater propane; S4's first specialist).
 S4's second batch, the hoodie's: acoustics (SPL at distance, amplifier power, sealed box, sound delay, safe
 listening time), audio DSP (buffer latency, data rate, dynamic range, FFT resolution, delay in samples), textiles
@@ -237,6 +237,32 @@ def _brine_salt(water: Quantity, vegetables: Quantity, strength: Quantity) -> di
     salt = q(total * strength.si, "g")
     return {"values": {"salt": salt},
             "said": f"{strength.si * 100:g}% of {total:.4g} g (water and vegetables together) is {salt} of salt."}
+
+
+CURE1_NITRITE = 0.0625  # Prague Powder / Insta Cure #1: 6.25% sodium nitrite, the rest salt
+CURE_PPM_RANGE = (100, 200)  # ingoing nitrite a home cure stays within (USDA: 156 most products, 120 pumped bacon)
+
+
+def _meat_cure(meat: Quantity, salt: Quantity, nitrite: Quantity) -> dict:
+    """An equilibrium cure for meat: curing salt #1 (6.25% sodium nitrite) for the ingoing nitrite asked (156 ppm, the
+    USDA's level for most cured products, is 0.25% of the meat's weight, about a level teaspoon for 5 lb), and plain
+    salt to bring the total to the salt percentage, less the salt the cure already holds."""
+    ppm = nitrite.si
+    if not CURE_PPM_RANGE[0] <= ppm <= CURE_PPM_RANGE[1]:
+        raise CalcError(f"Keep a home cure's nitrite between {CURE_PPM_RANGE[0]} and {CURE_PPM_RANGE[1]} ppm (156 for "
+                        "most cured meat, 120 for bacon); outside that, follow a tested recipe.")
+    grams = meat.number("g")
+    if grams <= 0:
+        raise CalcError("How much meat? More than none.")
+    cure = grams * ppm / 1_000_000 / CURE1_NITRITE
+    plain = grams * salt.si - cure * (1 - CURE1_NITRITE)
+    if plain < 0:
+        raise CalcError("That salt percentage is less than the cure itself brings: use at least 1.5% salt.")
+    teaspoons = grams / 453.59237 / 5 * (ppm / 156)
+    return {"values": {"cure": q(cure, "g"), "salt": q(plain, "g"), "teaspoons": q(teaspoons, "")},
+            "said": (f"For {grams:.4g} g of meat at {ppm:g} ppm nitrite and {salt.si * 100:g}% salt: {cure:.3g} g of "
+                     f"curing salt #1 (about {teaspoons:.2g} level teaspoons; weigh it) and {plain:.3g} g of plain "
+                     "salt.")}
 
 
 BLEACH_DROPS_PER_GAL_AT_6 = 8  # the EPA: 8 drops of 6% unscented bleach per gallon of clear water
@@ -675,6 +701,13 @@ CALCULATORS: tuple[Calculator, ...] = (
                 "strength": ("%", "the salt percentage", "2 %")},
                _brine_salt, "common fermenting practice: salt as a percentage of the water and vegetables together; "
                "for canning and curing, follow a tested recipe instead"),
+    Calculator("meat_cure", "crafts", "Meat Cure", "Curing salt #1 and salt for curing meat (bacon, ham, "
+               "sausage, jerky) by its weight.",
+               {"meat": ("g", "the weight of the meat", None), "salt": ("%", "the total salt percentage", "2.5 %"),
+                "nitrite": ("", "the ingoing nitrite in parts per million", "156")},
+               _meat_cure, "an equilibrium cure: curing salt #1 is 6.25% sodium nitrite; the USDA's ingoing limits "
+               "are 156 ppm for most cured meat and 120 ppm for pumped or immersion-cured bacon; cure in the fridge "
+               "(34 to 40 F) for the time a tested recipe gives", True),
     Calculator("water_bleach", "survival", "Make Water Safe With Bleach", "Unscented household bleach to "
                "disinfect drinking water when it can't be boiled.",
                {"water": ("gal", "how much clear water", None),

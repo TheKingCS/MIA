@@ -354,6 +354,11 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Curing meat** (no decision; his homestead): *built 2026-11-24 (`core/meat_cure.py`, the tool `meat_cure`, the
+  calculator `meat_cure` in core/eng_calcs.py).* "How much curing salt for 5 pounds of pork belly for bacon?": curing
+  salt #1 by weight at the USDA's 120 ppm for bacon or 156 for other cured meat (a level teaspoon for 5 lb at 156),
+  plain salt to 2.5% less what the cure holds, the fridge and a tested recipe for the time, #2 only for long dry
+  cures; nitrite outside 100 to 200 ppm refused.
 - **Why did my hens stop laying?** (no decision, asked): *built 2026-11-24 (`core/hen_laying.py`, the tool
   `why_hens_not_laying`).* His flock's lay rate this week against the four before, then the likely causes, most likely
   first: a change in the flock, feed run out, too young, the day's daylight against 14 hours with the day it's back

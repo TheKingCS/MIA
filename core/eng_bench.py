@@ -122,6 +122,8 @@ TASKS: tuple[Task, ...] = (
     Task("c2", "How many grams of wax fill a 250 millilitre candle jar, with wax at 0.86 grams per millilitre?",
          "candle_wax", {"volume": "0.25 L"}, "wax", "g"),
     Task("c3", "How much salt for my sauerkraut at 2%?", "brine_salt", {"strength": "2 %"}, missing="vegetables"),
+    Task("c9", "How many grams of curing salt #1 do I need for 2000 grams of pork at 156 ppm nitrite?", "meat_cure",
+         {"meat": "2000 g", "nitrite": "156"}, "cure", "g"),
     Task("c4", "Cold-process soap with 1000 grams of olive oil at a 5% superfat: how many grams of sodium hydroxide?",
          "soap_lye", {"olive": "1000 g", "superfat": "5 %"}, "lye", "g"),
     Task("c5", "A soap recipe uses 700 grams of olive oil and 300 grams of coconut oil at a 5% superfat. How many grams "

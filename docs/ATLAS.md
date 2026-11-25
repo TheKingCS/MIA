@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1737 files, 374,348 lines; 1737 files describe themselves; 20,546 of 20,676 classes and functions are documented.
+1739 files, 374,507 lines; 1739 files describe themselves; 20,554 of 20,684 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-692 files, 193,273 lines; 9,808 of 9,894 classes and functions documented
+693 files, 193,394 lines; 9,813 of 9,899 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -361,6 +361,7 @@
 - `core/material_manager.py`: MIA Home's fabrication-materials inventory — the first concrete slice of the proposed `mia_home_schema.sql`'s `materials` table (see `docs/VISION.md`'s "MIA Home's expanded scope" section), adapted to this project's persisted-JSON-manager convention rather than adopting SQLite, per the user's explic
 - `core/meal_plan.py`: The week's meals (DEC-0020, docs/KITCHEN_FITNESS_PLAN.md phase 3): what's planned each day, the prep sessions that cook ahead, the nutrition the plan adds up to against the person's targets, a shopping list for the whole week, and a suggested week from the person's own recipes. The plan is the perso
 - `core/meaning.py`: Comparing what someone said with example sentences by meaning, not by the words they share (DEC-0052; docs/TOOL_CALLING_RESEARCH.md R2). A small local embedding model on the home computer's Ollama (`llm.embed_model`, default nomic-embed-text) turns each sentence into a vector; the nearest example wi
+- `core/meat_cure.py`: "How much curing salt for 5 pounds of pork belly?" (Jarvis brainstorm, round 12; his homestead): the meat cure worked out in code (core/eng_calcs.py `meat_cure`), never from the model's memory: curing salt #1 by the meat's weight for the ingoing nitrite (156 ppm for most cured meat, 120 for bacon, `
 - `core/memories_web.py`: Memories' web screen (web/memories.html): one recap per expedition, newest first (core/memory_manager.py, as the desktop's Memories module shows them): how long, the distance and pace by activity, the kinds of places visited, the journal's highlights and how many photos, with "On this day" above whe
 - `core/memory_callbacks.py`: Remembering at the right moment (DEC-0029, ALICE pick 3): MIA brings up something you told her when it's about to matter, instead of waiting to be asked.
 - `core/memory_manager.py`: Memories — docs/ROADMAP.md milestone v0.17, the first of three new subsystems from the 2026-07-14 wearable-companion vision update (see docs/VISION.md). A **read-only aggregation service**, deliberately unlike every other core manager in this project: it owns no persisted file of its own and compute
@@ -990,7 +991,7 @@
 
 ## tests/: the test suite: what each part must do
 
-639 files, 99,980 lines; 8,373 of 8,417 classes and functions documented
+640 files, 100,018 lines; 8,376 of 8,420 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1292,6 +1293,7 @@
 - `tests/test_market_eve.py`: The day before a market day (core/market_eve.py): what to bring from what usually sells, beside what's on hand, the short ones and the goods without history named; once per market day, only for an open one tomorrow. *(2 undocumented)*
 - `tests/test_material_manager.py`: Unit tests for core.material_manager. Isolates _DATA_DIR/_MATERIALS_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. materials_needing_restock() is also tested directly as a pure function (no filesystem I/O), same reasoning as every other pur
 - `tests/test_meal_plan.py`: Meal plans, prep and the shopping list (core/meal_plan.py, DEC-0020), with their actions (meal.*) and missions. Placeholder recipes and values.
+- `tests/test_meat_cure.py`: "How much curing salt for 5 pounds of pork belly?" (core/meat_cure.py): the weight read from his words in any unit, bacon at the USDA's 120 ppm and the rest at 156, a salt percentage he names, the fridge and tested-recipe advice, and a question without a weight asked back.
 - `tests/test_memories_module.py`: Unit tests for modules.memories.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_memories_web.py`: Memories' web screen (core/memories_web.py): a recap per expedition, on this day, and a recap's route map.
 - `tests/test_memory_callbacks.py`: Remembering at the right moment (DEC-0029, ALICE pick 3): a birthday, a plan or due upkeep brings back what you told MIA, only when there's something remembered to add.

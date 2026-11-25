@@ -60,7 +60,8 @@
       "remove_pantry_item",
       "suggest_recipes",
       "update_pantry_item",
-      "fix_jar_count"
+      "fix_jar_count",
+      "meat_cure"
     ],
     "actions": [
       "cooking.back",
@@ -152,7 +153,8 @@
       "suggest_recipes": "suggest",
       "update_pantry_item": "act_within_grant",
       "fix_jar_count": "act_within_grant",
-      "jars.correct": "act_within_grant"
+      "jars.correct": "act_within_grant",
+      "meat_cure": "observe"
     },
     "outside": []
   },

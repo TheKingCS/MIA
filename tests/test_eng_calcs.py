@@ -96,6 +96,8 @@ def test_embedded_calculators_match_examples_worked_by_hand():
 
 
 def test_structural_and_craft_calculators():
+    """The joist, brine salt, meat cure (a level teaspoon of cure #1 for 5 lb at 156 ppm; nitrite past 200 refused)
+    and candle wax against hand-worked examples."""
     joist = calculate("floor_joist", {"span": "12 ft"})
     assert joist["choice"].startswith("2x") and joist["caveat"] == CAVEAT
     with pytest.raises(CalcError, match="past my joist table"):
@@ -103,6 +105,12 @@ def test_structural_and_craft_calculators():
     assert near(calculate("brine_salt", {"water": "1000 g", "vegetables": "500 g"})["values"]["salt"], 30, "g")
     assert near(calculate("brine_salt", {"water": "2 lb", "vegetables": "1 lb", "strength": "3 %"})["values"]["salt"],
                 3 * 453.59237 * 0.03, "g")
+    cure = calculate("meat_cure", {"meat": "5 lb"})
+    assert near(cure["values"]["cure"], 5 * 453.59237 * 156 / 1e6 / 0.0625, "g") and cure["caveat"] == CAVEAT
+    assert abs(cure["values"]["teaspoons"].si - 1) < 0.01  # a level teaspoon for 5 lb at 156 ppm
+    assert near(cure["values"]["salt"], 5 * 453.59237 * 0.025 - cure["values"]["cure"].number("g") * 0.9375, "g")
+    with pytest.raises(CalcError, match="between 100 and 200 ppm"):
+        calculate("meat_cure", {"meat": "5 lb", "nitrite": "500"})
     wax = calculate("candle_wax", {"volume": "0.25 L"})["values"]
     assert near(wax["wax"], 215, "g") and near(wax["fragrance"], 17.2, "g")
 
