@@ -66,7 +66,10 @@ the last four. Done since: a tool call written as text is never said (642e2c88),
 (d1dbe97c), daily reminders on the calendar (14bbb7e0), the week said without alarms (aff21b2d), the twelfth
 review's fixes (ea163dd0: a daily event survives editing everywhere, a JSON answer is never taken for a tool call).
 At the PC: "remind me every morning to give the dog his meds", then edit it on the calendar page and see it stay
-daily. A thirteenth review of ea163dd0 is running or due.
+daily. Then the thirteenth review (8027f3cc: tasks back in the week, the evening wrap and the morning briefing; an
+alarm told by its detail, `core/today.is_alarm`; 88a5ccdf) and the fourteenth (76a90b77). The word-pattern routes
+(spending, reminders, quotes, the briefing, tool calls as text) took several rounds each; MIA's knowledge K-0496 says
+what held. A fifteenth review of 76a90b77 is due.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:
