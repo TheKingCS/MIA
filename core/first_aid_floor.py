@@ -38,7 +38,8 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-_WHO = (r"(?:he|she|they|i|we|someone|somebody|the baby|baby|my (?:\w+ ){0,2}(?:wife|husband|son|daughter|dad|father|"
+_WHO = (r"(?:he|she|they|i|we|someone|somebody|the baby|baby|grandma|grandpa|granny|mom|mum|dad|mother|father|"
+        r"my (?:\w+ ){0,2}(?:wife|husband|son|daughter|dad|father|"
         r"mom|mother|friend|kid|baby|child|brother|sister|grandpa|grandma|grandfather|grandmother|neighbou?r|partner|"
         r"boy|girl|uncle|aunt|cousin))")
 _CPR_SHORT = "If they stop responding and aren't breathing normally, start CPR: push hard and fast in the center of the chest."
@@ -86,6 +87,10 @@ KINDS: list[tuple[str, re.Pattern, str]] = [
                             r"\b(?:he|she|they|i|baby|it)(?:'s| is| am| are|'m|'re)? (?:still )?bleeding\b"
                             r"(?! (?:the|my|our|his|her|a) (?:brakes?|radiators?|lines?|air|pipes?|system|hydraulics))|"
                             r"\bblood (?:is )?(?:spurting|pouring|everywhere|gushing)\b|"
+                            r"\bbleeding (?:won'?t|will not|doesn'?t|isn'?t|is not) stop\w*\b|"
+                            r"\b(?:gushing|spurting|pouring) blood\b|"
+                            r"\bcut (?:my|his|her|their|the baby'?s|a) (?:\w+ )?(?:finger|thumb|toe|hand|arm|leg|foot)s? "
+                            r"(?:off|clean off)\b|"
                             r"\b(?:severe|heavy|serious|bad) bleeding\b|\bdeep (?:cut|gash|wound)\b|"
                             r"\bcut (?:my |his |her |their |the baby'?s |a )?(?:hand|finger|thumb|leg|arm|foot|"
                             r"toe|head|face|wrist|knee|neck|palm|shin)\b.{0,25}\b(?:deep|to the bone|bad|badly)\b|\b(?:been|got|was|i'?m) (?:shot|stabbed)\b|"
@@ -186,6 +191,18 @@ _FIGURE = re.compile(r"\bdrowning in\b|\bchok(?:ing|ed) on (?:all )?(?:this|that
 _REAL = re.compile(r"\b(?:not|isn'?t|no|ain'?t) (?:a |no )?drill\b|\bfor real\b|\breal(?:ly)? happening\b")
 
 
+def _left_after_drill(text: str) -> bool:
+    """Pure logic. Whether an emergency is still named once the drill's own words are taken out ("give me a choking
+    drill, baby can't breathe" still says baby can't breathe: the seventh review). Any doubt is an emergency."""
+    try:
+        from core.drills import _ASKED_FOR, _REQUEST
+
+        rest = _REQUEST.sub(" ", _ASKED_FOR.sub(" ", text))
+    except Exception:  # noqa: BLE001 - if it can't tell, the floor answers
+        return True
+    return any(words.search(rest) for _kind, words, _do in KINDS)
+
+
 def _practice_asked(text: str) -> bool:
     """Pure logic. Whether the words ask for a drill (core/drills.requested), so they're practice, not an
     emergency."""
@@ -205,8 +222,9 @@ MARK = "or have someone else call while you help."
 
 def kinds(prompt: str) -> list[str]:
     """Pure logic. Every kind of emergency these words say is happening now, most time-critical first ([] for none).
-    A drill asked for (core/drills.requested) isn't one, unless the words also say it's happening or real; a bare
-    "practice" or "drill" never turns the floor off."""
+    A drill asked for (core/drills.requested) isn't one, unless the words also say it's happening or real, or an
+    emergency is left once the drill's own words are out (`_left_after_drill`); a bare "practice" or "drill" never
+    turns the floor off."""
     text = " ".join(str(prompt or "").lower().replace("’", "'").split())
     if not text:
         return []
@@ -218,7 +236,8 @@ def kinds(prompt: str) -> list[str]:
     happening = bool(_HAPPENING.search(text))
     if (_ABOUT.search(text) or _PAST.search(text)) and not happening:
         return []
-    if _practice_asked(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)):
+    if _practice_asked(text) and not _REAL.search(text) and not _HAPPENING.search(re.sub(r"\bhelp me\b", " ", text)) \
+            and not _left_after_drill(text):
         return []  # "help me practice the choking drill" is practice; "help, he's choking" never is
     return found
 

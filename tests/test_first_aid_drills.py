@@ -4,7 +4,8 @@ tests.test_first_aid_drills
 
 The first-aid drills (core/drills.py: a deep cut, choking at dinner), written in the emergency floor's words
 (core/first_aid_floor.py) so a drill never teaches what the floor wouldn't say; asking for one never trips the floor,
-and anything that says it's real still does, even with "practice" or "drill" in it (the sixth review); and a how-to
+and anything that says it's real still does, even with "practice" or "drill" in it (the sixth review) or right after
+asking for a drill (the seventh: "give me a choking drill, baby can't breathe"); and a how-to
 in other words (a radiator bled, stumps burned) or for an animal is never taught as first aid.
 """
 
@@ -48,6 +49,20 @@ def test_a_how_to_in_other_words_or_for_an_animal_is_never_taught_as_first_aid()
     for words in ("how do you use a tourniquet?", "how to treat a burn", "how do I do CPR?",
                   "how do I stop bleeding?"):
         assert floor.teach(words) is not None, words
+
+
+def test_an_emergency_said_after_asking_for_a_drill_still_gets_the_floor():
+    """The seventh review's cases: a drill asked for and an emergency in the same words is the emergency; and the
+    older gaps it found (a family member named bare, bleeding that won't stop, a finger cut off)."""
+    for words in ("give me a choking drill... wait, actually the baby is choking", "practise choking drill, baby is choking",
+                  "give me a choking drill, baby can't breathe", "another choking drill, my daughter choking",
+                  "try a choking scenario, my kid can't breathe", "quiz me on first aid, my son fell and is unconscious",
+                  "start the first aid drill, someone's unconscious", "grandma collapsed", "mom collapsed",
+                  "bleeding won't stop", "cut my finger off", "my arm is gushing blood"):
+        assert floor.detect(words) is not None, words
+    for words in ("give me a choking drill", "try a choking scenario", "quiz me on first aid", "my mom is fine",
+                  "dad cut the lawn"):
+        assert floor.detect(words) is None, words
 
 
 def test_words_that_say_it_is_real_still_get_the_floor():
