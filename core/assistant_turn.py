@@ -15,7 +15,9 @@ session: core/talk_it_out.py) is deliberately returned as a follow-up
 call, and running it before the reply is spoken/sent would add its
 full latency to every answer. Callers speak/send first, then call
 `run_followup()`.
-A model reply that only says the person's words back (`echoes`) is replaced by a plain line asking again.
+A model reply that only says the person's words back (`echoes`) is replaced by a plain line asking again, and one
+that claims a change no tool made is said honestly (core/claim_check.py). A tool's date the model fills is the day
+his words name (`with_his_day`), and "remind me to X on a day" goes on his calendar in code (`_reminder_reply`).
 """
 
 from __future__ import annotations
@@ -117,7 +119,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A first-aid how-to too (`_first_aid_reply`).
     A how-to from a course lesson too (`_lesson_reply`).
     Days of water too (`_water_on_hand_reply`).
-    A materials question too (`_materials_reply`)."""
+    A materials question too (`_materials_reply`).
+    A reminder on a day too (`_reminder_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -156,6 +159,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _water_on_hand_reply(context, prompt)  # "how many days of water do I have?", as in a turn
     if walked is None:
         walked = _materials_reply(context, prompt)  # "how many fence posts for 200 feet?", as in a turn
+    if walked is None:
+        walked = _reminder_reply(context, prompt)  # "remind me to check the oil Saturday", as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -267,6 +272,60 @@ def _water_on_hand_reply(context, prompt: str):
         log.exception("Couldn't answer the water on hand")
         return None
     return f"{drinking}\n\nFor the whole property: {stored}"
+
+
+# Tools whose date the model fills, and his words may name a day for
+_DATED = {"add_calendar_event": "date"}
+
+
+def with_his_day(name: str, arguments, prompt: str, today=None) -> dict:
+    """Pure logic. A call's arguments with the day his words name ("Friday", "tomorrow", "next Saturday",
+    core/weather.days_meant) in place of the model's date, for a tool that takes one (`_DATED`; live sweep,
+    2026-11-25: "put the vet on the calendar for Friday at 2pm" went on 2024-03-15, made up and in the past). A date
+    his words give as digits, or none, leaves the model's as it is."""
+    arguments = dict(arguments or {})
+    field = _DATED.get(name)
+    if not field:
+        return arguments
+    from datetime import date as _date
+
+    from core.weather import days_meant
+
+    days = days_meant(str(prompt or ""), today or _date.today())
+    if days:
+        arguments[field] = days[0].isoformat()
+    return arguments
+
+
+_REMIND_ON = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+)?remind me to\s+(.+?)"
+                        r"\s+(?:on\s+|this\s+|next\s+|this coming\s+)?(today|tonight|tomorrow|monday|tuesday|wednesday|"
+                        r"thursday|friday|saturday|sunday)(?:\s+(?:morning|afternoon|evening|night))?"
+                        r"(?:\s+at\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?)?\s*[.!]?\s*$", re.I)
+
+
+def _reminder_reply(context, prompt: str):
+    """"Remind me to check the oil Saturday", in code (live sweep, 2026-11-25: offered the alarms, the model called no
+    tool and said "You've been reminded"): what and the day his words name (and a time, when said) go on his calendar
+    through add_calendar_event, so it's undoable like any change of hers. A time with no day stays the alarms'; a
+    repeating one ("every Saturday") the model's. None otherwise."""
+    found = _REMIND_ON.match(prompt.replace("’", "'"))
+    if not found or re.search(r"\b(?:every|each)\b", found.group(1), re.I):
+        return None
+    what = found.group(1).strip().rstrip(",")
+    args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, prompt)
+    if "date" not in args:
+        return None
+    if found.group(3):
+        hour, minute = int(found.group(3)), int(found.group(4) or 0)
+        hour += 12 if (found.group(5) or "").lower() == "pm" and hour < 12 else 0
+        hour = 0 if (found.group(5) or "").lower() == "am" and hour == 12 else hour
+        if hour < 24 and minute < 60:
+            args["time"] = f"{hour:02d}:{minute:02d}"
+    try:
+        return context.assistant_actions.execute(context, "add_calendar_event", args)
+    except Exception:
+        log.exception("Couldn't put the reminder on the calendar")
+        return None
 
 
 def _materials_reply(context, prompt: str):
@@ -402,6 +461,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
+    A claim of a change no tool made is said honestly; a reminder on a day goes on the calendar.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -504,6 +564,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
         if walked is None:
             walked = _materials_reply(context, prompt)  # a structure and its size: the calculators' list
         if walked is None:
+            walked = _reminder_reply(context, prompt)  # "remind me to X on Saturday": on his calendar
+        if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:
             add_message(conversation, "assistant", walked)
@@ -568,7 +630,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
                 log.warning("The model called %s, which wasn't offered this turn; not run.", tool_call.name)
                 confirmation = "I got that mixed up on my end. Could you say it another way?"
             else:
-                confirmation = context.assistant_actions.execute(context, tool_call.name, tool_call.arguments)
+                confirmation = context.assistant_actions.execute(context, tool_call.name,
+                                                                 with_his_day(tool_call.name, tool_call.arguments, prompt))
             add_message(conversation, "assistant", confirmation)
             replies.append(confirmation)
         called = calls_to_execute[0].name if calls_to_execute else ""
@@ -584,6 +647,9 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     # Her own words without the model's habitual "Sure!" first and "let me know" last, on every surface, not
     # only the phone (docs/CONVERSATION_REVIEW.md). An offer of hers to do something stays.
     content = with_offer(conversation, polish(reply.content))
+    from core.claim_check import honest
+
+    content = honest(context, prompt, content)  # nothing changed here: never "I've added a reminder" (claim_check)
     earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
     if echoes(content, prompt) or any(echoes(content, said) for said in earlier):
         content = ECHO_REPLY  # never the person's own words (now or a moment ago) said back as if an answer

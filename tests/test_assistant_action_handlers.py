@@ -684,9 +684,13 @@ def test_list_calendar_events_empty(context):
 
 
 def test_list_calendar_events_returns_all(context):
-    context.calendar.add_event(title="Doctor Appointment", date="2026-08-14", time="09:00")
+    """An event coming up is listed with its date (a past one isn't: core/calendar_move.listing)."""
+    from datetime import date, timedelta
+
+    ahead = (date.today() + timedelta(days=30)).isoformat()  # what's coming up: a past event isn't listed
+    context.calendar.add_event(title="Doctor Appointment", date=ahead, time="09:00")
     result = MIAApplication._action_list_calendar_events(context, {})
-    assert "Doctor Appointment" in result and "2026-08-14" in result
+    assert "Doctor Appointment" in result and ahead in result
 
 
 def test_delete_calendar_event_removes_matching_event(context):

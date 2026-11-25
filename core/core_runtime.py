@@ -368,7 +368,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     (core/meat_cure.py) size_solar (core/solar_size.py) canning_time (core/canning_times.py) rent_collected
     (core/rent_collected.py) move_calendar_event (core/calendar_move.py) the ESP32 lab bench's tools
     (core/esp32_lab.py), start_drill (core/drills.py) and the part specs' tools (core/part_specs.py) are among them.
-    The homestead sums too (core/homestead_sums.py)."""
+    The homestead sums too (core/homestead_sums.py).
+    list_calendar_events takes his words."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -638,8 +639,9 @@ def _register_core_assistant_actions(context: AppContext) -> None:
             "List the user's upcoming/scheduled Calendar events in MIA — what's coming up "
             "today, this week, or on any date. Not for past activity — see recall_recent_activity for that."
         ),
-        parameters={"type": "object", "properties": {}, "required": []},
-        handler=_action_list_calendar_events,
+        parameters={"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
+                    "required": []},
+        handler=_action_list_calendar_events, prompt_arg="question",
         trigger_phrases=(
             "list my events", "list my calendar", "what's on my calendar", "upcoming events", "show my calendar",
             "anything on my calendar", "anything today", "going on this week", "going on today",
@@ -1015,14 +1017,12 @@ def _action_add_calendar_event(context: AppContext, arguments: dict) -> str:
 
 
 def _action_list_calendar_events(context: AppContext, arguments: dict) -> str:
-    """Core's voice tool `list_calendar_events`: every calendar event with its date and time. The same behavior as core/application.py's handler, kept here so headless Core never
+    """Core's voice tool `list_calendar_events`: the events on the days his words name, else what's coming up (core/calendar_move.listing). The same behavior as core/application.py's handler, kept here so headless Core never
     imports the Qt app. Returns the reply in words (an unknown name says so, nothing changes).
     """
-    events = context.calendar.all_events()
-    if not events:
-        return "You have no calendar events."
-    lines = [f"- '{e.title}' on {e.date}" + (f" at {e.time}" if e.time else "") for e in events]
-    return "Your calendar events:\n" + "\n".join(lines)
+    from core.calendar_move import listing
+
+    return listing(context.calendar.all_events(), str(arguments.get("question") or ""))
 
 
 def _action_delete_calendar_event(context: AppContext, arguments: dict) -> str:

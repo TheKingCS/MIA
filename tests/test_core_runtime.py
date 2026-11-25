@@ -349,9 +349,13 @@ def test_list_calendar_events_empty(context):
 
 
 def test_list_calendar_events_returns_all(context):
-    context.calendar.add_event(title="Dentist", date="2026-09-01", time="14:00")
+    """An event coming up is listed with its date (a past one isn't: core/calendar_move.listing)."""
+    from datetime import date, timedelta
+
+    ahead = (date.today() + timedelta(days=30)).isoformat()  # what's coming up: a past event isn't listed
+    context.calendar.add_event(title="Dentist", date=ahead, time="14:00")
     result = _action_list_calendar_events(context, {})
-    assert "Dentist" in result and "2026-09-01" in result and "14:00" in result
+    assert "Dentist" in result and ahead in result and "14:00" in result
 
 
 def test_delete_calendar_event_removes_matching_event(context):

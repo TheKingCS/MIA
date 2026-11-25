@@ -11,12 +11,14 @@ recently (core/calendar_manager.py all_events keeps the order added): "it" and "
 **The day** (`day_of`): a date as YYYY-MM-DD, else a day in his words ("Sunday", "tomorrow", "the day after",
 core/weather.days_meant), the next one from today. **The time**: HH:MM when he gives one; else it keeps its own.
 Undoable like any calendar change (core/calendar_manager.update_event writes through atomic_write).
+**What's on it** (`listing`, for list_calendar_events): the days his words name, repeats counted, else what's coming
+up from today, never what's past (live sweep, 2026-11-25: "tomorrow" had listed every event).
 """
 
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 
@@ -40,6 +42,54 @@ def day_of(text: str, today: Optional[date] = None) -> Optional[str]:
         return days[0].isoformat()
     found = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", str(text or ""))
     return found.group(1) if found else None
+
+
+def _line(event, day: Optional[date] = None) -> str:
+    """Pure logic. One event as a line: its title, the day (the one asked about, for a repeating event), its time."""
+    when = (day.isoformat() if day else event.date)
+    return (f"- '{event.title}' on {when}" + (f" at {event.time}" if event.time else "")
+            + (f" (repeats {event.recurrence})" if event.recurrence else ""))
+
+
+def listing(events: list, words: str = "", today: Optional[date] = None) -> str:
+    """Pure logic, given his events. "What's on my calendar tomorrow?" (live sweep, 2026-11-25: every event was
+    listed, one from August among them): on the days his words name (core/weather.days_meant: "today", "tomorrow",
+    "Friday", "this week"), the events on them, repeats counted (core/calendar_manager.occurs_on), or that there's
+    nothing then and the next one coming up; with no day named, what's coming up from today (never what's past), the
+    soonest first."""
+    from core.calendar_manager import occurs_on
+    from core.weather import days_meant
+
+    today = today or date.today()
+    if not events:
+        return "You have no calendar events."
+    days = days_meant(str(words or ""), today)
+    if days:
+        found = [(d, e) for d in days for e in events if occurs_on(e, d)]
+        if found:
+            return "On your calendar:\n" + "\n".join(_line(e, d) for d, e in found)
+        named = days[0].strftime("%A, %B ") + str(days[0].day) if len(days) == 1 else "then"
+        ahead = _coming(events, days[-1] + timedelta(days=1))
+        return f"Nothing on your calendar for {named}." + (f" Next: {ahead[0][1].title} on {ahead[0][0].isoformat()}."
+                                                            if ahead else "")
+    ahead = _coming(events, today)
+    if not ahead:
+        return "Nothing coming up on your calendar."
+    return "Coming up on your calendar:\n" + "\n".join(_line(e, d) for d, e in ahead[:10])
+
+
+def _coming(events: list, start: date, days: int = 366) -> list:
+    """Pure logic. (day, event) for each event's next day from `start`, within a year, the soonest first."""
+    from core.calendar_manager import occurs_on
+
+    out = []
+    for event in events:
+        for n in range(days):
+            day = start + timedelta(days=n)
+            if occurs_on(event, day):
+                out.append((day, event))
+                break
+    return sorted(out, key=lambda x: (x[0], x[1].time or ""))
 
 
 def event_day(date_str: str) -> Optional[str]:

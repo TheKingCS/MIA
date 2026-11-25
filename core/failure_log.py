@@ -76,6 +76,7 @@ KINDS = {
     "action_failed": ("something you approved broke when it ran", 3),
     "declined": ("you turned down what she suggested", 1),
     "invented_number": ("she stated a number she hadn't looked up, so the plain facts were shown", 2),
+    "claimed_done": ("she said she did something no tool did, so she said so instead", 4),
 }
 REPHRASE_SECONDS = 120
 UNDO_SECONDS = 180

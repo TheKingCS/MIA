@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1793 files, 385,947 lines; 1793 files describe themselves; 21,033 of 21,163 classes and functions are documented.
+1795 files, 386,207 lines; 1795 files describe themselves; 21,046 of 21,176 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-713 files, 201,053 lines; 10,081 of 10,167 classes and functions documented
+714 files, 201,236 lines; 10,089 of 10,175 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -160,6 +160,7 @@
 - `core/child_accounts.py`: Child accounts (2026-10-01): a young person in a household gets their own MIA, set up and looked after by a parent (their guardian).
 - `core/chronicle.py`: The Chronicle (DEC-0028, the game layer's eighth idea): the story of your week, and of your year, told from what really happened.
 - `core/chronicle_issue.py`: MIA: The Chronicles*, the weekly issue (build plan step 17, DEC-0085 and DEC-0086; the Story Bible is `docs/chronicles/`, the archive `core/saga.py`).
+- `core/claim_check.py`: Never "I've added a reminder" when nothing was added (live sweep, 2026-11-25: "remind me to check the oil Saturday" was offered only the alarms, called no tool, and the model answered "You've been reminded ... I'll send a notification to your device at the scheduled time"). A reply of the model's th
 - `core/classroom_actions.py`: The Classroom (core/classroom_manager.py, the person's own study) through the action contract (core/actions.py), for its web screen: a subject, a course and a lesson added, a lesson's notes written (lesson.notes, as "add to my notes for..." does by voice), the skill a lesson trains and its XP (lesso
 - `core/classroom_manager.py`: Classroom (2026-09-11) — the user's own self-education content model: Subjects (K-12-level academic subjects and trades) contain Courses, Courses contain Lessons. v1 is deliberately just this content/lesson structure — no Skills/Missions/Discovery wiring yet, see this module's own ROADMAP entry for 
 - `core/clock.py`: One clock for MIA (LS-07, DEC-0284; `docs/mia_os/MIA_COGNITIVE_ARCHITECTURE.md` §6). Before it, 168 files in `core/` each asked the machine for a naive local time. New code asks here instead: `now()`: the time in his zone, aware of it; `today()`: the day as he means it; `week_of(day)`: Monday to Sun
@@ -1011,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-671 files, 102,879 lines; 8,581 of 8,625 classes and functions documented
+672 files, 102,956 lines; 8,586 of 8,630 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1108,6 +1109,7 @@
 - `tests/test_chronicle.py`: The Chronicle (DEC-0028): each week (and year) told as a story from what really happened. Never made up, never a failure. And the game layer threads: the homestead (eggs once a day), music and wins.
 - `tests/test_chronicle_issue.py`: The Chronicles' weekly issue (build plan step 17, core/chronicle_issue.py): told from approved series events, oldest first; captions in code with the event named; lines from the model in the characters' voices; the Story Bible's five rules checked in code; Zac's approval marks the events as told and
 - `tests/test_ci_workflows.py`: FW-02, CI as the gate (DEC-0264; `docs/mia_os/MIA_OS_FINAL_IMPLEMENTATION_ROADMAP.md` §4): every action a workflow uses is pinned to a commit, not a tag that could be moved; every workflow says what its token may do; the Linux suite runs on every push; the image's own Python runs the whole suite ins
+- `tests/test_claim_check.py`: Never "I've added a reminder" when nothing was added (core/claim_check.py; live sweep, 2026-11-25), and the three calendar fixes from the same sweep: "remind me to X on a day" goes on the calendar in code (core/assistant_turn._reminder_reply), the day his words name wins over the model's made-up dat
 - `tests/test_classroom_actions.py`: The Classroom's web screen (core/classroom_manager.screen, with the course to continue: DEC-0113) and its actions (core/classroom_actions.py), and a lesson's notes both ways: lesson.notes on the screen, add_lesson_notes and get_lesson_notes by voice; the skill a lesson trains (lesson.skill, set_less
 - `tests/test_classroom_manager.py`: Unit tests for core.classroom_manager. Isolates _DATA_DIR/the three per-level file constants into a tmp_path scratch area, same pattern as tests/test_workout_manager.py.
 - `tests/test_classroom_module.py`: Unit tests for modules.classroom.module's pure functions, same style as tests/test_pathway_tool.py (no Qt event loop, no fixtures).
