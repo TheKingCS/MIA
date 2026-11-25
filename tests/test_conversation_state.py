@@ -3,7 +3,8 @@ a short follow-up goes back to the last question plan, with both questions; a fo
 that question's tools, and the lookup it runs gets the follow-up's words, never a change.
 A follow-up that names no tool settles on its question's, called by code when the retry answers in text.
 A follow-up to a tool's answer is the model's unless a plan is in progress, and a leaked role label is taken off.
-Getting ready for what was just said is a follow-up."""
+Getting ready for what was just said is a follow-up.
+What she can help with is said for the area named, the follow-up's area first."""
 
 from types import SimpleNamespace
 
@@ -260,3 +261,14 @@ def test_getting_ready_for_what_was_just_said_is_a_follow_up():
     assert looks_like_follow_up("What should I do to get ready?")
     assert looks_like_follow_up("How should I prepare?")
     assert not looks_like_follow_up("How do I get ready for work?")
+
+
+
+def test_what_she_can_help_with_is_said_for_the_area_named():
+    """"On the homestead": Home and land; the follow-up "and for my woodworking business?": Making things and Money."""
+    from core.capabilities import focus_areas
+
+    assert focus_areas("What can you help me with on the homestead?") == ["Home and land"]
+    assert set(focus_areas("And for my woodworking business? (after: What can you help me with on the homestead?)")) \
+        == {"Money", "Making things"}
+    assert focus_areas("what can you do?") == []

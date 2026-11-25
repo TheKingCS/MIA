@@ -36,6 +36,8 @@ Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 
 `capability_map()` gathers it; `overview()`, `introduction()`,
 `specialties()`, `status_summary()` and `can_i()` say it.
+The overview can be said for the areas his words name (`focus_areas`, AREA_WORDS): "on the homestead", "for my
+woodworking business".
 """
 
 from __future__ import annotations
@@ -118,6 +120,31 @@ AREAS = (
     ("Outdoors", ("expeditions", "maps", "navigation", "knowledge")),
     ("Everyday", ("music", "good_news", "sight", "files", "passwords")),
 )
+# The words that point the overview at an area ("what can you help me with on the homestead?", "and for my
+# woodworking business?"): an area is said alone when his words name it.
+AREA_WORDS = {
+    "Money": r"money|financ\w*|budget\w*|business\w*|bills?|taxes|debts?|rentals?|insurance",
+    "Home and land": r"homestead\w*|home|land|garden\w*|greenhouse|chickens?|hens|flock|power|house|kitchen|garage",
+    "Health and growth": r"health|fitness|workouts?|learn\w*|skills?|growth",
+    "Your days and people": r"calendar|days?|schedule|people|family|friends|notes|email|inbox",
+    "Making things": r"woodwork\w*|workshop|shop|making|build\w*|crafts?|3d print\w*|electronics|projects?",
+    "Outdoors": r"outdoors?|fishing|hunting|hik\w*|camping|survival|bushcraft|maps?|trips?",
+    "Everyday": r"music|songs?|files|passwords",
+}
+
+
+def focus_areas(words: str) -> list:
+    """Pure logic. The areas his words name, a follow-up's own words first ("and for my woodworking business?" after
+    a homestead question is Making things and Money, not Home and land); [] when none."""
+    said = str(words or "").lower()
+    own, _sep, before = said.partition(" (after:")
+    for text in (own, before):
+        found = [area for area, pattern in AREA_WORDS.items() if re.search(rf"\b(?:{pattern})\b", text)]
+        if found:
+            return found
+    return []
+
+
 # Not listed in the overview. MIA herself (Home, the chat, Apps, Settings,
 # Diagnostics, the Fix-It Log) gets the closing line instead; Freedom stays out at the
 # owner's request (2026-10-29), though "can you…?" still finds it.
@@ -209,14 +236,18 @@ def capability_map(context=None) -> list[dict]:
     return out
 
 
-def overview(context) -> str:
-    """Plain words: what MIA does, area by area, from the code (see AREAS)."""
+def overview(context, words: str = "") -> str:
+    """Plain words: what MIA does, area by area, from the code (see AREAS); only the areas his words name
+    (`focus_areas`) when they name one."""
     apps = {a["id"]: a for a in capability_map(context) if a["where"] != "retired" and a["open_to_you"]}
     registry = getattr(context, "assistant_actions", None)
     count = len(getattr(registry, "_actions", {})) if registry is not None else 0
-    lines = [f"I have {len(apps)} apps and {count} things I can look up or do when you ask."]
+    focus = focus_areas(words)
+    lines = [] if focus else [f"I have {len(apps)} apps and {count} things I can look up or do when you ask."]
     tries = []
     for area, ids in AREAS:
+        if focus and area not in focus:
+            continue
         mine = [apps[i] for i in ids if i in apps]
         if not mine:
             continue
@@ -224,7 +255,8 @@ def overview(context) -> str:
         ask = next((a["ask"] for a in mine if a["ask"]), "")
         if ask and len(tries) < 3:
             tries.append(f"\"{ask.rstrip('.')}\"")
-    lines.append("I can also change my own settings, check how the computer is doing, keep a log of where I go wrong so I get fixed, and undo my last change.")
+    if not focus:
+        lines.append("I can also change my own settings, check how the computer is doing, keep a log of where I go wrong so I get fixed, and undo my last change.")
     if tries:
         lines.append("Try " + ", ".join(tries[:-1]) + (" or " if len(tries) > 1 else "") + tries[-1] + ".")
     lines.append("Ask \"can you…?\" about anything and I'll say whether I can, and what's missing if I can't.")

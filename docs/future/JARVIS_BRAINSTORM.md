@@ -354,6 +354,9 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **What can you help me with on the homestead?** (no decision): *fixed 2026-11-24.* It went to the homestead's
+  morning sheet, and "and for my woodworking business?" stayed there. Now it's her own overview
+  (core/capabilities.overview) said for the area named (`focus_areas`), and the follow-up's area comes first.
 - **How much rent did I collect?** (no decision; his rentals): *built 2026-11-24 (`core/rent_collected.py`, the tool
   `rent_collected`).* Only recording rent had a tool, and the question went to the month's money plan ("I don't have
   that information"). Now his rental income by property for this month, last month, this year or a named month,

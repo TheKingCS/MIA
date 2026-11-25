@@ -49,10 +49,11 @@ def register_self_actions(registry: AssistantActionRegistry) -> None:
 
 
 def _action_what_can_you_do(context, arguments: dict) -> str:
-    """Tool what_can_you_do: everything MIA can do, app by app, from her own app list."""
+    """Tool what_can_you_do: everything MIA can do, app by app, from her own app list; only the areas his words name
+    ("on the homestead", "for my woodworking business") when they name one."""
     from core.capabilities import overview
 
-    return overview(context)
+    return overview(context, str(arguments.get("question", "") or ""))
 
 
 def _action_about_yourself(context, arguments: dict) -> str:
@@ -121,6 +122,8 @@ def _action_lab_proposals(context, arguments: dict) -> str:
 def register_capability_actions(registry: AssistantActionRegistry) -> None:
     """Registers the tools about MIA herself: get_lab_proposals, get_inspection, what_can_you_do,
     get_introduction, get_specialties (what she's trained for), get_capability and get_mia_docs.
+    what_can_you_do takes his words (its prompt_arg) and is reached by "what can you help me with...", so an area he
+    names is said alone.
     """
     registry.register(AssistantAction(
         name="get_lab_proposals", domain="system",
@@ -148,13 +151,16 @@ def register_capability_actions(registry: AssistantActionRegistry) -> None:
     ))
     registry.register(AssistantAction(
         name="what_can_you_do", domain="system",
-        description="Everything MIA can do, app by app, from her own app list (never from memory).",
-        parameters={"type": "object", "properties": {}, "required": []},
-        handler=_action_what_can_you_do,
+        description="Everything MIA can do (or what she can help with in one area: the homestead, his business, "
+                    "money, outdoors), app by app, from her own app list (never from memory).",
+        parameters={"type": "object", "properties": {"question": {"type": "string", "description": "his words"}},
+                    "required": []},
+        handler=_action_what_can_you_do, prompt_arg="question",
         trigger_phrases=("what can you do", "what are you able to do", "what features do you", "what can mia do",
                          "what apps do you have", "what all can you", "what do you do", "you capable of",
                          "mia capable of", "your capabilities", "mia's capabilities", "what are your features",
-                         "what are you good at", "what all do you"),
+                         "what are you good at", "what all do you", "what can you help me with",
+                         "how can you help me with", "what can you help with", "what can you do for my"),
         subjects=("you", "mia"),
     ))
     registry.register(AssistantAction(
