@@ -13,6 +13,11 @@ then "next step"; "give me a survival drill", then answer "B". Waiting on Zac: `
 board) and Wokwi or QEMU for running real sketches (online with a token, or local and serial-only). Next build: drills
 for other courses (canning safety, a power outage, the flock) from their own verified sources, then the guitar and
 carpentry on the same frame. Phase B of the smart-ag plan, named next below, is done (2026-11-24).
+Later: Build With Arduino for his Mega and Nanos, Ask MIA on course pages, and My Bench (Learning > My Bench). At the
+PC: "flash the blink lab to my nano"; on My Bench, put an HC-SR04 on the ESP32 and wire ECHO straight to a pin.
+Waiting: SearXNG isn't running on the PC, so "look up the specs for..." can't search yet (docs/ONLINE_LOOKUP.md).
+Loose end: "what parts can I wire in the simulator?" reaches three tools by "what parts", so the model answers in
+text; a most-specific-phrase rule in direct_lookup would fix it (K-0482).
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:

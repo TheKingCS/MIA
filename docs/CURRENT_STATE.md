@@ -20,6 +20,13 @@ plans. Then scenario drills (core/drills.py), the simulator for a course without
 nor a drill ever passes a check. Also fixed: the next step named the stage's first lesson, not the check's; "how do I
 wire the relay lab?" counted as a how-to about MIA's Lab app. Waiting on Zac: PlatformIO on the PC, and whether to run
 real compiled sketches in a simulator (Wokwi, online with a token, or QEMU, local). 8340 passing.
+Later the same day (Zac: an Ask MIA bar, his ELEGOO Mega and Nanos, his own hardware): Ask MIA on every course page
+(core/lab_ask.py, answered from the lab or drill on screen); Build With Arduino (core/arduino_path.py, boards as data
+in core/boards.py, the bench and simulator on any board, a board picker); My Bench (web/bench.html,
+core/free_build.py, core/part_specs.py): his parts on his board wired freely and checked by each part's spec, a part
+MIA doesn't know drafted from his own SearXNG and kept on his yes. A fresh review found nine bugs in the labs (drills
+and builds taking ordinary messages, 5 V on a 3.3 V pin missed, a flash that could pick the wrong board): all fixed.
+8362 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the
