@@ -54,10 +54,11 @@ def _setting(context, key: str, default: float) -> float:
 
 def days_in(words: str) -> Optional[float]:
     """Pure logic. The days his words give: "two weeks", "3 days", "72 hours", "a month" (30), "a year"; None for
-    none."""
+    none.
+    Hours only when no days, weeks or months are said."""
     said = str(words or "").lower()
     hours = re.search(rf"\b{_NUM}\s+hours?\b", said)
-    if hours:  # "72 hours": 3 days (the sixth review)
+    if hours and not re.search(r"\b(?:days?|weeks?|months?|years?|fortnight)\b", said):  # "72 hours": 3 days
         return _number(hours.group(1)) / 24
     found = re.search(rf"\b{_NUM}\s+(day|week|month|year)s?\b", said)
     if not found:
@@ -69,13 +70,15 @@ def days_in(words: str) -> Optional[float]:
 
 def people_in(words: str) -> Optional[int]:
     """Pure logic. The people his words give: "for 4 people", "for 1 person", "a family of 5", "the two of us", and
-    every group said added up ("2 adults and 2 kids" is 4: the sixth review); None for none."""
+    every group said added up ("2 adults and 2 kids" is 4: the sixth review); None for none.
+    A total said (a family of 4, 4 people) wins over its breakdown."""
     said = str(words or "").lower()
-    groups = re.findall(rf"\b{_NUM}\s+(?:people|persons?|adults?|kids?|children|child|teens?|of us)\b", said)
-    if groups:
-        return max(1, int(sum(_number(g) for g in groups)))
-    found = re.search(rf"\bfamily of\s+{_NUM}\b", said) or re.search(rf"\bthe\s+{_NUM}\s+of us\b", said)
-    return max(1, int(_number(found.group(1)))) if found else None
+    whole = (re.search(rf"\bfamily of\s+{_NUM}\b", said) or re.search(rf"\bthe\s+{_NUM}\s+of us\b", said)
+             or re.search(rf"\b{_NUM}\s+(?:people|persons?)\b", said))
+    if whole:  # a total said wins over its breakdown ("4 people, 2 adults and 2 kids": the seventh review)
+        return max(1, int(_number(whole.group(1))))
+    groups = re.findall(rf"\b{_NUM}\s+(?:adults?|kids?|children|child|teens?)\b", said)
+    return max(1, int(sum(_number(g) for g in groups))) if groups else None
 
 
 def water_to_store(context, words: str) -> str:
@@ -101,13 +104,14 @@ _FUEL = re.compile(rf"\b{_NUM}\s*(gallons?|gal|lbs?|pounds?|liters?|litres?)\b(?
 
 def fuel_in(words: str) -> Optional[tuple]:
     """Pure logic. (gallons, what was said) for the fuel his words give: gallons or liters, cans of a size ("two
-    5-gallon cans"), or pounds of propane (about 4.24 lb a gallon); None for none."""
+    5-gallon cans"), or pounds of propane (about 4.24 lb a gallon); None for none.
+    Said as containers, whatever they are."""
     from core.power_ready import PROPANE_LB_A_GALLON
 
     cans = re.search(rf"\b{_NUM}\s*(?:x\s*)?(\d+(?:\.\d+)?)[\s-]*(?:gallon|gal)\b", str(words or ""), re.I)
     if cans and re.match(r"\s*\d", cans.group(2)):  # "two 5-gallon cans", "2 x 5 gallon" (the sixth review)
         count, size = _number(cans.group(1)), float(cans.group(2))
-        return count * size, f"{count:g} {size:g}-gallon cans ({count * size:g} gallons)"
+        return count * size, f"{count:g} {size:g}-gallon containers ({count * size:g} gallons)"
     found = _FUEL.search(str(words or ""))
     if not found:
         return None
@@ -136,26 +140,32 @@ def generator_runtime(context, words: str) -> str:
             "rate for the load you'll run. Run it outside, 20 feet from the house, exhaust away from windows.")
 
 
+_PER_WEEK = {"day": 7, "daily": 7, "week": 1, "weekly": 1, "month": 7 / 30.4, "monthly": 7 / 30.4}
+
+
 def eggs_wanted(words: str) -> Optional[float]:
     """Pure logic. The eggs a week his words want: "a dozen eggs a week", "2 eggs a day", "18 eggs weekly", "a dozen
-    eggs every week", and a dozen with no time said is a week's (the sixth review: its own trigger had asked back)."""
+    eggs every week", and a dozen with no time said is a week's (the sixth review: its own trigger had asked back).
+    A month's eggs are a week's share of them."""
     said = str(words or "").lower()
-    period = r"(?:\s+(?:a|per|each|every)\s+(day|week)\b|\s+(daily|weekly)\b)?"  # none said: a week
+    period = r"(?:\s+(?:a|per|each|every)\s+(day|week|month)\b|\s+(daily|weekly|monthly)\b)?"  # none: a week
     found = re.search(rf"\b(?:(\d+(?:\.\d+)?|a|one|two|three|half a)\s+)?dozen(?:\s+eggs?)?{period}", said)
     if found:
         many = 12 * (_number(found.group(1)) if found.group(1) else 1)
-        return many * (7 if (found.group(2) or found.group(3) or "") in ("day", "daily") else 1)
+        return many * _PER_WEEK.get(found.group(2) or found.group(3) or "", 1)
     found = re.search(rf"\b{_NUM}\s+eggs?{period}", said)
     if found and (found.group(2) or found.group(3)):
-        return _number(found.group(1)) * (7 if (found.group(2) or found.group(3)) in ("day", "daily") else 1)
+        return _number(found.group(1)) * _PER_WEEK.get(found.group(2) or found.group(3), 1)
     return None
 
 
 def hens_for_eggs(context, words: str) -> str:
-    """The hens it takes for the eggs a week his words want, at a hen's lay in her prime, with the winter allowance."""
+    """The hens it takes for the eggs a week his words want, at a hen's lay in her prime, with the winter allowance.
+    The eggs a week rounded to a tenth."""
     eggs = eggs_wanted(words)
     if eggs is None:
         return "How many eggs a week (or a day) do you want? Like \"a dozen a week\"."
+    eggs = round(eggs, 1)
     typical = math.ceil(eggs / EGGS_A_WEEK["production"])
     high, low = math.ceil(eggs / EGGS_A_WEEK["high"]), math.ceil(eggs / EGGS_A_WEEK["heritage"])
     return (f"For {eggs:g} eggs a week, about {typical} hens: a laying hen in her first year or two lays about 5 a week "

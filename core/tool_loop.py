@@ -260,7 +260,8 @@ def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply
 
 
 # The calculators whose one detail is his question, which the model has sent its own description for
-HIS_WORDS_TOOLS = frozenset({"canning_time", "feed_mix", "bleach_for_water", "meat_cure"})
+HIS_WORDS_TOOLS = frozenset({"canning_time", "feed_mix", "bleach_for_water", "meat_cure",
+                             "list_calendar_events"})  # called with {} by the model, it lost "tomorrow" (7th review)
 
 
 def his_words(registry, call: ToolCall, prompt: str) -> dict:

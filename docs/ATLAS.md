@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1796 files, 386,272 lines; 1796 files describe themselves; 21,049 of 21,179 classes and functions are documented.
+1797 files, 386,419 lines; 1797 files describe themselves; 21,056 of 21,187 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-714 files, 201,263 lines; 10,090 of 10,176 classes and functions documented
+714 files, 201,345 lines; 10,092 of 10,178 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1012,7 +1012,7 @@
 
 ## tests/: the test suite: what each part must do
 
-673 files, 102,994 lines; 8,588 of 8,632 classes and functions documented
+674 files, 103,059 lines; 8,593 of 8,638 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1490,6 +1490,7 @@
 - `tests/test_review_2026_11_20_low.py`: The review of 2026-11-20's low findings, fixed: code beyond Python needs the lab's proof; a taught skill's hold is refused; the phone removes the PC's greenhouse link once; a summer date gets summer time; a pick with no offer is learned; a busy port is tried again; a site opens in his browser, not t
 - `tests/test_review_2026_11_22.py`: Fable's review of 2026-11-22 (three independent reviewers over WP-01 to FW-12): each fixed finding held by a test of the behaviour it described.
 - `tests/test_review_2026_11_22_lows.py`: Fable's review of 2026-11-22, its low findings: a household device's key follows /api/live (its one route), a lost device ends the account's other sign-ins too, seal_now seals sync's base copies, a restore clears what couldn't be read and the note says what to do, and the glasses show their micropho
+- `tests/test_review_7.py`: The seventh review's findings (2026-11-25), each kept fixed: the claim check leaves alone a sentence about anything but his records, a story, and a lookup's "your alarm is set"; a date his words state is never replaced by a weekday, a weekday after "on" or "for" beats one in a title, "next Friday" i *(1 undocumented)*
 - `tests/test_review_bench_3.py`: The third review (2026-11-25), each finding as its failing input: "build me a ..." only as a request at the start, never a reminder, a note, a time or a stand; her designs only proper names, asked about exactly, and a plan said only when its decision calls it one; parts matched by whole word, severa
 - `tests/test_review_labs_2.py`: The second review of the labs (2026-11-25), each finding as its failing input: the Mega's I2C on its own header, never A4/A5; power backwards a stop in the free build and the course simulator; a part's input held to its range and an output tied to a rail warned; a lab named as one deciding the cours
 - `tests/test_review_labs_5.py`: The fifth review's findings (2026-11-25), each kept fixed: a photo of an ordinary thing never gets a part's spec and the first part named wins; a check's question uses the same words its course was looked for by, and words a started course uses for itself stay its; a lab's why never takes a request 

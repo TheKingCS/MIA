@@ -17,7 +17,8 @@ full latency to every answer. Callers speak/send first, then call
 `run_followup()`.
 A model reply that only says the person's words back (`echoes`) is replaced by a plain line asking again, and one
 that claims a change no tool made is said honestly (core/claim_check.py). A tool's date the model fills is the day
-his words name (`with_his_day`), and "remind me to X on a day" goes on his calendar in code (`_reminder_reply`).
+his words name (`with_his_day`, `named_day`), and "remind me to X on a day" goes on his calendar in code
+(`_reminder_reply`).
 """
 
 from __future__ import annotations
@@ -279,22 +280,48 @@ _DATED = {"add_calendar_event": "date"}
 
 
 def with_his_day(name: str, arguments, prompt: str, today=None) -> dict:
-    """Pure logic. A call's arguments with the day his words name ("Friday", "tomorrow", "next Saturday",
-    core/weather.days_meant) in place of the model's date, for a tool that takes one (`_DATED`; live sweep,
-    2026-11-25: "put the vet on the calendar for Friday at 2pm" went on 2024-03-15, made up and in the past). A date
-    his words give as digits, or none, leaves the model's as it is."""
+    """Pure logic. A call's arguments with the day his words name (`named_day`: "Friday", "tomorrow", "next
+    Saturday") in place of the model's date, for a tool that takes one (`_DATED`; live sweep, 2026-11-25: "put the vet
+    on the calendar for Friday at 2pm" went on 2024-03-15, made up and in the past). A date his words give themselves
+    ("December 24", "12/04", "the 3rd"), or no day, leaves the model's as it is."""
     arguments = dict(arguments or {})
     field = _DATED.get(name)
     if not field:
         return arguments
-    from datetime import date as _date
-
-    from core.weather import days_meant
-
-    days = days_meant(str(prompt or ""), today or _date.today())
-    if days:
-        arguments[field] = days[0].isoformat()
+    day = named_day(prompt, today)
+    if day is not None:
+        arguments[field] = day.isoformat()
     return arguments
+
+
+_WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+_EXPLICIT = re.compile(r"\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|"
+                       r"sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+\d{1,2}\b|"
+                       r"\b\d{1,2}/\d{1,2}\b|\b\d{4}-\d{2}-\d{2}\b|\bthe\s+\d{1,2}(?:st|nd|rd|th)\b", re.I)
+
+
+def named_day(prompt: str, today=None):
+    """Pure logic. The one day his words name, or None: none when they give a date themselves ("December 24",
+    "12/04", "the 3rd": the seventh review, a stated date had been replaced by a weekday). "Today", "tonight",
+    "tomorrow"; else a weekday, the one after "on", "for", "this", "next" or "by" before any other (a weekday in a
+    title, "Tuesday trivia night ... for Thursday", is Thursday), and "next Friday" the one after the coming one."""
+    from datetime import date as _date, timedelta
+
+    said = " ".join(str(prompt or "").lower().replace("’", "'").split())
+    today = today or _date.today()
+    if _EXPLICIT.search(said):
+        return None
+    if re.search(r"\btomorrow\b", said):
+        return today + timedelta(days=1)
+    if re.search(r"\b(?:today|tonight|this (?:morning|afternoon|evening))\b", said):
+        return today
+    found = [(m.start(), m.group(2), m.group(1) or "") for m in
+             re.finditer(r"\b(?:(on|for|this|next|by|coming)\s+)?(" + "|".join(_WEEKDAYS) + r")\b", said)]
+    if not found:
+        return None
+    _at, weekday, before = next((f for f in found if f[2]), found[-1])
+    ahead = (_WEEKDAYS.index(weekday) - today.weekday()) % 7
+    return today + timedelta(days=ahead + (7 if before == "next" else 0))
 
 
 _REMIND_ON = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+)?remind me to\s+(.+?)"
@@ -307,17 +334,20 @@ def _reminder_reply(context, prompt: str):
     """"Remind me to check the oil Saturday", in code (live sweep, 2026-11-25: offered the alarms, the model called no
     tool and said "You've been reminded"): what and the day his words name (and a time, when said) go on his calendar
     through add_calendar_event, so it's undoable like any change of hers. A time with no day stays the alarms'; a
-    repeating one ("every Saturday") the model's. None otherwise."""
+    repeating one ("every Saturday") the model's. None otherwise.
+    "Tonight" or "evening" with an hour and no am or pm is the evening's."""
     found = _REMIND_ON.match(prompt.replace("’", "'"))
     if not found or re.search(r"\b(?:every|each)\b", found.group(1), re.I):
         return None
     what = found.group(1).strip().rstrip(",")
     args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, prompt)
+    evening = re.search(r"\b(?:tonight|evening|night)\b", prompt, re.I)
     if "date" not in args:
         return None
     if found.group(3):
         hour, minute = int(found.group(3)), int(found.group(4) or 0)
-        hour += 12 if (found.group(5) or "").lower() == "pm" and hour < 12 else 0
+        hour += 12 if ((found.group(5) or "").lower() == "pm" or (evening and not found.group(5))) and hour < 12 \
+            else 0  # "tonight at 9" is 9 pm (the seventh review)
         hour = 0 if (found.group(5) or "").lower() == "am" and hour == 12 else hour
         if hour < 24 and minute < 60:
             args["time"] = f"{hour:02d}:{minute:02d}"
@@ -462,6 +492,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
     A claim of a change no tool made is said honestly; a reminder on a day goes on the calendar.
+    A personal or off-the-record turn's claim is never kept in the Fix-It Log.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -649,7 +680,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     content = with_offer(conversation, polish(reply.content))
     from core.claim_check import honest
 
-    content = honest(context, prompt, content)  # nothing changed here: never "I've added a reminder" (claim_check)
+    content = honest(context, prompt, content, keep=not _personal(conversation)
+                     and not getattr(conversation, "off_record", False))  # never "I've added a reminder" (claim_check)
     earlier = [m.content for m in (getattr(conversation, "messages", None) or [])[-6:] if m.role == "user"]
     if echoes(content, prompt) or any(echoes(content, said) for said in earlier):
         content = ECHO_REPLY  # never the person's own words (now or a moment ago) said back as if an answer

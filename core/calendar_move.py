@@ -56,14 +56,15 @@ def listing(events: list, words: str = "", today: Optional[date] = None) -> str:
     listed, one from August among them): on the days his words name (core/weather.days_meant: "today", "tomorrow",
     "Friday", "this week"), the events on them, repeats counted (core/calendar_manager.occurs_on), or that there's
     nothing then and the next one coming up; with no day named, what's coming up from today (never what's past), the
-    soonest first."""
+    soonest first.
+    "This week", "next week", the weekends and "next Friday" are their own days (`_range`)."""
     from core.calendar_manager import occurs_on
     from core.weather import days_meant
 
     today = today or date.today()
     if not events:
         return "You have no calendar events."
-    days = days_meant(str(words or ""), today)
+    days = _range(str(words or "").lower(), today) or days_meant(str(words or ""), today)
     if days:
         found = [(d, e) for d in days for e in events if occurs_on(e, d)]
         if found:
@@ -76,6 +77,24 @@ def listing(events: list, words: str = "", today: Optional[date] = None) -> str:
     if not ahead:
         return "Nothing coming up on your calendar."
     return "Coming up on your calendar:\n" + "\n".join(_line(e, d) for d, e in ahead[:10])
+
+
+def _range(said: str, today: date) -> Optional[list]:
+    """Pure logic. The days "this week" (today to Sunday), "next week" (next Monday to Sunday), "this weekend" or
+    "next weekend" and "next <weekday>" (the one after the coming one) mean, else None (the seventh review: "next
+    week" had meant the 7 days from today, and "next Friday" this Friday)."""
+    monday = today - timedelta(days=today.weekday())
+    if re.search(r"\bnext week\b", said):
+        return [monday + timedelta(days=7 + n) for n in range(7)]
+    if re.search(r"\bthis week\b|\bgoing on this week\b", said):
+        return [today + timedelta(days=n) for n in range((6 - today.weekday()) + 1)]
+    if re.search(r"\bnext weekend\b", said):
+        return [monday + timedelta(days=12), monday + timedelta(days=13)]
+    found = re.search(r"\bnext (monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", said)
+    if found:
+        names = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+        return [today + timedelta(days=(names.index(found.group(1)) - today.weekday()) % 7 + 7)]
+    return None
 
 
 def _coming(events: list, start: date, days: int = 366) -> list:

@@ -21,6 +21,7 @@
   "tests/test_plan_price.py": 1,
   "tests/test_preparedness.py": 1,
   "tests/test_private_budget.py": 1,
+  "tests/test_review_7.py": 1,
   "tests/test_seed_check.py": 1,
   "tests/test_specialist_work.py": 2,
   "tests/test_spoken_approval.py": 1,
