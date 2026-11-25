@@ -127,7 +127,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
-    A monthly reminder (`_monthly_reminder_reply`) too.
+    A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
+    (`_holiday_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -197,6 +198,10 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _project_time_reply(context, prompt)  # "log 2 hours on the shed", as in a turn
     if walked is None:
         walked = _mains_reply(context, prompt)  # an outlet's voltage, in fixed safe words, as in a turn
+    if walked is None:
+        walked = _convert_reply(context, prompt)  # "convert 5 gallons to liters", as in a turn
+    if walked is None:
+        walked = _holiday_reply(context, prompt)  # "when is Thanksgiving?", as in a turn
     if walked is None:
         walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
@@ -1032,6 +1037,47 @@ def _mains_reply(context, prompt: str):
     return MAINS_REPLY if _MAINS.search(prompt or "") else None
 
 
+_CONVERT = re.compile(r"^\s*(?:please\s+)?(?:convert|change|turn)\s+(?P<v>\d[\d,]*(?:\.\d+)?)\s*(?P<f>[a-z°][\w° .-]*?)\s+"
+                      r"(?:to|into|in)\s+(?P<t>[a-z°][\w° .-]*?)\s*[.?!]?\s*$|"
+                      r"^\s*how many\s+(?P<t2>[a-z°][\w° .-]*?)\s+(?:are |is )?in\s+(?:a\s+|an\s+)?(?P<v2>\d[\d,]*(?:\.\d+)?)?"
+                      r"\s*(?P<f2>[a-z°][\w° .-]*?)\s*\??\s*$|"
+                      r"^\s*what(?:'s| is)\s+(?P<v3>\d[\d,]*(?:\.\d+)?)\s*(?P<f3>[a-z°][\w° .-]*?)\s+in\s+"
+                      r"(?P<t3>[a-z°][\w° .-]*?)\s*\??\s*$", re.I)
+
+
+def _convert_reply(context, prompt: str):
+    """"Convert 5 gallons to liters", "how many cups in a gallon?", "what's 70 degrees fahrenheit in celsius?", in code
+    through convert_units (the live sweep, 2026-11-25: the model said only "The conversion is complete."). None when
+    the words aren't a conversion or the units aren't ones it knows (the model's then)."""
+    found = _CONVERT.match(prompt.replace("’", "'"))
+    if not found:
+        return None
+    value = found.group("v") or found.group("v2") or found.group("v3") or "1"
+    from_unit = (found.group("f") or found.group("f2") or found.group("f3") or "").strip()
+    to_unit = (found.group("t") or found.group("t2") or found.group("t3") or "").strip()
+    from_unit = re.sub(r"^degrees?\s+", "", from_unit, flags=re.I)
+    to_unit = re.sub(r"^degrees?\s+", "", to_unit, flags=re.I)
+    try:
+        said = context.assistant_actions.execute(context, "convert_units", {
+            "value": float(value.replace(",", "")), "from_unit": from_unit, "to_unit": to_unit})
+    except Exception:
+        log.exception("Couldn't convert")
+        return None
+    return said if said and not str(said).startswith(("I don't recognize", "I need")) else None
+
+
+def _holiday_reply(context, prompt: str):
+    """"When is Thanksgiving?", worked out in code (core/holidays.reply; the live sweep: "I don't have that
+    information"). None otherwise."""
+    from core import holidays
+
+    try:
+        return holidays.reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't work out the holiday")
+        return None
+
+
 _OVER_BUDGET = re.compile(r"^\s*(?:am i|are we|is anything|anything)\s+(?:over|under)\s+(?:my\s+|our\s+|the\s+)?budgets?"
                           r"(?:\s+(?:anywhere|on anything|at all|this month|yet))?\s*\??\s*$", re.I)
 
@@ -1224,7 +1270,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     What he spent on a category this month is said from his expenses (`_spent_on_reply`).
     When to start a crop and what's in a 72-hour kit are said from his records (`_garden_kit_reply`).
     Hours on a project are logged and read back in code (`_project_time_reply`); an outlet's voltage is said in fixed
-    safe words (`_mains_reply`); a monthly reminder goes on his calendar (`_monthly_reminder_reply`). A turn the
+    safe words (`_mains_reply`); a monthly reminder goes on his calendar (`_monthly_reminder_reply`); a unit
+    conversion (`_convert_reply`) and a holiday's date (`_holiday_reply`) are worked out in code. A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1368,6 +1415,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _project_time_reply(context, prompt)  # the hours he puts into his projects, logged and read
         if walked is None:
             walked = _mains_reply(context, prompt)  # an outlet's voltage: a tester first, an electrician if off
+        if walked is None:
+            walked = _convert_reply(context, prompt)  # a unit conversion, worked out by the converter
+        if walked is None:
+            walked = _holiday_reply(context, prompt)  # a holiday's date, worked out
         if walked is None:
             walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:

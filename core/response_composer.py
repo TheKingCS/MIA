@@ -135,11 +135,16 @@ def polish(text: str, prompt: str = "") -> str:
     word for word (core/personality.without_copied_example), or loosely when
     his words (`prompt`) are given, go. Lists, markdown and length stay.
     A paragraph or sentence said twice is said once (`without_repeats`), and his request said back as her opening
-    ("I want to learn about tying a bowline.") goes."""
+    ("I want to learn about tying a bowline.") goes.
+    "I don't know what that means." before a real answer goes."""
     from core.personality import without_copied_example
 
     text = without_copied_example((text or "").strip(), prompt)  # never a humor example's line said as hers
     text = without_repeats(text) or text  # never the same paragraph or sentence twice
+    # "Honestly, I don't know what that means. But ..." before a real answer (the live sweep): the answer stays
+    text = re.sub(r"^\s*(?:honestly,?\s+)?i (?:don't|do not) (?:know|understand) what (?:that|you) means?\.\s*"
+                  r"(?:but\s+)?(?=\S.{40,})", "", text, flags=re.I | re.S) or text
+    text = text[:1].upper() + text[1:]
     if re.match(r"\s*(?:teach|tell|show|explain|help)\b", prompt or "", re.I):
         # "Teach me how to tie a bowline" answered "I want to learn about tying a bowline." first (the live sweep)
         text = re.sub(r"^\s*I(?:'d like| want| would like) to (?:learn|know|understand)\b[^.!?\n]*[.!?]\s*", "", text) \

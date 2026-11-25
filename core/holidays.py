@@ -1,0 +1,124 @@
+"""
+core.holidays
+===============
+
+When a holiday falls (the live sweep, 2026-11-25: "What day is Thanksgiving this year?" got "I don't have that
+information"), worked out in code: the ones on a fixed date (Christmas, the Fourth of July, Halloween...), the ones on
+a weekday of a month (Thanksgiving, the fourth Thursday of November in the US and the second Monday of October in
+Canada; Memorial Day; Mother's Day...), and Easter by the Gregorian computus (Meeus/Jones/Butcher). A holiday kept
+only in some countries is said only for those (the person's country, core/region.py); one this module doesn't know
+is the model's.
+
+How: `day_of(name, year, country)` (pure) gives the date or None; `reply(context, words)` reads "when is
+Thanksgiving?", "what day is Easter next year?", "what date is Memorial Day in 2027?" and says the date, the weekday
+and how far off it is. Read-only.
+"""
+
+from __future__ import annotations
+
+import re
+from datetime import date, timedelta
+from typing import Optional
+
+
+def nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
+    """Pure logic. The nth (1 to 5) weekday (Monday 0) of a month, or the last one for n = -1."""
+    if n == -1:
+        last = (date(year + (month == 12), month % 12 + 1, 1) - timedelta(days=1))
+        return last - timedelta(days=(last.weekday() - weekday) % 7)
+    first = date(year, month, 1)
+    return first + timedelta(days=(weekday - first.weekday()) % 7 + 7 * (n - 1))
+
+
+def easter(year: int) -> date:
+    """Pure logic. Western Easter Sunday (the anonymous Gregorian algorithm, Meeus/Jones/Butcher)."""
+    a, b, c = year % 19, year // 100, year % 100
+    d, e = b // 4, b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = c // 4, c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7  # noqa: E741
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    return date(year, month, (h + l - 7 * m + 114) % 31 + 1)
+
+
+# name: (the words that name it, the countries that keep it (None for everywhere it's known), how it falls)
+HOLIDAYS = {
+    "New Year's Day": (r"new year'?s(?: day)?", None, lambda y: date(y, 1, 1)),
+    "Valentine's Day": (r"valentine'?s(?: day)?", None, lambda y: date(y, 2, 14)),
+    "St. Patrick's Day": (r"st\.? patrick'?s(?: day)?|saint patrick'?s(?: day)?", None, lambda y: date(y, 3, 17)),
+    "Easter": (r"easter(?: sunday)?", None, easter),
+    "Good Friday": (r"good friday", None, lambda y: easter(y) - timedelta(days=2)),
+    "Mother's Day": (r"mother'?s day", ("US", "CA"), lambda y: nth_weekday(y, 5, 6, 2)),
+    "Memorial Day": (r"memorial day", ("US",), lambda y: nth_weekday(y, 5, 0, -1)),
+    "Father's Day": (r"father'?s day", ("US", "CA", "GB"), lambda y: nth_weekday(y, 6, 6, 3)),
+    "Independence Day": (r"(?:the )?fourth of july|independence day|july 4(?:th)?", ("US",), lambda y: date(y, 7, 4)),
+    "Labor Day": (r"labou?r day", ("US", "CA"), lambda y: nth_weekday(y, 9, 0, 1)),
+    "Halloween": (r"halloween", None, lambda y: date(y, 10, 31)),
+    "Veterans Day": (r"veterans'? day", ("US",), lambda y: date(y, 11, 11)),
+    "Thanksgiving (US)": (r"thanksgiving", ("US",), lambda y: nth_weekday(y, 11, 3, 4)),
+    "Thanksgiving (Canada)": (r"thanksgiving", ("CA",), lambda y: nth_weekday(y, 10, 0, 2)),
+    "Christmas Eve": (r"christmas eve", None, lambda y: date(y, 12, 24)),
+    "Christmas": (r"christmas(?: day)?(?! eve)", None, lambda y: date(y, 12, 25)),
+    "New Year's Eve": (r"new year'?s eve", None, lambda y: date(y, 12, 31)),
+    "Martin Luther King Jr. Day": (r"(?:martin luther king|mlk)(?: jr\.?)?(?: day)?", ("US",),
+                                   lambda y: nth_weekday(y, 1, 0, 3)),
+    "Presidents' Day": (r"presidents'? day", ("US",), lambda y: nth_weekday(y, 2, 0, 3)),
+    "Columbus Day": (r"columbus day|indigenous peoples'? day", ("US",), lambda y: nth_weekday(y, 10, 0, 2)),
+}
+
+
+def named(words: str, country: str = "US") -> Optional[str]:
+    """Pure logic. The holiday his words name, kept in his country, or None ("new year's eve" before "new year's")."""
+    said = " ".join(str(words or "").lower().replace("\u2019", "'").split())
+    order = sorted(HOLIDAYS, key=lambda n: -len(HOLIDAYS[n][0]))  # the longer words first: "christmas eve"
+    for name in order:
+        pattern, where, _ = HOLIDAYS[name]
+        if re.search(rf"\b(?:{pattern})\b", said) and (where is None or country in where):
+            return name
+    return None
+
+
+def day_of(name: str, year: int) -> date:
+    """Pure logic. The date a holiday falls in a year."""
+    return HOLIDAYS[name][2](year)
+
+
+_ASKED = re.compile(r"^\s*(?:when(?:'s| is| does)?|what (?:day|date)(?: is| does)?|what day of the week is|which day is)\b"
+                    r"(?P<rest>.+?)\s*\??\s*$", re.I)
+
+
+def reply(context, words: str, today: Optional[date] = None) -> Optional[str]:
+    """"When is Thanksgiving?", "What day is Easter next year?", "What date is Memorial Day in 2027?": the date, its
+    weekday and how far off; None for anything else, or a holiday his country doesn't keep."""
+    found = _ASKED.match(str(words or ""))
+    if not found:
+        return None
+    from core.region import country_of
+
+    try:
+        country = country_of(context) if context is not None else "US"
+    except Exception:  # noqa: BLE001 - no settings: the default
+        country = "US"
+    name = named(found.group("rest"), country)
+    if name is None:
+        return None
+    today = today or date.today()
+    year_said = re.search(r"\b(20\d\d)\b", found.group("rest"))
+    if year_said:
+        year = int(year_said.group(1))
+    elif re.search(r"\bnext year\b", found.group("rest"), re.I):
+        year = today.year + 1
+    elif re.search(r"\blast year\b", found.group("rest"), re.I):
+        year = today.year - 1
+    else:
+        year = today.year if day_of(name, today.year) >= today or re.search(r"\bthis year\b", found.group("rest"),
+                                                                          re.I) else today.year + 1
+    when = day_of(name, year)
+    days = (when - today).days
+    away = ("today" if days == 0 else "tomorrow" if days == 1 else f"in {days} days" if days > 0
+            else f"{-days} days ago")
+    label = name.split(" (")[0]
+    return f"{label} is {when:%A}, {when:%B} {when.day}, {when.year} ({away})."

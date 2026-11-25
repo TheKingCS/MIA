@@ -95,7 +95,8 @@ def _sensors(context, arguments: dict) -> str:
 
 
 def register_screen_tools(registry) -> None:
-    """Registers look_up_online, get_app_status, list_past_conversations, find_in_conversations and list_sensors."""
+    """Registers look_up_online, get_app_status, list_past_conversations, find_in_conversations and list_sensors.
+    list_past_conversations is reached by "do you remember what I told you" too."""
     registry.register(AssistantAction(
         name="look_up_online", domain="system",
         description=("Look something up online through the person's own search engine, when they ask you to search "
@@ -126,7 +127,9 @@ def register_screen_tools(registry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_past,
         trigger_phrases=("past conversations", "our conversations", "previous conversations", "chat history",
-                         "conversation history", "what have we talked about", "what did we talk about"),
+                         "conversation history", "what have we talked about", "what did we talk about",
+                         "remember what i told you", "what did i tell you", "what i told you yesterday",
+                         "what we talked about yesterday"),
         subjects=("conversation", "conversations", "chat", "chats"),
     ))
     registry.register(AssistantAction(

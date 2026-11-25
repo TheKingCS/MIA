@@ -1459,6 +1459,10 @@ _LEARNING = r"homework|lessons?|practi[cs]e\w*|woodworking|bushcraft|fitness pla
 # spending past its usual is "anything unusual"'s, which compares each category with its own normal month; what's due
 # this week is the bills', not the week's review; having enough for rent is money ahead's).
 NOT_FOR = {
+    # what he told her before is his past conversations' (list_past_conversations), never one person's (the live
+    # sweep, 2026-11-25: "do you remember what I told you yesterday?" had asked which person)
+    "person": re.compile(r"\b(?:remember|recall) what i (?:told|said)|\bwhat (?:did )?i (?:tell|told|said to) you\b|"
+                         r"\bwhat we (?:talked|spoke) about\b", re.I),
     "tonight": re.compile(rf"\b({_WEATHER}|{_GROWING}|{_FLOCK}|{_LEARNING}|first (thing )?tomorrow|tomorrow first)\b",
                           re.I),
     # what she did on her own today is "catch me up"'s (her own changes), not today's list
