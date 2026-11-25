@@ -11,14 +11,14 @@ and money is said in his region's way where it's said at all (core/region.money)
 
 Written from: the US Consumer Financial Protection Bureau's guides on budgeting, emergency savings and paying down
 debt, and FINRA's investor education (employer matches, low-cost diversified funds); general guidance, never advice
-about his own taxes or a particular investment. Its XP goes to the Household management skill.
+about his own taxes or a particular investment. Its XP goes to the Finance skill.
 """
 
 from __future__ import annotations
 
 from core.paths import Check, Lesson, Program, Stage, register
 
-SKILL = "household_management"  # her skill tree has no finance skill yet; this is the nearest (data/skill_definitions.json)
+SKILL = "finance"  # her skill tree's Finance skill (data/skill_definitions.json)
 
 STAGES: tuple = (
     Stage(1, "Where it goes", "seeing a month of spending and planning the next", (
