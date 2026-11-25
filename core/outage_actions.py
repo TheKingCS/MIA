@@ -5,7 +5,8 @@ core.outage_actions
 The power outage clock from the screen and by voice (core/outage.py; DEC-0125, both ways). The actions
 `outage.start` (the Power page's "The Power's Out", with an optional time) and `outage.end` ("The Power's Back"), and
 the tool `power_outage` ("the power went out at 6 am", "how long is the food good?", "the power's back"); and the
-tool `water_emergency` for a day without safe water (core/water_day.py, read only).
+tool `water_emergency` for a day without safe water (core/water_day.py, read only), and `storm_ready` for a storm
+coming (core/storm_ready.py, read only).
 """
 
 from __future__ import annotations
@@ -68,8 +69,26 @@ def _water(context, arguments: dict) -> str:
     return say(context, boil=str(arguments.get("kind", "") or "").strip().lower().startswith("boil"))
 
 
+def _storm(context, arguments: dict) -> str:
+    """Tool storm_ready: a storm in the next three days and the checklist for it (core/storm_ready.say)."""
+    from core.storm_ready import say
+
+    return say(context)
+
+
 def register_outage_actions(registry) -> None:
-    """Registers power_outage and water_emergency (a day without safe water, core/water_day.py)."""
+    """Registers power_outage, water_emergency (a day without safe water, core/water_day.py) and storm_ready (a storm
+    coming, core/storm_ready.py)."""
+    registry.register(AssistantAction(
+        name="storm_ready", domain="today",
+        description="Is a storm coming in the next three days (thunderstorms, freezing rain, heavy rain or snow, high "
+                    "wind), and what to do before it from his records: generator fuel, water, hens, the greenhouse, "
+                    "a build's lumber. The plain forecast is get_weather.",
+        parameters={"type": "object", "properties": {}},
+        handler=_storm, trigger_phrases=("storm coming", "storm on the way", "ready for the storm",
+                                         "prepare for the storm", "storm prep", "get ready for the storm",
+                                         "any storms", "big storm", "ice storm", "blizzard", "high winds"),
+    ))
     registry.register(AssistantAction(
         name="water_emergency", domain="today",
         description="The water's off, or there's a boil-water notice: his drinking water in days, his tanks, the "

@@ -87,19 +87,22 @@ def unit_for(context) -> str:
 
 
 def forecast_url(lat: float, lon: float, unit: str) -> str:
-    """Pure logic. The forecast request: now, and the week's highs, lows, weather and chances of rain (today and
-    tomorrow for the Dashboard, the weekend for "what should I do this weekend?")."""
+    """Pure logic. The forecast request: now, and the week's highs, lows, weather, chances of rain and strongest
+    gusts (mph with Fahrenheit, km/h with Celsius; today and tomorrow for the Dashboard, the weekend for "what should
+    I do this weekend?", a storm for core/storm_ready.py)."""
     query = {"latitude": f"{lat:.4f}", "longitude": f"{lon:.4f}", "current": "temperature_2m,weather_code",
-             "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+             "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,"
+                      "wind_gusts_10m_max",
              "forecast_days": 7,
-             "temperature_unit": unit, "timezone": "auto"}
+             "temperature_unit": unit, "wind_speed_unit": "mph" if unit == "fahrenheit" else "kmh",
+             "timezone": "auto"}
     return FORECAST + "?" + urllib.parse.urlencode(query)
 
 
 def read(raw: dict, unit: str) -> Optional[dict]:
     """Pure logic. Open-Meteo's answer as {temp, words (now), today_words (the whole day's), high, low, tomorrow:
-    {high, low, words, rain?}, days: [{date, high, low, words, rain?}], unit: "°F"}, every temperature rounded, a
-    day's chance of rain when it's given (tomorrow None, and a day left out of `days`, when its figures have a gap);
+    {high, low, words, rain?, gust?}, days: [{date, high, low, words, rain?, gust?}], unit: "°F"}, every temperature
+    rounded, a day's chance of rain and strongest gust (mph with °F, km/h with °C) when it's given (tomorrow None, and a day left out of `days`, when its figures have a gap);
     None when it isn't a forecast."""
     try:
         now, daily = raw["current"], raw["daily"]
@@ -112,6 +115,9 @@ def read(raw: dict, unit: str) -> Optional[dict]:
             chances = daily.get("precipitation_probability_max")
             if chances and len(chances) > i and chances[i] is not None:
                 got["rain"] = round(chances[i])
+            gusts = daily.get("wind_gusts_10m_max")
+            if gusts and len(gusts) > i and gusts[i] is not None:
+                got["gust"] = round(gusts[i])
             return got
 
         today = day(0)

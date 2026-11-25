@@ -355,13 +355,15 @@ New ideas, each checked against what's there first:
   and bleach).* the same shape for water: stored water against his household's
   gallons a day (one a person, more for the animals), the rain barrels and cistern (core/water_budget.py), and how to
   make water safe offline (boil one minute; the library's pages when it runs).
-- **A storm coming** (his say: an unprompted heads-up through the gate): the forecast's wind, ice or heavy rain two
+- **A storm coming** (his say for the unprompted heads-up; asked for, built 2026-11-24: `core/storm_ready.py`, "is a
+  storm coming?", the forecast now carrying each day's strongest gust): the forecast's wind, ice or heavy rain two
   days out turned into one checklist from his records: fuel for the generator, the greenhouse's battery, the flock
   shut in, the outage kit, what to pick before a frost.
 - **The monthly bills that change** (no decision): *built 2026-11-24 (`core/utility_bills.py`, the tool
   `why_bill_high`).* electric, propane and fuel bills read against the same month last
   year and his meter readings, so "why was power so high?" has an answer from his own numbers.
-- **Automation he can see** (his say on each): routines that already run on their own (core/routines) listed with
+- **Automation he can see** (*found already there*: "what can you do on your own?" is `list_grants`, and "what did
+  you do on your own?" the recap): routines that already run on their own (core/routines) listed with
   what they did this week and what they'd do next, so "what's MIA handling for me?" has one honest answer.
 
 ## Round 9 (2026-11-24, evening): after the game layer and the greenhouse's command path
