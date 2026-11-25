@@ -84,7 +84,8 @@ def routes(tmp_path):
     What he spent is one of them.
     The morning briefing's reading of the words too.
     And the job quote's.
-    And the daily reminder's."""
+    And the daily reminder's.
+    His upkeep's and an LED's resistor's too."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -100,6 +101,8 @@ def routes(tmp_path):
         "drill": lambda w: drills.requested(w),
         "first-aid how-to": lambda w: first_aid_floor.teach(w),
         "spent": lambda w: turn._spent_reply(context, w),
+        "upkeep": lambda w: turn._upkeep_reply(context, w),
+        "led": lambda w: turn._led_reply(context, w),
         "job quote": lambda w: _job_words(w),
         "morning briefing": lambda w: _briefing_words(w),
         "lab": lambda w: esp32_sim.reply(context, empty, w),
@@ -115,6 +118,7 @@ MEANT = {
     "daily reminder": "remind me every morning to give the dog his meds",
     "first-aid how-to": "how do you use a tourniquet?", "lab": "walk me through building the pot lab",
     "spent": "I spent $30 on groceries",
+    "led": "what resistor do I need for an LED on 5 volts?",
     "job quote": "write a quote for Sarah's 12 by 16 deck",
     "morning briefing": "every morning at 7, tell me the weather and my day",
 }

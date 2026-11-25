@@ -43,11 +43,24 @@ ACTION_TYPES.update(CATCH_ACTIONS)
 
 def _log_tool(context, arguments: dict) -> str:
     """Tool log_catch: catch.log, its refusals said. Kept or released isn't asked of the model (it filled it in when
-    he never said, the live check 2026-11-24); a zero length or weight is none."""
+    he never said, the live check 2026-11-24); a zero length or weight is none; `count` logs that many, each its own
+    catch ("I caught 3 bass")."""
     params = {k: arguments.get(k) for k in FIELDS if k != "kept"}
     try:
+        many = max(1, min(50, int(float(arguments.get("count") or 1))))
+    except (TypeError, ValueError):
+        many = 1
+    try:
         ACTION_TYPES["catch.log"].describe(context, params)
-        return ACTION_TYPES["catch.log"].execute(context, params)
+        said = ""
+        for _ in range(many):  # "I caught 3 bass": three catches, each its own (the live sweep: it had been one)
+            said = ACTION_TYPES["catch.log"].execute(context, params)
+        if many > 1:
+            where = f" at {params['where']}" if params.get("where") else ""
+            total = said.rsplit(". ", 1)[-1] if ". " in said else ""
+            what = " ".join(str(params.get("species") or "fish").split())
+            return f"Logged {many} {what}{where}." + (f" {total}" if total else "")
+        return said
     except ActionError as problem:
         return str(problem)
 
@@ -67,7 +80,8 @@ FISH_WORDS = ("fish", "fishing", "bass", "trout", "walleye", "catfish", "bluegil
 def register_catch_actions(registry) -> None:
     """Registers log_catch and whats_biting (reached by "my biggest bass" and the other species too, live check
     2026-11-24), and the fishing words that offer them (`FISH_WORDS`, whole words).
-    "How many fish have I caught" reaches it, never "how many fish can I keep" (a limit)."""
+    "How many fish have I caught" reaches it, never "how many fish can I keep" (a limit).
+    log_catch takes a count ("I caught 3 bass" is three catches)."""
     registry.register_domain_keywords("expeditions", FISH_WORDS)
     registry.register(AssistantAction(
         name="log_catch", domain="expeditions",
@@ -78,7 +92,8 @@ def register_catch_actions(registry) -> None:
             "length": {"type": "number", "description": "inches, only if he said"},
             "weight": {"type": "number", "description": "pounds, only if he said"},
             "where": {"type": "string", "description": "the lake, river or spot, only if he said"},
-            "bait": {"type": "string", "description": "the bait or lure, only if he said"}},
+            "bait": {"type": "string", "description": "the bait or lure, only if he said"},
+            "count": {"type": "integer", "description": "how many, when he caught more than one (\"3 bass\" is 3)"}},
             "required": ["species"]},
         handler=_log_tool, trigger_phrases=("reeled in", "log a catch", "log my catch", "went fishing"),
     ))

@@ -123,6 +123,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A materials question too (`_materials_reply`).
     A reminder on a day too (`_reminder_reply`).
     A course's next lesson too (`_next_lesson_reply`).
+    His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -178,6 +179,10 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _daily_reminder_reply(context, prompt)  # "remind me every morning to ...", as in a turn
     if walked is None:
         walked = _spent_reply(context, prompt)  # "I spent $30 on groceries", as in a turn
+    if walked is None:
+        walked = _upkeep_reply(context, prompt)  # "when is my truck due for an oil change?", as in a turn
+    if walked is None:
+        walked = _led_reply(context, prompt)  # "what resistor for an LED on 5 volts?", as in a turn
     if walked is None:
         walked = _morning_briefing_reply(context, prompt)  # "every morning, tell me the weather", as in a turn
     if walked is None:
@@ -640,6 +645,75 @@ def _job_quote_reply(context, prompt: str):
         return None
 
 
+_DUE = re.compile(r"^\s*when(?:'s| is| are|s)?\s+(?:my|the|our)\s+(?P<asset>[\w' -]+?)\s+(?:due|next due)\s+for\s+"
+                  r"(?:a\s+|an\s+|its\s+|the\s+|new\s+)?(?P<task>[\w' -]+?)\s*\??\s*$", re.I)
+_NEEDS = re.compile(r"^\s*(?:my\s+|the\s+|our\s+)(?P<asset>[\w' -]+?)\s+(?:needs|is due for)\s+(?:a\s+|an\s+|new\s+|its\s+)?"
+                    r"(?P<what>[\w' -]+?)\s*[.!]?\s*$", re.I)
+
+
+def _assets(context) -> list:
+    """His maintenance assets' names, lowercased."""
+    book = getattr(context, "maintenance", None)
+    return [str(a.name).lower() for a in (book.all_assets() if book is not None and hasattr(book, "all_assets") else [])]
+
+
+def _upkeep_reply(context, prompt: str):
+    """His upkeep in code (the live sweep, 2026-11-25): "when is my truck due for an oil change?" is that task's line
+    from his own maintenance (the model had asked for the truck's make and model, or added a task); "the truck needs
+    new brakes" adds the task for that asset (it had tried to mark one complete), only when the asset is one of his.
+    None otherwise."""
+    assets = _assets(context)
+    said = prompt.replace("’", "'")
+    found = _DUE.match(said)
+    if found and found.group("asset").lower() in assets:
+        listed = context.assistant_actions.execute(context, "list_maintenance_tasks", {"query": found.group("asset")})
+        words = [w for w in re.findall(r"[a-z]{3,}", found.group("task").lower()) if w not in ("new", "the")]
+        line = next((ln.lstrip("- ").strip() for ln in str(listed).splitlines()
+                     if words and all(w in ln.lower() for w in words)), None)
+        if line is None:
+            return None
+        tail = (" Log its reading, like \"the truck is at 84,000 miles\", and I'll say when it's due."
+                if "no readings" in line.lower() else "")
+        return f"{line}.{tail}"
+    found = _NEEDS.match(said)
+    if found and found.group("asset").lower() in assets and not re.search(r"\b(?:to|be|more|some)\b",
+                                                                           found.group("what"), re.I):
+        title = found.group("what").strip()
+        return context.assistant_actions.execute(context, "add_maintenance_task", {
+            "asset_name": found.group("asset"), "title": title[:1].upper() + title[1:]})
+    return None
+
+
+_LED = re.compile(r"\bresistor\b.{0,40}\bleds?\b.{0,30}?\b(\d+(?:\.\d+)?)\s*(?:v|volts?)\b|"
+                  r"\bleds?\b.{0,30}?\b(\d+(?:\.\d+)?)\s*(?:v|volts?)\b.{0,30}\bresistor\b", re.I)
+
+
+def _led_reply(context, prompt: str):
+    """"What resistor do I need for an LED on 5 volts?", worked out in code (core/eng_calcs led_resistor: the live
+    sweep's model answer had its formula backwards): for a red LED (about 2 V) and a white or blue one (about 3.1 V),
+    at 20 mA, rounded up to a stock value. None otherwise."""
+    found = _LED.search(prompt)
+    if not found:
+        return None
+    supply = float(found.group(1) or found.group(2))
+    from core import eng_calcs
+
+    said = []
+    for color, forward in (("a red", 2.0), ("a white or blue", 3.1)):
+        if supply <= forward:
+            continue
+        try:
+            result = eng_calcs.calculate("led_resistor", {"supply": f"{supply:g} V", "forward": f"{forward:g} V",
+                                                          "current": "20 mA"})
+        except Exception:  # noqa: BLE001 - a calculation that can't be done is the model's
+            return None
+        said.append(f"for {color} LED (about {forward:g} V), {result['said'].rstrip('.')}")
+    if not said:
+        return None
+    return ("At 20 mA, " + "; ".join(said) + ". R = (supply - the LED's forward voltage) / current: check your LED's "
+            "own forward voltage and current on its datasheet.")
+
+
 def _materials_reply(context, prompt: str):
     """A materials question with its structure and size, in code (core/assistant_plan_actions.materials_reply: the
     calculators' list, never the model's); None otherwise."""
@@ -770,6 +844,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     core/drills.reply).
     A design of hers nothing builds yet is said in code as a plan (core/self_knowledge.plan_reply).
     A first-aid how-to is answered in the floor's own words (`_first_aid_reply`).
+    His upkeep ("when is my truck due for an oil change?", "the truck needs new brakes": `_upkeep_reply`) and an
+    LED's resistor (`_led_reply`) are taken in code too.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     Days of water: the pantry's and the property's (`_water_on_hand_reply`).
     A materials question with its size, from the calculators (`_materials_reply`).
@@ -897,6 +973,10 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _daily_reminder_reply(context, prompt)  # "every morning": a daily event on his calendar
         if walked is None:
             walked = _spent_reply(context, prompt)  # "I spent $30 on groceries": an expense, undoable
+        if walked is None:
+            walked = _upkeep_reply(context, prompt)  # his upkeep: when a task is due, a need added as a task
+        if walked is None:
+            walked = _led_reply(context, prompt)  # an LED's resistor, worked out in code
         if walked is None:
             walked = _morning_briefing_reply(context, prompt)  # the morning briefing he asks for, set or off
         if walked is None:
