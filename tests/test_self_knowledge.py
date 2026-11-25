@@ -7,6 +7,7 @@ question that only ends with something she has ("what's due in the greenhouse?")
 reports her real scale from the system map; `my_focus` reflects her Night School directive; `what_i_know_about_you`
 is honest about how much she knows; a missing source is a quiet gap, not a crash; and a question about her (not
 about one of her apps) gets these facts, her scale read once and kept a while for answers.
+And her own designs described from their decision and spec, and taking a chat out answered from the export code.
 """
 
 from types import SimpleNamespace
@@ -192,3 +193,26 @@ def test_where_the_storage_check_cannot_run_she_says_she_only_finds_serial_board
     assert any("only find serial boards" in x for x in self_knowledge._device_facts(None))
     monkeypatch.setattr(shutil, "which", lambda name: "/usr/bin/" + name)
     assert not any("only find serial boards" in x for x in self_knowledge._device_facts(None))
+
+
+def test_her_own_designs_are_described_from_their_decision_and_spec():
+    """The fix report's miss: "what is the Life Enrichment Protocol?" is hers to describe, from DEC-0161 (with its
+    status) and its spec; "what's the smart closet?" too, while "what's in my smart closet?" is the closet's lookup and
+    a design's words in passing ("phase 2 of the greenhouse plan") aren't one."""
+    from core import self_knowledge as sk
+
+    assert sk.asks_about_her("What is the Life Enrichment Protocol?")
+    block = sk.block_for(None, "What is the Life Enrichment Protocol?")
+    assert "[decision DEC-0161, APPROVED as direction]" in block and "LIFE_ENRICHMENT_PROTOCOL.md" in block
+    assert "My 53 apps" not in block and "[app registry] My" not in block
+    assert sk.asks_about_her("What's the smart closet?") and not sk.asks_about_her("What's in my smart closet?")
+    assert sk.design_asked(sk._norm("what is in phase 2 of the greenhouse plan?")) == []
+
+
+def test_how_to_take_a_chat_out_is_answered_from_the_export_code():
+    """"How do I copy this whole chat?" brings core/conversation_export.py's own words (the commands, the Copy
+    button), not a browser's select-all."""
+    from core import self_knowledge as sk
+
+    assert "core/conversation_export.py" in sk.block_for(None, "How do I copy this whole chat?")
+    assert "core/conversation_export.py" in sk.block_for(None, "can I export our conversation?")

@@ -18,6 +18,9 @@ ordinary words: TOPICS is a table of pointers (source files, decisions, apps, li
 them at that moment into the model's system message with each line's source, `asks_about_her()` tells the turn
 a question is hers alone, and `wants_described()` that it's to be answered in conversation, not by a tool. No
 description of her is kept here, so none can go stale.
+Her own designs too (2026-11-25, the fix report): what her decisions and specs name (`designs_in`, `design_asked`),
+so "what is the Life Enrichment Protocol?" is answered from DEC-0161 and its spec, with its status; and the
+conversations topic, so "how do I export this chat?" is answered from core/conversation_export.py.
 """
 
 from __future__ import annotations
@@ -248,10 +251,71 @@ TOPICS: tuple = (
        r".*\b(?:devices?|hardware|sensors?|usb|serial|bluetooth|wi-?fi|network|arduino|esp32|microcontrollers?)\b",
        files=("core/sensors.py", "core/device_framework.py"), apps=("field_kit", "security", "power"),
        live=("_device_facts",), gate=True),
+    # Taking a conversation out of the chat: export, copy, summary (the fix report: "how do I copy this whole chat?"
+    # was answered with a browser's select-all; the commands and the Copy button are core/conversation_export.py's).
+    _t("conversations",
+       r"\b(?:export|save|copy|download|send|share|print|back up|summari[sz]e)\b[^.?!]*\b(?:chat|conversation|"
+       r"transcript)(?: logs?| history)?s?\b",
+       files=("core/conversation_export.py",)),
     _t("greenhouse", r"\b(?:greenhouse|aquaponics|homestead)\b",
        files=("core/greenhouse_link.py", "core/homestead_manager.py"), decisions=("DEC-0150", "DEC-0145"),
        apps=("greenhouse",), live=("_greenhouse_facts",), gate=True),
 )
+
+
+# MIA's own designs: what her decisions and specs name ("the Life Enrichment Protocol", "Smart Closet"), so "what is
+# the Life Enrichment Protocol?" is answered from DEC-0161 and its spec, read when asked, with its status (the fix
+# report: she said she had no such thing). A decision names its subject before " is ", ":" or a dash; a spec by its
+# file name. Read again after ten minutes.
+_DECISION_HEAD = re.compile(r"^### (DEC-\d{4}): (.+)$", re.M)
+_SUBJECT_END = re.compile(r"\s+(?:is|are|was|becomes|gets|stays|goes|has|keeps|holds|works|lets|takes|runs)\s+|:\s|"
+                          r"\s[-—]\s|\s\(")
+_designs_cache: dict = {"at": 0.0, "found": None}
+
+
+def _designs() -> dict:
+    """{name (lowered, no leading "the"): {"decisions": [...], "spec": "docs/specs/X.md" or ""}} from docs/DECISIONS.md's
+    headings and docs/specs' file names; subjects of two to six words only, so a long sentence isn't a name."""
+    now = time.monotonic()
+    if _designs_cache["found"] is not None and now - _designs_cache["at"] < 600:
+        return _designs_cache["found"]
+    found: dict = {}
+    try:
+        text = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        text = ""
+    for dec, title in _DECISION_HEAD.findall(text):
+        subject = _SUBJECT_END.split(title.strip(), maxsplit=1)[0]
+        subject = re.sub(r"^(?:the|a|an)\s+", "", subject.strip().lower()).strip(" .,;")
+        if 2 <= len(subject.split()) <= 6 and not re.search(r"\b(?:mia|claude|zac|we|he|she|it|they)\b", subject):
+            found.setdefault(subject, {"decisions": [], "spec": ""})["decisions"].append(dec)
+    for spec in sorted((ROOT / "docs" / "specs").glob("*.md")):
+        name = spec.stem.lower().replace("_", " ")
+        if 2 <= len(name.split()) <= 6:
+            found.setdefault(name, {"decisions": [], "spec": ""})["spec"] = f"docs/specs/{spec.name}"
+    _designs_cache.update(at=now, found=found)
+    return found
+
+
+def designs_in(text: str) -> list:
+    """Pure logic, with her documents. The designs a lowered message names, longest first, two at most:
+    [(name, {"decisions", "spec"})]."""
+    said = f" {_norm(text)} "
+    named = [(n, d) for n, d in _designs().items() if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", said)]
+    return sorted(named, key=lambda x: len(x[0]), reverse=True)[:2]
+
+
+def design_asked(text: str) -> list:
+    """Pure logic, with her documents. The designs a lowered message asks her to describe: one that's the whole subject
+    of "what is ...?" ("what is the Life Enrichment Protocol?"), or one named in "tell me about your ..." / "do you
+    have ..."; never a design's words in passing ("what's in phase 2 of the greenhouse plan?")."""
+    defined = _DEFINE.match(text)
+    if defined:
+        rest = re.sub(r"^(?:the|a|an|your|mia's)\s+", "", defined.group(1).strip(" ?.!"))
+        found = designs_in(rest)
+        if found and len(rest) <= len(found[0][0]) + 4:
+            return found
+    return designs_in(text) if _ABOUT_FORM.match(text) else []
 
 
 def _norm(prompt: str) -> str:
@@ -272,11 +336,13 @@ def topics_for(prompt: str) -> list:
 def asks_about_her(prompt: str) -> bool:
     """Pure logic. Whether a message is a question only MIA's own records can answer (her history, her limits, what
     she's being built toward, her design, how she learns). The turn then leaves the person's question plans and
-    lookups aside (core/assistant_turn.py): "when did your development begin?" isn't about their progress."""
+    lookups aside (core/assistant_turn.py): "when did your development begin?" isn't about their progress. One of
+    her own designs as the subject ("what's the smart closet?", `design_asked`) is hers too; "what's in my smart
+    closet?" isn't."""
     text = _norm(prompt)
     if not text or not _QUESTION.match(text) or _DOING.match(text):
         return False
-    return any(t.hers for t in topics_for(text))
+    return any(t.hers for t in topics_for(text)) or bool(design_asked(text))
 
 
 def _apps_named(context, text: str) -> list:
@@ -307,12 +373,15 @@ def wants_described(context, prompt: str) -> bool:
     the Chronicle?", "how do you work with my glasses?") rather than to look up or change the person's records, so
     the turn answers it in conversation with her own records beside it instead of handing it to a tool. "What's X"
     names an app only when X is the app ("what's the greenhouse app?"), never when it ends with one ("what's due in
-    the greenhouse?")."""
+    the greenhouse?"). One of her own designs as the subject ("what is the Life Enrichment Protocol?",
+    `designs_in`) is hers to describe too."""
     text = _norm(prompt)
     if not text or _DOING.match(text):
         return False
     if asks_about_her(prompt):
         return True
+    if design_asked(text):
+        return True  # "what is the Life Enrichment Protocol?": one of her own designs is what's asked about
     topics, apps = topics_for(text), _apps_named(context, text)
     if not topics and not apps:
         return _lists_apps(text) and bool(_ABOUT_FORM.match(text))
@@ -353,7 +422,8 @@ def _status_first(body: str) -> str:
 def _opening(rel: str, chars: int = _FILE_CHARS) -> str:
     """What a file says it is, in its own opening words: a Python file's opening docstring, a Kotlin file's first
     doc comment, a Markdown file's first paragraphs (after any note about the document itself). Kept until the
-    file changes; "" when it can't be read."""
+    file changes; "" when it can't be read.
+    An HTML comment at the top of a document is skipped too."""
     path = ROOT / rel
     try:
         stamp = path.stat().st_mtime
@@ -374,9 +444,9 @@ def _opening(rel: str, chars: int = _FILE_CHARS) -> str:
         body = re.sub(r"^\s*\*\s?", "", found.group(1), flags=re.M) if found else ""
     else:
         paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
-        # Headings, tables, quoted "see also" notes and an italic note about the document itself say nothing of
-        # what it holds.
-        said = [p for p in paragraphs if not p.startswith(("#", "```", "|", "---", ">"))
+        # Headings, tables, quoted "see also" notes, HTML comments and an italic note about the document itself say
+        # nothing of what it holds.
+        said = [p for p in paragraphs if not p.startswith(("#", "```", "|", "---", ">", "<!--"))
                 and not re.fullmatch(r"\*[^*].*[^*]\*", p, re.S)]
         body = " ".join(re.sub(r"\*\*|__", "", p).strip("*_ ") for p in said)
     body = _status_first(" ".join(body.split()))
@@ -611,12 +681,14 @@ def _greenhouse_facts(context) -> list:
 def block_for(context, prompt: str) -> str:
     """Her own records on what a message asks about her, for the model's system message: the matched topics' live
     facts, then the apps, the decisions with their status, and the opening words of the source files, every line
-    saying where it comes from. Whole lines only, within BLOCK_CHARS. "" when the message isn't about her."""
+    saying where it comes from. Whole lines only, within BLOCK_CHARS. "" when the message isn't about her. A design
+    of hers named in a question (`designs_in`) brings its decisions and its spec."""
     text = _norm(prompt)
     if not text or _DOING.match(text):  # "can you show the list on my glasses?" is a thing to do
         return ""
     topics, apps = topics_for(text), _apps_named(context, text)
-    if not topics and not apps and not _lists_apps(text):
+    designs = design_asked(text)
+    if not topics and not apps and not designs and not _lists_apps(text):
         return ""
     each = 3 if len(topics) <= 1 else 2
     live, app_ids, files, decisions = [], [], [], []
@@ -627,7 +699,7 @@ def block_for(context, prompt: str) -> str:
         files += [f for f in t.files[:each + 1] if f not in files]
         decisions += [d for d in t.decisions[:each] if d not in decisions]
     lines = [x for x in live if x] + _safe(lambda: _app_lines(context, app_ids, apps), [])
-    if not topics and not apps:  # "what apps do you have?": the names, from the registry
+    if not topics and not apps and not designs:  # "what apps do you have?": the names, from the registry
         from core import capabilities
 
         names = [a["name"] for a in _safe(lambda: capabilities.capability_map(context), [])
@@ -635,6 +707,10 @@ def block_for(context, prompt: str) -> str:
         if not names:
             return ""
         lines.append(f"[app registry] My {len(names)} apps: " + ", ".join(names) + ".")
+    for _, design in designs:  # her own designs: the decision (with its status) and the spec's opening
+        decisions += [d for d in design["decisions"][:2] if d not in decisions]
+        if design["spec"] and design["spec"] not in files:
+            files.append(design["spec"])
     lines += [x for x in (_decision_line(d) for d in decisions) if x]
     for rel in files:
         said = _opening(rel)
