@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1830 files, 390,463 lines; 1830 files describe themselves; 21,264 of 21,389 classes and functions are documented.
+1831 files, 390,569 lines; 1831 files describe themselves; 21,266 of 21,391 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-718 files, 203,456 lines; 10,154 of 10,233 classes and functions documented
+719 files, 203,545 lines; 10,154 of 10,233 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -570,6 +570,7 @@
 - `core/smart_closet.py`: Smart Closet (DEC-0162; Zac, 2026-11-15: "an inventory of my clothes ... suggest outfits, let me rate them, maybe let me see what they would look like together"). The design is `docs/specs/SMART_CLOSET.md`.
 - `core/smart_suggestions.py`: Pure decision logic for a proactive "Smart Suggestions" daily check — docs/VISION.md's principle 3 ("Proactive, not just reactive") names three concrete examples: "recovery after intense workouts, a grocery trip when supplies run low, a birthday gift reminder before the date."
 - `core/solar_size.py`: "How many solar panels would I need?" (Jarvis brainstorm, round 12; his power, docs/future/SMART_AG_PLAN.md): the array and battery worked out in code (core/eng_calcs.py `solar_array`), from his own use:
+- `core/soldering_path.py`: Soldering and the meter, a learning program on core/paths.py's method (2026-11-25: the live sweeps found soldering a gap, and his Arduino Nanos often come with their headers loose; Build With Arduino and Build With ESP32 are breadboard labs that need neither). Through-hole soldering (a good joint, t
 - `core/specialist_models.py`: Which local model does each specialist's thinking (T1's second part; the local specialists plan, S3; DEC-0197: "the model per specialist is chosen from this table, not from a guide"). The table is the engineering bench's results on this PC (`work/eng_bench/<model>.json`, written by `python -m tools.
 - `core/specialist_review.py`: A second local model checks a specialist's work (the local specialists plan, S5; DEC-0198, Q-57: "a safety review can block a design until he's seen it"; the teams design: review is independent only across models).
 - `core/specialist_roster.py`: The specialists' roster and the "counts as added" bar, in code (the Specialist Forge, F1; DEC-0199; `docs/mia_os/MIA_OS_LOCAL_SPECIALISTS_PLAN.md` section 7: "a name with a paragraph is not a specialist").
@@ -1016,7 +1017,7 @@
 
 ## tests/: the test suite: what each part must do
 
-703 files, 104,992 lines; 8,739 of 8,785 classes and functions documented
+703 files, 105,009 lines; 8,741 of 8,787 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1217,7 +1218,7 @@
 - `tests/test_first_aid_floor.py`: The emergency floor (core/first_aid_floor.py, brainstorm 4.2): words that say an emergency is happening now get fixed first-aid words with the emergency number before any model; a question about the topic, a past one or a figure of speech goes on as usual. The corpus lists both what must trigger (th
 - `tests/test_first_aid_floor_never_misses.py`: Every real emergency phrasing the reviews found (2026-11-25, the sixth to ninth) reaches the emergency floor (core/first_aid_floor.detect). Narrowing its words to quiet a false alarm had twice silenced real ones ("grandma fell off the horse and isn't breathing", "dad has collapsed", "she choked at s
 - `tests/test_first_boot.py`: Meeting MIA (core/first_boot.py): each person's own progress, resumable, skippable, in their own name.
-- `tests/test_fishing_path.py`: Fishing basics (core/fishing_path.py, 2026-11-25): the course is registered with its stages and checks; its counted checks read his own catch log (a catch, a species); "what size hook for bass?" and "how do I tie a palomar knot?" are answered from its lessons, never a wall hook or the fish tank.
+- `tests/test_fishing_path.py`: Fishing basics (core/fishing_path.py, 2026-11-25): the course is registered with its stages and checks; its counted checks read his own catch log (a catch, a species); "what size hook for bass?" and "how do I tie a palomar knot?" are answered from its lessons, never a wall hook or the fish tank. Sol
 - `tests/test_fishing_times.py`: "When's the best time to fish?" (core/fishing_times.py): dawn and dusk around the real sunrise and sunset, the moon overhead and underfoot about twelve and a half hours apart, moonrise and moonset as the minors, the phase said near a new or full moon, the week's best days, his own log's best time, a
 - `tests/test_fitness.py`: A person's fitness plan and logs (core/fitness_manager.py, DEC-0020, H-0026) and recipe nutrition facts (core/nutrition.py). Placeholder numbers only (DEC-0002).
 - `tests/test_fitness_missions.py`: The fitness plan as missions (core/fitness_missions.py, DEC-0020, H-0026): made once per day and week from the plan, kept in step with the logs (the logs are the truth), ticked through the logs, completing themselves, and letting a missed day go quietly (DEC-0014). Placeholder plan values.

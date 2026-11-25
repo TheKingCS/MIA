@@ -149,7 +149,7 @@ def _builtins() -> None:
     """Imports the modules that register built-in programs: guitar, carpentry, and his hobbies' (DEC-0289).
     Build With ESP32 too (core/esp32_path.py, the first interactive lab course), and Build With Arduino
     (core/arduino_path.py), Money basics (core/money_path.py), Small business basics (core/business_path.py) and
-    Fishing basics (core/fishing_path.py)."""
+    Fishing basics (core/fishing_path.py) and Soldering and the meter (core/soldering_path.py)."""
     import core.guitar  # noqa: F401
     import core.carpentry  # noqa: F401  (Trade Master's first apprentice program, DEC-0149)
     import core.woodworking  # noqa: F401  (his hobbies' programs, DEC-0289)
@@ -161,6 +161,7 @@ def _builtins() -> None:
     import core.money_path  # noqa: F401  (Money basics, 2026-11-25)
     import core.business_path  # noqa: F401  (Small business basics, 2026-11-25)
     import core.fishing_path  # noqa: F401  (Fishing basics, 2026-11-25)
+    import core.soldering_path  # noqa: F401  (Soldering and the meter, 2026-11-25)
 
 
 def program_of(context, path_id: str) -> Optional[Program]:

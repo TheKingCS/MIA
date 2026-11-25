@@ -4,7 +4,8 @@ tests.test_fishing_path
 
 Fishing basics (core/fishing_path.py, 2026-11-25): the course is registered with its stages and checks; its counted
 checks read his own catch log (a catch, a species); "what size hook for bass?" and "how do I tie a palomar knot?" are
-answered from its lessons, never a wall hook or the fish tank.
+answered from its lessons, never a wall hook or the fish tank. Soldering and the meter (core/soldering_path.py)
+too: its how-tos from its own lessons, never a copper pipe.
 """
 
 from core import lesson_answer, paths
@@ -43,3 +44,19 @@ def test_its_counted_checks_read_his_catches(monkeypatch):
         {"species": "Bluegill", "at": "2026-11-22T10:00:00"}, {"species": "Crappie", "at": "2026-10-01T10:00:00"}])
     assert paths.SOURCES["catches"].read(None, "2026-11-01") == 3
     assert paths.SOURCES["species"].read(None, "2026-11-01") == 2
+
+
+def test_soldering_and_the_meter_are_their_own_course():
+    """Soldering and the multimeter have their own course; a pipe's solder is plumbing's."""
+    assert lesson_answer.find("how do I solder the headers on my nano?") == ("soldering", "joints")
+    assert lesson_answer.find("how do I fix a solder bridge?") == ("soldering", "fixing")
+    assert lesson_answer.find("how do I use a multimeter?") == ("soldering", "meter")
+    assert lesson_answer.find("how do I solder copper pipe?") is None
+    said = lesson_answer.reply(None, "how do I solder?")
+    assert said.startswith('From the Soldering and the meter course, "Solder a joint')
+
+
+def test_a_bridge_over_the_creek_is_no_soldering_lesson():
+    for words in ("how do I build a bridge over the creek", "how do I fix the bridge on my guitar"):
+        found = lesson_answer.find(words)
+        assert found is None or found[0] != "soldering", words

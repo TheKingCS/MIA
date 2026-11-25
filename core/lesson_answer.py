@@ -59,6 +59,12 @@ ASKS: dict[tuple, re.Pattern] = {
                                             r"chickens|flock|layers)\b|\b(?:protect|keep)\w*\s+(?:my\s+|the\s+)?"
                                             r"(?:hens|chickens|flock|coop)\b.{0,30}\b(?:predators?|raccoons?|foxes|"
                                             r"hawks|winter|cold|warm|safe)\b"),
+    # soldering and the meter (core/soldering_path.py: the live sweeps found it a gap)
+    ("soldering", "fixing"): re.compile(r"\bsolder(?:ing)? bridges?\b|\bbridged? (?:two |the )?pins\b|\bdesolder\w*|\bsolder (?:wick|sucker)\b|"
+                                     r"\btoo much solder\b"),
+    ("soldering", "joints"): re.compile(r"\bsolder\w*\b"),
+    ("soldering", "meter"): re.compile(r"\bmulti-?meter\b|\bcontinuity\b|\b(?:measure|check|test)\w*\s+(?:the\s+)?"
+                                   r"(?:voltage|volts|resistance|ohms)\b"),
     # fishing (the live sweeps: hook sizes had been guessed)
     ("fishing", "hooks"): re.compile(r"\bhook sizes?\b|\bsize (?:of )?hooks?\b|\b(?:what|which) (?:size )?hooks?\b|"
                                      r"\bhooks?\b.{0,25}\b(?:bass|trout|catfish|crappie|bluegill|panfish|sunfish|perch|"
@@ -103,6 +109,8 @@ NOT_ASKS = {
     ("fishing", "hooks"): re.compile(r"\bhooks? (?:for|on) (?:the |my |a )?(?:wall|garage|tools?|towels?|coats?|"
                                      r"pictures?|hanging|ceiling|shed|keys|hats?|bags?|trailer|chains?)\b|\bhook up\b"),
     ("fishing", "cleaning"): re.compile(r"\bfish ?tank\b|\baquarium\b|\baquaponics\b"),
+    # a pipe's solder is plumbing's, not a circuit board's
+    ("soldering", "joints"): re.compile(r"\b(?:pipes?|copper|plumbing|sweat\w*|fittings?|stained glass|jewel\w*)\b"),
     ("business", "biz_terms"): re.compile(r"\btax(?:es)?\b|\bcleared\b|\bbank\b|\btweets?\b|\bquote (?:a |the )?"
                                           r"(?:verse|passage|text|line|source)\b"),
 }
