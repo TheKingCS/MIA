@@ -114,7 +114,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     MIA runs on.
     A scenario drill (core/drills.reply) is answered there too.
     A design of hers not built yet is answered there too, as a plan.
-    A first-aid how-to too (`_first_aid_reply`)."""
+    A first-aid how-to too (`_first_aid_reply`).
+    A how-to from a course lesson too (`_lesson_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -147,6 +148,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _drill_reply(context, conversation, prompt)  # a scenario drill, as in a turn
     if walked is None:
         walked = _first_aid_reply(context, prompt)  # "how do you use a tourniquet?", as in a turn
+    if walked is None:
+        walked = _lesson_reply(context, prompt)  # "how do I sharpen a chisel?": her course's lesson, as in a turn
     if walked is None:
         walked = _plan_reply(prompt)  # a design of hers not built yet, said as a plan
     if walked is not None:
@@ -230,6 +233,18 @@ def _first_aid_reply(context, prompt: str):
     kind = next((k for k, words in first_aid_floor._TOPIC if words.search(prompt.lower())), "")
     drill = drills.FOR_KIND.get(kind)
     return taught + (f" To practise it, say \"give me a {drill} drill\"." if drill else "")
+
+
+def _lesson_reply(context, prompt: str):
+    """A how-to one of her courses teaches, in code (core/lesson_answer.reply: the lesson's steps, why and what to
+    watch for, from the course's sources); None otherwise."""
+    from core import lesson_answer
+
+    try:
+        return lesson_answer.reply(context, prompt)
+    except Exception:
+        log.exception("Couldn't answer from the lesson")
+        return None
 
 
 def _service_reply(context, prompt: str):
@@ -338,6 +353,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     core/drills.reply).
     A design of hers nothing builds yet is said in code as a plan (core/self_knowledge.plan_reply).
     A first-aid how-to is answered in the floor's own words (`_first_aid_reply`).
+    A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -433,6 +449,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _drill_reply(context, conversation, prompt)  # "give me a survival drill", then "B"
         if walked is None:
             walked = _first_aid_reply(context, prompt)  # "how do you use a tourniquet?": the floor's own words
+        if walked is None:
+            walked = _lesson_reply(context, prompt)  # "how do I purify water from a creek?": her course's lesson
         if walked is None:
             walked = _plan_reply(prompt)  # "what is the Life Enrichment Protocol?": a plan, said as one
         if walked is not None:

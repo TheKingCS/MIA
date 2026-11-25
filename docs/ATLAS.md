@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1785 files, 385,169 lines; 1785 files describe themselves; 20,989 of 21,119 classes and functions are documented.
+1787 files, 385,340 lines; 1787 files describe themselves; 20,995 of 21,125 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-711 files, 200,560 lines; 10,060 of 10,146 classes and functions documented
+712 files, 200,678 lines; 10,063 of 10,149 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -341,6 +341,7 @@
 - `core/learned.py`: What MIA has learned about him on her own, each habit with its evidence and its own reset (DEC-0282, LS-10, REQ-LS-004). Three kinds today:
 - `core/ledger_manager.py`: MIA Home's revenue/expense ledger — the fourth and final slice of the proposed `mia_home_schema.sql` (see `docs/VISION.md`'s "MIA Home's expanded scope" section, and `core/material_manager.py` `core/job_manager.py`/`core/product_manager.py`'s docstrings for slices 1-3), adapted to this project's per
 - `core/left_off.py`: Where he left off (Jarvis brainstorm 1.2; Zac, 2026-11-23: "smooth conversation ... aware"): "where were we?" or "what was I working on?" answered from what his records hold, never from the model's guess, so a conversation picks up where the last one stopped, on any device.
+- `core/lesson_answer.py`: A how-to answered from one of MIA's own courses (live sweep, 2026-11-25: "what's the best way to start a fire in the rain?" went to the project plan, "how do I purify water from a creek?" was answered from memory with brand names, and "how do I sharpen a chisel?" was told her library had no packs, w
 - `core/leveling.py`: Pure XP/Level math for the Missions gamification system — no Qt, no persistence, testable in isolation (see tests/test_leveling.py). `core/profile_manager.py` stores the one number that matters (`Profile.total_xp`, lifetime cumulative); everything else — what level that corresponds to, and how far i
 - `core/library_course.py`: Courses from her offline library (Zac, 2026-11-24: "I want to be able to say MIA, I want to learn about x and have offline coursework and instruction about any subject and it be quality information"). The knowledge comes from the packs she keeps offline (core/offline_library.py: Wikipedia, the homes
 - `core/life_areas.py`: The rest of a life, at a glance: the life state's `areas` section (DEC-0108's interconnection audit, 2026-11-07). `core/context_assembler.py` has full sections for money, property, assets, the kitchen, workouts, projects, goals and missions; the other stores were missing from her picture of a life e
@@ -1009,7 +1010,7 @@
 
 ## tests/: the test suite: what each part must do
 
-665 files, 102,594 lines; 8,558 of 8,602 classes and functions documented
+666 files, 102,647 lines; 8,561 of 8,605 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1291,6 +1292,7 @@
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
 - `tests/test_ledger_manager.py`: Unit tests for core.ledger_manager. Isolates _DATA_DIR/_REVENUE_FILE _EXPENSES_FILE into a tmp_path scratch area, same monkeypatch pattern as test_component_manager.py's isolated_paths. record_sale() also needs core.product_manager isolated in the same tmp_path, same "combined-manager fixture" patte
 - `tests/test_left_off.py`: Where he left off (core/left_off.py, brainstorm 1.2): missions changed lately with their next step, Planner drafts not yet confirmed, open promises and recent decisions (newest first, without their label said twice), from the records only. *(2 undocumented)*
+- `tests/test_lesson_answer.py`: A how-to answered from one of MIA's own courses (core/lesson_answer.py; live sweep, 2026-11-25): a fire in the rain, water from a creek, a chisel, seeds indoors, a tape measure, a first woodworking piece, each its lesson's steps, why and what to watch for, with a drill to practise it and how to star
 - `tests/test_lesson_named_course.py`: A lesson asked for by its course's name (core/assistant_path_actions.py; live check, 2026-11-25): a course he hasn't started is said as not started, never swapped for the one he has; with no course named, his one started course's next lesson, as before.
 - `tests/test_leveling.py`: Profile levels and prestige (core/leveling.py): the XP each level needs, progress within a level and a prestige cycle, when someone may prestige, and each prestige tier's colour.
 - `tests/test_library_course.py`: Courses from her offline library (core/library_course.py): "I want to learn about beekeeping" builds a Classroom course, one lesson a stage the library covers, each from one article never used twice and only one that fits the subject; too little in the library is said, never padded; no library is sa

@@ -1472,6 +1472,11 @@ NOT_FOR = {
                          re.I),
     # quitting by a date is its own plan's ("what if I quit at the end of next year?"), not the year's priorities
     "priorities": re.compile(r"\b(quit|quitting|leave (my|the) job|leaving (my|the) job)\b", re.I),
+    # a project idea for anyone ("a good beginner woodworking project") isn't his own projects (live sweep 2026-11-25)
+    "projects": re.compile(r"\b(beginner|beginners|good|easy|simple|first|starter|ideas?|weekend)\b.{0,30}\bprojects?\b|"
+                           r"\bprojects? (ideas?|for (a )?beginners?)\b", re.I),
+    # his net worth is get_net_worth's, not what his products are worth (live sweep 2026-11-25)
+    "products": re.compile(r"\bnet worth\b|\bam i worth\b", re.I),
     "money month": re.compile(r"\b(more|less) than (normal|usual)\b|\bunusual\b|\brent(al)?\b|\bwater\b", re.I),
     # a weekend gone is a conversation or recall; a shop's hours, a meal or a meeting on a weekend day isn't the plan
     "weekend": re.compile(r"\b(was|were|did|went|go|last|spent|happened|open|close[sd]?|hours|dinner|lunch|breakfast|"
@@ -1479,7 +1484,9 @@ NOT_FOR = {
     # the build's own questions are its tools' (material_list, cut_list, price_build, plan_with_me), and a plan
     # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"; nor a question about
     # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
-    "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
+    # a survival how-to ("the best way to start a fire in the rain", live sweep 2026-11-25) is no project of his
+    "project picture": re.compile(r"\b(fire|tinder|kindling|purify|creek|compass|shelter|"
+                                  r"materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
                                   r"how many (?:solar )?panels|panels (?:would|do) i need|kwh|size (?:a|my) solar|"
                                   r"hens?|chickens?|coop|laying|"
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
@@ -1763,12 +1770,13 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
 def without_source_label(said: str, sheet: Sheet) -> str:
     """Pure logic. The answer without a source label the model began it with ("Dungeon. I don't have...",
     "Dungeon\nYou're welcome.", "Workshop. You're missing...": the sheet labels facts by the app they came from, and
-    the model sometimes says the label first; live checks 2026-11-24)."""
+    the model sometimes says the label first; live checks 2026-11-24), a "The" before it too ("The Dungeon. A good
+    beginner project...", 2026-11-25)."""
     names = {re.sub(r"\s*\(.*\)$", "", re.sub(r"^the ", "", f.source.strip(), flags=re.I)).strip()
              for f in sheet.facts if f.source}
     names = {n for n in names if n and len(n.split()) <= 3} | {"Dungeon"}  # the protocol's own word for his job
-    label = re.compile(r"^\s*(?i:" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
-                       + r")(?:[ \t]*[.:,][ \t]*\n*|[ \t]*\n+)")  # the label, then a stop or a line break
+    label = re.compile(r"^\s*(?i:(?:the\s+)?(?:" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+                       + r"))(?:[ \t]*[.:,][ \t]*\n*|[ \t]*\n+)")  # the label (a "The" before it too), then a stop or a break
     trimmed = label.sub("", said, count=1)
     return trimmed if trimmed.strip() else said
 
