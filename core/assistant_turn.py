@@ -656,8 +656,12 @@ _NEEDS = re.compile(r"^\s*(?:my\s+|the\s+|our\s+)(?P<asset>[\w' -]+?)\s+needs\s+
 _NOT_A_TASK = re.compile(r"^\s*(?:gas|fuel|gasoline|diesel|work)\s*$|\d+\s*(?:days?|weeks?|months?|years?|st|nd|rd|th)\b|"
                          r"\b(?:to|be|more|some|every|each|soon|today|tomorrow|tonight|next|this|week|month|year|"
                          r"monday|tuesday|wednesday|thursday|friday|saturday|sunday|nothing|it|that|them|"
-                         r"how|what|when|why|where|anything|something|help)\b", re.I)
-_FILLER = {"new", "the", "its", "his", "her", "our", "and"}
+                         r"how|what|when|why|where|anything|something|help|"
+                         # a time, a remark or a list (the seventeenth review: "tires in the spring", "wipers,
+                         # badly", "an oil change, a new filter", "3 quarts of oil")
+                         r"in|on|at|before|after|by|for|of|with|from|and|or|but|asap|badly|lot|really|again|"
+                         r"quarts?|gallons?|liters?)\b|,\s|^(?:\S+\s+){5,}", re.I)
+_FILLER = {"new", "the", "its", "his", "her", "our", "and", "replace", "replacement", "replaced"}
 
 
 def _assets(context) -> list:
@@ -671,13 +675,20 @@ def _task_line(context, asset: str, task: str, same: bool = False):
     (the fifteenth review: "truck" lists every vehicle, and the Car's oil change had been said for the truck); None
     when there's none.
     `same`: for a need, only the same task (whole words of the title, a plural as its one), never one sharing a
-    word."""
+    word.
+    Words are matched by their stems ("a tire rotation" is Rotate Tires), "replace" and "new" left out."""
     listed = context.assistant_actions.execute(context, "list_maintenance_tasks", {"query": asset})
 
     def words(text):
-        """Its words, whole, a plural as its one ("tags" is "tag")."""
-        return {w[:-1] if len(w) > 3 and w.endswith("s") else w
-                for w in re.findall(r"[a-z]{3,}", text.lower()) if w not in _FILLER}
+        """Its words' stems: a plural as its one, a long word by its first five letters ("rotation", "rotated"
+        and "rotate" are one), "replace" and "new" left out ("new brake pads" is Replace Brake Pads)."""
+        stems = set()
+        for w in re.findall(r"[a-z]{3,}", text.lower()):
+            if w in _FILLER:
+                continue
+            w = w[:-1] if len(w) > 3 and w.endswith("s") else w
+            stems.add(w[:5])
+        return stems
 
     said = words(task)
     for ln in str(listed).splitlines():
@@ -733,7 +744,8 @@ def _led_reply(context, prompt: str):
     Only the plain question: a forward voltage, two voltages, ohms, current, several LEDs or a strip are the
     model's; mains is a warning, and over a quarter watt of heat says to use a 1/2 W resistor.
     A current in mA or several LEDs in words are the model's; mains is over 50 V or said; the resistor is rated
-    twice its heat."""
+    twice its heat.
+    The note gives the rating only, never a heat figure that disagrees with the stock resistor's."""
     found = _LED.search(prompt)
     if not found:
         return None
@@ -763,7 +775,7 @@ def _led_reply(context, prompt: str):
         heat = (supply - forward) * 0.02
         rating = next(r for r in (0.25, 0.5, 1, 2, 3, 5) if r >= 2 * heat)  # rated twice its heat
         if rating > 0.25:
-            said[-1] += f" ({heat:.2g} W of heat: use a {'1/2' if rating == 0.5 else f'{rating:g}'} W resistor)"
+            said[-1] += f" (use a {'1/2' if rating == 0.5 else f'{rating:g}'} W resistor)"
     if not said:
         return None
     return ("At 20 mA, " + "; ".join(said) + ". R = (supply - the LED's forward voltage) / current: check your LED's "
@@ -1135,15 +1147,18 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
 
 def _defines(text: str) -> bool:
     """Whether the JSON is a function definition: a "description" beside its name, never inside the arguments
-    (the sixteenth review: a made-up call whose arguments had a description had leaked as raw JSON)."""
+    (the sixteenth review: a made-up call whose arguments had a description had leaked as raw JSON).
+    Parameters that are a schema ("properties") make it a definition too."""
     import json
 
     try:
         whole = json.loads(text)
-        return isinstance(whole, dict) and "description" in whole
+        schema = isinstance(whole, dict) and isinstance(whole.get("parameters"), dict) and "properties" in whole["parameters"]
+        return isinstance(whole, dict) and ("description" in whole or schema)
     except ValueError:
         found = re.search(r'"(?:parameters|arguments|args|input)"\s*:', text)
-        return bool(found) and '"description"' in text[:found.start()]
+        return bool(found) and ('"description"' in text[:found.start()]
+                                or bool(re.match(r'\s*\{\s*"properties"', text[found.end():])))
 
 
 def _garbled(content: str, context=None) -> bool:
