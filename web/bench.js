@@ -3,7 +3,8 @@
  * Renders MIA.bench(board): the board picker, the parts placed (kept in this browser, per board), Add A Part from every
  * spec MIA knows, his Component DB's parts for what he has, and Look Up A Part online (MIA.benchDraft, shown before
  * Add This Part, the approved action partspec.add). The breadboard is web/labsim.js's, checked by MIA.benchCheck as
- * he wires (no sketch to run). Formatting only: every rule is core's.
+ * he wires (no sketch to run). "Build me a…" (MIA.benchDesign, core/bench_designs.py) puts one of MIA's designs on
+ * the bench for his goal. Formatting only: every rule is core's.
  */
 (function () {
   "use strict";
@@ -64,6 +65,42 @@
       : "Looking up online isn't available now: " + data.lookup.why), form);
   }
 
+  // "Build me a ..." (core/bench_designs.py): a design for his goal on his board, its parts (what he has), wiring,
+  // sketch and how to use it; Put It On The Bench places its parts and wires here, to check and change.
+  function designer(data) {
+    const input = el("input", { type: "text", class: "crs-ask-input", placeholder: "Build me a… motion light, temperature alarm, dry-soil alert, tank level gauge",
+      "aria-label": "What to build", maxlength: "200" });
+    const out = el("div", { class: "crs-ask-answer", "aria-live": "polite" });
+    const go = el("button", { type: "submit", class: "btn btn-amber" }, "Design It");
+    const form = el("form", { class: "crs-ask", onsubmit: async (e) => {
+      e.preventDefault();
+      if (!input.value.trim()) return;
+      go.disabled = true;
+      try {
+        const got = await MIA.benchDesign(input.value.trim(), data.board.id);
+        if (!got.found) { fill(out, el("p", {}, "I don't have a design for that yet. I can do: " + got.designs.join(", ").toLowerCase() + ".")); return; }
+        fill(out, el("h3", {}, got.name), el("p", {}, got.about),
+          got.have.length ? el("p", { class: "dim" }, "You have: " + got.have.join(", ") + ".") : null,
+          got.need.length ? el("p", { class: "dim" }, "You'd need: " + got.need.join(", ") + ".") : null,
+          el("ol", { class: "crs-list" }, got.steps.map((s) => el("li", {}, s))),
+          el("p", { class: "dim" }, got.use),
+          got.libs.length ? el("p", { class: "dim" }, "Libraries: " + got.libs.join(", ")) : null,
+          el("div", { class: "row-buttons" },
+            el("button", { type: "button", class: "btn btn-amber", onclick: () => {
+              store(partsKey(), got.parts);
+              store("mia.labsim." + wiresKey(), got.wires);
+              MIAShell.refresh();
+            } }, "Put It On The Bench"),
+            MIAShell.copyButton(got.sketch, "Copy The Sketch", "btn btn-ghost btn-small")),
+          el("pre", { class: "crs-code" }, got.sketch));
+      } catch (err) {
+        fill(out, el("p", {}, err.message));
+      } finally { go.disabled = false; }
+    } }, el("div", { class: "crs-ask-row" }, input, go), out);
+    return section("Build me a…", el("p", { class: "dim" }, "Say what you want to make: MIA designs it for your board " +
+      "from her tested designs, with what you have, and puts it on the bench to check and change."), form);
+  }
+
   MIAShell.start(async () => {
     const data = await MIA.bench(boardId);
     if (!data.board) { fill($("panel"), el("p", { class: "empty" }, el("strong", {}, data.lookup.why))); return; }
@@ -102,6 +139,7 @@
     fill($("panel"),
       section("Your board and parts", el("label", { class: "sim-input" }, el("span", {}, "Board"), picker), placed,
         el("div", { class: "row-buttons" }, adding, add)),
+      designer(data),
       board,
       lookup(data),
       section("What you have", el("p", { class: "dim" }, "From your Component DB (the Workshop)."), mine));

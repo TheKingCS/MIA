@@ -68,7 +68,8 @@
       "simulate_lab",
       "start_drill",
       "import_part_spec",
-      "part_specs"
+      "part_specs",
+      "design_build"
     ],
     "actions": [
       "course.add",
@@ -140,6 +141,7 @@
       "start_drill": "observe",
       "import_part_spec": "act_with_approval",
       "part_specs": "observe",
+      "design_build": "observe",
       "partspec.add": "act_with_approval",
       "partspec.remove": "act_with_approval",
       "esplab.flash": "act_with_approval",

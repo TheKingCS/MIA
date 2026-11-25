@@ -173,11 +173,12 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
 
 def _lab_build_reply(context, conversation, prompt: str):
     """Building an ESP32 lab along with MIA, in code (core/esp32_sim.reply): a lab named to build, or "next step"
-    right after a step; None when the words aren't for it."""
-    from core import esp32_sim
+    right after a step; or one of My Bench's designs asked for ("build me a motion light", core/bench_designs.reply);
+    None when the words aren't for it."""
+    from core import bench_designs, esp32_sim
 
     try:
-        return esp32_sim.reply(context, conversation, prompt)
+        return bench_designs.reply(context, conversation, prompt) or esp32_sim.reply(context, conversation, prompt)
     except Exception:
         log.exception("Couldn't follow the lab's build")
         return None

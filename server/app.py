@@ -93,8 +93,8 @@ Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
 screen; /api/taught-skills/run, /answer and /stop move a run one step at a
 time, each step through its own gate.
 An achievement card closed is marked seen by POST /api/achievements/seen (AchievementsSeenRequest).
-The free build (web/bench.html): GET /api/bench, POST /api/bench/check and /api/bench/draft (core/free_build.py,
-core/part_specs.py). A course's labs (web/course.html), with the simulator at POST /api/labs/{course}/sim and Ask MIA at
+The free build (web/bench.html): GET /api/bench, POST /api/bench/check, /api/bench/design (core/bench_designs.py)
+and /api/bench/draft (core/free_build.py, core/part_specs.py). A course's labs (web/course.html), with the simulator at POST /api/labs/{course}/sim and Ask MIA at
 POST /api/labs/{course}/ask (core/lab_ask.py): GET /api/labs/{course} (core/lab_page.py) and POST /api/labs/{course}/read (LabReadRequest: his
 board's serial output read and the lab checked from it, core/esp32_lab.py).
 YouTube in Music: GET /api/music/youtube/search and POST /api/music/youtube/key (YouTubeKeyRequest); the
@@ -219,6 +219,12 @@ class BenchCheckRequest(BaseModel):
     board: str
     parts: list[dict] = []
     wires: list[list[str]] = []
+
+
+class BenchDesignRequest(BaseModel):
+    """"Build me a ..." on My Bench (POST /api/bench/design): his goal in words, and his board."""
+    goal: str
+    board: str = "esp32dev"
 
 
 class BenchDraftRequest(BaseModel):
@@ -665,7 +671,8 @@ def create_app(context: AppContext) -> FastAPI:
     A lab's read runs as long as the lab needs unless asked otherwise (2 to 30 seconds).
     The labs' routes take Build With Arduino too, with the board he chose (`board`).
     My Bench, the free build: GET /api/bench, POST /api/bench/check and /api/bench/draft (core/free_build.py,
-    core/part_specs.py)."""
+    core/part_specs.py).
+    "Build me a ..." on My Bench is POST /api/bench/design (core/bench_designs.py)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3329,6 +3336,19 @@ def create_app(context: AppContext) -> FastAPI:
             return free_build.check(request.board, request.parts, [tuple(w) for w in request.wires if len(w) == 2],
                                     part_specs.book(view).all())
         except (ValueError, TypeError, KeyError) as problem:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
+
+    @app.post("/api/bench/design")
+    def web_bench_design(request: BenchDesignRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """A design for his goal on his board (core/bench_designs.design), or the designs there are; nothing kept."""
+        from core import bench_designs
+
+        found = bench_designs.find(request.goal[:200])
+        if found is None:
+            return {"found": False, "designs": [d["name"] for d in bench_designs.DESIGNS.values()]}
+        try:
+            return dict(bench_designs.design(view_for(context, profile_id), found, request.board), found=True)
+        except ValueError as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
 
     @app.post("/api/bench/draft")
