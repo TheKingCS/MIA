@@ -30,7 +30,8 @@ DEFAULT_HOUR = 7
 # Bible", "the morning report from the greenhouse": the eleventh review)
 # what's in it, said: "tell me the weather and my day", never "tell me a joke" or "give me the egg count" (the Fable
 # review, 2026-11-25)
-_WHAT = r"\s+(?:the\s+|my\s+|a\s+|today'?s\s+)?(?:weather|day|schedule|calendar|briefing|brief|rundown|summary|agenda|plan)\b"
+_WHAT = (r"\s+(?:the\s+|my\s+|a\s+|today'?s\s+)?(?:weather|forecast|day|schedule|calendar|briefing|brief|rundown|"
+         r"summary|agenda|plan|news)\b")
 _ASK = r"(?:brief me\b|(?:tell|give|show|send|read)\s+me" + _WHAT + ")"
 _SET = re.compile(r"\b(?:every|each)\s+morning\b.{0,40}\b" + _ASK + "|"
                   r"\b" + _ASK + r".{0,40}\b(?:every|each)\s+morning\b|"
@@ -39,8 +40,10 @@ _SET = re.compile(r"\b(?:every|each)\s+morning\b.{0,40}\b" + _ASK + "|"
                   r"\bgive me\s+(?:a\s+|my\s+)?(?:daily\s+)?morning\s+(?:briefing|brief|summary|rundown)\s+(?:at|every)\b",
                   re.I)  # "give me a morning briefing at 8am" is a standing one; "give me my morning briefing" isn't
 # a negation or a question is never a setting: "don't stop the morning briefing", "did you stop it?"
-_NOT_A_SETTING = re.compile(r"\b(?:don'?t|do not|never|didn'?t|did you|why|won'?t|can'?t)\b|\?\s*$|"
-                            r"^\s*(?:can|could|will|would|did|do|does|is|are|what|how|when)\b", re.I)
+# ("can you stop the morning briefing", "please stop it, I don't need it" are asks: Fable's check)
+_NOT_A_SETTING = re.compile(r"\b(?:don'?t|do not|never)\s+(?:\w+\s+){0,2}(?:stop|cancel|start|give|send|turn|set|end|"
+                            r"pause)\b|\b(?:didn'?t|did you|why)\b|^\s*(?:did|do|does|is|are|what|how|when)\b|"
+                            r"^(?!\s*(?:can|could|will|would)\s+you\b).*\?\s*$", re.I)
 _OFF = re.compile(r"\b(?:stop|cancel|turn off|no more|end|pause)\s+(?:the\s+|my\s+)?(?:daily\s+)?morning\s+"
                   r"(?:briefing|brief|summary|report|rundown)s?\b", re.I)
 _AT = re.compile(r"\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?", re.I)

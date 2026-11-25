@@ -47,11 +47,19 @@ _OFFER = re.compile(r"\b(?:i can|i could|want me to|would you like|shall i|shoul
 _NOT_DONE = re.compile(r"\b(?:no|not|isn'?t|aren'?t|wasn'?t|nothing|never|none|there'?s no)\b(?! (?:problem|worries)\b)|"
                        r"^\s*(?:if|when|whenever|once|after|before|until)\b|\b(?:when|whenever|if|once) you\b|"
                        r"\bbefore (?:a|an|the|your|it)\b|\buntil (?:a|an|the|you)\b", re.I)
+# her own doing ("I've added", "I'll remind you") is a claim whatever follows it ("so you will not forget", "when you
+# get home": Fable's check); only a sentence that opens on a condition or how it works isn't
+_CONDITION_FIRST = re.compile(r"^\s*(?:if|when|whenever|once)\b", re.I)
+# a question back that says nothing was done yet: which one, when, what time (never "want me to add a label?")
+_CLARIFYING = re.compile(r"^\s*(?:which|what (?:time|day|date)|when|morning or|am or pm|do you mean|for (?:which|what)|"
+                         r"how many|how much|is that|did you mean)\b", re.I)
 # Words of his or someone's, not hers: anything in quotes ("I've scheduled the repair", drafted for him)
 _QUOTED = re.compile(r"\"[^\"]*\"|\u201c[^\u201d]*\u201d")
 # A turn whose answer is words for him to use, or a story, claims nothing of hers
-_WRITING = re.compile(r"\b(?:write|draft|compose|word|reply to|respond to|text|message|email|say to|tell (?:him|her|"
-                      r"them)|story|poem|joke|song|example|pretend|role-?play)\b", re.I)
+_WRITING = re.compile(r"^\s*(?:(?:help me|can you|could you|please)\s+)?(?:write|draft|compose|word)\b(?!\s+(?:a |an |"
+                      r"the )?(?:note|reminder|entry|list|task)\b)|\bwhat (?:should|do|would|can) i (?:say|text|write|"
+                      r"tell)\b|\b(?:tell|give|write) me a (?:story|poem|joke|song)\b|\b(?:story|poem|pretend|"
+                      r"role-?play)\b", re.I)
 
 HONEST = ("I didn't set that up: I couldn't do it from what you said, so nothing was added. Say it with what it is and "
           "when, like \"add check the oil to my calendar on Saturday\", and I'll put it there.")
@@ -69,14 +77,17 @@ _ASKED = re.compile(r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+|can you\s+|cou
 def _claiming(sentence: str, asked: bool = True) -> bool:
     """Pure logic. Whether one sentence says it did something to one of his records (`_RECORD`), and isn't an offer
     or a question, or promises to remind or notify him (`_PROMISE`); the "it's set" forms only when he asked for a
-    change (`asked`). Words in quotes, a negation and a condition (`_NOT_DONE`) claim nothing."""
+    change (`asked`). Words in quotes claim nothing; her own doing ("I've added") is a claim whatever follows, unless
+    the sentence opens on a condition (`_CONDITION_FIRST`); a negation (`_NOT_DONE`) clears only the "it's set" forms."""
     sentence = _QUOTED.sub(" ", sentence)  # words in quotes are someone's, never hers
     if _OFFER.search(sentence) or sentence.strip().endswith("?"):
         return False
-    if _NOT_DONE.search(sentence):
-        return False  # "No alarm is set", "when you ask, I set a reminder": nothing claimed
+    if _CONDITION_FIRST.search(sentence):
+        return False  # "When you ask, I set a reminder": how it works
     first_person = bool(_DONE.search(sentence)) and not _PASSIVE.search(sentence) and bool(_RECORD.search(sentence))
-    return first_person or bool(_PROMISE.search(sentence)) or (asked and bool(_PASSIVE.search(sentence)))
+    if first_person or _PROMISE.search(sentence):
+        return True  # her own doing, whatever follows it
+    return asked and bool(_PASSIVE.search(sentence)) and not _NOT_DONE.search(sentence)  # "No alarm is set" claims none
 
 
 def claims_done(text: str, asked: bool = True) -> bool:
@@ -91,12 +102,12 @@ def honest(context, prompt: str, text: str, keep: bool = True) -> str:
     they're due" with no reminder set), or HONEST when nothing would be left. The claim is kept in the Fix-It Log as
     `claimed_done` (never failing the turn), unless `keep` is False (a personal, journal or off-the-record turn: the
     seventh review).
-    Words drafted for him or a story are left alone, a question back keeps what she found, and a negation, a
-    condition or words in quotes are never a claim (the Fable review, 2026-11-25)."""
+    Words drafted for him (asked as writing, `_WRITING`) or a story are left alone, a clarifying question back
+    (`_CLARIFYING`) keeps what she found, and words in quotes are never a claim (the Fable review, 2026-11-25)."""
     asked = bool(_ASKED.search(prompt or ""))
     if _WRITING.search(prompt or "") and not asked:
         return text  # words drafted for him, or a story: never hers to check (the Fable review)
-    if asked and any(s.strip().endswith("?") for s in _SENTENCES.split(str(text or ""))):
+    if asked and any(s.strip().endswith("?") and _CLARIFYING.search(s) for s in _SENTENCES.split(str(text or ""))):
         asked = False  # a question back ("Which one?") means nothing was done, and what she found stays
     if not claims_done(text, asked):
         return text

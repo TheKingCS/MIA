@@ -6,7 +6,8 @@ The Fable review of the emergency floor and teaching (2026-11-25): a figure of s
 its own words (its real emergencies are in tests/test_first_aid_floor_never_misses.py); a follow-up naming an
 emergency the floor's last reply didn't cover is answered; freezer burn, a tree's wound and a nosebleed never get
 the floor's steps; the kitchen's water, a goat shelter, a margin of safety and a quote tweet aren't lessons; the bare
-word "power" never starts the outage drill.
+word "power" never starts the outage drill. Fable's check of those fixes: each kind is said once in a
+conversation and then the model helps, and a how-to's answer never stops a real emergency after it.
 """
 
 from types import SimpleNamespace
@@ -50,3 +51,20 @@ def test_the_word_power_alone_never_starts_the_outage_drill():
         assert found is None or getattr(found, "id", found) != "power_out", words
     found = drills.requested("give me a power outage drill")
     assert found is not None
+
+
+def test_the_floor_says_each_kind_once_in_a_conversation_then_the_model_helps():
+    history = []
+    for words in ("dad collapsed", "he's not breathing", "he's unconscious and not breathing, how deep do I push"):
+        said = floor.respond(words, history)
+        history.append(SimpleNamespace(role="user", content=words))
+        if said:
+            history.append(SimpleNamespace(role="assistant", content=said))
+    assert floor.respond("he's unconscious and not breathing, how deep do I push", history) is None
+
+
+def test_after_a_how_to_a_real_emergency_is_answered():
+    taught = floor.teach("how do you use a tourniquet")
+    assert taught
+    history = [SimpleNamespace(role="assistant", content=taught)]
+    assert floor.respond("it won't stop bleeding", history) is not None

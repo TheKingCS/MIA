@@ -78,7 +78,7 @@ the emergency floor (a7a2afbe: a figure of speech or a past clause takes out onl
 apostrophes, a person without "my", a follow-up with a new emergency answered, 43 more never-miss phrasings), every
 reply's cleaning (2ffafb90: the claim check never replaces a true reply, the repeat filter only back to back and
 never code, <tool_call> tags caught), and the routes that write and the records (710858c3: each acts only on what it
-reads whole; Feb 30 refused; a "null" date heals). 8570 passing. A Fable check of those fixes is running or due.
+reads whole; Feb 30 refused; a "null" date heals). 8570 passing. Fable checked those fixes (two regressions: the floor repeating itself, false claims let through) and its findings are fixed too (8575 passing).
 Q-0018 asks Zac whether the six routes that write should stay word patterns. Still open from the sweeps: hook sizes, deer
 season, field dressing, filament and warping, soldering: these want the offline knowledge packs or SearXNG (Zac's call).
 

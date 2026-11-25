@@ -11,6 +11,15 @@ false alarm is the accepted cost (one careful message with the number), and this
 from core import first_aid_floor as floor
 
 REAL = (
+    # Fable's check of the fixes, 2026-11-25
+    "my son is drowning in my pool", "my son is drowning in the neighbor's pool", "she's drowning in the hot tub",
+    "he's drowning in the stock pond", "my son is drowning in the swimming pool",
+    "his car's brakes failed, he's bleeding badly", "the power line fell on him and he's bleeding heavily",
+    "the hydraulic line burst and he's bleeding", "he fell off the tractor unresponsive",
+    "my husband is on the phone not responding", "the baby, it's not responding", "my dad is seizing up and shaking",
+    "i'm burning the pile and my sleeve caught fire", "wont wake up", "he aint breathing", "he cant breath",
+    "why isn't she breathing", "grandpa is seizing", "my son is turning blue", "the baby is blue",
+    "his shirt caught fire", "baby went limp", "he's knocked out",
     # the Fable review, 2026-11-25: a figure, a past clause, a missing apostrophe or a person without "my"
     "my son is drowning in the pool", "he is drowning in the lake help",
     "he was burning brush and his clothes caught fire", "he was burning leaves and now he is on fire",

@@ -606,11 +606,15 @@ _SPENT_WHEN = re.compile(r"\s+(?:on\s+)?(yesterday|today|last week|(?:last\s+)?(
 # What's left of "what it was for" that this route can't read whole (the Fable review, 2026-11-25): a day ("two days
 # ago", "last night", "on the 20th", "November 20"), a debt or a payment ("my student loans", "the car payment",
 # "the truck"), a retraction ("scratch that"), or money that fell ("on the floor")
-_NOT_WHOLE = re.compile(r"\b(?:ago|last|tonight|night|tomorrow|next|week|month|year|morning|afternoon|evening|"
-                        r"january|february|march|april|june|july|august|september|october|november|december|"
-                        r"jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec|the \d{1,2}(?:st|nd|rd|th)?|\d{1,2}/\d{1,2}|"
-                        r"loans?|cards?|mortgages?|payments?|installments?|scratch that|never ?mind|actually|wait|"
-                        r"floor|ground|post office|stamps)\b|^(?:the |my |our )?(?:truck|car|house|boat|van)$", re.I)
+_DAY_WORDS = (r"\b(?:ago|last|tonight|tomorrow|next|yesterday|on (?:monday|tuesday|wednesday|thursday|friday|"
+              r"saturday|sunday)|january|february|march|april|june|july|august|september|october|november|december|"
+              r"(?:on|in) (?:jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec)\b|the \d{1,2}(?:st|nd|rd|th)|"
+              r"\d{1,2}/\d{1,2})\b")
+# (Fable's check: "ground beef", "floor mats", "a week of groceries", "playing cards" are things bought)
+_NOT_WHOLE = re.compile(_DAY_WORDS + r"|\b(?:loans?|(?:credit|debit|store|my|the) cards?|mortgages?|payments?|"
+                        r"installments?|scratch that|never ?mind|actually|wait|post office|stamps)\b|"
+                        r"^(?:the )?(?:floor|ground)$|^(?:the |my |our )?(?:truck|car|house|boat|van)$", re.I)
+_DAY_LEFT = re.compile(_DAY_WORDS, re.I)
 
 
 def _spent_reply(context, prompt: str):
@@ -728,7 +732,8 @@ _UPKEEP_JOB = re.compile(r"\b(?:oil|filters?|brakes?|brake pads?|rotors?|tires?|
                          r"gutters?|caulk\w*|paint\w*|seal\w*|shingles?|roof|chimney|furnace|hoses?|chain|bar oil|"
                          r"air filter|fuel filter|shocks?|struts?|muffler|exhaust|headlights?|bulbs?|registration|"
                          r"tags?|emissions|smog|winteriz\w*|flush|gas cap|caps?|(?:body|brake|engine|paint) work|"
-                         r"pump|gauge|fuel \w+|starter|alternator|radiator|thermostat)\b", re.I)
+                         r"pump|gauge|fuel \w+|starter|alternator|radiator|thermostat|tune ?up|clutch|windshield|"
+                         r"glass|wheel bearings?|u-?joints?|ball joints?|tie rods?|axle|cv joints?)\b", re.I)
 
 
 def _assets(context) -> list:
@@ -913,9 +918,8 @@ def _project_time_reply(context, prompt: str):
     project of his (core/project_time.project_named); "how many hours have I put into the shed?" and "what did I work
     on this week?" run project_hours. "Log 2 hours on" something that's neither a project nor one of his machines is
     said as no such project, with his projects' names, only when the words say it's a project ("the shed build"); a
-    machine's ("the mower") stays its engine hours, and an oven timer or guitar practice is never one. "I spent 3
-    hours on the deck" needs the project's whole name; a day it doesn't read is the model's (the Fable review). None
-    otherwise."""
+    machine's ("the mower") stays its engine hours, and an oven timer or guitar practice is never one. A day it
+    doesn't read is the model's (the Fable review). None otherwise."""
     from core import project_time
     from core.budget_manager import read_date
 
@@ -926,7 +930,7 @@ def _project_time_reply(context, prompt: str):
     try:
         for n, pattern in enumerate(_TIME_ON):
             found = pattern.match(said)
-            if found and _NOT_WHOLE.search(found.group("p")):
+            if found and _DAY_LEFT.search(found.group("p")):
                 return None  # "on the deck on Saturday", "two days ago": a day it doesn't read is the model's
             if found and n == 0 and project_time.project_named(context, found.group("p")) is None \
                     and re.search(r"\b(?:build|project|job|remodel|rewire|renovation|reno|addition)\b", found.group("p"),
@@ -936,7 +940,7 @@ def _project_time_reply(context, prompt: str):
                     # "log 2 hours on the shed build" with no such project: said so with his projects, never a
                     # machine's hours (the live check); "log 2 hours on the mower" stays its engine's reading
                     return actions.execute(context, "log_project_time", {"project": found.group("p"), "hours": 1})
-            if found and project_time.project_named(context, found.group("p"), whole=n > 0) is not None:
+            if found and project_time.project_named(context, found.group("p")) is not None:
                 hours = project_time.hours_said(found.group("h"))
                 if not hours or hours > 24:
                     return None
