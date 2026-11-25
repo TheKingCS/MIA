@@ -126,7 +126,7 @@ AREA_WORDS = {
     "Money": r"money|financ\w*|budget\w*|business\w*|bills?|taxes|debts?|rentals?|insurance",
     "Home and land": r"homestead\w*|home|land|garden\w*|greenhouse|chickens?|hens|flock|power|house|kitchen|garage",
     "Health and growth": r"health|fitness|workouts?|learn\w*|skills?|growth",
-    "Your days and people": r"calendar|days?|schedule|people|family|friends|notes|email|inbox",
+    "Your days and people": r"calendar|schedule|people|family|friends|notes|email|inbox",  # never "these days"
     "Making things": r"woodwork\w*|workshop|shop|making|build\w*|crafts?|3d print\w*|electronics|projects?",
     "Outdoors": r"outdoors?|fishing|hunting|hik\w*|camping|survival|bushcraft|maps?|trips?",
     "Everyday": r"music|songs?|files|passwords",

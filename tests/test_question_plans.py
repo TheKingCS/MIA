@@ -9,7 +9,8 @@ morning sheet; and the review's
 cases (quoted names kept, estimate-only sheets worded, dates read as said, habits
 and a winter gone kept out, the weekend winning a weekend for winter work).
 A question a tool is built for (spending against his usual, what to make next, taxes to set aside, the coop's light,
-who owes him) is never these plans'."""
+who owes him) is never these plans'.
+A thank-you is never a plan, a source label comes off, and the time plan keeps its own example."""
 
 from datetime import date
 from types import SimpleNamespace
@@ -296,3 +297,25 @@ def test_a_question_a_tool_is_built_for_isnt_these_plans(said, plan):
     assert qp._not_for(plan, said), said
 
     assert not qp._not_for("next dollar", "where should my tax refund go?")
+
+
+
+def test_the_time_plans_own_example_is_still_its():
+    """"What am I spending too much time on?" is the time plan's (review 2026-11-24), "am I spending more than usual?"
+    isn't."""
+    assert not qp._not_for("time", "What am I spending too much time on?")
+    assert qp._not_for("time", "Am I spending more than usual?")
+
+
+
+def test_a_thank_you_is_never_a_plan_and_a_source_label_comes_off_an_answer():
+    """"Thanks, that's good to know" reaches no plan; "Dungeon. I don't have..." loses its label; an answer that
+    only begins with a word like it keeps it."""
+    assert qp.match_scored(None, "Thanks, that's good to know") is None
+    sheet = qp.Sheet("x", "x")
+    sheet.add(qp.FACT, "No pay rate.", "the Dungeon (their job)")
+    assert qp.without_source_label("Dungeon. I don't have your income.", sheet) == "I don't have your income."
+    assert qp.without_source_label("Dungeon\nYou're welcome.", sheet) == "You're welcome."
+    assert qp.without_source_label("Dungeons are fun.", sheet) == "Dungeons are fun."
+    assert qp.without_source_label("Dungeon\nThe fact sheet...", qp.Sheet("x", "x")) == "The fact sheet..."
+    assert qp._not_for("project picture", "How many solar panels would I need? We use 900 kWh a month")

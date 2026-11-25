@@ -21,8 +21,8 @@ MONTHS = ("january", "february", "march", "april", "may", "june", "july", "augus
 
 
 def span_of(words: str, today: date) -> tuple:
-    """Pure logic. (label, first day, last day) his words ask about: last month, this year, a month by name (the
-    latest one not after today), else this month; only a follow-up's own words count (before its " (after: ...)")."""
+    """Pure logic. (label, first day, last day) his words ask about: last month, this year, last year, a month by name
+    (the latest one not after today; "may" and "march" only with "in", "for"... or a year), else this month; only a follow-up's own words count (before its " (after: ...)")."""
     own = str(words or "").lower().split(" (after:")[0]
     first_of_month = today.replace(day=1)
     if "last month" in own:
@@ -30,8 +30,13 @@ def span_of(words: str, today: date) -> tuple:
         return f"in {end:%B}", end.replace(day=1), end
     if "this year" in own or "so far this year" in own:
         return f"so far in {today.year}", date(today.year, 1, 1), today
+    if "last year" in own:
+        return f"in {today.year - 1}", date(today.year - 1, 1, 1), date(today.year - 1, 12, 31)
     for n, name in enumerate(MONTHS, 1):
-        if re.search(rf"\b{name}\b", own):
+        # "may" and "march" are verbs too ("some tenants may be late"): only "in may", "for may", "may 2026"
+        pattern = (rf"\b(?:in|for|during|of|since) {name}\b|\b{name} (?:19|20)\d\d\b" if name in ("may", "march")
+                   else rf"\b{name}\b")
+        if re.search(pattern, own):
             year = today.year if n <= today.month else today.year - 1
             start = date(year, n, 1)
             end = (date(year + (n == 12), n % 12 + 1, 1) - timedelta(days=1))
@@ -77,7 +82,8 @@ def _tool(context, arguments: dict) -> str:
 
 
 def register_rent_collected_actions(registry) -> None:
-    """Registers rent_collected (its words its prompt_arg, so it's answered in code)."""
+    """Registers rent_collected (its words its prompt_arg, so it's answered in code).
+    Its triggers say collected or paid, never "what's a fair rent this month?"."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -88,7 +94,7 @@ def register_rent_collected_actions(registry) -> None:
                     "required": []},
         handler=_tool, prompt_arg="question",
         trigger_phrases=("rent did i collect", "rent have i collected", "rent came in", "rent collected",
-                         "rental income this", "rental income last", "how much rent", "who paid rent",
-                         "paid their rent", "rent this month", "rent last month"),
+                         "rental income this", "rental income last", "how much rent did", "how much rent have",
+                         "who paid rent", "paid their rent", "paid rent this", "rent come in"),
         subjects=("rent", "rental"),
     ))

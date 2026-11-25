@@ -42,6 +42,8 @@ greenhouse, flock, garden, orchard, water, power and tonight's weather (the
 plan "homestead"). A tool's quoted example holding a
 number ("I burn 4 cords a winter") is left off a sheet (`without_examples`):
 the model read examples as his records.
+A thank-you is never a plan's (THANKS), and a source label the model starts an answer with comes off
+(`without_source_label`).
 """
 
 from __future__ import annotations
@@ -1392,6 +1394,10 @@ CROSS_DOMAIN = ("afford", "slipped", "projects", "habits", "priorities", "resour
 # ---------------------------------------------------------------- choosing a plan
 
 
+THANKS = re.compile(r"^(thanks|thank you|thx|ty|ok|okay|got it|great|cool|sounds good|perfect|awesome|nice|good to "
+                    r"know|that's (great|good|helpful|perfect)|will do)\b", re.I)
+
+
 def match(context, prompt: str) -> Optional[Plan]:
     """The plan a question wants (the best-scoring of match_scored), or None."""
     found = match_scored(context, prompt)
@@ -1406,7 +1412,8 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
     example is in NOT_A_PLAN); by words only (no embedding model) it must
     look like a question. Either way, a plan never takes a question its `NOT_FOR` words give to a tool (the
     evening's plan never answers "will it frost tonight?"). A how-to counts as one about using MIA only when her tool
-    registry says so (`assistant_chat.about_mia`): "how should I pay off my debts?" can reach the debts plan."""
+    registry says so (`assistant_chat.about_mia`): "how should I pay off my debts?" can reach the debts plan.
+    A thank-you or a nod that asks nothing is never a plan's (THANKS)."""
     from core.assistant_actions import looks_like_question
     from core.assistant_chat import looks_like_how_to_question, looks_like_teaching_request
 
@@ -1414,6 +1421,8 @@ def match_scored(context, prompt: str) -> Optional[tuple[Plan, Optional[float]]]
     first = re.sub(r"^(please|hey mia|mia|ok|okay)[, ]+", "", said.lower()).split(" ", 1)[0].strip(",.!?")
     if not said or first in CHANGE_VERBS:
         return None
+    if THANKS.match(said) and "?" not in said:
+        return None  # a thank-you or a nod asks no plan anything ("thanks, that's good to know": live check)
     how_to = looks_like_how_to_question(said, context) or looks_like_teaching_request(said, context)
     from core.meaning import nearest
 
@@ -1471,6 +1480,7 @@ NOT_FOR = {
     # named isn't the picture's: "I want to build a 10 by 12 shed, what materials do I need?"; nor a question about
     # one he already has (what's due in it, how it's doing: by meaning "what's due in the greenhouse?" came close)
     "project picture": re.compile(r"\b(materials?|lumber|cut list|cuts|charge|price|quote|cost|costs|help me plan|"
+                                  r"how many (?:solar )?panels|panels (?:would|do) i need|kwh|size (?:a|my) solar|"
                                   r"hens?|chickens?|coop|laying|"
                                   r"let's plan|plan the|debts?|loans?|bills?|weather|frost|due|overdue|status|"
                                   r"how(?:'s| is) (?:the|my) \w+ (?:doing|going)|needs? doing|needs? done|readings?|"
@@ -1483,7 +1493,8 @@ NOT_FOR = {
     # run_assistant_turn, 2026-11-24): spending against his usual is spending_vs_usual, what to make next is
     # what_to_make_next, taxes to set aside are tax_set_aside, who owes him is who_owes_me, the coop's light is the
     # hens' (why_hens_not_laying)
-    "time": re.compile(r"\b(spend\w*|spent|money|eating out|groceries|bills?)\b", re.I),
+    "time": re.compile(r"\b(spend(ing)? (more|less) than|spend(ing)? money|spent \$|money|eating out|groceries|"
+                       r"bills?)\b", re.I),
     "progress": re.compile(r"\b(make next|for the shop|sell\w*|products?|running low|in stock)\b", re.I),
     "next dollar": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|owe in tax(es)?|taxes on|tax bracket|irs|"
                               r"self.?employment|estimated tax|quarterly tax)\b", re.I),
@@ -1744,15 +1755,29 @@ def request(context, conversation, prompt: str, today: Optional[date] = None) ->
     return messages, sheet
 
 
+def without_source_label(said: str, sheet: Sheet) -> str:
+    """Pure logic. The answer without a source label the model began it with ("Dungeon. I don't have...",
+    "Dungeon\nYou're welcome.", "Workshop. You're missing...": the sheet labels facts by the app they came from, and
+    the model sometimes says the label first; live checks 2026-11-24)."""
+    names = {re.sub(r"\s*\(.*\)$", "", re.sub(r"^the ", "", f.source.strip(), flags=re.I)).strip()
+             for f in sheet.facts if f.source}
+    names = {n for n in names if n and len(n.split()) <= 3} | {"Dungeon"}  # the protocol's own word for his job
+    label = re.compile(r"^\s*(?i:" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+                       + r")(?:[ \t]*[.:,][ \t]*\n*|[ \t]*\n+)")  # the label, then a stop or a line break
+    trimmed = label.sub("", said, count=1)
+    return trimmed if trimmed.strip() else said
+
+
 def finish(content: str, sheet: Sheet, prompt: str, context=None) -> str:
     """The model's answer when it keeps to the sheet's numbers; else the
     sheet in plain words (never a number MIA didn't look up), noted for the
     answers.numbers loop; and the sheet in plain words when everything on it
     is missing (nothing to word). Either way
-    without a stock opener or closer (core.response_composer.polish)."""
+    without a stock opener or closer (core.response_composer.polish).
+    A source label the answer begins with is taken off first."""
     from core.plain_words import strip_markdown
 
-    said = strip_markdown(content or "")
+    said = without_source_label(strip_markdown(content or ""), sheet)
     if not said:
         return sheet.plain()
     if sheet.facts and all(f.kind == MISSING for f in sheet.facts):

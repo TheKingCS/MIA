@@ -10,6 +10,7 @@ How: `cords_on_hand(items)` (pure) reads inventory records named as firewood (or
 never bungee or extension cords), in "cords" (full cords, 128 cubic feet) or "face cords"/"ricks" (the piece length
 over 48 inches of a cord: a third for 16-inch pieces), with fractions and words ("1 1/2 cords", "half cord"); a record
 whose amount it can't read is named, never guessed. `say(context)` compares and says what's short.
+"I burn about 4 cords a winter" is kept in code (`reply`, from core/quick_commands.py).
 """
 
 from __future__ import annotations
@@ -95,6 +96,23 @@ def _setting(context, key: str) -> Optional[float]:
         return float(value) if value not in (None, "") else None
     except (TypeError, ValueError, AttributeError):
         return None
+
+
+_BURN = re.compile(r"^\s*(?:i|we)\s+(?:usually\s+|probably\s+)?(?:burn|go through|use)\s+(?:about\s+|around\s+|"
+                   r"roughly\s+)?(\d+(?:\.\d+)?)\s+(face\s+)?cords?\b", re.I)
+
+
+def reply(context, text: str) -> Optional[str]:
+    """"I burn about 4 cords a winter" kept, in code (core/quick_commands.py): the model only echoed it (live check
+    through the whole turn, 2026-11-24). Then the firewood check against it. None for other words."""
+    found = _BURN.search(text or "")
+    if not found or "winter" not in (text or "").lower() and "year" not in (text or "").lower():
+        return None
+    from core.assistant_today_actions import _action_set_preparedness
+
+    cords = float(found.group(1)) * (1 / 3 if found.group(2) else 1)  # a face cord is about a third of a cord
+    kept = _action_set_preparedness(context, {"firewood_cords": round(cords, 2)})
+    return kept + " " + say(context)
 
 
 def say(context) -> str:

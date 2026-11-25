@@ -237,17 +237,21 @@ WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", 
 def days_meant(words: str, today: date) -> Optional[list]:
     """Pure logic. The days a question asks about ("Saturday", "the day after tomorrow", "this weekend", "this week",
     "tomorrow"), today on; only a follow-up's own words count (before its " (after: ...)"), so "and the day after?"
-    after "what's the weather tomorrow?" is the day after tomorrow. None when it names no day."""
+    after "what's the weather tomorrow?" is the day after tomorrow. None when it names no day.
+    A weekday named wins over "this week", and the weekend asked on a Sunday is that day."""
     own = str(words or "").lower().split(" (after:")[0]
     if "weekend" in own:
-        return [today + timedelta(days=i) for i in range(7) if (today + timedelta(days=i)).weekday() >= 5][:2]
+        if today.weekday() == 6:
+            return [today]  # asked on a Sunday: the weekend is today (review 2026-11-24: it said next Saturday too)
+        saturday = today + timedelta(days=(5 - today.weekday()) % 7)
+        return [saturday, saturday + timedelta(days=1)]
+    for n, name in enumerate(WEEKDAYS):  # a day named wins over "this week" ("wednesday this week")
+        if re.search(rf"\b{name}\b", own):
+            return [today + timedelta(days=(n - today.weekday()) % 7)]
     if "week" in own:
         return [today + timedelta(days=i) for i in range(7)]
     if "day after" in own:
         return [today + timedelta(days=2)]
-    for n, name in enumerate(WEEKDAYS):
-        if re.search(rf"\b{name}\b", own):
-            return [today + timedelta(days=(n - today.weekday()) % 7)]
     if "tomorrow" in own:
         return [today + timedelta(days=1)]
     if re.search(r"\b(?:today|tonight)\b", own):

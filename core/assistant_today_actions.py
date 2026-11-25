@@ -275,7 +275,8 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
     tests/test_everyday_phrasing_routing.py).
     The battery size is reached by "battery bank is" or "kWh battery", never "my battery is" ("my battery is at 20
     percent").
-    get_weather takes his words (its prompt_arg, so it's still answered in code) and says the day he names."""
+    get_weather takes his words (its prompt_arg, so it's still answered in code) and says the day he names.
+    firewood_check is reached by "how much firewood do I need for winter?" too."""
     registry.register(AssistantAction(
         name="get_today", domain="today",
         description=("Everything that needs the user today across all apps: overdue things, today's events, bills, "
@@ -411,7 +412,9 @@ def register_today_actions(registry: AssistantActionRegistry) -> None:
         parameters={"type": "object", "properties": {}, "required": []},
         handler=_action_firewood,
         trigger_phrases=("enough firewood", "enough wood for the winter", "how much firewood", "firewood do i have",
-                         "cords of wood", "cords of firewood", "wood for winter"),
+                         "cords of wood", "cords of firewood", "wood for winter", "firewood do i need",
+                         "firewood for winter", "firewood for the winter"),
+        subjects=("firewood", "cords", "wood"),
     ))
     registry.register(AssistantAction(
         name="emergency_kit", domain="today",

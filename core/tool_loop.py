@@ -44,6 +44,8 @@ loop runs only against this computer's Ollama (the phone's small model
 keeps one round). Pure orchestration: `run()` calls the model and the
 lookups it's given; the desktop runs it on its ChatWorker thread, the
 web and voice inside `run_assistant_turn`.
+A SAID_AS_IS answer drops a failed lookup to the usual path, a repeat, and a sibling's refusal (NOT_AN_ANSWER), and
+keeps the model's words for a two-part question's other part (`two_part`).
 """
 
 from __future__ import annotations
@@ -304,7 +306,9 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     (`_finish`, core/reference_reader.floor), with what the library was
     asked beside the question (a follow-up names its food there), and
     the guide's page looked up in code when the turn's reading missed it.
-    Lookups that are all SAID_AS_IS (safety numbers worded in code) are the answer as they are."""
+    Lookups that are all SAID_AS_IS (safety numbers worded in code) are the answer as they are.
+    SAID_AS_IS answers skip failures and repeats, and keep the model's words (never figures) for a two-part
+    question's other part."""
     from core.assistant_chat import settle_on_named_tool
     from core.question_plans import invented_numbers
 
@@ -382,8 +386,19 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
         reply = llm.chat_with_tools(talk + [{"role": "system", "content": ANSWER_ONLY}], [])  # never unasked
     if not results:
         return reply
-    if all(name in SAID_AS_IS for name, _t in results) and not (reply is not None and reply.tool_calls):
-        return _finish(context, prompt, asked, results, "\n\n".join(text for _n, text in results))
+    if (all(name in SAID_AS_IS for name, _t in results) and not (reply is not None and reply.tool_calls)
+            and not any(text.startswith("(The ") for _n, text in results)):  # a failed lookup goes the usual way
+        texts = list(dict.fromkeys(t for _n, t in results))  # the same answer twice is said once
+        answered = [t for t in texts if not t.startswith(NOT_AN_ANSWER)]
+        text = "\n\n".join(answered or texts)  # a sibling lookup's "I can't" never stands beside an answer
+        extra = ((reply.content if reply is not None else "") or "").strip()
+        # the model's own words for the question's other part: never figures (those are a squeezed copy of the
+        # tool's, "20 minutes, 10 lb, 1,000 ft": the live check)
+        if extra and two_part(prompt) and not re.search(r"\d", extra):
+            from core.plain_words import strip_markdown
+
+            text += "\n\n" + strip_markdown(extra)  # the model's answer to the question's other part
+        return _finish(context, prompt, asked, results, text)
     said = (reply.content if reply is not None else "") or ""
     sources = "\n".join(text for _n, text in results)
     strict = all(name in LIBRARY_TOOLS for name, _t in results)  # a reference's figures, small ones too
@@ -421,6 +436,19 @@ def run(context, llm, messages: list[dict], tools: list[dict], prompt: str, name
     from core.plain_words import strip_markdown
 
     return _finish(context, prompt, asked, results, strip_markdown(said))
+
+
+# How a SAID_AS_IS lookup says it couldn't answer (asks for a detail, or has no tested figure)
+NOT_AN_ANSWER = ("I only give", "How much meat", "How much water", "How much power", "I don't know your town",
+                 "The forecast I have doesn't")
+
+
+def two_part(prompt: str) -> bool:
+    """Pure logic. Whether a question asks two things ("how long for green beans, and can I reuse the lids?"): then a
+    SAID_AS_IS answer keeps the model's reply after the tool's (review 2026-11-24: the lids part was lost)."""
+    said = str(prompt or "").lower()
+    return said.count("?") >= 2 or bool(re.search(
+        r"\b(and|also|plus)\s+(can|could|should|do|does|is|are|will|how|what|why|when|where|which)\b", said))
 
 
 def _finish(context, prompt: str, asked: str, results: list, text: str) -> ChatReply:

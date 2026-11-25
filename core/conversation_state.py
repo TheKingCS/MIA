@@ -33,10 +33,13 @@ Not yet (the rest of section 5): which single record "it" means across
 any turn, and open questions MIA asked.
 A follow-up to a tool's answer outside a plan conversation is the model's, never a plan its words match
 (`follows_a_tool`).
+A tool's follow-up needs a lead (`_TOOL_LEADS`) or a bare "get ready", never a pronoun alone, and its note lives in
+a context variable (`_TURN`), one per thread and turn, cleared at the turn's end.
 """
 
 from __future__ import annotations
 
+import contextvars
 import re
 import time
 from dataclasses import dataclass
@@ -128,15 +131,16 @@ FOLLOW_BACK = 4  # messages back a tool's follow-up may reach (the last exchange
 
 def followed_question(context, conversation, prompt: str) -> Optional[str]:
     """The person's last question in this conversation that brought tools, when `prompt` is a short follow-up
-    (`looks_like_follow_up`, or a short "what about corn?"); else None. One that brings tools of its own still gets
+    that leads like one ("and...", "what about...", "what if...": `_TOOL_LEADS`) or ends in a bare "get ready"
+    (`_GET_READY`); else None. One that brings tools of its own still gets
     it ("what if I used 350 watt panels?" brings a power tool, and the sizing question's tools must come too: the
     caller routes on both). Only the last FOLLOW_BACK messages are searched, and only the person's own words."""
     registry = getattr(context, "assistant_actions", None)
     said = (prompt or "").strip()
     if registry is None or conversation is None or not said or len(said.split()) > MAX_WORDS:
         return None
-    if not (_LEADS.match(said) or _LEANS.search(said)):
-        return None
+    if not (_TOOL_LEADS.match(said) or _GET_READY.search(said)):
+        return None  # a pronoun alone ("thanks, that's good to know") is never a tool's follow-up (review 2026-11-24)
     before = [m for m in getattr(conversation, "messages", []) or []
               if not (getattr(m, "role", "") == "user" and str(getattr(m, "content", "")) == prompt)]
     for m in reversed(before[-FOLLOW_BACK:]):
@@ -148,42 +152,65 @@ def followed_question(context, conversation, prompt: str) -> Optional[str]:
     return None
 
 
+# What makes a short message a tool's follow-up: a lead, never a pronoun alone (review 2026-11-24: "thanks, that's
+# good to know" after the solar answer ran the sizing again)
+_TOOL_LEADS = re.compile(r"^(and|but|also|then|what about|how about|what if|and if|and what|and how|so what about)\b",
+                         re.IGNORECASE)
+_GET_READY = re.compile(r"\b(get ready|be ready|prepare|be prepared)\W*$", re.IGNORECASE)
+
 TURN_SECONDS = 180  # a turn's follow-up words are good this long (the model's reply and its lookups)
-_turn = {"prompt": "", "words": "", "follows": "", "named": "", "at": 0.0}
+# This turn's follow-up, in a context variable: each thread and each turn its own, so a phone turn and a desktop
+# turn at once never share it, and the desktop's chat worker carries its turn's copy (core/chat_worker.py). A turn
+# sets it at its start and clears it at its end (review 2026-11-24: a module dict leaked across turns and tests).
+_TURN: contextvars.ContextVar = contextvars.ContextVar("mia_turn_follow_up", default=None)
 
 
-def set_turn_follow_up(prompt: str, words: str = "", follows: str = "") -> None:
-    """Notes this turn's follow-up words and the question it follows (or that it isn't one) for the lookups it runs
-    (`turn_follow_up`, `turn_follows`). One turn at a time: MIA answers one message at a time per device, and a stale
-    note runs out after TURN_SECONDS."""
-    _turn.update(prompt=str(prompt or "").strip() if words else "", words=words or "", follows=follows or "",
-                 named="", at=time.monotonic())
+def set_turn_follow_up(prompt: str, words: str = "", follows: str = "", tools=()) -> None:
+    """Notes this turn's follow-up: its words, the question it follows and that question's tools (`tools`, the only
+    lookups its words may go to); or that it isn't one (no `words`)."""
+    _TURN.set({"prompt": str(prompt or "").strip(), "words": words, "follows": follows or "", "named": "",
+               "tools": frozenset(tools or ()), "at": time.monotonic()} if words else None)
+
+
+def clear_turn_follow_up() -> None:
+    """Clears the note at a turn's end."""
+    _TURN.set(None)
+
+
+def _current() -> Optional[dict]:
+    """The note for the turn running in this context, while fresh; else None."""
+    note = _TURN.get()
+    return note if note and time.monotonic() - note["at"] <= TURN_SECONDS else None
 
 
 def note_follow_up_tool(name: str) -> None:
-    """Notes the tool a follow-up was settled on from the question it follows (core/assistant_chat.named_tool)."""
-    _turn["named"] = name or ""
+    """Notes the tool a follow-up was settled on from the question it follows (core/assistant_chat.named_tool).
+    On this context's note only."""
+    note = _current()
+    if note is not None:
+        note["named"] = name or ""
 
 
 def follow_up_tool() -> str:
-    """The tool this turn's follow-up was settled on from its question (`note_follow_up_tool`), or ""."""
-    if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
-        return ""
-    return _turn["named"]
+    """The tool this turn's follow-up was settled on from its question (`note_follow_up_tool`), or "".
+    From this context's note only."""
+    note = _current()
+    return note["named"] if note else ""
 
 
 def turn_follows(prompt: str) -> str:
-    """The question this turn's message follows, when `prompt` is the follow-up being answered now; else ""."""
-    if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
-        return ""
-    return _turn["follows"] if _turn["prompt"] == str(prompt or "").strip() else ""
+    """The question this turn's message follows, when `prompt` is the follow-up being answered now; else "".
+    From this context's note only."""
+    note = _current()
+    return note["follows"] if note and note["prompt"] == str(prompt or "").strip() else ""
 
 
 def turn_follow_up() -> Optional[tuple]:
-    """(the follow-up's own words, the question a tool should be given) for the turn now running, or None."""
-    if not _turn["words"] or time.monotonic() - _turn["at"] > TURN_SECONDS:
-        return None
-    return _turn["prompt"], _turn["words"]
+    """(the follow-up's own words, the question a tool should be given, the tools it may go to) for the turn now
+    running, or None."""
+    note = _current()
+    return (note["prompt"], note["words"], note["tools"] | ({note["named"]} if note["named"] else set())) \
+        if note else None
 
 
 def follows_a_tool(context, conversation, prompt: str) -> Optional[str]:

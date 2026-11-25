@@ -2,7 +2,8 @@
 the model and it may look up more, a few rounds at most, never the same
 lookup twice; one answer at the end that never states a number the
 lookups didn't; a change is never run inside the loop.
-A safety lookup worded in code is said as it is, never the model's squeezed version."""
+A safety lookup worded in code is said as it is, never the model's squeezed version.
+A two-part answer keeps words, never a squeezed copy, and drops a sibling's refusal."""
 
 from types import SimpleNamespace
 
@@ -164,3 +165,36 @@ def test_a_safety_lookup_worded_in_code_is_said_as_it_is():
     finally:
         tl.loop_ok, tl._lookups_only = old
     assert got.content == said
+
+
+
+def test_a_two_part_answer_keeps_words_never_a_squeezed_copy_and_drops_a_siblings_refusal():
+    """The tool's beans answer, the model's lids sentence after it; a model reply of figures isn't added; a second
+    lookup's "I only give..." beside a real answer is left out."""
+    from types import SimpleNamespace
+
+    from core import tool_loop as tl
+    from core.llm_manager import ChatReply, ToolCall
+
+    beans = "Green beans go in the pressure canner: 25 minutes for quarts."
+    refusal = "I only give processing times I have from the USDA's tested tables."
+
+    def run(final, answers):
+        calls = [ToolCall(name="canning_time", arguments={"question": str(i)}) for i in range(len(answers))]
+        replies = iter([ChatReply(content="", tool_calls=calls), ChatReply(content=final, tool_calls=[])])
+        lookups = iter(answers)
+        registry = SimpleNamespace(execute=lambda context, name, args: next(lookups), _actions={})
+        llm = SimpleNamespace(chat_with_tools=lambda messages, tools=None: next(replies))
+        context = SimpleNamespace(assistant_actions=registry, config=None, failures=None, llm=llm)
+        old = (tl.loop_ok, tl._lookups_only)
+        tl.loop_ok, tl._lookups_only = (lambda context: True), (lambda context, calls: bool(calls))
+        try:
+            return tl.run(context, llm, [{"role": "user", "content": "q"}], [{"function": {"name": "canning_time"}}],
+                          "How long do I process green beans, and can I reuse the lids?").content
+        finally:
+            tl.loop_ok, tl._lookups_only = old
+
+    assert run("Lids are single-use; the bands can be reused.", [beans]) == \
+        beans + "\n\nLids are single-use; the bands can be reused."
+    assert run("25 minutes, 10 lb.", [beans]) == beans
+    assert run("", [beans, refusal]) == beans

@@ -53,15 +53,26 @@ def _number(words, pattern: str) -> Optional[float]:
 
 
 def say(context, what: str = "", words: str = "") -> str:
-    """The answer (see the module's opening); a question about the solar he has goes to the power picture."""
+    """The answer (see the module's opening); a question about the solar he has goes to the power picture.
+    A follow-up's own words decide its figures and whether it's the house or the essentials."""
     from core import eng_calcs, power_picture
 
     words = f"{what} {words}"
     if HAVE_ENOUGH.search(words):  # about the solar he has: the power picture's answer (live check 2026-11-24)
         return power_picture.say(context)
-    essentials = bool(re.search(r"essential|backup|off.?grid|well pump|freezer|outage|the pumps", words, re.I))
-    sun = _number(words, r"(?:peak\s*)?sun\s*hours?")
-    panel = _number(words, r"(?:w|watt)s?\b(?:\s*(?:solar\s*)?panels?)")
+    own = words.split(" (after:")[0]  # a follow-up's own words decide; the question it follows fills the rest
+
+    def figure(pattern):
+        """A number from the follow-up's own words, else from the whole."""
+        found = _number(own, pattern)
+        return found if found is not None else _number(words, pattern)
+
+    house = re.compile(r"whole house|the house|whole home", re.I)
+    backup = re.compile(r"essential|backup|off.?grid|well pump|freezer|outage|the pumps", re.I)
+    essentials = (bool(backup.search(own)) and not house.search(own)) if (house.search(own) or backup.search(own)) \
+        else bool(backup.search(words))
+    sun = figure(r"(?:peak\s*)?sun\s*hours?")
+    panel = figure(r"(?:w|watt)s?\b(?:\s*(?:solar\s*)?panels?)")
     inputs = {"sun": f"{sun:g} h"} if sun else {}
     if panel:
         inputs["panel"] = f"{panel:g} W"
@@ -73,9 +84,12 @@ def say(context, what: str = "", words: str = "") -> str:
                   f"typical homestead essentials ({daily:.3g} kWh a day: " + ", ".join(r["name"] for r in rows)
                   + "; tell me yours, like \"the well pump draws 1000 watts for an hour a day\")")
     else:
-        month = _number(words, r"kwh\s*(?:a|per|each)?\s*month")
-        day = _number(words, r"kwh\s*(?:a|per|each)\s*day")
-        bare = _number(words, r"kwh\b")  # the model often passes only "900 kWh": a month's at 100 or more, else a day's
+        month = _number(own, r"kwh\s*(?:a|per|each)?\s*month")
+        day = _number(own, r"kwh\s*(?:a|per|each)\s*day")
+        if month is None and day is None:  # none in the follow-up's own words: the question it follows
+            month = _number(words, r"kwh\s*(?:a|per|each)?\s*month")
+            day = _number(words, r"kwh\s*(?:a|per|each)\s*day")
+        bare = figure(r"kwh\b")  # the model often passes only "900 kWh": a month's at 100 or more, else a day's
         metered = house_kwh_day(context)
         if not (day or month) and bare:
             month, day = (bare, None) if bare >= 100 else (None, bare)

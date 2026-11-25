@@ -5,7 +5,9 @@ A follow-up that names no tool settles on its question's, called by code when th
 A follow-up to a tool's answer is the model's unless a plan is in progress, and a leaked role label is taken off.
 Getting ready for what was just said is a follow-up.
 What she can help with is said for the area named, the follow-up's area first.
-A reply that only says the question back is caught."""
+A reply that only says the question back is caught.
+A pronoun or a thank-you is never a tool's follow-up, the note goes only to the followed question's lookups and ends
+with the turn, and a copied humor line comes out."""
 
 from types import SimpleNamespace
 
@@ -165,14 +167,16 @@ def test_a_short_follow_up_to_a_tools_answer_brings_that_questions_tools():
 def test_a_lookup_on_a_follow_up_turn_gets_the_new_words_and_a_change_never_does(monkeypatch):
     """"What about 8 pounds?": a lookup gets the whole follow-up, its words and the question it follows, even when
     the model passed only the new words; a tool that changes records, or a turn that isn't a follow-up, keeps its
-    own."""
+    own.
+    Only for the lookups the followed question brought."""
     from types import SimpleNamespace
 
     from core import assistant_actions as aa
     from core import conversation_state as cs
 
     lookup = SimpleNamespace(parameters={"properties": {"question": {"type": "string"}}})
-    cs.set_turn_follow_up("What about 8 pounds?", "What about 8 pounds? (after: curing salt for 5 lb of bacon?)")
+    cs.set_turn_follow_up("What about 8 pounds?", "What about 8 pounds? (after: curing salt for 5 lb of bacon?)",
+                          "curing salt for 5 lb of bacon?", ["meat_cure", "add_note"])
     assert aa._with_follow_up(lookup, "meat_cure", {"question": "curing salt for meat"})["question"].startswith(
         "What about 8 pounds?")
     only_new = {"question": "what about 8 pounds"}  # the new words alone lose the earlier question's details
@@ -186,7 +190,8 @@ def test_a_lookup_on_a_follow_up_turn_gets_the_new_words_and_a_change_never_does
 
 
 def test_a_follow_up_that_names_no_tool_settles_on_the_one_its_question_named():
-    """"What about tomorrow?" after "is it too hot to work outside today?": the tool that question named."""
+    """"What about tomorrow?" after "is it too hot to work outside today?": the tool that question named.
+    The follow-up brings no tools of its own."""
     from types import SimpleNamespace
 
     from core import conversation_state as cs
@@ -198,6 +203,10 @@ def test_a_follow_up_that_names_no_tool_settles_on_the_one_its_question_named():
         def named_action(self, text, offered):
             """The tool a message names, if offered."""
             return "work_outside" if "work outside" in str(text).lower() and "work_outside" in offered else None
+
+        def matching_actions(self, text, context):
+            """No tools of the follow-up's own."""
+            return []
 
     context = SimpleNamespace(assistant_actions=Registry())
     tools = [{"function": {"name": "work_outside"}}, {"function": {"name": "get_weather"}}]
@@ -282,3 +291,69 @@ def test_a_reply_that_only_says_the_question_back_is_caught():
 
     assert echoes("How's my training going this week?", "how's my training going this week")
     assert not echoes("Your training this week: three workouts.", "How's my training going this week?")
+
+
+
+def test_a_pronoun_alone_or_a_thank_you_is_never_a_tools_follow_up():
+    """"Thanks, that's good to know" and "ok I'll keep that in mind" after a tool's answer: no follow-up; "and what
+    about corn?" and "what should I do to get ready?" are."""
+    from types import SimpleNamespace
+
+    from core.conversation_state import followed_question
+
+    class Registry:
+        """Tools for a canning question."""
+
+        def matching_actions(self, text, context):
+            """A tool when the words name canning."""
+            return ["tool"] if "process" in text.lower() else []
+
+    context = SimpleNamespace(assistant_actions=Registry())
+    conv = SimpleNamespace(messages=[SimpleNamespace(role="user", content="How long do I process green beans?"),
+                                     SimpleNamespace(role="assistant", content="25 minutes.")])
+    for said in ("Thanks, that's good to know", "Ok I'll keep that in mind", "That's great, thanks"):
+        assert followed_question(context, conv, said) is None, said
+    for said in ("And what about corn?", "What should I do to get ready?"):
+        assert followed_question(context, conv, said) == "How long do I process green beans?", said
+
+
+def test_the_follow_up_note_goes_only_to_the_earlier_questions_lookups_and_ends_with_the_turn():
+    """A lookup the earlier question didn't bring, or the library's search, keeps its own question; a cleared note is
+    gone."""
+    from types import SimpleNamespace
+
+    from core import assistant_actions as aa
+    from core import conversation_state as cs
+
+    lookup = SimpleNamespace(parameters={"properties": {"question": {"type": "string"}}})
+    cs.set_turn_follow_up("And corn?", "And corn? (after: beans?)", "beans?", ["canning_time"])
+    assert aa._with_follow_up(lookup, "canning_time", {"question": "x"})["question"] == "And corn? (after: beans?)"
+    assert aa._with_follow_up(lookup, "bleach_for_water", {"question": "x"}) == {"question": "x"}
+    assert aa._with_follow_up(lookup, "look_up_offline", {"question": "x"}) == {"question": "x"}
+    cs.clear_turn_follow_up()
+    assert aa._with_follow_up(lookup, "canning_time", {"question": "x"}) == {"question": "x"}
+
+
+def test_a_two_part_question_keeps_the_models_answer_to_its_other_part():
+    """"How long for green beans, and can I reuse the lids?" asks two things; one question doesn't."""
+    from core.tool_loop import two_part
+
+    assert two_part("How long do I process green beans, and can I reuse the lids?")
+    assert not two_part("How long do I process quarts of green beans?")
+
+
+
+def test_these_days_isnt_an_area():
+    """"What can you help me with these days?" is the whole overview."""
+    from core.capabilities import focus_areas
+
+    assert focus_areas("What can you help me with these days?") == []
+
+
+
+def test_a_humor_examples_own_line_copied_into_a_reply_is_taken_out():
+    """"A tragedy. We'll get through this together. Seriously, I'm glad..." keeps only its own words."""
+    from core.response_composer import polish
+
+    said = polish("A tragedy. We'll get through this together. Seriously, though, I'm glad I could help.")
+    assert said == "Seriously, though, I'm glad I could help."

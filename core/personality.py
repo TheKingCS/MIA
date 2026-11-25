@@ -32,6 +32,8 @@ surprise): `humor_for()` decides in code, by chance on a light turn only,
 when to nudge her toward one line of wit, in a flavor picked at random;
 how often is each person's own level (HUMOR_LEVELS, off to lots), set
 by asking in chat (core/assistant_humor_actions.py).
+A humor example's own line the model copies into a reply is taken out (`without_copied_example`, from
+core/response_composer.polish).
 """
 
 from __future__ import annotations
@@ -162,6 +164,21 @@ def light_moment(prompt: str) -> bool:
     text = prompt or ""
     return bool(text.strip()) and not (_NOT_FUNNY.search(text) or sounds_heavy(text) or detect_danger(text)
                                        or _DEEP.search(text))
+
+
+# The examples' own lines, which the model sometimes says word for word ("A tragedy. We'll get through this
+# together." after "thanks": live check through the whole turn, 2026-11-24)
+EXAMPLE_LINES = tuple(m.group(1) for _f, example in HUMOR_FLAVORS for m in [re.search(r'"(.+)"', example)] if m)
+
+
+def without_copied_example(text: str) -> str:
+    """Pure logic. The reply without a humor example's line copied into it (never her own wit, so it goes); the rest
+    stays, and a reply that was only the line stays as it was."""
+    kept = str(text or "")
+    for line in EXAMPLE_LINES:
+        kept = kept.replace(line, "")
+    kept = re.sub(r"^[\s.,!]+", "", kept).strip()
+    return kept[:1].upper() + kept[1:] if kept else str(text or "")
 
 
 def humor_line(prompt: str, roll: float, flavor_roll: float, chance: float = HUMOR_CHANCE) -> str:

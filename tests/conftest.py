@@ -328,3 +328,14 @@ def _never_exit_after_an_erase(monkeypatch):
 
     monkeypatch.setattr(home_link, "EXIT_AFTER_ERASE", False)
     monkeypatch.setattr(home_link, "other_folders", lambda config: [])  # never the checkout's photos or config
+
+
+
+@pytest.fixture(autouse=True)
+def _no_follow_up_note_between_tests():
+    """A turn's follow-up note (core/conversation_state) never reaches the next test."""
+    from core.conversation_state import clear_turn_follow_up
+
+    clear_turn_follow_up()
+    yield
+    clear_turn_follow_up()

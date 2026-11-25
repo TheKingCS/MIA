@@ -91,9 +91,13 @@ OFFERING = re.compile(r"\b(?:" + _INVITES + r")\b", re.I)
 
 
 def polish(text: str) -> str:
-    """Pure logic. The whole answer, for a screen: only the filler opening and
-    a last sentence that offers more help go. Lists, markdown and length stay."""
-    text = (text or "").strip()
+    """Pure logic. The whole answer, for a screen: only the filler opening,
+    a last sentence that offers more help, and a humor example's line copied
+    word for word (core/personality.without_copied_example) go. Lists,
+    markdown and length stay."""
+    from core.personality import without_copied_example
+
+    text = without_copied_example((text or "").strip())  # never a humor example's own line said as hers
     trimmed = FILLER.sub("", text).strip() or text
     trimmed = trimmed[:1].upper() + trimmed[1:]
     lines = trimmed.split("\n")

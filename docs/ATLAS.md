@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1747 files, 376,045 lines; 1747 files describe themselves; 20,633 of 20,763 classes and functions are documented.
+1747 files, 376,450 lines; 1747 files describe themselves; 20,655 of 20,785 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-696 files, 194,367 lines; 9,858 of 9,944 classes and functions documented
+696 files, 194,572 lines; 9,866 of 9,952 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -994,7 +994,7 @@
 
 ## tests/: the test suite: what each part must do
 
-645 files, 100,583 lines; 8,410 of 8,454 classes and functions documented
+645 files, 100,783 lines; 8,424 of 8,468 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1438,7 +1438,7 @@
 - `tests/test_relationships_module.py`: Unit tests for modules.relationships.module's pure row formatters — no Qt widget construction, same shape as tests/test_kitchen_module.py's own formatter tests.
 - `tests/test_relay_offers.py`: What the phone will offer the glasses through the relay (DEC-0064). Relay.kt holds the list; these keep it inside what the glasses may do at all.
 - `tests/test_relevance.py`: World Intelligence's relevance from the person's own records (W2, DEC-0170; core/relevance.py): a find that fits a goal, a project or the homestead plan's next step scores above one that only matched a watch, with a reason naming each record; it can fit several at once; a long record name needs two 
-- `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one.
+- `tests/test_rent_collected.py`: "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month read from his words, rent summed by property from his records with the total, and a property that paid before but not yet this month named; no properties says how to add one. "May" 
 - `tests/test_repertoire.py`: His songbook (core/repertoire.py): a song learned is dated in his own history, never twice on the same instrument, counted toward the Songbook achievements at once and by a mission objective, and taken back by "undo that".
 - `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
 - `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang
@@ -1492,7 +1492,7 @@
 - `tests/test_slicing.py`: Slicing for his printer (core/slicing.py): the printer read from Bambu Studio's settings, its stock profiles found, the print time and grams read from the G-code's header, a slice run through Bambu's command line (a stand-in here: never the real program in a test), and plain words when Bambu or a pr
 - `tests/test_smart_closet.py`: Smart Closet (DEC-0162): pieces and outfits, ratings, the day's suggestion worked out in code (weather, occasion, rest, colour), insights, the actions with undo, the page and the voice tools.
 - `tests/test_smart_suggestions.py`: Unit tests for core.smart_suggestions — no Qt, no manager instances, same shape as tests/test_budget_nudges.py.
-- `tests/test_solar_size.py`: "How many solar panels would I need?" (core/solar_size.py): from the kWh a month he says, else his meter's months, else he's asked for the kWh; the essentials off-grid with two days of battery, typical ones said as typical; his sun hours and panel size used, else 4 hours said as an assumption.
+- `tests/test_solar_size.py`: "How many solar panels would I need?" (core/solar_size.py): from the kWh a month he says, else his meter's months, else he's asked for the kWh; the essentials off-grid with two days of battery, typical ones said as typical; his sun hours and panel size used, else 4 hours said as an assumption. A fol
 - `tests/test_sound.py`: Sound (DEC-0028 #11): the engine says which win it was and MIA's line for it; the person's settings say whether to play and speak.
 - `tests/test_source_hygiene.py`: No control characters in the source (2026-11-06): a `\b` in a regex that became a real backspace on its way through a shell still compiles, and then silently never matches.
 - `tests/test_specialist_models.py`: Which local model does each specialist's thinking (core/specialist_models.py, DEC-0197): chosen from this PC's bench results in the worksheet's own mode, over the disciplines that specialist uses; a model that guesses a missing input doesn't pass however many it gets right; the best that didn't pass
@@ -1573,7 +1573,7 @@
 - `tests/test_waypoint_actions.py`: Waypoints from the web (core/waypoint_actions.py): added from a tap on the map, taken out from Navigation.
 - `tests/test_waypoint_manager.py`: Unit tests for core.waypoint_manager. haversine_distance_km() initial_bearing_degrees() are checked against real, well-known distances/bearings (New York <-> Los Angeles, London <-> Paris) rather than only synthetic values, so a sign error or unit mistake can't accidentally cancel out and still pass
 - `tests/test_waypoint_map_canvas.py`: Unit tests for gui.widgets.waypoint_map_canvas's project_waypoints() — pure math, no Qt/QWidget instantiation needed. See that module's own docstring for why this is a schematic layout, not a real map projection.
-- `tests/test_weather_days.py`: "What's the weather Saturday?" (core/weather.py `days_meant`, `say_days`): a weekday, the weekend, the day after tomorrow and this week read from his words (a follow-up's own words first), each day said from the week's forecast, and a day past it said as that.
+- `tests/test_weather_days.py`: "What's the weather Saturday?" (core/weather.py `days_meant`, `say_days`): a weekday, the weekend, the day after tomorrow and this week read from his words (a follow-up's own words first), each day said from the week's forecast, and a day past it said as that. A weekday this week, and the weekend on
 - `tests/test_weather_watch.py`: The forecast read against his confirmed garden plans and his flock (core/weather_watch.py, brainstorm 2.2): frost against tender crops in the ground, a hard freeze against half-hardy ones, a cold night against seedlings hardening off, heat and freezing water against the hens, rain likely tomorrow (b *(2 undocumented)*
 - `tests/test_web_about.py`: About MIA (DEC-0142, DEC-0057): the page reads every line from the facts, a missing source is a quiet gap, and how her apps are doing is counted by status on the asking device.
 - `tests/test_web_areas.py`: MIA's eight destinations and their subdashboards (DEC-0153, core/web_areas.py; the area hues from DEC-0130): the eight in Zac's order, every app and page with exactly one owner, every web page owned or listed as part of the frame, old area ids still opening, a hub listing its subdashboards, what the

@@ -5,6 +5,7 @@ tests.test_solar_size
 "How many solar panels would I need?" (core/solar_size.py): from the kWh a month he says, else his meter's months,
 else he's asked for the kWh; the essentials off-grid with two days of battery, typical ones said as typical; his sun
 hours and panel size used, else 4 hours said as an assumption.
+A follow-up's own figure and subject win.
 """
 
 from types import SimpleNamespace
@@ -43,3 +44,15 @@ def test_whether_his_solar_is_enough_is_the_power_pictures_answer(monkeypatch):
         "the power picture"
     assert solar_size.say(SimpleNamespace(), "", "is my solar enough") == "the power picture"
     assert solar_size.say(SimpleNamespace(), "", "do I have enough panels for the freezer?") == "the power picture"
+
+
+
+def test_a_follow_ups_own_figure_and_subject_win(monkeypatch):
+    """"What about 1200 kWh a month?" after 30 kWh a day: 1200 a month; "the whole house" after the essentials: the
+    house."""
+    monkeypatch.setattr(utility_bills, "kwh_used", lambda context, month: None)
+    said = solar_size.say(SimpleNamespace(), "", "what about 1200 kWh a month? (after: how many panels for 30 kWh a day)")
+    assert said.startswith("From the 1200 kWh a month you said")
+    house = solar_size.say(SimpleNamespace(), "", "what about the whole house at 900 kWh a month? (after: panels for "
+                                                  "the essentials, well pump)")
+    assert house.startswith("From the 900 kWh a month you said")

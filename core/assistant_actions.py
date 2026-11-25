@@ -182,7 +182,7 @@ def _whole(name: str, text: str) -> bool:
 
 def _with_follow_up(action, name: str, arguments: dict) -> dict:
     """The arguments, with a read-only lookup's "question" set to the turn's whole follow-up (its words, then the
-    question it follows): the model passed the earlier question unchanged ("what about 8 pounds?") or only the new
+    question it follows), for the lookups that question brought only: the model passed the earlier question unchanged ("what about 8 pounds?") or only the new
     words ("and if the water is cloudy?", losing the 3 gallons; live checks 2026-11-24;
     core/conversation_state.turn_follow_up)."""
     from core.conversation_state import turn_follow_up
@@ -191,7 +191,9 @@ def _with_follow_up(action, name: str, arguments: dict) -> dict:
     turn = turn_follow_up()
     if turn is None or "question" not in props or changes_records(name):
         return arguments
-    _said, words = turn
+    _said, words, tools = turn
+    if name not in tools or name in ("look_up_offline", "read_reference"):
+        return arguments  # only the lookups the earlier question brought; never the library's few-word search
     # always the whole follow-up (its words, then the question it follows): the model's own question kept the
     # new words but dropped the earlier question's detail ("and if the water is cloudy?" lost the 3 gallons)
     return {**(arguments or {}), "question": words}

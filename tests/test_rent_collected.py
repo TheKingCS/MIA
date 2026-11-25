@@ -5,6 +5,7 @@ tests.test_rent_collected
 "How much rent did I collect this month?" (core/rent_collected.py): this month, last month, this year or a named month
 read from his words, rent summed by property from his records with the total, and a property that paid before but
 not yet this month named; no properties says how to add one.
+"May" as a verb isn't May, and last year is the whole of it.
 """
 
 from datetime import date
@@ -42,3 +43,12 @@ def test_rent_by_property_and_the_one_not_paid_yet(monkeypatch):
     last = rc.say(SimpleNamespace(real_estate=estate), "last month", date(2026, 11, 24))
     assert last.startswith("Rent collected in October: $2,750.00 (Main St $1,800.00; Oak Ave $950.00)")
     assert rc.say(SimpleNamespace(real_estate=None)).startswith("No properties in MIA yet")
+
+
+
+def test_may_as_a_verb_and_last_year():
+    """"Some tenants may be late" isn't May; "in may" is; last year is the whole of it."""
+    today = date(2026, 11, 24)
+    assert rc.span_of("how much rent did I collect? Some tenants may be late", today)[0] == "so far this month"
+    assert rc.span_of("rent in may", today)[0] == "in May 2026"
+    assert rc.span_of("rent last year", today)[1:] == (date(2025, 1, 1), date(2025, 12, 31))

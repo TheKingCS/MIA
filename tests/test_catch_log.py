@@ -78,7 +78,8 @@ def test_a_length_copied_from_the_weight_and_an_unknown_spot_are_left_out():
 
 
 def test_my_biggest_bass_reaches_whats_biting():
-    """"What's my biggest bass?" and "how many fish have I caught?" name the catch log's answer."""
+    """"What's my biggest bass?" and "how many fish have I caught?" name the catch log's answer.
+    A catch-limit question doesn't."""
     from core.assistant_actions import AssistantActionRegistry
     from core.catch_actions import register_catch_actions
 
@@ -86,3 +87,4 @@ def test_my_biggest_bass_reaches_whats_biting():
     register_catch_actions(registry)
     for said in ("What's my biggest bass?", "How many fish have I caught this year?"):
         assert registry.named_action(said, ["whats_biting", "log_catch"]) == "whats_biting", said
+    assert registry.named_action("How many fish can I keep per day?", ["whats_biting", "log_catch"]) is None

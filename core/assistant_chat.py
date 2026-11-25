@@ -231,7 +231,8 @@ _NAMED_TOOL_NUDGE = ("The person asked for exactly this. Call {name} now with wh
 def named_tool(context, prompt: str, tools: list[dict]) -> Optional[str]:
     """The offered tool `prompt` names in its own words, if exactly one (see settle_on_named_tool); for a follow-up
     that names none ("what about tomorrow?"), the one the question it follows named ("is it too hot to work
-    outside?": the work-outside tool, never get_weather; core/conversation_state.turn_follows)."""
+    outside?": the work-outside tool, never get_weather; core/conversation_state.turn_follows).
+    Never the followed question's tool when the follow-up brings tools of its own."""
     from core.conversation_state import turn_follows
 
     registry = getattr(context, "assistant_actions", None)
@@ -243,7 +244,9 @@ def named_tool(context, prompt: str, tools: list[dict]) -> Optional[str]:
         from core.conversation_state import note_follow_up_tool
 
         follows = turn_follows(prompt)
-        named = registry.named_action(follows, names) if follows else None
+        # never when the follow-up brings tools of its own ("and I burn 4 cords a winter" is the setting's)
+        own = registry.matching_actions(prompt, context) if follows else []
+        named = registry.named_action(follows, names) if follows and not own else None
         note_follow_up_tool(named or "")
     return named
 
@@ -851,6 +854,7 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
     (core/conversation_state.followed_question), with a line saying which question; a lookup it runs gets the
     follow-up's words in its "question" (core/assistant_actions._with_follow_up).
     The turn is noted as a follow-up, with the question it follows, for the lookup and the tool it settles on.
+    The turn's note names the tools the followed question brought, the only lookups its words may go to.
     """
     mode = getattr(conversation, "mode", COMPANION) if conversation is not None else COMPANION
     if mode in PERSONAL_MODES or getattr(conversation, "journal", False):
@@ -874,7 +878,9 @@ def build_chat_request(context, conversation: "Conversation", prompt: str) -> tu
         routed = f"{follows} {prompt}"
     from core.conversation_state import set_turn_follow_up
 
-    set_turn_follow_up(prompt, follow_up_question(prompt, follows) if follows else "", follows or "")
+    follow_tools = [a.name for a in context.assistant_actions.matching_actions(follows, context)] \
+        if follows and context.assistant_actions is not None else []
+    set_turn_follow_up(prompt, follow_up_question(prompt, follows) if follows else "", follows or "", follow_tools)
     matched_actions = (
         context.assistant_actions.matching_actions(routed, context)
         if context.assistant_actions is not None and not is_teaching_request

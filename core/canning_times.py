@@ -23,6 +23,8 @@ before pressure. Read-only.
 potatoes, beets, dried beans, ground meat and stock are hot pack only; the fish time is tested only for fatty fish
 (salmon, trout, steelhead, mackerel, bluefish), so a lean fish like bass or catfish gets no time; never white-flesh
 peaches in a water bath; crushed tomatoes always acidified.
+Foods are matched as whole words, a near miss of a tested food gets no time (NOT_THESE), and a bare number is an
+altitude only when his town's elevation isn't known (`bare_feet`).
 """
 
 from __future__ import annotations
@@ -37,9 +39,9 @@ PRESSURE = {
     "carrots": (("carrot",), 25, 30, "sliced or diced"),
     "potatoes": (("potato",), 35, 40, "cubed, hot pack"),
     "beets": (("beet",), 30, 35, "hot pack"),
-    "peas": (("green pea", "peas", "pea "), 40, 40, "shelled, raw or hot pack"),
-    "dry beans": (("dry bean", "dried bean", "pinto", "kidney bean", "navy bean", "black bean"), 75, 90,
-                  "soaked and boiled first"),
+    "peas": (("green pea", "english pea", "pea"), 40, 40, "green or English, shelled, raw or hot pack"),
+    "dry beans": (("dry bean", "dried bean", "pinto", "kidney bean", "navy bean", "black bean", "dried pea",
+                   "dry pea", "chickpea", "garbanzo"), 75, 90, "beans or peas, dried: soaked and boiled first"),
     "meat": (("beef", "venison", "pork", "lamb", "meat", "stew meat", "ground"), 75, 90,
              "strips or cubes, hot or raw pack; ground, hot pack"),
     "chicken": (("chicken", "poultry", "turkey", "rabbit"), 75, 90, "boneless; bone-in is 65 minutes for pints and 75 for quarts"),
@@ -50,13 +52,19 @@ PRESSURE = {
 }
 # food: (words, {jar: (0-1000, 1001-3000, 3001-6000, above 6000 ft) minutes}, the pack)
 WATER_BATH = {
-    "crushed tomatoes": (("crushed tomato", "tomato"), {"pints": (35, 40, 45, 50), "quarts": (45, 50, 55, 60)},
+    "crushed tomatoes": (("crushed tomato",), {"pints": (35, 40, 45, 50), "quarts": (45, 50, 55, 60)},
                          "crushed, with 1 tablespoon bottled lemon juice a pint (2 a quart)"),
     "peaches": (("peach",), {"pints": (20, 25, 30, 35), "quarts": (25, 30, 35, 40)},
                 "yellow, hot pack in syrup or water; never white-flesh peaches"),
     "applesauce": (("applesauce", "apple sauce"), {"pints": (15, 20, 20, 25), "quarts": (20, 25, 30, 35)},
                    "hot"),
 }
+# Foods whose names come close to a tested one but whose times differ (review 2026-11-24: sweet potatoes got the
+# potatoes' 35/40 against the USDA's 65/90, acorn squash and corned beef corn's, smoked salmon salmon's 100 against
+# 110, whole tomatoes the crushed ones'): never a time; the tested-recipe answer instead.
+NOT_THESE = re.compile(r"\b(sweet potato\w*|yams?|acorn|butternut|squash|pumpkins?|split peas?|black.?eyed|"
+                       r"field peas?|cream.?style|corned|smoked|soups?|chili|salsa|pie filling|jams?|jelly|pickl\w*|"
+                       r"ground cherr\w*)\b", re.I)
 BANDS = ((1000, "up to 1,000 ft"), (3000, "1,001 to 3,000 ft"), (6000, "3,001 to 6,000 ft"), (None, "above 6,000 ft"))
 DIAL = ((2000, 11), (4000, 12), (6000, 13), (8000, 14))
 
@@ -74,17 +82,25 @@ def band(feet: float) -> int:
 
 
 def food_in(words: str) -> Optional[tuple]:
-    """Pure logic. ("pressure" or "water", the food's name) for the food his words name first (a follow-up puts the new
-    food first: "and corn? (after: ...green beans?)"), the longer name where two start together ("chicken stock" over
-    "chicken"), or None."""
-    said = f" {str(words or '').lower()} "
-    found = [(said.find(w), -len(w), "water", name) for name, (ws, _t, _p) in WATER_BATH.items() for w in ws if w in said]
-    found += [(said.find(w), -len(w), "pressure", name) for name, (ws, *_rest) in PRESSURE.items() for w in ws
-              if w in said]
-    if not found:
-        return None
-    _at, _n, how, name = min(found)
-    return how, name
+    """Pure logic. ("pressure" or "water", the food's name) for the food his words name first (a follow-up's own words
+    first: "and corn? (after: ...green beans?)"), as whole words, the longer name where two start together ("chicken
+    stock" over "chicken"); None for a food not in the table or a near miss of one (`NOT_THESE`)."""
+    text = str(words or "").lower()
+    own, _sep, before = text.partition(" (after:")
+    for said in (own, before):
+        if NOT_THESE.search(said) or ("tomato" in said and "crushed" not in said):
+            return None  # a near miss of a tested food (or tomatoes not crushed): no time from this table
+        found = []
+        for how, table in (("water", WATER_BATH), ("pressure", PRESSURE)):
+            for name, (ws, *_rest) in table.items():
+                for w in ws:  # whole words, a plural allowed ("potatoes", "peas"), never inside another
+                    hit = re.search(rf"\b{re.escape(w)}(?:e?s)?\b", said)
+                    if hit:
+                        found.append((hit.start(), -len(w), how, name))
+        if found:
+            _at, _n, how, name = min(found)
+            return how, name
+    return None
 
 
 def jar_in(words: str) -> str:
@@ -94,20 +110,30 @@ def jar_in(words: str) -> str:
 
 
 def feet_in(words: str) -> Optional[float]:
-    """Pure logic. An altitude he said ("at 1,200 feet", "2500 ft elevation", "800 m"), in feet, or None; a bare number
-    of three to five digits with no unit after it is feet too (the model passes "chicken, 1500": live check
-    2026-11-24), never a count of jars or minutes."""
+    """Pure logic. An altitude he said with its unit ("at 1,200 feet", "2500 ft elevation", "800 m"), in feet, or None.
+    A bare number is `bare_feet`'s, used only when his town's elevation isn't known."""
     got = re.search(r"(\d[\d,]*)\s*(feet|foot|ft|meters?|metres?|m)\b", str(words or ""), re.I)
     if got:
         value = float(got.group(1).replace(",", ""))
         return value * 3.28084 if got.group(2).lower().startswith("m") else value
-    bare = re.search(r"(?<![\d.])(\d{1,2},\d{3}|\d{3,5})(?![\d.]|\s*(?:%|lb|pounds?|minutes?|min|jars?|quarts?|pints?))",
-                     str(words or ""), re.I)
-    return float(bare.group(1).replace(",", "")) if bare else None
+    return None
+
+
+def bare_feet(words: str) -> Optional[float]:
+    """Pure logic. A bare number of three to five digits read as feet (the model passes "chicken, 1500": live check
+    2026-11-24); never a year (1900 to 2099), a temperature ("240 degrees"), a count of jars, minutes or pounds."""
+    for hit in re.finditer(r"(?<![\d.])(\d{1,2},\d{3}|\d{3,5})(?![\d.]|\s*(?:%|°|degrees?|lb|pounds?|minutes?|min|"
+                           r"jars?|quarts?|pints?))", str(words or ""), re.I):
+        value = float(hit.group(1).replace(",", ""))
+        if not 1900 <= value <= 2099:
+            return value
+    return None
 
 
 def _altitude(context, words: str) -> tuple:
-    """(feet, where it came from) from his words, else his town's elevation, else (None, "")."""
+    """(feet, where it came from) from an altitude he said with its unit, else his town's elevation, else a bare
+    number (`bare_feet`), else (None, ""): a bare number never overrides a known elevation (review 2026-11-24:
+    "in my 921" gave 10 lb where a town at 5,000 ft needs 15)."""
     said = feet_in(words)
     if said is not None:
         return said, "the altitude you said"
@@ -117,9 +143,10 @@ def _altitude(context, words: str) -> tuple:
         got = weather.card(context)
         if got.get("elevation") is not None:
             return float(got["elevation"]) * 3.28084, f"{got.get('place') or 'your town'}'s elevation"
-    except Exception:  # noqa: BLE001 - no forecast: asked
+    except Exception:  # noqa: BLE001 - no forecast: a bare number, else asked
         pass
-    return None, ""
+    bare = bare_feet(words)
+    return (bare, "the altitude you said") if bare is not None else (None, "")
 
 
 TESTED = ("Follow a tested recipe (the USDA's or the National Center for Home Food Preservation's) for preparing the "
@@ -129,12 +156,13 @@ TESTED = ("Follow a tested recipe (the USDA's or the National Center for Home Fo
 def say(context, words: str) -> str:
     """The answer for what he said (see the module's opening).
     A lean fish (bass, catfish) isn't in the USDA's tested fish time, so it gets the tested-recipe answer, never 100
-    minutes."""
+    minutes.
+    The altitude: one he said with its unit, else his town's, else a bare number."""
     found = food_in(words)
     if found is None:
         return ("I only give processing times I have from the USDA's tested tables (green beans, corn, carrots, "
-                "potatoes, beets, peas, dry beans, meat, chicken, stock, salmon or trout, crushed tomatoes, peaches, "
-                "applesauce). "
+                "potatoes, beets, green peas, dried beans or peas, meat, chicken, stock, salmon or trout, crushed "
+                "tomatoes, peaches, applesauce). "
                 "For anything else, use a tested recipe from the National Center for Home Food Preservation; never "
                 "guess a time.")
     how, name = found
@@ -176,7 +204,8 @@ def _tool(context, arguments: dict) -> str:
 
 
 def register_canning_time_actions(registry) -> None:
-    """Registers canning_time."""
+    """Registers canning_time.
+    Reached by "what pressure to can...", never a bare "what pressure" (tires)."""
     from core.assistant_actions import AssistantAction
 
     registry.register(AssistantAction(
@@ -190,5 +219,6 @@ def register_canning_time_actions(registry) -> None:
         handler=_tool, trigger_phrases=("how long do i process", "how long to process", "processing time",
                                         "process time", "pressure can", "pressure canner", "water bath",
                                         "water-bath", "how long to can", "how long do i can", "canning time",
-                                        "what pressure", "how many pounds of pressure"),
+                                        "pressure to can", "pressure for canning", "pressure should i can",
+                                        "pressure do i can", "pounds of pressure for"),
     ))

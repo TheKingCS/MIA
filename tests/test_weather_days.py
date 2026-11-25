@@ -5,6 +5,7 @@ tests.test_weather_days
 "What's the weather Saturday?" (core/weather.py `days_meant`, `say_days`): a weekday, the weekend, the day after
 tomorrow and this week read from his words (a follow-up's own words first), each day said from the week's forecast,
 and a day past it said as that.
+A weekday this week, and the weekend on a Sunday.
 """
 
 from datetime import date
@@ -31,3 +32,11 @@ def test_each_day_said_from_the_forecast_and_past_it_said_as_that(monkeypatch):
     said = weather.say_days(None, "what about Saturday?", date(2026, 11, 24))
     assert said == "In Springfield: Saturday: light rain, 54 and 39°F, a 60% chance of rain, gusts to 30 mph."
     assert "doesn't reach that far" in weather.say_days(None, "next Monday", date(2026, 11, 24))
+
+
+
+def test_a_weekday_this_week_and_the_weekend_on_a_sunday():
+    """"Wednesday this week" is Wednesday; the weekend asked on Sunday 2026-11-29 is that day; on Saturday both."""
+    assert weather.days_meant("what's the weather wednesday this week", date(2026, 11, 24)) == [date(2026, 11, 25)]
+    assert weather.days_meant("this weekend", date(2026, 11, 29)) == [date(2026, 11, 29)]
+    assert weather.days_meant("this weekend", date(2026, 11, 28)) == [date(2026, 11, 28), date(2026, 11, 29)]
