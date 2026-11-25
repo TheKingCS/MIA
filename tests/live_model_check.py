@@ -818,7 +818,8 @@ def _check_personal_reply(reply, expected, max_words, lists_ok) -> tuple[bool, s
 
 
 def _build_context() -> AppContext:
-    """A context with every store the golden cases use, on temporary data, and the real model."""
+    """A context with every store the golden cases use (the life-event history too), on temporary data, and the real
+    model."""
     config = ConfigManager()
     events = EventBus()
     context = AppContext(config=config, events=events)
@@ -869,6 +870,11 @@ def _build_context() -> AppContext:
     context.jobs = JobManager(context)
     context.products = ProductManager(context)
     context.ledger = LedgerManager(context)
+    from core.life_events import LifeEventLog
+
+    # the history the catch log, the songbook and the year's harvest read and write (core/core_runtime.py has it),
+    # on the temporary data
+    context.life_events = LifeEventLog(context, data_dir=_TEMP_DATA_DIR)
     context.conversations = ConversationManager(context)
     context.user_memories = UserMemoryManager(context)
     context.config.set("maps.trail_map_root_path", str(_TEMP_DATA_DIR / "trail_maps"))

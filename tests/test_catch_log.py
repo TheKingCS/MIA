@@ -5,6 +5,7 @@ tests.test_catch_log
 His catch log (core/catch_log.py): a fish kept in his own history with only what he said, a personal best said the
 moment it's one, what's been biting from his own catches, the Angler achievement at once, and the page and voice;
 a placeholder spot and a length copied from the weight are left out.
+"What's my biggest bass?" reaches the catch log's answer.
 """
 
 from core import catch_log, progress_history
@@ -73,3 +74,15 @@ def test_a_length_copied_from_the_weight_and_an_unknown_spot_are_left_out():
     assert cl.plausible_length(3, 3) is None and cl.plausible_length(18, 2.5) == 18
     assert cl.plausible_length(30, None) == 30
     assert cl._clean("unknown") == "" and cl._clean("N/A") == "" and cl._clean("the pond") == "the pond"
+
+
+
+def test_my_biggest_bass_reaches_whats_biting():
+    """"What's my biggest bass?" and "how many fish have I caught?" name the catch log's answer."""
+    from core.assistant_actions import AssistantActionRegistry
+    from core.catch_actions import register_catch_actions
+
+    registry = AssistantActionRegistry()
+    register_catch_actions(registry)
+    for said in ("What's my biggest bass?", "How many fish have I caught this year?"):
+        assert registry.named_action(said, ["whats_biting", "log_catch"]) == "whats_biting", said

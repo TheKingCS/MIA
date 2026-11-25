@@ -65,7 +65,8 @@ FISH_WORDS = ("fish", "fishing", "bass", "trout", "walleye", "catfish", "bluegil
 
 
 def register_catch_actions(registry) -> None:
-    """Registers log_catch and whats_biting, and the fishing words that offer them (`FISH_WORDS`, whole words)."""
+    """Registers log_catch and whats_biting (reached by "my biggest bass" and the other species too, live check
+    2026-11-24), and the fishing words that offer them (`FISH_WORDS`, whole words)."""
     registry.register_domain_keywords("expeditions", FISH_WORDS)
     registry.register(AssistantAction(
         name="log_catch", domain="expeditions",
@@ -87,5 +88,9 @@ def register_catch_actions(registry) -> None:
         parameters={"type": "object", "properties": {}},
         handler=_biting, trigger_phrases=("what's biting", "what's been biting", "been biting", "my catches",
                                           "my personal best", "biggest fish", "best bait", "fishing log",
-                                          "catch log"),
+                                          "catch log", "biggest catch", "best catch", "biggest bass",
+                                          "biggest trout", "biggest catfish", "biggest walleye", "biggest pike",
+                                          "biggest crappie", "biggest bluegill", "biggest perch", "biggest salmon",
+                                          "how many fish"),
+        subjects=(*FISH_WORDS, "catch", "caught"),  # what the question is about, for named_action
     ))
