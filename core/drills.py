@@ -8,7 +8,7 @@ it in a simulator first). A drill puts him in a situation and asks a few decisio
 best, fine or wrong, with why, written from the course's own sources (a survival drill from core/bushcraft.py's:
 US Army ATP 3-50.21, the BSA Fieldbook, the CDC and the EPA, and for a power outage the CDC on generators and
 carbon monoxide and the USDA on food in a fridge and freezer without power; the flock from land-grant extension
-backyard poultry guides; canning from core/gardening_path.py's, the USDA Complete
+backyard poultry guides; money from core/money_path.py's (the CFPB's guides on emergency savings and debt); canning from core/gardening_path.py's, the USDA Complete
 Guide to Home Canning and the NCHFP; a saw cut from core/carpentry.py's lessons, OSHA Subpart I among them). Pure
 logic; nothing kept.
 
@@ -269,6 +269,42 @@ DRILLS: tuple = (
                  ("Give her some of your own antibiotics", "wrong",
                   "Never: the wrong drug and dose, and some aren't allowed at all in birds whose eggs you eat.")),
           ), "flock_care"),
+    Drill("surprise_bill", "money", "A surprise bill",
+          "The truck needs a repair that costs about two weeks of your take-home pay. You have a small cushion saved, "
+          "a credit card, and rent from the rentals coming in at the month's end.",
+          (
+              _q("How do you pay for the repair?",
+                 ("Put it on the credit card and pay the minimum each month", "wrong",
+                  "Paying only the minimum, a card's interest makes the repair cost far more and for far longer."),
+                 ("Use the cushion, then rebuild it", "best",
+                  "That's what the cushion is for: no interest, and the plan for next month refills it."),
+                 ("A payday loan until the rent comes in", "wrong",
+                  "A payday loan's fees work out to a very high rate, and they're easy to roll over into more.")),
+              _q("Next month, what comes first?",
+                 ("Refill the cushion, from the month's plan", "best",
+                  "The next surprise is coming too; a refilled cushion keeps it off a card."),
+                 ("Stop saving for a while: you've earned a break", "wrong",
+                  "With the cushion low, the next surprise lands on a card."),
+                 ("Raise the cushion's target if repairs keep coming", "fine",
+                  "Reasonable once it's refilled; first get it back where it was.")),
+              _q("A slow month: the rentals bring in a third less. What first?",
+                 ("Skip the mortgage payment and catch up later", "wrong",
+                  "A missed payment brings late fees and a mark on your credit; it's the last thing to let go."),
+                 ("Cut the wants in this month's plan, cover the essentials and the bills, and use the cushion for any "
+                  "gap", "best",
+                  "Essentials and on-time payments first; the cushion bridges the rest, and gets refilled when it "
+                  "picks up."),
+                 ("Take money out of a retirement account", "wrong",
+                  "In many places that costs taxes and penalties, and the growth it would have had is gone.")),
+              _q("Then a tax refund arrives. Where does it go first?",
+                 ("Top up the cushion if it's low, then the highest-rate debt", "best",
+                  "A full cushion, then the debt that costs the most: the most good per unit of money."),
+                 ("Some to something you'll enjoy, the rest to the plan", "fine",
+                  "Fair, as long as most of it goes to the cushion and the dearest debt."),
+                 ("The lowest-rate debt, since it's easiest to finish", "wrong",
+                  "The highest rate costs you the most every month; unless you're working the snowball on purpose, "
+                  "start there.")),
+          ), "money_cushion"),
     Drill("first_cut", "carpentry", "Cutting a 2x6 to length",
           "You're cutting a 2x6 to length with a circular saw, the board across two sawhorses, the cut near the "
           "middle.",
@@ -318,6 +354,7 @@ def by_id(drill_id: str) -> Optional[Drill]:
 # Words that name a drill besides its title's ("the power outage drill", "a blackout drill").
 ALSO = {"power_out": ("power outage", "outage", "blackout", "power out", "generator", "power"),
         "flock_night": ("flock", "chicken", "chickens", "hens", "coop", "poultry"),
+        "surprise_bill": ("money", "finance", "budget", "surprise bill", "debt"),
         "canning_day": ("canning", "green beans"), "first_cut": ("circular saw", "saw")}
 
 

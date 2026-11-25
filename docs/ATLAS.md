@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1776 files, 383,841 lines; 1776 files describe themselves; 20,948 of 21,078 classes and functions are documented.
+1777 files, 383,983 lines; 1777 files describe themselves; 20,949 of 21,079 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-709 files, 199,679 lines; 10,050 of 10,136 classes and functions documented
+710 files, 199,807 lines; 10,050 of 10,136 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -402,6 +402,7 @@
 - `core/momentum.py`: Natural Momentum (DEC-0148; Zac, 2026-11-08: a morning where waking naturally and a cup of coffee led to the dishes, laundry, the kitchen, the development list and getting ready for work, quickly and without forcing it). MIA learns the conditions of those runs and helps them happen again, and stays 
 - `core/money_actions.py`: Every change the Money screen can make (2026-10-06, DEC-0017: the web does everything the PC app's Budget screen does), as action kinds on the contract in core/actions.py: Propose → Approve → Execute → Record → Undo.
 - `core/money_ahead.py`: The next 13 weeks of money, week by week (Jarvis brainstorm 6.1; Zac, 2026-11-23: "finance skills"): what's coming in and going out from the bills, income and debt payments he keeps in the budget, so the tight weeks show before they come. Worked out in code from his records; the model only says it. 
+- `core/money_path.py`: Money basics, a learning program on core/paths.py's method (Zac's goal: "the ultimate tool ... for my businesses skills, finance skills"; brainstorm round 13, drills for money): where it goes, a cushion, debt in the right order, and saving for later. Stages of lessons with why and what to watch for,
 - `core/more_actions.py`: Every change the Journal, Workshop, Expeditions, Music and Files screens make (Zac, 2026-10-16: "they are empty right now and just bring up a chat with MIA"), as action kinds on the contract in core/actions.py, most from the shared table in core/record_actions.py.
 - `core/music_manager.py`: Local audio library + playlists + real playback for the Music module (modules/music/module.py) — 2026-09-09. Replaces the pure-placeholder Music stub, closing the last remaining "pure stub module" in this project.
 - `core/my_files.py`: Files on the web (Zac, 2026-10-16: the Files app was empty on the phone). Each person has their own MIA files folder, `my_files/` inside their own data folder (core/personal_data.py), the same folder as their journal: upload from the phone, open, make folders, rename, delete. It is never the compute
@@ -1007,7 +1008,7 @@
 
 ## tests/: the test suite: what each part must do
 
-658 files, 102,169 lines; 8,527 of 8,571 classes and functions documented
+658 files, 102,183 lines; 8,528 of 8,572 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
