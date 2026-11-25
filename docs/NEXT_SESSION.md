@@ -40,6 +40,13 @@ the wrong plans; "The Dungeon." off answers. Still open from the sweep: "how muc
 wants a small calculator: built 2026-11-25, core/homestead_sums.py), and "how many fence posts for 200 feet?" reaching
 find_plans (fixed 81aa4292: a materials question with its size is answered in code). "How many days of water do I
 have?" matched three tools; now it says both, the pantry's drinking water and the property's stored water (60497434).
+Then a sixth review: the first-aid drills' practice exception had silenced real emergencies ("she choked at soccer
+practice and can't breathe", "I cut my hand with the drill"): fixed first (91a78048), with its other findings
+(fcdca1b9). A second sweep (money, business, hobbies, the everyday): a reply claiming a change no tool made is said
+honestly (core/claim_check.py, Fix-It kind claimed_done); "remind me to X on a day" goes on the calendar; the day his
+words name wins over a made-up date; "what's on my calendar tomorrow?" is tomorrow's (57992c89); the tax set-aside
+question reaches its tool (415bf3e1). At the PC: "remind me to check the oil Saturday", "what's on my calendar
+tomorrow?", "how much do I owe in quarterly taxes?". A seventh review of these is due.
 
 **Later 2026-11-24 (Zac's widened vision):** the homestead's brain (`docs/future/SMART_AG_PLAN.md`, phase A built:
 orchard, water, power, "how's the homestead?") and the hub and the engineer (`docs/future/HUB_AND_ENGINEER_PLAN.md`:

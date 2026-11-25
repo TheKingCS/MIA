@@ -48,6 +48,10 @@ spec, a started course keeps its own words, the lab routes' exclusions, BOOT nev
 passing. Then a live sweep's fixes: a cut-list drill, materials and concrete questions as lookups said as worked out,
 the calculators given his own words, how-tos from her courses' lessons (core/lesson_answer.py), and three plans kept
 off questions that weren't theirs. 8417 passing.
+Then a sixth review (the emergency floor quiet for an emergency at practice or with a drill: fixed first, and its seven
+other findings), a claim of a change no tool made never said (core/claim_check.py), reminders on a day and the day
+his words name on the calendar, the calendar asked for a day says that day, and the tax set-aside question at its
+tool. 8441 passing.
 
 **Later that night: a review, food safety checked, and real conversations.** A fresh reviewer found eleven problems
 in round 12 the tests passed (moon days, tax dates off weekends and holidays, a clock change, short days near the
