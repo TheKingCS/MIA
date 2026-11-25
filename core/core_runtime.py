@@ -120,6 +120,7 @@ from core.solar_size import register_solar_size_actions
 from core.canning_times import register_canning_time_actions
 from core.rent_collected import register_rent_collected_actions
 from core.calendar_move import register_calendar_move_actions
+from core.esp32_lab import register_esp32_lab_actions
 from core.assistant_screen_tools import register_screen_tools
 from core.assistant_toolbox_actions import register_toolbox_actions
 from core.assistant_waypoint_actions import register_waypoint_actions
@@ -362,7 +363,8 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     why_bill_high (core/utility_bills.py) spending_vs_usual (core/spending_pace.py) the catch log's tools (core/catch_actions.py) what_to_make_next (core/make_next.py) work_outside_wind_chill_heat_index (core/outdoor_work.py) tax_set_aside
     (core/tax_setaside.py) best_time_to_fish (core/fishing_times.py) why_hens_not_laying (core/hen_laying.py) meat_cure
     (core/meat_cure.py) size_solar (core/solar_size.py) canning_time (core/canning_times.py) rent_collected
-    (core/rent_collected.py) and move_calendar_event (core/calendar_move.py) are among them."""
+    (core/rent_collected.py) move_calendar_event (core/calendar_move.py) and the ESP32 lab bench's tools
+    (core/esp32_lab.py) are among them."""
     registry = context.assistant_actions
     registry.register(connectivity_action())
     register_journal_actions(registry)
@@ -408,6 +410,7 @@ def _register_core_assistant_actions(context: AppContext) -> None:
     register_canning_time_actions(registry)  # canning times for his altitude
     register_rent_collected_actions(registry)  # rent collected by property
     register_calendar_move_actions(registry)  # moving a calendar event
+    register_esp32_lab_actions(registry)  # the ESP32 lab bench
     register_screen_tools(registry)  # look it up online, what isn't working, past conversations (DEC-0125)
     register_dungeon_actions(registry)  # the Dungeon: shifts, loot, quests (DEC-0046)
     register_closet_actions(registry)  # Smart Closet: what to wear, outfits, ratings (DEC-0162)

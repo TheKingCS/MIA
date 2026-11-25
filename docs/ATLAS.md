@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1751 files, 377,398 lines; 1751 files describe themselves; 20,683 of 20,813 classes and functions are documented.
+1753 files, 377,764 lines; 1753 files describe themselves; 20,701 of 20,831 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-698 files, 195,329 lines; 9,879 of 9,965 classes and functions documented
+699 files, 195,621 lines; 9,893 of 9,979 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -227,6 +227,7 @@
 - `core/eng_calcs.py`: MIA's engineering calculators (the local specialists plan, S2 first part; DEC-0197): where a specialist's numbers come from.
 - `core/environment.py`: The real-vs-fictional boundary (DEC-0137): *shared intelligence, not shared authority.* MIA reuses the same primitives — entities, events, goals, progression — across real domains (missions, the garage, the homestead) and fictional ones (Living Worlds). This module is the one guarantee that keeps th
 - `core/equipment_actions.py`: Every change the Garage, Property, Greenhouse and Maintenance screens can make (2026-10-06, DEC-0017), as action kinds on the contract in core/actions.py, from one table (core/record_actions.py): assets (add, edit, delete), maintenance tasks (add, edit, delete), and logging a reading, on a task's me
+- `core/esp32_lab.py`: The lab bench for Build With ESP32 (core/esp32_path.py; the standard is docs/future/INTERACTIVE_LABS_PLAN.md): MIA builds a lab's sketch, flashes it to his board on his yes, and reads what the board says to check the lab.
 - `core/esp32_path.py`: Build With ESP32, MIA's first interactive lab course (Zac, 2026-11-25: "an interactive environment made for learning how to build with esp32's ... this could be used as a standard for other teaching areas"; the standard is docs/future/INTERACTIVE_LABS_PLAN.md). A learning path (core/paths.py: stages
 - `core/estate_actions.py`: Every change the Real Estate screen makes (2026-10-06, DEC-0017/0018), as action kinds on the contract in core/actions.py: properties (add, edit, delete, with the concept's status, rent and location), recording rent received and an expense against a property (both land in Money, tagged to it), "trac
 - `core/evening_wrap.py`: The evening wrap (DEC-0292; Zac, 2026-11-23: "Yes"): once an evening, two sentences: what got done today, then tomorrow's first thing and tomorrow's weather. Everything from his records, worked out in code: today's wins from the history (core/life_events.py), tomorrow's list (core/today.py, overdue 
@@ -996,7 +997,7 @@
 
 ## tests/: the test suite: what each part must do
 
-647 files, 100,974 lines; 8,439 of 8,483 classes and functions documented
+648 files, 101,048 lines; 8,443 of 8,487 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1162,6 +1163,7 @@
 - `tests/test_eng_bench.py`: The engineering bench (core/eng_bench.py, DEC-0197): each task's answer comes from MIA's own calculator, a reply is judged right, wrong, guessed, asked or unreadable, and a model is measured alone and with the calculators; a thinking model's working is left out, and only a readable value for a missi
 - `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing input named, never guessed, and no input's description offering a value a model co
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
+- `tests/test_esp32_lab.py`: The ESP32 lab bench (core/esp32_lab.py): a lab's PlatformIO project written (its libraries, its sketch, a Wi-Fi secrets file with placeholders he fills in himself), never flashed with the placeholders still there or without PlatformIO or a board; a flash runs pio's upload on the board's port; the bo
 - `tests/test_esp32_path.py`: Build With ESP32 (core/esp32_path.py): the course has a sound shape, every lab its parts and a sketch that prints the marker its check reads, the check passes from what the board said (seen, a mark, a spread, a range), a pass is kept as an attempt on his path, and "I want to learn ESP32" finds it.
 - `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.

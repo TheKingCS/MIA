@@ -54,6 +54,7 @@ EFFECTS: dict[str, tuple[str, str, str]] = {
     # device: can't be put back
     "myfile.delete": ("device", "irreversible", "deletes one of his files or folders for good"),
     "track.delete": ("device", "irreversible", "deletes a music file from the disk"),
+    "esplab.flash": ("device", "compensable", "writes a lab's sketch to his ESP32; flashing another sketch replaces it"),
     "security.picture_delete": ("device", "irreversible", "deletes a camera picture file"),
     "craft.photo_delete": ("device", "irreversible", "deletes a build photo file"),
     "expedition.media_delete": ("device", "irreversible", "deletes an expedition's photo or video file"),

@@ -247,7 +247,8 @@ def register_path_actions(registry) -> None:
     learning_progress, and the words that reach them (`LEARNING_WORDS`, the programs' names), so his own way of
     asking about woodworking, gardening, fitness or bushcraft finds them (tests/test_everyday_phrasing_routing.py).
     practice_today (read only, so MIA can answer it herself) is reached by "what should I practice on guitar
-    today?"."""
+    today?".
+    learning_lesson is reached by "what's my next ESP32 lesson?" too."""
     from core.assistant_actions import AssistantAction
 
     s = {"type": "string"}
@@ -275,7 +276,8 @@ def register_path_actions(registry) -> None:
             "topic": {**s, "description": "A lesson or (guitar) a chord, only if they named one."}, "path": path},
             "required": []},
         handler=_action_lesson,
-        trigger_phrases=("next lesson", "my lesson", "guitar lesson", "show me the", "chord shape", "teach me the"),
+        trigger_phrases=("next lesson", "my lesson", "guitar lesson", "show me the", "chord shape", "teach me the",
+                         "next esp32 lesson", "esp32 lesson", "next lab"),
         subjects=("lesson", "chord"),
     ))
     registry.register(AssistantAction(

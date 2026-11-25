@@ -484,6 +484,10 @@
   "action:broilers": {
    "status": "none",
    "why": "it makes one mission from fixed meat-breed weeks (core/broiler_batch.BREEDS); the steps are his to tick and the missions' own loops judge how missions go; no judgement of MIA's here to improve"
+  },
+  "action:esplab": {
+   "status": "none",
+   "why": "flashing a lab is his choice on a card; whether the lab worked is the board's own output judged in code (core/esp32_path.judge), with no judgement of MIA's in it to tune"
   }
  }
 }

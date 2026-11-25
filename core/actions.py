@@ -445,6 +445,7 @@ import core.repertoire_actions  # noqa: E402,F401  (song.learned: a song in his 
 import core.canning_fix  # noqa: E402,F401  (jars.correct: a batch of jars put up with the wrong count)
 import core.greenhouse_adjust  # noqa: E402,F401  (greenhouse.adjust: a target on the greenhouse node, DEC-0185)
 import core.outage_actions  # noqa: E402,F401  (outage.start, outage.end: the power outage clock)
+import core.esp32_lab  # noqa: E402,F401  (esplab.flash: a Build With ESP32 lab written to his board)
 import core.catch_actions  # noqa: E402,F401  (catch.log: a fish in his catch log)
 import core.account_actions  # noqa: E402,F401  (Profile, Settings)
 import core.system_helper  # noqa: E402,F401  (the system helper's three operations, FW-06)

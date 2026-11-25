@@ -58,7 +58,10 @@
       "search_textbook",
       "set_lesson_skill",
       "start_learning",
-      "practice_today"
+      "practice_today",
+      "flash_lab",
+      "check_lab",
+      "lab_board"
     ],
     "actions": [
       "course.add",
@@ -79,7 +82,8 @@
       "trade.next",
       "trade.plan",
       "trade.start",
-      "trade.stop"
+      "trade.stop",
+      "esplab.flash"
     ],
     "tiers": {
       "add_course": "act_within_grant",
@@ -117,7 +121,11 @@
       "trade.plan": "act_within_grant",
       "trade.start": "act_within_grant",
       "trade.stop": "act_within_grant",
-      "practice_today": "observe"
+      "practice_today": "observe",
+      "flash_lab": "act_with_approval",
+      "check_lab": "act_within_grant",
+      "lab_board": "observe",
+      "esplab.flash": "act_with_approval"
     },
     "outside": []
   },

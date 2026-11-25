@@ -37,9 +37,11 @@ never MIA's.
 
 ## The steps after
 
-1. **The lab bench, in code** (next): MIA builds a lab's sketch as a PlatformIO project, flashes it to his board on
-   his yes (the board found as the greenhouse provisioning finds it, core/greenhouse_provision.py), and reads its
-   serial port for the check. Tools: "flash the blink lab", "check my lab". Writing to hardware is always approved.
+1. **The lab bench, in code**: *built 2026-11-25 (core/esp32_lab.py).* A lab is a PlatformIO project in his labs
+   folder (its libraries, its sketch, a Wi-Fi secrets file with placeholders only he fills in); "flash the blink lab"
+   is an approval card (`esplab.flash`: it writes to the board), "check my lab" reads the board's serial port for a
+   few seconds and judges the lab's checks from what it said, and "is my ESP32 plugged in?" says the port and whether
+   PlatformIO is installed. On this PC PlatformIO isn't installed yet (`pip install platformio`, his call).
 2. **The lab page**: the course map (stages, labs, passed checks), a lab's goal, parts, wiring, sketch (copy or
    flash), a live serial monitor, the check, and "try this"; the same frame for every area, each area its own
    "see it" panel (the serial monitor, the guitar's ear, a photo).
