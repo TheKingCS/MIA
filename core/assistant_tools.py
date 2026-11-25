@@ -131,7 +131,7 @@ from core.budget_manager import (
     days_until_bill_due,
 )
 from core.budget_nudges import build_nudge_message
-from core.calendar_manager import RECURRENCE_TYPES as CALENDAR_RECURRENCE_TYPES
+from core.calendar_manager import CALENDAR_RECURRENCE_TYPES
 from core.connectivity import connectivity_action
 from core.context_assembler import (
     assemble_life_state,

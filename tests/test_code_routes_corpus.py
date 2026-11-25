@@ -58,7 +58,7 @@ EVERYDAY = (
     "make a quote for Sarah's cutting board", "send Sarah the deck quote", "did Sarah accept the deck quote?",
     # the eleventh review's: money that wasn't spent, and his own mornings
     "I got a quote for $3,000", "I got a refund for $20", "every morning I give the dog his meds",
-    "Every morning I read the Bible", "remind me every morning to give the dog his meds",
+    "Every morning I read the Bible", "remind me why I get up every morning",
 )
 
 
@@ -83,7 +83,8 @@ def routes(tmp_path):
     """Each code route, as a function of the words; a change route records instead of acting.
     What he spent is one of them.
     The morning briefing's reading of the words too.
-    And the job quote's."""
+    And the job quote's.
+    And the daily reminder's."""
     context = SimpleNamespace(paths=paths.PathBook(None, data_dir=tmp_path), kitchen=None, llm=None,
                               conversations=None,
                               assistant_actions=SimpleNamespace(execute=lambda c, n, a: f"ran {n}"))
@@ -95,6 +96,7 @@ def routes(tmp_path):
         "days of water": lambda w: turn._water_on_hand_reply(context, w),
         "reminder on a day": lambda w: turn._reminder_reply(context, w),
         "weekly reminder": lambda w: turn._weekly_reminder_reply(context, w),
+        "daily reminder": lambda w: turn._daily_reminder_reply(context, w),
         "drill": lambda w: drills.requested(w),
         "first-aid how-to": lambda w: first_aid_floor.teach(w),
         "spent": lambda w: turn._spent_reply(context, w),
@@ -110,6 +112,7 @@ MEANT = {
     "next lesson": "What's my next guitar lesson?", "days of water": "How many days of water do I have?",
     "reminder on a day": "remind me to check the oil Saturday",
     "weekly reminder": "remind me every Monday to check the water filter", "drill": "give me a choking drill",
+    "daily reminder": "remind me every morning to give the dog his meds",
     "first-aid how-to": "how do you use a tourniquet?", "lab": "walk me through building the pot lab",
     "spent": "I spent $30 on groceries",
     "job quote": "write a quote for Sarah's 12 by 16 deck",

@@ -126,7 +126,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
-    A quote from a job's words too (`_job_quote_reply`)."""
+    A quote from a job's words too (`_job_quote_reply`).
+    A daily reminder too (`_daily_reminder_reply`)."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -173,6 +174,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _reminder_reply(context, prompt)  # "remind me to check the oil Saturday", as in a turn
     if walked is None:
         walked = _weekly_reminder_reply(context, prompt)  # "remind me every Monday to ...", as in a turn
+    if walked is None:
+        walked = _daily_reminder_reply(context, prompt)  # "remind me every morning to ...", as in a turn
     if walked is None:
         walked = _spent_reply(context, prompt)  # "I spent $30 on groceries", as in a turn
     if walked is None:
@@ -355,6 +358,44 @@ _REMIND_EVERY = re.compile(
     r"(?:automate|set up|add|make|create|schedule)\s+(?:a\s+)?(?:weekly\s+)?reminder\s+(?:for\s+)?every\s+"
     + _EVERY.replace("(", "(?P<day2>", 1) + r"\s+to\s+(?P<what3>.+?))"
     r"(?:\s+at\s+(?P<h>\d{1,2})(?::(?P<m>\d{2}))?\s*(?P<ap>am|pm)?)?\s*[.!?]?\s*$", re.I)
+
+
+_REMIND_DAILY = re.compile(
+    r"^\s*(?:(?:hey\s+)?mia[,:]?\s+)?(?:please\s+)?(?:can you\s+|could you\s+|would you\s+)?remind me\s+"
+    r"(?:(?:to\s+(?P<what1>.+?)\s+)?(?:every|each)\s+(?P<part>morning|day|night|evening|afternoon)|daily)"
+    r"(?:\s+at\s+(?P<h>\d{1,2})(?::(?P<m>\d{2}))?\s*(?P<ap>am|pm)?)?(?:\s+to\s+(?P<what2>.+?))?"
+    r"(?:\s+at\s+(?P<h2>\d{1,2})(?::(?P<m2>\d{2}))?\s*(?P<ap2>am|pm)?)?\s*[.!]?\s*$", re.I)
+
+
+def _daily_reminder_reply(context, prompt: str):
+    """"Remind me every morning to give the dog his meds", "remind me daily to check the water", in code (the
+    eleventh review: it had no home, and the morning briefing took it): a daily event on his calendar from today,
+    through add_calendar_event (undoable), at the time said ("at 7", in the evening for "night" or "evening"). None
+    otherwise."""
+    from datetime import date as _date
+
+    found = _REMIND_DAILY.match(prompt.replace("’", "'"))
+    if not found:
+        return None
+    what = (found.group("what1") or found.group("what2") or "").strip().rstrip(",")
+    what = re.sub(r",?\s+(?:or|and|but)\s+(?:is|would|should|will|do|does|can)\b.*$", "", what, flags=re.I).strip()
+    if not what or "?" in what:
+        return None
+    args = {"title": what[:1].upper() + what[1:], "date": _date.today().isoformat(), "recurrence": "daily"}
+    hour_said, minute_said, ap = (found.group("h") or found.group("h2"), found.group("m") or found.group("m2"),
+                                  (found.group("ap") or found.group("ap2") or "").lower())
+    if hour_said:
+        hour, minute = int(hour_said), int(minute_said or 0)
+        later = ap == "pm" or (not ap and (found.group("part") or "").lower() in ("night", "evening", "afternoon"))
+        hour += 12 if later and hour < 12 else 0
+        hour = 0 if ap == "am" and hour == 12 else hour
+        if hour < 24 and minute < 60:
+            args["time"] = f"{hour:02d}:{minute:02d}"
+    try:
+        return context.assistant_actions.execute(context, "add_calendar_event", args)
+    except Exception:
+        log.exception("Couldn't put the daily reminder on the calendar")
+        return None
 
 
 def _weekly_reminder_reply(context, prompt: str):
@@ -691,6 +732,7 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     The morning briefing he asks for, set or turned off (`_morning_briefing_reply`).
     A quote from a job's words, a draft for his yes (`_job_quote_reply`).
     A tool call written out as the answer is never said (GARBLED_REPLY).
+    A reminder every day goes on the calendar daily (`_daily_reminder_reply`).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -800,6 +842,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _reminder_reply(context, prompt)  # "remind me to X on Saturday": on his calendar
         if walked is None:
             walked = _weekly_reminder_reply(context, prompt)  # "every Monday": a weekly event on his calendar
+        if walked is None:
+            walked = _daily_reminder_reply(context, prompt)  # "every morning": a daily event on his calendar
         if walked is None:
             walked = _spent_reply(context, prompt)  # "I spent $30 on groceries": an expense, undoable
         if walked is None:

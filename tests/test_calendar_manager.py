@@ -214,7 +214,8 @@ def test_occurs_on_weekly_matches_same_weekday_every_7_days():
 
 
 def test_occurs_on_unknown_recurrence_value_falls_back_to_exact_date():
-    event = _event("2026-06-15", recurrence="daily")  # not a supported value
+    """An unknown repeat (\"hourly\"; daily is a real one now) is the anchor date only."""
+    event = _event("2026-06-15", recurrence="hourly")  # not a supported value
     assert occurs_on(event, date(2026, 6, 15)) is True
     assert occurs_on(event, date(2026, 6, 22)) is False
 

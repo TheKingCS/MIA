@@ -51,7 +51,9 @@ log = get_logger(__name__)
 _DATA_DIR = DATA_DIR
 _EVENTS_FILE = _DATA_DIR / "calendar_events.json"
 
-RECURRENCE_TYPES = ["yearly", "monthly", "weekly", "biweekly"]
+RECURRENCE_TYPES = ["yearly", "monthly", "weekly", "biweekly"]  # bills and income use these (core/budget_manager.py)
+# A calendar event also repeats daily ("remind me every morning to ...", 2026-11-25); a bill or income never does
+CALENDAR_RECURRENCE_TYPES = RECURRENCE_TYPES + ["daily"]
 
 
 @dataclass
@@ -106,6 +108,7 @@ def date_recurs_on(anchor: date, recurrence: Optional[str], check_date: date) ->
     before the anchor. Monthly recurrence on a day that doesn't exist
     in a given month (the 31st in February) simply doesn't occur that
     month — never fabricated onto a nearby date.
+    Daily: every day from the anchor (a calendar event only).
     """
     if check_date < anchor:
         return False
@@ -119,6 +122,8 @@ def date_recurs_on(anchor: date, recurrence: Optional[str], check_date: date) ->
         return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 7 == 0
     if recurrence == "biweekly":
         return check_date.weekday() == anchor.weekday() and (check_date - anchor).days % 14 == 0
+    if recurrence == "daily":
+        return True  # every day from the anchor on (2026-11-25: a reminder every morning had nowhere to go)
     return check_date == anchor  # unknown recurrence value — fail safe to exact-date-only
 
 

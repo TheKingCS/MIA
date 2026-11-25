@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1812 files, 388,067 lines; 1812 files describe themselves; 21,143 of 21,269 classes and functions are documented.
+1813 files, 388,155 lines; 1813 files describe themselves; 21,146 of 21,272 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-716 files, 202,222 lines; 10,124 of 10,205 classes and functions documented
+716 files, 202,271 lines; 10,125 of 10,206 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1014,7 +1014,7 @@
 
 ## tests/: the test suite: what each part must do
 
-687 files, 103,830 lines; 8,648 of 8,693 classes and functions documented
+688 files, 103,869 lines; 8,650 of 8,695 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1141,6 +1141,7 @@
 - `tests/test_cross_domain.py`: Cross-domain reasoning (build plan step 8): questions that span apps gather several plans onto one sheet; "can I afford it and still hit my freedom date" is worked out by the freedom plan twice; every plan answer says how sure it can be, from the sheet, and answers.calibration checks that "sure" is 
 - `tests/test_curriculum.py`: MIA's curriculum (core/curriculum.py, DEC-0107): the tracks are whole and point at real files, mastery is counted from the nights' lessons, the next objective takes the tracks in turn, security lessons carry their rules, a night of school sets one lesson for it, and it all runs on the same learning-
 - `tests/test_daily_occasions.py`: Unit tests for core.daily_occasions' pure decision logic — no Qt, no real clock, no manager instances needed.
+- `tests/test_daily_reminder.py`: A reminder every day goes on the calendar (core/assistant_turn._daily_reminder_reply; the eleventh review: "remind me every morning to give the dog his meds" had nowhere to go): a daily event from today, at the time said ("every night at 9" is 21:00), undoable through add_calendar_event; the calenda
 - `tests/test_dashboard_module.py`: Unit tests for modules.dashboard.module's pure functions, same style as tests/test_expeditions_module.py (no Qt event loop, no fixtures).
 - `tests/test_dashboard_telemetry.py`: The dashboard's system numbers (core/dashboard_telemetry.py): uptime as "3h 42m" and network speed in Mb/s from two byte-counter readings.
 - `tests/test_dashboard_week.py`: The Dashboard's DEC-0153 cards (Zac, 2026-11-11): Your Week (core/today.week_days, each due thing on its day once, by voice too), the weather (core/weather.py: the town found and kept as the person's own, the forecast read into words, never online from a test), the mission in play with its next obje
