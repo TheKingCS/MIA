@@ -344,6 +344,38 @@ New ideas, each checked against what's there first:
 - *Built 2026-11-24 too:* his rain gauge (`log_rain`, counted by "should I water?") and a batch of meat birds to
   processing day (`core/broiler_batch.py`).
 
+## Round 15 (2026-11-25, night): what the Fable reviews and nine more sweeps showed
+
+A Fable review of the whole day, two Fable audits of every tool that writes a record, and sweeps 11 to 16 found three
+shapes: the emergency floor missing real emergencies a figure of speech sat beside (fixed: a veto takes out only its
+own words), the local model filling tool details with placeholders (fixed: every call is cleaned first,
+core/tool_args.py), and word-pattern routes that write records misreading everyday sentences (narrowed; Q-0018 asks
+about retiring them). Ideas from that, each with what it needs:
+
+- **Home emergencies on the floor** (built 2026-11-25): a fire, a gas leak and carbon monoxide had reached nothing;
+  now get out first, call from outside. *Next, no decision:* a frozen or burst pipe (the main shutoff first), a
+  chimney fire, a downed power line on the property, flooding in the basement (the breaker), each in fixed words.
+- **Ask before it's written** (Q-0018, his say): a route that would record from his words says what it would do in one
+  line ("Log $30 under Groceries today?") and a yes does it, for the six routes the reviews kept finding wrong.
+- **The model picks, code checks** (Q-0018, his say): the model chooses the tool; code checks each detail against his
+  words (the amount said, a date it reads, a project he has) before anything is written. The arguments cleaning is
+  the first half of it.
+- **Every weak tool description, from the misses** (no decision): the failure log already counts a tool refused for
+  a placeholder; rank tools by those and rewrite the worst descriptions first, so the model stops guessing.
+- **Courses for his other hobbies** (needs him: which are his): fishing and soldering are built; hunting (seasons by
+  state, field dressing, safety), 3D printing (filament, bed adhesion, warping), small engines (a carburetor, a pull
+  start), each only if it's his.
+- **His catches and the weather** (no decision): "when's a good time to fish?" from his own catch log's best hours and
+  the forecast's pressure and wind, never folklore.
+- **Holidays in his week** (no decision): a holiday coming (core/holidays.py) said in the week ahead and the morning
+  briefing, with what it moves (a bill due, the dump closed).
+- **Yesterday's conversation, recalled** (no decision): "what did I tell you yesterday?" answered with a short summary
+  of yesterday's kept conversations (core/conversation_export already summarises one), not only their titles.
+- **Shop mode by voice** (his say: how it starts): conversions are now worked out in code; with the cut list read one
+  cut at a time and timers, the shop is hands-free.
+- **A nightly sweep on the PC's model** (needs the PC): the sweeps found most of today's bugs; run the corpus of real
+  phrasings through the whole turn every night and put the misses in the Fix-It Log for the next session.
+
 ## Round 14 (2026-11-25, late): what four live sweeps and ten reviews showed
 
 Four sweeps of everyday questions through the whole turn on the PC's model, and ten fresh reviews, found the same
