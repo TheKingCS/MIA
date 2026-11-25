@@ -357,8 +357,9 @@ New ideas, each checked against what's there first:
 - **A third sweep through the whole turn** (no decision): *fixed 2026-11-24.* "How prepared am I for an emergency?"
   went to the coming-up plan (now the preparedness answer, in code); "the power just went out" and "how long is the
   freezer good?" missed the outage clock; a songbook said "Wagon Wheel (None)"; "and if the water is cloudy?" lost
-  the 3 gallons and didn't lead with the doubled dose. The live check now has the greenhouse link the app has. *Seen,
-  not changed:* "what should I do to get ready?" after a storm answer still goes to the coming-up plan.
+  the 3 gallons and didn't lead with the doubled dose. The live check now has the greenhouse link the app has. And
+  "what should I do to get ready?" after a storm answer went to the coming-up plan: a bare "get ready" or "prepare"
+  at the end now leans on what was just said (core/conversation_state._LEANS).
 - **Plans that took a tool's question** (no decision): *fixed 2026-11-24.* Through the whole turn, "am I spending more
   than usual?" went to the time plan, "what should I make next?" to progress, "how much should I set aside for taxes?"
   to the next dollar (its answer began "Dungeon."), "should I add a light in the coop?" to the project picture: each

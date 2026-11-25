@@ -48,7 +48,10 @@ MAX_WORDS = 10
 _LEADS = re.compile(r"^(and|but|so|ok|okay|also|then|why|how come|what about|how about|what if|tell me more|more|"
                     r"what else|anything else|is that|are those|does that|which one|how much is that|explain|"
                     r"go on|really|wait)\b", re.IGNORECASE)
-_LEANS = re.compile(r"\b(it|that|this|those|these|them|they|there|the first one|the other one|same)\b", re.IGNORECASE)
+_LEANS = re.compile(r"\b(it|that|this|those|these|them|they|there|the first one|the other one|same)\b"
+                    # "what should I do to get ready?" after a storm: getting ready for what was just said (never
+                    # "get ready for work", which names its own)
+                    r"|\b(get ready|be ready|prepare|be prepared)\W*$", re.IGNORECASE)
 
 
 @dataclass

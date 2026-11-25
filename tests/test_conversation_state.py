@@ -2,7 +2,8 @@
 a short follow-up goes back to the last question plan, with both questions; a follow-up to a tool's answer brings
 that question's tools, and the lookup it runs gets the follow-up's words, never a change.
 A follow-up that names no tool settles on its question's, called by code when the retry answers in text.
-A follow-up to a tool's answer is the model's unless a plan is in progress, and a leaked role label is taken off."""
+A follow-up to a tool's answer is the model's unless a plan is in progress, and a leaked role label is taken off.
+Getting ready for what was just said is a follow-up."""
 
 from types import SimpleNamespace
 
@@ -249,3 +250,13 @@ def test_a_role_label_the_model_leaks_is_taken_off_its_reply():
     assert without_role_label("assistant\n\n25 minutes for quarts.") == "25 minutes for quarts."
     assert without_role_label("Assistant:\n25 minutes.") == "25 minutes."
     assert without_role_label("Your assistant pump runs 24 hours.") == "Your assistant pump runs 24 hours."
+
+
+
+def test_getting_ready_for_what_was_just_said_is_a_follow_up():
+    """"What should I do to get ready?" leans on the storm before it; "how do I get ready for work?" doesn't."""
+    from core.conversation_state import looks_like_follow_up
+
+    assert looks_like_follow_up("What should I do to get ready?")
+    assert looks_like_follow_up("How should I prepare?")
+    assert not looks_like_follow_up("How do I get ready for work?")
