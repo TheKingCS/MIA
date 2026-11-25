@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1718 files, 371,776 lines; 1718 files describe themselves; 20,403 of 20,533 classes and functions are documented.
+1720 files, 371,975 lines; 1720 files describe themselves; 20,415 of 20,545 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-682 files, 191,429 lines; 9,717 of 9,803 classes and functions documented
+683 files, 191,583 lines; 9,725 of 9,811 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -605,6 +605,7 @@
 - `core/usage_tracker.py`: Per-module usage tracking — "has the user ever actually opened X through the app" — the real gap docs/VISION.md's modular tutorial system names as still unbuilt: "proactively suggest a walkthrough for never-used features... needs a real per-feature usage-tracking subsystem that doesn't exist yet."
 - `core/user_memory_manager.py`: Persistent facts MIA has learned about the user over the course of conversations — 2026-07-14 aesthetic pass part 5 (docs/ROADMAP.md), at the user's explicit request: "an ability to review and delete... see the AI's stored memories about the user and keep or delete them." Same persisted-JSON pattern
 - `core/user_sync.py`: User Sync: where MIA gets to know a person (slices 3 and 4 of docs/GLASSES_FIRST_BOOT_PLAN.md). The questions are written here, by topic, not chosen by the model: it's the highest-stakes conversation she has.
+- `core/utility_bills.py`: "Why was power so high this month?" (Jarvis brainstorm, round 10), answered from his own records: each energy bill (electric, propane, natural gas, heating oil) said against the same month last year and his last three months' average, and, when one of his energy sources has a kWh meter he logs, whet
 - `core/vault_captions.py`: Finding a photo again (the memory vault's next step, DEC-0030 phase E): each photo the computer keeps for the phone (core/memory_vault.py's VaultShelf) gets one plain sentence saying what's in it, written on this PC by the local vision model (core/sight.py's model), from a small copy of the photo. T
 - `core/voice_catalog.py`: The curated set of selectable Piper TTS voices — 2026-07-15, at the user's explicit request: "I want to be able to pick through different voices for MIA" Piper's full voice library (`rhasspy/piper-voices` on Hugging Face) has dozens of entries; this is a small, hand-picked subset spanning a real spr
 - `core/voice_effects.py`: Post-processing DSP effects applied to Piper's raw synthesized audio — 2026-07-15, at the user's explicit request for MIA to "sound like a futuristic awesome AI companion device," not a plain human voice. Deliberately pure `numpy` (already a dependency for `core/voice_manager.py`'s recording/playbac
@@ -980,7 +981,7 @@
 
 ## tests/: the test suite: what each part must do
 
-630 files, 99,273 lines; 8,321 of 8,365 classes and functions documented
+631 files, 99,318 lines; 8,325 of 8,369 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1530,6 +1531,7 @@
 - `tests/test_usage_tracker.py`: Unit tests for core.usage_tracker. Isolates _DATA_DIR/_USAGE_FILE into a tmp_path scratch area (same monkeypatch pattern as test_activity_log_manager.py's isolated_paths).
 - `tests/test_user_memory_manager.py`: Unit tests for core.user_memory_manager. is_duplicate_memory() is tested directly (pure, deterministic). UserMemoryManager is tested against a tmp_path scratch area, same monkeypatch pattern as test_mission_manager.py's isolated_paths.
 - `tests/test_user_sync.py`: User Sync, Meals (core/user_sync.py): what the code decides, with a stand-in model. tools/user_sync_check.py runs the same steps on the real one.
+- `tests/test_utility_bills.py`: "Why was power so high this month?" (core/utility_bills.py): energy bills found by their words (never the truck's gas), totalled by month, said against the same month last year and the recent average, and the kWh meter when there is one.
 - `tests/test_vault_captions.py`: Finding a photo again (core/vault_captions.py): the photos this PC keeps for the phone, each described in one sentence by the local vision model (never who anyone is), kept beside the photo, and searched by what's in them.
 - `tests/test_voice_corrections.py`: Fixing and planning by voice (DEC-0125, core/assistant_correction_actions.py): each tool finds the record from the words said and runs the screen's own action kind (undoable); unclear names are asked about and change nothing.
 - `tests/test_voice_effects.py`: Unit tests for core.voice_effects' pure-numpy DSP functions. These test shape/dtype/range invariants (no clipping, no silent volume change, correct dtype) — not perceived audio quality, which no automated test can judge; see that module's docstring.

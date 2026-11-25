@@ -4,7 +4,7 @@
 
 ## At a glance
 
-- **Architecture** — 949 Python files across 682 core, 93 modules, 125 gui, 2 server, 47 tools (strict one-way layering; see docs/ARCHITECTURE.md).
+- **Architecture** — 950 Python files across 683 core, 93 modules, 125 gui, 2 server, 47 tools (strict one-way layering; see docs/ARCHITECTURE.md).
 - **Decisions** — 293 logged (docs/DECISIONS.md); the why behind every part.
 - **Capabilities** — ~378 Assistant tools (docs/ASSISTANT_CAPABILITIES.md).
 - **Improvement loops** — 96 active, 1 processes decided to need none (docs/LOOPS.md).

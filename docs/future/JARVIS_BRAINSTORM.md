@@ -358,7 +358,8 @@ New ideas, each checked against what's there first:
 - **A storm coming** (his say: an unprompted heads-up through the gate): the forecast's wind, ice or heavy rain two
   days out turned into one checklist from his records: fuel for the generator, the greenhouse's battery, the flock
   shut in, the outage kit, what to pick before a frost.
-- **The monthly bills that change** (no decision): electric, propane and fuel bills read against the same month last
+- **The monthly bills that change** (no decision): *built 2026-11-24 (`core/utility_bills.py`, the tool
+  `why_bill_high`).* electric, propane and fuel bills read against the same month last
   year and his meter readings, so "why was power so high?" has an answer from his own numbers.
 - **Automation he can see** (his say on each): routines that already run on their own (core/routines) listed with
   what they did this week and what they'd do next, so "what's MIA handling for me?" has one honest answer.

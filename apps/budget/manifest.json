@@ -77,7 +77,8 @@
       "set_build_budget",
       "still_using_subscription",
       "tag_charge",
-      "update_debt"
+      "update_debt",
+      "why_bill_high"
     ],
     "actions": [
       "bill.add",
@@ -162,7 +163,8 @@
       "get_net_worth": "observe",
       "money_ahead": "observe",
       "debt_payoff_mission": "act_with_approval",
-      "debts.missions": "act_with_approval"
+      "debts.missions": "act_with_approval",
+      "why_bill_high": "observe"
     },
     "outside": [
       "get_receipt"
