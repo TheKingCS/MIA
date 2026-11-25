@@ -93,6 +93,8 @@ Taught skills (DEC-0123, core/taught_skills.py): /api/taught-skills is the
 screen; /api/taught-skills/run, /answer and /stop move a run one step at a
 time, each step through its own gate.
 An achievement card closed is marked seen by POST /api/achievements/seen (AchievementsSeenRequest).
+A course's labs (web/course.html): GET /api/labs/{course} (core/lab_page.py) and POST /api/labs/{course}/read (LabReadRequest: his
+board's serial output read and the lab checked from it, core/esp32_lab.py).
 YouTube in Music: GET /api/music/youtube/search and POST /api/music/youtube/key (YouTubeKeyRequest); the
 Content-Security-Policy allows YouTube's privacy-enhanced player and its thumbnails, nothing else from outside.
 """
@@ -189,6 +191,13 @@ class PageErrorRequest(BaseModel):
 class NewsHeardRequest(BaseModel):
     """Good News Radio's page saying its episode was played, and in whose voice."""
     personality: str = Field(default="", max_length=40)
+
+
+class LabReadRequest(BaseModel):
+    """Reading his board for a lab (POST /api/labs/{course}/read): the lab, a port if not the one found, how long."""
+    lesson: str
+    port: str = ""
+    seconds: float = 8.0
 
 
 class AchievementsSeenRequest(BaseModel):
@@ -611,7 +620,9 @@ def create_app(context: AppContext) -> FastAPI:
     POST /api/achievements/seen marks cards seen by id, outside undo.
     /api/music/youtube/search and /api/music/youtube/key are YouTube in Music's (core/youtube_music.py).
     /api/music/youtube/next and /next/played hand MIA's pick by voice to the frame's small player.
-    /favicon.ico answers 204 (no icon yet) instead of a 404 in every page's console."""
+    /favicon.ico answers 204 (no icon yet) instead of a 404 in every page's console.
+    A course's labs (web/course.html) read /api/labs/{course}, and reading the board to check a lab is POST
+    /api/labs/{course}/read."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3216,6 +3227,28 @@ def create_app(context: AppContext) -> FastAPI:
         from core.web_progress import skills_page
 
         return _screen(profile_id, "skills", skills_page)
+
+    @app.get("/api/labs/{course}")
+    def web_course_labs(course: str, lesson: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Lab page (core/lab_page.page): the course, its stages and checks, the lab chosen, the board."""
+        from core.lab_page import page
+
+        return _screen(profile_id, "classroom", lambda view: page(view, course, lesson))
+
+    @app.post("/api/labs/{course}/read")
+    def web_lab_read(course: str, request: LabReadRequest, profile_id: str = Depends(require_profile_id)) -> dict:
+        """Reads his board's serial port for a few seconds and checks the lab from what it said
+        (core/esp32_lab.read_and_check; each result kept as an attempt on his path)."""
+        from core import esp32_lab
+
+        if course != "esp32":
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "That course isn't worked on a board.")
+        from core.esp32_path import lab_of
+
+        if lab_of(request.lesson) is None:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Which lab? Like blink or dht.")
+        view = view_for(context, profile_id)
+        return esp32_lab.read_and_check(view, request.lesson, request.port, max(2.0, min(20.0, request.seconds)))
 
     @app.get("/api/achievements")
     def web_achievements(profile_id: str = Depends(require_profile_id)) -> dict:

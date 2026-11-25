@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Course — MIA</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="themes.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="shell.css">
+  <link rel="stylesheet" href="concept.css">
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body data-app="classroom" class="mod-classroom" data-say="What's my next lab?">
+  <!--
+    A course's labs (claude, 2026-11-25; docs/future/INTERACTIVE_LABS_PLAN.md, step 3): one frame for every course on
+    the learning paths, first Build With ESP32. The course map (stages, labs, checks passed), the lab chosen (why,
+    steps, what to watch for, parts, wiring, the sketch to copy or flash), the board, a serial monitor that reads the
+    board and checks the lab from what it said, and what's next. From MIA.course() (core/lab_page.py); flashing is the
+    action esplab.flash and starting the course path.start, each approved; reading the board MIA.courseRead().
+    ?course=esp32&lesson=blink
+  -->
+  <div class="layout" id="app" hidden>
+    <nav class="side" aria-label="Apps"></nav>
+    <main class="layout-main">
+      <header class="hero">
+        <h1><span aria-hidden="true" id="icon">🔌</span> <span id="name">Course</span></h1>
+        <p class="tagline" id="about"></p>
+      </header>
+      <section class="strip" id="strip" aria-label="Status"></section>
+      <div class="crs-grid">
+        <aside id="map" aria-label="The course"></aside>
+        <div id="panel"></div>
+      </div>
+    </main>
+  </div>
+  <script src="mia.js"></script>
+  <script src="icons.js"></script>
+  <script src="sound.js"></script>
+  <script src="places-watch.js"></script>
+  <script src="shell.js"></script>
+  <script src="course.js"></script>
+</body>
+</html>

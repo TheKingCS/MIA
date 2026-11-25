@@ -1,0 +1,211 @@
+{
+  "available": true,
+  "started": true,
+  "course": {
+    "id": "esp32",
+    "name": "Build With ESP32",
+    "icon": "🔌",
+    "about": "From the first blink to a sensor node that sleeps on a battery: real labs on a real ESP32, each one checked by what the board itself says.",
+    "minutes_a_day": 30,
+    "days_a_week": 3
+  },
+  "stages": [
+    {
+      "number": 1,
+      "name": "First light",
+      "builds": "the board on USB, flashing a sketch, an LED and the serial monitor",
+      "state": "current",
+      "lessons": [
+        {
+          "id": "blink",
+          "title": "Blink the LED"
+        },
+        {
+          "id": "hello",
+          "title": "Talk over serial"
+        }
+      ],
+      "checks": [
+        {
+          "id": "esp_blink",
+          "what": "Blink the LED five times, the board saying so",
+          "passed": true
+        },
+        {
+          "id": "esp_hello",
+          "what": "Have the board say hello over serial",
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Inputs",
+      "builds": "reading a button and an analog voltage",
+      "state": "later",
+      "lessons": [
+        {
+          "id": "button",
+          "title": "Read a button"
+        },
+        {
+          "id": "pot",
+          "title": "Read a voltage"
+        }
+      ],
+      "checks": [
+        {
+          "id": "esp_button",
+          "what": "Press the button three times, each counted once",
+          "passed": false
+        },
+        {
+          "id": "esp_pot",
+          "what": "Turn the pot end to end, the readings spreading at least 3000",
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Sensors",
+      "builds": "a temperature and humidity sensor and a soil moisture sensor",
+      "state": "later",
+      "lessons": [
+        {
+          "id": "dht",
+          "title": "Temperature and humidity"
+        },
+        {
+          "id": "soil",
+          "title": "Soil moisture"
+        }
+      ],
+      "checks": [
+        {
+          "id": "esp_dht",
+          "what": "Read a room's temperature from the DHT22",
+          "passed": false
+        },
+        {
+          "id": "esp_soil",
+          "what": "Read dry and wet soil, the readings spreading at least 500",
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Outputs",
+      "builds": "PWM brightness and switching a load with a relay",
+      "state": "later",
+      "lessons": [
+        {
+          "id": "fade",
+          "title": "Fade an LED"
+        },
+        {
+          "id": "relay",
+          "title": "Switch a load"
+        }
+      ],
+      "checks": [
+        {
+          "id": "esp_fade",
+          "what": "Fade the LED up and down three times",
+          "passed": false
+        },
+        {
+          "id": "esp_relay",
+          "what": "Switch the relay four times",
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Connected",
+      "builds": "Wi-Fi and a little web server",
+      "state": "later",
+      "lessons": [
+        {
+          "id": "wifi",
+          "title": "Join your Wi-Fi"
+        },
+        {
+          "id": "web",
+          "title": "Serve a reading"
+        }
+      ],
+      "checks": [
+        {
+          "id": "esp_wifi",
+          "what": "Join your Wi-Fi, the board saying its address",
+          "passed": false
+        },
+        {
+          "id": "esp_web",
+          "what": "Answer a web request with a reading",
+          "passed": false
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "name": "A real node",
+      "builds": "deep sleep, the start of a battery sensor node",
+      "state": "later",
+      "lessons": [
+        {
+          "id": "sleep",
+          "title": "Sleep and wake"
+        }
+      ],
+      "checks": [
+        {
+          "id": "esp_sleep",
+          "what": "Wake from deep sleep three times",
+          "passed": false
+        }
+      ]
+    }
+  ],
+  "lab": {
+    "id": "hello",
+    "title": "Talk over serial",
+    "stage": 1,
+    "steps": [
+      "Flash the hello lab; open the serial monitor at 115200 baud.",
+      "Serial.begin sets the speed; both ends must agree, or you see garbage.",
+      "Watch MIA UPTIME count the seconds since it started; press EN (reset) and see it start over."
+    ],
+    "why": "The serial monitor is your window into the board: every later lab tells you what it's doing through it.",
+    "watch": [
+      "The wrong baud rate: gibberish on the monitor.",
+      "Printing too fast, which floods the monitor."
+    ],
+    "parts": [
+      "ESP32 dev board",
+      "USB cable"
+    ],
+    "wiring": [],
+    "code": "#include <Arduino.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  delay(500);\n  Serial.println(\"MIA HELLO\");\n}\n\nvoid loop() {\n  Serial.printf(\"MIA UPTIME %lu\\n\", millis() / 1000);   // seconds since it started\n  delay(2000);\n}\n",
+    "ini": "[env:esp32dev]\nplatform = espressif32\nboard = esp32dev\nframework = arduino\nmonitor_speed = 115200\n",
+    "secrets": false,
+    "libs": [],
+    "checks": [
+      {
+        "id": "esp_hello",
+        "what": "Have the board say hello over serial",
+        "passed": false
+      }
+    ]
+  },
+  "board": {
+    "port": "COM5",
+    "description": "CP2102 USB to UART",
+    "ready": true,
+    "missing": ""
+  },
+  "next": "Build With ESP32, stage 1 (First light): next is \"Have the board say hello over serial\" (show me, and I'll check it). The lesson for it: Talk over serial. 1 check left in this stage."
+}

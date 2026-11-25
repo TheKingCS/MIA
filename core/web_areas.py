@@ -77,6 +77,8 @@ WHY = Page("why", "My Why", "character", "What it's all for.", "why.html")
 CONNECTIONS = Page("connections", "Connections", "notes", "What MIA tied together, and what not to raise.", "connections.html")
 DIRECTIONS = Page("directions", "My Directions", "character", "What you're steering by.", "directions.html")
 GUITAR = Page("guitar", "Guitar", "classroom", "A learning path, stage by stage.", "guitar.html")
+LABS = Page("labs", "Labs", "classroom", "Build it, check it from the board: Build With ESP32.",
+            "course.html?course=esp32")
 PETS = Page("pets", "Pets", "relationships", "Your animals, their care and vet visits.", "people.html?only=pets")
 PLACES = Page("places", "My Places", "maps", "Places you go, and quests there.", "places.html")
 # DEC-0153: Living Worlds opens the Nexus, the worlds' own screen; the worlds page is reached from it.
@@ -161,7 +163,7 @@ AREAS: tuple[Area, ...] = (
          ("calendar", "notes", "life_notes", "operating_journal", "memories", "vault", "closet", "files", "relationships",
           CHECKIN, "observations", CONNECTIONS), hue="#ff8ad8", parent="home"),
     Area("learning", "Learning", "classroom", "Study, the library and what you're learning.",
-         ("classroom", "knowledge", "world_intel", GUITAR, TRADES, PLANNER), hue="#6a5cff", parent="home",
+         ("classroom", "knowledge", "world_intel", GUITAR, LABS, TRADES, PLANNER), hue="#6a5cff", parent="home",
          shortcuts=("skills",)),
     # ---- Finances' subdashboard
     Area("businesses", "Businesses", "business", "Each business: its money, its work, its customers.",

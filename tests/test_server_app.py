@@ -26,6 +26,7 @@ server.app.create_app() works against the actual object
 core/application.py hands it, not a hand-rolled stand-in. Also wires
 context.push_subscriptions directly (build_core_context() doesn't —
 that's core/application.py's job, gated by server.enabled).
+Also a course's labs page, and reading the board to check a lab.
 """
 
 from __future__ import annotations
@@ -1111,3 +1112,27 @@ def test_a_taught_skill_is_taught_run_and_answered_over_the_api_and_each_change_
     assert client.post("/api/taught-skills/answer", headers=auth, json={"text": "yes"}).status_code == 409
     assert client.post("/api/taught-skills/stop", headers=auth).json() == {"stopped": False}
 
+
+
+def test_a_courses_labs_page_and_reading_the_board_check_the_lab(client, context, tmp_path, monkeypatch):
+    """GET /api/labs/esp32: the course page; POST .../read with the board saying five blinks: the blink check passed and
+    kept; an unknown lab is 422, a course without labs 404, and both need a sign-in."""
+    from core import esp32_lab, paths
+    from core.esp32_path import PROGRAM
+
+    auth = _signed_in(client, context)
+    assert client.get("/api/labs/esp32").status_code == 401
+    if getattr(context, "paths", None) is None:
+        context.paths = paths.PathBook(context, data_dir=tmp_path / "paths")
+    monkeypatch.setattr(esp32_lab, "board", lambda *a, **k: {"port": "COM5", "description": "CP2102", "pio": [],
+                                                             "missing": ""})
+    monkeypatch.setattr(esp32_lab, "read_serial", lambda port, seconds: "MIA BLINK 1\nMIA BLINK 5\n")
+    page = client.get("/api/labs/esp32?lesson=blink", headers=auth).json()
+    assert page["available"] and page["lab"]["id"] == "blink" and page["board"]["port"] == "COM5"
+    if context.paths.path("esp32") is None:
+        context.paths.start(PROGRAM, "", *PROGRAM.plan)
+    got = client.post("/api/labs/esp32/read", headers=auth, json={"lesson": "blink", "seconds": 60}).json()
+    assert got["port"] == "COM5" and "MIA BLINK 5" in got["serial"] and got["results"][0]["passed"]
+    assert context.paths.passed("esp32", "esp_blink")
+    assert client.post("/api/labs/esp32/read", headers=auth, json={"lesson": "nope"}).status_code == 422
+    assert client.post("/api/labs/guitar/read", headers=auth, json={"lesson": "blink"}).status_code == 404

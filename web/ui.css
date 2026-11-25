@@ -2368,3 +2368,31 @@ body.sel-card { background: var(--bg); color: var(--text); margin: 0; font-famil
 /* A project's workspace (core/teamwork.py, T2): a specialist's entry is marked until he confirms it. */
 .pj-entry .chip { margin-right: 4px; }
 .pj-derived { border-left: 2px solid rgba(var(--rgb-accent), 0.5); padding-left: 8px; }
+
+/* A course's labs (web/course.html, core/lab_page.py): the course map beside the lab, the sketch and the serial monitor. */
+.crs-grid { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: var(--gap); align-items: start; }
+.crs-grid > * { min-width: 0; }
+@media (max-width: 860px) { .crs-grid { grid-template-columns: 1fr; } .crs-grid #map { order: 2; } }
+.crs-map { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
+.crs-stage { display: flex; flex-direction: column; gap: 4px; }
+.crs-stage.later { opacity: 0.6; }
+.crs-stage-head { font-weight: 600; color: var(--text); }
+.crs-stage.current .crs-stage-head { color: rgb(var(--rgb-accent)); }
+.crs-stage-sub { color: var(--text-faint); font-size: var(--text-sm); }
+.crs-lesson { text-align: left; background: none; border: 1px solid transparent; border-radius: 8px; padding: 4px 8px;
+  color: var(--text-dim); cursor: pointer; font: inherit; }
+.crs-lesson:hover { border-color: var(--line); color: var(--text); }
+.crs-lesson.on { border-color: rgba(var(--rgb-accent), 0.6); color: var(--text); background: rgba(var(--rgb-accent), 0.08); }
+.crs-check { color: var(--text-faint); font-size: var(--text-sm); padding-left: 8px; }
+.crs-check.passed { color: rgb(var(--rgb-accent)); }
+.crs-checks { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+.crs-why { color: var(--text-dim); }
+.crs-list { margin: 4px 0 8px; padding-left: 22px; line-height: 1.5; }
+.crs-wiring { border-collapse: collapse; margin-top: 8px; width: 100%; }
+.crs-wiring th, .crs-wiring td { border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+.crs-wiring th { color: var(--text-faint); font-weight: 500; }
+.crs-code, .crs-monitor { font-family: var(--font-mono); font-size: var(--text-sm); white-space: pre; overflow-x: auto;
+  background: rgba(var(--rgb-accent), 0.04); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin: 8px 0 0; }
+.crs-labs { margin-top: var(--gap); }
+.crs-labs a.cl-subject { text-decoration: none; color: inherit; }
+.crs-monitor { min-height: 4em; max-height: 18em; overflow-y: auto; color: var(--text-dim); }

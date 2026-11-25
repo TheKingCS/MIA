@@ -5,6 +5,8 @@ core.path_actions
 Learning paths on the action contract (DEC-0112, core/paths.py): proposed in
 plain words, approved, run, undoable.
 
+- `path.start`: start a course with its own plan (the course page's Start This Course; by voice it's
+  start_learning).
 - `path.draft`: draft a learning path for an interest (the Universal Action
   Layer's "Learn This Myself", DEC-0165 U3). An interest a program already
   covers is named, not drafted again. A draft is only a plan: nothing starts
@@ -51,8 +53,35 @@ def _draft_execute(context, params) -> str:
     return paths.describe_program(program) + " Say \"start it\" to begin, or open it in Learning."
 
 
+def _start_describe(context, params) -> str:
+    """The approval sentence for `path.start`: the course and its plan."""
+    from core import paths
+
+    _need(context, "paths")
+    program = paths.program_of(context, str(params.get("path") or ""))
+    if program is None:
+        raise ActionError("Which course? It isn't on MIA's learning paths.")
+    if context.paths.path(program.id) is not None:
+        raise ActionError(f"You've already started {program.name}.")
+    minutes, days = program.plan
+    return f"Start {program.name}: about {minutes} minutes a day, {days} days a week (you can change it)"
+
+
+def _start_execute(context, params) -> str:
+    """Does `path.start`: the course started with its own plan, and what's first."""
+    from core import paths
+
+    program = paths.program_of(context, str(params.get("path") or ""))
+    context.paths.start(program, str(params.get("goal") or ""), *program.plan)
+    return f"Started {program.name}. " + paths.next_step(context.paths, program)
+
+
 def _register() -> None:
-    """Adds the path kinds to ACTION_TYPES. Runs once, when this module is imported."""
+    """Adds the path kinds to ACTION_TYPES. Runs once, when this module is imported.
+    path.start starts a course with its own plan (the course page's Start This Course)."""
+    ACTION_TYPES["path.start"] = ActionType("path.start", "Start This Course", {"path": "the course's id",
+                                                                             "goal": "why, in their words (optional)"},
+                                            _start_describe, _start_execute)
     ACTION_TYPES["path.draft"] = ActionType("path.draft", "Draft A Learning Path",
                                             {"interest": "what to learn", "goal": "why, in their words (optional)"},
                                             _draft_describe, _draft_execute)

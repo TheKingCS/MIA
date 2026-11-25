@@ -42,9 +42,12 @@ never MIA's.
    is an approval card (`esplab.flash`: it writes to the board), "check my lab" reads the board's serial port for a
    few seconds and judges the lab's checks from what it said, and "is my ESP32 plugged in?" says the port and whether
    PlatformIO is installed. On this PC PlatformIO isn't installed yet (`pip install platformio`, his call).
-2. **The lab page**: the course map (stages, labs, passed checks), a lab's goal, parts, wiring, sketch (copy or
-   flash), a live serial monitor, the check, and "try this"; the same frame for every area, each area its own
-   "see it" panel (the serial monitor, the guitar's ear, a photo).
+2. **The lab page**: *built 2026-11-25 (web/course.html, core/lab_page.py; Classroom > Hands-on labs).* The
+   course map (stages done, current and later, each lab, each check passed or not), the lab chosen (why, steps,
+   what to watch for, parts, wiring, the sketch and platformio.ini to copy), Start This Course (`path.start`), Flash
+   This Lab (`esplab.flash`, approved), and the serial monitor: Read The Board reads it for a few seconds
+   (POST /api/labs/{course}/read) and checks the lab from what it said. `page()` is course-neutral: another area
+   gives its labs in `_labs()` and its own "see it" panel (the guitar's ear, a photo) in place of the bench.
 3. **Simulated, with no board** (his say: it needs an online simulator or a local one to be chosen): a lab run in a
    simulator when the board isn't on the desk.
 4. **The other areas on the same frame**: guitar (already verified by ear), carpentry and woodworking (a

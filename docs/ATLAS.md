@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1753 files, 377,764 lines; 1753 files describe themselves; 20,701 of 20,831 classes and functions are documented.
+1756 files, 378,201 lines; 1756 files describe themselves; 20,716 of 20,846 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-699 files, 195,621 lines; 9,893 of 9,979 classes and functions documented
+700 files, 195,766 lines; 9,900 of 9,986 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -326,6 +326,7 @@
 - `core/kitchen_blueprint.py`: Kitchen recipes as blueprints (DEC-0028 #9, the kitchen half; Zac, 2026-10-17), the same way Workshop recipes work (core/craft_recipes.py): the recipe is the blueprint, the pantry is the materials.
 - `core/kitchen_manager.py`: MIA's Kitchen Module — recipes, a pantry/inventory list, a grocery list, and a meal log, plus the logic that connects them: which recipes are makeable right now from what's in the pantry, and adding a recipe's missing ingredients to the grocery list in one action.
 - `core/lab_actions.py`: The development lab's changes as action kinds (DEC-0058, core/dev_lab.py): start a proposal (lab, write, check), approve one into the running MIA, reject one. Grown-ups only, never from the glasses; the long steps (the coder, the test suite) run in the background and say when they're done. "Approve"
+- `core/lab_page.py`: The course page (docs/future/INTERACTIVE_LABS_PLAN.md, step 3; web/course.html): one frame for every course on MIA's learning paths, the first Build With ESP32 (core/esp32_path.py).
 - `core/lab_push.py`: Her merged changes pushed with the daily summary (WP-12, Q-100, DEC-0264: "her merged changes are pushed with the daily summary, so CI tests them"). The changes MIA makes to herself go into the running copy on Claude's pass (core/self_merges.py) and were kept on the PC; now, once a day after the sum
 - `core/lab_reading_actions.py`: The Lab's changes on the web (DEC-0113 canvas Lab, DEC-0125: the Lab had no phone screen). `lab_reading.add` logs a reading to a series in the Data Logger (core/data_logger_manager.py), joining an existing series whatever its case and starting a new one with its first reading; `lab_reading.delete` t
 - `core/learned.py`: What MIA has learned about him on her own, each habit with its evidence and its own reset (DEC-0282, LS-10, REQ-LS-004). Three kinds today:
@@ -710,7 +711,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,862 lines; 59 of 59 classes and functions documented
+2 files, 4,895 lines; 60 of 60 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -997,7 +998,7 @@
 
 ## tests/: the test suite: what each part must do
 
-648 files, 101,048 lines; 8,443 of 8,487 classes and functions documented
+649 files, 101,153 lines; 8,450 of 8,494 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1164,7 +1165,7 @@
 - `tests/test_eng_calcs.py`: MIA's engineering calculators and the numbers-with-units under them (core/eng_calcs.py, core/quantities.py; DEC-0197): each calculator against an example worked by hand, units that don't go together refused, a missing input named, never guessed, and no input's description offering a value a model co
 - `tests/test_environment.py`: The real-vs-fictional boundary (core/environment.py + life_events, DEC-0137): `require_real` guards a real-authority sink (fictional/simulated raises DomainLeak); unknown/None normalises to real so nothing is fiction by accident; and a life event carries its environment, so a real-life view can filt
 - `tests/test_esp32_lab.py`: The ESP32 lab bench (core/esp32_lab.py): a lab's PlatformIO project written (its libraries, its sketch, a Wi-Fi secrets file with placeholders he fills in himself), never flashed with the placeholders still there or without PlatformIO or a board; a flash runs pio's upload on the board's port; the bo
-- `tests/test_esp32_path.py`: Build With ESP32 (core/esp32_path.py): the course has a sound shape, every lab its parts and a sketch that prints the marker its check reads, the check passes from what the board said (seen, a mark, a spread, a range), a pass is kept as an attempt on his path, and "I want to learn ESP32" finds it.
+- `tests/test_esp32_path.py`: Build With ESP32 (core/esp32_path.py): the course has a sound shape, every lab its parts and a sketch that prints the marker its check reads, the check passes from what the board said (seen, a mark, a spread, a range), a pass is kept as an attempt on his path, and "I want to learn ESP32" finds it. A
 - `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
@@ -1264,6 +1265,7 @@
 - `tests/test_knowledge_pack_delete.py`: Deleting a Knowledge pack from the web (core/reference_library_manager.delete_confirmed): only once its name is typed, as the desktop asks, because the file is gone for good.
 - `tests/test_knowledge_pictures.py`: Pictures in Knowledge articles (core/reference_library_manager.article_images): which <img> tags become pictures fetched from the pack, resolved against the article's own path.
 - `tests/test_lab_module.py`: Unit test for modules.lab.module.format_reading_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test.
+- `tests/test_lab_page.py`: A course's labs (core/lab_page.py, web/course.html): the course page before and after he starts it (stages, the lab chosen with its sketch and wiring, checks passed), an unknown course, and the action that starts a course (`path.start`, core/path_actions.py), refused for one already started.
 - `tests/test_lab_push.py`: WP-12 (Q-100, DEC-0264): her merged changes are pushed to GitHub with the daily summary, only hers, never forced or rebased, held when anything else is waiting or GitHub has newer commits, and never from the test suite itself.
 - `tests/test_learned.py`: Tests for what MIA learned on her own (DEC-0282, LS-10, core/learned.py): each habit with its evidence and its own reset, which never touches what he set himself or a break he asked for; and the daily budget for her own work.
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.
@@ -1650,7 +1652,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-120 files, 22,504 lines
+121 files, 22,658 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 
@@ -1678,6 +1680,7 @@
 - `web/connections.js`: connections.js — Connections (claude, 2026-11-08, DEC-0146). Renders MIA.connections() (core/web_connections.py): the ties MIA is holding (what you said, when, the project, goal or idea from weeks ago it ties into, and how, and what she found about it first in her own offline sources, each with wher
 - `web/cook.js`: cook.js — cook mode (claude, 2026-11-07, DEC-0113: the design canvas's Kitchen · Cook Mode). The recipe being cooked takes the whole screen, on the Kitchen page and on a recipe's page alike: one step in large type, what this step uses, the step's own timer to start, every timer running (they keep go
 - `web/council.js`: council.js — the council from the phone (claude, 2026-11-06, build plan step 16). Renders MIA.council() (core/council.py through server/app.py): the latest messages, who's here and ready, and a box to write to them. Only the PC's owner gets an answer; anyone else sees why. Formatting only.
+- `web/course.js`: course.js — a course's labs (claude, 2026-11-25; docs/future/INTERACTIVE_LABS_PLAN.md, step 3). Renders MIA.course(course, lesson) (core/lab_page.py): the course map, the lab chosen in its parts (why, steps, watch for, parts, wiring, the sketch), the board, and a serial monitor. Changes go through t
 - `web/dev.js`: dev.js: the development board (claude, 2026-11-03, DEC-0068/0070). Zac: "a window that makes it all easy to view and understand the workflow and what is going on, what is building, who is building it." Renders MIA.dev() (core/work_dashboard.py) as the flow, Up Next to Done, each card opening to its 
 - `web/diagnostics.js`: diagnostics.js — the PC's check-ups (claude, 2026-11-06, T-0040). Renders MIA.diagnostics() (core/diagnostics.py): each built-in check-up over one passive inspection (nothing is probed or changed), what passed, what to look at, and what couldn't be read (never counted as a pass). The PC's owner's pa
 - `web/directions.js`: directions.js — My Directions (claude, 2026-11-08, DEC-0141/0143). Renders MIA.directions() (core/web_directions.py): today's seed and one thing within reach (both from real state, never invented), then each standing direction in the person's own words, with how MIA encourages it and the little nudg

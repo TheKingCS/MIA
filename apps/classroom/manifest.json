@@ -20,7 +20,8 @@
   "components": {
     "interface": {
       "web": [
-        "classroom.html"
+        "classroom.html",
+        "course.html"
       ],
       "qt": [
         "modules/classroom"
@@ -83,7 +84,8 @@
       "trade.plan",
       "trade.start",
       "trade.stop",
-      "esplab.flash"
+      "esplab.flash",
+      "path.start"
     ],
     "tiers": {
       "add_course": "act_within_grant",
@@ -125,7 +127,8 @@
       "flash_lab": "act_with_approval",
       "check_lab": "act_within_grant",
       "lab_board": "observe",
-      "esplab.flash": "act_with_approval"
+      "esplab.flash": "act_with_approval",
+      "path.start": "act_within_grant"
     },
     "outside": []
   },

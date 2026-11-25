@@ -302,13 +302,24 @@ void loop() {}
     },
 }
 
-STAGES: tuple[Stage, ...] = (
+def _tied(stages: tuple) -> tuple:
+    """Pure logic. Each lesson tied to the checks its own sketch prints the marker of (its `about`), so the next step
+    names the lesson behind a check (core/paths.next_step), not the stage's first."""
+    from dataclasses import replace
+
+    return tuple(replace(s, lessons=tuple(
+        replace(l, about=tuple(c.about for c in s.checks
+                               if l.id in LABS and f"MIA {c.about.split()[0]}" in LABS[l.id]["code"]))
+        for l in s.lessons)) for s in stages)
+
+
+STAGES: tuple[Stage, ...] = _tied((
     Stage(1, "First light", "the board on USB, flashing a sketch, an LED and the serial monitor", (
         Lesson("blink", "Blink the LED", (
-            "Plug the board in with a data USB cable; MIA finds its serial port (Lab, or \"which board is plugged "
-            "in?\").",
+            "Plug the board in with a data USB cable; MIA finds its serial port (the course page, or \"which board is "
+            "plugged in?\").",
             "Read the sketch: setup() runs once, loop() over and over; pinMode makes GPIO 2 an output.",
-            "Say \"flash the blink lab\" (or press Flash on the Lab page) and approve it: MIA builds it with "
+            "Say \"flash the blink lab\" (or press Flash This Lab on the course page) and approve it: MIA builds it with "
             "PlatformIO and writes it to the board.",
             "Watch the LED blink once a second, and the serial monitor count MIA BLINK 1, 2, 3.",
             "Change delay(500) to delay(100), flash again, and see it blink faster."),
@@ -417,7 +428,7 @@ STAGES: tuple[Stage, ...] = (
         Check("esp_sleep", "Wake from deep sleep three times", VERIFIER, about="WAKE min", passes_at=3,
               unit="wakes"),
     )),
-)
+))
 
 
 # ------------------------------------------------------------------ the check: what the board said

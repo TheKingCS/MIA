@@ -5,6 +5,7 @@ tests.test_esp32_path
 Build With ESP32 (core/esp32_path.py): the course has a sound shape, every lab its parts and a sketch that prints the
 marker its check reads, the check passes from what the board said (seen, a mark, a spread, a range), a pass is kept as
 an attempt on his path, and "I want to learn ESP32" finds it.
+And the next step names the lesson behind a check (each lesson tied to the checks its sketch prints).
 """
 
 import re
@@ -60,3 +61,14 @@ def test_a_pass_is_kept_on_his_path(tmp_path):
 def test_wanting_to_learn_esp32_finds_the_course():
     """By its words: "esp32", "microcontroller"."""
     assert paths.find_program(SimpleNamespace(paths=None), "I want to learn to build with ESP32").id == "esp32"
+
+
+def test_the_next_step_names_the_lesson_behind_the_check_not_the_stages_first(tmp_path):
+    """Blink passed: the next check is hello, and the lesson named for it is Talk over serial (the bug: Blink the LED)."""
+    from core import paths
+    from core.esp32_path import PROGRAM
+
+    book = paths.PathBook(None, data_dir=tmp_path)
+    book.start(PROGRAM, goal="a soil node")
+    book.attempt(PROGRAM, "esp_blink", True, 5, "board_says", "")
+    assert "The lesson for it: Talk over serial." in paths.next_step(book, PROGRAM)

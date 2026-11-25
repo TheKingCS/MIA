@@ -19,6 +19,8 @@ builds a lab's sketch, flashes it to his board on his yes, and reads what the bo
 
 Tools: `flash_lab` ("flash the blink lab": the approval card), `check_lab` ("check my lab"), `lab_board` ("is my
 board plugged in?"). With no lab named, the next one on his path.
+The course page (web/course.html) reads the board through `read_and_check` (each check's result and what the board
+said), and `checks_of` gives a lab's checks.
 """
 
 from __future__ import annotations
@@ -164,32 +166,55 @@ def read_serial(port: str, seconds: float = READ_SECONDS, opener: Optional[Calla
     return "\n".join(lines)
 
 
-def check(context, lesson_id: str, port: str = "", seconds: float = READ_SECONDS,
-          reader: Optional[Callable] = None) -> str:
-    """Reads the board and judges each of the lab's checks from it (core/paths.verify, kept as attempts); in
-    words."""
-    from core import paths
+def checks_of(lesson_id: str) -> list:
+    """The checks a lab's sketch prints the marker of."""
     from core.esp32_path import LABS, PROGRAM
 
+    code = LABS[lesson_id]["code"]
+    return [c for s in PROGRAM.stages for c in s.checks if f"MIA {c.about.split()[0]}" in code]
+
+
+def read_and_check(context, lesson_id: str, port: str = "", seconds: float = READ_SECONDS,
+                   reader: Optional[Callable] = None) -> dict:
+    """Reads the board and judges each of the lab's checks from it (core/paths.verify, kept as attempts):
+    {port, serial (what it said), results [{check, passed, said}], said (in words)}. For the voice (`check`) and the
+    course page (web/course.html, server/app.py)."""
+    from core import paths
+    from core.esp32_path import PROGRAM
+
+    out = {"port": port, "serial": "", "results": [], "said": ""}
     book = getattr(context, "paths", None)
     if book is None:
-        return "Learning paths aren't on this MIA."
+        out["said"] = "Learning paths aren't on this MIA."
+        return out
     if book.path(PROGRAM.id) is None:
-        return "Start Build With ESP32 first: say \"start ESP32\", and how much time you have."
-    port = port or board(pio=[])["port"]
+        out["said"] = "Start Build With ESP32 first: say \"start ESP32\", and how much time you have."
+        return out
+    port = out["port"] = port or board(pio=[])["port"]
     if not port:
-        return "I don't see the ESP32 on a USB port: plug it in, or tell me its port."
+        out["said"] = "I don't see the ESP32 on a USB port: plug it in, or tell me its port."
+        return out
     try:
         text = (reader or read_serial)(port, seconds)
     except OSError as problem:
-        return f"I couldn't open {port}: {problem}. Close any serial monitor that has it, then ask again."
-    code = LABS[lesson_id]["code"]
-    mine = [c for s in PROGRAM.stages for c in s.checks if f"MIA {c.about.split()[0]}" in code]
+        out["said"] = f"I couldn't open {port}: {problem}. Close any serial monitor that has it, then try again."
+        return out
+    out["serial"] = text
     if not text.strip():
-        return (f"The board on {port} said nothing in {seconds:g} seconds: is the {lesson_id} lab on it? Flash it, "
-                "then ask again.")
-    said = [paths.verify(context, PROGRAM, c.id, {"serial": text})["said"] for c in mine]
-    return " ".join(said) if said else f"The {lesson_id} lab has no check to read."
+        out["said"] = (f"The board on {port} said nothing in {seconds:g} seconds: is the {lesson_id} lab on it? "
+                       "Flash it, then try again.")
+        return out
+    for c in checks_of(lesson_id):
+        got = paths.verify(context, PROGRAM, c.id, {"serial": text})
+        out["results"].append({"check": c.id, "passed": got["passed"], "said": got["said"]})
+    out["said"] = " ".join(r["said"] for r in out["results"]) or f"The {lesson_id} lab has no check to read."
+    return out
+
+
+def check(context, lesson_id: str, port: str = "", seconds: float = READ_SECONDS,
+          reader: Optional[Callable] = None) -> str:
+    """Reads the board and judges each of the lab's checks from it (`read_and_check`); in words."""
+    return read_and_check(context, lesson_id, port, seconds, reader)["said"]
 
 
 # ------------------------------------------------------------------ the action and the tools
@@ -220,10 +245,11 @@ ACTION_TYPES.update(ACTIONS)
 
 
 def _flash_tool(context, arguments: dict) -> str:
-    """Tool flash_lab: the approval card for flashing a lab (the one named, else the next on his path)."""
+    """Tool flash_lab: the approval card for flashing a lab (the one named, else the next on his path).
+    With no actions here it points to the course page."""
     actions = getattr(context, "actions", None)
     if actions is None:
-        return "I can't put that to you from here: it's on the Lab page."
+        return "I can't put that to you from here: it's on the course page."
     lesson = lesson_for(context, str(arguments.get("lab", "") or "") + " " + str(arguments.get("question", "") or ""))
     try:
         card = actions.propose(context, "esplab.flash", {"lesson": lesson, "port": str(arguments.get("port", "") or "")})

@@ -627,6 +627,12 @@
     skills: () => read("/api/skills", "skills"),
     // The achievements log (core/achievement_cards.py), and the unlocks not yet shown as a card (web/cards.js).
     achievements: () => read("/api/achievements", "achievements"),
+    // A course's labs (web/course.html, core/lab_page.py): the course, the lab chosen and the board; reading the
+    // board checks the lab. (Not the Data Logger's Lab above, MIA.lab.)
+    course: (course, lesson) => read("/api/labs/" + encodeURIComponent(course || "esp32") +
+      (lesson ? "?lesson=" + encodeURIComponent(lesson) : ""), "course"),
+    courseRead: (course, lesson, seconds) => demo ? demoOnly()
+      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/read", { lesson, seconds: seconds || 8 }),
     achievementsNew: () => demo ? Promise.resolve({ cards: [], more: 0 }) : call("GET", "/api/achievements/new"),
     achievementsSeen: (ids) => demo ? Promise.resolve({}) : call("POST", "/api/achievements/seen", { ids }),
     character: () => read("/api/character", "character"),
