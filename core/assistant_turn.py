@@ -128,7 +128,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
     A monthly reminder (`_monthly_reminder_reply`) too, a unit conversion (`_convert_reply`) and a holiday's date
-    (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`).
+    (`_holiday_reply`), and the house's trouble (`_home_trouble_reply`), and when to fish (`_fish_when_reply`).
     A weekly reminder too (`_weekly_reminder_reply`).
     What he spent too (`_spent_reply`).
     The morning briefing too (`_morning_briefing_reply`).
@@ -200,6 +200,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _mains_reply(context, prompt)  # an outlet's voltage, in fixed safe words, as in a turn
     if walked is None:
         walked = _home_trouble_reply(context, prompt)  # a burst pipe, a flooded basement, as in a turn
+    if walked is None:
+        walked = _fish_when_reply(context, prompt)  # "when's a good time to fish?", as in a turn
     if walked is None:
         walked = _convert_reply(context, prompt)  # "convert 5 gallons to liters", as in a turn
     if walked is None:
@@ -1047,6 +1049,26 @@ _CONVERT = re.compile(r"^\s*(?:please\s+)?(?:convert|change|turn)\s+(?P<v>\d[\d,
                       r"(?P<t3>[a-z°][\w° .-]*?)\s*\??\s*$", re.I)
 
 
+_FISH_WHEN = re.compile(r"\b(?:when(?:'s| is)?|what(?:'s| is))\s+(?:a\s+|the\s+)?(?:good|best|right)\s+time\s+(?:of\s+day\s+)?"
+                        r"to\s+(?:go\s+)?fish(?:ing)?\b|\bbest time (?:of day )?to (?:go )?fish|\bwhen should i (?:go )?"
+                        r"fish(?:ing)?\b|\bshould i (?:go )?fish(?:ing)? (?:today|tomorrow|this weekend|this morning|"
+                        r"tonight)\b", re.I)
+
+
+def _fish_when_reply(context, prompt: str):
+    """"When's a good time to fish?", from his own catch log and today's weather (core/catch_log.best_time); None
+    otherwise."""
+    if not _FISH_WHEN.search(prompt or ""):
+        return None
+    from core import catch_log
+
+    try:
+        return catch_log.best_time(context)
+    except Exception:
+        log.exception("Couldn't say when to fish")
+        return None
+
+
 def _home_trouble_reply(context, prompt: str):
     """A burst or frozen pipe or a flooded basement, in fixed words (core/home_trouble.reply); None otherwise."""
     from core import home_trouble
@@ -1281,7 +1303,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     Hours on a project are logged and read back in code (`_project_time_reply`); an outlet's voltage is said in fixed
     safe words (`_mains_reply`); a monthly reminder goes on his calendar (`_monthly_reminder_reply`); a unit
     conversion (`_convert_reply`) and a holiday's date (`_holiday_reply`) are worked out in code; a burst pipe or a
-    flooded basement is said in fixed words (`_home_trouble_reply`). A turn the
+    flooded basement is said in fixed words (`_home_trouble_reply`), and when to fish from his catches
+    (`_fish_when_reply`). A turn the
     model answers ends a question plan's thread
     (core/conversation_state.forget), and a reply that is only a humor example is never said.
     A how-to one of her courses teaches, from its lesson (`_lesson_reply`).
@@ -1427,6 +1450,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _mains_reply(context, prompt)  # an outlet's voltage: a tester first, an electrician if off
         if walked is None:
             walked = _home_trouble_reply(context, prompt)  # the house's trouble: the main shutoff, the power first
+        if walked is None:
+            walked = _fish_when_reply(context, prompt)  # when to fish, from his own catches and the weather
         if walked is None:
             walked = _convert_reply(context, prompt)  # a unit conversion, worked out by the converter
         if walked is None:

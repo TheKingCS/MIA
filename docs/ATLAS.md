@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1840 files, 391,693 lines; 1840 files describe themselves; 21,312 of 21,437 classes and functions are documented.
+1840 files, 391,768 lines; 1840 files describe themselves; 21,315 of 21,440 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-722 files, 204,297 lines; 10,173 of 10,252 classes and functions documented
+722 files, 204,354 lines; 10,175 of 10,254 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1020,7 +1020,7 @@
 
 ## tests/: the test suite: what each part must do
 
-709 files, 105,381 lines; 8,768 of 8,814 classes and functions documented
+709 files, 105,399 lines; 8,769 of 8,815 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1264,7 +1264,7 @@
 - `tests/test_hobby_programs.py`: His hobbies' learning programs (DEC-0289): woodworking, gardening and homesteading, fitness, survival and bushcraft, on core/paths.py's method like guitar and carpentry; a recorded check counts from the day its stage opened. Each one's skill is a real skill, every recorded check reads a record MIA k *(1 undocumented)*
 - `tests/test_home_dashboard.py`: Unit tests for gui.home_dashboard's pure formatting helpers. The reactive widget/QTimer behavior itself is verified with a headless offscreen-QPA smoke test (this project's convention for Qt widget behavior), not pytest — see gui/character_panel.py's own test file for the same split.
 - `tests/test_home_link.py`: Supercharged online (DEC-0022 level 2, core/home_link.py): a phone links to MIA on the home computer with the person's own sign-in, Talk uses the computer's model, and the phone's own model answers whenever the computer can't (and MIA says which one did).
-- `tests/test_home_trouble.py`: The house's trouble in fixed words (core/home_trouble.py, 2026-11-25): a burst pipe starts with the main shutoff, a frozen one with the faucet open and never a flame, a flooded basement with the power; a question about the topic, or a pipe that isn't his house's, is never one.
+- `tests/test_home_trouble.py`: The house's trouble in fixed words (core/home_trouble.py, 2026-11-25): a burst pipe starts with the main shutoff, a frozen one with the faucet open and never a flame, a flooded basement with the power; a question about the topic, or a pipe that isn't his house's, is never one. And when to fish, from
 - `tests/test_homeostasis.py`: MIA easing off her own work (the Living System doctrine's homeostasis, DEC-0173; core/homeostasis.py, core/scheduler.py): deferrable jobs wait while the computer is busy, on a low battery, offline (the online ones) or nearly out of disk (the heavy ones), essential jobs never do; a waiting job is tri
 - `tests/test_homestead_costs.py`: Finance #2, homestead builds and tools: expense tags, build budgets, tool cost of ownership (core/homestead_costs.py), the Assistant tools (core/assistant_homestead_actions.py), the maintenance-cost hook, and the Budget tab's formatting.
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, the Builds tab's Sell First and Best Earner (DEC-0113), and cups against pounds for materials on the density table.

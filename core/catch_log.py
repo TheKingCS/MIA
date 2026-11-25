@@ -17,6 +17,9 @@ that gave most, and his biggest of each species by length
 (else weight): a personal best is said the moment he logs one. All from his own catches; nothing guessed about
 species, the moon or the weather.
 
+**When to fish** (`best_time`): his own best hours and bait (three catches or more) beside today's weather;
+fewer, the general rule, said as that.
+
 Used by the action `catch.log` (Expeditions, Log A Catch) and the tools `log_catch` and `whats_biting`.
 """
 
@@ -152,6 +155,35 @@ def biting(rows: list[dict], season: Optional[int] = None) -> dict:
               "afternoon (12-17)" if 12 <= h < 17 else "evening (17-21)" if 17 <= h < 21 else "night"] += 1
     return {"total": len(rows), "species": Counter(str(c.get("species") or "").lower() for c in rows).most_common(4),
             "bait": top("bait"), "hour": hours.most_common(1)[0] if hours else None, "place": top("where")}
+
+
+def best_time(context, today: Optional[date] = None) -> str:
+    """"When's a good time to fish?" (brainstorm round 15): his own best hours from his catch log (three catches or
+    more), beside today's weather (core/weather.card) when MIA has it; a plain general rule when his log can't say
+    yet, said as that, never as his."""
+    rows = catches(context)
+    found = biting(rows) if rows else {"total": 0, "hour": None, "bait": None, "place": None}
+    if found["total"] >= 3 and found["hour"]:
+        out = f"From your own log, your best time has been {found['hour'][0]} ({found['hour'][1]} of {found['total']})"
+        out += (f", most of them on {found['bait'][0]}" if found["bait"] else "") + "."
+        if found["place"]:
+            out += f" Your best spot has been {found['place'][0]}."
+    else:
+        out = ("Your log doesn't have enough catches to say yet (log each one when you land it). The general rule: "
+               "early morning and evening, when the light is low, and the day or so before a front comes through.")
+    try:
+        from core import weather
+
+        card = weather.card(context) or {}
+    except Exception:  # noqa: BLE001 - no weather: his log alone
+        card = {}
+    if card.get("text"):
+        day = (card.get("today_words") or "").lower()
+        out += f" Today: {card['text']}" + (f", {day} for the day" if day and day not in card["text"].lower() else "")
+        if card.get("high") is not None:
+            out += f", a high of {card['high']}{card.get('unit', '')}"
+        out += "."
+    return out
 
 
 def say(context, today: Optional[date] = None) -> str:
