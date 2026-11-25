@@ -28,7 +28,8 @@ INSTRUCTION = (
 
 def material(course: str, lesson: str = "", drill: str = "", n: int = 0) -> tuple:
     """Pure logic. (what it's about, the material as text) for a lab of a course, or a drill's question n (from 1).
-    ValueError for a course, lab or drill that isn't there."""
+    ValueError for a course, lab or drill that isn't there.
+    The Arduino course's labs too, with their circuits."""
     from core import drills, paths
 
     if drill:
@@ -51,17 +52,17 @@ def material(course: str, lesson: str = "", drill: str = "", n: int = 0) -> tupl
              "Steps: " + " ".join(f"{i}. {s}" for i, s in enumerate(the.steps, 1))]
     if the.watch:
         lines.append("Watch for: " + " ".join(the.watch))
-    if course == "esp32":
+    if course in ("esp32", "arduino"):
         from core import esp32_sim
-        from core.esp32_path import LABS
+        from core.esp32_lab import labs_of
 
-        lab = LABS.get(the.id)
+        lab = labs_of(course).get(the.id)
         if lab:
             lines.append("Parts: " + ", ".join(lab["parts"]))
             if lab["wiring"]:
                 lines.append("Wiring: " + "; ".join(f"{a} to {b}" for a, b in lab["wiring"]))
             lines.append("The sketch:\n" + lab["code"])
-        circuit = esp32_sim.circuit_of(the.id)
+        circuit = esp32_sim.circuit_of(the.id, course=course)
         if circuit and circuit["steps"]:
             lines.append("The build, wire by wire: " + " ".join(f"{s['n']}. {s['words']} ({s['why']})"
                                                                  for s in circuit["steps"]))

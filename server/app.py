@@ -196,10 +196,12 @@ class NewsHeardRequest(BaseModel):
 
 class LabReadRequest(BaseModel):
     """Reading his board for a lab (POST /api/labs/{course}/read): the lab, a port if not the one found, how long.
-    No seconds: as long as the lab needs."""
+    No seconds: as long as the lab needs.
+    `board`: the Arduino course's Mega or Nano."""
     lesson: str
     port: str = ""
     seconds: float = 0.0  # 0: as long as the lab needs (core/esp32_lab.READ_FOR)
+    board: str = ""  # the Arduino course's: mega, nano or nano_new
 
 
 class LabAskRequest(BaseModel):
@@ -213,11 +215,13 @@ class LabAskRequest(BaseModel):
 
 class LabSimRequest(BaseModel):
     """A lab run in the simulator (POST /api/labs/{course}/sim): his wires (pairs of terminals), the inputs he set (the
-    knob, the room, the soil, presses, requests) and how long."""
+    knob, the room, the soil, presses, requests) and how long.
+    `board`: the Arduino course's Mega or Nano, for its drawing."""
     lesson: str
     wires: list[list[str]] = []
     inputs: dict = {}
     seconds: float = 10.0
+    board: str = ""
 
 
 class AchievementsSeenRequest(BaseModel):
@@ -645,7 +649,8 @@ def create_app(context: AppContext) -> FastAPI:
     /api/labs/{course}/read.
     The ESP32 simulator runs a lab on his wires at POST /api/labs/{course}/sim (core/esp32_sim).
     Ask MIA on a course page is POST /api/labs/{course}/ask (core/lab_ask.py).
-    A lab's read runs as long as the lab needs unless asked otherwise (2 to 30 seconds)."""
+    A lab's read runs as long as the lab needs unless asked otherwise (2 to 30 seconds).
+    The labs' routes take Build With Arduino too, with the board he chose (`board`)."""
     app = FastAPI(title="MIA Mobile API")
     app.state.context = context
     app.state.sessions: dict[str, str] = {}  # token -> profile_id
@@ -3252,11 +3257,13 @@ def create_app(context: AppContext) -> FastAPI:
         return _screen(profile_id, "skills", skills_page)
 
     @app.get("/api/labs/{course}")
-    def web_course_labs(course: str, lesson: str = "", profile_id: str = Depends(require_profile_id)) -> dict:
-        """The Lab page (core/lab_page.page): the course, its stages and checks, the lab chosen, the board."""
+    def web_course_labs(course: str, lesson: str = "", board: str = "",
+                        profile_id: str = Depends(require_profile_id)) -> dict:
+        """The Lab page (core/lab_page.page): the course, its stages and checks, the lab chosen, the board (`board`:
+        the Arduino course's Mega or Nano)."""
         from core.lab_page import page
 
-        return _screen(profile_id, "classroom", lambda view: page(view, course, lesson))
+        return _screen(profile_id, "classroom", lambda view: page(view, course, lesson, board))
 
     @app.post("/api/labs/{course}/read")
     def web_lab_read(course: str, request: LabReadRequest, profile_id: str = Depends(require_profile_id)) -> dict:
@@ -3264,15 +3271,14 @@ def create_app(context: AppContext) -> FastAPI:
         (core/esp32_lab.read_and_check; each result kept as an attempt on his path)."""
         from core import esp32_lab
 
-        if course != "esp32":
+        if course not in ("esp32", "arduino"):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That course isn't worked on a board.")
-        from core.esp32_path import lab_of
-
-        if lab_of(request.lesson) is None:
+        if request.lesson not in esp32_lab.labs_of(course):
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Which lab? Like blink or dht.")
         view = view_for(context, profile_id)
         seconds = max(2.0, min(30.0, request.seconds)) if request.seconds else None  # else the lab's own
-        return esp32_lab.read_and_check(view, request.lesson, request.port, seconds)
+        return esp32_lab.read_and_check(view, request.lesson, request.port, seconds, course=course,
+                                        board_id=request.board)
 
     @app.post("/api/labs/{course}/ask")
     def web_lab_ask(course: str, request: LabAskRequest, profile_id: str = Depends(require_profile_id)) -> dict:
@@ -3295,14 +3301,15 @@ def create_app(context: AppContext) -> FastAPI:
         (build_progress): pure, nothing kept, never a pass."""
         from core import esp32_sim
 
-        if course != "esp32":
+        if course not in esp32_sim.COURSE_CIRCUITS:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "That course has no simulator.")
-        if request.lesson not in esp32_sim.CIRCUITS or len(request.wires) > 60:
+        if request.lesson not in esp32_sim.COURSE_CIRCUITS[course] or len(request.wires) > 60:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Which lab? Like blink or dht.")
         try:
             wires = [tuple(w) for w in request.wires if len(w) == 2]
-            return {"sim": esp32_sim.simulate(request.lesson, wires, request.inputs, request.seconds),
-                    "build": esp32_sim.build_progress(request.lesson, wires)}
+            return {"sim": esp32_sim.simulate(request.lesson, wires, request.inputs, request.seconds, course=course,
+                                              board_id=request.board),
+                    "build": esp32_sim.build_progress(request.lesson, wires, course=course)}
         except (ValueError, TypeError) as problem:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(problem))
 

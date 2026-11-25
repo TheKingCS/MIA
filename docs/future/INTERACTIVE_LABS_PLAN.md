@@ -67,5 +67,13 @@ never MIA's.
    page (Classroom > Hands-on labs) and by voice ("give me a survival drill", then "B" or "I think C"), taken in code
    with its place carried in MIA's own message. Like the simulator, a drill never passes a check. Next: drills for
    other courses (canning safety, a power outage, the flock) from their own verified sources.
+4b. **His own boards** (*built 2026-11-25*, Zac: an ELEGOO MEGA R3 kit and a bunch of Nanos). Boards are data
+   (core/boards.py: pins as printed, logic voltage, ADC, input-only and serial pins, USB chips, PlatformIO ids), and
+   the bench, the simulator and the course page work on any of them. Build With Arduino (core/arduino_path.py): ten
+   labs on the parts an ELEGOO Mega kit carries (an LED, a button, a pot, a photoresistor, the HC-SR04, a DHT11, an
+   SG90 servo, a buzzer), only on pins the Mega and the Nano share, flashed for the board he names ("flash the blink
+   lab to my nano"; the Mega otherwise; the page has a board picker), each check passed only by what the board
+   prints. Ask MIA (core/lab_ask.py) on every course page: his question answered from the lab or drill in front of
+   him.
 5. **His own labs**: the greenhouse node's firmware as the capstone, and labs drafted for a new interest
    (core/paths.draft) in the same seven parts.

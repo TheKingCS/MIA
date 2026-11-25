@@ -15,6 +15,9 @@
   const query = new URLSearchParams(location.search);
   const course = query.get("course") || "esp32";
   let lesson = query.get("lesson") || "";
+  // The board this course is worked on (the Arduino course: his Mega or a Nano), remembered in this browser.
+  const boardKey = "mia.labboard." + course;
+  let boardId = query.get("board") || (() => { try { return localStorage.getItem(boardKey) || ""; } catch (e) { return ""; } })();
   let monitor = "";  // the board's last output, kept while the page is open
   let focus = { drill: "", n: 0, about: "" };  // what Ask MIA is about: the lab, or the drill question on screen
   let askBar = null;
@@ -94,10 +97,16 @@
   function bench(page) {
     const b = page.board || {};
     const lab = page.lab;
-    const status = b.ready ? "Your ESP32 is on " + b.port + (b.description ? " (" + b.description + ")" : "") + "."
+    const picker = (b.choices || []).length > 1 ? el("label", { class: "sim-input" }, el("span", {}, "Your board"),
+      el("select", { onchange: (e) => {
+        boardId = e.target.value;
+        try { localStorage.setItem(boardKey, boardId); } catch (err) { /* this browser keeps nothing */ }
+        MIAShell.refresh();
+      } }, b.choices.map((c) => el("option", { value: c.id, selected: c.id === b.id ? true : null }, c.name)))) : null;
+    const status = b.ready ? "Your board is on " + b.port + (b.description ? " (" + b.description + ")" : "") + "."
       : (b.missing || "Plug in your ESP32.");
     const flash = el("button", { type: "button", class: "btn btn-amber", disabled: page.started ? null : true,
-      onclick: () => MIAShell.act({ kind: "esplab.flash", params: { lesson: lab.id, port: b.port || "" } }) }, "Flash This Lab");
+      onclick: () => MIAShell.act({ kind: "esplab.flash", params: { lesson: lab.id, port: b.port || "", course, board: boardId } }) }, "Flash This Lab");
     const out = el("pre", { class: "crs-monitor", "aria-live": "polite" }, monitor || "The board's output shows here.");
     const said = el("p", { class: "dim" });
     const read = el("button", { type: "button", class: "btn btn-ghost", disabled: page.started ? null : true }, "Read The Board");
@@ -105,7 +114,7 @@
       read.disabled = true;
       read.textContent = "Reading…";
       try {
-        const got = await MIA.courseRead(course, lab.id, 0);
+        const got = await MIA.courseRead(course, lab.id, 0, boardId);
         monitor = got.serial || "(nothing came)";
         out.textContent = monitor;
         said.textContent = got.said;
@@ -118,6 +127,7 @@
       }
     };
     return section("On the bench",
+      picker,
       el("p", { class: "dim" }, status),
       lab.secrets ? el("p", { class: "dim" }, "This lab joins your Wi-Fi: type its name and password into the lab's " +
         "src/secrets.h yourself (MIA never does), then flash it.") : null,
@@ -202,7 +212,7 @@
   }
 
   MIAShell.start(async () => {
-    const page = await MIA.course(course, lesson);
+    const page = await MIA.course(course, lesson, boardId);
     if (!page.available) {
       $("strip").replaceChildren();
       $("map").replaceChildren();

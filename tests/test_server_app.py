@@ -1117,7 +1117,8 @@ def test_a_taught_skill_is_taught_run_and_answered_over_the_api_and_each_change_
 
 def test_a_courses_labs_page_and_reading_the_board_check_the_lab(client, context, tmp_path, monkeypatch):
     """GET /api/labs/esp32: the course page; POST .../read with the board saying five blinks: the blink check passed and
-    kept; an unknown lab is 422, a course without labs 404, and both need a sign-in."""
+    kept; an unknown lab is 422, a course without labs 404, and both need a sign-in.
+    The serial stub takes the board's speed too."""
     from core import esp32_lab, paths
     from core.esp32_path import PROGRAM
 
@@ -1127,7 +1128,7 @@ def test_a_courses_labs_page_and_reading_the_board_check_the_lab(client, context
         context.paths = paths.PathBook(context, data_dir=tmp_path / "paths")
     monkeypatch.setattr(esp32_lab, "board", lambda *a, **k: {"port": "COM5", "description": "CP2102", "pio": [],
                                                              "missing": ""})
-    monkeypatch.setattr(esp32_lab, "read_serial", lambda port, seconds: "MIA BLINK 1\nMIA BLINK 5\n")
+    monkeypatch.setattr(esp32_lab, "read_serial", lambda port, seconds, **kw: "MIA BLINK 1\nMIA BLINK 5\n")
     page = client.get("/api/labs/esp32?lesson=blink", headers=auth).json()
     assert page["available"] and page["lab"]["id"] == "blink" and page["board"]["port"] == "COM5"
     if context.paths.path("esp32") is None:

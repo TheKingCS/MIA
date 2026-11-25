@@ -62,16 +62,17 @@ def test_stopping_and_words_that_arent_a_drill():
 
 def test_canning_and_carpentry_drills_by_their_courses_words_and_the_classroom_lists_them():
     """"Give me a canning drill" is the green beans; "run a carpentry drill" the 2x6; water-bathing green beans is
-    wrong. The Classroom's Hands-on labs lists ESP32 first, then each course with drills, said with its count."""
+    wrong. The Classroom's Hands-on labs lists the board courses first (ESP32, Arduino), then each course with drills,
+    said with its count."""
     canning = drills.reply(None, _said(), "give me a canning drill")
     assert canning.startswith("Drill: Putting up green beans.")
     assert drills.reply(None, _said(), "run a carpentry drill").startswith("Drill: Cutting a 2x6 to length.")
     beans = drills.by_id("canning_day")
     assert drills.judge(beans, 2, 1)["verdict"] == "wrong" and "pressure canner" in drills.judge(beans, 2, 1)["best"]
     listed = lab_page.hands_on()
-    assert [c["id"] for c in listed] == ["esp32", "bushcraft", "gardening", "carpentry"]
-    assert listed[2]["what"] == "Lessons, and 1 drill that judges each call"
-    assert listed[1]["what"] == "Lessons, and 3 drills that judge each call"
+    assert [c["id"] for c in listed] == ["esp32", "arduino", "bushcraft", "gardening", "carpentry"]
+    assert listed[3]["what"] == "Lessons, and 1 drill that judges each call"
+    assert listed[2]["what"] == "Lessons, and 3 drills that judge each call"
 
 
 def test_ordinary_messages_never_start_a_drill_and_a_waiting_drill_lets_commands_through():

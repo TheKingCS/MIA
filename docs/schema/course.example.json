@@ -345,6 +345,11 @@
           "label": "3V3"
         }
       ],
+      "board": {
+        "id": "esp32dev",
+        "name": "ESP32 dev board (30-pin DevKit)",
+        "label": "ESP32"
+      },
       "steps": [
         {
           "n": 1,
@@ -397,7 +402,15 @@
     "port": "COM5",
     "description": "CP2102 USB to UART",
     "ready": true,
-    "missing": ""
+    "missing": "",
+    "id": "esp32dev",
+    "name": "ESP32 dev board (30-pin DevKit)",
+    "choices": [
+      {
+        "id": "esp32dev",
+        "name": "ESP32 dev board (30-pin DevKit)"
+      }
+    ]
   },
   "next": "Build With ESP32, stage 1 (First light): next is \"Have the board say hello over serial\" (show me, and I'll check it). The lesson for it: Talk over serial. 1 check left in this stage."
 }

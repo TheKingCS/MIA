@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1763 files, 380,430 lines; 1763 files describe themselves; 20,812 of 20,942 classes and functions are documented.
+1766 files, 381,506 lines; 1766 files describe themselves; 20,840 of 20,970 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-703 files, 197,175 lines; 9,960 of 10,046 classes and functions documented
+705 files, 198,110 lines; 9,980 of 10,066 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -30,6 +30,7 @@
 - `core/app_scaffold.py`: MIA Forge's scaffold (migration phase M7, DEC-0175; `docs/mia_os/MIA_OS_APPLICATION_REGISTRY.md` section E, steps 4 to 8): everything a new app needs to exist, written from one short description, so a new app starts as a working, registered, empty screen instead of a list of files to remember.
 - `core/appearance.py`: The appearance engine (prompt 24 phase A3, DEC-0183, DEC-0184; `docs/mia_os/MIA_OS_APPEARANCE_ENGINE.md` C): a person's look is three independent choices, composed into the one cleaned theme every page applies (`web/shell.js`):
 - `core/application.py`: MIAApplication: the orchestrator that boots the system.
+- `core/arduino_path.py`: Build With Arduino, the second interactive lab course (Zac, 2026-11-25: "I also have an arduino ELEGOO MEGA R3 kit and a bunch of arduino nanos that she should be able to teach me with"), on the standard Build With ESP32 set (docs/future/INTERACTIVE_LABS_PLAN.md): real labs, each with its parts, wir
 - `core/art_studio.py`: MIA paints (DEC-0140, Zac 2026-11-08: "She should also be able to be prompted to generate art assets and use them in her program, like if you wanted the background to show a fantasy castle/village scene"). A description becomes a picture on the PC's own graphics card, through a local image engine (C
 - `core/asset_parts.py`: Parts per asset (2026-11-07; the asset page's "parts aren't tracked per asset yet", PLANNED since 2026-10-06): the oil filters, blades, belts and fluids a vehicle, tool or appliance uses, from the household's own inventory, workshop materials and parts bins.
 - `core/assistant_accessibility_actions.py`: "Make the text bigger", "turn on high contrast", "read this screen to me" (core/accessibility.py, 2026-10-01), and "switch to the cards look" (core/display_style.py, DEC-0135), "make it cyberpunk" (core/themes.py, DEC-0136). Each changes only the speaker's own look.
@@ -112,6 +113,7 @@
 - `core/benchmarks.py`: The weekly benchmarks (build plan step 5, DEC-0094): Zac's 112-question Intelligence Benchmark on this PC's model and the person's real records, the golden conversation corpus on the glasses and the phone, and the routing audit. `tools/weekly_bench.py` runs them (Night School starts it once a week, 
 - `core/best_customers.py`: Who his best customers are, and who's gone quiet (Jarvis brainstorm round 7, 2026-11-24; his businesses): "who are my best customers?", "which customers haven't ordered in a while?". The customers, their orders and the ledger read together.
 - `core/blueprints.py`: The blueprints MIA builds screens from (DEC-0090; `blueprints/README.md`): versioned JSON in the repo, with fields named by role (`$title`, `$date`, `$group`, `$number`, `$all`, `$details`). `fill()` turns one into blocks for a particular record set, leaving out what has no field to show.
+- `core/boards.py`: The boards MIA's labs are built on (docs/future/INTERACTIVE_LABS_PLAN.md; Zac, 2026-11-25: "I also have an arduino ELEGOO MEGA R3 kit and a bunch of arduino nanos that she should be able to teach me with"). Pure data, read by the bench (core/esp32_lab.py: building, flashing, reading), the simulator 
 - `core/boot_sound.py`: Six to choose from** (2026-11-07, Zac: "an odd ping... sample some sounds and I will pick"): `startup_samples()` makes each of core/startup_sounds.py's choices (a warm chord, rising chimes, a reactor power-up, a soft swell, a ready tone, and the original below); Settings plays and picks one (`sound.
 - `core/boot_sound_worker.py`: Plays the boot sound off the GUI thread — same reasoning as core/tts_worker.py: `VoiceManager.play()`'s `sd.wait()` blocks for the whole sound's duration, which would otherwise freeze core/application.py's own `QTimer`-chained boot steps for that long.
 - `core/boss_battles.py`: Boss battles (DEC-0028, the game layer's third piece): big goals with an HP bar.
@@ -714,7 +716,7 @@
 
 ## server/: the web and phone API over the engine
 
-2 files, 4,951 lines; 62 of 62 classes and functions documented
+2 files, 4,958 lines; 62 of 62 classes and functions documented
 
 - `server/__init__.py`: MIA's fourth interface tier (Mobile access, Phase 1 — 2026-09-12), sibling to core/, gui/, modules/: a small local HTTP API + static PWA, consuming core/ the same way gui/ does. See server/app.py's own docstring for the full design.
 - `server/app.py`: The Mobile access Phase 1 API (see the "Mobile access, Phase 1" plan, 2026-09-12): a small FastAPI app proving the Web Push pipeline end-to-end (login -> get VAPID public key -> subscribe -> send a test push), plus a bare static PWA shell. Deliberately minimal — no real dashboard endpoints yet; that
@@ -1001,7 +1003,7 @@
 
 ## tests/: the test suite: what each part must do
 
-652 files, 101,561 lines; 8,484 of 8,528 classes and functions documented
+653 files, 101,677 lines; 8,492 of 8,536 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1032,6 +1034,7 @@
 - `tests/test_appearance.py`: The glass design system's foundation (prompt 24 phase A2, DEC-0183, DEC-0184; web/tokens.css, web/themes.css, core/themes.py, tools/css_colours.py): the five surface tiers exist as tokens with defaults inside their ranges; the glass material draws every tier from its tokens; a theme can set a tier o
 - `tests/test_application_daily_occasions.py`: Unit tests for core.application.MIAApplication._check_daily_occasions() and its per-check exception isolation (2026-09-14 stabilization pass).
 - `tests/test_approval_binding.py`: Tests for approvals bound to the card (WP-02, REQ-SEC-016, core/actions.py): an approval holds only for the card exactly as it was shown; a changed card, another card's binding, or a second approval does nothing.
+- `tests/test_arduino_labs.py`: Build With Arduino on his Mega or Nanos (core/arduino_path.py, core/boards.py, and the bench, simulator and course page on any board): every check's marker is printed by a lab's sketch and only by its own; each lab wired as built passes its checks in the simulator on the Arduino's 5 V and 10-bit ADC
 - `tests/test_art_studio.py`: MIA paints (DEC-0140, core/art_studio.py): a description becomes a picture on the PC's own image engine (ComfyUI), kept in the person's folder, and can go up as their theme's backdrop or, as a crest, on the Character card. Tested against a stand-in ComfyUI on a local port: the same HTTP calls, a tin
 - `tests/test_asset_parts.py`: Parts per asset (core/asset_parts.py and its voice tools): the parts an asset uses are stated links to the household's inventory and materials, listed with what's on hand, out and low first; adding and removing go through the same actions the asset page uses.
 - `tests/test_asset_photo.py`: An asset's photo (Q-0014, 2026-11-07): kept in the household's own folder under a name of its own, shown on its page and Garage card through a link that changes with the file, and never served from outside that folder.
@@ -1658,7 +1661,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-122 files, 23,014 lines
+122 files, 23,032 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

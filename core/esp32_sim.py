@@ -23,24 +23,49 @@ in a simulator, and MIA walking him through building alongside it). Pure logic: 
 
 Tools (registered in core/esp32_lab.py): `build_along` ("walk me through building the pot lab", "next step") and
 `simulate_lab` ("what will the dht lab print?").
+Any board (2026-11-25): the board and course ride in a context set by a public call that names one (`course`,
+`board_id`; core/boards.py), so the ESP32's labs run unchanged and Build With Arduino's (ARDUINO_CIRCUITS: a button,
+a light divider, the HC-SR04, a DHT11, a servo, a buzzer) run on the Arduino's 5 V and 10-bit ADC; a part with no
+rules of its own is judged against its build steps (`_by_build`).
 """
 
 from __future__ import annotations
 
+import functools
 import random
 import re
+from contextvars import ContextVar
 from typing import Callable, Optional
 
-BOARD_LEFT = ("EN", "GPIO 36", "GPIO 39", "GPIO 34", "GPIO 35", "GPIO 32", "GPIO 33", "GPIO 25", "GPIO 26", "GPIO 27",
-              "GPIO 14", "GPIO 12", "GPIO 13", "GND", "VIN")
-BOARD_RIGHT = ("GPIO 23", "GPIO 22", "GPIO 1", "GPIO 3", "GPIO 21", "GPIO 19", "GPIO 18", "GPIO 5", "GPIO 17",
-               "GPIO 16", "GPIO 4", "GPIO 2", "GPIO 15", "GND 2", "3V3")
+from core import boards as _boards
+
+_BOARD = ContextVar("lab_board", default=_boards.ESP32)
+_COURSE = ContextVar("lab_course", default="esp32")
+
+
+def B() -> "_boards.Board":
+    """The board the lab being judged runs on (core/boards.py): the ESP32 unless a call named another course."""
+    return _BOARD.get()
+
+
+def _in_course(fn):
+    """A public call taking `course` (and `board_id`): run on that course's board; with none, on the one already set
+    (the ESP32 by default)."""
+    @functools.wraps(fn)
+    def run(*args, course: str = "", board_id: str = "", **kwargs):
+        """The call, on its course's board."""
+        if not course:
+            return fn(*args, **kwargs)
+        tokens = (_COURSE.set(course), _BOARD.set(_boards.board_for(course, board_id)))
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            _COURSE.reset(tokens[0])
+            _BOARD.reset(tokens[1])
+    return run
+
+BOARD_LEFT, BOARD_RIGHT = _boards.ESP32.left, _boards.ESP32.right  # the ESP32 DevKit's pins (core/boards.py)
 BOARD = BOARD_LEFT + BOARD_RIGHT
-_PRINTED = {"GPIO 36": "VP", "GPIO 39": "VN", "GPIO 1": "TX0", "GPIO 3": "RX0", "GPIO 17": "TX2", "GPIO 16": "RX2",
-            "GND 2": "GND"}
-INPUT_ONLY = {34, 35, 36, 39}
-SERIAL = {1, 3}
-RAILS = ("3V3", "VIN", "GND")
 
 # kind -> (its name, its terminals (id, what it is on the part))
 KINDS = {
@@ -51,8 +76,17 @@ KINDS = {
     "dht22": ("DHT22 module", (("vcc", "VCC (+)"), ("data", "DATA"), ("gnd", "GND (-)"))),
     "soil": ("soil moisture sensor", (("vcc", "VCC"), ("gnd", "GND"), ("aout", "AOUT"))),
     "relay": ("relay module", (("vcc", "VCC"), ("gnd", "GND"), ("in", "IN"))),
+    # the Arduino course's (core/arduino_path.py)
+    "button": ("push button", (("a", "one leg"), ("b", "the leg across from it"))),
+    "ldr": ("photoresistor", (("a", "one leg"), ("b", "the other leg"))),
+    "resistor10k": ("10k resistor", (("a", "one end"), ("b", "the other end"))),
+    "hcsr04": ("HC-SR04", (("vcc", "VCC"), ("trig", "TRIG"), ("echo", "ECHO"), ("gnd", "GND"))),
+    "dht11": ("DHT11 module", (("vcc", "VCC (+)"), ("data", "DATA"), ("gnd", "GND (-)"))),
+    "servo": ("SG90 servo", (("gnd", "brown wire (GND)"), ("vcc", "red wire (+)"), ("sig", "orange wire (signal)"))),
+    "buzzer": ("buzzer", (("plus", "+ leg"), ("minus", "- leg"))),
 }
-SWAPS = {"resistor": ("a", "b"), "pot": ("end1", "end2")}  # ends that work either way round
+SWAPS = {"resistor": ("a", "b"), "pot": ("end1", "end2"), "button": ("a", "b"), "ldr": ("a", "b"),
+         "resistor10k": ("a", "b")}  # ends that work either way round
 
 # For "what will it print?" (the lab's own circuit): the inputs that show it passing, how long, and what they are in
 # words; and on the page, what to do in the simulator for the check.
@@ -63,6 +97,27 @@ SHOW = {
     "sleep": ({"moisture": [[0, 0], [31, 1]]}, 31.0, "for half a minute, the soil watered as it goes"),
     "web": ({"requests": [3.0]}, 5.0, "with one request from a browser"),
 }
+ARDUINO_SHOW = {
+    "button": ({"presses": [1.0, 2.0, 3.0]}, 5.0, "with the button pressed three times"),
+    "pot": ({"pot": [[0, 0], [5, 1]]}, 5.0, "with the knob turned end to end"),
+    "light": ({"light": [[0, 0.05], [3, 0.05], [4, 0.95]]}, 7.0, "covered, then in bright light"),
+    "distance": ({"distance": [[0, 10], [4, 60]]}, 5.0, "with your hand moving from 10 to 60 cm away"),
+    "servo": ({}, 7.0, ""),
+}
+ARDUINO_TRY = {
+    "button": "Press the button three times.",
+    "pot": "Turn the knob from one end to the other while it runs.",
+    "light": "Run it dark, then bright: the readings need to spread at least 200.",
+    "distance": "Move your hand nearer and farther: the distances need to spread 20 cm.",
+    "dht": "Set the room's temperature and humidity, then run it.",
+}
+
+
+def try_for(lesson_id: str, course: str = "esp32") -> str:
+    """What to do in the simulator for a lab's check, on its course."""
+    return (ARDUINO_TRY if course == "arduino" else TRY).get(lesson_id, "")
+
+
 TRY = {
     "button": "Press BOOT three times.",
     "pot": "Turn the knob from one end to the other while it runs.",
@@ -117,21 +172,72 @@ CIRCUITS = {
 }
 
 
+_ARD_LED = (
+    ("D13", "r1.a", "The pin drives the LED through the resistor, which limits the current: without it the LED and "
+                    "the pin take far more than they should."),
+    ("r1.b", "led1.anode", "The LED's long leg (+) faces the pin: an LED passes current one way only."),
+    ("led1.cathode", "GND", "The short leg (-) to ground closes the loop."),
+)
+ARDUINO_CIRCUITS = {
+    "blink": {"pin": "D13", "parts": (("r1", "resistor"), ("led1", "led")), "build": _ARD_LED,
+              "note": "The onboard LED on pin 13 blinks too, with nothing wired: this build is your own LED on the "
+                      "same pin."},
+    "hello": {"pin": "", "parts": (), "build": (), "note": "Nothing to wire: just the USB cable."},
+    "button": {"pin": "D2", "parts": (("button1", "button"),), "build": (
+        ("button1.a", "D2", "The pin reads the button; INPUT_PULLUP holds it at 5 V until the button is pressed."),
+        ("button1.b", "GND", "Pressed, the button joins the pin to ground: it reads LOW.")),
+        "note": "Put the button across the breadboard's middle gap, and use legs across from each other."},
+    "pot": {"pin": "A0", "parts": (("pot1", "pot"),), "build": (
+        ("pot1.end1", "5V", "One outer leg at 5 V: the top of the range."),
+        ("pot1.end2", "GND", "The other outer leg at ground: the bottom."),
+        ("pot1.wiper", "A0", "The wiper is the voltage in between, what analogRead(A0) turns into 0 to 1023.")),
+        "note": ""},
+    "light": {"pin": "A1", "parts": (("ldr1", "ldr"), ("r10k1", "resistor10k")), "build": (
+        ("ldr1.a", "5V", "The photoresistor is the top of a divider, from 5 V."),
+        ("ldr1.b", "A1", "The middle of the divider is the reading."),
+        ("r10k1.a", "A1", "The 10k resistor is the divider's bottom half, from the middle..."),
+        ("r10k1.b", "GND", "...to ground: without it, A1 floats and the reading wanders.")), "note": ""},
+    "distance": {"pin": "D7", "parts": (("sonar1", "hcsr04"),), "build": (
+        ("sonar1.vcc", "5V", "The HC-SR04 runs on 5 V."),
+        ("sonar1.gnd", "GND", "Ground, shared with the board."),
+        ("sonar1.trig", "D7", "TRIG: the board's 10 microsecond pulse that sends a ping."),
+        ("sonar1.echo", "D8", "ECHO: high for as long as the sound took there and back.")), "note": ""},
+    "dht": {"pin": "D3", "parts": (("dht1", "dht11"),), "build": (
+        ("dht1.vcc", "5V", "The DHT11 runs on 3.3 to 5 V; 5 V on an Arduino."),
+        ("dht1.gnd", "GND", "Ground."),
+        ("dht1.data", "D3", "DATA is a one-wire conversation on D3, the pin the sketch's dht(3, DHT11) talks on.")),
+        "note": "A module has its pull-up resistor on it; a bare sensor also needs 10k from DATA to 5V."},
+    "fade": {"pin": "D5", "parts": (("r1", "resistor"), ("led1", "led")), "build": (
+        ("D5", "r1.a", "D5 is a PWM pin (marked ~): it can dim the LED. Through the resistor, to limit the current."),
+        ("r1.b", "led1.anode", "The LED's long leg (+) faces the pin."),
+        ("led1.cathode", "GND", "The short leg (-) to ground closes the loop.")), "note": ""},
+    "servo": {"pin": "D6", "parts": (("servo1", "servo"),), "build": (
+        ("servo1.gnd", "GND", "Brown is ground."),
+        ("servo1.vcc", "5V", "Red is power: 5 V for one small servo, unloaded."),
+        ("servo1.sig", "D6", "Orange is the signal: the pulse from the Servo library that sets the angle.")),
+        "note": "A loaded servo, or several, need their own 5 V supply, its GND joined to the board's."},
+    "buzzer": {"pin": "D4", "parts": (("buzzer1", "buzzer"),), "build": (
+        ("buzzer1.plus", "D4", "The + leg to the pin tone() drives."),
+        ("buzzer1.minus", "GND", "The - leg to ground.")), "note": ""},
+}
+COURSE_CIRCUITS = {"esp32": CIRCUITS, "arduino": ARDUINO_CIRCUITS}
+
+
+def _circ() -> dict:
+    """The circuits of the course being judged."""
+    return COURSE_CIRCUITS[_COURSE.get()]
+
+
 def label(pin: str) -> str:
-    """Pure logic. What's printed beside a board pin: D2 for GPIO 2, VP, TX0, GND."""
-    if pin in _PRINTED:
-        return _PRINTED[pin]
-    return "D" + pin[5:] if pin.startswith("GPIO ") else pin
-
-
-def _gpio(terminal: str) -> Optional[int]:
-    """A board pin's GPIO number, or None."""
-    return int(terminal[5:]) if terminal.startswith("GPIO ") else None
+    """Pure logic. What's printed beside a board pin (on the board being judged): D2 for the ESP32's GPIO 2, VP, TX0,
+    GND; an Arduino's as it's named."""
+    return B().label(pin)
 
 
 def _parts(lesson_id: str) -> dict:
-    """{part id: kind} for a lab."""
-    return dict(CIRCUITS[lesson_id]["parts"])
+    """{part id: kind} for a lab.
+    In the course being judged."""
+    return dict(_circ()[lesson_id]["parts"])
 
 
 def words_for(lesson_id: str, terminal: str) -> str:
@@ -145,30 +251,37 @@ def words_for(lesson_id: str, terminal: str) -> str:
     return f"{what} of the {name}" if what.startswith(("one ", "the ")) else f"the {name}'s {what}"
 
 
+@_in_course
 def circuit_of(lesson_id: str) -> Optional[dict]:
     """The circuit page's data for a lab, or None for one without: the pin its sketch uses, its parts (with their
-    terminals), the board's pins on each side (each with what's printed), the build steps and a note."""
-    circuit = CIRCUITS.get(lesson_id)
+    terminals), the board's pins on each side (each with what's printed), the build steps and a note; and the board
+    it's drawn on ({id, name})."""
+    circuit = _circ().get(lesson_id)
     if circuit is None:
         return None
     parts = [{"id": pid, "kind": kind, "name": KINDS[kind][0],
               "pins": [{"id": f"{pid}.{t}", "name": n} for t, n in KINDS[kind][1]]} for pid, kind in circuit["parts"]]
     side = lambda pins: [{"id": p, "label": label(p)} for p in pins]  # noqa: E731
-    return {"pin": circuit["pin"], "parts": parts, "left": side(BOARD_LEFT), "right": side(BOARD_RIGHT),
+    return {"pin": circuit["pin"], "parts": parts, "left": side(B().left), "right": side(B().right),
+            "board": {"id": B().id, "name": B().name, "label": B().short.replace("the ", "").upper()},
             "steps": [{"n": i, "a": a, "b": b, "words": f"{words_for(lesson_id, a)} to {words_for(lesson_id, b)}",
                        "why": why} for i, (a, b, why) in enumerate(circuit["build"], 1)],
             "note": circuit["note"]}
 
 
+@_in_course
 def terminals(lesson_id: str) -> set:
-    """Every terminal a wire may join in a lab: the board's pins and its parts' terminals."""
-    return set(BOARD) | {f"{pid}.{t}" for pid, kind in CIRCUITS[lesson_id]["parts"] for t, _ in KINDS[kind][1]}
+    """Every terminal a wire may join in a lab: its board family's pins and its parts' terminals."""
+    return set(_boards.FAMILY_PINS[B().family]) | {f"{pid}.{t}" for pid, kind in _circ()[lesson_id]["parts"]
+                                                   for t, _ in KINDS[kind][1]}
 
 
+@_in_course
 def clean_wires(lesson_id: str, wires) -> list:
     """Pure logic. His wires as (a, b) pairs, each joining two different terminals of the lab. ValueError for a lab
-    without a circuit or a terminal it hasn't."""
-    if lesson_id not in CIRCUITS:
+    without a circuit or a terminal it hasn't.
+    In the course given: its board family's pins."""
+    if lesson_id not in _circ():
         raise ValueError("There's no lab by that name.")
     known = terminals(lesson_id)
     out = []
@@ -211,13 +324,14 @@ class _Nets:
         return self.find(a) == self.find(b)
 
     def rail(self, terminal: str) -> Optional[str]:
-        """The rail (3V3, VIN or GND) a terminal's net is on, or None (a short between rails names the first)."""
-        return next((r for r in RAILS if self.same(terminal, r)), None)
+        """The rail (a supply of the board, or GND) a terminal's net is on, or None (a short between rails names the
+        first)."""
+        return next((r for r in B().supplies + ("GND",) if self.same(terminal, r)), None)
 
     def pins_on(self, terminal: str) -> list:
-        """The board's GPIO pins on a terminal's net."""
+        """The board's signal pins on a terminal's net."""
         root = self.find(terminal)
-        return [p for p in BOARD if p.startswith("GPIO ") and self.find(p) == root]
+        return [p for p in B().signals if self.find(p) == root]
 
 
 def _reach(nets: _Nets, start: str, resistors: list) -> dict:
@@ -239,14 +353,15 @@ def _reach(nets: _Nets, start: str, resistors: list) -> dict:
 
 def _led(nets: _Nets, part: str, pin: str, resistors: list, touched: set, say: Callable) -> str:
     """An LED's state from its loop: lit, overdriven (no resistor), backwards, on (to 3V3, not the pin) or off.
-    An LED straight across a rail with no resistor is overdriven, like one on the pin."""
+    An LED straight across a rail with no resistor is overdriven, like one on the pin.
+    The pins and rails are the board's."""
     anode, cathode = f"{part}.anode", f"{part}.cathode"
     if nets.same(anode, cathode):
         say("warn", "The LED's two legs are joined: the current goes around it, so it stays dark.")
         return "off"
     to_a, to_c = _reach(nets, anode, resistors), _reach(nets, cathode, resistors)
     ground = nets.find("GND")
-    gpios = [p for p in BOARD if p.startswith("GPIO ")]
+    gpios = list(B().signals)
     forward = [(q, to_a[nets.find(q)] + to_c[ground]) for q in gpios if nets.find(q) in to_a and ground in to_c]
     backward = [q for q in gpios if nets.find(q) in to_c and ground in to_a]
     mine = [n for q, n in forward if q == pin]
@@ -263,7 +378,7 @@ def _led(nets: _Nets, part: str, pin: str, resistors: list, touched: set, say: C
         say("warn", "The LED is in backwards: its long leg (+) goes toward the pin, the short leg (-) toward GND. The "
                     "serial monitor still counts, but the LED stays dark.")
         return "backwards"
-    for rail_name in ("3V3", "VIN"):
+    for rail_name in B().supplies:
         rail_net = nets.find(rail_name)
         if rail_net in to_a and ground in to_c:
             if to_a[rail_net] + to_c[ground] == 0:
@@ -278,12 +393,15 @@ def _led(nets: _Nets, part: str, pin: str, resistors: list, touched: set, say: C
 
 
 def _pot(nets: _Nets, part: str, pin: str, say: Callable) -> dict:
-    """A pot's state: ok (and reversed), stuck at a value, or floating."""
+    """A pot's state: ok (and reversed), stuck at a value, or floating.
+    Across the board's logic rail (3V3 on the ESP32, 5V on an Arduino), read on its own ADC."""
     ends = (nets.rail(f"{part}.end1"), nets.rail(f"{part}.end2"))
     wiper = nets.pins_on(f"{part}.wiper")
-    state = {"ok": False, "reversed": ends == ("GND", "3V3"), "stuck": None, "floating": False}
+    logic, top = B().logic_rail, B().adc_max
+    state = {"ok": False, "reversed": ends == ("GND", logic), "stuck": None, "floating": False}
     if "VIN" in ends:
-        say("stop", "5 V on the pot: turned up, its wiper reaches 5 V, over the ESP32's 3.3 V limit. Use 3V3.")
+        say("stop", ("5 V" if B().family == "esp32" else "VIN, up to 12 V from a wall supply,") + " on the pot: turned "
+            f"up, its wiper reaches it, over {B().short}'s {B().logic_volts:g} V limit. Use {logic}.")
         return state
     if not wiper:
         say("warn", f"The wiper (the middle leg) isn't on {label(pin)} yet: that's the reading.")
@@ -293,23 +411,25 @@ def _pot(nets: _Nets, part: str, pin: str, say: Callable) -> dict:
         say("warn", f"The wiper is on {label(wiper[0])}, but the sketch reads {label(pin)} ({pin}).")
         state["floating"] = True
         return state
-    if sorted(e or "" for e in ends) == ["3V3", "GND"]:
+    if sorted(e or "" for e in ends) == sorted([logic, "GND"]):
         state["ok"] = True
         return state
     if ends[0] and ends[0] == ends[1]:
         say("warn", f"Both outer legs are on {ends[0]}: the wiper reads the same wherever you turn it.")
-        state["stuck"] = 4095 if ends[0] == "3V3" else 0
-    elif "3V3" in ends or "GND" in ends:
-        say("warn", "Each outer leg needs a rail, one 3V3 and one GND: with one loose, the reading sits at one end.")
-        state["stuck"] = 4095 if "3V3" in ends else 0
+        state["stuck"] = top if ends[0] != "GND" else 0
+    elif logic in ends or "GND" in ends:
+        say("warn", f"Each outer leg needs a rail, one {logic} and one GND: with one loose, the reading sits at one "
+                    "end.")
+        state["stuck"] = top if logic in ends else 0
     else:
-        say("warn", "The outer legs aren't on 3V3 and GND yet: with nothing across it, the reading wanders.")
+        say("warn", f"The outer legs aren't on {logic} and GND yet: with nothing across it, the reading wanders.")
         state["floating"] = True
     return state
 
 
 def _module(nets: _Nets, part: str, kind: str, signal: str, pin: str, say: Callable) -> bool:
-    """A three-wire module (DHT22, soil sensor, relay): powered, grounded and its signal on the sketch's pin."""
+    """A three-wire module (DHT22, soil sensor, relay): powered, grounded and its signal on the sketch's pin.
+    An input-only pin is the board's own (core/boards.py)."""
     name = KINDS[kind][0]
     power, ground, on = nets.rail(f"{part}.vcc"), nets.rail(f"{part}.gnd"), nets.pins_on(f"{part}.{signal}")
     ok = True
@@ -330,8 +450,7 @@ def _module(nets: _Nets, part: str, kind: str, signal: str, pin: str, say: Calla
         say("warn", f"The {name}'s {what} isn't on {label(pin)} yet.")
         return False
     if pin not in on:
-        number = _gpio(on[0])
-        if kind in ("dht22", "relay") and number in INPUT_ONLY:
+        if kind in ("dht22", "relay") and on[0] in B().input_only:
             say("warn", f"{label(on[0])} is input-only (GPIO 34 to 39): the {name} needs a pin that can drive it.")
         else:
             say("warn", f"The {name}'s {what} is on {label(on[0])}, but the sketch uses {label(pin)} ({pin}).")
@@ -339,13 +458,61 @@ def _module(nets: _Nets, part: str, kind: str, signal: str, pin: str, say: Calla
     return ok
 
 
+def _by_build(nets: _Nets, part: str, kind: str, say: Callable) -> bool:
+    """A part judged against its own build steps: each terminal on the rail or pin its step names (a button's,
+    photoresistor's or resistor's legs either way round); the closer way round is the one said."""
+    name = KINDS[kind][0]
+    steps = [(a, b) if a.startswith(part + ".") else (b, a) for a, b, _ in _circ()[_COURSE_LESSON.get()]["build"]
+             if a.startswith(part + ".") or b.startswith(part + ".")]
+    ways = [steps]
+    if kind in SWAPS:
+        x, y = (f"{part}.{t}" for t in SWAPS[kind])
+        ways.append([({x: y, y: x}.get(t, t), target) for t, target in steps])
+    best: Optional[list] = None
+    for way in ways:
+        found = []
+        for terminal, target in way:
+            what = dict(KINDS[kind][1])[terminal.split(".", 1)[1]]
+            if target in B().supplies or target == "GND":
+                actual = nets.rail(terminal)
+                if actual == target:
+                    continue
+                if actual is None:
+                    found.append(("warn", f"The {name}'s {what} isn't on {target} yet."))
+                elif actual == "VIN":
+                    found.append(("stop", f"The {name}'s {what} is on VIN: from a wall supply that's up to 12 V, too "
+                                          f"much for it. Use {target}."))
+                elif target == "5V" and actual == "3V3":
+                    found.append(("warn", f"The {name}'s {what} is on 3V3: it needs 5V to work reliably."))
+                else:
+                    found.append(("warn", f"The {name}'s {what} is on {actual}: it goes to {target}."))
+            else:
+                on = nets.pins_on(terminal)
+                if not on:
+                    found.append(("warn", f"The {name}'s {what} isn't on {label(target)} yet."))
+                elif target not in on:
+                    found.append(("warn", f"The {name}'s {what} is on {label(on[0])}, but the sketch uses "
+                                          f"{label(target)}."))
+        if best is None or len(found) < len(best):
+            best = found
+    for level, text in best or []:
+        say(level, text)
+    return not best
+
+
+_COURSE_LESSON = ContextVar("lab_lesson", default="")
+
+
+@_in_course
 def analyse(lesson_id: str, wires) -> dict:
     """Pure logic. His circuit judged (see the module's opening): {ok, problems [{level, text}], state {part: ...,
     "reset": EN held low, "short": a rail shorted}}. ValueError for a lab or terminal it hasn't.
-    A GPIO wired to VIN (5 V) is a stop: it can damage the chip."""
+    A GPIO wired to VIN (5 V) is a stop: it can damage the chip.
+    On any board (`course`, `board_id`): its supplies, reset pin, serial pins and limits."""
     wires = clean_wires(lesson_id, wires)
-    circuit = CIRCUITS[lesson_id]
+    circuit = _circ()[lesson_id]
     nets = _Nets(wires)
+    lesson_token = _COURSE_LESSON.set(lesson_id)
     problems: list = []
 
     def say(level: str, text: str) -> None:
@@ -355,35 +522,41 @@ def analyse(lesson_id: str, wires) -> dict:
 
     touched = {t for w in wires for t in w}
     state: dict = {"reset": False, "short": False}
-    for supply in ("3V3", "VIN"):
+    for supply in B().supplies:
         if nets.same(supply, "GND"):
             say("stop", f"{supply} is wired straight to GND: a short. A real board browns out and its regulator heats; "
                         "pull that wire.")
             state["short"] = True
-    if nets.same("3V3", "VIN"):
-        say("stop", "3V3 and VIN (5 V) are joined: that pushes 5 V into the 3.3 V side. Pull that wire.")
-        state["short"] = True
-    if nets.same("EN", "GND"):
-        say("stop", "EN to GND holds the board in reset: nothing runs until it's free.")
+    supplies = B().supplies
+    for i, a in enumerate(supplies):
+        for b in supplies[i + 1:]:
+            if nets.same(a, b):
+                say("stop", f"{a} and {b} are joined: two supplies at different voltages, pushing one into the other. "
+                            "Pull that wire.")
+                state["short"] = True
+    reset = "EN" if B().family == "esp32" else "RST"
+    if nets.same(reset, "GND"):
+        say("stop", f"{reset} to GND holds the board in reset: nothing runs until it's free.")
         state["reset"] = True
     pin = circuit["pin"]
-    drives = any(kind in ("led", "relay") for _, kind in circuit["parts"])
-    for gpio in sorted({t for t in touched if t.startswith("GPIO ")}, key=lambda p: int(p[5:])):
+    drives = any(kind in ("led", "relay", "servo", "buzzer") for _, kind in circuit["parts"])
+    for gpio in [p for p in B().signals if p in touched]:
         rail = nets.rail(gpio)
         if rail == "VIN":
-            say("stop", f"{label(gpio)} is wired to VIN, 5 V: over the ESP32's 3.3 V limit, which can damage the chip. "
-                        "Pull that wire.")
+            vin = "5 V" if B().family == "esp32" else "up to 12 V from a wall supply"
+            say("stop", f"{label(gpio)} is wired to VIN, {vin}: over {B().short}'s {B().logic_volts:g} V limit, which "
+                        "can damage the chip. Pull that wire.")
             state["short"] = True
         elif rail and gpio == pin and drives:
             say("stop", f"{label(gpio)} is tied straight to {rail}: when the sketch drives it the other way, it "
                         "shorts through the pin.")
             state["short"] = True
         elif rail:
-            say("warn", f"{label(gpio)} is tied straight to {rail}: it reads {'0' if rail == 'GND' else '4095'} and "
-                        "nothing else.")
-        if _gpio(gpio) in SERIAL:
+            say("warn", f"{label(gpio)} is tied straight to {rail}: it reads "
+                        f"{'0' if rail == 'GND' else B().adc_max} and nothing else.")
+        if gpio in B().serial:
             say("warn", f"{label(gpio)} carries the USB serial: anything on it garbles the monitor and can block "
-                        "uploads. Leave TX0 and RX0 free.")
+                        "uploads. Leave those two pins free.")
         others = [p for p in nets.pins_on(gpio) if p != gpio]
         if others and gpio < others[0]:
             say("warn", f"{label(gpio)} and {label(others[0])} are joined: two pins on one wire fight each other.")
@@ -399,17 +572,22 @@ def analyse(lesson_id: str, wires) -> dict:
             state[part] = _module(nets, part, kind, "aout", pin, say)
         elif kind == "relay":
             state[part] = _module(nets, part, kind, "in", pin, say)
+        elif kind not in ("resistor",):
+            state[part] = _by_build(nets, part, kind, say)
+    _COURSE_LESSON.reset(lesson_token)
     return {"ok": not any(p["level"] in ("stop", "warn") for p in problems), "problems": problems, "state": state}
 
 
+@_in_course
 def build_progress(lesson_id: str, wires) -> dict:
     """Pure logic. The lab's build against his wires: {steps [{n, a, b, words, why, done}], next (the first step not
-    done, or None), done (all of them)}. A resistor's or a pot's two ends count either way round."""
+    done, or None), done (all of them)}. A resistor's or a pot's two ends count either way round.
+    In the course given (`course`)."""
     circuit = circuit_of(lesson_id)
     if circuit is None:
         raise ValueError("There's no lab by that name.")
     nets = _Nets(clean_wires(lesson_id, wires))
-    flips = [(pid, SWAPS[kind]) for pid, kind in CIRCUITS[lesson_id]["parts"] if kind in SWAPS]
+    flips = [(pid, SWAPS[kind]) for pid, kind in _circ()[lesson_id]["parts"] if kind in SWAPS]
     best: list = []
     for mask in range(2 ** len(flips)):
         swap = {}
@@ -424,6 +602,7 @@ def build_progress(lesson_id: str, wires) -> dict:
     return {"steps": steps, "next": following, "done": bool(steps) and following is None}
 
 
+@_in_course
 def build_step(lesson_id: str, n: int, fresh: bool = True) -> str:
     """Pure logic. Step n of a lab's build as MIA says it (the parts first, starting fresh at step 1), or that it's
     built."""
@@ -464,25 +643,28 @@ def _where(words: str, at: Optional[dict], lesson_id: str) -> tuple:
 
 
 def _build_tool(context, arguments: dict) -> str:
-    """Tool build_along: one step of a lab's build, where he is kept on his path (so "next step" follows)."""
-    from core.esp32_lab import lesson_for
-    from core.esp32_path import PROGRAM
+    """Tool build_along: one step of a lab's build, where he is kept on his path (so "next step" follows), on the
+    course his words or his build so far mean (core/esp32_lab.course_in)."""
+    from core import paths
+    from core.esp32_lab import course_in, lesson_for
 
     book = getattr(context, "paths", None)
     if book is None:
         return "Learning paths aren't on this MIA."
     words = str(arguments.get("lab", "") or "") + " " + str(arguments.get("question", "") or "")
-    at = book.build_at(PROGRAM.id) if book.path(PROGRAM.id) is not None else None
-    named = any(lesson.id in words.lower() or lesson.title.lower() in words.lower()
-                for stage in PROGRAM.stages for lesson in stage.lessons)
-    lesson = lesson_for(context, words) if named or not at else at["lesson"]
-    if lesson not in CIRCUITS:
+    course = course_in(context, words, building=True)
+    program = paths.program_of(context, course)
+    at = book.build_at(program.id) if book.path(program.id) is not None else None
+    named = any(re.search(rf"\b{re.escape(lesson.id)}\b", words.lower()) or lesson.title.lower() in words.lower()
+                for stage in program.stages for lesson in stage.lessons)
+    lesson = lesson_for(context, words, course=course) if named or not at else at["lesson"]
+    if lesson not in COURSE_CIRCUITS[course]:
         return "That lab has nothing to build."
     step, fresh = _where(words if not named or (at and at.get("lesson") == lesson) else "", at, lesson)
-    step = min(step, len(CIRCUITS[lesson]["build"]) + 1)
-    if book.path(PROGRAM.id) is not None:
-        book.set_build(PROGRAM, lesson, step)
-    return build_step(lesson, step, fresh)
+    step = min(step, len(COURSE_CIRCUITS[course][lesson]["build"]) + 1)
+    if book.path(program.id) is not None:
+        book.set_build(program, lesson, step)
+    return build_step(lesson, step, fresh, course=course)
 
 
 _BUILD_VERB = re.compile(r"\b(build|building|wire|wiring|hook up|hooking up|connect|connecting|put together)\b")
@@ -506,14 +688,22 @@ def reply(context, conversation, text: str) -> Optional[str]:
     lab named as one starts it ("walk me through building the pot lab", "how do I wire the relay lab?"; never "the
     soil moisture sensor in the greenhouse"), and right after a
     step, "next step", "go back", "repeat that" or "done" moves it, when nothing else is said ("what's my next step on
-    the shed?" stays the plans'). None when the words aren't for it."""
-    from core.esp32_path import PROGRAM
+    the shed?" stays the plans'). None when the words aren't for it.
+    A lab of either board course named as one starts it."""
+    from core import paths
 
     said = " ".join(str(text or "").lower().replace("’", "'").split())
     if getattr(context, "paths", None) is None:
         return None
+    from core.esp32_lab import next_lab_reply
+
+    upcoming = next_lab_reply(context, said)  # "what's my next Arduino lesson?"
+    if upcoming is not None:
+        return upcoming
     names_a_lab = any(re.search(rf"\b(?:{re.escape(lesson.id)}|{re.escape(lesson.title.lower())}) lab\b", said)
-                      for stage in PROGRAM.stages for lesson in stage.lessons if lesson.id in CIRCUITS)
+                      for course, circuits in COURSE_CIRCUITS.items()
+                      for stage in paths.program_of(context, course).stages for lesson in stage.lessons
+                      if lesson.id in circuits)
     if names_a_lab and _BUILD_VERB.search(said) and not re.search(r"\b(flash|upload|simulat\w*|print|check)\b", said):
         return _build_tool(context, {"question": said})
     left = _FILLER.sub(" ", _STEP_WORD.sub(" ", re.sub(r"[^\w' ]+", " ", said))).split()
@@ -523,27 +713,33 @@ def reply(context, conversation, text: str) -> Optional[str]:
 
 
 def _simulate_tool(context, arguments: dict) -> str:
-    """Tool simulate_lab: the lab's own circuit run in the simulator, what it prints and whether the check would pass."""
-    from core.esp32_lab import lesson_for
+    """Tool simulate_lab: the lab's own circuit run in the simulator, what it prints and whether the check would pass.
+    On the course his words mean (core/esp32_lab.course_in)."""
+    from core.esp32_lab import course_in, lesson_for
 
-    lesson = lesson_for(context, str(arguments.get("lab", "") or "") + " " + str(arguments.get("question", "") or ""))
-    if lesson not in CIRCUITS:
+    words = str(arguments.get("lab", "") or "") + " " + str(arguments.get("question", "") or "")
+    course = course_in(context, words)
+    lesson = lesson_for(context, words, course=course)
+    if lesson not in COURSE_CIRCUITS[course]:
         return "That lab isn't in the simulator."
-    return simulate(lesson)["said"]
+    return simulate(lesson, course=course)["said"]
 
 
 def register_sim_tools(registry) -> None:
     """Registers build_along and simulate_lab (called from core/esp32_lab.register_esp32_lab_actions); simulate_lab
     takes only his words (the lab is read from them), so code answers "what will the pot lab print?" itself
-    (direct_lookup: the model, with a build in the conversation, answered from memory)."""
+    (direct_lookup: the model, with a build in the conversation, answered from memory).
+    Both take the Arduino course's labs too."""
     from core.assistant_actions import AssistantAction
 
     lab = {"type": "string", "description": "which lab (blink, hello, button, pot, dht, soil, fade, relay, wifi, web, "
-                                            "sleep), only if he named one"}
+                                            "sleep; on the Arduino light, distance, servo, buzzer), only if he named "
+                                            "one"}
     words = {"type": "string", "description": "his words"}
     registry.register(AssistantAction(
         name="build_along", domain="learning",
-        description="Walk him through wiring an ESP32 lab's circuit one step at a time (which wire, and why), and "
+        description="Walk him through wiring an ESP32 or Arduino lab's circuit one step at a time (which wire, and "
+                    "why), and "
                     "the next step when he says it's in: \"walk me through building the pot lab\", \"next step\".",
         parameters={"type": "object", "properties": {"lab": lab, "question": words}, "required": []},
         handler=_build_tool, trigger_phrases=("walk me through building", "walk me through wiring", "help me wire",
@@ -552,7 +748,8 @@ def register_sim_tools(registry) -> None:
     ))
     registry.register(AssistantAction(
         name="simulate_lab", domain="learning",
-        description="What an ESP32 lab will or should print, and what to expect, from MIA's simulator with no board "
+        description="What an ESP32 or Arduino lab will or should print, and what to expect, from MIA's simulator "
+                    "with no board "
                     "needed: \"what will the dht lab print?\", \"simulate the blink lab\". Only the real board passes "
                     "a check.",
         parameters={"type": "object", "properties": {"question": words}, "required": []}, prompt_arg="question",
@@ -561,9 +758,11 @@ def register_sim_tools(registry) -> None:
     ))
 
 
+@_in_course
 def reference_wires(lesson_id: str) -> list:
-    """The lab's own circuit as wires (its build), for "what will it print?"."""
-    return [(a, b) for a, b, _ in CIRCUITS[lesson_id]["build"]]
+    """The lab's own circuit as wires (its build), for "what will it print?".
+    In the course given (`course`)."""
+    return [(a, b) for a, b, _ in _circ()[lesson_id]["build"]]
 
 
 def _series(value, default: float) -> Callable:
@@ -590,13 +789,80 @@ def _series(value, default: float) -> Callable:
 
 
 def _clamp(x: float) -> int:
-    """A 12-bit ADC reading."""
-    return max(0, min(4095, int(round(x))))
+    """A 12-bit ADC reading.
+    On the board's own ADC (4095 on the ESP32, 1023 on an Arduino)."""
+    return max(0, min(B().adc_max, int(round(x))))
+
+
+def _run_arduino(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.Random) -> Optional[tuple]:
+    """The Arduino course's labs that run differently from the ESP32's (core/arduino_path.py's sketches); None for
+    one they share (blink, hello, pot, fade)."""
+    lines, outs = [], []
+    if lesson_id == "button":
+        last, count = -1.0, 0
+        for t in sorted(float(x) for x in inputs.get("presses") or ()):
+            if state.get("button1") and 0 <= t <= seconds and t - last > 0.05:
+                count += 1
+                lines.append((t, f"MIA BUTTON {count}"))
+                last = t
+    elif lesson_id == "light":
+        light = _series(inputs.get("light"), 0.5)
+        t = 0.0
+        while t <= seconds:
+            if state.get("ldr1") and state.get("r10k1"):
+                ohms = 1000 * 100 ** (1 - max(0.0, min(1.0, light(t))))  # about 100k in the dark to 1k in bright light
+                lines.append((t, f"MIA LIGHT {_clamp(1023 * 10000 / (ohms + 10000) + rng.uniform(-3, 3))}"))
+            else:
+                lines.append((t, f"MIA LIGHT {rng.randint(0, 1023)}"))
+            t += 0.5
+    elif lesson_id == "distance":
+        far = _series(inputs.get("distance"), 30.0)
+        t = 0.0
+        while t <= seconds:
+            d = far(t)
+            if state.get("sonar1") and 2 <= d <= 400:
+                lines.append((t, f"MIA DIST {int(d + rng.uniform(-0.5, 0.5))}"))
+            else:
+                lines.append((t, "MIA DIST_NONE"))
+            t += 0.3
+    elif lesson_id == "dht":
+        temp, humidity = _series(inputs.get("temp"), 21.5), _series(inputs.get("humidity"), 45.0)
+        t = 2.0
+        while t <= seconds:
+            if state.get("dht1"):
+                lines.append((t, f"MIA TEMP {temp(t) + rng.uniform(-0.05, 0.05):.1f}"))
+                lines.append((t, f"MIA HUMIDITY {humidity(t) + rng.uniform(-0.2, 0.2):.1f}"))
+            else:
+                lines.append((t, "MIA SENSOR_ERROR"))
+            t += 2.0
+    elif lesson_id == "servo":
+        angles = list(range(0, 181, 30)) + list(range(180, -1, -30))
+        t, i = 0.0, 0
+        while t <= seconds:
+            angle = angles[i % len(angles)]
+            lines.append((t, f"MIA SERVO {angle}"))
+            outs.append((t, {"box": bool(state.get("servo1")), "angle": angle if state.get("servo1") else None}))
+            t, i = t + 0.5, i + 1
+    elif lesson_id == "buzzer":
+        t, beeps = 0.0, 0
+        while t <= seconds:
+            beeps += 1
+            lines.append((t, f"MIA BEEP {beeps}"))
+            outs += [(t, {"box": bool(state.get("buzzer1"))}), (t + 0.2, {"box": False})]
+            t += 1.0
+    else:
+        return None
+    return [x for x in lines if x[0] <= seconds], [x for x in outs if x[0] <= seconds]
 
 
 def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.Random) -> tuple:
     """What the lab's sketch does in `seconds`: ([(t, line)], [(t, {output: value})]).
-    The hello lab says MIA HELLO with its seconds every loop, as its sketch does."""
+    The hello lab says MIA HELLO with its seconds every loop, as its sketch does. The Arduino course's own labs run
+    in `_run_arduino`; the ones it shares with the ESP32's run here, on its board's ADC."""
+    if _COURSE.get() == "arduino":
+        ran = _run_arduino(lesson_id, state, inputs, seconds, rng)
+        if ran is not None:
+            return ran
     lines, outs = [], []
     led = state.get("led1")
     glow = 1.0 if led in ("lit", "overdriven") else 0.0
@@ -625,11 +891,11 @@ def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.
         while t <= seconds:
             if pot.get("ok"):
                 x = max(0.0, min(1.0, position(t)))
-                value = _clamp((1 - x if pot.get("reversed") else x) * 4095 + rng.uniform(-6, 6))
+                value = _clamp((1 - x if pot.get("reversed") else x) * B().adc_max + rng.uniform(-6, 6))
             elif pot.get("stuck") is not None:
                 value = _clamp(pot["stuck"] + rng.uniform(-6, 6))
             else:
-                value = rng.randint(0, 4095)
+                value = rng.randint(0, B().adc_max)
             lines.append((t, f"MIA ADC {value}"))
             t += 0.25
     elif lesson_id == "dht":
@@ -649,7 +915,7 @@ def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.
             """The sensor's reading: about 3300 dry to 1400 wet, or noise when it isn't wired."""
             if state.get("soil1"):
                 return _clamp(3300 - max(0.0, min(1.0, wet(t))) * 1900 + rng.uniform(-15, 15))
-            return rng.randint(0, 4095)
+            return rng.randint(0, B().adc_max)
         if lesson_id == "soil":
             t = 0.0
             while t <= seconds:
@@ -694,21 +960,24 @@ def _run(lesson_id: str, state: dict, inputs: dict, seconds: float, rng: random.
     return [x for x in lines if x[0] <= seconds], [x for x in outs if x[0] <= seconds]
 
 
+@_in_course
 def simulate(lesson_id: str, wires=None, inputs: Optional[dict] = None, seconds: float = 10.0, seed: int = 0) -> dict:
     """Pure logic. Runs a lab in the simulator (see the module's opening) on his wires, or the lab's own circuit when
     none are given: {ok, problems, ran (False when a stop problem kept it from running), serial (the text), trace
     [{t, line}], outputs [{t, ...}], checks [{check, what, would_pass, how}], said}. The lab's own circuit with no
     inputs given runs as SHOW has it (the knob turned, BOOT pressed). Never a pass on his path.
-    Each input's list is cut to 500 entries."""
+    Each input's list is cut to 500 entries.
+    On any board course (`course`, `board_id`): the Arduino's runs as its sketches do (ARDUINO_SHOW)."""
     from core.esp32_lab import checks_of
     from core.esp32_path import judge
 
-    if lesson_id not in CIRCUITS:
+    if lesson_id not in _circ():
         raise ValueError("There's no lab by that name.")
     shown = ""
     inputs = {k: (v[:500] if isinstance(v, list) else v) for k, v in dict(inputs or {}).items()}
-    if wires is None and not inputs and lesson_id in SHOW:
-        inputs, seconds, shown = SHOW[lesson_id]
+    show = ARDUINO_SHOW if _COURSE.get() == "arduino" else SHOW
+    if wires is None and not inputs and lesson_id in show:
+        inputs, seconds, shown = show[lesson_id]
     seconds = max(1.0, min(60.0, float(seconds or 10.0)))
     found = analyse(lesson_id, reference_wires(lesson_id) if wires is None else wires)
     inputs = dict(inputs or {})
@@ -716,7 +985,7 @@ def simulate(lesson_id: str, wires=None, inputs: Optional[dict] = None, seconds:
     lines, outs = ([], []) if stopped else _run(lesson_id, found["state"], inputs, seconds, random.Random(seed))
     serial = "".join(line + "\n" for _, line in lines)
     checks = []
-    for check in checks_of(lesson_id):
+    for check in checks_of(lesson_id, course=_COURSE.get()):
         passed, _, how = judge(check, serial)
         checks.append({"check": check.id, "what": check.what, "would_pass": passed, "how": how})
     if stopped:

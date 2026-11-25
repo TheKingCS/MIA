@@ -631,14 +631,14 @@
     achievements: () => read("/api/achievements", "achievements"),
     // A course's labs (web/course.html, core/lab_page.py): the course, the lab chosen and the board; reading the
     // board checks the lab. (Not the Data Logger's Lab above, MIA.lab.)
-    course: (course, lesson) => read("/api/labs/" + encodeURIComponent(course || "esp32") +
-      (lesson ? "?lesson=" + encodeURIComponent(lesson) : ""), "course"),
+    course: (course, lesson, board) => read("/api/labs/" + encodeURIComponent(course || "esp32") +
+      "?lesson=" + encodeURIComponent(lesson || "") + "&board=" + encodeURIComponent(board || ""), "course"),
     courseAsk: (course, lesson, question, drill, n) => demo ? demoOnly()
       : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/ask", { lesson, question, drill: drill || "", n: n || 0 }),
-    courseSim: (course, lesson, wires, inputs, seconds) => demo ? demoOnly()
-      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/sim", { lesson, wires, inputs, seconds }),
-    courseRead: (course, lesson, seconds) => demo ? demoOnly()
-      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/read", { lesson, seconds: seconds || 0 }),
+    courseSim: (course, lesson, wires, inputs, seconds, board) => demo ? demoOnly()
+      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/sim", { lesson, wires, inputs, seconds, board: board || "" }),
+    courseRead: (course, lesson, seconds, board) => demo ? demoOnly()
+      : call("POST", "/api/labs/" + encodeURIComponent(course || "esp32") + "/read", { lesson, seconds: seconds || 0, board: board || "" }),
     achievementsNew: () => demo ? Promise.resolve({ cards: [], more: 0 }) : call("GET", "/api/achievements/new"),
     achievementsSeen: (ids) => demo ? Promise.resolve({}) : call("POST", "/api/achievements/seen", { ids }),
     character: () => read("/api/character", "character"),

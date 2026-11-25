@@ -1495,7 +1495,10 @@ NOT_FOR = {
     # hens' (why_hens_not_laying)
     "time": re.compile(r"\b(spend(ing)? (more|less) than|spend(ing)? money|spent \$|money|eating out|groceries|"
                        r"bills?)\b", re.I),
-    "progress": re.compile(r"\b(make next|for the shop|sell\w*|products?|running low|in stock)\b", re.I),
+    # a course's next lesson is the learning tools' (live check, 2026-11-25: "what's my next Arduino lesson?" was
+    # answered by this plan with a lesson it made up)
+    "progress": re.compile(rf"\b(make next|for the shop|sell\w*|products?|running low|in stock|{_LEARNING}|arduino|"
+                           r"esp ?32|labs?|course)\b", re.I),
     "next dollar": re.compile(r"\b(aside for tax(es)?|save for tax(es)?|owe in tax(es)?|taxes on|tax bracket|irs|"
                               r"self.?employment|estimated tax|quarterly tax)\b", re.I),
     "debts": re.compile(r"\b(owes? me|owing me)\b", re.I),

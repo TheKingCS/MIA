@@ -11,7 +11,7 @@
 (function () {
   "use strict";
   const SVG = "http://www.w3.org/2000/svg";
-  const RAIL = { "3V3": "pwr", VIN: "vin", GND: "gnd", "GND 2": "gnd" };
+  const RAIL = { "3V3": "pwr", "5V": "pwr", VIN: "vin", GND: "gnd", "GND 2": "gnd" };
 
   function svgEl(tag, attrs, ...kids) {
     const node = document.createElementNS(SVG, tag);
@@ -63,6 +63,14 @@
         if (extra) out.requests = Array.from({ length: Math.max(0, Math.min(20, Number(extra[0].value) || 0)) }, (_, i) => 2 + i * 0.5);
         return out;
       } };
+    }
+    if (id === "light") {
+      const [level, a] = range("Light", 50), [swing, b] = tick("Cover it, then light it, while it runs", true);
+      return { seconds: 7, view: [a, b], inputs: (s) => ({ light: swing.checked ? [[0, 0.05], [s / 2, 0.05], [s / 2 + 1, 0.95]] : level.value / 100 }) };
+    }
+    if (id === "distance") {
+      const [cm, a] = number("Your hand at (cm)", 30), [move, b] = tick("Move it from 10 to 60 cm while it runs", true);
+      return { seconds: 5, view: [a, b], inputs: (s) => ({ distance: move.checked ? [[0, 10], [s, 60]] : Number(cm.value) }) };
     }
     if (id === "button") {
       const [n, a] = number("Press BOOT", 3);
@@ -127,7 +135,7 @@
       svg.replaceChildren();
       leds.length = 0; relays.length = 0;
       svg.append(svgEl("rect", { x: LEFT - 22, y: TOP - 34, width: RIGHT - LEFT + 44, height: c.left.length * PIN + 50, rx: 10, class: "sim-chip" }));
-      svg.append(svgEl("text", { x: (LEFT + RIGHT) / 2, y: TOP - 14, class: "sim-chip-name", "text-anchor": "middle" }, "ESP32"));
+      svg.append(svgEl("text", { x: (LEFT + RIGHT) / 2, y: TOP - 14, class: "sim-chip-name", "text-anchor": "middle" }, (c.board && c.board.label) || "ESP32"));
       onboard = svgEl("circle", { cx: (LEFT + RIGHT) / 2, cy: TOP + 6, r: 5, class: "sim-onboard" });
       svg.append(onboard, svgEl("text", { x: (LEFT + RIGHT) / 2, y: TOP + 24, class: "sim-pin-label", "text-anchor": "middle" }, "LED"));
       svg.append(svgEl("rect", { x: (LEFT + RIGHT) / 2 - 16, y: TOP + c.left.length * PIN - 6, width: 32, height: 12, rx: 3, class: "sim-usb" }));
@@ -146,7 +154,7 @@
           leds.push(glow);
           svg.append(glow);
         }
-        if (part.kind === "relay") {
+        if (part.kind === "relay" || part.kind === "servo" || part.kind === "buzzer") {
           const box = svgEl("rect", { x: 558, y: top + 30, width: 26, height: 18, rx: 3, class: "sim-relay" });
           relays.push(box);
           svg.append(box);
@@ -184,7 +192,7 @@
     async function changed() {
       keep(lab.id, wires);
       try {
-        const got = await MIA.courseSim(course, lab.id, wires, {}, 1);
+        const got = await MIA.courseSim(course, lab.id, wires, {}, 1, c.board && c.board.id);
         build = got.build;
         showProblems(got.sim.problems);
         draw();
@@ -198,7 +206,7 @@
     function light(o) {
       if ("onboard" in o && onboard) onboard.style.opacity = String(0.15 + 0.85 * o.onboard);
       if ("led" in o) leds.forEach((g) => { g.style.opacity = String(0.15 + 0.85 * o.led); g.classList.toggle("lit", o.led > 0); });
-      if ("relay" in o) relays.forEach((r) => r.classList.toggle("on", !!o.relay));
+      if ("relay" in o || "box" in o) relays.forEach((r) => r.classList.toggle("on", !!(o.relay || o.box)));
     }
     async function run() {
       stop();
@@ -206,7 +214,7 @@
       monitor.textContent = "";
       verdict.textContent = "Running…";
       try {
-        const got = await MIA.courseSim(course, lab.id, wires, ctl.inputs(seconds), seconds);
+        const got = await MIA.courseSim(course, lab.id, wires, ctl.inputs(seconds), seconds, c.board && c.board.id);
         build = got.build;
         draw();
         const sim = got.sim;

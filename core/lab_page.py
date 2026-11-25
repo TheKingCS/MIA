@@ -22,20 +22,20 @@ from typing import Optional
 
 
 def _labs(course: str) -> dict:
-    """The hands-on labs a course has (lesson id -> lab), {} for a course taught without one."""
-    if course == "esp32":
-        from core.esp32_path import LABS
+    """The hands-on labs a course has (lesson id -> lab), {} for a course taught without one (core/esp32_lab.labs_of:
+    Build With ESP32's and Build With Arduino's)."""
+    from core.esp32_lab import labs_of
 
-        return LABS
-    return {}
+    return labs_of(course)
 
 
 def hands_on() -> list:
-    """The courses with labs or drills, for the Classroom's Hands-on labs: [{id, name, icon, what}]."""
+    """The courses with labs or drills, for the Classroom's Hands-on labs: [{id, name, icon, what}].
+    The board courses first: Build With ESP32, then Build With Arduino."""
     from core import drills, paths
 
     out = []
-    for course in ["esp32"] + [c for c in drills.courses() if c != "esp32"]:
+    for course in ["esp32", "arduino"] + [c for c in drills.courses() if c not in ("esp32", "arduino")]:
         program = paths.program_of(None, course)
         if program is None:
             continue
@@ -48,9 +48,10 @@ def hands_on() -> list:
     return out
 
 
-def page(context, course: str = "esp32", lesson: str = "") -> dict:
+def page(context, course: str = "esp32", lesson: str = "", board_id: str = "") -> dict:
     """The course page's data (see the module's opening).
-    For an ESP32 lab, the circuit for the simulator and what to do there to pass (core/esp32_sim).
+    For an ESP32 or Arduino lab, the circuit for the simulator and what to do there to pass (core/esp32_sim), drawn
+    and built for the board chosen (`board_id`; the course's first otherwise), with the boards he can choose.
     Its drills too (core/drills.page_of), for a course that has them."""
     from core import paths
 
@@ -69,35 +70,38 @@ def page(context, course: str = "esp32", lesson: str = "") -> dict:
                                   for c in s.checks]})
     labs = _labs(program.id)
     chosen = lesson if any(l.id == lesson for s in program.stages for l in s.lessons) else ""
-    if not chosen and program.id == "esp32":
+    if not chosen and labs:
         from core.esp32_lab import lesson_for
 
-        chosen = lesson_for(context, "")
+        chosen = lesson_for(context, "", course=program.id)
     if not chosen:
         chosen = paths.stage_of(book, program).lessons[0].id if started else program.stages[0].lessons[0].id
     stage, the = next((s, l) for s in program.stages for l in s.lessons if l.id == chosen)
     lab = labs.get(the.id)
     shown = {"id": the.id, "title": the.title, "stage": stage.number, "steps": list(the.steps), "why": the.why,
              "watch": list(the.watch)}
-    if program.id == "esp32":
-        from core import esp32_sim
+    from core import boards, esp32_sim
 
-        shown["circuit"] = esp32_sim.circuit_of(the.id)
-        shown["try"] = esp32_sim.TRY.get(the.id, "")
+    if program.id in esp32_sim.COURSE_CIRCUITS:
+        shown["circuit"] = esp32_sim.circuit_of(the.id, course=program.id, board_id=board_id)
+        shown["try"] = esp32_sim.try_for(the.id, program.id)
     if lab is not None:
         from core.esp32_lab import checks_of, ini
 
         shown.update({"parts": list(lab["parts"]), "wiring": [list(w) for w in lab["wiring"]], "code": lab["code"],
-                      "ini": ini(lab), "secrets": bool(lab.get("secrets")), "libs": list(lab.get("libs", ())),
+                      "ini": ini(lab, boards.board_for(program.id, board_id)), "secrets": bool(lab.get("secrets")),
+                      "libs": list(lab.get("libs", ())),
                       "checks": [{"id": c.id, "what": c.what, "passed": started and book.passed(program.id, c.id)}
-                                 for c in checks_of(the.id)]})
+                                 for c in checks_of(the.id, program.id)]})
     board: Optional[dict] = None
     if labs:
         from core.esp32_lab import board as bench
 
-        found = bench()
+        found = bench(course=program.id)
+        chosen_board = boards.board_for(program.id, board_id)
         board = {"port": found["port"], "description": found["description"], "ready": not found["missing"],
-                 "missing": found["missing"]}
+                 "missing": found["missing"], "id": chosen_board.id, "name": chosen_board.name,
+                 "choices": [{"id": b, "name": boards.BOARDS[b].name} for b in boards.COURSE_BOARDS[program.id]]}
     from core import drills
 
     return {"available": True, "started": started, "drills": drills.page_of(program.id),

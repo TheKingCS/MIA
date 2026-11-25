@@ -508,5 +508,5 @@ def _extra(lesson: Lesson) -> str:
 PROGRAM = register(Program(
     "esp32", "Build With ESP32", SKILL, "🔌", "From the first blink to a sensor node that sleeps on a battery: "
     "real labs on a real ESP32, each one checked by what the board itself says.",
-    ("esp32", "microcontroller", "arduino", "electronics", "build with esp32"), STAGES,
+    ("esp32", "microcontroller", "electronics", "build with esp32"), STAGES,  # "arduino" is Build With Arduino's
     verifiers={VERIFIER: _board_says}, extra=_extra, plan=(30, 3)))
