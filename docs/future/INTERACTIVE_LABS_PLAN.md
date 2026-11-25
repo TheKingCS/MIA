@@ -61,5 +61,11 @@ never MIA's.
    account token, or Espressif's QEMU, local but serial-only for most labs).
 4. **The other areas on the same frame**: guitar (already verified by ear), carpentry and woodworking (a
    measurement, a photo), gardening (his own logged readings), bushcraft and first aid (a said check, a photo).
+   *Started 2026-11-25: scenario drills (core/drills.py), the simulator for a course without a board.* A drill is a
+   situation and a few decisions in order, each choice judged best, fine or wrong with why, written from the course's
+   own sources; Survival and bushcraft has three (lost at dusk, water on day two, a fire in the wet), on its course
+   page (Classroom > Hands-on labs) and by voice ("give me a survival drill", then "B" or "I think C"), taken in code
+   with its place carried in MIA's own message. Like the simulator, a drill never passes a check. Next: drills for
+   other courses (canning safety, a power outage, the flock) from their own verified sources.
 5. **His own labs**: the greenhouse node's firmware as the capstone, and labs drafted for a new interest
    (core/paths.draft) in the same seven parts.

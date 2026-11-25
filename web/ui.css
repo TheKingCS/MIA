@@ -2440,3 +2440,21 @@ body.sel-card { background: var(--bg); color: var(--text); margin: 0; font-famil
 .sim-inputs { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0; }
 .sim-input { display: flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: var(--text-sm); }
 .sim-number { width: 6em; }
+
+/* Scenario drills on a course's page (web/course.js, core/drills.py): the choices, judged once picked. */
+.drill-list { display: flex; flex-direction: column; gap: 8px; }
+.drill-pick { text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.drill-ask { font-weight: 600; color: var(--text); }
+.drill-choices { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+.drill-choice { text-align: left; font: inherit; text-transform: none; color: var(--text); background: rgba(var(--rgb-accent), 0.04);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+.drill-choice:hover:not(:disabled), .drill-choice:focus-visible { border-color: rgba(var(--rgb-accent), 0.6); outline: none; }
+.drill-choice:disabled { cursor: default; color: var(--text-dim); }
+.drill-choice.best { border-color: rgb(var(--rgb-ok)); }
+.drill-choice.picked.fine { border-color: rgb(var(--rgb-amber)); color: var(--text); }
+.drill-choice.picked.wrong { border-color: rgb(var(--rgb-bad)); color: var(--text); }
+.drill-choice.picked.best { color: var(--text); background: rgba(var(--rgb-ok), 0.1); }
+.drill-feedback p { margin: 6px 0; }
+.drill-best strong { color: rgb(var(--rgb-ok)); }
+.drill-fine strong { color: rgb(var(--rgb-amber)); }
+.drill-wrong strong { color: rgb(var(--rgb-bad)); }

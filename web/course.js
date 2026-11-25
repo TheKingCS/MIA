@@ -4,7 +4,8 @@
  * watch for, parts, wiring, the sketch), the board, and a serial monitor. Changes go through the action contract,
  * each approved: Start This Course (path.start), Flash This Lab (esplab.flash). Read The Board (MIA.courseRead)
  * reads the board's serial output for a few seconds and checks the lab from what it said. The Simulator section,
- * building along with MIA, is web/labsim.js. Formatting only.
+ * building along with MIA, is web/labsim.js. A course with scenario drills (core/drills.py) shows them as Drills.
+ * Formatting only.
  */
 (function () {
   "use strict";
@@ -18,6 +19,8 @@
   const section = (title, ...body) =>
     el("section", { class: "glass money-section" }, el("div", { class: "sect" }, el("h2", {}, title)), ...body);
   const list = (items, ordered) => el(ordered ? "ol" : "ul", { class: "crs-list" }, items.map((t) => el("li", {}, t)));
+  // replaceChildren with the nulls left out (the DOM's own writes a null as the text "null"; el() skips them).
+  const fill = (node, ...kids) => node.replaceChildren(...kids.flat().filter((k) => k != null));
   const checkRow = (c) => el("div", { class: "crs-check" + (c.passed ? " passed" : "") }, (c.passed ? "✓ " : "○ ") + c.what);
 
   // Choosing a lab: the address keeps it (so a reload or a link lands on it), and the page is read again.
@@ -102,8 +105,54 @@
         el("pre", { class: "crs-code" }, lab.code)));
       parts.push(bench(page));
     }
+    if (page.drills && page.drills.length) parts.push(drills(page.drills));
     if (page.next) parts.push(section("What's next", el("p", {}, page.next)));
     return parts;
+  }
+
+  // Drills (core/drills.py): a situation and its decisions in order; a pick shows its verdict and why (core's), then
+  // the next question; at the end, how many were the best call. Practice only: nothing is kept.
+  function drills(list) {
+    const box = el("div", { class: "drill-box" });
+    const verdictWord = { best: "Right.", fine: "Close.", wrong: "Not that one." };
+    function run(d) {
+      let n = 0, right = 0;
+      function ask() {
+        const q = d.questions[n];
+        const feedback = el("div", { class: "drill-feedback", "aria-live": "polite" });
+        const next = el("button", { type: "button", class: "btn btn-amber", hidden: true }, n + 1 < d.questions.length ? "Next Question" : "See How It Went");
+        const buttons = q.choices.map((c, i) => el("button", { type: "button", class: "drill-choice", onclick: () => {
+          buttons.forEach((b, j) => { b.disabled = true; b.classList.add(q.choices[j].verdict); });
+          buttons[i].classList.add("picked");
+          if (c.verdict === "best") right += 1;
+          const best = q.choices.find((x) => x.verdict === "best");
+          fill(feedback, el("p", { class: "drill-" + c.verdict }, el("strong", {}, verdictWord[c.verdict] + " "), c.why),
+            c.verdict === "best" ? null : el("p", { class: "dim" }, "Best: " + best.text + ". " + best.why));
+          next.hidden = false;
+          next.focus();
+        } }, "ABCD"[i] + ") " + c.text));
+        next.onclick = () => { n += 1; if (n < d.questions.length) ask(); else done(); };
+        fill(box, el("h3", {}, d.title), n === 0 ? el("p", {}, d.situation) : null,
+          el("p", { class: "dim" }, "Question " + (n + 1) + " of " + d.questions.length),
+          el("p", { class: "drill-ask" }, q.ask), el("div", { class: "drill-choices" }, buttons), feedback,
+          el("div", { class: "row-buttons" }, next));
+      }
+      function done() {
+        const all = right === d.questions.length;
+        fill(box, el("h3", {}, d.title),
+          el("p", {}, all ? "Every call the best one." : right + " of " + d.questions.length + " best: the lesson behind it is worth a read again."),
+          el("p", { class: "dim" }, "A drill is practice; the real thing is the course's own check."),
+          el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-ghost", onclick: pickOne }, "Another Drill")));
+      }
+      ask();
+    }
+    function pickOne() {
+      box.replaceChildren(el("div", { class: "drill-list" }, list.map((d) => el("button", { type: "button", class: "glass cl-subject drill-pick", onclick: () => run(d) },
+        el("span", {}, d.title), el("span", { class: "cl-n" }, d.questions.length + " decisions")))));
+    }
+    pickOne();
+    return section("Drills", el("p", { class: "dim" }, "Practise the decisions before you need them: a situation, " +
+      "a few calls in order, each judged with why. Or by voice: \"give me a survival drill\"."), box);
   }
 
   MIAShell.start(async () => {
@@ -122,7 +171,7 @@
     const checks = page.stages.reduce((n, s) => n + s.checks.length, 0);
     const current = (page.stages.find((s) => s.state === "current") || page.stages[page.stages.length - 1]).number;
     const cell = (cls, n, t) => el("div", { class: "cell " + cls }, el("span", { class: "n" }, n), el("span", { class: "t" }, t));
-    $("strip").replaceChildren(
+    fill($("strip"),
       cell("ok", current + "/" + page.stages.length, "Stage"),
       cell(passed ? "ok" : "soon", passed + "/" + checks, "Checks passed"),
       page.board ? cell(page.board.ready ? "ok" : "soon", page.board.ready ? "Ready" : "Not yet", "Board") : null);
@@ -135,6 +184,6 @@
         el("div", { class: "row-buttons" }, el("button", { type: "button", class: "btn btn-amber",
           onclick: () => MIAShell.act({ kind: "path.start", params: { path: page.course.id } }) }, "Start This Course"))));
     }
-    $("panel").replaceChildren(...panel);
+    fill($("panel"), panel);
   }, { refreshOnChange: true });
 })();

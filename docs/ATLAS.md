@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1759 files, 379,417 lines; 1759 files describe themselves; 20,763 of 20,893 classes and functions are documented.
+1761 files, 379,909 lines; 1761 files describe themselves; 20,789 of 20,919 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-701 files, 196,541 lines; 9,935 of 10,021 classes and functions documented
+702 files, 196,903 lines; 9,955 of 10,041 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -219,6 +219,7 @@
 - `core/display_style.py`: Which look MIA's screens use (DEC-0135, Zac 2026-11-08: "selectable themes that change which variant of display you get: the spatial portal design or the organized cards design"). Each person's own choice (person_settings `display.style`), changed in Settings or by voice ("switch to the cards look")
 - `core/doc_freshness.py`: Documentation that keeps up with the code (DEC-0110; Zac, 2026-11-07: "when anything is changed it needs to be reflected in that file's documentation as well"). DEC-0104 makes sure every definition *has* a docstring; this checks that a docstring is still *true* after its code changes.
 - `core/document_text.py`: Text out of the documents the owner gives MIA: shared by the textbook tutor (core/textbook_manager.py) and the document inbox (core/inbox_manager.py). 2026-09-28.
+- `core/drills.py`: Scenario drills: the simulator for a course without a board (docs/future/INTERACTIVE_LABS_PLAN.md, step 4; Zac, 2026-11-25: the ESP32 labs "could be used as a standard for other teaching areas", and what he liked most was trying it in a simulator first). A drill puts him in a situation and asks a fe
 - `core/dungeon_actions.py`: The Dungeon's actions (DEC-0046, core/work_dungeon.py) on the action contract: proposed in plain words with the loot they bring, approved, run, undoable.
 - `core/dungeon_master.py`: Living Worlds Phase 2 (DEC-0134): a playable turn. The player says what they do; the **model proposes** narrative and the state changes it implies; **authoritative code validates and commits** them; MIA narrates the committed result. This is the spec's hardest rule (§9.1) made real — the language mo
 - `core/email_drafts.py`: Email drafts (2026-10-01, accounts stage 3): the Assistant can write an email for you, and you choose what happens to it: **Send** (only when you press Send, from your own address, core/mail_send.py), **Copy** it, or open it in your mail app** (a mailto: link). MIA never sends anything by herself; n
@@ -999,7 +1000,7 @@
 
 ## tests/: the test suite: what each part must do
 
-650 files, 101,313 lines; 8,461 of 8,505 classes and functions documented
+651 files, 101,392 lines; 8,467 of 8,511 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1158,6 +1159,7 @@
 - `tests/test_display_style.py`: Display styles (DEC-0135, core/display_style.py): each person picks the spatial look (the Nexus and rooms), the cards look (the Dashboard and cards), or spatial on the computer and cards on the phone; in Settings, by voice, and handed to every page through the shell.
 - `tests/test_doc_freshness.py`: Documentation that keeps up with the code (core/doc_freshness.py, DEC-0110): a definition whose code changed while its docstring didn't is found, changed parameters most of all; a docstring edit, moved code or an added decorator is not; a file's opening is asked about only when public definitions co
 - `tests/test_documentation.py`: Documentation for everything MIA is made of (DEC-0104, core/code_atlas.py): every file says what it is; new code arrives documented; nothing already documented slips back; docs/ATLAS.md is current.
+- `tests/test_drills.py`: Scenario drills (core/drills.py): every drill well formed (one best choice a question, a lesson its course has); a drill run by voice from its start to its summary, the place riding in MIA's own message; answers by letter or by ordinal, "stop the drill", and words that aren't a drill (a drill bit, a
 - `tests/test_dungeon_master.py`: Living Worlds Phase 2 (core/dungeon_master.py, DEC-0134): a playable turn where the model proposes and code validates/commits. The model's intents only change state when they pass their check; a quest, item or skill is committed to the store; the turn records a fictional event (DEC-0137), never real
 - `tests/test_eggs_span.py`: "How many eggs last week?" (core/assistant_goods_actions.py get_eggs): last week, this month and last month read from his words (a follow-up's own first) and counted from the flock's log, both ends counted.
 - `tests/test_email_drafts.py`: Email drafts (core/email_drafts.py, core/mail_send.py, core/assistant_email_actions.py), 2026-10-01: MIA writes, the person sends (only by pressing Send), copies, or opens their mail app.
@@ -1654,7 +1656,7 @@
 
 ## web/: the web front end (the phone, the glasses, the desktop's web view)
 
-122 files, 22,912 lines
+122 files, 22,963 lines
 
 - `web/about.js`: about.js — About MIA (claude, 2026-11-08, DEC-0142). Renders MIA.about() (core/web_about.py): what she is, her real scale as tiles, what she's working on, what she's trained for (each specialty read from the code that makes it true), how her apps are doing on this device (DEC-0057: working, partly, 
 - `web/achievements.js`: achievements.js — the Achievements page (claude, 2026-11-24, the game layer). Renders MIA.achievements() (core/achievement_cards.py): how many are unlocked, the structures built (and still to build), each chain's progress toward its next tier, and the log of every unlock, newest first. A row in the 

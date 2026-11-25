@@ -64,7 +64,8 @@
       "check_lab",
       "lab_board",
       "build_along",
-      "simulate_lab"
+      "simulate_lab",
+      "start_drill"
     ],
     "actions": [
       "course.add",
@@ -131,6 +132,7 @@
       "lab_board": "observe",
       "build_along": "act_within_grant",
       "simulate_lab": "observe",
+      "start_drill": "observe",
       "esplab.flash": "act_with_approval",
       "path.start": "act_within_grant"
     },

@@ -111,7 +111,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     "carry on" (core/stop.py), asked first in every conversation, as in
     a turn.
     Building an ESP32 lab along with MIA (core/esp32_sim.reply) is answered there too, after the greenhouse and what
-    MIA runs on."""
+    MIA runs on.
+    A scenario drill (core/drills.reply) is answered there too."""
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
     from core.conversation_state import set_turn_follow_up
 
@@ -140,6 +141,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
         walked = _service_reply(context, prompt)  # "what breaks if Ollama stops?" (core/service_map.py, T-0007)
     if walked is None:
         walked = _lab_build_reply(context, conversation, prompt)  # building a lab along with MIA, as in a turn
+    if walked is None:
+        walked = _drill_reply(context, conversation, prompt)  # a scenario drill, as in a turn
     if walked is not None:
         return walked
     from core.quick_commands import handle
@@ -177,6 +180,18 @@ def _lab_build_reply(context, conversation, prompt: str):
         return esp32_sim.reply(context, conversation, prompt)
     except Exception:
         log.exception("Couldn't follow the lab's build")
+        return None
+
+
+def _drill_reply(context, conversation, prompt: str):
+    """A scenario drill, in code (core/drills.reply): "give me a survival drill", or an answer to the question MIA
+    just asked; None when the words aren't for a drill."""
+    from core import drills
+
+    try:
+        return drills.reply(context, conversation, prompt)
+    except Exception:
+        log.exception("Couldn't follow the drill")
         return None
 
 
@@ -282,6 +297,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     An echo of one of his messages from a moment ago is caught too.
     Building an ESP32 lab along with MIA is taken in code there too, before the plans ("walk me through building the
     pot lab", then "next step": core/esp32_sim.reply).
+    A scenario drill is taken in code too, after the lab's build ("give me a survival drill", then "B":
+    core/drills.reply).
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
 
@@ -373,6 +390,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
             walked = _service_reply(context, prompt)  # "what breaks if Ollama stops?" (core/service_map.py, T-0007)
         if walked is None:
             walked = _lab_build_reply(context, conversation, prompt)  # "walk me through building the pot lab", "next"
+        if walked is None:
+            walked = _drill_reply(context, conversation, prompt)  # "give me a survival drill", then "B"
         if walked is not None:
             add_message(conversation, "assistant", walked)
             return AssistantTurn(replies=([prepared.notice] if prepared.notice else []) + [walked], route="code")

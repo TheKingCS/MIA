@@ -98,12 +98,14 @@
   }
 
   // Hands-on labs (web/course.html, core/lab_page.py): the courses built on a board, each lab checked from what the
-  // board prints. Build With ESP32 is the first.
+  // board prints (Build With ESP32), and the courses with scenario drills (Survival and bushcraft, core/drills.py).
   function labs() {
     return el("div", { class: "crs-labs" },
       el("h2", { class: "cl-label cl-subjects-label" }, "Hands-on labs"),
       el("div", { class: "cl-subjects" }, el("a", { class: "glass cl-subject", href: "course.html?course=esp32" },
-        el("span", {}, "🔌 Build With ESP32"), el("span", { class: "cl-n" }, "Wiring, sketches and checks from your board"))));
+        el("span", {}, "🔌 Build With ESP32"), el("span", { class: "cl-n" }, "Wiring, sketches and checks from your board")),
+        el("a", { class: "glass cl-subject", href: "course.html?course=bushcraft" },
+          el("span", {}, "🔥 Survival and bushcraft"), el("span", { class: "cl-n" }, "Lessons, and drills that judge each call"))));
   }
 
   // Textbooks (core/web_textbooks.py): your books with their chapters, a search inside them, Make A Course (one lesson

@@ -1,0 +1,79 @@
+"""
+tests.test_drills
+===================
+
+Scenario drills (core/drills.py): every drill well formed (one best choice a question, a lesson its course has); a
+drill run by voice from its start to its summary, the place riding in MIA's own message; answers by letter or by
+ordinal, "stop the drill", and words that aren't a drill (a drill bit, a fire drill at home) left alone; the course
+page's data; and a drill never touching his path.
+"""
+
+from types import SimpleNamespace
+
+from core import drills
+from core import lab_page
+from core import paths
+
+
+def _said(*texts):
+    """A conversation whose assistant messages are these."""
+    return SimpleNamespace(messages=[SimpleNamespace(role="assistant", content=t) for t in texts])
+
+
+def test_every_drill_has_one_best_choice_a_question_and_a_lesson_its_course_teaches():
+    """Each question: two to four choices, exactly one best, every verdict known and every why written; the lesson
+    behind each drill is one its course has."""
+    assert drills.DRILLS
+    for drill in drills.DRILLS:
+        assert drills.lesson_title(drill), drill.id
+        for q in drill.questions:
+            assert 2 <= len(q.choices) <= 4 and [c.verdict for c in q.choices].count("best") == 1, (drill.id, q.ask)
+            assert all(c.verdict in ("best", "fine", "wrong") and c.why for c in q.choices)
+
+
+def test_a_drill_by_voice_from_start_to_summary():
+    """"Run the water drill": the situation and question 1; "B": right, then question 2 with 1 best so far; "the
+    third one": close, with the best said; "a": right, and the summary names the lesson to read again."""
+    first = drills.reply(None, _said(), "Run the water drill")
+    assert first.startswith("Drill: Water on day two.") and "question 1 of 3, 0 best so far" in first
+    second = drills.reply(None, _said(first), "B")
+    assert second.startswith("Right.") and "question 2 of 3, 1 best so far" in second
+    third = drills.reply(None, _said(first, second), "the third one")
+    assert third.startswith("Close.") and "Best: A rolling boil for 1 minute" in third
+    last = drills.reply(None, _said(first, second, third), "I'd go with a")
+    assert "That's the drill: 2 of 3 best" in last and "Making water safe" in last
+
+
+def test_stopping_and_words_that_arent_a_drill():
+    """"Stop the drill" ends it; an answer with no drill asked, a drill bit, drilling a hole, a house fire drill,
+    and a letter after another kind of reply are all left alone."""
+    first = drills.reply(None, _said(), "give me a survival drill")
+    assert first.startswith("Drill: ")
+    assert drills.reply(None, _said(first), "stop the drill").startswith("Drill stopped: 0 of 0 best")
+    for words in ("B", "I need a drill bit for concrete", "drill a hole in the wall", "let's do a fire drill"):
+        assert drills.reply(None, _said(), words) is None, words
+    assert drills.reply(None, _said(first, "Your shed needs lumber."), "B") is None
+    assert drills.reply(None, _said(first), "hmm not sure").startswith("Which one: A, B or C?")
+    assert drills.reply(None, _said(first), "repeat that").startswith(first.split("\n\n")[1][:30])
+
+
+def test_picking_by_letter_or_ordinal_within_the_choices():
+    """"C", "(c)", "option b", "the second one": picked; "D" on a three-choice question, and a sentence: not."""
+    assert drills.picked("C", 3) == 2 and drills.picked("(c)", 3) == 2 and drills.picked("option b", 3) == 1
+    assert drills.picked("the second one", 3) == 1 and drills.picked("I think C", 3) == 2
+    assert drills.picked("go with a then", 3) == 0 and drills.picked("a minute", 3) is None
+    assert drills.picked("D", 3) is None and drills.picked("boil it for a minute", 3) is None
+
+
+def test_the_survival_course_page_has_its_drills_and_a_drill_leaves_his_path_alone(tmp_path):
+    """The Survival course page carries its drills with their verdicts; a whole drill run by voice records nothing."""
+    book = paths.PathBook(None, data_dir=tmp_path)
+    page = lab_page.page(SimpleNamespace(paths=book), "bushcraft")
+    assert page["available"] and page["board"] is None
+    assert [d["id"] for d in page["drills"]] == [d.id for d in drills.of_program("bushcraft")]
+    assert page["drills"][0]["questions"][0]["choices"][1]["verdict"] == "best"
+    assert lab_page.page(SimpleNamespace(paths=book), "esp32")["drills"] == []
+    said = drills.start(drills.DRILLS[0])
+    for letter in "BCAA":
+        said = drills.reply(None, _said(said), letter)
+    assert "That's the drill: Every call the best one." in said and book.paths == {}

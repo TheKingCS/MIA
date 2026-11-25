@@ -1,6 +1,7 @@
 {
   "available": true,
   "started": true,
+  "drills": [],
   "course": {
     "id": "esp32",
     "name": "Build With ESP32",

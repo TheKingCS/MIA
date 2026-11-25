@@ -11,7 +11,8 @@ the next on his path) with its goal, steps, why, what to watch for, and for a ha
 platformio.ini and whether it needs his Wi-Fi typed in, and its circuit for the simulator (core/esp32_sim.circuit_of)
 with what to do there to pass; the board (its port, or what's missing) for a course worked
 on one; and what's next. Read only: starting the course is the action `path.start`, flashing `esplab.flash`, reading
-the board POST /api/labs/{course}/read.
+the board POST /api/labs/{course}/read. A course with scenario drills has them too (core/drills.page_of), its
+choices' verdicts in them, shown on the page once he picks.
 """
 
 from __future__ import annotations
@@ -30,7 +31,8 @@ def _labs(course: str) -> dict:
 
 def page(context, course: str = "esp32", lesson: str = "") -> dict:
     """The course page's data (see the module's opening).
-    For an ESP32 lab, the circuit for the simulator and what to do there to pass (core/esp32_sim)."""
+    For an ESP32 lab, the circuit for the simulator and what to do there to pass (core/esp32_sim).
+    Its drills too (core/drills.page_of), for a course that has them."""
     from core import paths
 
     program = paths.program_of(context, course)
@@ -77,7 +79,9 @@ def page(context, course: str = "esp32", lesson: str = "") -> dict:
         found = bench()
         board = {"port": found["port"], "description": found["description"], "ready": not found["missing"],
                  "missing": found["missing"]}
-    return {"available": True, "started": started,
+    from core import drills
+
+    return {"available": True, "started": started, "drills": drills.page_of(program.id),
             "course": {"id": program.id, "name": program.name, "icon": program.icon, "about": program.about,
                        "minutes_a_day": program.plan[0], "days_a_week": program.plan[1]},
             "stages": stages, "lab": shown, "board": board,
