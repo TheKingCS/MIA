@@ -104,7 +104,8 @@ def forecast_url(lat: float, lon: float, unit: str) -> str:
 def read(raw: dict, unit: str) -> Optional[dict]:
     """Pure logic. Open-Meteo's answer as {temp, words (now), today_words (the whole day's), high, low, tomorrow:
     {high, low, words, rain?, gust?}, days: [{date, high, low, words, rain?, gust?}], hours: [{time, temp, rh, wind}]
-    (the first 48, as given; [] without them), unit: "°F"}, every daily temperature
+    (the first 48, as given; [] without them), elevation (metres, as Open-Meteo gives it, or None), unit: "°F"}, every
+    daily temperature
     rounded, a day's chance of rain and strongest gust (mph with °F, km/h with °C) when it's given (tomorrow None, and a day left out of `days`, when its figures have a gap);
     None when it isn't a forecast."""
     try:
@@ -144,7 +145,8 @@ def read(raw: dict, unit: str) -> Optional[dict]:
         return {"temp": round(now["temperature_2m"]), "words": CODES.get(int(now["weather_code"]), ""),
                 "high": today["high"], "low": today["low"], "tomorrow": tomorrow, "unit": sign,
                 "today_words": today["words"],  # the whole day's, not only now (a clear morning, storms later)
-                "days": days, "hours": hours}
+                "days": days, "hours": hours,
+                "elevation": raw.get("elevation")}  # metres, the town's (core/canning_times.py reads it)
     except (KeyError, IndexError, TypeError, ValueError):
         return None
 

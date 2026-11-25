@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1741 files, 374,917 lines; 1741 files describe themselves; 20,578 of 20,708 classes and functions are documented.
+1743 files, 375,156 lines; 1743 files describe themselves; 20,591 of 20,721 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-694 files, 193,657 lines; 9,827 of 9,913 classes and functions documented
+695 files, 193,843 lines; 9,836 of 9,922 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -139,6 +139,7 @@
 - `core/calibration.py`: Whether MIA's "how sure" means anything (build plan step 8, DEC-0094): every question-plan answer is marked sure, likely or unsure in code, from what its fact sheet holds (core/question_plans.sureness). Each one is noted here, in the person's own folder, by its plan, its level and a fingerprint of t
 - `core/canning_fix.py`: Fixing a batch of jars that was put up with the wrong count (the achievements review, 2026-11-24): "I put up 7 jars of tomatoes, not 70". The jars he has ever canned are counted from `canned` life events (core/canning_shelf.py, core/life_milestones.jars_canned), because an eaten jar leaves the pantr
 - `core/canning_shelf.py`: The canning shelf (Jarvis brainstorm, round 2): the jars he puts up, kept as batches in his pantry, said by date against the USDA's best-quality window. "I put up 7 quarts of tomatoes today" adds a batch (`put_up`); "what's on my canning shelf?" reads them back (`shelf`, `say`), oldest first, with t
+- `core/canning_times.py`: "How long do I process quarts of green beans?" (Jarvis brainstorm, round 12; canning is one of his skills): processing times from the USDA's Complete Guide to Home Canning (2015), with the pressure or the time adjusted for his altitude, worked out in code and never from the model's memory. A food no
 - `core/capabilities.py`: What MIA can do, built from the code (DEC-0041; the intelligence spec's Phase 2B, docs/INTELLIGENCE_AUDIT.md). Never a hand-written brochure:
 - `core/capability_check.py`: A capability's four descriptions read as one (DEC-0283, LS-04, docs/mia_os/MIA_UNIVERSAL_RUNTIME_CONTRACTS.md section 2). A capability is described in four places that each work on their own:
 - `core/capability_gaps.py`: Self-enablement (build plan step 9, DEC-0094): "I can't do that" stops being a dead end. Every request no tool matched is already in the person's Fix-It Log (`no_tool`, core/failure_log.py). Here they become **capability gaps**:
@@ -992,7 +993,7 @@
 
 ## tests/: the test suite: what each part must do
 
-641 files, 100,165 lines; 8,386 of 8,430 classes and functions documented
+642 files, 100,218 lines; 8,390 of 8,434 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1067,6 +1068,7 @@
 - `tests/test_camera_voice.py`: The Security cameras by voice (DEC-0125, core/assistant_camera_actions.py): which cameras there are and whether each last worked, and saving a camera's picture through the screen's own Save Picture.
 - `tests/test_canning_fix.py`: A batch put up with the wrong count, fixed (core/canning_fix.py): the history gains the difference, so the jars he has ever canned are right again, and the jars on hand move by it; a bought can or a count that's already right is refused.
 - `tests/test_canning_shelf.py`: The canning shelf (core/canning_shelf.py): "I put up 7 quarts of tomatoes" adds a dated batch to the pantry, best by a year on, a second batch the same month joins it, and the shelf is read back oldest first with the ones past or nearing a year said first and the never-taste-a-bad-jar line always; b
+- `tests/test_canning_times.py`: "How long do I process quarts of green beans?" (core/canning_times.py): the USDA's pressure-canning minutes with the pressure for his altitude (weighted 10 or 15 lb, a dial gauge by thousands of feet), the boiling-water minutes by each food's own altitude column, his altitude from his words or his t
 - `tests/test_capabilities.py`: What MIA can do and how she's built (DEC-0041): the capability map from the code, "can you…?" answered from it (or "not that I can find", never a guess), MIA's own docs searched with the file each answer came from, and a status per capability (DEC-0057: a boundary by design isn't partial, a missing 
 - `tests/test_capability_check.py`: Tests for a capability's four descriptions read as one (DEC-0283, LS-04, core/capability_check.py): the tool, the action kind, the manifest's tier and the effects table must agree.
 - `tests/test_capability_gaps.py`: Self-enablement (build plan step 9, core/capability_gaps.py): requests no tool matched become gaps with what they'd take, worked out in code; a repeated one is offered through the gate; "build it" opens a task that names the gap by id, never the person's words; "bring it back" shows a tucked-away ap

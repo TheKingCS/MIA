@@ -61,7 +61,8 @@
       "suggest_recipes",
       "update_pantry_item",
       "fix_jar_count",
-      "meat_cure"
+      "meat_cure",
+      "canning_time"
     ],
     "actions": [
       "cooking.back",
@@ -154,7 +155,8 @@
       "update_pantry_item": "act_within_grant",
       "fix_jar_count": "act_within_grant",
       "jars.correct": "act_within_grant",
-      "meat_cure": "observe"
+      "meat_cure": "observe",
+      "canning_time": "observe"
     },
     "outside": []
   },

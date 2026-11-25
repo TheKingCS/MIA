@@ -354,6 +354,12 @@ New ideas, each checked against what's there first:
   and wind chill worked out in code from the hourly forecast, through the working day: the risk level, the cooler
   hours for heavy work with OSHA's water-and-shade advice and the heat-stroke signs, or the minutes to frostbite on
   bare skin. Live model: the name had to say "wind chill" and "work outside" before both kinds of question found it.
+- **Canning times for his altitude** (no decision; canning is his): *built 2026-11-24 (`core/canning_times.py`, the
+  tool `canning_time`).* The USDA's Complete Guide times for 11 pressure-canned foods (the pressure by his altitude:
+  weighted 10 or 15 lb, a dial gauge by the thousand feet) and 3 boiling-water ones (each food's own altitude
+  column); his altitude from his words or his town's elevation (now kept with the forecast); a food not in the table
+  is never given a time. Live model: it drops "feet" and adds a jar size he never said, so a bare number is feet and
+  both jar sizes are always said.
 - **How many solar panels would I need?** (no decision; his power): *built 2026-11-24 (`core/solar_size.py`, the tool
   `size_solar`, the calculator `solar_array`).* From his kWh meter's months, the kWh a month he says, or his
   essentials off-grid with two days of battery: the array's kW and panel count at his sun hours (else 4, said as an
