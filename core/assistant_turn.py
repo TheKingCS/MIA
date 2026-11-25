@@ -494,7 +494,8 @@ def _reminder_reply(context, prompt: str):
     Evening only for "tonight" or a day's evening; "tonight at 12" sets no time.
     The day first is the same ("remind me tomorrow at 9 to call the vet", `_REMIND_FIRST`: the live sweep, where the
     model had written its alarm call out as text), its date from the day said first, never one in the task. An hour
-    from 1 to 5 with no am, pm or morning is the afternoon ("tomorrow at 3")."""
+    from 1 to 5 with no am, pm or morning is the afternoon ("tomorrow at 3").
+    "Morning" counts only in the day and time, never in the task ("the morning glories")."""
     first = _REMIND_FIRST.match(prompt.replace("’", "'"))
     day_words = prompt
     if first:
@@ -513,7 +514,8 @@ def _reminder_reply(context, prompt: str):
         hour, minute = int(found.group(3)), int(found.group(4) or 0)
         if evening and not found.group(5) and hour == 12:
             hour = 99  # "tonight at 12": noon or midnight? no time rather than a wrong one
-        morning = re.search(r"\bmorning\b", day_words, re.I)
+        # "morning" in the day and time, never in the task ("check the morning glories saturday at 4", the nineteenth)
+        morning = re.search(r"\bmorning\b", day_words if first else prompt.replace("’", "'")[found.end(1):], re.I)
         small = not found.group(5) and not morning and 1 <= hour <= 5  # "tomorrow at 3" is the afternoon (the eighteenth)
         hour += 12 if ((found.group(5) or "").lower() == "pm" or (evening and not found.group(5)) or small) \
             and hour < 12 else 0  # "tonight at 9" is 9 pm (the seventh review)
@@ -549,7 +551,7 @@ _SPENT_ON = (
     ("Groceries", r"\bchicken (?:breasts?|thighs?|wings?|legs?|drumsticks?|nuggets?|tenders?)\b|\bwhole chicken\b"),
     ("Animals & Feed", r"\b(?:feed|hay|straw|bedding|vet|chicks|scratch|oyster shell|dog food|cat food|kibble|goats?|"
                        r"(?:chicken|hen|goat|pig|pet|horse|rabbit) food|food for (?:the )?(?:dogs?|cats?|chickens|hens|"
-                       r"goats|pigs|horses|rabbits|animals|pets)|pets?|"
+                       r"goats|pigs|horses|rabbits|animals|pets)|pet supplies|"
                        r"horses?|pigs?|piglets?|livestock|lambs?|calf|calves)\b"),
     ("Groceries", r"\b(?:groceries|grocery|milk|bread|eggs|meat|produce|chicken|food|walmart|aldi|kroger|costco)\b"),
     ("Maintenance", r"\b(?:repairs?|fix(?:ing|ed)?|plumber|electrician|mechanic|parts)\b"),
@@ -825,10 +827,11 @@ def _garden_kit_reply(context, prompt: str):
     frost date, and asked him to log a kit): "when should I start my tomato seeds?" is that crop's dates from his
     own last frost (core/planting_now.say_crop), and "what should be in a 72 hour bag?" the kit against his records
     (core/ready_kit.say). None otherwise, or for a crop she has no dates for.
-    Never "when should I start selling tomatoes?" (a verb after start), and the kit only when what's in it is asked."""
+    Never "when should I start selling tomatoes?" (a verb after start), and the kit only when what's in it is asked.
+    Spring and string are crops' words, never a verb ("start spring peas")."""
     found = _PLANT_WHEN.match(prompt)
     try:
-        if found and re.match(r"\s*\w+ing\b", found.group("rest")) and not re.match(r"\s*(?:my|the|our)\b",
+        if found and re.match(r"\s*(?!spring\b|string\b)\w+ing\b", found.group("rest")) and not re.match(r"\s*(?:my|the|our)\b",
                                                                                      found.group("rest")):
             return None  # "when should I start selling tomatoes?" is no planting date (the eighteenth review)
         if found:

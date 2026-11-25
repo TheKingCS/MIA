@@ -7,6 +7,7 @@ The sixth live sweep's fixes (2026-11-25): "remind me tomorrow at 9 to call the 
 what he spent on a category and "am I over budget?" are from his own records; a crop's dates and the 72-hour kit are hers.
 The eighteenth review's: the day said first is the day, "at 3" the afternoon; a period it can't read, two things or
 a verb after "start" are the model's; the animals' food is Animals & Feed.
+The nineteenth's: morning in the task is no morning, a pet project no animal, spring peas a crop.
 """
 
 from types import SimpleNamespace
@@ -112,3 +113,16 @@ def test_a_crop_word_or_a_kit_word_alone_is_no_garden_or_kit_question(monkeypatc
     assert assistant_turn._garden_kit_reply(None, "when should I plant potatoes?") == "dates"
     assert assistant_turn._garden_kit_reply(None, "what should I pack in my go bag?") == "the kit"
     assert assistant_turn._garden_kit_reply(None, "what goes in a bug out bag?") == "the kit"
+
+
+def test_the_nineteenth_reviews_three():
+    """Morning in the task is no morning; a pet project is no animal; spring peas are a crop."""
+    added = []
+    context = SimpleNamespace(assistant_actions=SimpleNamespace(execute=lambda c, n, a: added.append(a) or "ok"))
+    assistant_turn._reminder_reply(context, "remind me to check the morning glories saturday at 4")
+    assert added[-1]["time"] == "16:00"
+    book = SimpleNamespace(total_expenses_by_category=lambda s, e: {"Animals & Feed": 3.0})
+    assert assistant_turn._spent_on_reply(SimpleNamespace(budget=book), "how much did I spend on my pet project?") is None
+    assert assistant_turn._PLANT_WHEN.match("when should I start spring peas")
+    import re
+    assert not re.match(r"\s*(?!spring\b|string\b)\w+ing\b", " spring peas")
