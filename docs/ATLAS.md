@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1923 files, 401,891 lines; 1923 files describe themselves; 21,751 of 21,898 classes and functions are documented.
+1923 files, 401,962 lines; 1923 files describe themselves; 21,754 of 21,901 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-741 files, 210,775 lines; 10,387 of 10,466 classes and functions documented
+741 files, 210,822 lines; 10,388 of 10,467 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1040,7 +1040,7 @@
 
 ## tests/: the test suite: what each part must do
 
-772 files, 108,954 lines; 8,990 of 9,058 classes and functions documented
+772 files, 108,978 lines; 8,992 of 9,060 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1230,7 +1230,7 @@
 - `tests/test_evening_noticed.py`: What she noticed today in the evening wrap (core/evening_wrap.noticed_today, brainstorm round 18): the first unusual finding the gate sent today, named once, from the gate's own log; never one held back.
 - `tests/test_evening_wrap.py`: The evening wrap (core/evening_wrap.py, DEC-0292): today's wins, tomorrow's first thing and its weather in two sentences, from his hour on, once a day through the gate; nothing when there's nothing to say; an alarm is never tomorrow's first thing, and one of a thing is said singular. *(1 undocumented)*
 - `tests/test_event_bus.py`: Unit tests for core.event_bus.EventBus.
-- `tests/test_event_cancel.py`: "Cancel the dentist" is that calendar event of his, cancelled through the action contract (core/reminders_view.cancel, the calendar conversation check 2026-11-26: the model had said "That isn't available on this MIA"); never a word that names another kind of thing.
+- `tests/test_event_cancel.py`: "Cancel the dentist appointment" is that calendar event of his, cancelled through the action contract (core/reminders_view.cancel_event, the calendar conversation check 2026-11-26: the model had said "That isn't available on this MIA"); careful because it deletes: a word shared with another kind of 
 - `tests/test_event_catalog.py`: The event catalogue (build plan step 7, core/event_catalog.py): docs/EVENTS.md is the code's own record of what each file publishes and hears on the event bus, and no listener waits on an event nothing sends.
 - `tests/test_everyday_phrasing_routing.py`: The everyday ways he'd ask for the tools built 2026-11-23 and 24 reach them by their trigger phrases, without the embedding model (the phone): who owes him, his emergency kit, the jars he puts up and his canning shelf, his generator and preparedness settings, everyday money questions (bills due, the
 - `tests/test_expedition_manager.py`: Unit tests for core.expedition_manager. Isolates _DATA_DIR _EXPEDITIONS_FILE into a tmp_path scratch area (same monkeypatch pattern as test_journal_manager.py's isolated_paths).

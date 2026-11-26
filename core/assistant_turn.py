@@ -1543,7 +1543,8 @@ _REMINDER_CANCEL = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:cancel|delete|
 # "cancel the dentist (appointment)": a calendar event of his whose title holds every word (the calendar conversation
 # check, 2026-11-26: the model had said "That isn't available on this MIA"); only cancel, delete or remove
 _EVENT_CANCEL = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:cancel|delete|remove)\s+(?:the |my |that )?(?P<what>[\w' -]{2,40}?)"
-                           r"(?:\s+(?:appointment|appt|event|meeting|visit))?(?:\s+(?:on|for)\s+\w+(?:day)?)?\s*[.!]*\s*$", re.I)
+                           r"(?P<kind>\s+(?:appointment|appt|event|meeting|visit))?(?:\s+(?:on\s+|for\s+)?(?P<day>today|"
+                           r"tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday))?\s*[.!]*\s*$", re.I)
 _GREETING = re.compile(r"^\s*(?:good (?:morning|afternoon|evening)|morning|hi|hello|hey|howdy|yo)(?:,? (?:mia|there))?"
                        r"\s*[.!]*\s*$", re.I)
 _YESTERDAY = re.compile(r"^\s*(?:hey mia,? )?what did (?:i|we) (?:do|get done|accomplish) yesterday\s*[?.!]*\s*$", re.I)
@@ -1789,7 +1790,7 @@ def _own_tool_reply(context, prompt: str):
     bill" is what's due and how to mark it, since she pays nothing),
     "where can I cut back?" his chosen spending against
     his usual and his recurring bills (core/money_periods.cut_back), "how prepared am I for a winter storm?" the checklist
-    from his records (core/storm_ready.ready_for), "cancel the dentist" that event of his (core/reminders_view.cancel), "I practiced for 30 minutes today" a session on
+    from his records (core/storm_ready.ready_for), "cancel the dentist appointment" that event of his, or a question first (core/reminders_view.cancel_event), "I practiced for 30 minutes today" a session on
     his
     course (log_practice: the course named whole, never "guitar hero"; unnamed only as "practiced", never a day or a
     game), "what's due today?" today's things then the overdue (core/today.due_today_said), "what reports do you send
@@ -1969,7 +1970,8 @@ def _own_tool_reply(context, prompt: str):
         from core import reminders_view
 
         try:
-            found = reminders_view.cancel(context, cancelling.group("what"))  # None when no event of his fits
+            found = reminders_view.cancel_event(context, cancelling.group("what"), bool(cancelling.group("kind")),
+                                                cancelling.group("day") or "")  # None when no event of his fits
             if found:
                 return found
         except Exception:

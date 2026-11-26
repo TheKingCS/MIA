@@ -9,7 +9,10 @@ His reminders and the small everyday turns around them, in code (the live sweep,
 - `cancel`: "cancel the oil reminder" (it had said "it's not a reminder for the truck's oil change"): the one whose
   title holds every word he said, by its id, through the action contract (event.delete / alarm.delete: recorded and
   undoable); two that fit are asked about with their days; none, and the model has it;
-  "turn off all reminders" lists them and asks which, never deleting them all on one sentence;
+  "turn off all reminders" lists them and asks which, never deleting them all on one sentence; one titled exactly
+  his words wins over others that hold them too;
+- `cancel_event`: "cancel the dentist appointment": careful, because it deletes: outright only when he named its kind
+  or its whole title, it doesn't repeat and a day said is its day; else a question first;
 - `greeting`: "good morning" (it had said "I didn't get an answer together for that one"): back in kind, with the
   morning briefing's day when it's morning (core/morning_briefing.briefing);
 - `yesterday`: "what did I do yesterday?" (it had said nothing's kept): yesterday's wins in a few words
@@ -83,11 +86,49 @@ def _words(text: str) -> set:
         "about", "for", "to", "please", "mia"}
 
 
+_WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+
+
+def cancel_event(context, words: str, kind_said: bool, day: str = "", today: Optional[date] = None) -> Optional[str]:
+    """For "cancel the dentist appointment" (the calendar conversation check, 2026-11-26), careful because it deletes:
+    the calendar events whose titles hold every word (the one titled exactly that first); none, None (the model's);
+    several, which one. One event is cancelled outright only when he called it an appointment, event, meeting or
+    visit (`kind_said`) or said its whole title, it doesn't repeat, and a day he said is the day it falls on (the
+    Fable review: "remove the oil change" or "cancel the gym on Friday" had deleted an event or a whole series);
+    otherwise she asks, saying the words that do it."""
+    today = today or date.today()
+    want = _words(words)
+    if not want or re.search(r"\b(?:all|every|everything)\b", words or "", re.I):
+        return None
+    hits = [e for e in _events(context, today) if want <= _words(e.title)]
+    exact = [e for e in hits if _words(e.title) == want]
+    hits = exact if len(exact) == 1 else hits
+    if not hits:
+        return None
+    if len(hits) > 1:
+        return "Which one? " + "; ".join(f"{e.title} ({_when(e, today)})" for e in hits[:6]) + "."
+    event = hits[0]
+    when = _when(event, today)
+    if event.recurrence:
+        return (f"{event.title} repeats ({when}): cancelling it would remove the whole series. Remove it on the "
+                "Calendar page if that's what you want.")
+    if day:
+        on = date.fromisoformat(event.date[:10])
+        said_day = day.lower()
+        fits = (said_day == "today" and on == today) or (said_day == "tomorrow" and on == today + timedelta(days=1)) \
+            or (said_day in _WEEKDAYS and on.weekday() == _WEEKDAYS.index(said_day))
+        if not fits:
+            return f"I don't have {event.title} on {day}: it's {when}. Say which, and I'll cancel the right one."
+    if not (kind_said or _words(event.title) == want):
+        return f"Cancel {event.title} ({when})? Say \"cancel the {event.title.lower()}\" and I'll do it."
+    return cancel(context, event.title, today)
+
+
 def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     """For "cancel the oil reminder": the one reminder or alarm whose title holds every word he said, cancelled by
     its id through the action contract (undoable); the choice when several fit; for "all", the list and a question.
     None when no words are left to match or none fits (the model's then); with no actions engine here, where to
-    remove it."""
+    remove it. The one titled exactly his words wins over others that hold them."""
     today = today or date.today()
     if re.search(r"\b(?:all|every|everything)\b", words or "", re.I):
         found = listing(context, today)
@@ -98,6 +139,10 @@ def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     # every word he said is in its title (never one shared word: "the oil change reminder" isn't "Change the filter")
     events = [e for e in _events(context, today) if want <= _words(e.title)]
     alarms = [a for a in _alarms(context) if want <= _words(a.label)]
+    exact = [e for e in events if _words(e.title) == want] + [a for a in alarms if _words(a.label) == want]
+    if len(exact) == 1:  # "cancel dinner" with "Dinner" and "Dinner with Sarah": the one titled exactly that
+        events = [x for x in events if x is exact[0]]
+        alarms = [x for x in alarms if x is exact[0]]
     hits = [("event.delete", {"event_id": e.event_id}, e.title, _when(e, today)) for e in events] + \
         [("alarm.delete", {"alarm_id": a.alarm_id}, f"the {a.label} alarm", a.time) for a in alarms]
     if not hits:
