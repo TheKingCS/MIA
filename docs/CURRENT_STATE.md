@@ -100,7 +100,13 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - The fishing conversation check: "I caught a 3 pound bass at the pond" is one bass, read in code
   (core/catch_actions.parse; the model had logged three), "when's the best time to go back?" after a catch is the
   fishing times, and spending on a thing no category names ("fishing gear") is the expenses that name it.
-  Fable-reviewed. 8807 passing.
+  Fable-reviewed.
+- The money conversation check: "can I afford a $300 chainsaw?" reaches the afford check (never a recurring cost),
+  "how much is left this month?" (or a bare "how much is left?" after her money reply) is the month's records after
+  what's due, "what bills are still due?" names the debts' minimums too, and "I paid the electric bill" marks it paid
+  in code (never twice for one time round; "pay the electric bill" says what's due, since she pays nothing). Also
+  "are the eggs paying for the feed?" is the flock's numbers, and "Saturday morning" on a reminder is 8am.
+  Fable-reviewed. 8811 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
