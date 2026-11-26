@@ -18,8 +18,9 @@ from core.logger import get_logger
 log = get_logger(__name__)
 
 
-def say(context, today: Optional[date] = None) -> str:
-    """His reasons, then one thing to start on now: a task or upkeep due today or overdue (never a bill, a birthday or
+def say(context, today: Optional[date] = None, task: str = "") -> str:
+    """His reasons, then one thing to start on now: for a task he named ("to finish the shed"), its smallest piece and
+    the hours logged on that project; else a task or upkeep due today or overdue (never a bill, a birthday or
     something coming soon), else the smallest step toward it."""
     today = today or date.today()
     parts = []
@@ -49,7 +50,21 @@ def say(context, today: Optional[date] = None) -> str:
                  ("overdue", "today")]
     except Exception:  # noqa: BLE001
         items = []
-    if items:
+    if task:  # "motivation to finish the shed": the smallest piece of that, and what's logged on it
+        project = None
+        try:
+            from core import project_time
+
+            project = project_time.project_named(context, task)
+        except Exception:  # noqa: BLE001
+            project = None
+        logged = ""
+        if project is not None:
+            hours = project_time.total(project)
+            logged = f" You've put {hours:g} hours into {project.name} so far." if hours else ""
+        parts.append(f"For {task.split(' ', 1)[-1] if ' ' in task else task}: pick the smallest piece you can finish in "
+                     f"twenty minutes and do just that.{logged}")
+    elif items:
         parts.append(f"One small thing to start with: {items[0].title}. Do that one, then see how you feel.")
     else:
         parts.append("Nothing's due today, so pick the smallest step toward it and do just that.")

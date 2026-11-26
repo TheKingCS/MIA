@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1893 files, 399,051 lines; 1893 files describe themselves; 21,654 of 21,798 classes and functions are documented.
+1894 files, 399,126 lines; 1894 files describe themselves; 21,656 of 21,801 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-738 files, 209,107 lines; 10,355 of 10,434 classes and functions documented
+738 files, 209,147 lines; 10,356 of 10,435 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1037,7 +1037,7 @@
 
 ## tests/: the test suite: what each part must do
 
-745 files, 107,782 lines; 8,925 of 8,990 classes and functions documented
+746 files, 107,817 lines; 8,926 of 8,992 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1541,6 +1541,7 @@
 - `tests/test_replayed_week.py`: Tests for LS-09, a replayed week (core/replay.py): on a frozen clock, each day's due things are said on their day, nothing twice, and a stop-everything holds her unprompted messages until it lifts.
 - `tests/test_requirements.py`: What each project needs (Procurement P1, DEC-0172; core/requirements.py, core/requirement_actions.py): a plan's materials become a new project's needs with the plan's quantities; what's on hand in the workshop and the inventory is marked off (enough is owned, some is partial); the person adds, chang
 - `tests/test_requirements_spec.py`: MIA OS's requirements specification (Prompt 04; `docs/mia_os/MIA_OS_SYSTEM_REQUIREMENTS.md`, `tools/requirements_matrix.py`): every requirement row is well formed, defined once, with a known priority, tier and status and an owner prompt; the scenarios name only requirements that exist; the generated
+- `tests/test_reshaped.py`: A sentence put in the shape her routes read (core/assistant_turn.reshaped, the cross-route review 2026-11-26): a greeting before a question set aside, a weekday first or a part of the day read as "remind me every X to ... at". *(1 undocumented)*
 - `tests/test_response_composer.py`: The response composer (core/response_composer.py, DEC-0067): what she says on each device, composed for it, never a sentence cut in half.
 - `tests/test_response_style.py`: Learning how the person likes MIA to answer (core/response_style.py, DEC-0138): a recorded A/B pick moves the preferred value; confidence rises as picks agree; the next experiment targets the least-settled dimension; the style instruction only names dimensions that have a pick; and it all persists (
 - `tests/test_restore_drill.py`: WP-09 (DEC-0259, REQ-SEC-037): the monthly restore drill restores the newest backup into a scratch folder and opens every store in it, sealed ones through their key, passing only when all open, telling a failure at once; and the nightly backup's second copy goes to the place he chose off the PC, kep

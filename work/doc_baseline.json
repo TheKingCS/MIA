@@ -31,6 +31,7 @@
   "tests/test_preparedness.py": 1,
   "tests/test_private_budget.py": 1,
   "tests/test_reminders_view.py": 1,
+  "tests/test_reshaped.py": 1,
   "tests/test_review_7.py": 1,
   "tests/test_seed_check.py": 1,
   "tests/test_specialist_work.py": 2,

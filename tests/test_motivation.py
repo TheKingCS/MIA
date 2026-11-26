@@ -33,6 +33,6 @@ def test_with_no_reasons_it_asks_for_one(monkeypatch):
 
 
 def test_the_words_reach_it(monkeypatch):
-    monkeypatch.setattr(motivation, "say", lambda c, t=None: "why")
+    monkeypatch.setattr(motivation, "say", lambda c, t=None, task="": "why")
     for words in ("I need motivation", "motivate me", "I'm so unmotivated today"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "why", words

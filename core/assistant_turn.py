@@ -125,8 +125,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A course's next lesson too (`_next_lesson_reply`).
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
     A short follow-up to a code answer, made whole, too (`_follow_through_reply`: "what about this month?"), and a
-    go-ahead to her own offer runs its words (core/conversation_state.offered_phrase), and "every Monday remind me
-    to ..." is read with the weekday after, as in a turn.
+    go-ahead to her own offer runs its words (core/conversation_state.offered_phrase), and the sentence is put in
+    the shape her routes read (`reshaped`), as in a turn.
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
@@ -158,10 +158,7 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     from core.conversation_state import offered_phrase
 
     prompt = offered_phrase(conversation, prompt) or prompt  # "ok, start it" to her offer, as in a turn
-    day_first = re.match(r"^\s*(?:hey mia,?\s+)?(?:every|each) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?,?"
-                         r"\s+remind me to\s+(.+?)\s*[.!]?\s*$", prompt, re.I)
-    if day_first:  # the weekday first, as in a turn
-        prompt = f"Remind me every {day_first.group(1)} to {day_first.group(2)}"
+    prompt = reshaped(prompt)  # a greeting before a question, the weekday first, as in a turn
     from core.trade_actions import reply as job_reply
 
     try:  # a job in progress, or "walk me through ..." (DEC-0149), as in a turn
@@ -1440,7 +1437,8 @@ _IN_A_WHILE = re.compile(r"^\s*(?:hey mia,? )?(?:please )?(?:can you |could you 
                          r"\s*[.!?]*\s*$", re.I)
 _MOTIVATION = re.compile(r"^\s*(?:hey mia,? )?(?:i (?:really )?need (?:some )?motivation|motivate me|give me (?:some )?"
                          r"motivation|i'?m (?:feeling )?(?:so |really )?unmotivated|i can'?t get motivated|i have no "
-                         r"motivation)(?: today| right now)?\s*[.!?]*\s*$", re.I)
+                         r"motivation)(?: to (?P<task>(?:finish|work on|start|do|get to|tackle|build|clean) [\w' -]{2,40}?))?"
+                         r"(?: today| right now)?\s*[.!?]*\s*$", re.I)
 _VEHICLE_KIT = re.compile(r"\b(?:truck|car|vehicle|jeep|suv|van)(?:'s)? (?:emergency |winter |road(?:side)? |survival )?kit\b|"
                           r"\b(?:emergency|winter|road(?:side)?|survival) kit for (?:my |the |a )?(?:truck|car|vehicle|"
                           r"jeep|suv|van)\b|\bkeep in (?:my |the )?(?:truck|car|vehicle)\b", re.I)
@@ -1465,6 +1463,33 @@ def _run_own(context, name: str, arguments: dict):
 _COMMAND_FIRST = re.compile(r"^\s*(?:hey mia,?\s+)?(?:please\s+)?(?:remind|add|log|put|note|write|save|keep track|record|"
                             r"schedule|make a note|i (?:put|added|bought|got|did|packed|need to)|we (?:put|added|bought))\b",
                             re.I)  # a command or a statement, never a question to answer (the cross-route review)
+
+
+_DAYS_RE = "monday|tuesday|wednesday|thursday|friday|saturday|sunday"
+_PART_TIMES = {"morning": "8am", "afternoon": "2pm", "evening": "6pm", "night": "8pm"}
+
+
+def reshaped(prompt: str) -> str:
+    """Pure logic. A sentence put in the shape her routes read, its meaning kept (the cross-route review,
+    2026-11-26): a greeting before a question set aside ("good morning, what's my week look like?" is the question);
+    the weekday first ("every Monday remind me to ...") and a part of the day after it ("every Saturday morning")
+    read as "remind me every Saturday to ... at 8am"."""
+    said = prompt or ""
+    greeted = re.match(r"^\s*(?:good (?:morning|afternoon|evening)|hi|hello|hey|morning)(?:,? mia)?\s*[,!.]+\s*(?P<rest>\S.{5,})$",
+                       said, re.I)
+    if greeted:
+        said = greeted.group("rest")
+    first = re.match(rf"^\s*(?:hey mia,?\s+)?(?:every|each) ({_DAYS_RE})s?(?: (morning|afternoon|evening|night))?,?\s+"
+                     r"remind me to\s+(.+?)\s*[.!]?\s*$", said, re.I)
+    if first:
+        at = f" at {_PART_TIMES[first.group(2).lower()]}" if first.group(2) and " at " not in first.group(3) else ""
+        return f"Remind me every {first.group(1)} to {first.group(3)}{at}"
+    part = re.match(rf"^\s*(?:hey mia,?\s+)?(?:please\s+)?remind me every ({_DAYS_RE}) (morning|afternoon|evening|night)\s+to\s+"
+                    r"(.+?)\s*[.!]?\s*$", said, re.I)
+    if part:
+        at = "" if re.search(r"\bat \d", part.group(3)) else f" at {_PART_TIMES[part.group(2).lower()]}"
+        return f"Remind me every {part.group(1)} to {part.group(3)}{at}"
+    return said
 
 
 def _own_tool_reply(context, prompt: str):
@@ -1495,7 +1520,7 @@ def _own_tool_reply(context, prompt: str):
     record (or his history: "when did I last work out?"), "remind me in 2 hours to ..." (or "an hour and a half") with the clock worked out, spending tracked automatically, a morning routine,
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
-    out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation" his own reasons and one small step (core/motivation), "what should be in my truck's
+    out for it (core/build_calcs's structures, only one named on its own and with no size said), "I need motivation (to finish the shed)" his own reasons and one small step (core/motivation), "what should be in my truck's
     emergency kit?" Ready.gov's car kit against his records (core/ready_kit.say_vehicle), "what's a good side
     hustle for me?" from what he already sells,
     keeps and owns (core/side_hustle), "what do I need for the chili?" a saved recipe's missing
@@ -1721,11 +1746,12 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't check the vehicle kit")
             return None
-    if _MOTIVATION.match(said):  # "I need motivation": his own reasons and one small step (core/motivation)
+    motivated = _MOTIVATION.match(said)
+    if motivated:  # "I need motivation (to finish the shed)": his own reasons and one small step (core/motivation)
         from core import motivation
 
         try:
-            return motivation.say(context)
+            return motivation.say(context, task=motivated.group("task") or "")
         except Exception:
             log.exception("Couldn't give motivation")
             return None
@@ -2164,7 +2190,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     A reminder every day goes on the calendar daily (`_daily_reminder_reply`).
     A plain go-ahead ("ok, start it") to her own 'Say "..." and I'll ...' runs those words
     (core/conversation_state.offered_phrase); a short follow-up to a code answer is made whole
-    (`_follow_through_reply`); "every Monday remind me to ..." is read as "remind me every Monday to ...".
+    (`_follow_through_reply`); the sentence is put in the shape her routes read (`reshaped`: a greeting before a
+    question set aside, "every Saturday morning remind me to ..." as "remind me every Saturday to ... at 8am").
     A reply is taken for a tool call only when it names one of her tools.
     """
     from core import stop  # "stop", "stop everything", "carry on": in code, before anything else (REQ-AUT-010)
@@ -2186,10 +2213,8 @@ def _turn(context: AppContext, conversation: Conversation, prompt: str) -> Assis
     add_message(conversation, "user", prompt)
     if offered and prepared.fixed_reply is None:
         prompt = offered
-    day_first = re.match(r"^\s*(?:hey mia,?\s+)?(?:every|each) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?,?"
-                         r"\s+remind me to\s+(.+?)\s*[.!]?\s*$", prompt, re.I)
-    if day_first and prepared.fixed_reply is None:  # the weekday first (the automation sweep: it said it had, and hadn't)
-        prompt = f"Remind me every {day_first.group(1)} to {day_first.group(2)}"
+    if prepared.fixed_reply is None:  # the shape her routes read: a greeting before a question, the weekday first
+        prompt = reshaped(prompt)
     if prepared.fixed_reply is not None:
         add_message(conversation, "assistant", prepared.fixed_reply)
         after_fixed_reply(context, conversation)
