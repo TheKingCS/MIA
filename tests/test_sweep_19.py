@@ -4,7 +4,7 @@ tests.test_sweep_19
 
 The thirteenth live sweep's fixes (2026-11-25): "we're out of milk" goes on the grocery list, never into the pantry;
 "my freezer uses 150 watts" is kept as one of his loads; what's on his calendar and who he owes are never the week's
-review or his assets' returns.
+review or his assets' returns. The Fable review of it: each guard takes only what's clearly its own.
 """
 
 from types import SimpleNamespace
@@ -34,3 +34,22 @@ def test_a_loads_watts_are_kept():
 def test_the_calendar_and_his_debts_are_never_the_wrong_plans():
     assert question_plans._not_for("week review", "What's on my calendar this week?")
     assert question_plans._not_for("returns", "Who do I owe money to?")
+
+
+def test_the_fable_review_of_sweep_19():
+    """The pantry's out-of guard takes only "out of" the item itself; a load is used or drawn, never a source, a
+    number or zero; the plans' vetoes only what's clearly the other's."""
+    added = []
+    kitchen = SimpleNamespace(all_grocery_items=lambda: [], add_grocery_item=lambda n, **k: added.append(n),
+                              all_pantry_items=lambda: [],
+                              add_pantry_item=lambda n, **k: SimpleNamespace(name=n, quantity=0, unit=""))
+    for words in ("I need to add 5 lb of flour to the pantry", "We're out of town next week, add 3 cans of beans to "
+                  "the pantry", "We're not low on rice, there's 10 lb in the pantry"):
+        said = _action_add_pantry_item(SimpleNamespace(kitchen=kitchen), {"name": "flour", "question": words})
+        assert "grocery list" not in said, words
+    context = SimpleNamespace(assistant_actions=SimpleNamespace(execute=lambda c, n, a: "ok"))
+    for words in ("my solar panel is 400 watts", "the generator is 5000 watts", "the answer is 42 watts",
+                  "The microwave is 1100 watts.", "my freezer uses 0 watts", "the grow light bulbs use 200 watts"):
+        assert assistant_turn._load_watts_reply(context, words) is None, words
+    assert not question_plans._not_for("returns", "What's the return on my rental, I still owe 80k on it")
+    assert not question_plans._not_for("week review", "How did my week go? I had a lot on my calendar")

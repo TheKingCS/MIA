@@ -263,7 +263,10 @@ def _answer_instead(context, llm, messages: list[dict], tools: list[dict], reply
 HIS_WORDS_TOOLS = frozenset({"canning_time", "feed_mix", "bleach_for_water", "meat_cure",
                              "list_calendar_events",  # called with {} by the model, it lost "tomorrow" (7th review)
                              # their guards read his words (the Fable review, 2026-11-25: without these they never ran)
-                             "add_grocery_item", "set_power_load", "list_past_conversations"})
+                             "add_grocery_item", "set_power_load", "list_past_conversations", "add_pantry_item",
+                             # better given his whole question (the Fable review of the general fill)
+                             "get_mia_docs", "ask_specialist", "generator_runtime", "hens_for_eggs", "water_to_store",
+                             "get_capability"})
 
 
 def his_words(registry, call: ToolCall, prompt: str) -> dict:
@@ -272,18 +275,17 @@ def his_words(registry, call: ToolCall, prompt: str) -> dict:
     model's (live check, 2026-11-25: "how long do I pressure can quart jars of green beans?" reached canning_time with
     the tool's own description as the question, and was refused). Only for HIS_WORDS_TOOLS, and only when the
     model's question is empty or the tool's own description: any other question of the model's stands (the sixth
-    review: describe_app's two apps, a budget, two foods in two calls had all become the whole prompt). Any other tool
-    with a prompt_arg gets his words only when the model left that field empty (2026-11-25, K-0499)."""
+    review: describe_app's two apps, a budget, two foods in two calls had all become the whole prompt). Never any
+    other tool: tried for every prompt_arg, it made a colour of "nice" and a search of a whole sentence (the Fable
+    review, 2026-11-25); a tool whose guard reads his words goes in HIS_WORDS_TOOLS (K-0499)."""
     arguments = dict(call.arguments or {})
     action = getattr(registry, "_actions", {}).get(call.name)
     field = getattr(action, "prompt_arg", "") if action is not None else ""
     if not field or not str(prompt or "").strip():
         return arguments
     if call.name not in HIS_WORDS_TOOLS:
-        # any other tool that reads his words gets them when the model left them out (K-0499: guards on his words
-        # had never run in a real turn); a question the model gave stands, as for the rest
-        if not str(arguments.get(field) or "").strip():
-            arguments[field] = str(prompt).strip()
+        # never every tool: a field that's a search, a name or a choice turns his whole sentence into the wrong one
+        # (the Fable review, 2026-11-25: "something nice" set the colours to Ice, a recall matched its stop-words)
         return arguments
     given = " ".join(str(arguments.get(field) or "").lower().split())
     described = " ".join(str(getattr(action, "description", "") or "").lower().split())

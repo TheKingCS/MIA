@@ -1204,7 +1204,7 @@ def _egg_price(context):
     return "Log your feed and eggs and I'll work out what a dozen costs you. " + rule
 
 
-_LOAD_WATTS = re.compile(r"^\s*(?:my|the|our)\s+(?P<load>[a-z][\w' -]{1,30}?)\s+(?:uses|draws|pulls|runs at|is|takes)\s+"
+_LOAD_WATTS = re.compile(r"^\s*(?:my|the|our)\s+(?P<load>[a-z][\w' -]{1,30}?)\s+(?:uses|draws|pulls|runs at|takes)\s+"
                          r"(?:about\s+|around\s+)?(?P<w>\d[\d,]*)\s*(?:w|watts)\b(?:\s+(?:for|and runs)\s+(?P<h>\d+(?:\.\d+)?)"
                          r"\s*hours?(?: a day)?)?\s*[.!]?\s*$", re.I)
 
@@ -1212,10 +1212,14 @@ _LOAD_WATTS = re.compile(r"^\s*(?:my|the|our)\s+(?P<load>[a-z][\w' -]{1,30}?)\s+
 def _load_watts_reply(context, prompt: str):
     """"My freezer uses 150 watts" (and "for 8 hours a day"), kept as one of his essential loads through
     set_power_load (the live sweep, 2026-11-25: the pantry's tools were offered and nothing was kept); a car, a
-    phone or a light bulb's watts are the model's. None otherwise."""
+    phone or a light bulb's watts are the model's. None otherwise.
+    Only what a load uses or draws: never a solar panel, a generator, a battery or a number like a total or a
+    budget, and never 0 watts."""
     found = _LOAD_WATTS.match(prompt.replace("’", "'"))
-    if not found or re.search(r"\b(?:bulb|phone|laptop|charger|car|truck|tv)\b", found.group("load"), re.I):
-        return None
+    if not found or re.search(r"\b(?:bulbs?|phones?|laptops?|chargers?|car|truck|tv|solar|panels?|generator|inverter|"
+                              r"batter(?:y|ies)|answer|budget|limit|total|capacity|max(?:imum)?)\b", found.group("load"),
+                              re.I) or float(found.group("w").replace(",", "")) <= 0:
+        return None  # a source of power, a number or a nothing is never a load (the Fable review)
     args = {"load": found.group("load").strip(), "watts": float(found.group("w").replace(",", "")), "question": prompt}
     if found.group("h"):
         args["hours"] = float(found.group("h"))

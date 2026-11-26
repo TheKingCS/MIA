@@ -517,15 +517,19 @@ def _find_pantry(context: AppContext, name: str):
 
 def _action_add_pantry_item(context: AppContext, arguments: dict) -> str:
     """Assistant tool `add_pantry_item`: adds a pantry item, or sets the quantity of one already there. Returns the sentence to say back; an unclear or ambiguous name is asked about, nothing changes.
-    Out of something, by his words ("we're out of milk"), is the grocery list's (add_grocery_item)."""
+    Out of something, by his words ("we're out of milk"), is the grocery list's (add_grocery_item).
+    Only "out of" the item itself, never with what he has or put away said beside it ("out of town", "not low on
+    rice")."""
     from core.kitchen_manager import PANTRY_CATEGORIES
 
     raw_name = str(arguments.get("name", "") or "").strip()
     if not raw_name:
         return "What should I add to the pantry?"
     said = str(arguments.get("question") or "")
-    if re.search(r"\b(?:out of|ran out|run out|running out|almost out|low on|need(?:s)? (?:more|some)?|used (?:up|the "
-                 r"last)|finished the)\b", said, re.I):
+    name_words = re.escape(raw_name.split()[-1].lower().rstrip("s"))
+    if re.search(rf"\b(?:out of|ran out of|run out of|running out of|almost out of|low on|need (?:more|some)|used up "
+                 rf"the|used the last of the)\s+(?:\w+\s+){{0,2}}{name_words}", said, re.I) \
+            and not re.search(r"\b(?:not|bought|have|got|put|there'?s|added|add|pantry|fridge|freezer|town)\b", said, re.I):
         # "we're out of milk" is the grocery list's, never milk added to the pantry (the live sweep, 2026-11-25)
         return _action_add_grocery_item(context, {"items": raw_name, "question": said})
     parsed_qty, parsed_unit, parsed_name = parse_quantity_phrase(raw_name)
