@@ -1274,9 +1274,10 @@ _HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestea
                                r"on what we have))?|how long (?:could|can|would|will) i (?:last|hold out|make it) "
                                r"(?:here|at home|on what (?:we|i) have)|how many days (?:could|can|will) we last)"
                                r"\s*[?.!]*\s*$", re.I)
-_MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?money pulse|how(?:'s| is) (?:my )?money "
-                          r"(?:this week|looking|doing)|how(?:'s| is) my money this week looking|how am i doing (?:on|with) "
-                          r"money this week)\s*[?.!]*\s*$", re.I)
+_MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
+                          r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
+                          r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
+                          r"(?:on|with) money this week)\s*[?.!]*\s*$", re.I)
 
 
 def _own_tool_reply(context, prompt: str):

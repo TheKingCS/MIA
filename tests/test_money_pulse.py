@@ -27,7 +27,7 @@ class _Budget:
     def all_bills(self):
         due = self.today + timedelta(days=3)
         return [SimpleNamespace(name="Electric", amount=150.0, due_date=due.isoformat(), recurrence="monthly",
-                                last_paid_date=None, paid=False, autopay=False, bill_id="b1")]
+                                last_paid_date=None, category="Utilities", entity_id="", bill_id="b1")]
 
     def all_income_sources(self):
         return []
@@ -44,8 +44,16 @@ def test_the_pulse_names_the_drift_and_whats_due(monkeypatch):
     said = money_pulse.line(SimpleNamespace(budget=_Budget(today)), today)
     assert said.startswith("Groceries is running"), said
     assert "Utilities" not in said
-    assert "Due in the next seven days:" in said and "Electric" in said
-    assert "Tightest week ahead" in said
+    assert "Due this week:" in said and "Electric" in said
+    assert "Tightest week ahead" not in said, "no income logged: no week is called tight"
+
+
+def test_rent_paid_in_one_go_is_never_paced_as_drift():
+    class Rent(_Budget):
+        def total_expenses_by_category(self, start, end, entity_id=""):
+            return {"Mortgage/Rent": 1500.0}
+
+    assert money_pulse.drift(SimpleNamespace(budget=Rent(date(2026, 11, 8))), date(2026, 11, 8)) is None
 
 
 def test_nothing_to_say_says_how_to_start():
@@ -69,7 +77,8 @@ def test_it_is_offered_only_on_sundays_once_a_week(monkeypatch):
 
 def test_the_words_reach_the_pulse(monkeypatch):
     monkeypatch.setattr(money_pulse, "say", lambda c, t=None: "the pulse")
-    for words in ("How's my money this week?", "money pulse", "how's money looking", "give me the money pulse."):
+    for words in ("How's my money this week?", "money pulse", "how's money looking", "give me the money pulse.",
+                  "how's my money looking this week", "how are my finances this week"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) == "the pulse", words
     for words in ("how's my money", "how is money tight this week"):
         assert assistant_turn._own_tool_reply(SimpleNamespace(), words) != "the pulse", words
