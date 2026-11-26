@@ -125,7 +125,8 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     A course's next lesson too (`_next_lesson_reply`).
     His upkeep (`_upkeep_reply`) and an LED's resistor (`_led_reply`) too.
     A short follow-up to a code answer, made whole, too (`_follow_through_reply`: "what about this month?"), and a
-    go-ahead to her own offer runs its words (core/conversation_state.offered_phrase), as in a turn.
+    go-ahead to her own offer runs its words (core/conversation_state.offered_phrase), and "every Monday remind me
+    to ..." is read with the weekday after, as in a turn.
     What he spent on a category (`_spent_on_reply`) too.
     A crop's dates and the 72-hour kit (`_garden_kit_reply`) too.
     The hours he puts into his projects (`_project_time_reply`) too, and an outlet's voltage (`_mains_reply`).
@@ -157,6 +158,10 @@ def instant_answer(context, conversation, prompt: str) -> Optional[str]:
     from core.conversation_state import offered_phrase
 
     prompt = offered_phrase(conversation, prompt) or prompt  # "ok, start it" to her offer, as in a turn
+    day_first = re.match(r"^\s*(?:hey mia,?\s+)?(?:every|each) (monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?,?"
+                         r"\s+remind me to\s+(.+?)\s*[.!]?\s*$", prompt, re.I)
+    if day_first:  # the weekday first, as in a turn
+        prompt = f"Remind me every {day_first.group(1)} to {day_first.group(2)}"
     from core.trade_actions import reply as job_reply
 
     try:  # a job in progress, or "walk me through ..." (DEC-0149), as in a turn
@@ -572,7 +577,8 @@ def _reminder_reply(context, prompt: str):
     from 1 to 5 with no am, pm or morning is the afternoon ("tomorrow at 3").
     "Morning" counts only in the day and time, never in the task ("the morning glories"). Said the other way, the
     day is the one after the task, never one inside it ("remind me to send the invoice by Friday on Monday": the
-    Fable review)."""
+    Fable review). A task ending on "before", "by", "and" or "or" is a deadline, the model's ("order feed before
+    Friday": the cross-route review, 2026-11-26)."""
     first = _REMIND_FIRST.match(prompt.replace("’", "'"))
     day_words = None
     if first:
@@ -584,6 +590,8 @@ def _reminder_reply(context, prompt: str):
     if day_words is None:  # the day said after the task, never one inside it ("send the invoice by Friday on Monday")
         day_words = prompt.replace("’", "'")[found.end(1):]
     what = found.group(1).strip().rstrip(",")
+    if re.search(r"\b(?:before|by|until|till|after|and|or|on|for)$", what, re.I):
+        return None  # "order feed before Friday" is a deadline, not an event called "Order feed before" (cross-route review)
     args = with_his_day("add_calendar_event", {"title": what[:1].upper() + what[1:]}, day_words)
     evening = re.search(r"\btonight\b|\b(?:this|tomorrow|" + "|".join(_WEEKDAYS) + r")\s+(?:evening|night)\b", day_words,
                         re.I)  # never "night crawlers" or "game night saturday" (the eighth review)
@@ -702,7 +710,8 @@ def _spent_reply(context, prompt: str):
     day alone is the model's to ask.
     The bill tools' words are checked again once a day said is cut off ("my phone yesterday"); family words (my
     mother, the kids) are people. Anything left it can't read whole (`_NOT_WHOLE`: another day, a debt, a
-    retraction) is the model's (the Fable review)."""
+    retraction) is the model's (the Fable review). Money paid for one of his bills ("I paid $85 for propane") is that
+    bill's to mark paid, never a stray expense (the cross-route review)."""
     said = prompt.replace("’", "'").strip()
     found = _SPENT.match(said) or _BOUGHT.match(said)
     if not found or "?" in said:
@@ -742,6 +751,13 @@ def _spent_reply(context, prompt: str):
                 and flock is not None and getattr(flock, "flocks", None):  # goat feed never counts for the hens
             return context.assistant_actions.execute(context, "log_feed", {"pounds": float(weight.group(1)),
                                                                            "cost": amount})
+        budget = getattr(context, "budget", None)
+        bills = budget.all_bills() if budget is not None and hasattr(budget, "all_bills") else []
+        thing = re.sub(r"^(?:the|my|our)\s+", "", what.lower()).strip()
+        if any(thing and (thing == b.name.lower() or thing + " bill" == b.name.lower() or b.name.lower() in (thing,
+                                                                                               thing.rstrip("s")))
+               for b in bills):
+            return None  # a bill of his: marking it paid is the bill tool's (the model's), never a stray expense
         args = {"amount": amount, "category": category, "description": what[:1].upper() + what[1:]}
         if day:
             args["date"] = day
@@ -1059,7 +1075,9 @@ def _mains_reply(context, prompt: str):
     """"How do I check the voltage at an outlet?", in fixed words (the live sweep, 2026-11-25: the model walked him
     through a multimeter on a live outlet, setting it to "V or \u03a9"): a plug-in outlet tester or a non-contact
     tester first, a meter only rated for mains, and the breaker and an electrician when anything's off. None
-    otherwise."""
+    otherwise, and None for a vehicle's or a trailer's wiring (never the house's mains)."""
+    if re.search(r"\b(?:truck|trailer|car|camper|rv|vehicle|boat|tractor)\b", prompt or "", re.I):
+        return None  # a 12-volt outlet or trailer lights aren't the house's mains (cross-route review)
     return MAINS_REPLY if _MAINS.search(prompt or "") else None
 
 
@@ -1119,8 +1137,9 @@ _LOG_ACTIVITY = re.compile(r"^\s*(?:please\s+)?log (?:a |an |my )?(?P<n>\d+(?:\.
                            r"lift(?:ing)?|row(?:ing)?)(?:\s+(?P<day>yesterday|today|this morning|last night))?\s*[.!]?\s*$",
                            re.I)
 # what he should charge for his own eggs, never a store's price, a recipe or another thing by the dozen
-_EGG_PRICE = re.compile(r"\b(?:how much|what) (?:should|could|do|can) (?:i|we) (?:charge|ask|sell|get)\b.{0,25}\b(?:eggs?|"
-                        r"a dozen|per dozen)\b|\bprice (?:my|our) eggs\b|\bcharge (?:per|a|for a) dozen\b", re.I)
+_EGG_PRICE = re.compile(r"\b(?:how much|what) (?:should|could|do|can) (?:i|we) (?:charge|ask|sell|get)\b.{0,25}\b(?:eggs?\b|"
+                        r"(?:a|per) dozen\b(?!\s+(?!eggs?\b)[a-z]))|\bprice (?:my|our) eggs\b|\bcharge (?:per|a|for a) dozen\b"
+                        r"(?!\s+(?!eggs?\b)[a-z])", re.I)
 _NOT_EGG_PRICE = re.compile(r"\b(?:walmart|store|costco|aldi|kroger|grocery|benedict|cupcakes?|donuts?|doughnuts?|cookies?|"
                             r"rolls|bagels?|last (?:week|month)|did i|legal|chickens)\b", re.I)
 
@@ -1323,11 +1342,11 @@ _OUT_OF = re.compile(r"^\s*(?:hey mia,?\s+)?(?:(?:looks like|so|well|ugh),?\s+)?
 _GROCERY_WORDS = frozenset(
     "milk eggs egg bread butter coffee tea sugar flour salt pepper rice pasta noodles cheese yogurt cereal oats oatmeal "
     "bacon sausage ham chicken beef pork turkey fish tuna beans lentils potatoes potato onions onion garlic carrots "
-    "lettuce tomatoes tomato apples apple bananas banana oranges lemons limes berries grapes juice soda water cream "
-    "creamer honey syrup jam jelly peanut ketchup mustard mayo mayonnaise ranch dressing oil vinegar spices cinnamon "
-    "vanilla yeast baking soda powder chips crackers cookies snacks popcorn tortillas buns bagels muffins broth "
-    "soup sauce salsa pickles olives corn peas spinach broccoli cabbage celery peppers mushrooms avocados avocado "
-    "toilet paper towels napkins dish soap detergent foil wrap bags trash diapers wipes shampoo toothpaste".split())
+    "lettuce tomatoes tomato apples apple bananas banana oranges lemons limes berries grapes juice soda cream "
+    "creamer honey syrup jam jelly peanut ketchup mustard mayo mayonnaise ranch dressing vinegar spices cinnamon "
+    "vanilla yeast baking soda powder crackers cookies snacks popcorn tortillas buns bagels muffins broth "
+    "soup sauce salsa pickles olives peas spinach broccoli cabbage celery peppers mushrooms avocados avocado "
+    "toilet paper towels napkins dish soap detergent foil wrap trash diapers wipes shampoo toothpaste".split())
 _NOT_GROCERIES = re.compile(r"^(?:the |a |an |my |our |here\b|this\b|that\b)|\b(?:feed|hope|reasons?|patience|time|"
                             r"options|ideas|energy|luck|money|cash|gas|fuel|diesel|propane|oil for|firewood|hay)\b", re.I)
 
@@ -1366,7 +1385,7 @@ _SPENT_PERIOD = re.compile(r"^\s*(?:hey mia,? )?(?:how much (?:did|have) (?:i|we
 _BIGGEST_CATEGORY = re.compile(r"^\s*(?:hey mia,? )?(?:what(?:'s| is| was| are| were) (?:my|our) (?:biggest|largest|top|"
                                r"main) (?:expense|spending)(?: categor(?:y|ies))?|where (?:does|did) (?:all )?(?:my|our) "
                                r"money go|what (?:do|did) (?:i|we) spend the most on)(?P<rest>[^?]*?)\s*[?.!]*\s*$", re.I)
-_SHOP_MADE = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|how much) did (?:i|we) make (?:from|in|at|with|off) (?:the |my "
+_SHOP_MADE = re.compile(r"^\s*(?:hey mia,? )?(?:(?:what|how much) did (?:i|we) make (?:from|at|with|off) (?:the |my "
                         r")?(?:shop|workshop|woodshop|business)|how much did (?:the|my) (?:shop|workshop|woodshop|"
                         r"business) make|what(?:'s| are| were) (?:the|my) shop'?s? (?:sales|revenue|profit))"
                         r"(?P<rest>[^?]*?)\s*[?.!]*\s*$", re.I)
@@ -1440,6 +1459,11 @@ def _run_own(context, name: str, arguments: dict):
         return None
 
 
+_COMMAND_FIRST = re.compile(r"^\s*(?:hey mia,?\s+)?(?:please\s+)?(?:remind|add|log|put|note|write|save|keep track|record|"
+                            r"schedule|make a note|i (?:put|added|bought|got|did|packed|need to)|we (?:put|added|bought))\b",
+                            re.I)  # a command or a statement, never a question to answer (the cross-route review)
+
+
 def _own_tool_reply(context, prompt: str):
     """The homestead's own read-only answers by the words that are their question (the live sweep, 2026-11-25: "why
     aren't my hens laying?" was asked about stress, "how much feed do I have left?" asked what feed, "should I water
@@ -1448,7 +1472,9 @@ def _own_tool_reply(context, prompt: str):
     her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health), "how's my
     money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
     (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress), "what does
-    my week look like?" the week with its look-ahead (get_week), "we're out of milk" the grocery list
+    my week look like?" the week with its look-ahead (get_week); a sentence that opens as a command or a statement
+    ("remind me to ...", "add ...", "I put ...": `_COMMAND_FIRST`) never gets her own tools' answers or the vehicle's
+    kit, and "should I pay X or Y first?" only when X and Y are two of his debts (the cross-route review); "we're out of milk" the grocery list
     (add_grocery_item, never the pantry; only for groceries: food and household words, or what's in
     his pantry or on his list, never "out of the woods", "out of hope" or "out of diesel": `_groceries`), "do you remember what I told
     you yesterday?" her record of it (list_past_conversations), "what's a good workout for today?" his own next
@@ -1524,7 +1550,7 @@ def _own_tool_reply(context, prompt: str):
             except Exception:
                 log.exception("Couldn't run %s", name)
                 return None
-    if _TRIP_EVE.match(said):  # "what do I need for my trip?": tomorrow's trip, before he goes (core/trip_eve)
+    if _TRIP_EVE.match(said) and re.search(r"\btrip\b|\bpack|\bbefore i go\b", said, re.I):  # "what do I need for my trip?": tomorrow's trip, before he goes (core/trip_eve)
         from core import trip_eve
 
         try:
@@ -1563,7 +1589,19 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't say the money for that period")
             return None
-    if _DEBT_FIRST.match(said):  # "should I pay off the card or the truck first?": his own debts, in code
+    debt_or = _DEBT_FIRST.match(said) and re.search(r"\bor\b", said)
+    if debt_or:  # "the electric bill or buy feed first?" names no two debts: the model's
+        try:
+            from core.assistant_domain_actions import _debts_named
+
+            ranked = context.budget.debt_payoff_priority()
+            if len(_debts_named(ranked, said)) != 2:
+                debt_or = None
+        except Exception:  # noqa: BLE001
+            debt_or = None
+        if debt_or is None:
+            debt_or = False
+    if _DEBT_FIRST.match(said) and debt_or is not False:  # "should I pay off the card or the truck first?"
         found = _run_own(context, "get_debt_payoff_plan", {"question": said})
         if found:
             return found
@@ -1585,6 +1623,7 @@ def _own_tool_reply(context, prompt: str):
             found = reminders_view.cancel(context, stopping.group("what"))
             if found:
                 return found
+            return reminders_view.stop_reminding(context, stopping.group("what"))  # never a claim it stopped
         except Exception:
             log.exception("Couldn't answer about reminders")
             return None
@@ -1670,7 +1709,8 @@ def _own_tool_reply(context, prompt: str):
             found = None
         if found:
             return found
-    if _VEHICLE_KIT.search(said) and re.search(r"\b(?:what|should|need|check|kit|keep)\b", said, re.I):
+    if _VEHICLE_KIT.search(said) and not _COMMAND_FIRST.match(said) and \
+            re.match(r"\s*(?:hey mia,?\s+)?(?:what|which|check|do i|should i|how)\b", said, re.I):
         from core import ready_kit  # the vehicle's own kit, never the house's 72-hour bag
 
         try:
@@ -1729,6 +1769,8 @@ def _own_tool_reply(context, prompt: str):
     actions = getattr(context, "assistant_actions", None)
     if actions is None:
         return None
+    if _COMMAND_FIRST.match(said):
+        return None  # "remind me to ask the vet why the hens aren't laying" is the reminder's, not the diagnosis
     for name, pattern, words in _OWN_TOOLS:
         if pattern.search(said) and name in getattr(actions, "_actions", {name: 1}):
             try:

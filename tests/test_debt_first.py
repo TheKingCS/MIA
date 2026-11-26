@@ -31,7 +31,9 @@ def test_the_two_he_names_are_compared_by_name():
 
 def test_the_words_reach_it():
     ran = []
-    context = SimpleNamespace(assistant_actions=SimpleNamespace(execute=lambda c, n, a: ran.append(n) or "the order"))
+    context = SimpleNamespace(assistant_actions=SimpleNamespace(execute=lambda c, n, a: ran.append(n) or "the order"),
+                              budget=SimpleNamespace(debt_payoff_priority=lambda strategy="hybrid": _ranked()))
     for words in ("Should I pay off the card or the truck first?", "which debt should I pay off first",
                   "what should I pay off first?"):
         assert assistant_turn._own_tool_reply(context, words) == "the order", words
+    assert assistant_turn._own_tool_reply(context, "should I pay the electric bill or buy feed first") is None

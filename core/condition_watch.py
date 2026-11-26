@@ -200,19 +200,23 @@ def parse(words: str, today: Optional[date] = None, celsius: bool = False) -> Op
     """Pure logic. {kind, about, value, standing, until} from his words, or None when it isn't something she can
     watch. A reminder ("remind me if it rains to bring in the laundry"), something stopping ("when it stops
     raining"), a bill or a price isn't a watch; the weather only when it's the weather doing it ("if it freezes",
-    "frost tonight", never "the freezer" or "the rain gauge"); a supply or the feed only as its own subject ("our
-    water", "low on gas", never "the dog food"). An item's name is his words for it (matched to the pantry when it's
+    "frost tonight", never "the freezer" or "the rain gauge", nor a weekday's, which the forecast doesn't read); a
+    supply or the feed only as its own subject ("our water", "low on gas", never "the dog food"); never a store's
+    sale, a budget, money or a vehicle ("the truck is low on gas"). An item's name is his words for it (matched to the pantry when it's
     checked)."""
     today = today or date.today()
     text = _numbers(" ".join(str(words or "").lower().replace("’", "'").split()))
     text = re.sub(r"\bbelow zero\b", "below 0 degrees", text)
-    if _NOT_A_WATCH.search(text):
-        return None
+    if _NOT_A_WATCH.search(text) or re.search(r"\b(?:store|sale|budget|money|truck|car|van|tank)\b", text):
+        return None  # "when the feed store has a sale", "the truck is low on gas": not his homestead's (cross-route)
     base = {"standing": bool(_STANDING.search(text)), "until": _until(text, today), "about": ""}
     cold = re.search(rf"\b(?:below|under|down to|colder than|drops? (?:below|under|to)|gets? (?:below|under|down to)) "
                      rf"(-?{_NUMBER[1:-1]}) ?(?:degrees|°)", text)
     if cold:
         return {**base, "kind": "freeze", "value": float(cold.group(1))}
+    if re.search(r"\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", text) and \
+            (_FREEZE.search(text) or _RAIN.search(text)):
+        return None  # "rain on Saturday": the forecast only reads tonight and tomorrow, never a day he named
     if _FREEZE.search(text):
         return {**base, "kind": "freeze", "value": 0.0 if celsius else 32.0}
     if _RAIN.search(text):
