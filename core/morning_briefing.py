@@ -120,7 +120,8 @@ def day_today(context, today) -> str:
 
 def briefing(context, now: datetime) -> str:
     """The briefing's words; "" when there's no weather and nothing on the list. A holiday in the next three days is
-    named at its end (core/holidays.coming_line)."""
+    named at its end (core/holidays.coming_line), and anything of the homestead's at a week or under
+    (core/homestead_health.low_line)."""
     parts = []
     for read, name in ((lambda: weather_today(context), "weather"), (lambda: day_today(context, now.date()), "day")):
         try:
@@ -144,6 +145,15 @@ def briefing(context, now: datetime) -> str:
         ahead = ""
     if ahead:
         said += f" {ahead}"
+    try:
+        from core.homestead_health import low_line
+
+        low = low_line(context, now.date())  # water, food, feed or fuel at a week or under (brainstorm round 16)
+    except Exception:  # noqa: BLE001 - never stops the briefing
+        log.exception("Morning briefing: the homestead's days couldn't be read")
+        low = ""
+    if low:
+        said += f" {low}"
     return said
 
 

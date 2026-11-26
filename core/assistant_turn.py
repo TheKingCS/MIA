@@ -1268,13 +1268,27 @@ _OWN_TOOLS = (
 )
 
 
+_HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestead(?: doing)?|homestead (?:health|status|"
+                               r"check)|how long (?:could|can|would) (?:we|i) (?:last|hold out|make it)(?: (?:here|at home|"
+                               r"on what we have))?|how many days (?:could|can) (?:we|i) last)\s*\??\s*$", re.I)
+
+
 def _own_tool_reply(context, prompt: str):
     """The homestead's own read-only answers by the words that are their question (the live sweep, 2026-11-25: "why
     aren't my hens laying?" was asked about stress, "how much feed do I have left?" asked what feed, "should I water
     the garden?" said there was no garden, and "how do I can tomatoes?" got back "How to can tomatoes."):
     why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time; and what she may do on her own,
-    her grants (list_grants). None otherwise."""
+    her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health). None
+    otherwise."""
     said = prompt.replace("’", "'")
+    if _HOMESTEAD_HEALTH.match(said):  # "how's the homestead?": its days in one line (core/homestead_health)
+        from core import homestead_health
+
+        try:
+            return homestead_health.line(context)
+        except Exception:
+            log.exception("Couldn't say the homestead's health")
+            return None
     actions = getattr(context, "assistant_actions", None)
     if actions is None:
         return None

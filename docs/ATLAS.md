@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1851 files, 393,235 lines; 1851 files describe themselves; 21,362 of 21,487 classes and functions are documented.
+1853 files, 393,398 lines; 1853 files describe themselves; 21,369 of 21,494 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-723 files, 205,113 lines; 10,187 of 10,266 classes and functions documented
+724 files, 205,237 lines; 10,190 of 10,269 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -311,6 +311,7 @@
 - `core/home_trouble.py`: The house's trouble that can't wait but isn't a call to the emergency number (brainstorm round 15, 2026-11-25): a burst or frozen pipe and a flooded basement, answered in fixed words, the first thing first, the same idea as the emergency floor (core/first_aid_floor.py, which has a fire, a gas leak a
 - `core/homeostasis.py`: MIA easing off her own background work (the Living System doctrine's homeostasis, DEC-0173, G2; Zac 2026-11-15: "Mia should slow herself down but make a notice about it").
 - `core/homestead_costs.py`: Finance #2 (2026-09-28): what the owner's homestead builds and tools actually cost. The owner asked for MIA to "help me manage my homestead I am building and the costs associated with my tools, and builds."
+- `core/homestead_health.py`: The homestead's health in one line (brainstorm round 16, 2026-11-25): how many days his water, food, the flock's feed and the generator's fuel last, the lowest first ("Feed: 6 days, the lowest. Water: 9 days. Food: 23 days. Fuel: 2 days of generator."), each worked out by the module that already kee
 - `core/homestead_manager.py`: Watched-folder ingestion for MIA Home's summarized-state snapshots from sibling automation projects — the first (and so far only) source is MIA Homestead's greenhouse/aquaponics system (`homestead/` in this repository since DEC-0145; once a separate repo), which exports via its own `homestead/viewer
 - `core/homestead_sums.py`: Three everyday homestead sums worked out in code, never from the model's memory (live sweep, 2026-11-25: each was answered from memory, "around 2 chickens" for a dozen eggs a week among them):
 - `core/homestead_year.py`: The homestead's year at a glance (Jarvis brainstorm 4.4; Zac, 2026-11-23: "homestead skills"): the next twelve months, month by month, from his own records, never a generic calendar:
@@ -1022,7 +1023,7 @@
 
 ## tests/: the test suite: what each part must do
 
-718 files, 105,991 lines; 8,801 of 8,847 classes and functions documented
+719 files, 106,030 lines; 8,805 of 8,851 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1272,6 +1273,7 @@
 - `tests/test_homeostasis.py`: MIA easing off her own work (the Living System doctrine's homeostasis, DEC-0173; core/homeostasis.py, core/scheduler.py): deferrable jobs wait while the computer is busy, on a low battery, offline (the online ones) or nearly out of disk (the heavy ones), essential jobs never do; a waiting job is tri
 - `tests/test_homestead_costs.py`: Finance #2, homestead builds and tools: expense tags, build budgets, tool cost of ownership (core/homestead_costs.py), the Assistant tools (core/assistant_homestead_actions.py), the maintenance-cost hook, and the Budget tab's formatting.
 - `tests/test_homestead_goods.py`: Homestead goods (DEC-0036): batches in kitchen units, stock with a made date and a sell-by, sold oldest first, leftovers tossed as a loss, a market day's tally read from the books, the Builds tab's Sell First and Best Earner (DEC-0113), and cups against pounds for materials on the density table.
+- `tests/test_homestead_health.py`: The homestead's health in one line (core/homestead_health.py, 2026-11-25): its days of water, food, feed and fuel, the lowest first, what isn't counted said; "how's the homestead?" reaches it; the morning briefing names what's low.
 - `tests/test_homestead_manager.py`: Unit tests for core.homestead_manager — mirrors tests/test_finance_manager.py's structure exactly (same isolated tmp_path watched folder, same _FakeConfig pattern), since core.homestead_manager is a deliberate sibling of core.finance_manager, not a shared abstraction (see that module's own docstring
 - `tests/test_homestead_sums.py`: Three homestead sums worked out in code (core/homestead_sums.py; live sweep, 2026-11-25, each had been answered from memory): water to store at a gallon a person a day for the days and people said (or his settings), a generator's hours on the fuel said at his burn rate (or how to tell MIA his rate, 
 - `tests/test_homestead_year.py`: The homestead's year (core/homestead_year.py, brainstorm 4.4): his confirmed garden plans' crop dates and his recurring upkeep, month by month over the next twelve, from his own records (a frequent task once a month, with how many times). *(1 undocumented)*
