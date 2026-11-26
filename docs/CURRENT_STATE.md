@@ -39,7 +39,13 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
 - The full live sweep (2026-11-26) fixed: "we're out of milk" to the grocery list (groceries only); a described
   problem never marks a job done; a written-out lookup; "do you remember yesterday"; today's workout from his own
   training and plan (core/workout_today.py); his next woodworking piece. The crisis floor now hears "out of hope"
-  and "out of reasons to live" (K-0500). 8706 passing.
+  and "out of reasons to live" (K-0500).
+- Two more fresh sweeps (the corpus's "fresh" and "fresh2" areas): money over a period in code (core/money_periods:
+  last month's spending, the biggest category, the shop's month), which debt first by name, best customers and
+  dinner to their tools, plan answers never say "the fact sheet"; reminders listed and one cancelled (every word
+  must match, by id, undoable), "good morning", yesterday's wins, what's due this month; a library answer is never
+  cut to its second sentence, and with no packs installed it isn't held to figures. Waiting on Zac: Q-0019 (a fire
+  how-to through the emergency floor). 8721 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
