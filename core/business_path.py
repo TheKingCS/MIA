@@ -52,13 +52,14 @@ STAGES: tuple = (
             "Selling on your own, you're a sole proprietor by default: no filing beyond your local licence (and a "
             "\"doing business as\" name if you use one), and the business's income goes on your own tax return.",
             "An LLC is filed with your state, with a fee and usually a yearly report. It can keep the business's debts "
-            "and lawsuits off your house and savings, but only while its money, account and records stay its own.",
+            "and lawsuits off your house and savings, but only while its money, account and records stay its own, and "
+            "never harm from your own work or a debt you sign for personally: that's what insurance is for.",
             "A one-owner LLC is taxed like a sole proprietor unless you choose otherwise: it doesn't lower the tax by "
             "itself.",
             "Liability insurance protects a small shop as much as an LLC does, and often first: ask what a policy for "
             "what you make costs.",
-            "It's worth looking at once you sell things that could hurt someone (furniture, food, a deck), hire help, "
-            "sign contracts, or earn enough that a lawsuit would hurt. Check your own state's fees and rules, and ask "
+            "It's worth looking at, beside the insurance, once you sell things that could hurt someone (furniture, food, "
+            "a deck), hire help, sign contracts, or earn enough that a lawsuit would hurt. Check your own state's fees and rules, and ask "
             "an accountant or a lawyer before you file."),
             "The structure decides what a bad day can reach: the business alone, or your home too.",
             ("An LLC with the money mixed in with yours may not shield you at all.",

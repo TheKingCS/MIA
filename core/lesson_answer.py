@@ -51,9 +51,11 @@ ASKS: dict[tuple, re.Pattern] = {
     # calculator, "how do I write a quote for a deck job?" a cut list)
     ("business", "biz_price"): re.compile(r"\b(?:markup|mark-up|margin|mark (?:it|them|things) up)\b"),
     # "should I form an LLC for my woodworking?" had "I'm not sure what plans you're referring to" (the skills sweep)
-    ("business", "biz_structure"): re.compile(r"\bllcs?\b|\bsole proprietor\w*\b|\bbusiness (?:structure|entity)\b|"
-                                              r"\b(?:form|start|set up|register)\w*\s+(?:a|an|my)\s+(?:business|company)\s+"
-                                              r"(?:legally|officially)\b"),
+    # the structure itself, never an LLC named in another question ("a quote for Oak Ridge LLC", "my LLC's taxes":
+    # the Fable review)
+    ("business", "biz_structure"): re.compile(r"\b(?:form|start|set up|need|get|become|register|file for|make)\w*\s+(?:a|an|"
+                                              r"my)\s+llc\b|\ban llc worth\b|\bllc\b.{0,10}\b(?:or|vs\.?|versus)\b.{0,12}"
+                                              r"\bsole\b|\bsole proprietor\w*\b|\bbusiness (?:structure|entity)\b"),
     ("business", "biz_terms"): re.compile(r"\b(?:write|make|put together|do|draw up)\w*\s+(?:up\s+)?(?:a\s+|an\s+)?"
                                           r"(?:quote|estimate|bid)s?\b"),
     # brainstorm round 19's skills sweep: a load tied down with a bowline, a chainsaw "taken apart" to sharpen, potatoes
@@ -131,7 +133,8 @@ ASKS: dict[tuple, re.Pattern] = {
     ("gardening", "seed_starting"): re.compile(r"\bstart\w*\s+(?:my\s+|the\s+)?(?:\w+\s+)?seeds?\b|\bseeds?\s+"
                                                r"(?:indoors|inside)\b"),
 }
-_HOWTO = re.compile(r"\b(?:should (?:i|we) (?:form|start|get|make|set up|open|be) (?:a|an|my)\b|is an llc worth|"
+_HOWTO = re.compile(r"\b(?:should (?:i|we) (?:form|start|get|set up|be|become) (?:a|an|my) (?:llc|sole proprietor\w*|"
+                    r"business (?:structure|entity))\b|is an llc worth|"
                     r"(?:do|would) (?:i|we) need an llc|llc or (?:a )?sole|sole proprietor or|what size|which size|what hook|which hook|what knot|which knot|what(?:'s| is) the best knot|"
                     r"give me a|show me a|"
                     r"how hot|what temp\w*|where (?:do|should|can|would) (?:i|you)|do i need a|"

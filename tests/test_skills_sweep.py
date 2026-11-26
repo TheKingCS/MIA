@@ -49,3 +49,10 @@ def test_the_business_structure_lesson():
                   "is an LLC worth it for a small shop?", "LLC or sole proprietor for my shop?"):
         assert lesson_answer.find(words) == ("business", "biz_structure"), words
     assert lesson_answer.find("should I get a new truck?") is None
+    for words in ("how do I write a quote for Oak Ridge LLC?", "how do I work out the tax to set aside for my LLC?",
+                  "should I start a fire in the woodstove tonight?", "should I get a dovetail jig?",
+                  "should I get a multimeter?"):
+        assert lesson_answer.find(words) != ("business", "biz_structure"), words
+    assert lesson_answer.find("how do I write a quote for Oak Ridge LLC?") == ("business", "biz_terms")
+    for words in ("should I start a fire in the woodstove tonight?", "should I get a dovetail jig?"):
+        assert lesson_answer.find(words) is None, words
