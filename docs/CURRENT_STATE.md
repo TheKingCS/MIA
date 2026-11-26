@@ -33,7 +33,13 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   and the weekly look-ahead (core/week_ahead.py, the end of get_week), and "tell me when..." (core/condition_watch.py:
   tonight's low, rain, a pantry item, the feed, his supplies; read from his words in code, sealed in his own folder,
   said through the gate once or every time), and "before you go" (core/trip_eve.py). Round 17 of the brainstorm
-  (joining them up) is written. 8678 passing.
+  (joining them up) is built where it needed no decision: the money pulse's cause, hobby streaks in the evening
+  wrap, a pantry watch's grocery offer, a new trip's packing list from the last (a button too), asking first again
+  after two corrections, and Home's Waiting For Your Yes (MIA's own cards, which had shown on no screen).
+- The full live sweep (2026-11-26) fixed: "we're out of milk" to the grocery list (groceries only); a described
+  problem never marks a job done; a written-out lookup; "do you remember yesterday"; today's workout from his own
+  training and plan (core/workout_today.py); his next woodworking piece. The crisis floor now hears "out of hope"
+  and "out of reasons to live" (K-0500). 8706 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
