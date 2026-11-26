@@ -18,9 +18,9 @@ pulse names the two biggest expenses behind a drift, the evening wrap names a ho
 grocery list ("say add coffee to my grocery list"), and a new trip offers its last like trip's packing list ("copy the
 packing list to <trip>"). Also built: after his second correction in a week of something she does on his standing yes, she offers to ask
 first again ("ask me first for grocery add"). Left from 17: the lock-screen look-ahead
-(Zac's say); a homestead tile (Muse). Loose end the Fable review found: MIA's own approval cards (actions.pending)
-show on no screen, only by asking "what's waiting for me?" (web/mia.js has pending() unused): a Home/Today card
-strip is for Muse's look. copy_packing_list has no screen button yet (DEC-0125). The live sweep's "anticipating" area checks them.
+(Zac's say); a homestead tile (Muse). MIA's own approval cards now show on Home under Waiting For Your Yes (web/welcome.js,
+Approve / Not Now; plain styling, Muse may restyle it), and a planned trip's card has a "Copy N from <last trip>"
+button (gear.copy_last). The live sweep's "anticipating" area checks them.
 
 **2026-11-25: interactive labs** (`docs/future/INTERACTIVE_LABS_PLAN.md`; CURRENT_STATE has the whole of it). At the
 PC: open Classroom > Hands-on labs; build the blink lab in the simulator; say "walk me through building the pot lab",

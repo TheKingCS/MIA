@@ -5,7 +5,10 @@
  * ticking runs the item's action: confirm, undo), what's upcoming, the
  * level; and on a wide screen MIA's column (MIA.history, things to ask).
  * "Hear It" says the day aloud in MIA's voice (the engine's `briefing`,
- * spoken by /api/heavy/speak on the home computer).
+ * spoken by /api/heavy/speak on the home computer). Waiting For Your Yes:
+ * the cards MIA herself proposed (MIA.pending(), proposed_by "mia"), each
+ * with Approve and Not Now, so one made in the background is seen (the
+ * Fable review, 2026-11-25: they had shown on no screen).
  */
 (function () {
   "use strict";
@@ -156,8 +159,28 @@
     $("home-mia-ask").replaceChildren(...ASK.map((q) => el("a", { class: "btn btn-ghost", href: "assistant.html?ask=" + encodeURIComponent(q) }, q)));
   }
 
+  // Waiting For Your Yes: MIA's own cards, each approved or turned down here (its binding is the one shown).
+  async function waiting() {
+    let cards = [];
+    try { cards = (((await MIA.pending()) || {}).proposals || []).filter((p) => p.proposed_by === "mia"); }
+    catch (e) { cards = []; }
+    $("waiting").hidden = !cards.length;
+    $("waiting-list").replaceChildren(...cards.map((p) => el("li", {},
+      el("span", { class: "what" }, p.summary),
+      el("button", { type: "button", class: "btn btn-green btn-small", onclick: async () => {
+        try { const done = await MIA.approve(p.proposal_id); MIAShell.say((done && done.result) || "Done."); }
+        catch (e) { MIAShell.say(e.message); }
+        waiting();
+      } }, "Approve"),
+      el("button", { type: "button", class: "btn btn-ghost btn-small", onclick: async () => {
+        try { await MIA.reject(p.proposal_id); } catch (e) { MIAShell.say(e.message); }
+        waiting();
+      } }, "Not Now"))));
+  }
+
   // DEC-0153: MIA opens here, on the Dashboard, in every look (the Nexus is Living Worlds' screen now).
   async function render() {
+    waiting();
     const [home, shell] = await Promise.all([MIA.dashboard(), MIA.shell()]);
     $("greeting").textContent = home.greeting;
     hearIt(home.briefing);
