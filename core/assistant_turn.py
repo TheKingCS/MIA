@@ -1238,23 +1238,33 @@ def _load_watts_reply(context, prompt: str):
 # his homestead's own answers, which the model passed over (the live sweep, 2026-11-25): each read-only tool by the
 # words that are its whole question
 _OWN_TOOLS = (
-    ("why_hens_not_laying", re.compile(r"\b(?:why|how come)\b.{0,40}\b(?:hens?|chickens?|flock|girls)\b.{0,30}\b(?:not|aren'?t|"
-                                       r"isn'?t|stopped|quit|haven'?t been) laying\b|\b(?:hens?|chickens?|flock)\b.{0,15}"
-                                       r"\b(?:stopped|quit) laying\b|\b(?:why|how come)\s+(?:aren'?t|isn'?t|haven'?t|are|"
-                                       r"is)\s+(?:my|the|our)\s+(?:hens?|chickens?|flock|girls)\b.{0,20}\blaying\b", re.I),
-     False),
-    ("should_i_water", re.compile(r"^\s*(?:should|do) i (?:water|need to water)\b.{0,30}\b(?:garden|beds|plants|tomatoes|"
-                                  r"vegetables|lawn)?|\b(?:does|do) (?:the |my )?(?:garden|beds|plants) need (?:water|"
-                                  r"watering)\b", re.I), False),
-    # the flock's feed only: "how much feed is left?" alone could be any animal's (the everyday corpus)
-    ("get_eggs", re.compile(r"\bhow (?:much|many)\b.{0,15}\bfeed\b.{0,10}\b(?:do (?:i|we) have|have (?:i|we) got)\b|"
-                            r"\bhow long will (?:the |my |our )?(?:chicken |layer |hens'? )?feed last\b", re.I), True),
+    # his own flock not laying (never "laying so much", a neighbour's hens or the sheep lying down: the Fable review)
+    ("why_hens_not_laying", re.compile(r"^(?!.*\b(?:neighbou?r'?s?|book|video|sheep|cows?|goats?|so much|more)\b)(?:.*\b(?:why|"
+                                       r"how come)\b.{0,40}\b(?:hens?|chickens?|flock|girls)\b.{0,30}\b(?:not|aren'?t|isn'?t|"
+                                       r"stopped|stop|quit|haven'?t been) laying\b|.*\b(?:my|our|the) (?:hens?|chickens?|flock)\b"
+                                       r".{0,15}\b(?:stopped|quit) laying\b|.*\bwhy (?:am|are) (?:i|we) not getting (?:any |"
+                                       r"many )?eggs\b|.*\bwhy (?:aren'?t|isn'?t|haven'?t) (?:my|the|our) (?:hens?|chickens?|"
+                                       r"flock|girls)\b.{0,20}\blaying\b)", re.I), False),
+    # the garden's water only, never paint, the dog or the horses
+    ("should_i_water", re.compile(r"^\s*(?:should|do) i (?:water|need to water) (?:the |my )?(?:garden|beds|plants|tomatoes|"
+                                  r"vegetables|lawn|seedlings|peppers|squash|flowers)\b|^\s*should i water(?: today| this "
+                                  r"week| tomorrow)?\s*\??\s*$|\b(?:does|do) (?:the |my )?(?:garden|beds|plants|tomatoes|"
+                                  r"peppers|seedlings) need (?:water|watering)\b|^\s*is it time to water\b", re.I), False),
+    # the flock's feed only: never the dog's or the pigs', a what-if, or last week's (the Fable review)
+    ("get_eggs", re.compile(r"^(?!.*\b(?:dogs?|cats?|pigs?|goats?|horses?|cattle|cows?|rabbits?|if|last week|yesterday)\b)(?:.*"
+                            r"\bhow (?:much|many)\b.{0,15}\b(?:chicken |layer )?feed\b.{0,10}\b(?:do (?:i|we) have|have (?:i|"
+                            r"we) got)\b|.*\bhow long will (?:the |my |our )?(?:chicken |layer |hens'? )?feed last\b|"
+                            r".*\bdo (?:i|we) have enough (?:chicken |layer )?feed\b)", re.I), True),
     # what she may do herself is her grants' (list_grants); the model had made up a browser and the Classroom
-    ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking|me))\s*\??\s*$",
+    ("list_grants", re.compile(r"^\s*what (?:can|may|do|will) you do (?:on your own|by yourself|without (?:asking(?: me)?|"
+                               r"me asking))\s*\??\s*$|^\s*what are you allowed to do (?:on your own|by yourself)\s*\??\s*$",
                                re.I), False),
-    ("canning_time", re.compile(r"^\s*how (?:do|should|would) (?:i|you|we) (?:pressure |water[- ]bath )?can\b(?! i\b| you\b)|"
-                                r"^\s*how long (?:do|should) (?:i|you) (?:pressure |water[- ]bath )?(?:can|process)\b", re.I),
-     True),
+    # canning only with a food or a canning word: never "how do I can afford a truck" (the Fable review)
+    ("canning_time", re.compile(r"^(?=.*\b(?:jars?|pints?|quarts?|pressure|water[- ]?bath|canner|beans|corn|tomatoes|peaches|"
+                                r"pickles|salsa|jam|jelly|sauce|carrots|beets|peppers|meat|chicken|venison|soup|stock|broth|"
+                                r"applesauce|pears|apples)\b)(?:\s*how (?:do|should|would) (?:i|you|we) (?:pressure |water[- ]bath"
+                                r" )?can\b|\s*how long (?:do|should) (?:i|you) (?:pressure |water[- ]bath )?(?:can|process)\b)",
+                                re.I), True),
 )
 
 
@@ -1285,11 +1295,13 @@ _DEBT_ASK = re.compile(r"^\s*how much (?:is|do (?:i|we) (?:still )?owe on|is lef
 def _debt_line(context, prompt: str):
     """"How much is my truck loan?" from his debts (the live sweep, 2026-11-25: the word "truck" had offered the
     maintenance tools, and the model said the balance wasn't in them): the one debt his words name, its balance, rate
-    and minimum. None otherwise."""
+    and minimum. None otherwise.
+    Only with a debt word said (loan, card, owe, balance): "how much is my truck?" is its value."""
     found = _DEBT_ASK.match(prompt.replace("’", "'"))
     budget = getattr(context, "budget", None)
-    if not found or budget is None or not hasattr(budget, "all_debts"):
-        return None
+    if not found or budget is None or not hasattr(budget, "all_debts") or not re.search(
+            r"\b(?:loan|card|debt|balance|owe|left on)\b", prompt, re.I):
+        return None  # "how much is my truck?" is its value (the Fable review)
     generic = {"loan", "card", "debt", "balance", "the", "my", "credit"}
     said = set(re.findall(r"[a-z0-9]+", found.group("debt").lower())) - generic
     named = [d for d in budget.all_debts() if said and said == set(re.findall(r"[a-z0-9]+", d.name.lower())) - generic]
