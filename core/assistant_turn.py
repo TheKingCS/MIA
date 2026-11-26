@@ -1411,6 +1411,11 @@ _MONTHLY_BILL = re.compile(r"^\s*(?:hey mia,? )?remind me (?:on the (?P<day1>fir
                            r"each) month |every month |monthly )?to (?P<what>pay (?:the |my )?(?:rent|mortgage|[\w ]+? bill))"
                            r"(?: (?:every|each) month| monthly| on the (?P<day2>first|1st|\d{1,2}(?:st|nd|rd|th)))*"
                            r"\s*[.!]*\s*$", re.I)
+_LAST_DONE = re.compile(r"^\s*(?:hey mia,? )?when (?:did|was) (?:i|we) last (?P<what>[\w' -]{3,50}?)\s*[?.!]*\s*$|"
+                        r"^\s*(?:hey mia,? )?when was the last time (?:i|we) (?P<what2>[\w' -]{3,50}?)\s*[?.!]*\s*$", re.I)
+_IN_A_WHILE = re.compile(r"^\s*(?:hey mia,? )?(?:please )?remind me in (?P<amount>\d+(?:\.\d+)?|an?|one|two|three|four|"
+                         r"five|ten|fifteen|twenty|thirty|forty|forty-five|ninety|half an?) ?(?P<unit>minutes?|mins?|"
+                         r"hours?|hrs?)? to (?P<what>.+?)\s*[.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1451,7 +1456,8 @@ def _own_tool_reply(context, prompt: str):
     cancelled by its words (never all on one sentence), "good morning" back in kind with the day, and "what did I do
     yesterday?" (core/reminders_view), "what's due this month?" to the month's end, overdue first
     (core/assistant_today_actions.due_through), and the automation asks she can't or mustn't claim (core/reminders_view:
-    "stop reminding me to ..." only stops one that's there, spending tracked automatically, a morning routine,
+    "stop reminding me to ..." only stops one that's there, "when did I last change the oil?" from his maintenance
+    record, "remind me in 2 hours to ..." with the clock worked out, spending tracked automatically, a morning routine,
     "when I get paid remind me", rent reminded as a bill only when said monthly), a report on a schedule kept only
     when her code answers its question (core/standing_reports), "I'm thinking about building a chicken coop" what she can work
     out for it (core/build_calcs's structures, only one named on its own and with no size said), "what's a good side hustle for me?" from what he already sells,
@@ -1633,6 +1639,32 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't answer %s", name)
             return None
+    done = _LAST_DONE.match(said)
+    if done:  # "when did I last change the oil?": his maintenance record, never a guess (core/reminders_view)
+        from core import reminders_view
+
+        try:
+            found = reminders_view.last_done(context, done.group("what") or done.group("what2"))
+        except Exception:
+            log.exception("Couldn't say when it was last done")
+            found = None
+        if found:
+            return found
+    later = _IN_A_WHILE.match(said)
+    if later:  # "remind me in 2 hours to check the oven": the clock worked out in code
+        from core import reminders_view
+
+        amount, unit = later.group("amount"), later.group("unit") or ""
+        if amount.lower().startswith("half"):
+            amount, unit = "30", "minutes"
+        if unit:
+            try:
+                found = reminders_view.in_a_while(context, amount, unit, later.group("what"))
+            except Exception:
+                log.exception("Couldn't set the reminder")
+                found = None
+            if found:
+                return found
     if _DUE_MONTH.match(said):  # "what's due this month?": the month to its end, overdue first (get_week's sources)
         from core.assistant_today_actions import due_through
 

@@ -2,11 +2,11 @@
 
 *Generated from the code by `python -m core.code_atlas` (DEC-0104); never edit by hand, a test keeps it current. Each line is the file's own first paragraph: to change it, change the file. How to rebuild MIA from these, in what order: `docs/REBUILD.md`.*
 
-1887 files, 398,412 lines; 1887 files describe themselves; 21,626 of 21,769 classes and functions are documented.
+1888 files, 398,558 lines; 1888 files describe themselves; 21,632 of 21,776 classes and functions are documented.
 
 ## core/: the engine: every store, rule and calculation; knows nothing of the screens
 
-737 files, 208,723 lines; 10,347 of 10,426 classes and functions documented
+737 files, 208,821 lines; 10,350 of 10,429 classes and functions documented
 
 - `core/__init__.py`: The MIA kernel.
 - `core/accessibility.py`: Making MIA comfortable for anyone (2026-10-01): bigger text, a high-contrast look, and reading the screen aloud. Each person's own choices (core/person_settings.py: `display.text_size`, `display.high_contrast`), applied when they sign in.
@@ -1036,7 +1036,7 @@
 
 ## tests/: the test suite: what each part must do
 
-740 files, 107,527 lines; 8,905 of 8,969 classes and functions documented
+741 files, 107,575 lines; 8,908 of 8,973 classes and functions documented
 
 - `tests/__init__.py`: MIA's test suite: one file per part of MIA, each saying what that part must do (run with pytest).
 - `tests/assistant_registry.py`: Builds the real desktop Assistant action registry (exactly what core/application.py registers) without booting Qt or any managers, and reports how a prompt would be routed. Shared by the routing tests and the audit script. `demo_context()` supplies realistic record names (a mower, tomato beds, a ven
@@ -1336,6 +1336,7 @@
 - `tests/test_lab_module.py`: Unit test for modules.lab.module.format_reading_row — pure formatting logic, no Qt event loop needed. Same shape as tests/test_notes_module.py's format_entry_row test.
 - `tests/test_lab_page.py`: A course's labs (core/lab_page.py, web/course.html): the course page before and after he starts it (stages, the lab chosen with its sketch and wiring, checks passed), an unknown course, and the action that starts a course (`path.start`, core/path_actions.py), refused for one already started.
 - `tests/test_lab_push.py`: WP-12 (Q-100, DEC-0264): her merged changes are pushed to GitHub with the daily summary, only hers, never forced or rebased, held when anything else is waiting or GitHub has newer commits, and never from the test suite itself.
+- `tests/test_last_done.py`: "When did I last change the oil?" from his maintenance record, and "remind me in 2 hours to check the oven" with the clock worked out in code (core/reminders_view, the full sweep 2026-11-26). *(1 undocumented)*
 - `tests/test_learned.py`: Tests for what MIA learned on her own (DEC-0282, LS-10, core/learned.py): each habit with its evidence and its own reset, which never touches what he set himself or a break he asked for; and the daily budget for her own work.
 - `tests/test_learned_week.py`: What she learned this week (core/learned_week.py, 2026-11-25): the memories she kept, the skills he taught her and how many of her changes he corrected, in words on "what did you learn this week?" and as numbers only in the self-report. *(1 undocumented)*
 - `tests/test_learning_from_dismissals.py`: Learning from being ignored (core/communication_gate.py): closing MIA's messages of one kind with their X pauses that kind for a while; urgent ones never pause; the owner can bring a kind back.

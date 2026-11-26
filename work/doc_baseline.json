@@ -16,6 +16,7 @@
   "tests/test_hobby_programs.py": 1,
   "tests/test_homestead_year.py": 1,
   "tests/test_invoice_email.py": 1,
+  "tests/test_last_done.py": 1,
   "tests/test_learned_week.py": 1,
   "tests/test_left_off.py": 2,
   "tests/test_market_eve.py": 2,

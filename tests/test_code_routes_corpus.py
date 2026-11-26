@@ -38,7 +38,8 @@ EVERYDAY = (
     "how do i draw up an estimate of my taxes", "what is the margin on my cutting boards",
     "I built 200 feet of fence today, how many posts did that take", "how many posts for a barbed wire fence 1000 feet",
     # the calendar and reminders that aren't a new event
-    "what's on my calendar?", "remind me why I started this", "remind me in 20 minutes to check the oven",
+    # ("remind me in 20 minutes to check the oven" is an alarm worked out in code now: core/reminders_view.in_a_while)
+    "what's on my calendar?", "remind me why I started this",
     "set an alarm for 6am", "did I miss any reminders?", "move the dentist to Friday",
     "remind me to buy 14 days of water", "set my water target to 30 days of water",
     # learning, his own

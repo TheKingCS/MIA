@@ -14,6 +14,8 @@ His reminders and the small everyday turns around them, in code (the live sweep,
   morning briefing's day when it's morning (core/morning_briefing.briefing);
 - `yesterday`: "what did I do yesterday?" (it had said nothing's kept): yesterday's wins in a few words
   (core/life_events.WINS, as the evening wrap counts them), never something taken back since;
+- `last_done` ("when did I last change the oil?", from his maintenance record) and `in_a_while` ("remind me in 2
+  hours to ...", the clock worked out in code), from the full sweep of 2026-11-26;
 - the automation asks she mustn't claim (the automation sweep, 2026-11-26): `stop_reminding` stops only one that's
   there, `TRACK_SPENDING` and `MORNING_ROUTINE` say what she does, `when_paid` his next payday (she can't see pay
   arrive), and `bill_reminder` rent or a bill as a bill.
@@ -234,3 +236,67 @@ def when_paid(context, what: str) -> str:
     how = getattr(source, "recurrence", "") or "once"
     return (f"I can't see your pay arrive (no bank is linked), but your {source.name} pay is next due {day:%A, %B} "
             f"{day.day} ({how}). Say \"add {task} to my calendar on {day:%B} {day.day}\" and I'll put it there.")
+
+
+def _stems(text: str) -> set:
+    """Pure logic. A phrase's words, small and asking ones out, a plural's s off ("changes" is "change")."""
+    words = set(re.findall(r"[a-z]+", (text or "").lower())) - {
+        "the", "my", "a", "an", "in", "on", "of", "for", "did", "i", "we", "last", "time", "our", "do"}
+    return {w[:-1] if w.endswith("s") and len(w) > 3 else w for w in words}
+
+
+def last_done(context, words: str, today: Optional[date] = None) -> Optional[str]:
+    """For "when did I last change the oil?" (the full sweep, 2026-11-26: "about 3 months ago", made up): his
+    maintenance tasks whose title (with its asset's name) holds every word he said, and when each was last done, from
+    the record; None when none fits (the model has it)."""
+    today = today or date.today()
+    maintenance = getattr(context, "maintenance", None)
+    want = _stems(words)
+    if maintenance is None or not want:
+        return None
+    hits = []
+    for task in maintenance.all_tasks():
+        asset = maintenance.get_asset(task.asset_id) if hasattr(maintenance, "get_asset") else None
+        has = _stems(task.title) | _stems(getattr(asset, "name", "") if asset else "")
+        if want <= has:
+            hits.append((task, asset))
+    if not hits:
+        return None
+    parts = []
+    for task, asset in hits[:3]:
+        name = task.title + (f" ({asset.name})" if asset is not None else "")
+        if not task.last_completed:
+            parts.append(f"{name}: never logged as done. Tell me when you do it (\"I changed the oil\").")
+            continue
+        when = date.fromisoformat(str(task.last_completed)[:10])
+        ago = (today - when).days
+        since = "today" if ago == 0 else "yesterday" if ago == 1 else f"{ago} days ago"
+        parts.append(f"{name}: last done {when:%B} {when.day}, {when.year}, {since}.")
+    return " ".join(parts)
+
+
+_SPOKEN = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "ten": 10, "fifteen": 15,
+           "twenty": 20, "thirty": 30, "forty": 40, "forty-five": 45, "ninety": 90}
+
+
+def in_a_while(context, amount: str, unit: str, what: str, now: Optional[datetime] = None) -> Optional[str]:
+    """For "remind me in 2 hours to check the oven" (the full sweep, 2026-11-26: the model worked the clock out
+    itself): an alarm at now plus that, through add_alarm (undoable); "half an hour" read; None past 23 hours (a
+    calendar day's, the model's) or without the alarm tool."""
+    from datetime import timedelta
+
+    now = now or datetime.now()
+    amount = (amount or "").lower().strip()
+    n = float(amount) if re.fullmatch(r"\d+(?:\.\d+)?", amount) else _SPOKEN.get(amount)
+    if n is None:
+        return None
+    minutes = n * (60 if unit.lower().startswith(("h", "hr")) else 1)
+    if not 0 < minutes <= 23 * 60:
+        return None
+    at = now + timedelta(minutes=minutes)
+    actions = getattr(context, "assistant_actions", None)
+    if actions is None:
+        return None
+    label = what.strip(" .!")[:60]
+    said = actions.execute(context, "add_alarm", {"label": label[:1].upper() + label[1:], "time": f"{at:%H:%M}"})
+    return said + (" That's tomorrow." if at.date() != now.date() else "")  # the alarm's own reply says its time
