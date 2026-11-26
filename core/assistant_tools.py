@@ -2851,8 +2851,8 @@ class AssistantTools:
     def _action_get_sun_moon_info(context: AppContext, arguments: dict) -> str:
         """Assistant tool `get_sun_moon_info`: today's sunrise, sunset and moon phase (the Navigation module's
         summary) with the moon tonight (core/sun_moon.moon_tonight: days to the full or new moon, moonrise and
-        moonset), at a named waypoint, else his town (core/weather.place). Returns the reply in words (an unknown
-        waypoint, or no town yet, says so; nothing changes).
+        moonset), at a named waypoint, else his town (core/weather.place; his town's own name given as a waypoint is
+        his town). Returns the reply in words (an unknown waypoint, or no town yet, says so; nothing changes).
         One reading of the moon: the summary's four-bucket phase line is left out, so the reply never says Full Moon
         beside 6 days past it."""
         from datetime import date as _date
@@ -2861,6 +2861,10 @@ class AssistantTools:
         from core.sun_moon import format_sun_moon_summary, moon_tonight
 
         name = str(arguments.get("waypoint_name", "") or "").strip().lower()
+        town_now = weather.place(context)
+        town_words = str((town_now or {}).get("name") or "").lower()
+        if name and town_words and (name in town_words or town_words.split(",")[0].strip() in name):
+            name = ""  # his town given as a "waypoint" (the weather conversation check: "no waypoint called Springfield")
         if name and name not in ("my town", "home", "here", "town", "null", "none", "unknown", "n/a"):
             match = next((w for w in context.waypoints.all_waypoints() if w.name.lower() == name), None)
             if match is None:
