@@ -329,7 +329,8 @@ WEEK_SOURCES = ("calendar", "bills", "maintenance", "tasks", "birthdays", "healt
 def week_days(context, today: Optional[date] = None, days: int = 7) -> list[dict]:
     """The Dashboard's Your Week (DEC-0153, Zac 2026-11-11: "what is due this week"): today (everything overdue,
     today's and waiting, as on Today), then each of the next days with what falls due on it, from the same sources as
-    Today (WEEK_SOURCES), each item once. [{date, items: [TodayItem as dict]}], a day with nothing left in."""
+    Today (WEEK_SOURCES), each item once (over more than a week, once on each day it falls due).
+    [{date, items: [TodayItem as dict]}], a day with nothing left in."""
     today = today or date.today()
     out = [{"date": today.isoformat(), "items": [i.as_dict() for i in today_items(context, today) if i.when != SOON]}]
     seen = {(i["module_id"], i["record_id"], i["title"]) for i in out[0]["items"]}
@@ -342,7 +343,8 @@ def week_days(context, today: Optional[date] = None, days: int = 7) -> list[dict
         found.sort(key=lambda i: (i.time == "", i.time))
         items = []
         for i in found:
-            mark = (i.module_id, i.record_id, i.title)
+            # over a month a weekly reminder or a bill comes round again: each of its days is its own (the Fable review)
+            mark = (i.module_id, i.record_id, i.title) + ((day.isoformat(),) if days > 7 else ())
             if mark not in seen:
                 seen.add(mark)
                 items.append(i.as_dict())

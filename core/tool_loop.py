@@ -350,7 +350,8 @@ def without_figures(answer: str, wrong: set[str], keep_share: float = 0.6) -> st
     return " ".join(p.strip() for p in kept)
 
 
-GENERAL_GUIDANCE = "Answer from what you know"  # the library's words when it has nothing (core/offline_library)
+GENERAL_GUIDANCE = "The offline library has no packs yet"  # core/offline_library.NO_PACKS: no text at all to hold
+# figures to; a library with packs that found nothing keeps the check (the Fable review, 2026-11-26)
 
 
 def kept_its_opening(answer: str, trimmed: str) -> bool:

@@ -6,13 +6,14 @@ His reminders and the small everyday turns around them, in code (the live sweep,
 
 - `listing`: "what reminders do I have?" (it had named only the wake-up alarm): the calendar's reminders still to
   come, the repeating ones with how often, and his alarms;
-- `cancel`: "cancel the oil reminder" (it had said "it's not a reminder for the truck's oil change"): the one his
-  words name, through the delete_calendar_event or delete_alarm tool (undoable); two that fit are asked about;
+- `cancel`: "cancel the oil reminder" (it had said "it's not a reminder for the truck's oil change"): the one whose
+  title holds every word he said, by its id, through the action contract (event.delete / alarm.delete: recorded and
+  undoable); two that fit are asked about with their days; none, and the model has it;
   "turn off all reminders" lists them and asks which, never deleting them all on one sentence;
 - `greeting`: "good morning" (it had said "I didn't get an answer together for that one"): back in kind, with the
   morning briefing's day when it's morning (core/morning_briefing.briefing);
-- `yesterday`: "what did I do yesterday?" (it had said nothing's kept): yesterday's history in a few words
-  (core/life_events).
+- `yesterday`: "what did I do yesterday?" (it had said nothing's kept): yesterday's wins in a few words
+  (core/life_events.WINS, as the evening wrap counts them), never something taken back since.
 """
 
 from __future__ import annotations
@@ -48,10 +49,10 @@ def _alarms(context) -> list:
 
 
 def _when(event, today: date) -> str:
-    """Pure logic. "every week", "tomorrow at 09:00", "on Dec 3"."""
+    """Pure logic. "every week", "every two weeks", "tomorrow at 09:00", "on Dec 3"."""
     if event.recurrence:
-        return {"daily": "every day", "weekly": "every week", "monthly": "every month",
-                "yearly": "every year"}.get(event.recurrence, event.recurrence)
+        return {"daily": "every day", "weekly": "every week", "biweekly": "every two weeks", "monthly": "every month",
+                "yearly": "every year"}.get(event.recurrence, f"every {event.recurrence}")
     day = date.fromisoformat(event.date[:10])
     said = "today" if day == today else "tomorrow" if day == today + timedelta(days=1) else f"on {day:%b} {day.day}"
     return said + (f" at {event.time}" if event.time else "")
@@ -78,8 +79,9 @@ def _words(text: str) -> set:
 
 
 def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
-    """For "cancel the oil reminder": the one reminder or alarm his words name, deleted through its tool; the
-    choice when several fit; for "all", the list and a question. None when no words are left to match."""
+    """For "cancel the oil reminder": the one reminder or alarm whose title holds every word he said, cancelled by
+    its id through the action contract (undoable); the choice when several fit; for "all", the list and a question.
+    None when no words are left to match or none fits (the model's then)."""
     today = today or date.today()
     if re.search(r"\b(?:all|every|everything)\b", words or "", re.I):
         found = listing(context, today)
@@ -87,19 +89,28 @@ def cancel(context, words: str, today: Optional[date] = None) -> Optional[str]:
     want = _words(words)
     if not want:
         return None
-    events = [e for e in _events(context, today) if want & _words(e.title)]
-    alarms = [a for a in _alarms(context) if want & _words(a.label)]
-    hits = [("event", e.title) for e in events] + [("alarm", a.label) for a in alarms]
+    # every word he said is in its title (never one shared word: "the oil change reminder" isn't "Change the filter")
+    events = [e for e in _events(context, today) if want <= _words(e.title)]
+    alarms = [a for a in _alarms(context) if want <= _words(a.label)]
+    hits = [("event.delete", {"event_id": e.event_id}, e.title, _when(e, today)) for e in events] + \
+        [("alarm.delete", {"alarm_id": a.alarm_id}, f"the {a.label} alarm", a.time) for a in alarms]
     if not hits:
-        return f"I don't see a reminder about {' '.join(sorted(want))}. " + listing(context, today)
+        return None  # nothing it can name for sure: the model's (a maintenance task, a watch, a far-off reminder)
     if len(hits) > 1:
-        return "Which one? " + "; ".join(name for _, name in hits) + "."
-    kind, name = hits[0]
-    actions = getattr(context, "assistant_actions", None)
+        return "Which one? " + "; ".join(f"{name} ({when})" for _k, _p, name, when in hits) + "."
+    kind, params, name, when = hits[0]
+    actions = getattr(context, "actions", None)
     if actions is None:
         return None
-    tool, arguments = ("delete_calendar_event", {"title": name}) if kind == "event" else ("delete_alarm", {"label": name})
-    return actions.execute(context, tool, arguments)
+    from core.actions import ActionError
+
+    try:  # his own request, through the action contract: recorded, and "undo that" brings it back
+        done = actions.approve(context, actions.propose(context, kind, params).proposal_id)
+    except ActionError as problem:
+        return str(problem)
+    repeats = " It was a repeating one; the whole series is gone." if "every" in when else ""
+    return f"Cancelled {name}.{repeats} Say \"undo that\" to bring it back." if done.status == "executed" else \
+        (done.result or "I couldn't cancel it.")
 
 
 def greeting(context, words: str, now: Optional[datetime] = None) -> str:
@@ -123,7 +134,8 @@ def greeting(context, words: str, now: Optional[datetime] = None) -> str:
 
 
 def yesterday(context, today: Optional[date] = None) -> str:
-    """For "what did I do yesterday?": yesterday's history counted by kind, from core/life_events."""
+    """For "what did I do yesterday?": yesterday's wins counted by kind (core/life_events.WINS), never one taken
+    back since."""
     from core import life_events
 
     day = (today or date.today()) - timedelta(days=1)
@@ -133,8 +145,12 @@ def yesterday(context, today: Optional[date] = None) -> str:
     except Exception:  # noqa: BLE001
         log.exception("Yesterday couldn't be read")
         events = []
-    taken_back = life_events.reversed_ids(events)
-    kept = [e for e in events if e.event_id not in taken_back and e.type != "undone"]
+    try:  # what's been taken back since, today included, doesn't count
+        later = life_events.events_for(context, since=day.isoformat())
+    except Exception:  # noqa: BLE001
+        later = events
+    taken_back = life_events.reversed_ids(later)
+    kept = [e for e in events if e.event_id not in taken_back and e.type in life_events.WINS]
     if not kept:
         return f"Nothing's logged for yesterday ({day:%A}). Tell me what you do as you go, and I'll keep the day."
     from core.evening_wrap import _count

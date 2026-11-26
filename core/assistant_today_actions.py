@@ -63,10 +63,11 @@ def _action_get_week(context, arguments: dict) -> str:
 def due_through(context, words: str, today=None) -> str:
     """"What's due this month?" (the live sweep, 2026-11-26: it had named one thing 36 days off and left out an
     overdue bill): everything overdue now, then each day to the month's end with what falls due (core.today.week_days,
-    the Dashboard's sources), alarms left out; "in the next 30 days" or "next month" read too; "bills" alone keeps the
-    budget's."""
+    the Dashboard's sources), alarms left out; "in the next 30 days" or "next month" (from its 1st) read too; "bills"
+    alone keeps the budget's bills (never a payday)."""
     import calendar
     import re
+    from datetime import timedelta
 
     from core.today import is_alarm, week_days
 
@@ -79,9 +80,15 @@ def due_through(context, words: str, today=None) -> str:
     else:
         days = calendar.monthrange(today.year, today.month)[1] - today.day + 1
     only_bills = bool(re.search(r"\bbills?\b", said))
+    first = None
+    if "next month" in said:  # from the 1st of next month, never today's overdue
+        first = (today.replace(day=28) + timedelta(days=4)).replace(day=1).isoformat()
     found = []
     for d in week_days(context, today, days=days):
-        items = [i for i in d["items"] if not is_alarm(i) and (not only_bills or i.get("module_id") == "budget")]
+        if first and d["date"] < first:
+            continue
+        items = [i for i in d["items"] if not is_alarm(i) and (not only_bills or (
+            i.get("module_id") == "budget" and str(i.get("title", "")).startswith("Pay ")))]
         if items:
             found.append(dict(d, items=items))
     if not found:

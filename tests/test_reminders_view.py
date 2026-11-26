@@ -16,13 +16,16 @@ TODAY = date(2026, 11, 26)
 
 
 def _context(ran=None):
-    events = [SimpleNamespace(title="Check the oil", date="2026-11-27", time=None, recurrence="weekly"),
-              SimpleNamespace(title="Call the vet", date="2026-11-27", time="09:00", recurrence=None),
-              SimpleNamespace(title="Old thing", date="2026-01-01", time=None, recurrence=None)]
-    alarms = [SimpleNamespace(label="Wake Up", time="07:00", enabled=True)]
-    actions = SimpleNamespace(execute=lambda c, n, a: (ran.append((n, a)) if ran is not None else None) or "Deleted.")
+    events = [SimpleNamespace(event_id="e1", title="Check the oil", date="2026-11-27", time=None, recurrence="weekly"),
+              SimpleNamespace(event_id="e2", title="Call the vet", date="2026-11-27", time="09:00", recurrence=None),
+              SimpleNamespace(event_id="e3", title="Old thing", date="2026-01-01", time=None, recurrence=None)]
+    alarms = [SimpleNamespace(alarm_id="a1", label="Wake Up", time="07:00", enabled=True)]
+    actions = SimpleNamespace(
+        propose=lambda c, kind, params: (ran.append((kind, params)) if ran is not None else None)
+        or SimpleNamespace(proposal_id="p1"),
+        approve=lambda c, pid: SimpleNamespace(status="executed", result="done"))
     return SimpleNamespace(calendar=SimpleNamespace(all_events=lambda: events),
-                           alarms=SimpleNamespace(all_alarms=lambda: alarms), assistant_actions=actions)
+                           alarms=SimpleNamespace(all_alarms=lambda: alarms), actions=actions)
 
 
 def test_the_reminders_are_listed_with_the_calendars():
@@ -32,8 +35,10 @@ def test_the_reminders_are_listed_with_the_calendars():
 
 def test_one_is_cancelled_by_its_words_never_all_at_once():
     ran = []
-    assert reminders_view.cancel(_context(ran), "the oil reminder", TODAY) == "Deleted."
-    assert ran == [("delete_calendar_event", {"title": "Check the oil"})]
+    said = reminders_view.cancel(_context(ran), "the oil reminder", TODAY)
+    assert said.startswith("Cancelled Check the oil. It was a repeating one")
+    assert ran == [("event.delete", {"event_id": "e1"})]
+    assert reminders_view.cancel(_context(ran), "the oil change reminder", TODAY) is None, "every word, never one"
     said = reminders_view.cancel(_context(ran), "all reminders", TODAY)
     assert said.startswith("Your reminders:") and "Which should I cancel?" in said and len(ran) == 1
 
