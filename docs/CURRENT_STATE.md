@@ -119,7 +119,10 @@ Fable audits of every write tool, and sweeps 11 to 19, each followed by a fresh 
   noted), "what should I work on next?" after her course reply is its next step (it had suggested a project).
   Fable-reviewed.
 - The vehicle conversation check: "the mower needs new blades" is a task on his Riding Mower (the said words the end
-  of one asset's name), and "what has the truck cost me?" is that machine's own costs. Fable-reviewed. 8820 passing.
+  of one asset's name), and "what has the truck cost me?" is that machine's own costs. Fable-reviewed.
+- The preparedness conversation check: "how prepared am I for a winter storm?" is the storm checklist from his records
+  (core/storm_ready.ready_for), "what am I missing?" after it his emergency kit's gaps (it had listed MIA's own
+  software), an outage still the outage plan's. Fable-reviewed. 8822 passing.
 
 **2026-11-25: interactive labs, a standard for every teaching area** (Zac found an ESP32 learning site and asked for
 one like it, "a standard for other teaching areas"; what he liked most was its simulation, and MIA walking him through
