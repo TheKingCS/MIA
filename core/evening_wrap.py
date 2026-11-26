@@ -12,8 +12,8 @@ once a day.
 `wrap(context, now)` is the words ("" when there's nothing at all to say); `offer(context, now)` the daily check's
 message. A course practised today on a streak of three days or more is named after the day ("Guitar: 4 days in a
 row.", `streaks`, brainstorm round 17). What she noticed today (`noticed_today`, brainstorm round 18): the first thing
-off his usual (core/unusual) she told him today, named again in one line ("What I noticed today: Feed: more than
-usual."), from the gate's own log, so it's only ever what was said today.
+off his usual (core/unusual) she told him today, named again in one line ("Something I flagged today: Feed, more
+than usual."), from the gate's own log, so it's only ever what reached him today.
 """
 
 from __future__ import annotations
@@ -102,20 +102,25 @@ def streaks(context, today: date) -> str:
 
 
 def noticed_today(context, today: date) -> str:
-    """What she noticed today: the title of the first unusual finding (core/unusual's topic) the gate sent him today,
-    and how many more; "" when none went out (one held back or dropped is never said here: it may still come, or he
-    heard it days ago)."""
+    """What she noticed today: the title of the first unusual finding (core/unusual's topic) the gate delivered to him
+    today (a notification made) and he didn't dismiss, and how many more; "" when none (one held back or dropped is
+    never said here: it may still come, or he heard it days ago). A finding first found in the same background run as
+    the wrap isn't in the log yet, so it isn't named; it went out beside the wrap anyway (the Fable review,
+    2026-11-26)."""
     from core.communication_gate import ACT
 
     gate = getattr(context, "communication", None)
     if gate is None:
         return ""
     sent = [e for e in gate.entries_for_day(today.isoformat())
-            if e.get("topic") == "unusual" and e.get("action") == ACT and e.get("title")]
+            if e.get("topic") == "unusual" and e.get("action") == ACT and e.get("title")
+            and e.get("notification_id") and not e.get("dismissed_at")]
     if not sent:
         return ""
     more = len(sent) - 1
-    return f"What I noticed today: {sent[0]['title']}" + (f", and {more} more" if more else "") + "."
+    title = sent[0]["title"].replace(": ", ", ")
+    others = f" (and {more} other thing{'s' if more > 1 else ''})" if more else ""
+    return f"Something I flagged today: {title}{others}."
 
 
 def wrap(context, now: datetime) -> str:
