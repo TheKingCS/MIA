@@ -1268,9 +1268,12 @@ _OWN_TOOLS = (
 )
 
 
-_HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestead(?: doing)?|homestead (?:health|status|"
-                               r"check)|how long (?:could|can|would) (?:we|i) (?:last|hold out|make it)(?: (?:here|at home|"
-                               r"on what we have))?|how many days (?:could|can) (?:we|i) last)\s*\??\s*$", re.I)
+_HOMESTEAD_HEALTH = re.compile(r"^\s*(?:how(?:'s| is) (?:the |my |our )?homestead(?: doing| holding up| looking| going)?|"
+                               r"homestead (?:health|status|check)|how are we (?:doing|set) on supplies|"
+                               r"how long (?:could|can|would|will) we (?:last|hold out|make it)(?: (?:here|at home|"
+                               r"on what we have))?|how long (?:could|can|would|will) i (?:last|hold out|make it) "
+                               r"(?:here|at home|on what (?:we|i) have)|how many days (?:could|can|will) we last)"
+                               r"\s*[?.!]*\s*$", re.I)
 
 
 def _own_tool_reply(context, prompt: str):
