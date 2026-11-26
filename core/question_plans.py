@@ -1505,6 +1505,9 @@ _LEARNING = r"homework|lessons?|practi[cs]e\w*|woodworking|bushcraft|fitness pla
 # spending past its usual is "anything unusual"'s, which compares each category with its own normal month; what's due
 # this week is the bills', not the week's review; having enough for rent is money ahead's).
 NOT_FOR = {
+    # the week ahead is get_week's (with its look-ahead), never the ideal week he operates by (the live sweep,
+    # 2026-11-25: "what does my week look like?" had been told to add a routine to the operating journal)
+    "operating": re.compile(r"^(?!.*\b(?:ideal|operat\w*|rules|want to)\b).*\b(?:my|the|this) week\b", re.I),
     # a debt's balance is the debts' plan, never what he can afford (the live sweep, 2026-11-25)
     "afford": re.compile(r"^(?!.*\bafford\b).*\bhow much is (?:my|the) [\w ]*?(?:loan|card|debt|balance)\b", re.I),
     # who he owes is his debts', never what his assets return (the live sweep)

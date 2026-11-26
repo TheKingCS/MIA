@@ -59,6 +59,18 @@ def test_an_old_feed_record_is_never_said_as_run_out(monkeypatch):
     assert week_ahead._feed(SimpleNamespace(flock=book), date(2026, 11, 23)) == []
 
 
+def test_the_words_reach_the_week(monkeypatch):
+    from core import assistant_turn
+
+    ran = []
+    actions = SimpleNamespace(execute=lambda c, name, args: ran.append(name) or "the week")
+    for words in ("What does my week look like?", "what's my week look like", "what's on this week?", "week ahead",
+                  "what's coming up this week"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(assistant_actions=actions), words) == "the week", words
+    for words in ("How was my week?", "what does my ideal week look like?"):
+        assert assistant_turn._own_tool_reply(SimpleNamespace(assistant_actions=actions), words) != "the week", words
+
+
 def test_an_empty_context_has_nothing_to_add():
     """No stores at all is no look-ahead, never an error."""
     assert isinstance(week_ahead.extras(SimpleNamespace(), date(2026, 11, 23)), list)

@@ -1280,6 +1280,9 @@ _HOBBIES = re.compile(r"^\s*(?:(?:how(?:'s| is| are)|hows) (?:my |the )?hobbies(
                       r"doing)?(?: this month| lately| so far)?|how did my hobbies go this month|"
                       r"(?:my |the )?hobbies' progress|(?:my )?hobby progress|(?:my )?hobbies this month|"
                       r"what have i done for (?:fun|myself|my hobbies) this month)(?:,? mia)?\s*[?.!]*\s*$", re.I)
+_MY_WEEK = re.compile(r"^\s*(?:(?:what(?:'s| is| does)|whats) (?:my|the) week (?:look(?:ing)? like|ahead(?: look like)?)|"
+                      r"what(?:'s| is) (?:on|coming up|happening) (?:for )?this week|(?:my |the )?week ahead|"
+                      r"what(?:'s| is) my week(?: (?:going to|gonna) look like)?)(?:,? mia)?\s*[?.!]*\s*$", re.I)
 _MONEY_PULSE = re.compile(r"^\s*(?:(?:give me |what's |what is )?(?:my |the )?(?:money pulse|weekly money check)|"
                           r"how(?:'s| is) (?:my )?money (?:this week|(?:looking|doing)(?: this week)?)|"
                           r"how(?:'s| is) my money this week looking|how are my finances this week|how am i doing "
@@ -1293,8 +1296,8 @@ def _own_tool_reply(context, prompt: str):
     why_hens_not_laying, should_i_water, get_eggs (its feed runway) and canning_time; and what she may do on her own,
     her grants (list_grants). "How's the homestead?" is its days in one line (core/homestead_health), "how's my
     money this week?" its pulse (core/money_pulse), "what did you learn this week?" the week's learning
-    (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress). None
-    otherwise."""
+    (core/learned_week), "how are my hobbies going?" this month across them (core/hobby_progress), "what does
+    my week look like?" the week with its look-ahead (get_week). None otherwise."""
     said = prompt.replace("’", "'")
     if _HOMESTEAD_HEALTH.match(said):  # "how's the homestead?": its days in one line (core/homestead_health)
         from core import homestead_health
@@ -1320,6 +1323,14 @@ def _own_tool_reply(context, prompt: str):
         except Exception:
             log.exception("Couldn't say the hobbies' progress")
             return None
+    if _MY_WEEK.match(said):  # "what does my week look like?": the week and its look-ahead (get_week, core/week_ahead)
+        actions = getattr(context, "assistant_actions", None)
+        if actions is not None and "get_week" in getattr(actions, "_actions", {"get_week": 1}):
+            try:
+                return actions.execute(context, "get_week", {})
+            except Exception:
+                log.exception("Couldn't say the week")
+                return None
     if _MONEY_PULSE.match(said):  # "how's my money this week?": its pulse in a line (core/money_pulse)
         from core import money_pulse
 

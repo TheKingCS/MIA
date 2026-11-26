@@ -55,6 +55,10 @@ CORPUS = {
         "Every morning tell me the weather and my day", "Stop the morning briefing",
         "Watch me: the Friday reset", "What are you watching for me?",
     ],
+    "anticipating": [
+        "How's the homestead?", "How long could we last?", "How's my money this week?",
+        "What did you learn this week?", "How are my hobbies going?", "What does my week look like?",
+    ],
     "conversation": [
         ["I'm thinking about getting goats", "What breed would be good for milk?", "How much space do they need?",
          "Thanks, that's helpful"],
